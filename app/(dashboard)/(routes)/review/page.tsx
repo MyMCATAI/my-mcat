@@ -26,7 +26,7 @@ const UWorldBlitzPage: React.FC = () => {
             <Video className="w-8 h-8" />
           </div>
           <p className="text-gray-300">
-            "a sudden, energetic, and concerted effort, typically on a specific task."
+            &ldquo;a sudden, energetic, and concerted effort, typically on a specific task.&rdquo;
           </p>
         </div>
         
