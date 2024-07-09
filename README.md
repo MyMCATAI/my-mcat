@@ -3,7 +3,10 @@
 
 Created by Joshua Wade
 
-## Getting Started
+WIP deployed at
+https://my-mcatmy-mcat.vercel.app/
+
+## Getting Started - Dev
 
 First, run the development server:
 
@@ -30,28 +33,34 @@ This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-opti
 - clerk auth setup
 - PlanetScale prisma MySQL DB
 
-Tools
-- GPT for chatting and code gen -> easy and can just adjust initial prompt
-- Replicate has many models and tools and is a great AI backend, similar pricing system to OpenAI
+## Current Services
+Services
+- AI LLM - https://openai.com/
+- Customer service - app.crisp.chat
+- sql db - app.planetscale.com
+- auth - dashboard.clerk.com
 
-backend DB
+Backend DB
 - prisma and planetscale
 - run prisma with `npx prisma studio`
 - run prisma db changes with `npx prisma generate`, `npx prisma db push `
 - reset with `npx prisma migrate reset`
 
 Stripe
-- Set up with josh@method-ai.com
+- Currently set up with josh@method-ai.com
 - Need to consider taxes, etc. long term
 - currently - only card is excepted, should this be other methods of payment a well?
 - Need to run `stripe listen --forward-to localhost:3000/api/webhook` in terminal when developing with Stripe
 
 Customer Support
-- Crisp Chat -> methodAI email setup
+- Crisp Chat -> methodAI email setup app.crisp.chat
 
 
 
 ### Todo
 - clean frontend UI
 - set up authed dashboards
+- Set up initial diagnostic quiz
+- update env vars to be production
+
 

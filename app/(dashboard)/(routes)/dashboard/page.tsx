@@ -1,86 +1,42 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Tasks from "@/components/ui/tasks";
+import Calendar from "@/components/ui/calendar";
+import { useUser } from "@clerk/nextjs";
 
-import { ArrowRight, Code, ImageIcon, MessageSquare, Music, VideoIcon } from "lucide-react";
+const HomePage = () => {
+    const {user} = useUser();
 
-import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-
-
-const tools=[
-    {
-        label: "Covnersation",
-        icon: MessageSquare,
-        color: "text-violet-500",
-        bgColor: "bg-violet-500/10",
-        href:"/conversation"
-    },
-    {
-        label: "Music Generation",
-        icon: Music,
-        color: "text-emerald-500",
-        bgColor: "bg-emerald-500/10",
-        href:"/music"
-    },
-    {
-        label: "Image Generation",
-        icon: ImageIcon,
-        color: "text-pink-700",
-        bgColor: "bg-pink-700/10",
-        href:"/image"
-    },
-    {
-        label: "Video Generation",
-        icon: VideoIcon,
-        color: "text-orange-700",
-        bgColor: "bg-orange-700/10",
-        href:"/video"
-    },
-    {
-        label: "Code Generation",
-        icon: Code,
-        color: "text-green-700",
-        bgColor: "bg-green-700/10",
-        href:"/code"
-    },
-
-]
-
-const DashboardPage =()=>{
-    const router = useRouter()
-    return(
-        <div>
-            <div className="mb-8 space-y-4">
-                <h2 className="text-2xl md:text-4xl font-bold text-center">
-                    Explore the Power of AI
-                    </h2>
-        
-            <p className="text-muted-foreground font-light text-sm md:text-lg text-center">
-                Chat with the smartest AI - Experiecne the poewer of AI
-            </p>
+    return (
+        <div className="bg-[#001326] min-h-screen p-8 text-white flex justify-center">
+        <div className="max-w-screen-xl w-full">
+            <div className="text-center mb-8">
+                <h1 className="text-2xl font-bold">Welcome {user?.firstName} to your MCAT!</h1>
             </div>
-            <div className="px-4 md:px-20 lg:px32 space-y-4">
-                {tools.map((tool) => (
-                    <Card
-                    onClick={() => router.push(tool.href)}
-                        key={tool.href}
-                        className="p-4 border-black/5 flex items-center justify-between hover:shadow-md transition cursor-pointer"
-            
-                    >
-                        <div className="flex items-center gap-x-4">
-                            <div className={cn("p-2 w-fit rounded-md", tool.bgColor)}>
-                                <tool.icon className={cn("w-8 h-8", tool.color)}/>
-                            </div>
-                            <div className="font-semibold">{tool.label}</div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="col-span-1 lg:col-span-2">
+                    <div className="bg-black p-4 rounded-lg shadow-md space-y-4">
+                        <div className="flex items-center space-x-4">
+                            <span className="text-blue-400">😺 kalypso</span>
+                            <p className="bg-gray-800 p-2 rounded-md">omg hi {user?.firstName}! ready to study?</p>
                         </div>
-                        <ArrowRight className="w-5 h-5"/>
-                    </Card>
-                ))}
+                        <div className="flex space-x-2 h-40">
+                            <button className="bg-blue-600 px-4 py-2 rounded-md h-10">Let's do it</button>
+                            <button className="bg-blue-600 px-4 py-2 rounded-md h-10">Great!</button>
+                            <button className="bg-blue-600 px-4 py-2 rounded-md h-10">No!</button>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-span-1">
+                    <Tasks />
+                </div>
+            </div>
+            <div className="mt-8">
+                <Calendar />
             </div>
         </div>
-
+    </div>
     )
 }
-    
-export default DashboardPage;
+
+export default HomePage;

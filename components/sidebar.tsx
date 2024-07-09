@@ -31,10 +31,10 @@ const routes = [
     href: '/image',
   },
   {
-    label: 'Video Generation',
+    label: 'Home',
     icon: VideoIcon,
     color: "text-orange-700",
-    href: '/video',
+    href: '/home',
   },
   {
     label: 'Music Generation',
