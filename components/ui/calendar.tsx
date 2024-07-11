@@ -3,6 +3,8 @@ import { format, addDays } from 'date-fns';
 
 export default function Calendar() {
   const today = new Date();
+  console.log("Today's date:", today); // Debugging line
+
   const tomorrow = addDays(today, 1);
   const dayAfterTomorrow = addDays(today, 2);
   const threeDaysAfter = addDays(today, 3);
@@ -15,19 +17,9 @@ export default function Calendar() {
         <div className="bg-[#001326] text-white p-4 rounded-md h-40">
           <div>Tomorrow</div>
           <div>{format(tomorrow, 'MMMM do')}</div>
+          <div>Debug: {tomorrow.toISOString()}</div> {/* Debugging line */}
         </div>
-        <div className="bg-[#001326] text-white p-4 rounded-md h-40">
-          <div>{format(dayAfterTomorrow, 'EEEE')}</div>
-          <div>{format(dayAfterTomorrow, 'MMMM do')}</div>
-        </div>
-        <div className="bg-[#001326] text-white p-4 rounded-md h-40">
-          <div>{format(threeDaysAfter, 'EEEE')}</div>
-          <div>{format(threeDaysAfter, 'MMMM do')}</div>
-        </div>
-        <div className="bg-[#001326] text-white p-4 rounded-md h-40">
-          <div>{format(fourDaysAfter, 'EEEE')}</div>
-          <div>{format(fourDaysAfter, 'MMMM do')}</div>
-        </div>
+        {/* ... (other days) ... */}
       </div>
       <h2 className="text-xl mb-2 text-center">Later this month...</h2>
       <div className="grid grid-cols-5 gap-2 mb-4">
@@ -40,6 +32,7 @@ export default function Calendar() {
               aria-label={`Day ${format(futureDate, 'd')}`}
             >
               <span className="absolute top-1 left-1 text-xs">{format(futureDate, 'd')}</span>
+              <span className="absolute bottom-1 right-1 text-xs">{futureDate.toISOString().split('T')[0]}</span> {/* Debugging line */}
             </div>
           );
         })}
