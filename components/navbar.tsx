@@ -29,6 +29,7 @@ export const Navbar = ({
           {[
             { href: "/dashboard", label: "Acquire" },
             { href: "/apply", label: "Apply" },
+            { href: "/quiz", label: "quiz" },
             { href: "/review", label: "Review" },
           ].map((link) => (
             <Link 
