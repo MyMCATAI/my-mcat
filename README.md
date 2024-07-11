@@ -58,9 +58,5 @@ Customer Support
 
 
 ### Todo
-- clean frontend UI
-- set up authed dashboards
 - Set up initial diagnostic quiz
-- update env vars to be production
-
 
