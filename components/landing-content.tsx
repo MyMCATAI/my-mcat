@@ -49,10 +49,10 @@ export const LandingContent = () => {
                 Kalypso is a friendly AI study buddy that keeps you accountable with
                 weekly emails summarizing your progress. He provides suggestions
                 based on your Suite analytics. You can even talk to him for emotional
-                support! (unless he's napping)
+                support! (unless he&apos;s napping)
               </p>
               <p className="mb-4">
-                He's a part of the innovative system that ensures you will score...
+                He&apos;s a part of the innovative system that ensures you will score...
               </p>
               <p className="text-1xl font-bold text-white-300">...MEOWSOME!</p>
             </div>
