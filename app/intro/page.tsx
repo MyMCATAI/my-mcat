@@ -40,13 +40,13 @@ const IntroPage = () => {
 
   useEffect(() => {
     if (showForm && window.Tally) {
-      window.Tally.openPopup('wbk8Ao', {
+      (window as any).Tally.openPopup('wbk8Ao', {
         alignLeft: true,
         overlay: true,
         emoji: { text: '👋', animation: 'wave' },
         onSubmit: () => {
           setFormSubmitted(true);
-          window.Tally.closePopup('wbk8Ao');
+          (window as any).Tally.closePopup('wbk8Ao');
         }
       });
     }
