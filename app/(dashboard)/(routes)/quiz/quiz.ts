@@ -1,99 +1,98 @@
-export const quiz =  {
-    "quizTitle": "React Quiz Component Demo",
-    "quizSynopsis": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim",
-    "nrOfQuestions": "4",
-    "questions": [
-      {
-        "question": "How can you access the state of a component from inside of a member function?",
-        "questionType": "text",
-        "questionPic": "https://dummyimage.com/600x400/000/fff&text=X", // if you need to display Picture in Question
-        "answerSelectionType": "single",
-        "answers": [
-          "this.getState()",
-          "this.prototype.stateValue",
-          "this.state",
-          "this.values"
-        ],
-        "correctAnswer": "3",
-        "messageForCorrectAnswer": "Correct answer. Good job.",
-        "messageForIncorrectAnswer": "Incorrect answer. Please try again.",
-        "explanation": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-        "point": "20"
-      },
-      {
-        "question": "ReactJS is developed by _____?",
-        "questionType": "text",
-        "answerSelectionType": "single",
-        "answers": [
-          "Google Engineers",
-          "Facebook Engineers"
-        ],
-        "correctAnswer": "2",
-        "messageForCorrectAnswer": "Correct answer. Good job.",
-        "messageForIncorrectAnswer": "Incorrect answer. Please try again.",
-        "explanation": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-        "point": "20"
-      },
-      {
-        "question": "ReactJS is an MVC based framework?",
-        "questionType": "text",
-        "answerSelectionType": "single",
-        "answers": [
-          "True",
-          "False"
-        ],
-        "correctAnswer": "2",
-        "messageForCorrectAnswer": "Correct answer. Good job.",
-        "messageForIncorrectAnswer": "Incorrect answer. Please try again.",
-        "explanation": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-        "point": "10"
-      },
-      {
-        "question": "Which of the following concepts is/are key to ReactJS?",
-        "questionType": "text",
-        "answerSelectionType": "single",
-        "answers": [
-          "Component-oriented design",
-          "Event delegation model",
-          "Both of the above",
-        ],
-        "correctAnswer": "3",
-        "messageForCorrectAnswer": "Correct answer. Good job.",
-        "messageForIncorrectAnswer": "Incorrect answer. Please try again.",
-        "explanation": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-        "point": "30"
-      },
-      {
-        "question": "Lorem ipsum dolor sit amet, consectetur adipiscing elit,",
-        "questionType": "photo",
-        "answerSelectionType": "single",
-        "answers": [
-          "https://dummyimage.com/600x400/000/fff&text=A",
-          "https://dummyimage.com/600x400/000/fff&text=B",
-          "https://dummyimage.com/600x400/000/fff&text=C",
-          "https://dummyimage.com/600x400/000/fff&text=D"
-        ],
-        "correctAnswer": "1",
-        "messageForCorrectAnswer": "Correct answer. Good job.",
-        "messageForIncorrectAnswer": "Incorrect answer. Please try again.",
-        "explanation": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-        "point": "20"
-      },
-      {
-        "question": "What are the advantages of React JS?",
-        "questionType": "text",
-        "answerSelectionType": "multiple",
-        "answers": [
-          "React can be used on client and as well as server side too",
-          "Using React increases readability and makes maintainability easier. Component, Data patterns improves readability and thus makes it easier for manitaining larger apps",
-          "React components have lifecycle events that fall into State/Property Updates",
-          "React can be used with any other framework (Backbone.js, Angular.js) as it is only a view layer"
-        ],
-        "correctAnswer": [1, 2, 4],
-        "messageForCorrectAnswer": "Correct answer. Good job.",
-        "messageForIncorrectAnswer": "Incorrect answer. Please try again.",
-        "explanation": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-        "point": "20"
-      },
-    ]
-  } 
+
+import {QuizData} from "@/components/quiz";
+
+export const mockMcatQuiz: QuizData = {
+  questions: [
+    {
+      question: "Which of the following is a function of the enzyme HIV protease?",
+      options: [
+        "Cleaving viral RNA",
+        "Cleaving viral proteins",
+        "Synthesizing viral DNA",
+        "Integrating viral DNA into host genome"
+      ]
+    },
+    {
+      question: "In the context of acid-base chemistry, what is the conjugate base of H2PO4-?",
+      options: [
+        "H3PO4",
+        "HPO4^2-",
+        "PO4^3-",
+        "H2PO4^2-"
+      ]
+    },
+    {
+      question: "Which of the following best describes the function of the corpus callosum?",
+      options: [
+        "Regulating hormone production",
+        "Controlling involuntary movements",
+        "Connecting the cerebral hemispheres",
+        "Processing sensory information from the eyes"
+      ]
+    },
+    {
+      question: "What is the primary function of tRNA in protein synthesis?",
+      options: [
+        "To carry amino acids to the ribosome",
+        "To serve as a template for protein synthesis",
+        "To catalyze peptide bond formation",
+        "To regulate gene expression"
+      ]
+    },
+    {
+      question: "Which of the following is NOT a component of the electron transport chain?",
+      options: [
+        "NADH dehydrogenase",
+        "Cytochrome c oxidase",
+        "ATP synthase",
+        "Pyruvate dehydrogenase"
+      ]
+    },
+    {
+      question: "In physics, what is the SI unit of electric charge?",
+      options: [
+        "Ampere",
+        "Volt",
+        "Coulomb",
+        "Ohm"
+      ]
+    },
+    {
+      question: "Which of the following techniques would be most appropriate for separating proteins based on their molecular weight?",
+      options: [
+        "Chromatography",
+        "Electrophoresis",
+        "Centrifugation",
+        "X-ray crystallography"
+      ]
+    },
+    {
+      question: "What is the role of carbonic anhydrase in red blood cells?",
+      options: [
+        "Oxygen transport",
+        "Iron storage",
+        "Carbon dioxide transport",
+        "Hemoglobin synthesis"
+      ]
+    },
+    {
+      question: "Which of the following is a characteristic of a competitive enzyme inhibitor?",
+      options: [
+        "It decreases the Vmax of the enzyme",
+        "It increases the Km of the enzyme",
+        "It binds to a site other than the active site",
+        "Its effects cannot be overcome by increasing substrate concentration"
+      ]
+    },
+    {
+      question: "In the context of genetics, what is meant by the term 'epistasis'?",
+      options: [
+        "The interaction between two genes that affect a single phenotype",
+        "The complete dominance of one allele over another",
+        "The presence of multiple alleles for a single trait",
+        "The inheritance of traits linked to sex chromosomes"
+      ]
+    }
+  ],
+  timeLimit: "02:00:00" // 2 hours in HH:MM:SS format
+};

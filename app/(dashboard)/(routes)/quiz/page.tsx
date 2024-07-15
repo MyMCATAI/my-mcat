@@ -3,12 +3,23 @@
 
 import React from 'react';
 import { useUser } from '@clerk/nextjs';
-import { quiz } from './quiz';
-import Quiz from 'react-quiz-component';
+import  Quiz  from "@/components/quiz";
+import {mockMcatQuiz} from './quiz'
+// TODO, change this to db
+interface QuizData {
+  questions: {
+    question: string;
+    options: string[];
+    image?: string;
+  }[];
+  timeLimit: string;
+}
 
 const QuizPage = () => {
 
   const { user } = useUser();
+
+const typedQuiz = mockMcatQuiz as QuizData;
 
   return (
     <div className="bg-[#001326] min-h-screen p-8 text-white flex justify-center">
@@ -17,7 +28,7 @@ const QuizPage = () => {
           <h1 className="text-2xl font-bold">
             
           Welcome {user?.firstName ?? ""} to the Diagnostic quiz
-          <Quiz quiz={quiz} shuffle={true}/>
+          <Quiz quiz={typedQuiz} shuffle={true}/>
 
             </h1>
         </div>
