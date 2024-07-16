@@ -56,6 +56,26 @@ Customer Support
 - Crisp Chat -> methodAI email setup app.crisp.chat
 
 
+# Prims DB
+
+Initial setup (optional)
+```
+npm i @prisma/client
+npx prisma init
+```
+
+pushing changes
+
+```
+npx prisma db push
+npx prisma generate
+```
+
+See data
+
+```npx prisma studio```
+
+
 
 ### Todo
 - Set up initial diagnostic quiz
