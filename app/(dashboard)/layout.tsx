@@ -12,7 +12,6 @@ const DashboardLayout = async ({
 
   return ( 
     <div className="h-full relative">
-      {userBio}
         <Navbar isPro={isPro}/>
         <main className="w-full pb-10">
         {children}
