@@ -40,7 +40,6 @@ model Question {
   questionOptions     Json
   questionAnswer      Int
   questionAnswerNotes String   @db.Text
-  imageUrl            String?
   sectionCode         String
   passageId           String?
   passage             Passage? @relation(fields: [passageId], references: [id])
