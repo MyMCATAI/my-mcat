@@ -1,57 +1,36 @@
 "use client";
-
-import TypewriterComponent from "typewriter-effect";
-import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
-
-import { Button } from "@/components/ui/button";
+import hero from "../public/heroimg.png";
+import Image from "next/image";
+import Link from "next/link";
 
 export const LandingHero = () => {
   const { isSignedIn } = useAuth();
 
   return (
-    <div className="relative bg-[#2A507E] text-white font-bold py-20 overflow-hidden">
-      {/* Banner Image */}
-      <div 
-        className="absolute top-0 right-0 w-2/3 h-full bg-cover bg-right"
-        style={{ backgroundImage: "url('/banner.png')" }}
-      />
-      
-      {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-left space-y-5 w-full md:w-1/2">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold">
-            MCAT SUITE
-          </h1>
-          <div className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 text-3xl sm:text-4xl md:text-5xl font-bold">
-            <TypewriterComponent
-              options={{
-                strings: [
-                  "Adaptive Learning.",
-                  "UWorld Integration.",
-                  "AAMC Materials.",
-                  "Personalized Schedules."
-                ],
-                autoStart: true,
-                loop: true,
-              }}
-            />
+    <section className="bg-white py-16">
+      <div className="container mx-auto px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 items-center">
+          <div className="text-center md:text-left">
+            <h1 className="text-3xl md:text-[44px] font-bold text-black mb-2">
+              Study smarter, with a friend.
+            </h1>
+            <p className="text-lg md:text-[20px] text-black-900 mb-6">
+              Take the stress out of your MCAT prep with Kalypso.
+            </p>
+            <div className="flex justify-center md:justify-start">
+              <Link href={isSignedIn ? "/dashboard" : "/sign-up"}>
+                <button className="bg-[#2D4778] text-white py-3 text-lg md:text-[20px] px-6 rounded-[20px]">
+                  Join the waitlist
+                </button>
+              </Link>
+            </div>
           </div>
-          <div className="text-sm md:text-xl font-light text-zinc-300">
-            Study smarter with an adaptive content schedule that integrates with UWorld and AAMC
-          </div>
-          <div className="pt-4">
-            <Link href={isSignedIn ? "/dashboard" : "/sign-up"}>
-              <Button variant="premium" className="md:text-lg p-4 md:p-6 rounded-full font-semibold">
-                Get Started
-              </Button>
-            </Link>
-          </div>
-          <div className="text-zinc-400 text-xs md:text-sm font-normal">
-            Revolutionize your MCAT prep today
+          <div className="flex justify-center mt-6 md:mt-0">
+            <Image src={hero} alt="Hero" className="w-4/5" />
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
