@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^4.25.7",
-    "@prisma/client": "^5.5.2",
+    "@prisma/client": "^5.16.2",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-label": "^2.0.2",
@@ -24,7 +24,7 @@
     "crisp-sdk-web": "^1.0.21",
     "date-fns": "^3.6.0",
     "lucide-react": "^0.288.0",
-    "next": "13.5.6",
+    "next": "^14.2.5",
     "openai": "^4.14.1",
     "react": "^18",
     "react-dom": "^18",
@@ -51,6 +51,7 @@
     "eslint-config-next": "13.5.6",
     "postcss": "^8",
     "prisma": "^5.5.2",
+    "react-quiz-component": "^0.8.2",
     "tailwindcss": "^3",
     "typescript": "^5"
   }
