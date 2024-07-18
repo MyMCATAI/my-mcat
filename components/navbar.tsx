@@ -31,6 +31,9 @@ export const Navbar = ({
             { href: "/apply", label: "Apply" },
             { href: "/quiz", label: "quiz" },
             { href: "/review", label: "Review" },
+            // TODO add auth check so this only appears for specific users
+            { href: "/admin", label: "Admin" },
+
           ].map((link) => (
             <Link 
               key={link.href}
