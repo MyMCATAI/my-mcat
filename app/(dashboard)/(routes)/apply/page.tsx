@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Play } from 'lucide-react';
 
 const ApplyPage = () => {
@@ -20,8 +21,8 @@ const ApplyPage = () => {
         </div>
         
         <div className="space-y-4">
-          <TestButton title="Karki's Diagnostic Exam" />
-          <TestButton title="AAMC Unscored Sample" />
+          <TestButton title="Karki's Diagnostic Exam" link="/quiz" />
+          <TestButton title="AAMC Unscored Sample" link="/" />
         </div>
       </div>
     </div>
@@ -29,17 +30,23 @@ const ApplyPage = () => {
 };
 
 interface TestButtonProps {
-    title: string;
-  }
-const TestButton: React.FC<TestButtonProps> = ({ title }) => (
-    <button className="w-full bg-[#0A2744] hover:bg-[#0A2744]/80 transition-colors duration-200 py-3 px-4 rounded-lg flex items-center space-x-2">
-    <div className="flex-shrink-0 flex space-x-2">
-      <span className="block w-4 h-4 bg-white/20 rounded-sm"></span>
-      <span className="block w-4 h-4 bg-white/20 rounded-sm"></span>
-      <span className="block w-4 h-4 bg-white/20 rounded-sm"></span>
-    </div>
-    <span className="flex-grow text-left">{title}</span>
-  </button>
+  title: string;
+  link: string;
+}
+
+const TestButton: React.FC<TestButtonProps> = ({ title, link }) => (
+  <Link href={link} className="flex my-2">
+    
+      <button className="w-full bg-[#0A2744] hover:bg-[#0A2744]/80 transition-colors duration-200 py-3 px-4 rounded-lg flex items-center space-x-2">
+        <div className="flex-shrink-0 flex space-x-2">
+          <span className="block w-4 h-4 bg-white/20 rounded-sm"></span>
+          <span className="block w-4 h-4 bg-white/20 rounded-sm"></span>
+          <span className="block w-4 h-4 bg-white/20 rounded-sm"></span>
+        </div>
+        <span className="flex-grow text-left">{title}</span>
+      </button>
+    
+  </Link>
 );
 
 export default ApplyPage;
