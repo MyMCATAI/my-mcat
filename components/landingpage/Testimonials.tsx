@@ -9,8 +9,24 @@ const data = [
   { name: 'Group B', value: 300, fill: '#001226' },
   { name: 'Group C', value: 300, fill: '#2D4778' },
 ];
+interface CustomShapeProps {
+  midAngle: number;
+  cx: number;
+  cy: number;
+  innerRadius: number;
+  outerRadius: number;
+  startAngle: number;
+  endAngle: number;
+  fill: string;
+  payload: {
+    name: string;
+  };
+  percent: number;
+  value: number;
+}
 
-const renderActiveShape = (props) => {
+
+const renderActiveShape = (props:CustomShapeProps) => {
   const RADIAN = Math.PI / 180;
   const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
   const sin = Math.sin(-RADIAN * midAngle);
@@ -59,7 +75,7 @@ const renderActiveShape = (props) => {
 const Testimonials = () => {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const onPieEnter = (_, index) => {
+  const onPieEnter = (_:any, index:number) => {
     setActiveIndex(index);
   };
 
@@ -99,9 +115,9 @@ const Testimonials = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8">
             
             {testimonials.map((testimonial, index) => (
-                <div key={index} className="w-full mx-auto bg-white border border-black shadow-md rounded-lg overflow-hidden">
+                <div key={index} className="w-full mx-auto bg-white border shadow-md rounded-lg overflow-hidden">
                   <div className="px-6 py-3">
-                    <p className="mt-4 text-3xl text-black font-medium mb-4">{testimonial.text}</p>
+                    <p className="mt-4  text-2xl lg:text-3xl text-black font-medium mb-4">{testimonial.text}</p>
                     <div className="flex items-center">
                       <Image className="w-12 h-12 rounded-full mr-4" src={avatar} alt="Avatar" />
                       <div className="text-lg">
@@ -119,7 +135,7 @@ const Testimonials = () => {
                 <PieChart>
                   <Pie
                     activeIndex={activeIndex}
-                    activeShape={renderActiveShape}
+                    activeShape={renderActiveShape  as any}
                     data={data}
                     cx="50%"
                     cy="50%"

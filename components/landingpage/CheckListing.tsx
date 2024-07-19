@@ -13,7 +13,7 @@ const CheckListing = () => {
     ];
 
     return (
-        <section className='bg-white py-16'>
+        <section className='bg-white py-6 lg:py-16' id='keypoints' >
             <div className="container mx-auto">
                 <div className="text-center mb-10">
                     <h1 className="text-2xl md:text-4xl font-bold text-black mb-4">
@@ -34,7 +34,7 @@ const CheckListing = () => {
                                 <div>
                                     <h3 className='text-[#231312] text-xl font-[800]' style={{ color: "#0E2247", fontWeight: 600 }}>{item.heading}</h3>
                                 </div>
-                                <div className='text-md'>
+                                <div className='text-sm md:text-md'>
                                     {item.text}
                                 </div>
                             </div>

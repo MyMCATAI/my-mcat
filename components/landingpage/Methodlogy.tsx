@@ -1,6 +1,5 @@
 import Image from 'next/image'
 import React from 'react'
-import icon from '../../public/checkicon.png';
 import test from '../../public/test.png';
 import catoncouch from "../../public/catoncouch.png"
 import cards from "../../public/cards.png"
@@ -16,8 +15,8 @@ const Methodology = () => {
 
     return (
         <>
-            <section className="bg-white py-16">
-                <div className="container mx-auto px-6">
+            <section className="bg-white py-16" id='methodology'>
+                <div className="container-fluid">
                     <div className="grid grid-cols-1 md:grid-cols-2 ">
                         <div className=" mt-6 md:mt-0">
                             <div className="polygon mt-2">
@@ -26,20 +25,20 @@ const Methodology = () => {
 
                             </div>
                             <div className='mt-2 flex justify-center items-center' style={{ width: "80%" }}>
-                                <Image src={catoncouch} alt={"Image"} style={{ width: "80%", marginTop: "-160px", zIndex: "9999" }} />
+                                <Image src={catoncouch} alt={"Image"} style={{ width: "80%", marginTop: "-160px", zIndex: "1" }} />
                             </div>
                         </div>
-                        <div className="text-center">
-                            <h1 className="text-3xl md:text-[38px] font-bold text-[#007AFF] mb-2">
+                        <div className="text-center mx-4">
+                            <h1 className="text-3xl md:text-[38px] font-bold text-[#007AFF] mb-6">
                                 Our methodology
                             </h1>
                             <ul className="grid grid-cols-1 gap-4">
                                 {items.map((item, index) => (
-                                    <li key={index} className='flex gap-2 my-2'>
-                                        <div className='mt-2 flex justify-center items-center' style={{ maxWidth: '100px', maxHeight: '100px' }}>
-                                            <Image src={item.icon} alt={item.text} className='w-full' width={0} height={0} />
+                                    <li key={index} className='flex'>
+                                        <div   style={{ minWidth: '100px', minHeight: '100px' }}>
+                                            <Image src={item.icon} alt={item.text}  width={100} height={100}  />
                                         </div>
-                                        <div className='text-left pt-2'>
+                                        <div className='text-left pt-2 ps-3'>
                                             <div>
                                                 <h3 className='text-xl' style={{ color: "#0E2247", fontWeight: 600 }}>{item.heading}</h3>
                                             </div>
@@ -53,7 +52,7 @@ const Methodology = () => {
                            
                            
 
-                            <div className='text-left doublediv' style={{ background: "#0E2247" }}>
+                            <div className='text-left doublediv mt-3 bg-[#0E2247] mx-3' >
                                 <p className='p-3 text-white'>In alpha and beta, we’ve seen an average of 14 points of
 
                                     increase -- with exceptional students going from 490 to 520.

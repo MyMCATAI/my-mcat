@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 import icon from '../../public/checkicon.png';
 
 const Faqs = () => {
-    const [expanded, setExpanded] = useState(null);
+    const [expanded, setExpanded] = useState<number | null>(null);
 
-    const toggleAccordion = (index) => {
+    const toggleAccordion = (index:number) => {
         if (expanded === index) {
             setExpanded(null);
         } else {
-            setExpanded(index); // Expand if not expanded
+            setExpanded(index);
         }
     };
 
@@ -26,7 +26,7 @@ const Faqs = () => {
         <section className='py-16' style={{ background: "#FAFAFA" }}>
             <div className="container mx-auto">
                 <div className="text-center md:text-left mb-10">
-                    <h1 className="text-3xl md:text-5xl font-semi-bold mb-4" style={{ color: "#0E2247" }}>
+                    <h1 className="text-3xl md:text-3xl font-[600] mb-4" style={{ color: "#0E2247" }}>
                         Frequently Asked Questions
                     </h1>
                 </div>
@@ -39,7 +39,7 @@ const Faqs = () => {
                                 onClick={() => toggleAccordion(index)}
                             >
                                 <div className="flex items-center">
-                                    <h3 className="text-lg font-medium text-blue-900">{item.heading}</h3>
+                                    <h3 className="text-lg font-[500] text-[#0E2247]">{item.heading}</h3>
                                 </div>
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -64,9 +64,13 @@ const Faqs = () => {
                         </div>
                     ))}
                 </div>
-                <button className="bg-transparent text-[#0E2247] py-3 text-md px-6 rounded-[20px] border border-[#0E2247] my-2" style={{ border: "2px solid #0E2247" }}>
+                <div className="text-center md:text-left">
+                    
+              
+                <button className=" bg-transparent text-[#0E2247] font-[600] py-3 text-md px-6 rounded-[60px] border-5 border-[#0E2247] mt-10" style={{ border: "2px solid #0E2247" }}>
                     EXPLORE ALL FAQs
                 </button>
+                </div>
             </div>
         </section>
     );
