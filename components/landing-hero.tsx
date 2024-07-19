@@ -9,7 +9,7 @@ export const LandingHero = () => {
 
   return (
     <section className="bg-white py-16">
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-6 pt-20">
         <div className="grid grid-cols-1 md:grid-cols-2 items-center">
           <div className="text-center md:text-left">
             <h1 className="text-3xl md:text-[44px] font-bold text-black mb-2">

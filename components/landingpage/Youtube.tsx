@@ -3,15 +3,13 @@ import React from 'react'
 const Youtube = () => {
     return (
         <>
-            <div className="bg-[#0E2247]">
-
-
+            <div className="bg-[#0E2247]" id='mission'>
                 <div className="container mx-auto py-16">
                     <div className="text-center md:text-left">
-                        <h1 className="text-3xl md:text-[44px] font-bold text-white mb-2">
+                        <h1 className="text-4xl md:text-[44px] font-bold text-white mb-2">
                             Our mission
                         </h1>
-                        <p className="text-2xl text-white mb-6">
+                        <p className="text-lg lg:text-2xl text-white mb-6">
                             Kalypso is a friendly cat that believes everyone deserves a fair shot.
                         </p>
                     </div>
@@ -33,11 +31,11 @@ const Youtube = () => {
             </div>
             <div className="bg-[#2D4778]">
                 <div className="container mx-auto py-16">
-                    <div className="text-center md:text-left">
-                        <h1 className="text-3xl md:text-[44px] font-bold text-white mb-2">
+                    <div className="text-center lg:text-right">
+                        <h1 className="text-4xl md:text-[44px] font-bold text-white mb-2">
                             Our product
                         </h1>
-                        <p className="text-2xl text-white mb-6">
+                        <p className="text-lg lg:text-2xl text-white mb-6">
                             Designed by an AI Engineer and a 99% Scorer.
                         </p>
                     </div>
