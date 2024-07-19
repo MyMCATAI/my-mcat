@@ -99,7 +99,7 @@ export const LandingNavbar = () => {
         </span>
 
         <div className="flex items-center hidden lg:block">
-          <Link href={isSignedIn ? "/dashboard" : "/sign-up"}>
+          <Link href={"https://docs.google.com/forms/d/e/1FAIpQLScOLeXmRGPBE3oPcuA77qL1HhAlWRUV2ZQLvHJZLyELmiv9Ng/viewform?usp=sf_link"}>
             <button className="bg-[#2D4778] text-white py-2 text-lg md:text-[16px] px-4 rounded-[8px]">
               Join the waitlist
             </button>

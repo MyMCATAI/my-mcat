@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const LandingHero = () => {
-  const { isSignedIn } = useAuth();
 
   return (
     <section className="bg-white py-16">
@@ -19,7 +18,7 @@ export const LandingHero = () => {
               Take the stress out of your MCAT prep with Kalypso.
             </p>
             <div className="flex justify-center md:justify-start">
-              <Link href={isSignedIn ? "/dashboard" : "/sign-up"}>
+              <Link target="/" href={"https://docs.google.com/forms/d/e/1FAIpQLScOLeXmRGPBE3oPcuA77qL1HhAlWRUV2ZQLvHJZLyELmiv9Ng/viewform?usp=sf_link"}>
                 <button className="bg-[#2D4778] text-white py-3 text-lg md:text-[20px] px-6 rounded-[20px]">
                   Join the waitlist
                 </button>
@@ -31,6 +30,9 @@ export const LandingHero = () => {
           </div>
         </div>
       </div>
+      
     </section>
+
+    
   );
 };
