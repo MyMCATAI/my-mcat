@@ -2,19 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { Users, FileText, Settings, BarChart2, Edit, Trash2 } from 'lucide-react';
 
-// Updated Question interface to match our schema
+// Updated Question interface to match our new schema
 interface Question {
   id: string;
-  questionTitle: string;
+  questionID: string;
   questionContent: string;
   questionOptions: string[];
-  questionAnswer: number;
-  questionAnswerNotes: string;
-  imageUrl?: string;
-  sectionCode: string;
+  questionAnswerNotes?: string;
+  contentCategory: string;
+  passageId?: string;
   categoryId: string;
   category?: {
-    mcatCategory: string;
     subjectCategory: string;
     contentCategory: string;
     conceptCategory: string;
@@ -24,25 +22,28 @@ interface Question {
 const AdminPage = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [newQuestion, setNewQuestion] = useState<Partial<Question>>({
-    questionTitle: '',
+    questionID: '',
     questionContent: '',
     questionOptions: ['', '', '', ''],
-    questionAnswer: 0,
     questionAnswerNotes: '',
-    sectionCode: '',
+    contentCategory: '',
+    passageId: '',
     categoryId: '',
   });
+  
 
   useEffect(() => {
     fetchQuestions();
   }, []);
 
   const fetchQuestions = async () => {
+    console.log("fetchQuestions")
     try {
       const response = await fetch('/api/question');
       if (!response.ok) throw new Error('Failed to fetch questions');
       const data = await response.json();
       setQuestions(data.questions);
+      console.log("data",data)
     } catch (error) {
       console.error('Error fetching questions:', error);
     }
@@ -61,24 +62,25 @@ const AdminPage = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log("new question")
-    //todo set this up properly with question categories
     e.preventDefault();
     try {
       const response = await fetch('/api/question', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newQuestion),
+        body: JSON.stringify({
+          ...newQuestion,
+          questionOptions: newQuestion.questionOptions?.join('|'),
+        }),
       });
       if (!response.ok) throw new Error('Failed to add question');
       fetchQuestions(); // Refresh the question list
       setNewQuestion({ // Reset the form
-        questionTitle: '',
+        questionID: '',
         questionContent: '',
         questionOptions: ['', '', '', ''],
-        questionAnswer: 0,
         questionAnswerNotes: '',
-        sectionCode: '',
+        contentCategory: '',
+        passageId: '',
         categoryId: '',
       });
     } catch (error) {
@@ -103,10 +105,10 @@ const AdminPage = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
               type="text"
-              name="questionTitle"
-              value={newQuestion.questionTitle}
+              name="questionID"
+              value={newQuestion.questionID}
               onChange={handleInputChange}
-              placeholder="Question Title"
+              placeholder="Question ID"
               className="w-full p-2 bg-[#001326] rounded"
             />
             <textarea
@@ -126,14 +128,6 @@ const AdminPage = () => {
                 className="w-full p-2 bg-[#001326] rounded"
               />
             ))}
-            <input
-              type="number"
-              name="questionAnswer"
-              value={newQuestion.questionAnswer}
-              onChange={handleInputChange}
-              placeholder="Correct Answer (0-3)"
-              className="w-full p-2 bg-[#001326] rounded"
-            />
             <textarea
               name="questionAnswerNotes"
               value={newQuestion.questionAnswerNotes}
@@ -143,10 +137,18 @@ const AdminPage = () => {
             />
             <input
               type="text"
-              name="sectionCode"
-              value={newQuestion.sectionCode}
+              name="contentCategory"
+              value={newQuestion.contentCategory}
               onChange={handleInputChange}
-              placeholder="Section Code"
+              placeholder="Content Category"
+              className="w-full p-2 bg-[#001326] rounded"
+            />
+            <input
+              type="text"
+              name="passageId"
+              value={newQuestion.passageId}
+              onChange={handleInputChange}
+              placeholder="Passage ID (optional)"
               className="w-full p-2 bg-[#001326] rounded"
             />
             <input
@@ -170,7 +172,7 @@ const AdminPage = () => {
               <thead className="text-xs uppercase bg-gray-700 text-gray-300">
                 <tr>
                   <th className="px-6 py-3">ID</th>
-                  <th className="px-6 py-3">Title</th>
+                  <th className="px-6 py-3">Question ID</th>
                   <th className="px-6 py-3">Content</th>
                   <th className="px-6 py-3">Category</th>
                   <th className="px-6 py-3">Actions</th>
@@ -180,9 +182,9 @@ const AdminPage = () => {
                 {questions.map((q) => (
                   <tr key={q.id} className="border-b bg-[#0A2744] border-gray-700 hover:bg-[#0A2744]/80">
                     <td className="px-6 py-4">{q.id}</td>
-                    <td className="px-6 py-4">{q.questionTitle}</td>
+                    <td className="px-6 py-4">{q.questionID}</td>
                     <td className="px-6 py-4">{q.questionContent.substring(0, 50)}...</td>
-                    <td className="px-6 py-4">{q.category?.mcatCategory || "no category"}</td>
+                    <td className="px-6 py-4">{q.category?.contentCategory || "N/A"}</td>
                     <td className="px-6 py-4 flex space-x-2">
                       <button className="text-blue-400 hover:text-blue-300"><Edit size={18} /></button>
                       <button className="text-red-400 hover:text-red-300"><Trash2 size={18} /></button>
@@ -202,6 +204,7 @@ const AdminPage = () => {
     </div>
   );
 };
+
 
 
 interface StatCardProps {

@@ -6,34 +6,46 @@ import prismadb from "@/lib/prismadb"
 export const getQuestions = async (params: {
   categoryId?: string;
   passageId?: string;
+  contentCategory?: string;
   page?: number;
   pageSize?: number;
 }) => {
-  const { categoryId, passageId, page = 1, pageSize = 10 } = params;
+  console.log('Params:', JSON.stringify(params));
+  const { categoryId, passageId, contentCategory, page = 1, pageSize = 10 } = params;
   const skip = (page - 1) * pageSize;
 
   const where = {
     ...(categoryId && { categoryId }),
     ...(passageId && { passageId }),
+    ...(contentCategory && { contentCategory }),
   };
+  console.log('Where clause:', JSON.stringify(where));
 
-  const questions = await prismadb.question.findMany({
-    where,
-    include: {
-      passage: true,
-      category: true,
-    },
-    skip,
-    take: pageSize,
-  });
+  try {
+    const questions = await prismadb.question.findMany({
+      where,
+      include: {
+        passage: true,
+        category: true,
+      },
+      skip,
+      take: pageSize,
+    });
 
-  const total = await prismadb.question.count({ where });
+    const total = await prismadb.question.count({ where });
 
-  return {
-    questions,
-    totalPages: Math.ceil(total / pageSize),
-    currentPage: page,
-  };
+    return {
+      questions: questions.map(q => ({
+        ...q,
+        questionOptions: q.questionOptions.split('|') // Split the string into an array
+      })),
+      totalPages: Math.ceil(total / pageSize),
+      currentPage: page,
+    };
+  } catch (error) {
+    console.error('Error in getQuestions:', error);
+    throw error;
+  }
 };
 
 export const getQuestionById = async (id: string) => {
@@ -49,12 +61,11 @@ export const getQuestionById = async (id: string) => {
 };
 
 export const createQuestion = async (data: {
-  questionTitle: string;
+  questionID: string;
   questionContent: string;
-  questionOptions: any;
-  questionAnswer: string;
-  questionAnswerNotes: string;
-  sectionCode: string;
+  questionOptions: string;
+  questionAnswerNotes?: string;
+  contentCategory: string;
   passageId?: string;
   categoryId: string;
 }) => {
@@ -62,22 +73,28 @@ export const createQuestion = async (data: {
   if (!userId) throw new Error("Unauthorized");
 
   const question = await prismadb.question.create({
-    data,
+    data: {
+      questionID: data.questionID,
+      questionContent: data.questionContent,
+      questionOptions: data.questionOptions,
+      questionAnswerNotes: data.questionAnswerNotes,
+      contentCategory: data.contentCategory,
+      passageId: data.passageId,
+      categoryId: data.categoryId,
+    },
   });
 
   return question;
 };
 
-export const updateQuestion = async (id: string, data: Partial<{
-  questionTitle: string;
-  questionContent: string;
-  questionOptions: any;
-  questionAnswer: string;
-  questionAnswerNotes: string;
-  sectionCode: string;
+export const updateQuestion = async (id: string, data: {
+  questionContent?: string;
+  questionOptions?: string;
+  questionAnswerNotes?: string;
+  contentCategory?: string;
   passageId?: string;
-  categoryId: string;
-}>) => {
+  categoryId?: string;
+}) => {
   const { userId } = auth();
   if (!userId) throw new Error("Unauthorized");
 

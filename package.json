@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "create-categories": "ts-node --project tsconfig.server.json scripts/createCategories.ts"
+    "create-categories": "ts-node --project tsconfig.server.json scripts/createCategories.ts",
+    "create-questions": "ts-node --project tsconfig.server.json scripts/createQuestions.ts"
+
   },
   "dependencies": {
     "@clerk/nextjs": "^4.25.7",
