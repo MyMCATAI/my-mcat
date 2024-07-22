@@ -45,7 +45,7 @@ async function createQuestionsFromCSV() {
           record['Wrong 1'],
           record['Wrong 2'],
           record['Wrong 3']
-        ].filter(Boolean); // Remove any empty answers
+        ].filter(Boolean).toString()
 
         const question = await prisma.question.create({
           data: {
