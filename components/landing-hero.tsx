@@ -7,7 +7,7 @@ import Link from "next/link";
 export const LandingHero = () => {
 
   return (
-    <section className="bg-white py-16">
+    <section className="bg-white py-16" id="home">
       <div className="container mx-auto px-6 pt-20">
         <div className="grid grid-cols-1 md:grid-cols-2 items-center">
           <div className="text-center md:text-left">
