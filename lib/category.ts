@@ -15,7 +15,8 @@ export const getCategories = async (params: {
       questions: {
         select: {
           id: true,
-          questionTitle: true,
+          questionID: true,
+          questionContent: true,
         }
       }
     }
