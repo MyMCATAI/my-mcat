@@ -21,6 +21,7 @@ export const getQuestions = async (params: {
     where,
     include: {
       passage: true,
+      category: true,
     },
     skip,
     take: pageSize,
@@ -51,9 +52,8 @@ export const createQuestion = async (data: {
   questionTitle: string;
   questionContent: string;
   questionOptions: any;
-  questionAnswer: number;
+  questionAnswer: string;
   questionAnswerNotes: string;
-  imageUrl?: string;
   sectionCode: string;
   passageId?: string;
   categoryId: string;
@@ -72,9 +72,8 @@ export const updateQuestion = async (id: string, data: Partial<{
   questionTitle: string;
   questionContent: string;
   questionOptions: any;
-  questionAnswer: number;
+  questionAnswer: string;
   questionAnswerNotes: string;
-  imageUrl?: string;
   sectionCode: string;
   passageId?: string;
   categoryId: string;
