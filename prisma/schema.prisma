@@ -52,9 +52,10 @@ model Question {
 
 model Category {
   id               String     @id @default(cuid())
-  mcatCategory     String
+  section          String
   subjectCategory  String
   contentCategory  String
   conceptCategory  String
+  generalWeight    Float
   questions        Question[]
 }
