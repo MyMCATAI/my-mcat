@@ -35,16 +35,15 @@ model Passage {
 
 model Question {
   id                  String   @id @default(cuid())
-  questionTitle       String
+  questionID          String
   questionContent     String   @db.Text
-  questionOptions     Json
-  questionAnswer      Int
-  questionAnswerNotes String   @db.Text
-  sectionCode         String
+  questionOptions     String   @db.Text
+  questionAnswerNotes String?  @db.Text
+  contentCategory     String
   passageId           String?
   passage             Passage? @relation(fields: [passageId], references: [id])
-  category            Category? @relation(fields: [categoryId], references: [id])
-  categoryId          String?
+  category            Category @relation(fields: [categoryId], references: [id])
+  categoryId          String
 
   @@index([passageId])
   @@index([categoryId])

@@ -15,12 +15,14 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const categoryId = searchParams.get('categoryId');
     const passageId = searchParams.get('passageId');
+    const contentCategory = searchParams.get('contentCategory');
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
     const result = await getQuestions({ 
       categoryId: categoryId || undefined, 
       passageId: passageId || undefined, 
+      contentCategory: contentCategory || undefined,
       page, 
       pageSize 
     });
@@ -41,7 +43,26 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const newQuestion = await createQuestion(body);
+    
+    // Validate required fields
+    if (!body.questionID || !body.questionContent || !body.questionOptions || !body.contentCategory || !body.categoryId) {
+      return new NextResponse("Missing required fields", { status: 400 });
+    }
+
+    // Ensure questionOptions is an array of strings
+    if (!Array.isArray(body.questionOptions) || body.questionOptions.length === 0) {
+      return new NextResponse("questionOptions must be a non-empty array of strings", { status: 400 });
+    }
+
+    const newQuestion = await createQuestion({
+      questionID: body.questionID,
+      questionContent: body.questionContent,
+      questionOptions: body.questionOptions,
+      questionAnswerNotes: body.questionAnswerNotes,
+      contentCategory: body.contentCategory,
+      passageId: body.passageId,
+      categoryId: body.categoryId,
+    });
 
     return NextResponse.json(newQuestion);
   } catch (error) {
