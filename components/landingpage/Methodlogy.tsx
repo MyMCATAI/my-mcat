@@ -21,7 +21,7 @@ const Methodology = () => {
                         <div className=" mt-6 md:mt-0">
                             <div className="polygon mt-2">
 
-                                <p className='text-white' style={{ padding: "100px 30px" }}>Rest easy with us.</p>
+                                {/* <p className='text-white' style={{ padding: "100px 30px" }}>Rest easy with us.</p> */}
 
                             </div>
                             <div className='mt-2 flex justify-center items-center' style={{ width: "80%" }}>
