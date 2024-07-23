@@ -1,0 +1,68 @@
+import {auth} from "@clerk/nextjs"
+
+import prismadb from "@/lib/prismadb"
+import { DEFAULT_BIO } from "@/constants"
+
+export const createUserInfo = async () =>{
+    const {userId} = auth();
+    if (!userId) {return;}
+
+    const userInfo= await prismadb.userInfo.findUnique({
+        where: {
+            userId
+        }
+    });
+
+    if(userInfo){
+        return
+    }else{
+        await prismadb.userInfo.create({
+            data: {userId: userId, bio:DEFAULT_BIO }
+        })
+    }
+};
+
+// update this to handle all user info
+export const getBio = async ()=>{
+    const {userId} = auth();
+    if (!userId) {return false;}
+    const userInfo =await prismadb.userInfo.findUnique({
+        where: {
+            userId: userId
+        } 
+    })
+
+    return userInfo?.bio
+}
+
+export const getUserInfo = async () => {
+    const { userId } = auth();
+    if (!userId) return null;
+  
+    const userInfo = await prismadb.userInfo.findUnique({
+      where: { userId }
+    });
+  
+    return userInfo;
+  };
+  
+  export const updateUserInfo = async (data: Partial<{ bio: string; [key: string]: any }>) => {
+    const { userId } = auth();
+    if (!userId) return null;
+  
+    const updatedInfo = await prismadb.userInfo.upsert({
+      where: { userId },
+      update: data,
+      create: {
+        userId,
+        bio: data.bio || DEFAULT_BIO,
+        ...data
+      }
+    });
+  
+    return updatedInfo;
+  };
+  
+  export const setBio = async (newBio: string) => {
+    return updateUserInfo({ bio: newBio });
+  };

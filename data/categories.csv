@@ -1,0 +1,80 @@
+Section,Subject Category,Kontent Category (KC),Concept Category 1,General Weight
+B/B,Biochemistry,1A,Amino Acids,1.5
+B/B,Biochemistry,1A,Enzymes,1.2
+B/B,Biochemistry,1A,Proteins,1.2
+B/B,Biochemistry,1B,DNA & Biotechnology,1.4
+B/B,Biochemistry,1B,RNA and The Central Dogma,1.4
+B/B,Biochemistry,1B,Eukaryotic Gene Expression,1.2
+B/B,Biochemistry,1C,Medellian Genetics,0.8
+B/B,Biochemistry,1C,Evolution,0.7
+B/B,Biochemistry,1C,Meiosis & Genetic Diversity,1.1
+B/B,Biochemistry,1D,"Glycolysis, Glycogen, Gluconeogenesis, and The Pentose Phosphate Pathway",1.1
+B/B,Biochemistry,1D,Aerobic Respiration,1.1
+B/B,Biochemistry,1D,Lipid and Amino Acid Metabolism,1.1
+B/B,Biochemistry,1D,Bioenergetics and Regulation of Metabolism,1.1
+B/B,Biology,2A,The Cell,1.2
+B/B,Biology,2A,Tissues,0.8
+B/B,Biology,2A,Plasma Membrane,1
+B/B,Biology,2B,Prokaryotes,0.8
+B/B,Biology,2B,Viruses,0.8
+B/B,Biology,2C,Mitosis,1.2
+B/B,Biology,2C,Embryogenesis,1
+B/B,Biology,3A,Nervous System,1.2
+B/B,Biology,3A,Endocrine System,1.2
+B/B,Biology,3B,Respiration & Circulation,1
+B/B,Biology,3B,Immune System,1
+B/B,Biology,3B,Digestion System,1
+B/B,Biology,3B,Excretion System,1.3
+B/B,Biology,3B,Reproductive System,1
+B/B,Biology,3B,Muscular System,1
+B/B,Biology,3B,Skin & Bones,0.8
+C/P,Physics,4A,Kinematics,1.3
+C/P,Physics,4A,Force,1
+C/P,Physics,4A,Energy,1
+C/P,Physics,4B,Fluids,1.2
+C/P,Physics,4B,Gases,1.2
+C/P,Physics,4C,Electrostatics & Magnetism,1
+C/P,Physics,4C,Circuits,0.8
+C/P,Physics,4C,Electrochemistry,0.8
+C/P,Physics,4D,Sound & Waves,0.9
+C/P,Physics,4D,Light,1.3
+C/P,Physics,4D,Optics,1.3
+C/P,Chemistry,4E,Atoms,1.5
+C/P,Physics,4E,Periodic Trends,1.3
+C/P,Physics,4E,Stoichiometry,1.2
+C/P,Chemistry,5A,Acid-Base,1.3
+C/P,Chemistry,5A,Solutions,1.3
+C/P,Chemistry,5B,Covalent Bonds,1
+C/P,Chemistry,5B,Intermolecular Forces,1.4
+C/P,Chemistry,5C,Seperations and Purifications,1.1
+C/P,Chemistry,5C,Spectroscopy,1.1
+C/P,Chemistry,5D,Organic Compounds,1.3
+C/P,Chemistry,5D,Carbohydrate Structure and Function,1.1
+C/P,Chemistry,5D,Lipid Structure and Function,0.8
+C/P,Chemistry,5E,Enzyme Kinetics,1.4
+C/P,Chemistry,5E,Equilibrium,1.4
+C/P,Chemistry,5E,Thermodynamics & Thermochemistry,1.2
+P/S,Psychology,6A,Sensation,1
+P/S,Psychology,6A,Perception,1
+P/S,Psychology,6B,Cognition,1.3
+P/S,Psychology,6B,Memory & Langauge,1
+P/S,Psychology,6C,Motivation,1
+P/S,Psychology,6C,Emotions & Stress,1
+P/S,Psychology,7A,Biology and Behavior,1
+P/S,Psychology,7A,Personality,1
+P/S,Psychology,7A,Motivation & Attitudes,1
+P/S,Psychology,7B,Social Processes on Individuals,1
+P/S,Psychology,7B,Social Porcesses on Communities,1
+P/S,Psychology,7C,Learning,1.4
+P/S,Psychology,7C,Attitude & Behavior Change,1
+P/S,Sociology,8A,Self-Identity,1
+P/S,Sociology,8A,Formation of Identity,1
+P/S,Sociology,8B,Attribuion,1
+P/S,Sociology,8B,Stereotypes & Bias,1
+P/S,Sociology,8C,Social Interaction,1
+P/S,Sociology,8C,Self Presentation,1
+P/S,Sociology,9A,Social Institutions,1
+P/S,Sociology,9A,Culture,1
+P/S,Sociology,9B,Demographic Structure,1
+P/S,Sociology,9B,Demographic Shift,1
+P/S,Sociology,10A,Social Stratification,1
