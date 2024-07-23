@@ -1,8 +1,6 @@
 "use client";
 
 import React from "react";
-import Passage from "@/components/test/Passage";
-import Questions from "@/components/test/Questions";
 import TestListing from "@/components/test/TestListing";
 
 const TestPage = () => {
