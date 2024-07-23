@@ -17,7 +17,7 @@ const TestQuestions = () => {
           </p>
         </div>
         <div className="flex flex-row h-screen ">
-          <div className="w-1/2 border-r-2 border-sky-500">
+          <div className="w-1/2 border-r border-sky-500">
             <Passage />
           </div>
           <div className="w-1/2">
