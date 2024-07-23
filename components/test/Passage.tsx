@@ -3,14 +3,7 @@ import React from "react";
 const Passage = () => {
   return (
     <div className="bg-[#001326] ">
-      <div className="sticky top-0 left-0 right-0 bg-gray-800 text-white p-4 flex justify-between">
-        <button className="bg-[#ffffff] text-black py-2 px-4 rounded">
-          Previous Passage
-        </button>
-        <button className="bg-[#ffffff] text-black py-2 px-4 rounded">
-          Next Passage
-        </button>
-      </div>
+      
       <div className=" px-4 flex justify-between ">
         <div>
           <h1 className="text-white text-2xl font-bold mt-5">Passage 1</h1>
@@ -27,7 +20,7 @@ const Passage = () => {
         </div> */}
       </div>
 
-      <div className="max-h-[55vh] overflow-auto p-4">
+      <div className="max-h-[60vh] overflow-auto p-4">
         <p className="text-white">
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Repellendus,
           hic soluta officia voluptatum quaerat nostrum asperiores, sint
