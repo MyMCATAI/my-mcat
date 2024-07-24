@@ -5,17 +5,17 @@ import { parse } from 'csv-parse';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 
-// Load environment variables
 dotenv.config({ path: '.env' });
 
 const prisma = new PrismaClient();
 
 async function createQuestionsFromCSV() {
-  const csvFilePath = path.join(process.cwd(), 'data', 'questions.csv');
+  const csvFilePath = path.join(process.cwd(), 'data', 'passageQuestions.csv');
   const fileContent = fs.readFileSync(csvFilePath, { encoding: 'utf-8' });
 
-  // Fetch all categories once
+  // Fetch all categories and passages once
   const categories = await prisma.category.findMany();
+  const passages = await prisma.passage.findMany();
 
   parse(fileContent, {
     columns: true,
@@ -30,8 +30,8 @@ async function createQuestionsFromCSV() {
       try {
         // Find the matching category
         const category = categories.find(cat => 
-          cat.contentCategory === record['Content Category'] &&
-          cat.conceptCategory === record['Concept Category (CC)']
+          cat.contentCategory === record.KC &&
+          cat.conceptCategory === record['Concept Category']
         );
 
         if (!category) {
@@ -39,23 +39,30 @@ async function createQuestionsFromCSV() {
           continue;
         }
 
-        // Combine correct and wrong answers into a single array
-        const questionOptions = [
-          record['Correct'],
-          record['Wrong 1'],
-          record['Wrong 2'],
-          record['Wrong 3']
-        ].filter(Boolean).toString()
+        // Find the matching passage
+        const passage = passages.find(p => p.id === record.PassageID);
+
+        if (!passage) {
+          console.error(`No matching passage found for question ${record['Question ID']}`);
+          continue;
+        }
+
+        // Create an array of options with the correct answer first
+        const options = [record[record.correct], record.a, record.b, record.c, record.d];
+        const uniqueOptions = options
+          .filter((option, index, self) => 
+            option && self.indexOf(option) === index
+          );
 
         const question = await prisma.question.create({
           data: {
             questionID: record['Question ID'],
-            questionContent: record['Question'],
-            questionOptions: questionOptions,
-            questionAnswerNotes: record['Keywords?'] || undefined,
-            contentCategory: record['Content Category'],
+            questionContent: record.Question,
+            questionOptions: JSON.stringify(uniqueOptions),
+            questionAnswerNotes: '',
+            contentCategory: record.KC,
+            passageId: passage.id,
             categoryId: category.id,
-            // Add passageId if it's in your CSV. If not, it will be null by default.
           },
         });
         console.log(`Created question: ${question.questionID}`);

@@ -11,7 +11,7 @@ dotenv.config({ path: '.env' });
 const prisma = new PrismaClient();
 
 async function createCategoriesFromCSV() {
-  const csvFilePath = path.join(process.cwd(), 'data', 'categories.csv');
+  const csvFilePath = path.join(process.cwd(), 'data', 'passageQuestions.csv');
   const fileContent = fs.readFileSync(csvFilePath, { encoding: 'utf-8' });
 
   parse(fileContent, {
@@ -23,20 +23,28 @@ async function createCategoriesFromCSV() {
       return;
     }
 
+    const uniqueCategories = new Set();
+
     for (const record of records) {
-      try {
-        const category = await prisma.category.create({
-          data: {
-            section: record.Section,
-            subjectCategory: record['Subject Category'],
-            contentCategory: record['Kontent Category (KC)'],
-            conceptCategory: record['Concept Category 1'],
-            generalWeight: parseFloat(record['General Weight']),
-          },
-        });
-        console.log(`Created category: ${category.subjectCategory}`);
-      } catch (error) {
-        console.error(`Error creating category:`, error);
+      const categoryKey = `${record['Subject Category']}-${record.KC}-${record['Concept Category']}`;
+      
+      if (!uniqueCategories.has(categoryKey)) {
+        uniqueCategories.add(categoryKey);
+        
+        try {
+          const category = await prisma.category.create({
+            data: {
+              section: record.Section,
+              subjectCategory: record['Subject Category'],
+              contentCategory: record.KC,
+              conceptCategory: record['Concept Category'],
+              generalWeight: parseFloat(record['General Weight']),
+            },
+          });
+          console.log(`Created category: ${category.subjectCategory} - ${category.contentCategory} - ${category.conceptCategory}`);
+        } catch (error) {
+          console.error(`Error creating category:`, error);
+        }
       }
     }
 
