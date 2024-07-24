@@ -26,7 +26,7 @@ const TestListing: React.FC<TestListingProps> = ({ passages }) => {
           {passages.map((passage) => (
             <Link
               key={passage.id}
-              href="/test/testquestions"
+              href={`/test/testquestions?id=${passage.id}`}
               className="bg-[#071644] border-2 border-sky-500 text-md text-white rounded-lg shadow-md p-4 m-2 w-full max-w-xl"
             >
               <h2 className="text-ms font-medium mb-2">
