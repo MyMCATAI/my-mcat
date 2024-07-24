@@ -1,5 +1,11 @@
 import React from "react";
 
+export interface Passage {
+  id: string;
+  text: string;
+  citation: string;
+}
+
 const Passage = () => {
   return (
     <div className="bg-[#001326] ">

@@ -29,7 +29,7 @@ model UserSubscription {
 model Passage {
   id        String     @id @default(cuid())
   text      String     @db.Text
-  title      String     @db.Text
+  citation      String     @db.Text
   questions Question[]
 }
 

@@ -56,7 +56,7 @@ Customer Support
 - Crisp Chat -> methodAI email setup app.crisp.chat
 
 
-# Prims DB
+# Prisma DB
 
 Initial setup (optional)
 ```
@@ -75,6 +75,11 @@ See data
 
 ```npx prisma studio```
 
+### Running scripts
+
+```
+npm run "script-name"
+```
 
 
 ### Todo
