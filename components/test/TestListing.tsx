@@ -1,17 +1,15 @@
-// components/TestListing.js
+// components/TestListing.tsx
 import React from "react";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { Passage } from "@/types";
 
-const TestListing = () => {
+interface TestListingProps {
+  passages: Passage[];
+}
+
+const TestListing: React.FC<TestListingProps> = ({ passages }) => {
   const { user } = useUser();
-
-  // Example list of items
-  const items = [
-    { id: 1, title: "CARs: Otherkin, Kanye West, and The Walking Dead. " },
-    { id: 2, title: "CARs: Project 2025, Nero & His Femboy, Machine Learning" },
-    { id: 3, title: "CARs: Materialistic Darwinism, Pow-chicka-wow-Wow, and Dante’s Inferno. " },
-  ];
 
   return (
     <div className="bg-[#001326] min-h-screen p-8 text-white flex justify-center">
@@ -25,13 +23,15 @@ const TestListing = () => {
           </h1>
         </div>
         <div className="flex flex-col justify-center items-center">
-          {items.map((item) => (
+          {passages.map((passage) => (
             <Link
-              key={item.id}
+              key={passage.id}
               href="/test/testquestions"
               className="bg-[#071644] border-2 border-sky-500 text-md text-white rounded-lg shadow-md p-4 m-2 w-full max-w-xl"
             >
-              <h2 className="text-ms font-medium mb-2">{item.title}</h2>
+              <h2 className="text-ms font-medium mb-2">
+                {passage.id}: {passage.text.substring(0, 50)}...
+              </h2>
             </Link>
           ))}
         </div>
