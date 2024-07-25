@@ -103,3 +103,6 @@ body :root {
 .react-chatbot-kit-chat-bot-message{
   margin-left: 0 !important;
 }
+.tinder{
+z-index: 1 !important;
+}

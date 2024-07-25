@@ -29,6 +29,7 @@ export const Navbar = ({
           {[
             { href: "/home", label: "Home" },
             { href: "/dashboard", label: "Acquire" },
+            { href: "/adaptive", label: "Adaptive" },
             { href: "/apply", label: "Apply" },
             { href: "/quiz", label: "quiz" },
             { href: "/review", label: "Review" },

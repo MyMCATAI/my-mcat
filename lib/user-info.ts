@@ -23,17 +23,17 @@ export const createUserInfo = async () =>{
 };
 
 // update this to handle all user info
-export const getBio = async ()=>{
-    const {userId} = auth();
-    if (!userId) {return false;}
-    const userInfo =await prismadb.userInfo.findUnique({
-        where: {
-            userId: userId
-        } 
-    })
+// export const getBio = async ()=>{
+//     const {userId} = auth();
+//     if (!userId) {return false;}
+//     const userInfo =await prismadb.userInfo.findUnique({
+//         where: {
+//             userId: userId
+//         } 
+//     })
 
-    return userInfo?.bio
-}
+//     return userInfo?.bio
+// }
 
 export const getUserInfo = async () => {
     const { userId } = auth();

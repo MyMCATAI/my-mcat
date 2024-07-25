@@ -1,13 +1,13 @@
 import { Navbar } from "@/components/navbar";
 import { checkSubscription } from "@/lib/subscription";
-import { getBio } from "@/lib/user-info";
+// import { getBio } from "@/lib/user-info";
 
 const DashboardLayout = async ({
   children,
 }: {
   children: React.ReactNode
 }) => {
-  const userBio = await getBio();
+  // const userBio = await getBio();
   const isPro = await checkSubscription();
 
   return ( 
