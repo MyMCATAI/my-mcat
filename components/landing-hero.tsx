@@ -29,7 +29,7 @@ export const LandingHero = () => {
           <div className="relative flex justify-center mt-6 md:mt-0">
             <Image src={laptop} alt="Laptop" className="w-4/5" />
             <div className="absolute top-[5%] left-[10%] w-[80%] h-[80%]">
-              <Image src={cat} alt="GIF" layout="fill" objectFit="contain" />
+              <Image src={cat} alt="GIF" layout="fill" objectFit="contain" unoptimized/>
             </div>
           </div>
         </div>
