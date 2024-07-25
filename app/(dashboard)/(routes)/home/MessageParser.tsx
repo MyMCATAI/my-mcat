@@ -7,8 +7,29 @@ interface MessageParserProps {
 }
 
 const MessageParser: React.FC<MessageParserProps> = ({ children, actions }) => {
-  const parse = (message: string) => {
-    console.log(message);
+  const parse = async (message: string) => {
+    if (message.trim() === '') return;
+
+    try {
+      const response = await fetch('/api/conversation', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from API');
+      }
+
+      const data = await response.json();
+      console.log(data)
+      actions.handleApiResponse(data.message);
+    } catch (error) {
+      console.error('Error:', error);
+      actions.handleError('Sorry, there was an error processing your request.');
+    }
   };
 
   return (
