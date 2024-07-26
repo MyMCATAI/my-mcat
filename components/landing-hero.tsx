@@ -53,7 +53,7 @@ export const LandingHero = () => {
                 `
               </h1>
               <p className="text-[20px] text-[#0e2247]  font-bold  mb-2 ms-2">
-                senator Bernie Sanders of vermont
+                Senator Bernie Sanders of vermont
               </p>
             </div>
           </div>
