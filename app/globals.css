@@ -85,7 +85,7 @@ body :root {
   clip-path: polygon(100% 0, 0 0, 0 100%);
   background-color: #0E2247;
   height: 300px;
-  margin-top: 20px;
+  /* margin-top: 20px; */
 }
 
 .doublediv{

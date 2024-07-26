@@ -7,7 +7,7 @@ const CheckListing = () => {
         { heading: "We're experts", text: 'Just relax! Our study methodology is tried and tested by 520+ scorers.', icon: icon },
         { heading: "We work with your schedule", text: `Even if you're busy, we prioritize content for you to maximize your score by test day.`, icon: icon },
         { heading: "We know what's on the test", text: `You won't miss a thing. Our content is based on the AAMC's content categories.`, icon: icon },
-        { heading: "We care about you", text: `You're more than just a checkbook-this process is stressful, and our team is here to provide empathetic and engaging support.`, icon: icon },
+        { heading: "Profit isn’t our goal, it’s impact: to create a better life for all. ", text: `You're more than just a checkbook-this process is stressful, and our team is here to provide empathetic and engaging support.`, icon: icon },
         { heading: "We know the best resources", text: 'Professionally curated content and resources from trusted sources like Khan Academy, UWorld, AAMC.', icon: icon },
         { heading: "We're just like you!", text: `Most test prep companies are staffed by people who haven't taken the test-but we're made by premeds for premeds.`, icon: icon },
     ];
@@ -20,7 +20,7 @@ const CheckListing = () => {
                         Don&apos;t worry, darling --
                     </h1>
                     <p className="text-xl text-black mb-6">
-                        Karki Education has got you.
+                    Kalypso Education has got you.
                     </p>
                 </div>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -23,8 +23,7 @@ export const LandingNavbar = () => {
 
   const handleScroll = () => {
     const sections = navLinks.map(link => document.querySelector(link.href) as HTMLElement);
-    const scrollPosition = window.scrollY + 100; // Adjust based on your offset needs
-
+    const scrollPosition = window.scrollY + 100;
     for (let i = sections.length - 1; i >= 0; i--) {
       if (sections[i] && scrollPosition >= sections[i].offsetTop) {
         setActiveSection(navLinks[i].name);
@@ -43,12 +42,17 @@ export const LandingNavbar = () => {
   return (
     <nav className="bg-white p-4 fixed top-0 left-0 w-full z-50 shadow-lg">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <Link href={"/"}>
         <div className="flex items-center">
           <div className="h-16 w-16">
+           
             <Image src={logo} alt="Logo" className="w-full mr-4" />
+           
+            
           </div>
           <span className="text-black text-2xl font-semibold">myMCAT.ai</span>
         </div>
+        </Link>
 
         <div className="block lg:hidden">
           <button
