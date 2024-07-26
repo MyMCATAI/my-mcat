@@ -15,11 +15,11 @@ const Methodology = () => {
 
     return (
         <>
-            <section className="bg-white py-16" id='methodology'>
+            <section className="bg-white pb-16" id='methodology'>
                 <div className="container-fluid">
                     <div className="grid grid-cols-1 md:grid-cols-2 ">
                         <div className=" mt-6 md:mt-0">
-                            <div className="polygon mt-2">
+                            <div className="polygon">
 
                                 {/* <p className='text-white' style={{ padding: "100px 30px" }}>Rest easy with us.</p> */}
 
@@ -28,7 +28,7 @@ const Methodology = () => {
                                 <Image src={catoncouch} alt={"Image"} style={{ width: "80%", marginTop: "-160px", zIndex: "1" }} />
                             </div>
                         </div>
-                        <div className="text-center mx-4">
+                        <div className="text-center mx-4 mt-10">
                             <h1 className="text-3xl md:text-[38px] font-bold text-[#007AFF] mb-6">
                                 Our methodology
                             </h1>
@@ -53,9 +53,9 @@ const Methodology = () => {
                            
 
                             <div className='text-left doublediv mt-3 bg-[#0E2247] mx-3' >
-                                <p className='p-3 text-white'>In alpha and beta, we’ve seen an average of 14 points of
+                                <p className='p-4 text-white'>
 
-                                    increase -- with exceptional students going from 490 to 520.
+                                    You can rest easy knowing you are with the best
                                 </p>
                             </div>
                          

@@ -1,21 +1,28 @@
 import React from "react";
 import logo from "../../public/logo.png";
 import Image from "next/image";
+import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
+
 const Footer = () => {
+  // const { isSignedIn } = useAuth();
+  
   const linkSections = [
     {
       title: "Pages",
       links: [{ href: "#", text: "Home" }],
     },
     {
-      title: "join now",
-      links: [{ href: "#", text: "Portal" }],
+      title: "Join Now",
+      links: [
+        { href:  "/dashboard", text: "Portal" }
+      ],
     },
     {
       title: "Terms & Policy",
       links: [
-        { href: "#", text: "Privacy Policy" },
-        { href: "#", text: "Terms & Conditions" },
+        { href: "/privacypolicy", text: "Privacy Policy" },
+        { href: "/termsandconditions", text: "Terms & Conditions" },
       ],
     },
   ];
@@ -79,6 +86,7 @@ const Footer = () => {
       ),
     },
   ];
+
   return (
     <footer className="bg-[#2D4778] ">
       <div className="mx-auto max-w-screen-xl py-6 ">
@@ -99,15 +107,15 @@ const Footer = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-3 px-3">
             {linkSections.map((section, index) => (
               <div key={index} className="text-left md:text-left">
-                <h2 className="mb-3 text-lg font-semibold text-white uppercase text-white">
+                <h2 className="mb-3 text-lg font-semibold text-white uppercase">
                   {section.title}
                 </h2>
                 <ul className="text-gray-500 font-medium">
                   {section.links.map((link, linkIndex) => (
                     <li key={linkIndex} className="mb-4">
-                      <a href={link.href} className=" text-gray-400 ">
+                      <Link href={link.href} className=" text-gray-400 ">
                         {link.text}
-                      </a>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -126,7 +134,7 @@ const Footer = () => {
           </span>
           <div className="flex mt-4 justify-center lg:justify-end sm:mt-0">
             {socialMediaLinks.map((link, index) => (
-              <a
+              <Link
                 key={index}
                 href={link.href}
                 className={`text-gray-500 hover:text-gray-900 ${
@@ -135,7 +143,7 @@ const Footer = () => {
               >
                 {link.svg}
                 <span className="sr-only">{link.name}</span>
-              </a>
+              </Link>
             ))}
           </div>
         </div>

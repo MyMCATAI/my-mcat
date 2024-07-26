@@ -14,12 +14,14 @@ const Faqs = () => {
     };
 
     const items = [
-        { heading: "We're experts", text: 'Just relax! Our study methodology is tried and tested by 520+ scorers.', icon: icon },
-        { heading: "We work with your schedule", text: `Even if you're busy, we prioritize content for you to maximize your score by test day.`, icon: icon },
-        { heading: "We know what's on the test", text: `You won't miss a thing. Our content is based on the AAMC's content categories.`, icon: icon },
-        { heading: "We care about you", text: `You're more than just a checkbook-this process is stressful, and our team is here to provide empathetic and engaging support.`, icon: icon },
-        { heading: "We know the best resources", text: 'Professionally curated content and resources from trusted sources like Khan Academy, UWorld, AAMC.', icon: icon },
-        { heading: "We're just like you!", text: `Most test prep companies are staffed by people who haven't taken the test-but we're made by premeds for premeds.`, icon: icon },
+        { heading: "How do you accomplish your mission?", text: 'Most nonprofits rely on donors, but we’re a business that uses our proceeds to fund low-income and underrepresented students. Every five paying customers means one approved student gets free access/support.', icon: icon },
+        { heading: "Who are your founders?", text: `Shreyas is a 523 scorer and our architect, designer, and CEO. Josh is a computer science and AI wizard that helped bring Kalypso to life. Both of them work together with the hopes of changing education for the better`, icon: icon },
+        { heading: "How can I get access to Kalypso?", text: `We’re launching later this year with our full product, but we’re also doing an early, limited release to get feedback.`, icon: icon },
+        { heading: "Can I integrate Kalyps’s tutoring into my AAMC prep?", text: `We actually have a chrome extension that allows you to open the AAMC in an innovative browser and ask Kalypso questions. Isn’t that swell?`, icon: icon },
+        { heading: "How does Kalypso differ from ChatGPT?", text: 'Kalypso is trained on the MCAT with dozens of textbooks and fine-tuned over hundreds of hours. Plus, they’re plucky and interesting. Who doesn’t love cats?', icon: icon },
+        { heading: "What if I bought Kaplan, UWorld, AAMC?", text: `Good news. We strive to be the best resource so we integrate with what you have in our adaptive calendar so you can get the most out of the resources you already have.`, icon: icon },
+        { heading: "Does Kalypso include practice questions and full practice tests?", text: `Yes! We include thousands of novel practic equations, flashcards, AAMC-level CARs passages, and a diagnostic test that’s the best in the industry. `, icon: icon },
+        { heading: "Does Kalypso offer more than MCAT prep?", text: `We’re glad you asked. MCAT Prep is only the first step of our journey: we seek to personalize and gamify education for students from K-12 to college to graduate school. Sure, it’s a big dream. But everything great begins as a big dream. `, icon: icon },
     ];
 
     return (
