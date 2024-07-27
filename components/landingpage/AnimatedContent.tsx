@@ -20,12 +20,13 @@ const AnimatedContent = () => {
 
   useEffect(() => {
     // Testimonials animation
-    gsap.from(testimonialsRef.current, {
+    gsap.to(testimonialsRef.current, {
       scrollTrigger: {
         trigger: testimonialsRef.current,
         start: "top 80%",
         end: "bottom 20%",
-        toggleActions: "play none none reverse"
+        toggleActions: "play reverse play reverse",
+        scrub: true
       },
       opacity: 0,
       y: 50,
@@ -33,12 +34,13 @@ const AnimatedContent = () => {
     });
 
     // Methodology animation
-    gsap.from(methodologyRef.current, {
+    gsap.to(methodologyRef.current, {
       scrollTrigger: {
         trigger: methodologyRef.current,
         start: "top 80%",
         end: "bottom 20%",
-        toggleActions: "play none none reverse"
+        toggleActions: "play reverse play reverse",
+        scrub: true
       },
       opacity: 0,
       x: -50,
@@ -46,12 +48,13 @@ const AnimatedContent = () => {
     });
 
     // Youtube animation
-    gsap.from(youtubeRef.current, {
+    gsap.to(youtubeRef.current, {
       scrollTrigger: {
         trigger: youtubeRef.current,
         start: "top 80%",
         end: "bottom 20%",
-        toggleActions: "play none none reverse"
+        toggleActions: "play reverse play reverse",
+        scrub: true
       },
       opacity: 0,
       scale: 0.8,
@@ -59,12 +62,13 @@ const AnimatedContent = () => {
     });
 
     // CheckListing animation
-    gsap.from(checkListingRef.current, {
+    gsap.to(checkListingRef.current, {
       scrollTrigger: {
         trigger: checkListingRef.current,
         start: "top 80%",
         end: "bottom 20%",
-        toggleActions: "play none none reverse"
+        toggleActions: "play reverse play reverse",
+        scrub: true
       },
       opacity: 0,
       y: 50,
@@ -72,12 +76,13 @@ const AnimatedContent = () => {
     });
 
     // FAQs animation
-    gsap.from(faqsRef.current, {
+    gsap.to(faqsRef.current, {
       scrollTrigger: {
         trigger: faqsRef.current,
         start: "top 80%",
         end: "bottom 20%",
-        toggleActions: "play none none reverse"
+        toggleActions: "play reverse play reverse",
+        scrub: true
       },
       opacity: 0,
       x: 50,
@@ -86,23 +91,23 @@ const AnimatedContent = () => {
   }, []);
 
   return (
-    <>
-      <div ref={testimonialsRef}>
+    <div style={{ position: 'relative', zIndex: 1 }}>
+      <div ref={testimonialsRef} style={{ background: 'white' }}>
         <Testimonials />
       </div>
-      <div ref={methodologyRef}>
+      <div ref={methodologyRef} style={{ background: 'white' }}>
         <Methodlogy />
       </div>
-      <div ref={youtubeRef}>
+      <div ref={youtubeRef} style={{ background: 'white' }}>
         <Youtube />
       </div>
-      <div ref={checkListingRef}>
+      <div ref={checkListingRef} style={{ background: 'white' }}>
         <CheckListing />
       </div>
-      <div ref={faqsRef}>
+      <div ref={faqsRef} style={{ background: 'white' }}>
         <Faqs />
       </div>
-    </>
+    </div>
   );
 };
 
