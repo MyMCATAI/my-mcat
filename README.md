@@ -1,5 +1,5 @@
 
-# MYMCAT MVP
+# MY MCAT MVP
 
 Created by Joshua Wade
 
