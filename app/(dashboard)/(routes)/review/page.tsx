@@ -1,6 +1,5 @@
 import React from 'react';
 import { Video } from 'lucide-react';
-import SimplePieChart from '@/components/pie-chart'
 
 interface DataPoint {
   name: string;
