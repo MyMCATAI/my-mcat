@@ -96,7 +96,7 @@ const Methodology = () => {
               </ul>
               <div className='text-center doublediv mt-6 bg-[#0E2247] mx-3 p-6 text-lg' ref={restEasyRef} style={{ marginTop: '5rem', transform: 'translateX(+2rem)', width: '78%' }}>
                 <p className='text-white'>
-                  Rest easy. You're with the best of the best.
+                  Rest easy. You&apos;re with the best of the best.
                 </p>
               </div>
             </div>

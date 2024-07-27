@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import logo from "../public/logo.png";
 
 export const LandingNavbar = () => {
@@ -14,12 +14,12 @@ export const LandingNavbar = () => {
     setIsOpen(!isOpen);
   };
 
-  const navLinks = [
+  const navLinks = useMemo(() => [
     { name: "Home", href: "#home" },
     { name: "Methodology", href: "#methodology" },
     { name: "Mission", href: "#mission" },
     { name: "Keypoints", href: "#keypoints" },
-  ];
+  ], []);
 
   const handleScroll = useCallback(() => {
     const sections = navLinks.map(link => document.querySelector(link.href) as HTMLElement);
