@@ -52,11 +52,11 @@ const Methodology = () => {
     });
 
     tl.to(title, { opacity: 1, y: 0, duration: 0.5 })
+      .to([polygon, cat], { opacity: 1, x: 0, duration: 0.2 }, '-=0.2')
       .to(itemElements[0], { opacity: 1, y: 0, duration: 0.2 }, '+=0.1')
       .to(itemElements[1], { opacity: 1, y: 0, duration: 0.2 }, '+=0.1')
       .to(itemElements[2], { opacity: 1, y: 0, duration: 0.2 }, '+=0.1')
       .to(itemElements[3], { opacity: 1, y: 0, duration: 0.2 }, '-=0.1')
-      .to([polygon, cat], { opacity: 1, x: 0, duration: 0.2 }, '-=0.2')
       .to(restEasy, { opacity: 1, x: 0, duration: 0.2 }, '-=0.2');
 
     return () => {
