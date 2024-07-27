@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import logo from "../public/logo.png";
 
 export const LandingNavbar = () => {
@@ -21,7 +21,7 @@ export const LandingNavbar = () => {
     { name: "Keypoints", href: "#keypoints" },
   ];
 
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     const sections = navLinks.map(link => document.querySelector(link.href) as HTMLElement);
     const scrollPosition = window.scrollY + 100;
     for (let i = sections.length - 1; i >= 0; i--) {
@@ -30,14 +30,14 @@ export const LandingNavbar = () => {
         break;
       }
     }
-  };
+  }, [navLinks]);
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, [handleScroll]);
 
   return (
     <nav className="bg-white p-4 fixed top-0 left-0 w-full z-50 shadow-lg">

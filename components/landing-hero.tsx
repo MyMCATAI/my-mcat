@@ -76,7 +76,7 @@ export const LandingHero = () => {
             </div>
             <div className="mt-8 md:mt-0">
               <h1 className="text-2xl md:text-3xl text-[#0e2247] font-bold mb-4">
-                "Higher education should be a right for all, not a privilege for the few."
+                &ldquo;Higher education should be a right for all, not a privilege for the few.&rdquo;
               </h1>
               <p className="text-xl text-[#0e2247] font-bold mb-2 ms-2">
                 Senator Bernie Sanders of Vermont
