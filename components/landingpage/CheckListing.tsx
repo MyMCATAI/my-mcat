@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -9,16 +9,20 @@ gsap.registerPlugin(ScrollTrigger);
 
 const CheckListing = () => {
     const sectionRef = useRef(null);
-    const itemRefs = useRef([]);
+    const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
     const items = [
         { heading: "We're experts", text: 'Just relax! Our study methodology is tried and tested by 520+ scorers.', icon: icon },
         { heading: "We work with your schedule", text: `Even if you're busy, we prioritize content for you to maximize your score by test day.`, icon: icon },
         { heading: "We know what's on the test", text: `You won't miss a thing. Our content is based on the AAMC's content categories.`, icon: icon },
-        { heading: "Profit isn’t our goal, it’s impact: to create a better life for all. ", text: `You're more than just a checkbook-this process is stressful, and our team is here to provide empathetic and engaging support.`, icon: icon },
+        { heading: "Profit isn't our goal, it's impact: to create a better life for all. ", text: `You're more than just a checkbook-this process is stressful, and our team is here to provide empathetic and engaging support.`, icon: icon },
         { heading: "We know the best resources", text: 'Professionally curated content and resources from trusted sources like Khan Academy, UWorld, AAMC.', icon: icon },
         { heading: "We're just like you!", text: `Most test prep companies are staffed by people who haven't taken the test-but we're made by premeds for premeds.`, icon: icon },
     ];
+
+    const setItemRef = useCallback((el: HTMLLIElement | null, index: number) => {
+        itemRefs.current[index] = el;
+    }, []);
 
     useEffect(() => {
         const section = sectionRef.current;
@@ -36,7 +40,9 @@ const CheckListing = () => {
         });
 
         itemElements.forEach((item, index) => {
-            tl.to(item, { opacity: 1, y: 0, duration: 0.4 }, `+=${index * 0.2}`);
+            if (item) {
+                tl.to(item, { opacity: 1, y: 0, duration: 0.4 }, `+=${index * 0.2}`);
+            }
         });
 
         return () => {
@@ -57,7 +63,7 @@ const CheckListing = () => {
                 </div>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {items.map((item, index) => (
-                        <li key={index} className='flex gap-4 my-4' ref={el => itemRefs.current[index] = el}>
+                        <li key={index} className='flex gap-4 my-4' ref={(el) => setItemRef(el, index)}>
                             <div className='mt-2 flex justify-center items-center' style={{ minWidth: '24px', minHeight: '24px' }}>
                                 <Image src={item.icon} alt={item.text} className='w-full' />
                             </div>
