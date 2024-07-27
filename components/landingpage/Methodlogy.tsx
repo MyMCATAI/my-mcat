@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import test from '../../public/test.png';
@@ -14,7 +14,7 @@ gsap.registerPlugin(ScrollTrigger);
 const Methodology = () => {
   const sectionRef = useRef(null);
   const titleRef = useRef(null);
-  const itemRefs = useRef([]);
+  const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
   const polygonRef = useRef(null);
   const catRef = useRef(null);
   const restEasyRef = useRef(null);
@@ -25,6 +25,10 @@ const Methodology = () => {
     { heading: 'Plan your prep.', text: 'Every day of your prep planned out in an adaptive schedule that syncs to your weaknesses & Google Calendar.', icon: calender },
     { heading: '24/7 tutoring assistance.', text: 'Kalypso is trained on 100+ hours worth of content (and helps you study!)', icon: assistance },
   ];
+
+  const setItemRef = useCallback((el: HTMLLIElement | null, index: number) => {
+    itemRefs.current[index] = el;
+  }, []);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -79,7 +83,7 @@ const Methodology = () => {
               </h1>
               <ul className="grid grid-cols-1 gap-4">
                 {items.map((item, index) => (
-                  <li key={index} className='flex' ref={el => itemRefs.current[index] = el}>
+                  <li key={index} className='flex' ref={(el) => setItemRef(el, index)}>
                     <div style={{ minWidth: '100px', minHeight: '100px' }}>
                       <Image src={item.icon} alt={item.text} width={100} height={100} />
                     </div>
