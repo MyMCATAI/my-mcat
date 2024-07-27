@@ -13,8 +13,8 @@ const LandingPage = () => {
     <div className="h-full w-full bg-[#2A507E]">
      
       <LandingHero />
-      <Methodlogy/>
       <Testimonials/>
+      <Methodlogy/>
       <Youtube />
       <CheckListing />
       <Faqs />
