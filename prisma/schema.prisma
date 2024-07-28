@@ -31,8 +31,6 @@ model Passage {
   text      String     @db.Text
   citation      String     @db.Text
   questions Question[]
-  tests     Test[]
-
 }
 
 model Question {
@@ -67,13 +65,11 @@ model Test {
   id          String       @id @default(cuid())
   title       String
   description String? @db.Text
-  passageId   String? 
+  setName     String? 
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   questions   TestQuestion[]
   userTests   UserTest[]
-  passage     Passage?     @relation(fields: [passageId], references: [id])
-  @@index([passageId])
 }
 
 model TestQuestion {
