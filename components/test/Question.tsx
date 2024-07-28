@@ -2,7 +2,6 @@ import React from "react";
 import { Question, TestQuestion } from "@/types";
 
 interface QuestionsProps {
-  testQuestion: TestQuestion;
   question: Question;
   onNext: () => void;
   onPrevious: () => void;
@@ -11,7 +10,6 @@ interface QuestionsProps {
 }
 
 const Questions: React.FC<QuestionsProps> = ({ 
-  testQuestion, 
   question, 
   onNext, 
   onPrevious, 
