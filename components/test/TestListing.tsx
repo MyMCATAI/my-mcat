@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+// todo replace with real test data
 const data = [
   { name: "Page A", uv: 4000 },
   { name: "Page B", uv: 3000 },
@@ -21,39 +22,14 @@ const data = [
   { name: "Page F", uv: 2390 },
   { name: "Page G", uv: 3490 },
 ];
-import { Passage } from "@/types";
+import { Passage, Test } from "@/types";
 
 interface TestListingProps {
-  passages: Passage[];
+  tests: Test[];
 }
 
-const TestListing: React.FC<TestListingProps> = ({ passages }) => {
+const TestListing: React.FC<TestListingProps> = ({ tests }) => {
   const { user } = useUser();
-
-  const items = [
-    {
-      id: 1,
-      title: "CARs: Otherkin, Kanye West, and The Walking Dead.",
-      percentage: 45,
-      attemptedQuestions: 6,
-      totalQuestions: 15,
-    },
-    {
-      id: 2,
-      title: "CARs: Project 2025, Nero & His Femboy, Machine Learning",
-      percentage: 56,
-      attemptedQuestions: 11,
-      totalQuestions: 15,
-    },
-    {
-      id: 3,
-      title:
-        "CARs: Materialistic Darwinism, Pow-chicka-wow-Wow, and Dante’s Inferno.",
-      percentage: 85,
-      attemptedQuestions: 13,
-      totalQuestions: 15,
-    },
-  ];
 
   const getPercentageColor = (percentage: number) => {
     if (percentage < 50) return "text-red-500";
@@ -70,7 +46,6 @@ const TestListing: React.FC<TestListingProps> = ({ passages }) => {
               Welcome {user?.firstName ?? ""} to the Diagnostic Quiz
             </h1>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 mt-5">
             <div>
               <ResponsiveContainer
@@ -127,26 +102,28 @@ const TestListing: React.FC<TestListingProps> = ({ passages }) => {
             </h1>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-5 pb-10">
-            {items.map((item) => (
+            {tests.map((test) => (
               <div
-                key={item.id}
+                key={test.id}
                 className="bg-[#021226] border-2 border-sky-500 text-md text-white rounded-[30px] shadow-md p-4 w-full"
                 style={{ boxShadow: "rgba(61, 165, 233,0.4) 0px 7px 29px 0px" }}
               >
                 <div className="flex justify-between">
                   <div>
                     <h2 className="text-md text-[#3da5e9] font-medium mb-2">
-                      CARS - Set {item.id}
+                      {test.title}
                     </h2>
                   </div>
                 </div>
 
                 <div className="min-h-[80px]">
                   <Link
-                    href="/test/testquestions"
+                    href={`/test/testquestions?id=${test.id}`}
                     className="text-lg font-medium mb-2"
                   >
-                    {item.title}
+                     {test.description && test.description?.length > 100 
+                      ? `${test.description.slice(0, 100)}...` 
+                      : test.description}
                   </Link>
                 </div>
                 <div className="flex justify-between">
@@ -158,12 +135,14 @@ const TestListing: React.FC<TestListingProps> = ({ passages }) => {
                   <div>
                     <h2
                       className={`text-md font-medium mb-2 ${getPercentageColor(
-                        (item.attemptedQuestions / item.totalQuestions) * 100
+                        // (test.attemptedQuestions / item.totalQuestions) * 100
+                        70
                       )}`}
                     >
                       {(
-                        (item.attemptedQuestions / item.totalQuestions) *
-                        100
+                        // (item.attemptedQuestions / item.totalQuestions) *
+                        // 100
+                        70
                       ).toFixed(2)}
                       %
                     </h2>
