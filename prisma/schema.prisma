@@ -31,6 +31,8 @@ model Passage {
   text      String     @db.Text
   citation      String     @db.Text
   questions Question[]
+  tests     Test[]
+
 }
 
 model Question {
@@ -44,6 +46,8 @@ model Question {
   passage             Passage? @relation(fields: [passageId], references: [id])
   category            Category @relation(fields: [categoryId], references: [id])
   categoryId          String
+  testQuestions TestQuestion[]
+  userResponses UserResponse[]
 
   @@index([passageId])
   @@index([categoryId])
@@ -57,4 +61,59 @@ model Category {
   conceptCategory  String
   generalWeight    Float
   questions        Question[]
+}
+
+model Test {
+  id          String       @id @default(cuid())
+  title       String
+  description String? @db.Text
+  passageId   String? 
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  questions   TestQuestion[]
+  userTests   UserTest[]
+  passage     Passage?     @relation(fields: [passageId], references: [id])
+  @@index([passageId])
+}
+
+model TestQuestion {
+  id         String   @id @default(cuid())
+  testId     String
+  questionId String
+  sequence   Int
+  test       Test     @relation(fields: [testId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id])
+
+  @@index([testId])
+  @@index([questionId])
+}
+
+model UserTest {
+  id        String       @id @default(cuid())
+  userId    String
+  testId    String
+  startedAt DateTime     @default(now())
+  finishedAt DateTime?
+  score     Float?
+  test      Test         @relation(fields: [testId], references: [id])
+  responses UserResponse[]
+
+  @@index([userId])
+  @@index([testId])
+}
+
+model UserResponse {
+  id           String   @id @default(cuid())
+  userTestId   String
+  questionId   String
+  userAnswer   String
+  isCorrect    Boolean
+  timeSpent    Float ?      
+  userNotes    String?  @db.Text
+  answeredAt   DateTime @default(now())
+  userTest     UserTest @relation(fields: [userTestId], references: [id])
+  question     Question @relation(fields: [questionId], references: [id])
+
+  @@index([userTestId])
+  @@index([questionId])
 }
