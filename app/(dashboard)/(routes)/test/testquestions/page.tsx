@@ -127,9 +127,8 @@ const TestQuestions = () => {
             {currentPassage && <PassageComponent passageData={currentPassage} />}
           </div>
           <div className="w-1/2">
-            {currentQuestion && currentTestQuestion && (
+            {currentQuestion && (
               <QuestionComponent
-                testQuestion={currentTestQuestion}
                 question={currentQuestion} 
                 onNext={handleNextQuestion}
                 onPrevious={handlePreviousQuestion}
