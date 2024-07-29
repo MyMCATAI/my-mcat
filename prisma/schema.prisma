@@ -100,14 +100,14 @@ model UserTest {
 
 model UserResponse {
   id           String   @id @default(cuid())
-  userTestId   String
+  userTestId   String ?
   questionId   String
   userAnswer   String
   isCorrect    Boolean
   timeSpent    Float ?      
   userNotes    String?  @db.Text
   answeredAt   DateTime @default(now())
-  userTest     UserTest @relation(fields: [userTestId], references: [id])
+  userTest     UserTest? @relation(fields: [userTestId], references: [id])
   question     Question @relation(fields: [questionId], references: [id])
 
   @@index([userTestId])

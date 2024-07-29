@@ -1,6 +1,10 @@
-import React from 'react';
+"use client"
+
+import React, { useState, useEffect } from 'react';
 import { Video } from 'lucide-react';
-import SimplePieChart from '@/components/pie-chart'
+import Link from 'next/link';
+import SimplePieChart from '@/components/pie-chart';
+import { UserTest } from '@/types';
 
 interface DataPoint {
   name: string;
@@ -8,6 +12,28 @@ interface DataPoint {
 }
 
 const UWorldBlitzPage: React.FC = () => {
+  const [userTests, setUserTests] = useState<UserTest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchUserTests();
+  }, []);
+
+  const fetchUserTests = async () => {
+    try {
+      const response = await fetch('/api/user-test');
+      if (!response.ok) throw new Error('Failed to fetch user tests');
+      const data = await response.json();
+      setUserTests(data.userTests);
+    } catch (err) {
+      setError('Error fetching user tests');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const incorrectData: DataPoint[] = [
     { name: '7. Stereochem', value: 11.8 },
     { name: '2. Enzymes', value: 26.5 },
@@ -53,9 +79,26 @@ const UWorldBlitzPage: React.FC = () => {
           </div>
         </div>
         
-        <div>
+        <div className="mb-8">
           <h3 className="text-xl mb-4">Enter previous scores below.</h3>
           <div className="bg-[#0A2744] h-16 rounded-lg"></div>
+        </div>
+
+        <div className="mb-8">
+          <h3 className="text-xl mb-4">Past Tests</h3>
+          {loading && <div>Loading past tests...</div>}
+          {error && <div className="text-red-500">Error: {error}</div>}
+          {!loading && !error && (
+            <ul className="bg-[#0A2744] rounded-lg p-4">
+              {userTests.map((test) => (
+                <li key={test.id} className="mb-2">
+                  <Link href={`/user-test/${test.id}`} className="text-blue-400 hover:underline">
+                    {test.test.title} - Score: {test.score} - Date: {new Date(test.finishedAt!).toLocaleDateString()}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </div>
