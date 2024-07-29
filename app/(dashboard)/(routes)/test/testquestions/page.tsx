@@ -4,17 +4,31 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import PassageComponent from "@/components/test/Passage";
 import QuestionComponent from "@/components/test/Question";
-import { Test, TestQuestion, Passage, Question } from "@/types";
+import { Test, TestQuestion, Passage, Question, UserResponse } from "@/types";
+import { useStopwatch } from 'react-timer-hook';
 
 const TestQuestions = () => {
   const [test, setTest] = useState<Test | null>(null);
+  const [userTest, setUserTest] = useState<{ id: string } | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPassage, setCurrentPassage] = useState<Passage | null>(null);
+  const [userResponses, setUserResponses] = useState<Record<string, UserResponse>>({});
   const passageCacheRef = useRef<Record<string, Passage>>({});
   const searchParams = useSearchParams();
   const testId = searchParams.get('id');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [testCreated, setTestCreated] = useState(false);
+  const [isCreatingTest, setIsCreatingTest] = useState(false);
+  const [questionIdToResponseId, setQuestionIdToResponseId] = useState<Record<string, string>>({});
+
+  const {
+    seconds,
+    minutes,
+    hours,
+    reset,
+  } = useStopwatch({ autoStart: true });
 
   useEffect(() => {
     fetchTest();
@@ -38,7 +52,124 @@ const TestQuestions = () => {
         setCurrentPassage(null);
       }
     }
+    reset();
   }, [currentQuestionIndex, test]);
+
+  const handleUserResponse = async (questionId: string, userAnswer: string, isCorrect: boolean): Promise<UserResponse | null> => {
+    let currentUserTest = userTest;
+
+    if (!testCreated) {
+      currentUserTest = await createUserTest();
+      if (!currentUserTest) {
+        console.error('Failed to create user test');
+        return null;
+      }
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+
+    if (!currentUserTest) {
+      console.error('No valid user test available');
+      return null;
+    }
+
+    console.log("change answer");
+
+    const currentQuestion = getCurrentQuestion();
+    if (!currentQuestion) return null;
+
+    const timeSpent = hours * 3600 + minutes * 60 + seconds;
+
+    try {
+      const response = await fetch('/api/user-test/response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userTestId: currentUserTest.id,
+          questionId,
+          userAnswer,
+          isCorrect,
+          timeSpent,
+          answeredAt: new Date().toISOString(),
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to save user response');
+      const savedResponse: UserResponse = await response.json();
+
+      setUserResponses(prev => ({
+        ...prev,
+        [savedResponse.id]: savedResponse
+      }));
+
+      setQuestionIdToResponseId(prev => ({
+        ...prev,
+        [questionId]: savedResponse.id
+      }));
+
+      return savedResponse;
+    } catch (err) {
+      console.error('Error saving user response:', err);
+      return null;
+    }
+  };
+  const createUserTest = async (): Promise<{ id: string } | null> => {
+    if (!testId || testCreated) return null;
+    setIsCreatingTest(true);
+  
+    try {
+      const response = await fetch('/api/user-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testId }),
+      });
+  
+      if (!response.ok) throw new Error('Failed to create user test');
+      const data = await response.json();
+      setUserTest(data);
+      setTestCreated(true);
+      return data;
+    } catch (err) {
+      console.error('Error creating user test:', err);
+      return null;
+    } finally {
+      setIsCreatingTest(false);
+    }
+  };
+
+  const calculateScore = () => {
+    if (!test) return 0;
+    const totalQuestions = test.questions.length;
+    const correctAnswers = Object.values(userResponses).filter(r => r.isCorrect).length;
+    return (correctAnswers / totalQuestions) * 100;
+  };
+
+  const handleFinishTest = async () => {
+    setIsSubmitting(true)
+    if (!userTest) return;
+    const score = calculateScore();
+    try {
+      const response = await fetch(`/api/user-test/${userTest.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ score, finishedAt: new Date().toISOString() }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update test');
+      }
+
+      // Redirect to the user-test page
+      window.location.href = `/user-test/${userTest.id}`;
+
+    } catch (err) {
+      console.error('Error finishing test:', err);
+      // Optionally, show an error message to the user
+      // setError('Failed to finish the test. Please try again.');
+    }finally{
+      setIsSubmitting(false)
+    }
+  };
+
 
   const fetchTest = async () => {
     if (!testId) {
@@ -97,12 +228,14 @@ const TestQuestions = () => {
   const handleNextQuestion = () => {
     if (test && currentQuestionIndex < test.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+      reset(); // Reset the timer when moving to the next question
     }
   };
 
   const handlePreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
+      reset(); // Reset the timer when moving to the previous question
     }
   };
 
@@ -114,32 +247,54 @@ const TestQuestions = () => {
   const currentQuestion = getCurrentQuestion();
 
   return (
-    <div className="bg-[#001326] min-h-[80vh] text-black flex justify-center flex-col">
-      <div className="max-w-full w-full flex-grow">
-        <div className="bg-gray-800 text-white p-4 flex justify-between border-b-2 border-sky-500">
-          <h1 className="text-white text-lg font-semi-bold mb-0 mt-2">
-            {test.title}
-          </h1>
-          <p className="">Timer</p>
+    <div className="bg-[#001326] h-screen flex flex-col text-black overflow-hidden">
+    <div className="bg-gray-800 text-white p-4 flex justify-between items-center border-b-2 border-sky-500">
+      <h1 className="text-lg font-semibold">
+        {test.title}
+        {isCreatingTest && <span className="ml-2 text-sm text-gray-400">Creating test...</span>}
+      </h1>
+      <div className="timer">
+        <span>{hours.toString().padStart(2, '0')}:</span>
+        <span>{minutes.toString().padStart(2, '0')}:</span>
+        <span>{seconds.toString().padStart(2, '0')}</span>
+      </div>
+    </div>
+    <div className="flex flex-grow overflow-hidden">
+      <div className="w-1/2 border-r border-sky-500 overflow-auto">
+        <div className="p-4">
+          {currentPassage && <PassageComponent passageData={currentPassage} />}
         </div>
-        <div className="flex flex-row h-screen">
-          <div className="w-1/2 border-r border-sky-500">
-            {currentPassage && <PassageComponent passageData={currentPassage} />}
-          </div>
-          <div className="w-1/2">
-            {currentQuestion && (
+      </div>
+      <div className="w-1/2 flex flex-col overflow-hidden">
+        <div className="flex-grow overflow-auto">
+          <div className="p-4">
+            {currentQuestion && currentTestQuestion && (
               <QuestionComponent
                 question={currentQuestion} 
                 onNext={handleNextQuestion}
                 onPrevious={handlePreviousQuestion}
                 isFirst={currentQuestionIndex === 0}
                 isLast={currentQuestionIndex === test.questions.length - 1}
+                onAnswer={handleUserResponse}
+                userAnswer={userResponses[questionIdToResponseId[currentQuestion.id]]?.userAnswer}
               />
             )}
           </div>
         </div>
+        {currentQuestionIndex === test.questions.length - 1 && (
+          <div className="p-4 flex justify-center">
+            <button 
+              onClick={handleFinishTest} 
+              disabled={isSubmitting}
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Finishing...' : 'Finish Test'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
+  </div>
   );
 };
 

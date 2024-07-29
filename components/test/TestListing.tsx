@@ -22,7 +22,7 @@ const data = [
   { name: "Page F", uv: 2390 },
   { name: "Page G", uv: 3490 },
 ];
-import { Passage, Test } from "@/types";
+import { Test } from "@/types";
 
 interface TestListingProps {
   tests: Test[];

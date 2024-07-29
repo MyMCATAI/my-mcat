@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Question, TestQuestion } from "@/types";
 
 interface QuestionsProps {
@@ -7,17 +7,43 @@ interface QuestionsProps {
   onPrevious: () => void;
   isFirst: boolean;
   isLast: boolean;
+  onAnswer: (questionId: string, answer: string, isCorrect: boolean) => void;
+  userAnswer?: string;
 }
 
-const Questions: React.FC<QuestionsProps> = ({ 
+const Question: React.FC<QuestionsProps> = ({ 
   question, 
   onNext, 
   onPrevious, 
   isFirst, 
-  isLast 
+  isLast,
+  onAnswer,
+  userAnswer
 }) => {
-  // Parse the questionOptions string into an array
+  const [randomizedOptions, setRandomizedOptions] = useState<string[]>([]);
   const options = JSON.parse(question.questionOptions);
+  // First string in array should always be correct
+  const correctAnswer = options[0]
+
+
+  useEffect(() => {
+    // Fisher-Yates shuffle algorithm
+    const shuffled = [...options];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    setRandomizedOptions(shuffled);
+  }, [question]);
+  
+  const handleAnswerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedAnswer = event.target.value;
+    const isCorrect = selectedAnswer === correctAnswer;
+    console.log("selectedAnswer:",selectedAnswer)
+    console.log("correct:",isCorrect)
+    onAnswer(question.id, event.target.value,isCorrect);
+  };
 
   return (
     <div className="bg-[#001326] min-h-screen px-3">
@@ -46,12 +72,14 @@ const Questions: React.FC<QuestionsProps> = ({
           <h1 className="text-white text-2xl font-bold my-4">{`Question ${question.questionID}`}</h1>
           <p className="text-white text-xl mb-4">{question.questionContent}</p>
           <form className="text-white space-y-2">
-            {options.map((option: string, idx: number) => (
+            {randomizedOptions.map((option: string, idx: number) => (
               <label key={idx} className="flex items-center">
                 <input
                   type="radio"
                   name={`question${question.questionID}`}
-                  value={`option${idx + 1}`}
+                  value={option}
+                  checked={userAnswer === option}
+                  onChange={handleAnswerChange}
                   className="mr-2"
                 />
                 {option}
@@ -64,4 +92,4 @@ const Questions: React.FC<QuestionsProps> = ({
   );
 };
 
-export default Questions;
+export default Question;
