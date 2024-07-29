@@ -28,6 +28,7 @@ export const Navbar = ({
         <div className="flex h-1/2">
           {[
             { href: "/home", label: "Home" },
+            { href: "/calendar", label: "Calendar" },
             { href: "/dashboard", label: "Acquire" },
             { href: "/apply", label: "Apply" },
             { href: "/quiz", label: "quiz" },
