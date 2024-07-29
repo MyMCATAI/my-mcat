@@ -11,7 +11,7 @@ const DashboardLayout = async ({
   const isPro = await checkSubscription();
 
   return ( 
-    <div className="h-full relative">
+    <div className="flex flex-col min-h-screen bg-[#001326]">
         <Navbar isPro={isPro}/>
         <main className="w-full pb-10">
         {children}
