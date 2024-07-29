@@ -3,27 +3,26 @@
 
 import React, { useEffect, useState } from "react";
 import TestListing from "@/components/test/TestListing";
-import { Passage } from "@/types";
+import { Test } from "@/types";
 
 
 const TestPage: React.FC = () => {
-  const [passages, setPassages] = useState<Passage[]>([]);
+  const [tests, setTests] = useState<Test[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPassages();
+    fetchTests();
   }, []);
-
-  const fetchPassages = async () => {
+  const fetchTests = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/passage');
-      if (!response.ok) throw new Error('Failed to fetch passages');
+      const response = await fetch('/api/test');
+      if (!response.ok) throw new Error('Failed to fetch tests');
       const data = await response.json();
-      setPassages(data.passages);
+      setTests(data.tests);
     } catch (error) {
-      console.error('Error fetching passages:', error);
+      console.error('Error fetching tests:', error);
       setError(error instanceof Error ? error.message : 'An unknown error occurred');
     } finally {
       setIsLoading(false);
@@ -34,11 +33,11 @@ const TestPage: React.FC = () => {
     <div className="bg-[#001326] min-h-[80vh] text-black flex justify-center flex-col">
       <div className="max-w-full w-full flex-grow">
         {isLoading ? (
-          <p className="text-white text-center">Loading passages...</p>
+          <p className="text-white text-center">Loading tests...</p>
         ) : error ? (
           <p className="text-red-500 text-center">{error}</p>
         ) : (
-          <TestListing passages={passages} />
+          <TestListing tests={tests} />
         )}
       </div>
     </div>
