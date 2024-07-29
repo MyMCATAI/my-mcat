@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Question, TestQuestion } from "@/types";
+import { Question } from "@/types";
 
 interface QuestionsProps {
   question: Question;
@@ -11,7 +11,7 @@ interface QuestionsProps {
   userAnswer?: string;
 }
 
-const Question: React.FC<QuestionsProps> = ({ 
+const QuestionComponent: React.FC<QuestionsProps> = ({ 
   question, 
   onNext, 
   onPrevious, 
@@ -92,4 +92,4 @@ const Question: React.FC<QuestionsProps> = ({
   );
 };
 
-export default Question;
+export default QuestionComponent;
