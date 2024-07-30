@@ -70,3 +70,11 @@ export interface Test {
   questions: TestQuestion[];
   userTests?: UserTest[]; 
 }
+
+export interface StudyPlan {
+  id?: string;
+  examDate: Date;
+  resources: string[];
+  hoursPerDay: Record<string, string>;
+  fullLengthDays: string;
+}

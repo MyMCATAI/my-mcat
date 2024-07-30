@@ -113,3 +113,16 @@ model UserResponse {
   @@index([userTestId])
   @@index([questionId])
 }
+
+model StudyPlan {
+  id                String   @id @default(cuid())
+  userId            String
+  creationDate      DateTime @default(now())
+  examDate          DateTime
+  resources         Json
+  hoursPerDay       Json
+  fullLengthDays    String   // This will store the array of booleans as a string
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+}
