@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { format, addDays } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import SettingContent from "./SettingContent";
-import AdaptiveTutoring from "./AdaptiveTutoring";
 const Schedule = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
@@ -36,10 +35,11 @@ const Schedule = () => {
 
   return (
     <>
+    {/* <FloatingButton/> */}
       <h2 className="text-2xl">Calendar</h2>
       <div className="relative p-4 mt-4">
         <div
-          className="absolute inset-0 gradientbg min-h-[900px]"
+          className="absolute inset-0 gradientbg min-h-[880px]"
           style={{
             opacity: 0.5,
 
@@ -48,7 +48,7 @@ const Schedule = () => {
             zIndex: 0,
           }}
         ></div>
-        <div className="relative z-10 text-white px-4 rounded-lg">
+        <div className="relative z-10 text-white rounded-lg">
           <div>
             <div className="text-end mb-3">
               <button onClick={toggleSettings} className="ms-auto">
@@ -68,7 +68,7 @@ const Schedule = () => {
             </div>
 
             {showSettings && (
-              <div className="absolute top-12 right-4 w-100 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
+              <div className="absolute top-10 right-1 w-100 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
                 <SettingContent  />
               </div>
             )}
@@ -101,21 +101,23 @@ const Schedule = () => {
               const futureDate = addDays(currentDate, index + 3);
               return (
                 <div
-                  key={index}
-                  className="bg-[#7AA3E4] text-white p-3 rounded-[10px] h-[100px] relative flex justify-between group overflow-hidden shadow-md"
-                  aria-label={`Day ${format(futureDate, "d")}`}
-                >
-                  <div className="text-sm">{format(futureDate, "d")}</div>
-                  <span className="text-sm">{format(futureDate, "MMM")}</span>
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 ">
-                    <p>Task will be shown here</p>
-                  </div>
-                </div>
+  key={index}
+  className="bg-[#7AA3E4] text-white p-3 rounded-[10px] h-[100px] relative flex justify-between group overflow-hidden shadow-md transition-transform duration-300 ease-in-out transform hover:scale-105"
+  aria-label={`Day ${format(futureDate, "d")}`}
+>
+  <div className="text-sm">{format(futureDate, "d")}</div>
+  <span className="text-sm">{format(futureDate, "MMM")}</span>
+  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+    <p>Task will be shown here</p>
+  </div>
+</div>
+
               );
             })}
           </div>
         </div>
       </div>
+
     </>
   );
 };

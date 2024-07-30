@@ -1,67 +1,88 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import React, { useState } from "react";
 import SettingContent from "./SettingContent";
 import Image from "next/image";
-import icon from "../../../../public/atomic.png";
 
 const AdaptiveTutoring = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
-  const { user } = useUser();
-
-  useEffect(() => {
-    setCurrentDate(new Date());
-  }, []);
+  const [showVideo, setShowVideo] = useState(true);
+  const [showPDF, setShowPDF] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [selectedCard, setSelectedCard] = useState(null);
 
   const event = [
     {
       day: "atomic theory",
-      icon: icon,
-      bgColor:"#b1c03a"
+      icon: "/atomic.svg",
+      bgColor: "#b1c03a",
+      description: "Exploring the fundamentals of atomic theory.",
     },
     {
       day: "sensation",
-      icon: icon,
-      bgColor:"#B925FF"
+      icon: "/sensation.svg",
+      bgColor: "#B925FF",
+      description: "Understanding sensory processes.",
     },
     {
       day: "newton",
-      icon: icon,
-      bgColor:"#009918"
+      icon: "/newton.svg",
+      bgColor: "#009918",
+      description: "Examining Newton's laws of motion.",
     },
     {
       day: "respiration",
-      icon: icon,
-      bgColor:"#3294FF"
+      icon: "/respiration.svg",
+      bgColor: "#3294FF",
+      description: "Learning about the process of respiration.",
     },
     {
       day: "molecular bio",
-      icon: icon,
-      bgColor:"#AE5353"
+      icon: "/molecular.svg",
+      bgColor: "#AE5353",
+      description: "Studying the basics of molecular biology.",
     },
   ];
 
   const toggleSettings = () => {
-    setShowSettings(!showSettings);
+    setShowSettings((prev) => !prev);
+  };
+
+  const handleCameraClick = () => {
+    setShowVideo(true);
+    setShowPDF(false);
+  };
+
+  const handleBookClick = () => {
+    setShowPDF(true);
+    setShowVideo(false);
+  };
+
+  const toggleSearch = () => {
+    setShowSearch((prev) => !prev);
+  };
+
+  const handleCardClick = (index: any) => {
+    setSelectedCard(index);
   };
 
   return (
     <>
       <h2 className="text-2xl mb-2">Adaptive tutoring suite.</h2>
       <div className="relative p-4 mt-4">
-        <div
-          className="absolute inset-0 rounded-lg gradientbg"
-          style={{
-            opacity: 0.9,
-
-            boxShadow: "0px 0px 4px 2px #000",
-            backgroundColor: "white",
-            zIndex: 0,
-          }}
-        ></div>
-        <div className="relative z-10 text-white p-4 rounded-lg">
-          <div>
+        <div className="absolute inset-0 min-h-[880px] gradientbg"></div>
+        <div className="relative z-10 text-white  rounded-lg">
+          <div className="flex justify-end gap-2">
+           
+            <div className="text-end mb-3">
+              <button onClick={toggleSearch} className="ms-auto">
+                <Image
+                  src={"/search.svg"}
+                  alt="search icon"
+                  width={24}
+                  height={24}
+                />
+              </button>
+            </div>
             <div className="text-end mb-3">
               <button onClick={toggleSettings} className="ms-auto">
                 <svg
@@ -80,18 +101,36 @@ const AdaptiveTutoring = () => {
             </div>
 
             {showSettings && (
-              <div className="absolute top-12 right-4 w-80 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
+              <div className="absolute top-10 right-1 w-100 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
                 <SettingContent />
               </div>
             )}
           </div>
+          <div className="mb-2">
+              {showSearch && (
+                <div className="flex mt-2 w-100">
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className="p-1 rounded-l-lg border text-white w-full bg-transparent"
+                  />
+                  <button className="bg-[#ffffff] text-[#03275f] p-2 rounded-r-lg ">
+                    Search
+                  </button>
+                </div>
+              )}
+            </div>
 
-          <div className="grid grid-cols-5 gap-4 mb-4">
+          <div className="grid grid-cols-5 gap-4 ">
             {event.map((event, index) => (
               <div
-                className={` text-white p-4 rounded-[10px] text-center mb-5 relative group min-h-[150px]`}
-                style={{ boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px",backgroundColor:event.bgColor }}
+                className={` text-white p-4 rounded-[10px] text-center mb-5 relative group min-h-[150px] cursor-pointer`}
+                style={{
+                  boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px",
+                  backgroundColor: event.bgColor,
+                }}
                 key={index}
+                onClick={() => handleCardClick(index)}
               >
                 <p className="text-md text-white">{event.day}</p>
                 <div className="flex justify-center mt-2">
@@ -105,7 +144,64 @@ const AdaptiveTutoring = () => {
               </div>
             ))}
           </div>
-    
+
+          <div className="bg-[#91a2b7] h-[600px] rounded-[30px] pt-5 overflow-hidden">
+            <div className="bg-[#2D4778] min-h-[30px] py-2 text-center flex gap-4 justify-center">
+              <button onClick={handleCameraClick}>
+                <Image
+                  src={"/camera.svg"}
+                  width={40}
+                  height={40}
+                  alt="camera"
+                  className="mx-2"
+                />
+              </button>
+              <button onClick={handleBookClick}>
+                <Image
+                  src={"/bookopened.svg"}
+                  width={40}
+                  height={40}
+                  alt="book opened"
+                />
+              </button>
+              <p className="text-lg mt-1 px-3">
+                {selectedCard !== null
+                  ? event[selectedCard].description
+                  : "light and sound"}
+              </p>
+              <button>
+                <Image src={"/exam.svg"} width={40} height={40} alt="exam"/>
+              </button>
+              <button>
+                <Image src={"/cat.svg"} width={40} height={40} alt="cat" />
+              </button>
+            </div>
+
+            <div className="p-4">
+              {showVideo && (
+                <iframe
+                  className="w-full  rounded-[20px]"
+                  style={{ height: "490px" }}
+                  src="https://www.youtube.com/embed/NEW3QcXWKEU?si=RiPpAz42l5OUBmlW"
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                ></iframe>
+              )}
+
+              {showPDF && (
+                <div className="pdf-container">
+                  <iframe
+                    src="/sample.pdf"
+                    width="100%"
+                    height="490px"
+                  ></iframe>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </>
