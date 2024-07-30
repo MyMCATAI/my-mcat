@@ -16,19 +16,12 @@ const KnowledgeProfile = () => {
     <>
       <h2 className="text-2xl mb-2">Knowledge Profile</h2>
       <div className="relative p-2 mt-4">
-        <div
-          className="absolute inset-0 rounded-lg min-h-[865px]"
-          style={{
-            opacity: 0.9,
-            background:
-              "linear-gradient(178deg, rgba(48,104,185,1) 0%, rgba(181,213,245,1) 21%, rgba(191,221,253,1) 99%);",
-            boxShadow: "0px 0px 4px 2px #000",
-            backgroundColor:"white",
-            zIndex: 0,
-          }}
-        ></div>
+        <div className="absolute inset-0  min-h-[900px] gradientbg"></div>
         <div className="relative z-10 text-white p-2 rounded-lg">
-          <div className="p-2 bg-[#072e6f]">
+          <div
+            className="p-2 "
+            style={{ backgroundColor: "rgba(7, 46, 111,0.5)" }}
+          >
             <Image src={profile} alt="Profile" style={{ width: "100%" }} />
           </div>
           <div className="mt-4">
@@ -47,11 +40,15 @@ const KnowledgeProfile = () => {
                 </button>
               ))}
             </div>
-            {/* Tab Content */}
+
             <div className="mt-4">
               {tabs.map(
-                (tab) =>
-                  activeTab === tab.id && <div key={tab.id}>{tab.content}</div>
+                (tab:any) =>
+                  activeTab === tab.id && (
+                    <div key={tab.id} className="bg-[#7A99E4] h-[500px] p-1">
+                      <div>{tab.content}</div>
+                    </div>
+                  )
               )}
             </div>
           </div>
