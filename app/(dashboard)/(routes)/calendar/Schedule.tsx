@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { format, addDays } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import SettingContent from "./SettingContent";
-
 const Schedule = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
@@ -36,20 +35,20 @@ const Schedule = () => {
 
   return (
     <>
-      <h2 className="text-2xl mb-2">Calendar</h2>
+    {/* <FloatingButton/> */}
+      <h2 className="text-2xl">Calendar</h2>
       <div className="relative p-4 mt-4">
         <div
-          className="absolute inset-0 rounded-lg"
+          className="absolute inset-0 gradientbg min-h-[880px]"
           style={{
-            opacity: 0.9,
-            background:
-              "linear-gradient(178deg, rgba(48,104,185,1) 0%, rgba(181,213,245,1) 21%, rgba(191,221,253,1) 99%);",
+            opacity: 0.5,
+
             boxShadow: "0px 0px 4px 2px #000",
-            backgroundColor:"white",
+            backgroundColor: "white",
             zIndex: 0,
           }}
         ></div>
-        <div className="relative z-10 text-white p-4 rounded-lg">
+        <div className="relative z-10 text-white rounded-lg">
           <div>
             <div className="text-end mb-3">
               <button onClick={toggleSettings} className="ms-auto">
@@ -69,26 +68,29 @@ const Schedule = () => {
             </div>
 
             {showSettings && (
-              <div className="absolute top-12 right-4 w-100 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
+              <div className="absolute top-10 right-1 w-100 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
                 <SettingContent  />
               </div>
             )}
           </div>
-          <div className="bg-[#2D4778] text-white p-4 rounded-[30px] text-center mb-5">
+          <div
+            className="bg-[#2D4778] text-white px-4 py-4 rounded-[30px] text-center mb-5"
+            style={{ filter: "drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.50))" }}
+          >
             <p className="text-2xl">{event[0].day}</p>
-            <div className="px-4 h-18 mt-3 overflow-auto">
-              <p>{event[0].message}</p>
+            <div className="px-4  mt-3 overflow-auto">
+              <p className="py-4 text-[16px]">{event[0].message}</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-2 gap-4 ">
             {event.slice(1).map((event, index) => (
               <div
-                className="bg-[#5D84CE] text-white p-4 rounded-[30px] text-center mb-5 relative group"
-                style={{boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px"}}
+                className="bg-[#5D84CE] text-white p-4 rounded-[10px] text-center mb-5 relative group"
+                style={{ boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px" }}
                 key={index}
               >
                 <p className="text-2xl">{event.day}</p>
-                <div className="px-4 h-10 mt-3 overflow-auto">
+                <div className="px-4 py-5 mt-3 overflow-auto">
                   <p>{event.message}</p>
                 </div>
               </div>
@@ -99,38 +101,22 @@ const Schedule = () => {
               const futureDate = addDays(currentDate, index + 3);
               return (
                 <div
-                  key={index}
-                  className="bg-[#7AA3E4] text-white p-3 rounded-[10px] h-[100px] relative flex justify-between group overflow-hidden shadow-md"
-                  aria-label={`Day ${format(futureDate, "d")}`}
-                >
-                  <div className="text-xs">{format(futureDate, "d")}</div>
-                  <span className="text-xs">{format(futureDate, "MMM")}</span>
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 ">
-                    <p>Task will be shown here</p>
-                  </div>
-                </div>
+  key={index}
+  className="bg-[#7AA3E4] text-white p-3 rounded-[10px] h-[100px] relative flex justify-between group overflow-hidden shadow-md transition-transform duration-300 ease-in-out transform hover:scale-105"
+  aria-label={`Day ${format(futureDate, "d")}`}
+>
+  <div className="text-sm">{format(futureDate, "d")}</div>
+  <span className="text-sm">{format(futureDate, "MMM")}</span>
+  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+    <p>Task will be shown here</p>
+  </div>
+</div>
+
               );
             })}
           </div>
         </div>
       </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     </>
   );
