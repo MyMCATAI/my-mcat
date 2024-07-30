@@ -83,23 +83,39 @@ body :root {
 
 .polygon {
   clip-path: polygon(100% 0, 0 0, 0 100%);
-  background-color: #0E2247;
+  background-color: #0e2247;
   height: 300px;
   /* margin-top: 20px; */
 }
 
-.doublediv{
-  -webkit-box-shadow: -17px 28px 0px 5px rgba(20,148,184,1);
-  -moz-box-shadow: -17px 28px 0px 5px rgba(20,148,184,1);
-  box-shadow: -17px 28px 0px 5px rgba(20,148,184,1);
-  
-  
-  
+.doublediv {
+  -webkit-box-shadow: -17px 28px 0px 5px rgba(20, 148, 184, 1);
+  -moz-box-shadow: -17px 28px 0px 5px rgba(20, 148, 184, 1);
+  box-shadow: -17px 28px 0px 5px rgba(20, 148, 184, 1);
 }
 
-.react-chatbot-kit-chat-container{
+.react-chatbot-kit-chat-container {
   width: 100% !important;
 }
-.react-chatbot-kit-chat-bot-message{
+.react-chatbot-kit-chat-bot-message {
   margin-left: 0 !important;
 }
+.gradientbg {
+  opacity: 0.5;
+  background: linear-gradient(
+    180deg,
+    #003c98 7%,
+    #7aa3e4 39%,
+    #a6c7ed 64.5%,
+    #bedcfd 90%
+  );
+  box-shadow: 0px 0px 4px 2px #000;
+  opacity: 0.5;
+
+  background-color: "white";
+}
+
+
+
+
+

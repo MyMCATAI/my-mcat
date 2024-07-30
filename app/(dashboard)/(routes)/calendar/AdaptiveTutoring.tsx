@@ -1,10 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { format, addDays } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import SettingContent from "./SettingContent";
-import AdaptiveTutoring from "./AdaptiveTutoring";
-const Schedule = () => {
+import Image from "next/image";
+import icon from "../../../../public/atomic.png";
+
+const AdaptiveTutoring = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
   const { user } = useUser();
@@ -15,18 +16,29 @@ const Schedule = () => {
 
   const event = [
     {
-      day: "Today",
-      message: `Hi, ${
-        user?.firstName ?? "Guest"
-      }. Today you’re going to do content for three concepts and around 100 thinkcards. Don’t forget to do CARs as well :). Remember your test is in 10 days!`,
+      day: "atomic theory",
+      icon: icon,
+      bgColor:"#b1c03a"
     },
     {
-      day: "Tomorrow",
-      message: "25 UWorld, 20 AAMC, 120 thinkcards",
+      day: "sensation",
+      icon: icon,
+      bgColor:"#B925FF"
     },
     {
-      day: "overmorrow",
-      message: "Take AAMC FL 1",
+      day: "newton",
+      icon: icon,
+      bgColor:"#009918"
+    },
+    {
+      day: "respiration",
+      icon: icon,
+      bgColor:"#3294FF"
+    },
+    {
+      day: "molecular bio",
+      icon: icon,
+      bgColor:"#AE5353"
     },
   ];
 
@@ -36,19 +48,19 @@ const Schedule = () => {
 
   return (
     <>
-      <h2 className="text-2xl">Calendar</h2>
+      <h2 className="text-2xl mb-2">Adaptive tutoring suite.</h2>
       <div className="relative p-4 mt-4">
         <div
-          className="absolute inset-0 gradientbg min-h-[900px]"
+          className="absolute inset-0 rounded-lg gradientbg"
           style={{
-            opacity: 0.5,
+            opacity: 0.9,
 
             boxShadow: "0px 0px 4px 2px #000",
             backgroundColor: "white",
             zIndex: 0,
           }}
         ></div>
-        <div className="relative z-10 text-white px-4 rounded-lg">
+        <div className="relative z-10 text-white p-4 rounded-lg">
           <div>
             <div className="text-end mb-3">
               <button onClick={toggleSettings} className="ms-auto">
@@ -68,56 +80,36 @@ const Schedule = () => {
             </div>
 
             {showSettings && (
-              <div className="absolute top-8 right-4 w-80 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
+              <div className="absolute top-12 right-4 w-80 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
                 <SettingContent />
               </div>
             )}
           </div>
-          <div
-            className="bg-[#2D4778] text-white px-4 py-4 rounded-[30px] text-center mb-5"
-            style={{ filter: "drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.50))" }}
-          >
-            <p className="text-2xl">{event[0].day}</p>
-            <div className="px-4  mt-3 overflow-auto">
-              <p className="py-4 text-[16px]">{event[0].message}</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 ">
-            {event.slice(1).map((event, index) => (
+
+          <div className="grid grid-cols-5 gap-4 mb-4">
+            {event.map((event, index) => (
               <div
-                className="bg-[#5D84CE] text-white p-4 rounded-[10px] text-center mb-5 relative group"
-                style={{ boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px" }}
+                className={` text-white p-4 rounded-[10px] text-center mb-5 relative group min-h-[150px]`}
+                style={{ boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px",backgroundColor:event.bgColor }}
                 key={index}
               >
-                <p className="text-2xl">{event.day}</p>
-                <div className="px-4 py-5 mt-3 overflow-auto">
-                  <p>{event.message}</p>
+                <p className="text-md text-white">{event.day}</p>
+                <div className="flex justify-center mt-2">
+                  <Image
+                    src={event.icon}
+                    alt="icons"
+                    width={100}
+                    height={100}
+                  />
                 </div>
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-4 gap-4 mb-4">
-            {[...Array(16)].map((_, index) => {
-              const futureDate = addDays(currentDate, index + 3);
-              return (
-                <div
-                  key={index}
-                  className="bg-[#7AA3E4] text-white p-3 rounded-[10px] h-[100px] relative flex justify-between group overflow-hidden shadow-md"
-                  aria-label={`Day ${format(futureDate, "d")}`}
-                >
-                  <div className="text-sm">{format(futureDate, "d")}</div>
-                  <span className="text-sm">{format(futureDate, "MMM")}</span>
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 ">
-                    <p>Task will be shown here</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+    
         </div>
       </div>
     </>
   );
 };
 
-export default Schedule;
+export default AdaptiveTutoring;
