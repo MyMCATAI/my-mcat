@@ -68,8 +68,8 @@ const Schedule = () => {
             </div>
 
             {showSettings && (
-              <div className="absolute top-8 right-4 w-80 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
-                <SettingContent />
+              <div className="absolute top-12 right-4 w-100 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
+                <SettingContent  />
               </div>
             )}
           </div>
