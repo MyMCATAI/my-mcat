@@ -36,7 +36,7 @@ const Page = () => {
             }`}
             onClick={() => setActiveTab("Schedule")}
           >
-            Schedule
+            schedule
           </button>
           <button
             className={`px-4 py-2 ${
@@ -44,7 +44,7 @@ const Page = () => {
             }`}
             onClick={() => setActiveTab("AdaptiveTutoring")}
           >
-            Adaptive Tutoring
+            adaptive Tutoring
           </button>
         </div>
       </div>

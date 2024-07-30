@@ -14,18 +14,18 @@ const Schedule = () => {
 
   const event = [
     {
-      day: "Today",
+      day: "today",
       message: `Hi, ${
         user?.firstName ?? "Guest"
       }. Today you’re going to do content for three concepts and around 100 thinkcards. Don’t forget to do CARs as well :). Remember your test is in 10 days!`,
     },
     {
-      day: "Tomorrow",
+      day: "tomorrow",
       message: "25 UWorld, 20 AAMC, 120 thinkcards",
     },
     {
       day: "overmorrow",
-      message: "Take AAMC FL 1",
+      message: "take AAMC FL 1",
     },
   ];
 
@@ -36,7 +36,7 @@ const Schedule = () => {
   return (
     <>
     {/* <FloatingButton/> */}
-      <h2 className="text-2xl">Calendar</h2>
+      <h2 className="text-2xl">calendar.</h2>
       <div className="relative p-4 mt-4">
         <div
           className="absolute inset-0 gradientbg min-h-[880px]"
