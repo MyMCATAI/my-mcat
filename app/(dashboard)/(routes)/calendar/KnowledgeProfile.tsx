@@ -16,7 +16,7 @@ const KnowledgeProfile = () => {
 
   return (
     <>
-      <h2 className="text-2xl mb-2">Knowledge Profile</h2>
+      <h2 className="text-2xl mb-2">knowledge profile</h2>
       <div className="relative p-2 mt-4">
         <div className="absolute inset-0 min-h-[880px] gradientbg"></div>
         <div className="relative z-10 text-white p-2 rounded-lg">
