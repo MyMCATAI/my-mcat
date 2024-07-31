@@ -1,26 +1,20 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { format, addDays } from "date-fns";
+import { format, addDays, isSameDay, startOfDay } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import SettingContent from "./SettingContent";
+import { NewActivity, FetchedActivity } from '@/types';
 
-interface Event {
-  day: string;
-  message: string;
+interface ScheduleProps {
+  activities: FetchedActivity[];
 }
 
-interface NewActivity {
-  activityTitle: string;
-  activityText: string;
-  hours: string;
-  activityType: string;
-  scheduledDate: string;
-}
+const Schedule: React.FC<ScheduleProps> = ({ activities }) => {
 
-const Schedule = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
   const [showNewActivityForm, setShowNewActivityForm] = useState(false);
+
   const [newActivity, setNewActivity] = useState({
     activityTitle: "",
     activityText: "",
@@ -35,24 +29,6 @@ const Schedule = () => {
     setCurrentDate(new Date());
   }, []);
 
-  const event = [
-    {
-      day: "today",
-      message: `Hi, ${
-        user?.firstName ?? "Guest"
-      }. Today you’re going to do content for three concepts and around 100 thinkcards. 
-      Don’t forget to do CARs as well :). Remember your test is in 10 days!
-      `,      
-    },
-    {
-      day: "tomorrow",
-      message: "25 UWorld, 20 AAMC, 120 thinkcards",
-    },
-    {
-      day: "overmorrow",
-      message: "take AAMC FL 1",
-    },
-  ];
 
   const toggleSettings = () => {
     setShowSettings(!showSettings);
@@ -91,7 +67,6 @@ const Schedule = () => {
       }
   
       const data = await response.json();
-      console.log("Activity created successfully", data);
       setShowNewActivityForm(false);
       setNewActivity({
         activityTitle: "",
@@ -108,6 +83,13 @@ const Schedule = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getActivitiesForDate = (date: Date) => {
+    return activities.filter(activity => {
+      const activityDate = new Date(activity.scheduledDate);
+      return isSameDay(activityDate, date);
+    });
   };
 
   return (
@@ -224,42 +206,67 @@ const Schedule = () => {
           )}
 
           <div
-            className="bg-[#2D4778] text-white px-4 py-4 rounded-[30px] text-center mb-5"
+            className="bg-[#2D4778] text-white px-4 py-4 rounded-[30px] text-center mb-5 transition-transform duration-300 ease-in-out transform hover:scale-105"
             style={{ filter: "drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.50))" }}
           >
-            <p className="text-2xl">{event[0].day}</p>
-            <div className="px-4  mt-3 overflow-auto">
-              <p className="py-4 text-[16px]">{event[0].message}</p>
+            <p className="text-2xl">Today</p>
+            <div className="px-4 mt-3 overflow-auto">
+              <p className="py-4 text-[16px]">
+                Hi, {user?.firstName ?? "Guest"}. Here are your activities for today:
+              </p>
+              {getActivitiesForDate(startOfDay(new Date())).map((activity, index) => (
+                <div key={index} className="text-sm mt-2">
+                  {activity.activityTitle} - {activity.hours} hours
+                </div>
+              ))}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 ">
-            {event.slice(1).map((event, index) => (
-              <div
-                className="bg-[#5D84CE] text-white p-4 rounded-[10px] text-center mb-5 relative group"
-                style={{ boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px" }}
-                key={index}
-              >
-                <p className="text-2xl">{event.day}</p>
-                <div className="px-4 py-5 mt-3 overflow-auto">
-                  <p>{event.message}</p>
+          <div className="grid grid-cols-2 gap-4">
+            {[1, 2].map((dayOffset) => {
+              const date = addDays(currentDate, dayOffset);
+              const dayActivities = getActivitiesForDate(date);
+              return (
+                <div 
+                  key={dayOffset} 
+                  className="bg-[#5D84CE] text-white p-4 rounded-[10px] text-center mb-5 relative group transition-transform duration-300 ease-in-out transform hover:scale-105"
+                  style={{ boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px" }}
+                >
+                  <p className="text-2xl">{format(date, 'EEEE')}</p>
+                  <div className="px-4 py-5 mt-3 overflow-auto">
+                    {dayActivities.length > 0 ? (
+                      dayActivities.map((activity, index) => (
+                        <p key={index} className="text-sm mt-2">
+                          {activity.activityTitle} - {activity.hours} hours
+                        </p>
+                      ))
+                    ) : (
+                      <p>No activities scheduled</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="grid grid-cols-4 gap-4 mb-4">
             {[...Array(16)].map((_, index) => {
               const futureDate = addDays(currentDate, index + 3);
+              const dayActivities = getActivitiesForDate(futureDate);
               return (
-                <div
-                  key={index}
-                  className="bg-[#7AA3E4] text-white p-3 rounded-[10px] h-[100px] relative flex justify-between group overflow-hidden shadow-md transition-transform duration-300 ease-in-out transform hover:scale-105"
-                  aria-label={`Day ${format(futureDate, "d")}`}
-                >
-                  <div className="text-sm">{format(futureDate, "d")}</div>
-                  <span className="text-sm">{format(futureDate, "MMM")}</span>
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <p>Task will be shown here</p>
+                <div key={index} className="bg-[#7AA3E4] text-white p-3 rounded-[10px] h-[100px] relative flex flex-col justify-between group overflow-hidden shadow-md transition-transform duration-300 ease-in-out transform hover:scale-105">
+                  <div className="flex justify-between">
+                    <div className="text-sm">{format(futureDate, "d")}</div>
+                    <span className="text-sm">{format(futureDate, "MMM")}</span>
                   </div>
+                  <div className="flex-grow overflow-y-auto">
+                    {dayActivities.map((activity, idx) => (
+                      <div key={idx} className="text-xs mt-1">
+                        {activity.activityTitle}
+                      </div>
+                    ))}
+                  </div>
+                  {dayActivities.length === 0 && (
+                    <div className="text-xs mt-1">No tasks</div>
+                  )}
                 </div>
               );
             })}
