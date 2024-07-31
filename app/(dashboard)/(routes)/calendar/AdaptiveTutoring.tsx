@@ -67,10 +67,9 @@ const AdaptiveTutoring = () => {
 
   return (
     <>
-      <h2 className="text-2xl mb-2">Adaptive tutoring suite.</h2>
-      <div className="relative p-4 mt-4">
-        <div className="absolute inset-0 min-h-[880px] gradientbg"></div>
-        <div className="relative z-10 text-white  rounded-lg">
+
+        
+        <div className=" text-white  rounded-lg">
           <div className="flex justify-end gap-2">
            
             <div className="text-end mb-3">
@@ -145,7 +144,7 @@ const AdaptiveTutoring = () => {
             ))}
           </div>
 
-          <div className="bg-[#91a2b7] h-[600px] rounded-[30px] pt-5 overflow-hidden">
+          <div className="bg-[#91a2b7] h-[600px] rounded-[10px] pt-5 overflow-hidden">
             <div className="bg-[#2D4778] min-h-[30px] py-2 text-center flex gap-4 justify-center">
               <button onClick={handleCameraClick}>
                 <Image
@@ -180,7 +179,7 @@ const AdaptiveTutoring = () => {
             <div className="p-4">
               {showVideo && (
                 <iframe
-                  className="w-full  rounded-[20px]"
+                  className="w-full  rounded-[10px]"
                   style={{ height: "490px" }}
                   src="https://www.youtube.com/embed/NEW3QcXWKEU?si=RiPpAz42l5OUBmlW"
                   title="YouTube video player"
@@ -203,7 +202,7 @@ const AdaptiveTutoring = () => {
             </div>
           </div>
         </div>
-      </div>
+
     </>
   );
 };
