@@ -58,7 +58,10 @@ model Category {
   contentCategory  String
   conceptCategory  String
   generalWeight    Float
+  color             String @default("")
+  icon              String @default("")
   questions        Question[]
+  calendarActivities CalendarActivity[]
 }
 
 model Test {
@@ -123,6 +126,30 @@ model StudyPlan {
   hoursPerDay       Json
   fullLengthDays    String   // This will store the array of booleans as a string
   updatedAt         DateTime @updatedAt
+  calendarActivities CalendarActivity[]
 
   @@index([userId])
+}
+
+model CalendarActivity {
+  id            String    @id @default(cuid())
+  userId        String
+  studyPlanId   String
+  categoryId    String?
+  activityText  String    @db.Text
+  activityTitle String
+  hours         Float
+  activityType  String
+  link          String?
+  scheduledDate DateTime  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  status        String @default("Not Started")
+  studyPlan     StudyPlan @relation(fields: [studyPlanId], references: [id])
+  category      Category? @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([studyPlanId])
+  @@index([categoryId])
+  @@index([scheduledDate]) // index for better performance when querying by date
 }
