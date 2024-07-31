@@ -18,7 +18,7 @@ export async function GET(
   const skip = (page - 1) * limit;
 
   try {
-    const studyPlans = await prisma.studyPlan.findMany({
+    const studyPlans = await prisma.studyPlan.findFirst({
       where: {
         userId: params.userId,
       },
