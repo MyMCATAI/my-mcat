@@ -1,0 +1,68 @@
+// app/api/calendar-activity/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from "@clerk/nextjs";
+import prisma from "@/lib/prismadb";
+
+export async function POST(req: NextRequest) {
+  try {
+    const { userId } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // First, check if a CalendarActivity exists for this user
+    const existingPlan = await prisma.studyPlan.findFirst({
+      where: { userId },
+    });
+
+    if (!existingPlan) {
+      return NextResponse.json({ error: "No existing Calendar Activity found for this user" }, { status: 405 });
+    }
+
+    const body = await req.json();
+    const {  categoryId, activityText, activityTitle, hours, activityType, link, scheduledDate } = body;
+
+    if ( !activityText || !activityTitle || !hours || !activityType || !scheduledDate) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    const activity = await prisma.calendarActivity.create({
+      data: {
+        userId,
+        studyPlanId:existingPlan.id,
+        categoryId,
+        activityText,
+        activityTitle,
+        hours: parseFloat(hours),
+        activityType,
+        link,
+        status: "Not Started",
+        scheduledDate: new Date(scheduledDate),
+      },
+    });
+
+    return NextResponse.json(activity, { status: 201 });
+  } catch (error) {
+    console.error('Error creating calendar activity:', error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { userId } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const activities = await prisma.calendarActivity.findMany({
+      where: { userId },
+      orderBy: { scheduledDate: 'asc' },
+    });
+
+    return NextResponse.json(activities);
+  } catch (error) {
+    console.error('Error fetching calendar activities:', error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
