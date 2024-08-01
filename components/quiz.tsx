@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
 
 interface QuizQuestion {
   question: string;
@@ -20,7 +20,9 @@ interface QuizProps {
 const Quiz: React.FC<QuizProps> = ({ quiz, shuffle = false }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [shuffledQuestions, setShuffledQuestions] = useState<QuizQuestion[]>([]);
+  const [shuffledQuestions, setShuffledQuestions] = useState<QuizQuestion[]>(
+    []
+  );
 
   useEffect(() => {
     if (shuffle) {
@@ -38,32 +40,37 @@ const Quiz: React.FC<QuizProps> = ({ quiz, shuffle = false }) => {
 
   const handleNextQuestion = () => {
     setSelectedAnswer(null);
-    setCurrentQuestionIndex((prevIndex) => 
+    setCurrentQuestionIndex((prevIndex) =>
       prevIndex < shuffledQuestions.length - 1 ? prevIndex + 1 : prevIndex
     );
   };
 
   const handlePrevQuestion = () => {
     setSelectedAnswer(null);
-    setCurrentQuestionIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : prevIndex));
+    setCurrentQuestionIndex((prevIndex) =>
+      prevIndex > 0 ? prevIndex - 1 : prevIndex
+    );
   };
 
   if (!currentQuestion) return null;
 
   return (
-    <div className="bg-white text-black p-6 rounded-lg shadow-lg max-w-3xl mx-auto">
+    <div className="bg-transparent text-black px-6 rounded-lg  mx-auto">
       <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-xl font-bold">Question {currentQuestionIndex + 1}</h2>
-        <span className="text-sm">
-          Time Remaining: {quiz.timeLimit} | {currentQuestionIndex + 1} of {shuffledQuestions.length}
+        <h2 className="text-xl font-semi-bold text-white drop-shadow-lg">
+          Question {currentQuestionIndex + 1}
+        </h2>
+        <span className="text-sm text-white drop-shadow-lg">
+          Time Remaining: {quiz.timeLimit} | {currentQuestionIndex + 1} of{" "}
+          {shuffledQuestions.length}
         </span>
       </div>
-      
-      <div className="mb-6">
-        <p className="text-lg mb-4">{currentQuestion.question}</p>
+
+      <div className="mb-2">
+        <p className="text-lg mb-4 text-white drop-shadow-lg">{currentQuestion.question}</p>
         {currentQuestion.image && (
           <div className="relative w-full h-64 mb-4">
-            <Image 
+            <Image
               src={currentQuestion.image}
               alt="Question Image"
               layout="fill"
@@ -78,8 +85,8 @@ const Quiz: React.FC<QuizProps> = ({ quiz, shuffle = false }) => {
               onClick={() => handleAnswerSelect(option)}
               className={`w-full text-left p-2 rounded ${
                 selectedAnswer === option
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 hover:bg-gray-200'
+                  ? "bg-[#0e2247] text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
               }`}
             >
               {String.fromCharCode(65 + index)}. {option}
@@ -87,7 +94,7 @@ const Quiz: React.FC<QuizProps> = ({ quiz, shuffle = false }) => {
           ))}
         </div>
       </div>
-      
+
       <div className="flex justify-between">
         <button
           onClick={handlePrevQuestion}
@@ -99,7 +106,7 @@ const Quiz: React.FC<QuizProps> = ({ quiz, shuffle = false }) => {
         <button
           onClick={handleNextQuestion}
           disabled={currentQuestionIndex === shuffledQuestions.length - 1}
-          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+          className="px-4 py-2 bg-[#0e2247] text-white rounded disabled:opacity-50"
         >
           Next
         </button>
