@@ -22,9 +22,9 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities }) => {
   }, [activities]);
 
   const tabs = [
-    { id: "tab1", label: "Future", content: categorizedActivities.future, image: profile },
-    { id: "tab2", label: "Present", content: categorizedActivities.present, image: "/setting.svg" },
-    { id: "tab3", label: "Past", content: categorizedActivities.past, image: profile },
+    { id: "tab1", label: "future", content: categorizedActivities.future, image: profile },
+    { id: "tab2", label: "present", content: categorizedActivities.present, image: "/setting.svg" },
+    { id: "tab3", label: "past", content: categorizedActivities.past, image: profile },
   ];
 
   const activeImage = tabs.find(tab => tab.id === activeTab)?.image || profile;
@@ -34,21 +34,19 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities }) => {
       {activities.length > 0 ? (
         activities.map((activity, index) => (
           <div key={index} className="mb-2 p-2 bg-[#021326] rounded">
-            <p className="text-sm font-bold">{activity.activityTitle}</p>
-            <p className="text-xs">{format(new Date(activity.scheduledDate), 'MMM d, yyyy')}</p>
+            <p className="text-sm font-bold text-center mt-4 text-sm mt-1  text-white text-lg  leading-normal shadow-text">{activity.activityTitle}</p>
+            <p className="text-sm font-bold text-center mt-4 text-sm mt-1  text-white text-lg  leading-normal shadow-text">{format(new Date(activity.scheduledDate), 'MMM d, yyyy')}</p>
           </div>
         ))
       ) : (
-        <p className="text-center mt-4">No activities</p>
+        <p className="text-center mt-4 text-sm mt-1  text-white text-lg font-light leading-normal shadow-text">No activities</p>
       )}
     </div>
   );
 
   return (
     <div className="relative p-2 mt-4">
-      <div className="absolute inset-0 min-h-[880px] gradientbg"></div>
       <div className="relative z-10 text-white p-2 rounded-lg">
-        <h2 className="text-2xl mb-2">Knowledge Profile</h2>
         <div
           className="p-2 flex justify-center"
           style={{ backgroundColor: "rgba(7, 46, 111, 0.5)" }}
@@ -77,7 +75,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities }) => {
             {tabs.map(
               (tab) =>
                 activeTab === tab.id && (
-                  <div key={tab.id} className="bg-[#7A99E4] h-[570px] p-1">
+                  <div key={tab.id} className="bg-[#7A99E4] h-[330px] p-1">
                     {renderActivities(tab.content)}
                   </div>
                 )
