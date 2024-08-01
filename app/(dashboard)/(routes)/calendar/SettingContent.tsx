@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import  profile  from "../../../../public/setting.svg";
+import profile from "../../../../public/setting.svg";
+import { StudyPlan } from '@/types';
 
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
@@ -38,9 +39,34 @@ const SettingContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("tab1");
   const [activeOption, setActiveOption] = useState<string | null>(null);
   const [calendarValue, setCalendarValue] = useState<Value>(new Date());
-  const [fullLengthsDays, setFullLengthsDays] = useState<Record<string, boolean>>({});
   const [hoursPerDay, setHoursPerDay] = useState<Record<string, string>>({});
   const [selectedResources, setSelectedResources] = useState<Record<string, boolean>>({});
+  const [existingStudyPlan, setExistingStudyPlan] = useState<StudyPlan | null>(null);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [fullLengthDays, setFullLengthDays] = useState<boolean[]>(new Array(7).fill(false));
+
+  useEffect(() => {
+    fetchExistingStudyPlan();
+  }, []);
+
+  const fetchExistingStudyPlan = async () => {
+    try {
+      const response = await fetch('/api/study-plan');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.studyPlans && data.studyPlans.length > 0) {
+          const plan = data.studyPlans[0]; // Assuming we're working with the most recent plan
+          setExistingStudyPlan(plan);
+          setCalendarValue(new Date(plan.examDate));
+          setSelectedResources(plan.resources.reduce((acc: any, resource: any) => ({ ...acc, [resource]: true }), {}));
+          setHoursPerDay(plan.hoursPerDay);
+          setFullLengthDays(plan.fullLengthDays.split('').map((d: string) => d === '1'));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching existing study plan:', error);
+    }
+  };
 
   const handleOptionClick = (optionId: string) => {
     setActiveOption(activeOption === optionId ? null : optionId);
@@ -51,6 +77,49 @@ const SettingContent: React.FC = () => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    const studyPlanData = {
+      examDate: calendarValue,
+      resources: Object.keys(selectedResources).filter(key => selectedResources[key]),
+      hoursPerDay,
+      fullLengthDays: fullLengthDays.map(d => d ? '1' : '0').join(''),
+    };
+
+    try {
+      if (existingStudyPlan) {
+        // Update existing study plan
+        const response = await fetch('/api/study-plan', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...studyPlanData, id: existingStudyPlan.id }),
+        });
+        if (response.ok) {
+          const updatedPlan = await response.json();
+          setExistingStudyPlan(updatedPlan);
+        }
+      } else {
+        // Create new study plan
+        const response = await fetch('/api/study-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(studyPlanData),
+        });
+        if (response.ok) {
+          const newPlan = await response.json();
+          setExistingStudyPlan(newPlan);
+        }
+      }
+      alert('Study plan saved successfully!');
+    } catch (error) {
+      console.error('Error saving study plan:', error);
+      alert('Error saving study plan. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
 
   const renderOptionContent = () => {
     switch (activeOption) {
@@ -63,13 +132,17 @@ const SettingContent: React.FC = () => {
       case "option2":
         return (
           <div className="bg-white p-4 rounded-lg shadow-md">
-            {days.map((day) => (
+            {days.map((day, index) => (
               <div key={day} className="flex items-center justify-between mb-2">
                 <span>{day}</span>
                 <input
                   type="checkbox"
-                  checked={fullLengthsDays[day] || false}
-                  onChange={(e) => setFullLengthsDays({ ...fullLengthsDays, [day]: e.target.checked })}
+                  checked={fullLengthDays[index]}
+                  onChange={(e) => {
+                    const newFullLengthDays = [...fullLengthDays];
+                    newFullLengthDays[index] = e.target.checked;
+                    setFullLengthDays(newFullLengthDays);
+                  }}
                 />
               </div>
             ))}
@@ -110,6 +183,7 @@ const SettingContent: React.FC = () => {
         return null;
     }
   };
+
 
   return (
     <div className="bg-blue-100 p-6 rounded-lg shadow-lg">
@@ -159,6 +233,14 @@ const SettingContent: React.FC = () => {
               )}
             </div>
           ))}
+          
+          <button
+            className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-200"
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? 'Saving...' : (existingStudyPlan ? 'Update Study Plan' : 'Save Study Plan')}
+          </button>
         </div>
       )}
 

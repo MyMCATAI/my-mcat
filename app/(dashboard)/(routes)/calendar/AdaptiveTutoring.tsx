@@ -67,9 +67,10 @@ const AdaptiveTutoring = () => {
 
   return (
     <>
-
-        
-        <div className=" text-white  rounded-lg">
+      <h2 className="text-2xl mb-2">adaptive tutoring suite.</h2>
+      <div className="relative p-4 mt-4">
+        <div className="absolute inset-0 min-h-[880px] gradientbg"></div>
+        <div className="relative z-10 text-white  rounded-lg">
           <div className="flex justify-end gap-2">
            
             <div className="text-end mb-3">

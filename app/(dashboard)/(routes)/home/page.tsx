@@ -1,7 +1,7 @@
 "use client"
 import React from "react";
 import MyCalendar from "./Calendar";
-import ChatBot from "./ChatBot";
+import ChatBot from "../../../../components/chatbot/ChatBot";
 import Image from "next/image";
 import rectangle from "../../../../public/homeimage.png";
 import { useUser } from "@clerk/nextjs";
