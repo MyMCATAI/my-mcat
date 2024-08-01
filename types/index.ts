@@ -70,3 +70,32 @@ export interface Test {
   questions: TestQuestion[];
   userTests?: UserTest[]; 
 }
+
+export interface StudyPlan {
+  id?: string;
+  examDate: Date;
+  resources: string[];
+  hoursPerDay: Record<string, string>;
+  fullLengthDays: string;
+}
+export interface NewActivity {
+  activityTitle: string;
+  activityText: string;
+  hours: string;
+  activityType: string;
+  scheduledDate: string;
+}
+
+export interface FetchedActivity {
+  id: string;
+  userId: string;
+  studyPlanId: string;
+  categoryId: string | null;
+  activityText: string;
+  activityTitle: string;
+  hours: number;
+  activityType: string;
+  link: string | null;
+  status: string;
+  scheduledDate: string;
+}

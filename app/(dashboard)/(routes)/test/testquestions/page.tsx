@@ -7,6 +7,8 @@ import QuestionComponent from "@/components/test/Question";
 import { Test, TestQuestion, Passage, Question, UserResponse } from "@/types";
 import { useStopwatch } from 'react-timer-hook';
 
+import ChatBot from "@/components/chatbot/ChatBot";
+
 const TestQuestions = () => {
   const [test, setTest] = useState<Test | null>(null);
   const [userTest, setUserTest] = useState<{ id: string } | null>(null);
@@ -22,7 +24,9 @@ const TestQuestions = () => {
   const [testCreated, setTestCreated] = useState(false);
   const [isCreatingTest, setIsCreatingTest] = useState(false);
   const [questionIdToResponseId, setQuestionIdToResponseId] = useState<Record<string, string>>({});
+  const [showChatbot, setShowChatbot] = useState(false);
 
+  
   const {
     seconds,
     minutes,
@@ -293,6 +297,26 @@ const TestQuestions = () => {
           </div>
         )}
       </div>
+
+      {/* Chatbot */}
+      <div className="fixed bottom-6 right-6 flex flex-col items-end">
+        {showChatbot && (
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-4" style={{ width: '350px', height: '500px' }}>
+            <ChatBot />
+          </div>
+        )}
+        <button
+          className="w-20 h-20 rounded-full overflow-hidden shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
+          onClick={() => setShowChatbot((prev) => !prev)}
+          aria-label={showChatbot ? 'Close Chat' : 'Open Chat'}
+        >
+          <img
+            src="/Kalypso.png"
+            alt="Chat with Kalypso"
+            className="w-full h-full object-cover"
+          />
+        </button>
+      </div>git s
     </div>
   </div>
   );
