@@ -25,13 +25,13 @@ export const Navbar = ({ isPro = false }: { isPro: boolean }) => {
       <div className="flex items-end h-full">
         <div className="flex h-1/2">
           {[
-            { href: "/home", label: "Home" },
+            // { href: "/home", label: "Home" },
             { href: "/calendar", label: "Calendar" },
-            { href: "/dashboard", label: "Acquire" },
-            { href: "/apply", label: "Apply" },
+            // { href: "/dashboard", label: "Acquire" },
+            // { href: "/apply", label: "Apply" },
             { href: "/quiz", label: "quiz" },
-            { href: "/review", label: "Review" },
-            { href: "/test", label: "Test" },
+            // { href: "/review", label: "Review" },
+            // { href: "/test", label: "Test" },
             // TODO add auth check so this only appears for specific users
             { href: "/admin", label: "Admin" },
           ].map((link) => (
