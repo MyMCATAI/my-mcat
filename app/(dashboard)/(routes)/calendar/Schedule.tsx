@@ -220,6 +220,15 @@ const Schedule: React.FC<ScheduleProps> = ({ activities }) => {
                 </div>
               ))}
             </div>
+          )}
+        </div>
+        <div
+          className="bg-[#2D4778] text-white px-4 py-4 rounded-[30px] text-center mb-5"
+          style={{ filter: "drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.50))" }}
+        >
+          <p className="text-2xl">{event[0].day}</p>
+          <div className="px-4  mt-3 overflow-auto">
+            <p className="py-4 text-[16px]">{event[0].message}</p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {[1, 2].map((dayOffset) => {

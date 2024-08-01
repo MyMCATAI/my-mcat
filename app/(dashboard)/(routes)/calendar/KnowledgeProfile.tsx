@@ -87,7 +87,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities }) => {
             </div>
           </div>
         </div>
-      </div>
+  
     </>
   );
 };
