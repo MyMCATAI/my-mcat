@@ -101,18 +101,8 @@ body :root {
   margin-left: 0 !important;
 }
 .gradientbg {
-  /* opacity: 0.5; */
-  background: linear-gradient(
-    180deg,
-    #003c98 7%,
-    #7aa3e4 39%,
-    #a6c7ed 64.5%,
-    #bedcfd 90%
-  );
-  /* box-shadow: 0px 0px 4px 2px #000; */
-  /* opacity: 0.5; */
-
-  background-color: "white";
+  background: rgb(97,119,145);
+background: linear-gradient(0deg, rgba(97,119,145,1) 0%, rgba(3,39,95,1) 100%);
 }
 
 
