@@ -44,10 +44,73 @@ const SettingContent: React.FC = () => {
   const [existingStudyPlan, setExistingStudyPlan] = useState<StudyPlan | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [fullLengthDays, setFullLengthDays] = useState<boolean[]>(new Array(7).fill(false));
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [setName, setSetName] = useState('');
+  const [section, setSection] = useState('');
+  const [subjectCategory, setSubjectCategory] = useState('');
+  const [contentCategory, setContentCategory] = useState('');
+  const [conceptCategory, setConceptCategory] = useState('');
+  const [numberOfQuestions, setNumberOfQuestions] = useState('');
+
 
   useEffect(() => {
     fetchExistingStudyPlan();
   }, []);
+
+  const generateNewTest = async () => {
+    try {
+      const testData: {
+        title: string;
+        description: string;
+        setName: string;
+        section?: string;
+        subjectCategory?: string;
+        contentCategory?: string;
+        conceptCategory?: string;
+        numberOfQuestions?: number;
+      } = {
+        title,
+        description,
+        setName,
+      };
+
+      if (section) testData.section = section;
+      if (subjectCategory) testData.subjectCategory = subjectCategory;
+      if (contentCategory) testData.contentCategory = contentCategory;
+      if (conceptCategory) testData.conceptCategory = conceptCategory;
+      if (numberOfQuestions) testData.numberOfQuestions = parseInt(numberOfQuestions);
+
+      const response = await fetch('/api/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(testData),
+      });
+
+      if (response.ok) {
+        const newTest = await response.json();
+        console.log('New test generated:', newTest);
+        // You can add state update logic here if needed
+        // For example: setLatestTest(newTest);
+        
+        // Clear the input fields after successful generation
+        setTitle('');
+        setDescription('');
+        setSetName('');
+        setSection('');
+        setSubjectCategory('');
+        setContentCategory('');
+        setConceptCategory('');
+        setNumberOfQuestions('');
+      } else {
+        console.error('Failed to generate new test');
+      }
+    } catch (error) {
+      console.error('Error generating new test:', error);
+    }
+  };
 
   const fetchExistingStudyPlan = async () => {
     try {
@@ -186,7 +249,7 @@ const SettingContent: React.FC = () => {
 
 
   return (
-    <div className="bg-blue-100 p-6 rounded-lg shadow-lg">
+    <div className="bg-blue-100 p-2 rounded-lg shadow-lg">
       <div className="bg-white rounded-t-lg overflow-hidden">
         <div className="flex">
           {tabs.map((tab) => (
@@ -243,10 +306,78 @@ const SettingContent: React.FC = () => {
           </button>
         </div>
       )}
-
-      <div className="p-2">
-        <Image src={profile} alt="Profile" style={{width: "100%"}} />
-      </div>
+        {activeTab === "tab2" && (
+      <div className="bg-white p-4 space-y-4">
+        <h1 className="text-2xl font-bold">Generate New Test</h1>
+        <div className="space-y-2">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Test Title (required)"
+            className="w-full p-2 border rounded"
+            required
+          />
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Test Description (required)"
+            className="w-full p-2 border rounded"
+            required
+          />
+          <input
+            type="text"
+            value={setName}
+            onChange={(e) => setSetName(e.target.value)}
+            placeholder="Test Set Name (required)"
+            className="w-full p-2 border rounded"
+            required
+          />
+          <input
+            type="text"
+            value={section}
+            onChange={(e) => setSection(e.target.value)}
+            placeholder="Section (optional)"
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="text"
+            value={subjectCategory}
+            onChange={(e) => setSubjectCategory(e.target.value)}
+            placeholder="Subject Category (optional)"
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="text"
+            value={contentCategory}
+            onChange={(e) => setContentCategory(e.target.value)}
+            placeholder="Content Category (optional)"
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="text"
+            value={conceptCategory}
+            onChange={(e) => setConceptCategory(e.target.value)}
+            placeholder="Concept Category (optional)"
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="number"
+            value={numberOfQuestions}
+            onChange={(e) => setNumberOfQuestions(e.target.value)}
+            placeholder="Number of Questions (optional)"
+            className="w-full p-2 border rounded"
+            min="1"
+          />
+        </div>
+        <button
+          onClick={generateNewTest}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Generate New Test
+        </button>
+      </div>)}
     </div>
   );
 };

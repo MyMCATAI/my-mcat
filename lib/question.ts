@@ -1,20 +1,22 @@
 // File: lib/question.ts
 
-import { auth } from "@clerk/nextjs"
-import prismadb from "@/lib/prismadb"
+import { NextResponse } from 'next/server';
+import { auth } from "@clerk/nextjs";
+import prismadb from "@/lib/prismadb";
 
 export const getQuestions = async (params: {
   categoryId?: string;
   passageId?: string;
   contentCategory?: string;
+  conceptCategory?: string;
   page?: number;
   pageSize?: number;
 }) => {
   console.log('Params:', JSON.stringify(params));
-  const { categoryId, passageId, contentCategory, page = 1, pageSize = 10 } = params;
+  const { categoryId, passageId, contentCategory, conceptCategory, page = 1, pageSize = 10 } = params;
   const skip = (page - 1) * pageSize;
 
-  const where = {
+  const where: any = {
     ...(categoryId && { categoryId }),
     ...(passageId && { passageId }),
     ...(contentCategory && { contentCategory }),
@@ -22,26 +24,61 @@ export const getQuestions = async (params: {
   console.log('Where clause:', JSON.stringify(where));
 
   try {
-    const questions = await prismadb.question.findMany({
-      where,
-      include: {
-        passage: true,
-        category: true,
-      },
-      skip,
-      take: pageSize,
-    });
+    if (conceptCategory) {
+      const category = await prismadb.category.findFirst({
+        where: { conceptCategory },
+        include: {
+          questions: {
+            where,
+            include: {
+              passage: true,
+            },
+            skip,
+            take: pageSize,
+          },
+        },
+      });
 
-    const total = await prismadb.question.count({ where });
+      const total = await prismadb.question.count({
+        where: {
+          ...where,
+          category: { conceptCategory },
+        },
+      });
 
-    return {
-      questions: questions.map(q => ({
-        ...q,
-        questionOptions: q.questionOptions.split('|') // Split the string into an array
-      })),
-      totalPages: Math.ceil(total / pageSize),
-      currentPage: page,
-    };
+      return {
+        category: {
+          ...category,
+          questions: category?.questions.map(q => ({
+            ...q,
+            questionOptions: q.questionOptions.split('|')
+          })) || [],
+        },
+        totalPages: Math.ceil(total / pageSize),
+        currentPage: page,
+      };
+    } else {
+      const questions = await prismadb.question.findMany({
+        where,
+        include: {
+          passage: true,
+          category: true,
+        },
+        skip,
+        take: pageSize,
+      });
+
+      const total = await prismadb.question.count({ where });
+
+      return {
+        questions: questions.map(q => ({
+          ...q,
+          questionOptions: q.questionOptions.split('|')
+        })),
+        totalPages: Math.ceil(total / pageSize),
+        currentPage: page,
+      };
+    }
   } catch (error) {
     console.error('Error in getQuestions:', error);
     throw error;
