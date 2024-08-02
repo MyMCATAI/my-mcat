@@ -7,6 +7,7 @@ import { mockMcatQuiz } from "../quiz/quiz";
 import ReactPlayer from "react-player";
 import prisma from "@/lib/prismadb";
 import { getCategories } from "@/lib/category";
+import ChatBot from "@/components/chatbot/ChatBot";
 
 interface ContentItem {
   id: string;
@@ -35,21 +36,23 @@ const AdaptiveTutoring = () => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [content, setContent] = useState<ContentItem[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [category, setCategory] = useState([]);
+  const [videoUrls, setVideoUrls] = useState<string[]>([]);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState(videoUrls[0]);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     fetchContent("atoms");
     fetchQuestions("atoms");
     fetchCategories();
   }, []);
-  const videoUrls = [
-    "https://www.youtube.com/watch?v=NEW3QcXWKEU",
-    "https://www.youtube.com/watch?v=njEqnfyzYjI",
-    "https://www.youtube.com/watch?v=_Z7SgDeiG_E",
-    "https://www.youtube.com/watch?v=cVu8x22mSPA",
-  ];
-  const [currentVideoUrl, setCurrentVideoUrl] = useState(videoUrls[0]);
-  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    const videoContent = content.filter(item => item.type === "video").map(item => item.link);
+    setVideoUrls(videoContent);
+    if (videoContent.length > 0) {
+      setCurrentVideoUrl(videoContent[0]);
+    }
+  }, [content]);  
 
   const extractVideoId = (url: string) => {
     const urlParams = new URLSearchParams(new URL(url).search);
@@ -141,13 +144,13 @@ const AdaptiveTutoring = () => {
       description: "Examining Newton's laws of motion.",
     },
     {
-      title: "newton",
+      title: "Respiration and Circulation",
       icon: "/respiration.svg",
       bgColor: "#3294FF",
       description: "Learning about the process of respiration.",
     },
     {
-      title: "dna & rna",
+      title: "Bioenergetics and Regulation of Metabolism",
       icon: "/molecular.svg",
       bgColor: "#AE5353",
       description: "Studying the basics of molecular biology.",

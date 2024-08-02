@@ -316,7 +316,7 @@ const TestQuestions = () => {
             className="w-full h-full object-cover"
           />
         </button>
-      </div>git s
+      </div>
     </div>
   </div>
   );
