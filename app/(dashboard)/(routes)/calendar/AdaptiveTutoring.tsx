@@ -1,17 +1,69 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SettingContent from "./SettingContent";
 import Image from "next/image";
 import Quiz from "@/components/quiz";
 import { mockMcatQuiz } from "../quiz/quiz";
+
+interface ContentItem {
+  id: string;
+  title: string;
+  link: string;
+  type: string;
+}
+
+interface Question {
+  id: string;
+  questionContent: string;
+  questionOptions: string[];
+}
 
 const AdaptiveTutoring = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
   const [showPDF, setShowPDF] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedCard, setSelectedCard] = useState<number | null>(null);  
   const [showQuiz, setShowQuiz] = useState(false);
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
+
+  useEffect(() => {
+    fetchContent("atoms");
+    fetchQuestions("atoms");
+  }, []);
+
+  const fetchContent = async (conceptCategory: string) => {
+    try {
+      const response = await fetch(`/api/content?conceptCategory=${conceptCategory.replace(/ /g, '_')}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setContent(data.content);
+      console.log('Content:', data.content);
+    } catch (error) {
+      console.error('Error fetching content:', error);
+    }
+  };
+
+
+  const fetchQuestions = async (conceptCategory: string) => {
+    console.log("fetchQuestions")
+
+    try {
+      const response = await fetch(`/api/question?conceptCategory=${conceptCategory.replace(/ /g, '_')}&page=1&pageSize=10`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setQuestions(data.category.questions);
+      console.log('Questions:', data.category.questions);
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+    }
+  };
+
   interface QuizData {
     questions: {
       question: string;
@@ -22,33 +74,33 @@ const AdaptiveTutoring = () => {
   }
   
   const typedQuiz = mockMcatQuiz as QuizData;
-  const events = [
+  const conceptCategories = [
     {
-      day: "atomic theory",
+      title: "Atoms",
       icon: "/atomic.svg",
       bgColor: "#b1c03a",
       description: "Exploring the fundamentals of atomic theory.",
     },
     {
-      day: "sensation",
+      title: "Sensation",
       icon: "/sensation.svg",
       bgColor: "#B925FF",
       description: "Understanding sensory processes.",
     },
     {
-      day: "newton",
+      title: "Kinematics",
       icon: "/newton.svg",
       bgColor: "#009918",
       description: "Examining Newton's laws of motion.",
     },
     {
-      day: "respiration",
+      title: "Respiration and Circulation",
       icon: "/respiration.svg",
       bgColor: "#3294FF",
       description: "Learning about the process of respiration.",
     },
     {
-      day: "molecular bio",
+      title: "Bioenergetics and Regulation of Metabolism",
       icon: "/molecular.svg",
       bgColor: "#AE5353",
       description: "Studying the basics of molecular biology.",
@@ -75,8 +127,9 @@ const AdaptiveTutoring = () => {
     setShowSearch((prev) => !prev);
   };
 
-  const handleCardClick = (index: any) => {
+  const handleCardClick = (index: number) => {
     setSelectedCard(index);
+    fetchContent(conceptCategories[index].title);
   };
   const handleQuizTabClick = () => {
     setShowQuiz(true);
@@ -126,27 +179,26 @@ const AdaptiveTutoring = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-5 gap-4 mb-2">
-          {events.map((event, index) => (
-            <div
-              key={index}
-              className="text-white p-4 rounded-lg text-center mb-2 relative group min-h-[130px] cursor-pointer transition-transform hover:scale-105 shadow-lg"
-              style={{ backgroundColor: event.bgColor }}
-              onClick={() => handleCardClick(index)}
-            >
-              <p className="text-md font-bold mb-2">{event.day}</p>
-              <Image
-                src={event.icon}
-                alt={event.day}
-                width={80}
-                height={80}
-                className="mx-auto"
-              />
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-[#91a2b7] rounded-lg overflow-hidden">
+      <div className="grid grid-cols-5 gap-4 mb-2">
+        {conceptCategories.map((category, index) => (
+          <div
+            key={index}
+            className="text-white p-4 rounded-lg text-center mb-2 relative group min-h-[130px] cursor-pointer transition-transform hover:scale-105 shadow-lg"
+            style={{ backgroundColor: category.bgColor }}
+            onClick={() => handleCardClick(index)}
+          >
+            <p className="text-md font-bold mb-2">{category.title}</p>
+            <Image
+              src={category.icon}
+              alt={category.title}
+              width={80}
+              height={80}
+              className="mx-auto"
+            />
+          </div>
+        ))}
+      </div>
+        <div className="bg-[#91a2b7] rounded-lg ">
           <div className="bg-[#2D4778] py-2 flex items-center justify-center gap-4 mt-2">
             <button
               onClick={handleCameraClick}
@@ -167,7 +219,7 @@ const AdaptiveTutoring = () => {
             </button>
             <p className="text-lg px-3">
               {selectedCard !== null
-                ? events[selectedCard].description
+                ? conceptCategories[selectedCard].description
                 : "Light and Sound"}
             </p>
             <button
@@ -205,8 +257,42 @@ const AdaptiveTutoring = () => {
               <Quiz quiz={typedQuiz} shuffle={true}/>
 
             )}
+            
           </div>
         </div>
+      </div>
+       {/* New content list */}
+       <div className="mt-4">
+              <h3 className="text-xl font-bold mb-2">Related Content</h3>
+              <ul className="space-y-2">
+                
+                {content.map((item) => (
+                  <li key={item.id} className="bg-white text-gray-800 p-2 rounded">
+                    <h4 className="font-semibold">{item.title}</h4>
+                    <p className="text-sm">Type: {item.type}</p>
+                    <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      View Content
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+
+      <div className="mt-4">
+        <h3 className="text-xl font-bold mb-2">Practice Questions</h3>
+        <ul className="space-y-2">
+          {questions.map((question) => (
+            <li key={question.id} className="bg-white text-gray-800 p-2 rounded">
+              <p className="font-semibold">{question.questionContent}</p>
+              <ul className="list-disc pl-5 mt-2">
+                {question.questionOptions.map((option, index) => (
+                  <li key={index}>{option}</li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
