@@ -210,7 +210,7 @@ const AdaptiveTutoring = () => {
         )}
 
         <div className="grid grid-cols-12 gap-4 mb-2">
-          <div className="col-span-7">
+          <div className="col-span-10">
             <div className="grid grid-cols-5 gap-4 mb-2">
               {conceptCategories.map((category, index) => (
                 <div
@@ -231,9 +231,9 @@ const AdaptiveTutoring = () => {
               ))}
             </div>
           </div>
-          <div className="col-span-4">
+          {/* <div className="col-span-4">
             <div className="flex flex-col w-full">
-              <div className="card bg-[#446695] p-4 rounded-[20px] mb-2">
+              <div className="card bg-[#446695] p-2 rounded-[20px] mb-2">
                 <p className="text-white text-center text-sm mb-2">
                   (paste your own content link here)
                 </p>
@@ -243,7 +243,7 @@ const AdaptiveTutoring = () => {
                 />
               </div>
             </div>
-          </div>
+          </div> */}
           <div className="col-span-1">
             <div className="flex items-end">
               <button onClick={toggleSearch} className="p-2">
@@ -346,7 +346,7 @@ const AdaptiveTutoring = () => {
             </div>
           </div>
           <div className="col-span-2">
-            <div className="mt-20 h-[350px] overflow-auto">
+            <div className=" h-[420px] overflow-auto">
               {showVideo && (
                 <>
                   {videoUrls.map((url, index) => {

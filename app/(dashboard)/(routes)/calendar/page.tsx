@@ -73,23 +73,28 @@ const Page = () => {
         </div>
       </div>
       {/* Chatbot */}
-      <div className="fixed bottom-6 right-6 flex flex-col items-end">
-        {showChatbot && (
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-4" style={{ width: '350px', height: '500px' }}>
-            <ChatBot />
-          </div>
-        )}
-        <button
-          className="w-20 h-20 rounded-full overflow-hidden shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
-          onClick={() => setShowChatbot((prev) => !prev)}
-          aria-label={showChatbot ? 'Close Chat' : 'Open Chat'}
-        >
-          <img
-            src="/Kalypso.png"
-            alt="Chat with Kalypso"
-            className="w-full h-full object-cover"
-          />
-        </button>
+      <div className="fixed inset-0 pointer-events-none z-50">
+        <div className="absolute bottom-6 right-6 flex flex-col items-end pointer-events-auto">
+          {showChatbot && (
+            <div 
+              className="bg-white rounded-lg shadow-lg overflow-hidden mb-4"
+              style={{ width: '350px', height: '500px' }}
+            >
+              <ChatBot />
+            </div>
+          )}
+          <button
+            className="w-20 h-20 rounded-full overflow-hidden shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
+            onClick={() => setShowChatbot((prev) => !prev)}
+            aria-label={showChatbot ? 'Close Chat' : 'Open Chat'}
+          >
+            <img
+              src="/Kalypso.png"
+              alt="Chat with Kalypso"
+              className="w-full h-full object-cover"
+            />
+          </button>
+        </div>
       </div>
     </div>
   );
