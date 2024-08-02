@@ -19,8 +19,6 @@ export async function GET(req: Request) {
     const conceptCategory = searchParams.get('conceptCategory')?.replace(/_/g, ' ') || '';
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
-
-    console.log(conceptCategory)
     
     const result = await getQuestions({ 
       categoryId: categoryId || undefined, 

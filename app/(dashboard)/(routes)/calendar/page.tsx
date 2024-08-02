@@ -5,10 +5,13 @@ import KnowledgeProfile from "./KnowledgeProfile";
 import AdaptiveTutoring from "./AdaptiveTutoring";
 import FloatingButton from "./FloatingButton";
 import { FetchedActivity } from "@/types";
+import ChatBot from "@/components/chatbot/ChatBot";
 
 const Page = () => {
   const [activeTab, setActiveTab] = useState("Schedule");
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
+  const [showChatbot, setShowChatbot] = useState(false);
+
   const scrollPosition = 130;
   const height = "660px";
 
@@ -68,6 +71,25 @@ const Page = () => {
             <KnowledgeProfile activities={activities} />
           </div>
         </div>
+      </div>
+      {/* Chatbot */}
+      <div className="fixed bottom-6 right-6 flex flex-col items-end">
+        {showChatbot && (
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-4" style={{ width: '350px', height: '500px' }}>
+            <ChatBot />
+          </div>
+        )}
+        <button
+          className="w-20 h-20 rounded-full overflow-hidden shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
+          onClick={() => setShowChatbot((prev) => !prev)}
+          aria-label={showChatbot ? 'Close Chat' : 'Open Chat'}
+        >
+          <img
+            src="/Kalypso.png"
+            alt="Chat with Kalypso"
+            className="w-full h-full object-cover"
+          />
+        </button>
       </div>
     </div>
   );
