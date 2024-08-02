@@ -11,6 +11,7 @@
     "create-categories": "ts-node --project tsconfig.server.json scripts/createCategories.ts",
     "merge-tests": "ts-node --project tsconfig.server.json scripts/mergeTests.ts",
     "create-questions": "ts-node --project tsconfig.server.json scripts/createQuestions.ts",
+    "create-content": "ts-node --project tsconfig.server.json scripts/createContent.ts",
     "create-passages": "ts-node --project tsconfig.server.json scripts/createPassages.ts",
     "delete-all-passages": "ts-node --project tsconfig.server.json scripts/deleteAllPassages.ts"
   },
