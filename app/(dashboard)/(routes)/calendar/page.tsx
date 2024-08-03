@@ -78,7 +78,7 @@ const Page = () => {
           {showChatbot && (
             <div 
               className="bg-white rounded-lg shadow-lg overflow-hidden mb-4"
-              style={{ width: '350px', height: '500px' }}
+              style={{ width: '380px', height: '490px' }}
             >
               <ChatBot />
             </div>
