@@ -40,6 +40,7 @@
     "react-big-calendar": "^1.13.1",
     "react-calendar": "^5.0.0",
     "react-chatbot-kit": "^2.2.2",
+    "react-chatbotify": "^2.0.0-beta.4",
     "react-countup": "^6.5.3",
     "react-dom": "^18",
     "react-hook-form": "^7.47.0",
