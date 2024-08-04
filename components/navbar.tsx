@@ -29,7 +29,7 @@ export const Navbar = ({ isPro = false }: { isPro: boolean }) => {
             { href: "/calendar", label: "Calendar" },
             // { href: "/dashboard", label: "Acquire" },
             // { href: "/apply", label: "Apply" },
-            { href: "/quiz", label: "quiz" },
+            { href: "/test", label: "Test" },
             // { href: "/review", label: "Review" },
             // { href: "/test", label: "Test" },
             // TODO add auth check so this only appears for specific users
