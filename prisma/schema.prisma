@@ -91,11 +91,11 @@ model TestQuestion {
 model UserTest {
   id        String       @id @default(cuid())
   userId    String
-  testId    String
+  testId    String?
   startedAt DateTime     @default(now())
   finishedAt DateTime?
   score     Float?
-  test      Test         @relation(fields: [testId], references: [id])
+  test      Test?         @relation(fields: [testId], references: [id])
   responses UserResponse[]
 
   @@index([userId])
