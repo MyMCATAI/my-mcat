@@ -3,16 +3,23 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY!,
 });
 
-const SYSTEM_MESSAGE = `You are Kalypso the cat, an AI MCAT assistant. Your responses should be short, friendly, and tailored to helping students with MCAT-related questions. Always stay in character as a helpful, knowledgeable cat.`;
+const assistantId: string = process.env.ASSISTANT_ID || "";
+if (!assistantId) {
+  throw new Error("Assistant ID not configured in .env file");
+}
+
+// In-memory store for thread IDs (replace with a database in production)
+const userThreads = new Map<string, string>();
 
 export async function POST(req: Request) {
   try {
     const { userId } = auth();
     const body = await req.json();
-    const { message } = body;
+    const { message, threadId } = body;
+
     console.log('Received message:', message);
 
     if (!userId) {
@@ -22,7 +29,7 @@ export async function POST(req: Request) {
 
     if (!process.env.OPENAI_API_KEY) {
       console.log('OpenAI API Key not configured');
-      return NextResponse.json({ error: "OpenAI API Key not configured." }, { status: 500 });
+      return NextResponse.json({ error: "OpenAI API Key not configured." }, { status: 503 });
     }
 
     if (!message) {
@@ -30,22 +37,67 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
 
-    console.log('Sending request to OpenAI');
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: SYSTEM_MESSAGE },
-        { role: "user", content: message }
-      ]
-    });
-    console.log('Received response from OpenAI');
+    // Use existing thread or create a new one
+    let currentThreadId = threadId || userThreads.get(userId);
+    if (!currentThreadId) {
+      console.log('Creating new thread');
+      const thread = await openai.beta.threads.create();
+      currentThreadId = thread.id;
+      userThreads.set(userId, currentThreadId);
+    }
 
-    return NextResponse.json({ message: response.choices[0].message.content });
+    console.log('Using thread:', currentThreadId);
+
+    // Add the message to the thread
+    await openai.beta.threads.messages.create(currentThreadId, {
+      role: "user",
+      content: message
+    });
+
+    // Run the assistant
+    const run = await openai.beta.threads.runs.create(currentThreadId, {
+      assistant_id: assistantId,
+    });
+
+    // Wait for the run to complete
+    let runStatus = await openai.beta.threads.runs.retrieve(currentThreadId, run.id);
+    while (runStatus.status !== 'completed') {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      runStatus = await openai.beta.threads.runs.retrieve(currentThreadId, run.id);
+    }
+
+    // Retrieve only the last message from the assistant
+    const messages = await openai.beta.threads.messages.list(currentThreadId, { limit: 1 });
+    const lastMessage = messages.data[0];
+
+    if (!lastMessage || lastMessage.role !== 'assistant') {
+      throw new Error("No response from assistant");
+    }
+
+    console.log('Received response from Assistant');
+
+    // Handle different content types
+    if (Array.isArray(lastMessage.content)) {
+      const textContents = lastMessage.content
+        .filter(content => content.type === 'text')
+        .map(content => content.text.value);
+      return NextResponse.json({
+        message: textContents.join('\n'),
+        threadId: currentThreadId
+      }, { status: 200 });
+    } else {
+      // Fallback for unexpected content structure
+      return NextResponse.json({
+        message: "Unexpected response format from assistant",
+        threadId: currentThreadId
+      }, { status: 200 });
+    }
   } catch (error) {
     console.error('[CONVERSATION_ERROR]', error);
-    if (error instanceof Error) {
-      return NextResponse.json({ error: `Internal Error: ${error.message}` }, { status: 500 });
-    }
-    return NextResponse.json({ error: "Internal Error" }, { status: 500 });
+    return NextResponse.json({
+      error: error instanceof Error ? `Internal Error: ${error.message}` : "Internal Error"
+    }, {
+      status: error instanceof Error ? 507 : 505
+    });
   }
 }

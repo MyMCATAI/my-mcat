@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
+import FileUploadComponent from './fileUpload';
 
-// Dynamically import ChatBot with SSR disabled
 const ChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
+
 
 const MyChatBot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [threadId, setThreadId] = useState<string | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -23,21 +26,48 @@ const MyChatBot = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, threadId }),
       });
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
-      console.log('Received response:', data);
-      return data.message;
+  
+      const contentType = response.headers.get("content-type");
+      let data;
+  
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await response.json();
+        console.log('Received JSON response:', data);
+      } else {
+        data = await response.text();
+        console.log('Received text response:', data);
+      }
+  
+      // Update the threadId if it's returned in JSON response
+      if (data.threadId) {
+        setThreadId(data.threadId);
+      }
+  
+      // Return the message based on content type
+      if (typeof data === 'string') {
+        return data;
+      } else {
+        return data.message;
+      }
     } catch (error) {
       console.error('Error:', error);
-      setError(`An error occurred while sending the message: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setError(`An error occurred: ${error instanceof Error ? error.message : String(error)}`);
       return null;
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  const handleScreenshot = (blob: Blob) => {
+    // Handle the screenshot blob here
+    console.log('Screenshot taken:', blob);
+    // You can add logic here to send the screenshot to the server or process it as needed
   };
 
   const flow = {
@@ -66,11 +96,16 @@ const MyChatBot = () => {
       storageKey: "mcat_assistant_chat_history"
     },
     header: {
+      showAvatar: false,
       title: (
-        <div style={{cursor: "pointer", margin: 0, fontSize: 20, fontWeight: "bold"}} onClick={
-          () => window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-        }>
-          kalypso
+        <div className="flex items-center justify-between w-full">
+          <div 
+            style={{cursor: "pointer", margin: 0, fontSize: 10, fontWeight: ""}} 
+            onClick={() => window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")}
+          >
+          </div>
+          <ScreenshotButton onScreenshot={handleScreenshot} />
+          <FileUploadComponent></FileUploadComponent>
         </div>
       )
     },
@@ -84,7 +119,7 @@ const MyChatBot = () => {
     },
     botBubble: {
       simStream: true
-    }
+    },
   };
 
   const themes = [
