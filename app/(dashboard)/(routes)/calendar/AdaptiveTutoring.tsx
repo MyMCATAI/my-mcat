@@ -2,8 +2,7 @@
 import React, { useEffect, useState } from "react";
 import SettingContent from "./SettingContent";
 import Image from "next/image";
-import Quiz from "@/components/quiz";
-import { mockMcatQuiz } from "../quiz/quiz";
+import Quiz, {QuizQuestion} from "@/components/quiz";
 import ReactPlayer from "react-player";
 import prisma from "@/lib/prismadb";
 import { getCategories } from "@/lib/category";
@@ -16,17 +15,6 @@ interface ContentItem {
   type: string;
 }
 
-interface Question {
-  id: string;
-  questionContent: string;
-  questionOptions: string[];
-}
-
-interface GetCategoriesParams {
-  page?: number;
-  pageSize?: number;
-}
-
 const AdaptiveTutoring = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
@@ -35,7 +23,7 @@ const AdaptiveTutoring = () => {
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
   const [content, setContent] = useState<ContentItem[]>([]);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [videoUrls, setVideoUrls] = useState<string[]>([]);
   const [currentVideoUrl, setCurrentVideoUrl] = useState(videoUrls[0]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -81,8 +69,6 @@ const AdaptiveTutoring = () => {
   };
 
   const fetchQuestions = async (conceptCategory: string) => {
-    console.log("fetchQuestions");
-
     try {
       const response = await fetch(
         `/api/question?conceptCategory=${conceptCategory.replace(
@@ -123,7 +109,7 @@ const AdaptiveTutoring = () => {
     timeLimit: string;
   }
 
-  const typedQuiz = mockMcatQuiz as QuizData;
+  
   const conceptCategories = [
     {
       title: "Atoms",
@@ -180,6 +166,7 @@ const AdaptiveTutoring = () => {
   const handleCardClick = (index: number) => {
     setSelectedCard(index);
     fetchContent(conceptCategories[index].title);
+    fetchQuestions(conceptCategories[index].title)
   };
   const handleQuizTabClick = () => {
     setShowQuiz(true);
@@ -341,7 +328,7 @@ const AdaptiveTutoring = () => {
                     title="PDF Document"
                   ></iframe>
                 )}
-                {showQuiz && <Quiz quiz={typedQuiz} shuffle={true} />}
+                {showQuiz && <Quiz questions={questions} shuffle={true} />}
               </div>
             </div>
           </div>
@@ -395,25 +382,6 @@ const AdaptiveTutoring = () => {
               >
                 View Content
               </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="mt-4">
-        <h3 className="text-xl font-bold mb-2">Practice Questions</h3>
-        <ul className="space-y-2">
-          {questions.map((question) => (
-            <li
-              key={question.id}
-              className="bg-white text-gray-800 p-2 rounded"
-            >
-              <p className="font-semibold">{question.questionContent}</p>
-              <ul className="list-disc pl-5 mt-2">
-                {question.questionOptions.map((option, index) => (
-                  <li key={index}>{option}</li>
-                ))}
-              </ul>
             </li>
           ))}
         </ul>

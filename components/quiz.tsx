@@ -1,36 +1,34 @@
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 
-interface QuizQuestion {
-  question: string;
-  options: string[];
-  image?: string;
-}
-
-export interface QuizData {
-  questions: QuizQuestion[];
-  timeLimit: string;
+export interface QuizQuestion {
+  categoryId: string;
+  contentCategory: string;
+  id: string;
+  passage: string | null;
+  passageId: string | null;
+  questionAnswerNotes: string | null;
+  questionContent: string;
+  questionID: string;
+  questionOptions: string[];
 }
 
 interface QuizProps {
-  quiz: QuizData;
+  questions: QuizQuestion[];
   shuffle?: boolean;
 }
 
-const Quiz: React.FC<QuizProps> = ({ quiz, shuffle = false }) => {
+const Quiz: React.FC<QuizProps> = ({ questions, shuffle = false }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [shuffledQuestions, setShuffledQuestions] = useState<QuizQuestion[]>(
-    []
-  );
+  const [shuffledQuestions, setShuffledQuestions] = useState<QuizQuestion[]>([]);
 
   useEffect(() => {
     if (shuffle) {
-      setShuffledQuestions([...quiz.questions].sort(() => Math.random() - 0.5));
+      setShuffledQuestions([...questions].sort(() => Math.random() - 0.5));
     } else {
-      setShuffledQuestions(quiz.questions);
+      setShuffledQuestions(questions);
     }
-  }, [quiz, shuffle]);
+  }, [questions, shuffle]);
 
   const currentQuestion = shuffledQuestions[currentQuestionIndex];
 
@@ -55,31 +53,25 @@ const Quiz: React.FC<QuizProps> = ({ quiz, shuffle = false }) => {
   if (!currentQuestion) return null;
 
   return (
-    <div className="bg-transparent text-black px-6 rounded-lg  mx-auto">
+    <div className="bg-transparent text-black px-6 rounded-lg mx-auto">
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-xl font-semi-bold text-white drop-shadow-lg">
           Question {currentQuestionIndex + 1}
         </h2>
         <span className="text-sm text-white drop-shadow-lg">
-          Time Remaining: {quiz.timeLimit} | {currentQuestionIndex + 1} of{" "}
-          {shuffledQuestions.length}
+          {currentQuestionIndex + 1} of {shuffledQuestions.length}
         </span>
       </div>
 
       <div className="mb-2">
-        <p className="text-lg mb-4 text-white drop-shadow-lg">{currentQuestion.question}</p>
-        {currentQuestion.image && (
-          <div className="relative w-full h-64 mb-4">
-            <Image
-              src={currentQuestion.image}
-              alt="Question Image"
-              layout="fill"
-              objectFit="contain"
-            />
+        <p className="text-lg mb-4 text-white drop-shadow-lg">{currentQuestion.questionContent}</p>
+        {currentQuestion.passage && (
+          <div className="mb-4 p-4 bg-gray-100 rounded">
+            <p className="text-sm">{currentQuestion.passage}</p>
           </div>
         )}
         <div className="space-y-2">
-          {currentQuestion.options.map((option, index) => (
+          {currentQuestion.questionOptions[0].split('", "').map((option, index) => (
             <button
               key={index}
               onClick={() => handleAnswerSelect(option)}
@@ -89,7 +81,7 @@ const Quiz: React.FC<QuizProps> = ({ quiz, shuffle = false }) => {
                   : "bg-gray-100 hover:bg-gray-200"
               }`}
             >
-              {String.fromCharCode(65 + index)}. {option}
+              {String.fromCharCode(65 + index)}. {option.replace(/^\["|"\]$/g, '')}
             </button>
           ))}
         </div>
