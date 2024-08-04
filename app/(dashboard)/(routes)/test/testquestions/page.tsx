@@ -17,6 +17,7 @@ const TestQuestions = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPassage, setCurrentPassage] = useState<Passage | null>(null);
   const [userResponses, setUserResponses] = useState<Record<string, UserResponse>>({});
+  const [pendingResponses, setPendingResponses] = useState<Record<string, UserResponse>>({});
   const passageCacheRef = useRef<Record<string, Passage>>({});
   const searchParams = useSearchParams();
   const testId = searchParams.get('id');
@@ -26,7 +27,6 @@ const TestQuestions = () => {
   const [questionIdToResponseId, setQuestionIdToResponseId] = useState<Record<string, string>>({});
   const [showChatbot, setShowChatbot] = useState(false);
 
-  
   const {
     seconds,
     minutes,
@@ -59,29 +59,44 @@ const TestQuestions = () => {
     reset();
   }, [currentQuestionIndex, test]);
 
-  const handleUserResponse = async (questionId: string, userAnswer: string, isCorrect: boolean): Promise<UserResponse | null> => {
+  const handleUserResponse = async (questionId: string, userAnswer: string, isCorrect: boolean) => {
     let currentUserTest = userTest;
 
     if (!testCreated) {
       currentUserTest = await createUserTest();
       if (!currentUserTest) {
         console.error('Failed to create user test');
-        return null;
+        return;
       }
       await new Promise(resolve => setTimeout(resolve, 0));
     }
 
     if (!currentUserTest) {
       console.error('No valid user test available');
-      return null;
+      return;
     }
 
-    console.log("change answer");
-
-    const currentQuestion = getCurrentQuestion();
-    if (!currentQuestion) return null;
-
     const timeSpent = hours * 3600 + minutes * 60 + seconds;
+
+    const optimisticResponse: UserResponse = {
+      id: `temp-${questionId}`,
+      userTestId: currentUserTest.id,
+      questionId,
+      userAnswer,
+      isCorrect,
+      timeSpent,
+      answeredAt: new Date(),
+    };
+
+    setPendingResponses(prev => ({
+      ...prev,
+      [questionId]: optimisticResponse
+    }));
+
+    setQuestionIdToResponseId(prev => ({
+      ...prev,
+      [questionId]: optimisticResponse.id
+    }));
 
     try {
       const response = await fetch('/api/user-test/response', {
@@ -110,12 +125,25 @@ const TestQuestions = () => {
         [questionId]: savedResponse.id
       }));
 
-      return savedResponse;
+      // Remove from pending responses
+      setPendingResponses(prev => {
+        const { [questionId]: _, ...rest } = prev;
+        return rest;
+      });
+
     } catch (err) {
       console.error('Error saving user response:', err);
-      return null;
+      setPendingResponses(prev => {
+        const { [questionId]: _, ...rest } = prev;
+        return rest;
+      });
+      setQuestionIdToResponseId(prev => {
+        const { [questionId]: _, ...rest } = prev;
+        return rest;
+      });
     }
   };
+
   const createUserTest = async (): Promise<{ id: string } | null> => {
     if (!testId || testCreated) return null;
     setIsCreatingTest(true);
@@ -243,6 +271,11 @@ const TestQuestions = () => {
     }
   };
 
+  const getCurrentUserResponse = (questionId: string): UserResponse | undefined => {
+    const responseId = questionIdToResponseId[questionId];
+    return userResponses[responseId] || pendingResponses[questionId];
+  };
+
   if (loading) return <div className="text-white">Loading...</div>;
   if (error) return <div className="text-white">Error: {error}</div>;
   if (!test) return <div className="text-white">No test found</div>;
@@ -252,51 +285,73 @@ const TestQuestions = () => {
 
   return (
     <div className="bg-[#001326] h-screen flex flex-col text-black overflow-hidden">
-    <div className="bg-gray-800 text-white p-4 flex justify-between items-center border-b-2 border-sky-500">
-      <h1 className="text-lg font-semibold">
-        {test.title}
-        {isCreatingTest && <span className="ml-2 text-sm text-gray-400">Creating test...</span>}
-      </h1>
-      <div className="timer">
-        <span>{hours.toString().padStart(2, '0')}:</span>
-        <span>{minutes.toString().padStart(2, '0')}:</span>
-        <span>{seconds.toString().padStart(2, '0')}</span>
-      </div>
-    </div>
-    <div className="flex flex-grow overflow-hidden">
-      <div className="w-1/2 border-r border-sky-500 overflow-auto">
-        <div className="p-4">
-          {currentPassage && <PassageComponent passageData={currentPassage} />}
+      <div className="bg-gray-800 text-white p-4 flex justify-between items-center border-b-2 border-sky-500">
+        <h1 className="text-lg font-semibold">
+          {test?.title}
+          {isCreatingTest && <span className="ml-2 text-sm text-gray-400">Creating test...</span>}
+        </h1>
+        <div className="timer">
+          <span>{hours.toString().padStart(2, '0')}:</span>
+          <span>{minutes.toString().padStart(2, '0')}:</span>
+          <span>{seconds.toString().padStart(2, '0')}</span>
         </div>
       </div>
-      <div className="w-1/2 flex flex-col overflow-hidden">
-        <div className="flex-grow overflow-auto">
-          <div className="p-4">
-            {currentQuestion && currentTestQuestion && (
-              <QuestionComponent
-                question={currentQuestion} 
-                onNext={handleNextQuestion}
-                onPrevious={handlePreviousQuestion}
-                isFirst={currentQuestionIndex === 0}
-                isLast={currentQuestionIndex === test.questions.length - 1}
-                onAnswer={handleUserResponse}
-                userAnswer={userResponses[questionIdToResponseId[currentQuestion.id]]?.userAnswer}
-              />
-            )}
-          </div>
-        </div>
-        {currentQuestionIndex === test.questions.length - 1 && (
-          <div className="p-4 flex justify-center">
-            <button 
-              onClick={handleFinishTest} 
-              disabled={isSubmitting}
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Finishing...' : 'Finish Test'}
-            </button>
+      <div className="flex flex-grow overflow-hidden">
+        {currentPassage ? (
+          <>
+            <div className="w-1/2 border-r border-sky-500 overflow-auto">
+              <div className="p-4">
+                <PassageComponent passageData={currentPassage} />
+              </div>
+            </div>
+            <div className="w-1/2 flex flex-col overflow-hidden">
+              <div className="flex-grow overflow-auto">
+                <div className="p-4">
+                  {currentQuestion && currentTestQuestion && (
+                    <QuestionComponent
+                      question={currentQuestion} 
+                      onNext={handleNextQuestion}
+                      onPrevious={handlePreviousQuestion}
+                      isFirst={currentQuestionIndex === 0}
+                      isLast={currentQuestionIndex === test?.questions.length - 1}
+                      onAnswer={handleUserResponse}
+                      userAnswer={userResponses[questionIdToResponseId[currentQuestion.id]]?.userAnswer}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="w-full flex items-center justify-center">
+            <div className="max-w-2xl w-full p-8">
+              {currentQuestion && currentTestQuestion && (
+                <QuestionComponent
+                  question={currentQuestion} 
+                  onNext={handleNextQuestion}
+                  onPrevious={handlePreviousQuestion}
+                  isFirst={currentQuestionIndex === 0}
+                  isLast={currentQuestionIndex === test?.questions.length - 1}
+                  onAnswer={handleUserResponse}
+                  userAnswer={getCurrentUserResponse(getCurrentQuestion()!.id)?.userAnswer}
+                />
+              )}
+            </div>
           </div>
         )}
       </div>
+      
+      {currentQuestionIndex === test?.questions.length - 1 && (
+        <div className="p-4 flex justify-center">
+          <button 
+            onClick={handleFinishTest} 
+            disabled={isSubmitting}
+            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Finishing...' : 'Finish Test'}
+          </button>
+        </div>
+      )}
 
       {/* Chatbot */}
       <div className="fixed bottom-6 right-6 flex flex-col items-end">
@@ -318,8 +373,8 @@ const TestQuestions = () => {
         </button>
       </div>
     </div>
-  </div>
   );
 };
+
 
 export default TestQuestions;

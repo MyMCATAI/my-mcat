@@ -7,7 +7,7 @@ const DashboardLayout = async ({
 }: {
   children: React.ReactNode
 }) => {
-  const userBio = await getBio();
+  // const userBio = await getBio();
   const isPro = await checkSubscription();
 
   return ( 
