@@ -6,6 +6,7 @@ import AdaptiveTutoring from "./AdaptiveTutoring";
 import FloatingButton from "./FloatingButton";
 import { FetchedActivity } from "@/types";
 import ChatBot from "@/components/chatbot/ChatBot";
+import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
 
 const Page = () => {
   const [activeTab, setActiveTab] = useState("Schedule");
@@ -78,13 +79,13 @@ const Page = () => {
           {showChatbot && (
             <div 
               className="bg-white rounded-lg shadow-lg overflow-hidden mb-4"
-              style={{ width: '360px', height: '500px' }}
+              style={{ width: '370px', height: '600px' }}
             >
               <ChatBot />
             </div>
           )}
           <button
-            className="w-20 h-20 rounded-full overflow-hidden shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
+            className="w-20 h-20 rounded-full overflow-hidden shadow-lg transition duration-120 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
             onClick={() => setShowChatbot((prev) => !prev)}
             aria-label={showChatbot ? 'Close Chat' : 'Open Chat'}
           >
