@@ -111,7 +111,7 @@ const MyChatBot = () => {
     },
     voice: {
       disabled: false,
-      defaultToggledOn: true,
+      defaultToggledOn: false,
       language: "en-US",
       autoSendDisabled: false,
       autoSendPeriod: 1000,
