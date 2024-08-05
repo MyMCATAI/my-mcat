@@ -7,6 +7,8 @@ import ReactPlayer from "react-player";
 import prisma from "@/lib/prismadb";
 import { getCategories } from "@/lib/category";
 import ChatBot from "@/components/chatbot/ChatBot";
+import { useToast } from "@/components/ui/use-toast";
+import { Toast } from "@/components/ui/toast";
 
 interface ContentItem {
   id: string;
@@ -30,6 +32,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
   const [videoUrls, setVideoUrls] = useState<string[]>([]);
   const [currentVideoUrl, setCurrentVideoUrl] = useState(videoUrls[0]);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchContent("atoms");
@@ -108,15 +113,38 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
     }
   };
 
-  interface QuizData {
-    questions: {
-      question: string;
-      options: string[];
-      image?: string;
-    }[];
-    timeLimit: string;
-  }
+  const handleUpdateKnowledgeProfile = async () => {
+    setIsUpdatingProfile(true);
+    try {
+      const response = await fetch('/api/knowledge-profile/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
+      if (!response.ok) {
+        throw new Error('Failed to update knowledge profile');
+      }
+
+      const data = await response.json();
+      toast({
+        title: "Success",
+        description: "Knowledge profile updated successfully!",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error updating knowledge profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update knowledge profile. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
   
   const conceptCategories = [
     {
@@ -225,6 +253,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
                 </div>
               ))}
             </div>
+            
           </div>
           {/* <div className="col-span-4">
             <div className="flex flex-col w-full">
@@ -252,6 +281,21 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
                   <path d="m21.75 20.063-5.816-5.818a7.523 7.523 0 0 0 1.44-4.433c0-4.17-3.393-7.562-7.562-7.562-4.17 0-7.562 3.392-7.562 7.562s3.392 7.562 7.562 7.562a7.523 7.523 0 0 0 4.433-1.44l5.818 5.816 1.687-1.688ZM9.812 14.986a5.174 5.174 0 1 1-.002-10.35 5.174 5.174 0 0 1 0 10.349Z"></path>
                 </svg>
               </button>
+              <button 
+              onClick={handleUpdateKnowledgeProfile} 
+              className={`p-2 mr-2 ${isUpdatingProfile ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isUpdatingProfile}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="#ffffff"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-12h2v4h4v2h-4v4h-2v-4H7v-2h4V8z"/>
+              </svg>
+            </button>
               <button onClick={toggleSettings} className="p-2">
                 <svg
                   width="24"
