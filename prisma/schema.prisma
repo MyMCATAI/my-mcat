@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
@@ -29,49 +29,51 @@ model UserSubscription {
 model Passage {
   id        String     @id @default(cuid())
   text      String     @db.Text
-  citation      String     @db.Text
+  citation  String     @db.Text
   questions Question[]
 }
 
 model Question {
-  id                  String   @id @default(cuid())
+  id                  String         @id @default(cuid())
   questionID          String
-  questionContent     String   @db.Text
-  questionOptions     String   @db.Text
-  questionAnswerNotes String?  @db.Text
+  questionContent     String         @db.Text
+  questionOptions     String         @db.Text
+  questionAnswerNotes String?        @db.Text
   contentCategory     String
   passageId           String?
-  passage             Passage? @relation(fields: [passageId], references: [id])
-  category            Category @relation(fields: [categoryId], references: [id])
+  passage             Passage?       @relation(fields: [passageId], references: [id])
+  category            Category       @relation(fields: [categoryId], references: [id])
   categoryId          String
-  testQuestions TestQuestion[]
-  userResponses UserResponse[]
+  testQuestions       TestQuestion[]
+  userResponses       UserResponse[]
 
   @@index([passageId])
   @@index([categoryId])
 }
 
 model Category {
-  id               String     @id @default(cuid())
-  section          String
-  subjectCategory  String
-  contentCategory  String
-  conceptCategory  String
-  generalWeight    Float
-  color             String @default("")
-  icon              String @default("")
-  questions        Question[]
+  id                 String             @id @default(cuid())
+  section            String
+  subjectCategory    String
+  contentCategory    String
+  conceptCategory    String
+  generalWeight      Float
+  color              String             @default("")
+  icon               String             @default("")
+  questions          Question[]
   calendarActivities CalendarActivity[]
-  contents         Content[]
+  contents           Content[]
+  userResponses      UserResponse[]
+  knowledgeProfiles  KnowledgeProfile[]
 }
 
 model Test {
-  id          String       @id @default(cuid())
+  id          String         @id @default(cuid())
   title       String
-  description String? @db.Text
-  setName     String? 
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  description String?        @db.Text
+  setName     String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   questions   TestQuestion[]
   userTests   UserTest[]
 }
@@ -89,87 +91,105 @@ model TestQuestion {
 }
 
 model UserTest {
-  id        String       @id @default(cuid())
-  userId    String
-  testId    String?
-  startedAt DateTime     @default(now())
+  id         String         @id @default(cuid())
+  userId     String
+  testId     String?
+  startedAt  DateTime       @default(now())
   finishedAt DateTime?
-  score     Float?
-  test      Test?         @relation(fields: [testId], references: [id])
-  responses UserResponse[]
+  score      Float?
+  test       Test?          @relation(fields: [testId], references: [id])
+  responses  UserResponse[]
 
   @@index([userId])
   @@index([testId])
 }
 
 model UserResponse {
-  id           String   @id @default(cuid())
-  userTestId   String ?
-  questionId   String
-  userAnswer   String
-  isCorrect    Boolean
-  timeSpent    Float ?      
-  userNotes    String?  @db.Text
-  answeredAt   DateTime @default(now())
-  userTest     UserTest? @relation(fields: [userTestId], references: [id])
-  question     Question @relation(fields: [questionId], references: [id])
+  id         String    @id @default(cuid())
+  userTestId String?
+  questionId String
+  userAnswer String
+  isCorrect  Boolean
+  categoryId String?
+  timeSpent  Float?
+  userNotes  String?   @db.Text
+  answeredAt DateTime  @default(now())
+  userTest   UserTest? @relation(fields: [userTestId], references: [id])
+  question   Question  @relation(fields: [questionId], references: [id])
+  Category   Category? @relation(fields: [categoryId], references: [id])
 
   @@index([userTestId])
   @@index([questionId])
+  @@index([categoryId])
 }
 
 model StudyPlan {
-  id                String   @id @default(cuid())
-  userId            String
-  creationDate      DateTime @default(now())
-  examDate          DateTime
-  resources         Json
-  hoursPerDay       Json
-  fullLengthDays    String   // This will store the array of booleans as a string
-  updatedAt         DateTime @updatedAt
+  id                 String             @id @default(cuid())
+  userId             String
+  creationDate       DateTime           @default(now())
+  examDate           DateTime
+  resources          Json
+  hoursPerDay        Json
+  fullLengthDays     String // This will store the array of booleans as a string
+  updatedAt          DateTime           @updatedAt
   calendarActivities CalendarActivity[]
 
   @@index([userId])
 }
+
 model CalendarActivity {
   id            String    @id @default(cuid())
   userId        String
   studyPlanId   String
   categoryId    String?
-  contentId     String? 
+  contentId     String?
   activityText  String    @db.Text
   activityTitle String
   hours         Float
   activityType  String
   link          String?
-  scheduledDate DateTime  
+  scheduledDate DateTime
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   status        String    @default("Not Started")
   studyPlan     StudyPlan @relation(fields: [studyPlanId], references: [id])
   category      Category? @relation(fields: [categoryId], references: [id])
-  content       Content?  @relation(fields: [contentId], references: [id]) 
+  content       Content?  @relation(fields: [contentId], references: [id])
 
   @@index([userId])
   @@index([studyPlanId])
   @@index([categoryId])
   @@index([scheduledDate])
-  @@index([contentId])  
+  @@index([contentId])
 }
 
 model Content {
-  id               String   @id @default(cuid())
-  title            String   @default("")
-  categoryId       String
-  link             String   @default("")
-  type             String   @default("")
-  total_timing     Float    @default(0)
-  minutes_estimate Float    @default(0)
-  transcript       String?  @db.Text 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  category         Category @relation(fields: [categoryId], references: [id])
+  id                 String             @id @default(cuid())
+  title              String             @default("")
+  categoryId         String
+  link               String             @default("")
+  type               String             @default("")
+  total_timing       Float              @default(0)
+  minutes_estimate   Float              @default(0)
+  transcript         String?            @db.Text
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  category           Category           @relation(fields: [categoryId], references: [id])
   calendarActivities CalendarActivity[]
 
+  @@index([categoryId])
+}
+
+model KnowledgeProfile {
+  id             String   @id @default(cuid())
+  userId         String
+  categoryId     String
+  correctAnswers Int      @default(0)
+  totalAttempts  Int      @default(0)
+  lastAttemptAt  DateTime @default(now())
+  category       Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([userId, categoryId])
+  @@index([userId])
   @@index([categoryId])
 }
