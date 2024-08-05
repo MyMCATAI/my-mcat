@@ -41,6 +41,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [videoUrls, setVideoUrls] = useState<string[]>([]);
   const [currentVideoUrl, setCurrentVideoUrl] = useState(videoUrls[0]);
+  const [PDFUrls, setPDFUrls] = useState<string[]>([]);
+  const [currentPdfUrl, setCurrentPdfUrl] = useState(PDFUrls[0]);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -54,12 +57,22 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
   }, []);
 
   useEffect(() => {
+    console.log("content")
     const videoContent = content.filter(item => item.type === "video").map(item => item.link);
     setVideoUrls(videoContent);
     if (videoContent.length > 0) {
       setCurrentVideoUrl(videoContent[0]);
     }
-  }, [content]);  // want something similar for readings
+
+    const pdfContent = content
+        .filter((item) => item.type === "reading")
+        .map((item) => item.link.replace("/view", "/preview"));
+
+    setPDFUrls(pdfContent);
+    if (pdfContent.length > 0) {
+      setCurrentPdfUrl(pdfContent[0]);
+    }
+  }, [content]);
 
   const extractVideoId = (url: string) => {
     const urlParams = new URLSearchParams(new URL(url).search);
@@ -175,6 +188,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
     }
   };
   
+
   const conceptCategories = [
     {
       title: "Atoms",
@@ -230,8 +244,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
 
   const handleCardClick = (index: number) => {
     setSelectedCard(index);
-    fetchContent(categories[index].title);
-    fetchQuestions(categories[index].title);
+    fetchContent(conceptCategories[index].title);
+    fetchQuestions(conceptCategories[index].title);
   };
   
   const handleQuizTabClick = () => {
@@ -263,22 +277,26 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
         )}
 
         <div className="grid grid-cols-12 gap-4 mb-2">
-          <div className="col-span-10">
+        <div className={`col-span-${videoUrls.length>1 ? "10" : "12"}`}>
             <div className="grid grid-cols-5 gap-4 mb-2">
-              {conceptCategories.map((category, index) => (
+              {conceptCategories.slice(0, 5).map((category, index) => (
                 <div
                   key={index}
-                  className="text-white p-2 rounded-lg text-center mb-2 relative group min-h-[100px] cursor-pointer transition-transform hover:scale-105 shadow-lg"
+                  className="text-white p-2 rounded-lg text-start mb-2 relative group min-h-[100px] cursor-pointer transition-transform hover:scale-105 shadow-lg"
                   style={{ backgroundColor: category.bgColor }}
                   onClick={() => handleCardClick(index)}
                 >
-                  <p className="text-md font-bold mb-2">{category.title}</p>
+                  <p className="text-md font-bold mb-5">
+                    {category?.title.length > 5
+                      ? `${category?.title.slice(0, 10)}...`
+                      : category?.title}
+                  </p>
                   <Image
                     src={category.icon}
                     alt={category.title}
-                    width={60}
-                    height={60}
-                    className="mx-auto"
+                    width={45}
+                    height={45}
+                    className="ms-auto"
                   />
                 </div>
               ))}
@@ -406,7 +424,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
 
                 {showPDF && (
                   <iframe
-                    src="/sample.pdf"
+                    src={currentPdfUrl}
                     className="w-full rounded-lg"
                     height="320"
                     title="PDF Document"
@@ -416,6 +434,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
               </div>
             </div>
           </div>
+          {videoUrls.length>1 && (
+
           <div className="col-span-2">
             <div className=" h-[420px] overflow-auto">
               {showVideo && (
@@ -448,28 +468,35 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
               )}
             </div>
           </div>
+          )}
         </div>
       </div>
+
       {/* New content list */}
-      <div className="mt-4">
-        <h3 className="text-xl font-bold mb-2">Related Content</h3>
-        <ul className="space-y-2">
-          {content.map((item) => (
-            <li key={item.id} className="bg-white text-gray-800 p-2 rounded">
-              <h4 className="font-semibold">{item.title}</h4>
-              <p className="text-sm">Type: {item.type}</p>
-              <a
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+      <div>
+        <h3 className="text-xl font-bold my-2">Related Content</h3>
+        <div className="mt-4  h-[200px] overflow-auto">
+          <ul className=" grid grid-cols-2 gap-4">
+            {content.map((item) => (
+              <li
+                key={item.id}
+                className="bg-[#021326] text-gray-800 p-4 rounded-[20px] mt-2"
               >
-                View Content
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
+               <h4 className="font-semibold text-gray-400">{item.title}</h4>
+                <p className="text-sm text-[#7a99e4]">Type: {item.type}</p>
+                <a
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white text-sm hover:underline "
+                >
+                  View Content
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+        </div>
     </div>
   );
 };
