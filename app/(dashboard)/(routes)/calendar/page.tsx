@@ -38,7 +38,9 @@ const Page = () => {
       case "Schedule":
         return <Schedule activities={activities} />;
       case "KnowledgeProfile":
-        return <AdaptiveTutoring />;
+        return <AdaptiveTutoring 
+                  toggleChatBot={toggleChatBot}
+                />;
       case "AdaptiveTutoring":
         return "";
       default:
@@ -50,6 +52,10 @@ const Page = () => {
     window.scrollTo({ top: scrollPosition, behavior: "smooth" });
   }, []);
 
+
+  const toggleChatBot=()=>{
+    setShowChatbot(!showChatbot)
+  }
   return (
     <div className="container py-10">
       <div className="text-white flex gap-6">

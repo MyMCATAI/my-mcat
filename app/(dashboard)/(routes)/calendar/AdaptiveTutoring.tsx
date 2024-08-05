@@ -14,8 +14,11 @@ interface ContentItem {
   link: string;
   type: string;
 }
+interface AdaptiveTutoringProps {
+  toggleChatBot: () => void;
+}
 
-const AdaptiveTutoring = () => {
+const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
   const [showPDF, setShowPDF] = useState(false);
@@ -50,6 +53,11 @@ const AdaptiveTutoring = () => {
   const handleThumbnailClick = (url: string) => {
     setCurrentVideoUrl(url);
     setIsPlaying(true);
+  };
+
+
+  const handleChatClick = () => {
+    toggleChatBot()
   };
 
   const fetchContent = async (conceptCategory: string) => {
@@ -299,7 +307,9 @@ const AdaptiveTutoring = () => {
                 >
                   <Image src="/exam.svg" width={30} height={30} alt="exam" />
                 </button>
-                <button className="p-2 hover:bg-[#3D5788] rounded">
+                <button 
+                onClick={handleChatClick}
+                className="p-2 hover:bg-[#3D5788] rounded">
                   <Image src="/cat.svg" width={30} height={30} alt="cat" />
                 </button>
               </div>
