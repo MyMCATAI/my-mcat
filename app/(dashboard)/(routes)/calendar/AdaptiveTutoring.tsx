@@ -9,12 +9,22 @@ import { getCategories } from "@/lib/category";
 import ChatBot from "@/components/chatbot/ChatBot";
 import { useToast } from "@/components/ui/use-toast";
 import { Toast } from "@/components/ui/toast";
+import KnowledgeProfile from "./KnowledgeProfile";
 
 interface ContentItem {
   id: string;
   title: string;
   link: string;
   type: string;
+}
+
+//todo move this to index
+interface Category {
+  id: string;
+  title: string;
+  icon: string;
+  bgColor: string;
+  description: string;
 }
 interface AdaptiveTutoringProps {
   toggleChatBot: () => void;
@@ -33,13 +43,14 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
   const [currentVideoUrl, setCurrentVideoUrl] = useState(videoUrls[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const { toast } = useToast();
 
   useEffect(() => {
     fetchContent("atoms");
     fetchQuestions("atoms");
-    fetchCategories();
+    fetchCategories(true);
   }, []);
 
   useEffect(() => {
@@ -48,7 +59,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
     if (videoContent.length > 0) {
       setCurrentVideoUrl(videoContent[0]);
     }
-  }, [content]);  
+  }, [content]);  // want something similar for readings
 
   const extractVideoId = (url: string) => {
     const urlParams = new URLSearchParams(new URL(url).search);
@@ -99,15 +110,33 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
       console.error("Error fetching questions:", error);
     }
   };
-
-  const fetchCategories = async () => {
+  
+  const fetchCategories = async (useKnowledgeProfiles: boolean = false) => {
     try {
-      const response = await fetch('/api/category?page=1&pageSize=10');
+      const url = new URL('/api/category', window.location.origin);
+      url.searchParams.append('page', '1');
+      url.searchParams.append('pageSize', '10');
+      if (useKnowledgeProfiles) {
+        url.searchParams.append('useKnowledgeProfiles', 'true');
+      }
+  
+      const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      console.log("data",data);
+      console.log("Fetched categories:", data);
+      
+      // Transform the fetched data to match the Category interface
+      const transformedCategories: Category[] = data.items.map((item: any) => ({
+        id: item.id,
+        title: item.name,
+        icon: item.icon || "/atomic.svg",
+        bgColor: item.bgColor || "#FFFFFF", 
+        description: item.description || "No description available",
+      }));
+      
+      setCategories(transformedCategories);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -201,9 +230,10 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
 
   const handleCardClick = (index: number) => {
     setSelectedCard(index);
-    fetchContent(conceptCategories[index].title);
-    fetchQuestions(conceptCategories[index].title)
+    fetchContent(categories[index].title);
+    fetchQuestions(categories[index].title);
   };
+  
   const handleQuizTabClick = () => {
     setShowQuiz(true);
     setShowVideo(false);
