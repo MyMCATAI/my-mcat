@@ -38,11 +38,9 @@ const Page = () => {
       case "Schedule":
         return <Schedule activities={activities} />;
       case "KnowledgeProfile":
-        return <AdaptiveTutoring 
-                  toggleChatBot={toggleChatBot}
-                />;
-      case "AdaptiveTutoring":
-        return "";
+        return <AdaptiveTutoring toggleChatBot={toggleChatBot} />;
+      case "thinkcard":
+        return "Think Cards";
       default:
         return null;
     }
@@ -52,16 +50,21 @@ const Page = () => {
     window.scrollTo({ top: scrollPosition, behavior: "smooth" });
   }, []);
 
-
-  const toggleChatBot=()=>{
-    setShowChatbot(!showChatbot)
-  }
+  const toggleChatBot = () => {
+    setShowChatbot(!showChatbot);
+  };
   return (
     <div className="container py-10">
       <div className="text-white flex gap-6">
         <div className="w-3/4 relative">
-          <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
-            {activeTab === "Schedule" ? "calendar." : "adaptive tutoring suite."}
+          <h2 className="text-white text-2xl font-thin leading-normal shadow-text mb-2">
+            {activeTab === "Schedule"
+              ? "calendar."
+              : activeTab === "KnowledgeProfile"
+              ? "adaptive tutoring suite."
+              : activeTab === "thinkcard"
+              ? "think Card"
+              : ""}
           </h2>
           <div className="relative">
             <div className="p-3 gradientbg" style={{ minHeight: height }}>
@@ -83,9 +86,9 @@ const Page = () => {
       <div className="fixed inset-0 pointer-events-none z-50">
         <div className="absolute bottom-6 right-6 flex flex-col items-end pointer-events-auto">
           {showChatbot && (
-            <div 
+            <div
               className="bg-white rounded-lg shadow-lg overflow-hidden mb-4"
-              style={{ width: '370px', height: '600px' }}
+              style={{ width: "370px", height: "600px" }}
             >
               <ChatBot />
             </div>
@@ -93,7 +96,7 @@ const Page = () => {
           <button
             className="w-20 h-20 rounded-full overflow-hidden shadow-lg transition duration-120 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
             onClick={() => setShowChatbot((prev) => !prev)}
-            aria-label={showChatbot ? 'Close Chat' : 'Open Chat'}
+            aria-label={showChatbot ? "Close Chat" : "Open Chat"}
           >
             <img
               src="/Kalypso.png"

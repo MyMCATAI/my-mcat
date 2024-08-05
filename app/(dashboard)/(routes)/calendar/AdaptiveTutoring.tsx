@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import SettingContent from "./SettingContent";
 import Image from "next/image";
-import Quiz, {QuizQuestion} from "@/components/quiz";
+import Quiz, { QuizQuestion } from "@/components/quiz";
 import ReactPlayer from "react-player";
 import prisma from "@/lib/prismadb";
 import { getCategories } from "@/lib/category";
@@ -18,7 +18,9 @@ interface AdaptiveTutoringProps {
   toggleChatBot: () => void;
 }
 
-const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) => {
+const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
+  toggleChatBot,
+}) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
   const [showPDF, setShowPDF] = useState(false);
@@ -29,7 +31,11 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [videoUrls, setVideoUrls] = useState<string[]>([]);
   const [currentVideoUrl, setCurrentVideoUrl] = useState(videoUrls[0]);
+  const [currentPdfUrl, setCurrentPdfUrl] = useState<string[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+
+
 
   useEffect(() => {
     fetchContent("atoms");
@@ -38,12 +44,22 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
   }, []);
 
   useEffect(() => {
-    const videoContent = content.filter(item => item.type === "video").map(item => item.link);
+    const videoContent = content
+      .filter((item) => item.type === "video")
+      .map((item) => item.link);
     setVideoUrls(videoContent);
     if (videoContent.length > 0) {
       setCurrentVideoUrl(videoContent[0]);
     }
-  }, [content]);  
+  }, [content]);
+  useEffect(() => {
+    const pdfContent = content
+      .filter((item) => item.type === "reading")
+      .map((item) => item.link);
+    setCurrentPdfUrl(pdfContent);
+  }, [content]);
+
+  console.log("pdfContent", currentPdfUrl);
 
   const extractVideoId = (url: string) => {
     const urlParams = new URLSearchParams(new URL(url).search);
@@ -55,9 +71,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
     setIsPlaying(true);
   };
 
-
   const handleChatClick = () => {
-    toggleChatBot()
+    toggleChatBot();
   };
 
   const fetchContent = async (conceptCategory: string) => {
@@ -97,12 +112,13 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/category?page=1&pageSize=10');
+      const response = await fetch("/api/category?page=1&pageSize=10");
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error("Network response was not ok");
       }
       const data = await response.json();
-      console.log("data",data);
+      setCategories(data.categories);
+      console.log("categories", categories);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -116,40 +132,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
     }[];
     timeLimit: string;
   }
-
-  
-  const conceptCategories = [
-    {
-      title: "Atoms",
-      icon: "/atomic.svg",
-      bgColor: "#b1c03a",
-      description: "Exploring the fundamentals of atomic theory.",
-    },
-    {
-      title: "Sensation",
-      icon: "/sensation.svg",
-      bgColor: "#B925FF",
-      description: "Understanding sensory processes.",
-    },
-    {
-      title: "Kinematics",
-      icon: "/newton.svg",
-      bgColor: "#009918",
-      description: "Examining Newton's laws of motion.",
-    },
-    {
-      title: "Respiration and Circulation",
-      icon: "/respiration.svg",
-      bgColor: "#3294FF",
-      description: "Learning about the process of respiration.",
-    },
-    {
-      title: "Bioenergetics and Regulation of Metabolism",
-      icon: "/molecular.svg",
-      bgColor: "#AE5353",
-      description: "Studying the basics of molecular biology.",
-    },
-  ];
 
   const toggleSettings = () => {
     setShowSettings((prev) => !prev);
@@ -173,14 +155,15 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
 
   const handleCardClick = (index: number) => {
     setSelectedCard(index);
-    fetchContent(conceptCategories[index].title);
-    fetchQuestions(conceptCategories[index].title)
+    fetchContent(categories[index].conceptCategory);
+    fetchQuestions(categories[index].conceptCategory);
   };
   const handleQuizTabClick = () => {
     setShowQuiz(true);
     setShowVideo(false);
     setShowPDF(false);
   };
+  const shouldShowVideoSuggestions = videoUrls.length > 1;
 
   return (
     <div className="relative p-1">
@@ -207,20 +190,25 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
         <div className="grid grid-cols-12 gap-4 mb-2">
           <div className="col-span-10">
             <div className="grid grid-cols-5 gap-4 mb-2">
-              {conceptCategories.map((category, index) => (
+              {categories?.slice(0, 5)?.map((category, index) => (
                 <div
                   key={index}
-                  className="text-white p-2 rounded-lg text-center mb-2 relative group min-h-[100px] cursor-pointer transition-transform hover:scale-105 shadow-lg"
-                  style={{ backgroundColor: category.bgColor }}
+                  className="text-white p-2 rounded-lg text-start mb-2 relative group min-h-[100px] cursor-pointer transition-transform hover:scale-105 shadow-lg"
+                  style={{ backgroundColor: category?.color }}
                   onClick={() => handleCardClick(index)}
                 >
-                  <p className="text-md font-bold mb-2">{category.title}</p>
+                  <p className="text-md font-bold mb-5">
+                    {category?.conceptCategory.length > 5
+                      ? `${category?.conceptCategory.slice(0, 10)}...`
+                      : category?.title}
+                  </p>
+
                   <Image
-                    src={category.icon}
-                    alt={category.title}
-                    width={60}
-                    height={60}
-                    className="mx-auto"
+                    src={category?.icon}
+                    alt={category?.conceptCategory}
+                    width={45}
+                    height={45}
+                    className="ms-auto"
                   />
                 </div>
               ))}
@@ -271,7 +259,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
         </div>
 
         <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-10">
+          <div
+            className={`col-span-${shouldShowVideoSuggestions ? "10" : "12"}`}
+          >
             <div className="bg-[#91a2b7] rounded-lg overflow-hidden">
               <div className="bg-[#2D4778] py-2 flex items-center justify-center gap-4 mt-2">
                 <button
@@ -298,7 +288,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
                 </button>
                 <p className="text-lg px-3">
                   {selectedCard !== null
-                    ? conceptCategories[selectedCard].description
+                    ? categories[selectedCard].conceptCategory
                     : "Light and Sound"}
                 </p>
                 <button
@@ -307,9 +297,10 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
                 >
                   <Image src="/exam.svg" width={30} height={30} alt="exam" />
                 </button>
-                <button 
-                onClick={handleChatClick}
-                className="p-2 hover:bg-[#3D5788] rounded">
+                <button
+                  onClick={handleChatClick}
+                  className="p-2 hover:bg-[#3D5788] rounded"
+                >
                   <Image src="/cat.svg" width={30} height={30} alt="cat" />
                 </button>
               </div>
@@ -332,7 +323,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
 
                 {showPDF && (
                   <iframe
-                    src="/sample.pdf"
+                    src={""}
                     className="w-full rounded-lg"
                     height="320"
                     title="PDF Document"
@@ -342,59 +333,86 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
               </div>
             </div>
           </div>
-          <div className="col-span-2">
-            <div className=" h-[420px] overflow-auto">
-              {showVideo && (
-                <>
-                  {videoUrls.map((url, index) => {
-                    const videoId = extractVideoId(url);
-                    return (
-                      <div
-                        key={index}
-                        onClick={() => handleThumbnailClick(url)}
-                        className="cursor-pointer "
-                      >
-                        {videoId && (
-                          <Image
-                            src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
-                            alt={`Thumbnail ${index}`}
-                            width={140}
-                            height={60}
-                            className={`relative w-40 h-28 bg-black cursor-pointer rounded-lg mb-2 ${
-                              currentVideoUrl === url && isPlaying
-                                ? "border-4 border-white"
-                                : ""
-                            }`}
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                </>
-              )}
+          {shouldShowVideoSuggestions && (
+            <div className="col-span-2">
+              <div className=" h-[420px] overflow-auto">
+                {showVideo && (
+                  <>
+                    {videoUrls.map((url, index) => {
+                      const videoId = extractVideoId(url);
+                      return (
+                        <div
+                          key={index}
+                          onClick={() => handleThumbnailClick(url)}
+                          className="cursor-pointer "
+                        >
+                          {videoId && (
+                            <Image
+                              src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                              alt={`Thumbnail ${index}`}
+                              width={140}
+                              height={60}
+                              className={`relative w-40 h-28 bg-black cursor-pointer rounded-lg mb-2 ${
+                                currentVideoUrl === url && isPlaying
+                                  ? "border-4 border-white"
+                                  : ""
+                              }`}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+                {showPDF && (
+                  <>
+                    {currentPdfUrl.map((url, index) => {
+                      console.log("currentPdfUrl", currentPdfUrl);
+                      return (
+                        <div
+                          key={index}
+                          onClick={() => handleThumbnailClick(url)}
+                          className="cursor-pointer "
+                        >
+                          <iframe
+                            src={url}
+                            className="w-full rounded-lg mb-4"
+                            height="100"
+                            title="PDF Document"
+                          ></iframe>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
-      {/* New content list */}
-      <div className="mt-4">
-        <h3 className="text-xl font-bold mb-2">Related Content</h3>
-        <ul className="space-y-2">
-          {content.map((item) => (
-            <li key={item.id} className="bg-white text-gray-800 p-2 rounded">
-              <h4 className="font-semibold">{item.title}</h4>
-              <p className="text-sm">Type: {item.type}</p>
-              <a
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+      <div>
+        <h3 className="text-xl font-bold my-2">Related Content</h3>
+        <div className="mt-4  h-[200px] overflow-auto">
+          <ul className=" grid grid-cols-2 gap-4">
+            {content.map((item) => (
+              <li
+                key={item.id}
+                className="bg-[#021326] text-gray-800 p-4 rounded-[20px] mt-2"
               >
-                View Content
-              </a>
-            </li>
-          ))}
-        </ul>
+                <h4 className="font-semibold text-gray-400">{item.title}</h4>
+                <p className="text-sm text-[#7a99e4]">Type: {item.type}</p>
+                <a
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white text-sm hover:underline "
+                >
+                  View Content
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
