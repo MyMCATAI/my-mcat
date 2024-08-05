@@ -1,5 +1,3 @@
-// File: app/api/knowledge-profile/update/route.ts
-
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs";
 import prisma from "@/lib/prismadb";
@@ -21,6 +19,7 @@ export async function POST(req: Request) {
         categoryId: { not: null }
       },
       _count: {
+        _all: true,
         isCorrect: true
       },
       _sum: {
@@ -45,6 +44,10 @@ export async function POST(req: Request) {
         }
       });
 
+      const numCorrects = response._count.isCorrect;
+      const numIncorrects = response._count._all - numCorrects;
+      const conceptMastery = (numCorrects + 1) / ((numCorrects + 1) + (numIncorrects + 1));
+
       return prisma.knowledgeProfile.upsert({
         where: {
           userId_categoryId: {
@@ -53,16 +56,18 @@ export async function POST(req: Request) {
           },
         },
         update: {
-          correctAnswers: response._count.isCorrect,
-          totalAttempts: response._count.isCorrect,
+          correctAnswers: numCorrects,
+          totalAttempts: response._count._all,
           lastAttemptAt: latestResponse?.answeredAt || new Date(),
+          conceptMastery: conceptMastery,
         },
         create: {
           userId: userId,
           categoryId: response.categoryId as string,
-          correctAnswers: response._count.isCorrect,
-          totalAttempts: response._count.isCorrect,
+          correctAnswers: numCorrects,
+          totalAttempts: response._count._all,
           lastAttemptAt: latestResponse?.answeredAt || new Date(),
+          conceptMastery: conceptMastery,
         },
       });
     });
