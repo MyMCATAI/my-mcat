@@ -38,11 +38,11 @@ const Page = () => {
       case "Schedule":
         return <Schedule activities={activities} />;
       case "KnowledgeProfile":
-        return <AdaptiveTutoring 
-                  toggleChatBot={toggleChatBot}
-                />;
+        return <AdaptiveTutoring toggleChatBot={toggleChatBot}/>;
       case "AdaptiveTutoring":
         return "";
+        case "thinkcard":
+          return "Think Cards";
       default:
         return null;
     }
@@ -61,7 +61,13 @@ const Page = () => {
       <div className="text-white flex gap-6">
         <div className="w-3/4 relative">
           <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
-            {activeTab === "Schedule" ? "calendar." : "adaptive tutoring suite."}
+          {activeTab === "Schedule"
+              ? "calendar."
+              : activeTab === "KnowledgeProfile"
+              ? "adaptive tutoring suite."
+              : activeTab === "thinkcard"
+              ? "think Card"
+              : ""}
           </h2>
           <div className="relative">
             <div className="p-3 gradientbg" style={{ minHeight: height }}>

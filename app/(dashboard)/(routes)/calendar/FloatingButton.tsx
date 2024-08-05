@@ -33,9 +33,9 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange }) => {
 
   const buttonPositions: ButtonPosition[] = [
     { top: 0, left: 0, tab: "Schedule", icon: "/calendar.svg" },
-    { top: 0, left: 0, tab: "Cards", icon: "/cards.svg" },
-    { top: 0, left: 0, tab: "KnowledgeProfile", icon: "/book.svg" },
-    { top: 0, left: 0, tab: "AdaptiveTutoring", icon: "/graduationcap.svg" },
+    { top: 0, left: 0, tab: "thinkcard", icon: "/cards.svg" },
+    { top: 0, left: 0, tab: "AdaptiveTutoring", icon: "/book.svg" },
+    { top: 0, left: 0, tab: "KnowledgeProfile", icon: "/graduationcap.svg" },
   ];
 
 
