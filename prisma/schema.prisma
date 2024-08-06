@@ -37,7 +37,7 @@ model Question {
   id                  String         @id @default(cuid())
   questionID          String
   questionContent     String         @db.Text
-  questionOptions     String         @db.Text
+  questionOptions     String         @db.Text // string is really an array, first option is correct
   questionAnswerNotes String?        @db.Text
   contentCategory     String
   passageId           String?
