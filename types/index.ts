@@ -1,18 +1,24 @@
 // types/index.ts
 
+import { IconName } from "@/components/ui/Icons";
+
 export interface Passage {
   id: string;
   text: string;
   citation: string;
 }
+
 export interface Category {
   id: string;
-  section:          String
-  subjectCategory:  String
-  contentCategory:  String
-  conceptCategory:  String
-  generalWeight:    number
+  section: string;
+  subjectCategory: string;
+  contentCategory: string;
+  conceptCategory: string;
+  generalWeight: number;
+  color: string;
+  icon: IconName;
 }
+
 export interface TestQuestion {
   id: string;
   testId: string;
