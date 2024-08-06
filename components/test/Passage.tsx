@@ -12,10 +12,10 @@ interface PassageProps {
 
 const Passage: React.FC<PassageProps> = ({ passageData }) => {
   return (
-    <div className="bg-[#001326]">
+    <div className="bg-[#ffffff] from-blue-900  h-[80vh] p-4 overflow-auto">
       <div className="px-4 flex justify-between">
         <div>
-          <h1 className="text-white text-2xl font-bold mt-5">
+          <h1 className="text-black text-2xl font-bold mt-5">
             Passage {passageData.id}
           </h1>
         </div>
@@ -33,10 +33,10 @@ const Passage: React.FC<PassageProps> = ({ passageData }) => {
         */}
       </div>
 
-      <div className="max-h-[60vh] overflow-auto p-4">
-        <p className="text-white whitespace-pre-wrap">{passageData.text}</p>
+      <div className=" p-4">
+        <p className="text-black whitespace-pre-wrap">{passageData.text}</p>
         {passageData.citation && (
-          <p className="text-gray-400 mt-4">Citation: {passageData.citation}</p>
+          <p className="text-black mt-4">Citation: {passageData.citation}</p>
         )}
       </div>
     </div>
