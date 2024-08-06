@@ -5,8 +5,11 @@ import FileUploadComponent from './fileUpload';
 
 const ChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
 
+interface MyChatBotProps {
+  context: string;
+}
 
-const MyChatBot = () => {
+const MyChatBot: React.FC<MyChatBotProps> = ({ context }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -26,7 +29,7 @@ const MyChatBot = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message, threadId }),
+        body: JSON.stringify({ message, context, threadId }),
       });
   
       if (!response.ok) {
@@ -44,17 +47,11 @@ const MyChatBot = () => {
         console.log('Received text response:', data);
       }
   
-      // Update the threadId if it's returned in JSON response
       if (data.threadId) {
         setThreadId(data.threadId);
       }
   
-      // Return the message based on content type
-      if (typeof data === 'string') {
-        return data;
-      } else {
-        return data.message;
-      }
+      return typeof data === 'string' ? data : data.message;
     } catch (error) {
       console.error('Error:', error);
       setError(`An error occurred: ${error instanceof Error ? error.message : String(error)}`);
@@ -65,24 +62,19 @@ const MyChatBot = () => {
   };
   
   const handleScreenshot = (blob: Blob) => {
-    // Handle the screenshot blob here
     console.log('Screenshot taken:', blob);
-    // You can add logic here to send the screenshot to the server or process it as needed
+    // Add logic here to handle the screenshot
   };
 
   const flow = {
     start: {
-      message: "Hi! I'm Kalypso the cat, your MCAT assistant. How can I help you today?",
+      message: `Hi! I'm Kalypso the cat, your MCAT assistant. I have some context about your studies: ${context}. How can I help you today?`,
       path: "loop"
     },
     loop: {
       message: async (params: { userInput: string }) => {
         const response = await sendMessage(params.userInput);
-        if (response) {
-          return response;
-        } else {
-          return "I'm sorry, I couldn't process your request. Please try again.";
-        }
+        return response || "I'm sorry, I couldn't process your request. Please try again.";
       },
       path: "loop"
     }
@@ -105,7 +97,7 @@ const MyChatBot = () => {
           >
           </div>
           <ScreenshotButton onScreenshot={handleScreenshot} />
-          <FileUploadComponent></FileUploadComponent>
+          <FileUploadComponent />
         </div>
       )
     },
@@ -143,10 +135,10 @@ const MyChatBot = () => {
   );
 };
 
-const App = () => {
+const App: React.FC<MyChatBotProps> = ({ context }) => {
   return (
     <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
-      <MyChatBot />
+      <MyChatBot context={context} />
     </div>
   );
 };

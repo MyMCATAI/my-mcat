@@ -18,9 +18,10 @@ export async function POST(req: Request) {
   try {
     const { userId } = auth();
     const body = await req.json();
-    const { message, threadId } = body;
+    const { message, context, threadId } = body;
 
     console.log('Received message:', message);
+    if (context) console.log('Received context:', context);
 
     if (!userId) {
       console.log('Unauthorized: No userId');
@@ -48,10 +49,13 @@ export async function POST(req: Request) {
 
     console.log('Using thread:', currentThreadId);
 
-    // Add the message to the thread
+    // Combine message and context if context is provided
+    const fullMessage = context ? `Context: ${context}\n\nUser Message: ${message}` : message;
+
+    // Add the combined message to the thread
     await openai.beta.threads.messages.create(currentThreadId, {
       role: "user",
-      content: message
+      content: fullMessage
     });
 
     // Run the assistant
@@ -79,8 +83,10 @@ export async function POST(req: Request) {
     // Handle different content types
     if (Array.isArray(lastMessage.content)) {
       const textContents = lastMessage.content
-        .filter(content => content.type === 'text')
+        .filter((content): content is OpenAI.Beta.Threads.Messages.TextContentBlock => 
+          content.type === 'text')
         .map(content => content.text.value);
+      
       return NextResponse.json({
         message: textContents.join('\n'),
         threadId: currentThreadId
