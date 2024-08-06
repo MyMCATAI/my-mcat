@@ -6,7 +6,7 @@ import FileUploadComponent from './fileUpload';
 const ChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
 
 interface MyChatBotProps {
-  context: string;
+  context?: string;
 }
 
 const MyChatBot: React.FC<MyChatBotProps> = ({ context }) => {
