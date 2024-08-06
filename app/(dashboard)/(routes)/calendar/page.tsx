@@ -4,9 +4,11 @@ import Schedule from "./Schedule";
 import KnowledgeProfile from "./KnowledgeProfile";
 import AdaptiveTutoring from "./AdaptiveTutoring";
 import FloatingButton from "./FloatingButton";
-import { FetchedActivity } from "@/types";
+import { FetchedActivity, Test } from "@/types";
 import ChatBot from "@/components/chatbot/ChatBot";
 import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
+import TestPage from "../test/page";
+import TestingSuit from "./TestingSuit";
 
 const Page = () => {
   const [activeTab, setActiveTab] = useState("Schedule");
@@ -16,9 +18,13 @@ const Page = () => {
 
   const scrollPosition = 130;
   const height = "660px";
+  const [tests, setTests] = useState<Test[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchActivities();
+    fetchTests();
   }, []);
 
   const fetchActivities = async () => {
@@ -31,6 +37,22 @@ const Page = () => {
       setActivities(activities);
     } catch (error) {
       console.error("Error fetching activities:", error);
+    }
+  };
+  const fetchTests = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/test");
+      if (!response.ok) throw new Error("Failed to fetch tests");
+      const data = await response.json();
+      setTests(data.tests);
+    } catch (error) {
+      console.error("Error fetching tests:", error);
+      setError(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -49,6 +71,8 @@ const Page = () => {
         return "";
       case "thinkcard":
         return "Think Cards";
+      case "test":
+        return <TestingSuit tests={tests} />;
       default:
         return null;
     }
@@ -73,6 +97,8 @@ const Page = () => {
               ? "adaptive tutoring suite."
               : activeTab === "thinkcard"
               ? "think Card"
+              : activeTab === "test"
+              ? "testing suite"
               : ""}
           </h2>
           <div className="relative">
@@ -95,9 +121,9 @@ const Page = () => {
       <div className="fixed inset-0 pointer-events-none z-50">
         <div className="absolute bottom-6 right-6 flex flex-col items-end pointer-events-auto">
           {showChatbot && (
-            <div 
+            <div
               className="bg-white rounded-lg shadow-lg overflow-hidden mb-4"
-              style={{ width: '370px', height: '600px' }}
+              style={{ width: "370px", height: "600px" }}
             >
               <ChatBot context={chatbotContext} />
             </div>
@@ -105,7 +131,7 @@ const Page = () => {
           <button
             className="w-20 h-20 rounded-full overflow-hidden shadow-lg transition duration-120 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
             onClick={() => setShowChatbot((prev) => !prev)}
-            aria-label={showChatbot ? 'Close Chat' : 'Open Chat'}
+            aria-label={showChatbot ? "Close Chat" : "Open Chat"}
           >
             <img
               src="/Kalypso.png"
