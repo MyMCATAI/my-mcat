@@ -2,11 +2,12 @@
 import React, { useEffect, useState } from "react";
 import SettingContent from "./SettingContent";
 import Image from "next/image";
-import Quiz, {QuizQuestion} from "@/components/quiz";
+import Quiz, { QuizQuestion } from "@/components/quiz";
 import ReactPlayer from "react-player";
 import { useToast } from "@/components/ui/use-toast";
 import { Category } from "@/types";
 import Icon from "@/components/ui/icon";
+import image from "@/public/atomic.png";
 
 interface ContentItem {
   id: string;
@@ -22,7 +23,10 @@ interface AdaptiveTutoringProps {
   setChatbotContext: (context: string) => void;
 }
 
-const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setChatbotContext }) => {
+const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
+  toggleChatBot,
+  setChatbotContext,
+}) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
   const [showPDF, setShowPDF] = useState(false);
@@ -33,7 +37,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
   const [currentContentId, setCurrentContentId] = useState<string | null>(null);
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -48,7 +52,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
 
   useEffect(() => {
     if (content.length > 0) {
-      const firstItem = content.find(item => item.type === "video" || item.type === "reading");
+      const firstItem = content.find(
+        (item) => item.type === "video" || item.type === "reading"
+      );
       if (firstItem) {
         setCurrentContentId(firstItem.id);
       }
@@ -60,10 +66,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
     return urlParams.get("v");
   };
 
-  
   const handleContentClick = (contentId: string) => {
     setCurrentContentId(contentId);
-    const clickedContent = content.find(item => item.id === contentId);
+    const clickedContent = content.find((item) => item.id === contentId);
     if (clickedContent) {
       if (clickedContent.type === "video") {
         setShowVideo(true);
@@ -74,13 +79,19 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
         setShowVideo(false);
       }
 
-      console.log(clickedContent.transcript)
-      setChatbotContext(clickedContent.transcript? "Here's a transcript of the content that I'm currently looking at: " + clickedContent.transcript + " Only refer to this if I ask a question directly about what I'm studying" : "" )
+      console.log(clickedContent.transcript);
+      setChatbotContext(
+        clickedContent.transcript
+          ? "Here's a transcript of the content that I'm currently looking at: " +
+              clickedContent.transcript +
+              " Only refer to this if I ask a question directly about what I'm studying"
+          : ""
+      );
     }
   };
 
   const handleChatClick = () => {
-    toggleChatBot()
+    toggleChatBot();
   };
 
   const fetchContent = async (conceptCategory: string) => {
@@ -116,22 +127,22 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
       console.error("Error fetching questions:", error);
     }
   };
-  
+
   const fetchCategories = async (useKnowledgeProfiles: boolean = false) => {
     try {
-      const url = new URL('/api/category', window.location.origin);
-      url.searchParams.append('page', '1');
-      url.searchParams.append('pageSize', '5');
+      const url = new URL("/api/category", window.location.origin);
+      url.searchParams.append("page", "1");
+      url.searchParams.append("pageSize", "5");
       if (useKnowledgeProfiles) {
-        url.searchParams.append('useKnowledgeProfiles', 'true');
+        url.searchParams.append("useKnowledgeProfiles", "true");
       }
-  
+
       const response = await fetch(url.toString());
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error("Network response was not ok");
       }
       const data = await response.json();
-      setCategories(data.items)
+      setCategories(data.items);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -140,15 +151,15 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
   const handleUpdateKnowledgeProfile = async () => {
     setIsUpdatingProfile(true);
     try {
-      const response = await fetch('/api/knowledge-profile/update', {
-        method: 'POST',
+      const response = await fetch("/api/knowledge-profile/update", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update knowledge profile');
+        throw new Error("Failed to update knowledge profile");
       }
 
       toast({
@@ -157,7 +168,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
         duration: 3000,
       });
     } catch (error) {
-      console.error('Error updating knowledge profile:', error);
+      console.error("Error updating knowledge profile:", error);
       toast({
         title: "Error",
         description: "Failed to update knowledge profile. Please try again.",
@@ -173,13 +184,12 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
     setShowSettings((prev) => !prev);
   };
 
-
   const handleCameraClick = () => {
     setShowVideo(true);
     setShowPDF(false);
     setShowQuiz(false);
-    
-    const firstVideo = content.find(item => item.type === "video");
+
+    const firstVideo = content.find((item) => item.type === "video");
     if (firstVideo) {
       setCurrentContentId(firstVideo.id);
       setIsPlaying(true);
@@ -190,8 +200,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
     setShowPDF(true);
     setShowVideo(false);
     setShowQuiz(false);
-    
-    const firstPDF = content.find(item => item.type === "reading");
+
+    const firstPDF = content.find((item) => item.type === "reading");
     if (firstPDF) {
       setCurrentContentId(firstPDF.id);
     }
@@ -201,7 +211,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
     setShowQuiz(true);
     setShowVideo(false);
     setShowPDF(false);
-    setCurrentContentId(null); 
+    setCurrentContentId(null);
   };
 
   const toggleSearch = () => {
@@ -215,20 +225,22 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
   };
 
   const updateContentVisibility = (fetchedContent: ContentItem[]) => {
-    const hasVideos = fetchedContent.some(item => item.type === "video");
-    const hasReadings = fetchedContent.some(item => item.type === "reading");
+    const hasVideos = fetchedContent.some((item) => item.type === "video");
+    const hasReadings = fetchedContent.some((item) => item.type === "reading");
 
     setShowVideo(hasVideos);
     setShowPDF(hasReadings && !hasVideos);
     setShowQuiz(!hasVideos && !hasReadings);
 
     if (hasVideos) {
-      const firstVideo = fetchedContent.find(item => item.type === "video");
+      const firstVideo = fetchedContent.find((item) => item.type === "video");
       if (firstVideo) {
         setCurrentContentId(firstVideo.id);
       }
     } else if (hasReadings) {
-      const firstReading = fetchedContent.find(item => item.type === "reading");
+      const firstReading = fetchedContent.find(
+        (item) => item.type === "reading"
+      );
       if (firstReading) {
         setCurrentContentId(firstReading.id);
       }
@@ -237,7 +249,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
     }
   };
 
-  const currentContent = content.find(item => item.id === currentContentId);
+  const currentContent = content.find((item) => item.id === currentContentId);
 
 
 
@@ -264,25 +276,28 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
         )}
 
         <div className="grid grid-cols-12 gap-4 mb-2">
-        <div className={`col-span-10`}>
-        <div className="grid grid-cols-5 gap-4 mb-2">
-          {categories.slice(0, 5).map((category, index) => (
-            <div
-              key={index}
-              className="text-white p-4 rounded-lg text-center mb-2 relative group min-h-[120px] cursor-pointer transition-all hover:scale-105 hover:shadow-xl flex flex-col justify-between items-center"
-              style={{ backgroundColor: category.color }}
-              onClick={() => handleCardClick(index)}
-            >
-               <p className="text-sm font-semibold mb-2 line-clamp-2">
-                {category?.conceptCategory || "No title"}
-              </p>
-              <div className="mt-auto">
-                <Icon name={category.icon} className="w-8 h-8" />
-              </div>
+          <div className={`col-span-10`}>
+            <div className="grid grid-cols-5 gap-4 mb-2">
+              {categories.slice(0, 5).map((category, index) => (
+                <div
+                  key={index}
+                  className="text-white overflow-hidden rounded-lg text-center mb-2 relative group min-h-[120px] cursor-pointer transition-all hover:scale-105 hover:shadow-xl flex flex-col justify-between items-center"
+                  style={{ backgroundColor: category.color }}
+                  onClick={() => handleCardClick(index)}
+                >
+                  <div className="relative w-full h-full flex flex-col justify-center items-center">
+                    <div className="opacity-0 group-hover:opacity-100 absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center transition-opacity duration-300">
+                      <p className="text-white text-sm font-semibold">
+                        {category?.conceptCategory || "No title"}
+                      </p>
+                    </div>
+                    <div className="m-auto">
+                      <Icon name={category.icon} className="w-8 h-8" />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>  
-            
           </div>
           {/* <div className="col-span-4">
             <div className="flex flex-col w-full">
@@ -310,21 +325,23 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
                   <path d="m21.75 20.063-5.816-5.818a7.523 7.523 0 0 0 1.44-4.433c0-4.17-3.393-7.562-7.562-7.562-4.17 0-7.562 3.392-7.562 7.562s3.392 7.562 7.562 7.562a7.523 7.523 0 0 0 4.433-1.44l5.818 5.816 1.687-1.688ZM9.812 14.986a5.174 5.174 0 1 1-.002-10.35 5.174 5.174 0 0 1 0 10.349Z"></path>
                 </svg>
               </button>
-              <button 
-              onClick={handleUpdateKnowledgeProfile} 
-              className={`p-2 mr-2 ${isUpdatingProfile ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={isUpdatingProfile}
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="#ffffff"
-                xmlns="http://www.w3.org/2000/svg"
+              <button
+                onClick={handleUpdateKnowledgeProfile}
+                className={`p-2 mr-2 ${
+                  isUpdatingProfile ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                disabled={isUpdatingProfile}
               >
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-12h2v4h4v2h-4v4h-2v-4H7v-2h4V8z"/>
-              </svg>
-            </button>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="#ffffff"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-12h2v4h4v2h-4v4h-2v-4H7v-2h4V8z" />
+                </svg>
+              </button>
               <button onClick={toggleSettings} className="p-2">
                 <svg
                   width="24"
@@ -380,28 +397,33 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
                 >
                   <Image src="/exam.svg" width={30} height={30} alt="exam" />
                 </button>
-                <button 
-                onClick={handleChatClick}
-                className="p-2 hover:bg-[#3D5788] rounded">
+                <button
+                  onClick={handleChatClick}
+                  className="p-2 hover:bg-[#3D5788] rounded"
+                >
                   <Image src="/cat.svg" width={30} height={30} alt="cat" />
                 </button>
               </div>
 
               <div className="p-4">
-              {showVideo && currentContent && currentContent.type === "video" && (
-                <ReactPlayer
-                  className="w-full h-full"
-                  url={currentContent.link}
-                  playing={isPlaying}
-                  muted
-                  width="100%"
-                  height="330px"
-                  onEnded={() => setIsPlaying(false)}
-                  controls={true}
-                />
-              )}
+                {showVideo &&
+                  currentContent &&
+                  currentContent.type === "video" && (
+                    <ReactPlayer
+                      className="w-full h-full"
+                      url={currentContent.link}
+                      playing={isPlaying}
+                      muted
+                      width="100%"
+                      height="330px"
+                      onEnded={() => setIsPlaying(false)}
+                      controls={true}
+                    />
+                  )}
 
-                {showPDF && currentContent && currentContent.type === "reading" && (
+                {showPDF &&
+                  currentContent &&
+                  currentContent.type === "reading" && (
                     <iframe
                       src={currentContent.link.replace("/view", "/preview")}
                       className="w-full rounded-lg"
@@ -409,74 +431,92 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setCh
                       title={currentContent.title}
                     ></iframe>
                   )}
-                  
+
                 {showQuiz && <Quiz questions={questions} shuffle={true} />}
               </div>
             </div>
           </div>
-         
 
           <div className="col-span-2">
             <div className=" h-[420px] overflow-auto">
-            {showVideo && (
-              <>
-                {content.filter(item => item.type === "video").map((video, index) => {
-                  const videoId = extractVideoId(video.link);
-                  return (
-                    <div
-                      key={index}
-                      onClick={() => handleContentClick(video.id)}
-                      className="cursor-pointer mb-2"
-                    >
-                      {videoId && (
-                        <div>
-                          <Image
-                            src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
-                            alt={`Thumbnail ${index}`}
-                            width={140}
-                            height={60}
-                            className={`relative w-40 h-28 bg-black cursor-pointer rounded-lg ${
-                              currentContentId === video.id && isPlaying
-                                ? "border-4 border-white"
-                                : ""
-                            }`}
-                          />
-                          <p className="text-xs mt-1 text-white truncate">{video.title}</p>
+              {showVideo && (
+                <>
+                  {content
+                    .filter((item) => item.type === "video")
+                    .map((video, index) => {
+                      const videoId = extractVideoId(video.link);
+                      return (
+                        <div
+                          key={index}
+                          onClick={() => handleContentClick(video.id)}
+                          className="cursor-pointer mb-2"
+                        >
+                          {videoId && (
+                            <div>
+                              <Image
+                                src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                                alt={`Thumbnail ${index}`}
+                                width={140}
+                                height={60}
+                                className={`relative w-40 h-28 bg-black cursor-pointer rounded-lg ${
+                                  currentContentId === video.id && isPlaying
+                                    ? "border-4 border-white"
+                                    : ""
+                                }`}
+                              />
+                              <p className="text-xs mt-1 text-white truncate">
+                                {video.title}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </>
-            )}
-            {showPDF && (
-              <div className="flex flex-wrap gap-4">
-                {content.filter(item => item.type === "reading").map((pdf, index) => (
-                  <div
-                    key={index}
-                    onClick={() => handleContentClick(pdf.id)}
-                    className={`cursor-pointer w-40 h-28 flex items-center justify-center bg-gray-200 rounded-lg overflow-hidden ${
-                      currentContentId === pdf.id ? "border-4 border-blue-500" : ""
-                    }`}
-                  >
-                    <div className="text-center p-2">
-                      <svg className="w-12 h-12 mx-auto mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-xs font-medium text-gray-800 truncate">{pdf.title}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                      );
+                    })}
+                </>
+              )}
+              {showPDF && (
+                <div className="flex flex-wrap gap-4">
+                  {content
+                    .filter((item) => item.type === "reading")
+                    .map((pdf, index) => (
+                      <div
+                        key={index}
+                        onClick={() => handleContentClick(pdf.id)}
+                        className={`cursor-pointer w-40 h-28 flex items-center justify-center bg-gray-200 rounded-lg overflow-hidden ${
+                          currentContentId === pdf.id
+                            ? "border-4 border-blue-500"
+                            : ""
+                        }`}
+                      >
+                        <div className="text-center p-2">
+                          <svg
+                            className="w-12 h-12 mx-auto mb-2 text-gray-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                            />
+                          </svg>
+                          <p className="text-xs font-medium text-gray-800 truncate">
+                            {pdf.title}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-
-  
 };
 
 export default AdaptiveTutoring;

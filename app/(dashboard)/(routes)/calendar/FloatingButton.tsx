@@ -34,10 +34,9 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange }) => {
   const buttonPositions: ButtonPosition[] = [
     { top: 0, left: 0, tab: "Schedule", icon: "/calendar.svg" },
     { top: 0, left: 0, tab: "thinkcard", icon: "/cards.svg" },
-    { top: 0, left: 0, tab: "AdaptiveTutoring", icon: "/book.svg" },
+    { top: 0, left: 0, tab: "test", icon: "/book.svg" },
     { top: 0, left: 0, tab: "KnowledgeProfile", icon: "/graduationcap.svg" },
   ];
-
 
   const inactivePositions = [
     { top: -65, left: 10 },
@@ -63,11 +62,23 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange }) => {
         >
           {buttonPositions.map((pos, index) => {
             const isActive = activeTab === pos.tab;
-            const activeIndex = buttonPositions.findIndex(p => p.tab === activeTab);
-            const inactiveIndex = buttonPositions.filter(p => p.tab !== activeTab).findIndex(p => p.tab === pos.tab);
+            const activeIndex = buttonPositions.findIndex(
+              (p) => p.tab === activeTab
+            );
+            const inactiveIndex = buttonPositions
+              .filter((p) => p.tab !== activeTab)
+              .findIndex((p) => p.tab === pos.tab);
 
-            const top = isActive ? 0 : isHovered ? inactivePositions[inactiveIndex].top : inactivePositions[activeIndex]?.top;
-            const left = isActive ? 0 : isHovered ? inactivePositions[inactiveIndex].left : inactivePositions[activeIndex]?.left;
+            const top = isActive
+              ? 0
+              : isHovered
+              ? inactivePositions[inactiveIndex].top
+              : inactivePositions[activeIndex]?.top;
+            const left = isActive
+              ? 0
+              : isHovered
+              ? inactivePositions[inactiveIndex].left
+              : inactivePositions[activeIndex]?.left;
 
             return (
               <button

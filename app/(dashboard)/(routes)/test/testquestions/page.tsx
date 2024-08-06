@@ -296,17 +296,17 @@ const TestQuestions = () => {
           <span>{seconds.toString().padStart(2, '0')}</span>
         </div>
       </div>
-      <div className="flex flex-grow overflow-hidden">
+      <div className="flex flex-grow">
         {currentPassage ? (
           <>
             <div className="w-1/2 border-r border-sky-500 overflow-auto">
-              <div className="p-4">
+              <div className="">
                 <PassageComponent passageData={currentPassage} />
               </div>
             </div>
             <div className="w-1/2 flex flex-col overflow-hidden">
               <div className="flex-grow overflow-auto">
-                <div className="p-4">
+                <div className="">
                   {currentQuestion && currentTestQuestion && (
                     <QuestionComponent
                       question={currentQuestion} 
