@@ -5,7 +5,6 @@ import Image from "next/image";
 import Quiz, {QuizQuestion} from "@/components/quiz";
 import ReactPlayer from "react-player";
 import { useToast } from "@/components/ui/use-toast";
-import { Toast } from "@/components/ui/toast";
 import { Category } from "@/types";
 import Icon from "@/components/ui/icon";
 
@@ -14,14 +13,16 @@ interface ContentItem {
   title: string;
   link: string;
   type: string;
+  transcript?: string;
 }
 
 //todo move this to index
 interface AdaptiveTutoringProps {
   toggleChatBot: () => void;
+  setChatbotContext: (context: string) => void;
 }
 
-const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) => {
+const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot,setChatbotContext }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
   const [showPDF, setShowPDF] = useState(false);
@@ -65,7 +66,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
     const clickedContent = content.find(item => item.id === contentId);
     if (clickedContent) {
       if (clickedContent.type === "video") {
-        console.log("content video")
         setShowVideo(true);
         setShowPDF(false);
         setIsPlaying(true);
@@ -73,6 +73,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
         setShowPDF(true);
         setShowVideo(false);
       }
+
+      console.log(clickedContent.transcript)
+      setChatbotContext(clickedContent.transcript? "Here's a transcript of the content that I'm currently looking at: " + clickedContent.transcript + " Only refer to this if I ask a question directly about what I'm studying" : "" )
     }
   };
 
@@ -109,7 +112,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
       }
       const data = await response.json();
       setQuestions(data.category.questions);
-      console.log("Questions:", data.category.questions);
     } catch (error) {
       console.error("Error fetching questions:", error);
     }
@@ -130,10 +132,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
       }
       const data = await response.json();
       setCategories(data.items)
-
-
-      console.log(data.items);
-
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -153,7 +151,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({ toggleChatBot }) =>
         throw new Error('Failed to update knowledge profile');
       }
 
-      const data = await response.json();
       toast({
         title: "Success",
         description: "Knowledge profile updated successfully!",
