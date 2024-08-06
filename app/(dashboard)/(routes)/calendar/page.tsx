@@ -12,6 +12,7 @@ const Page = () => {
   const [activeTab, setActiveTab] = useState("Schedule");
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
   const [showChatbot, setShowChatbot] = useState(false);
+  const [chatbotContext, setChatbotContext] = useState("");
 
   const scrollPosition = 130;
   const height = "660px";
@@ -38,11 +39,16 @@ const Page = () => {
       case "Schedule":
         return <Schedule activities={activities} />;
       case "KnowledgeProfile":
-        return <AdaptiveTutoring toggleChatBot={toggleChatBot}/>;
+        return (
+          <AdaptiveTutoring
+            toggleChatBot={toggleChatBot}
+            setChatbotContext={setChatbotContext}
+          />
+        );
       case "AdaptiveTutoring":
         return "";
-        case "thinkcard":
-          return "Think Cards";
+      case "thinkcard":
+        return "Think Cards";
       default:
         return null;
     }
@@ -52,16 +58,16 @@ const Page = () => {
     window.scrollTo({ top: scrollPosition, behavior: "smooth" });
   }, []);
 
+  const toggleChatBot = () => {
+    setShowChatbot(!showChatbot);
+  };
 
-  const toggleChatBot=()=>{
-    setShowChatbot(!showChatbot)
-  }
   return (
     <div className="container py-10">
       <div className="text-white flex gap-6">
         <div className="w-3/4 relative">
           <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
-          {activeTab === "Schedule"
+            {activeTab === "Schedule"
               ? "calendar."
               : activeTab === "KnowledgeProfile"
               ? "adaptive tutoring suite."
@@ -78,7 +84,7 @@ const Page = () => {
         </div>
         <div className="w-1/4">
           <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
-            knowledge profile
+            Knowledge profile
           </h2>
           <div className="gradientbg p-3" style={{ minHeight: height }}>
             <KnowledgeProfile activities={activities} />
@@ -93,7 +99,7 @@ const Page = () => {
               className="bg-white rounded-lg shadow-lg overflow-hidden mb-4"
               style={{ width: '370px', height: '600px' }}
             >
-              <ChatBot />
+              <ChatBot context={chatbotContext} />
             </div>
           )}
           <button
