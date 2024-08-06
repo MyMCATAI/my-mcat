@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
+
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import profile from "../../../../public/setting.svg";
 import { StudyPlan } from '@/types';
 
 type ValuePiece = Date | null;
