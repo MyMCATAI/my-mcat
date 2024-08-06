@@ -14,8 +14,9 @@
     "create-content": "ts-node --project tsconfig.server.json scripts/createContent.ts",
     "create-passages": "ts-node --project tsconfig.server.json scripts/createPassages.ts",
     "delete-all-passages": "ts-node --project tsconfig.server.json scripts/deleteAllPassages.ts",
-    "generate-icons": "ts-node --project tsconfig.server.json scripts/generateIconList.ts"
-
+    "generate-icons": "ts-node --project tsconfig.server.json scripts/generateIconList.ts",
+    "create-diagnostic-questions": "ts-node --project tsconfig.server.json scripts/createDiagnosticQuizQuestions.ts",
+    "create-diagnostic-test": "ts-node --project tsconfig.server.json scripts/createDiagnosticQuiz.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^4.25.7",
