@@ -278,7 +278,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                 <div
                   key={index}
                   className="text-white overflow-hidden rounded-lg text-center mb-2 relative group min-h-[80px] cursor-pointer transition-all hover:scale-105 hover:shadow-xl flex flex-col justify-between items-center"
-                  style={{ backgroundColor: category.color }}
+                  style={{ backgroundColor: '#001226' }}
                   onClick={() => handleCardClick(index)}
                 >
                   <div className="relative w-full h-full flex flex-col justify-center items-center">
@@ -287,7 +287,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                         {category?.conceptCategory || "No title"}
                       </p>
                     </div>
-                    <div className="m-auto">
+                    <div className="m-auto" style={{ color: 'white'}}>
                       <Icon name={category.icon} className="w-10 h-10" />
                     </div>
                   </div>
@@ -357,17 +357,17 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         </div>
 
         <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-10">
-            <div className="bg-[#91a2b7] rounded-lg overflow-hidden">
-              <div className="bg-[#2D4778] py-2 flex items-center justify-center gap-4 mt-2">
+          <div className="col-span-11">
+            <div className="bg-[#001226] rounded-lg overflow-hidden">
+              <div className="bg-[#001226] py-1 flex items-center justify-center gap-4 mt-2">
                 <button
                   onClick={handleCameraClick}
                   className="p-2 hover:bg-[#3D5788] rounded"
                 >
                   <Image
                     src="/camera.svg"
-                    width={30}
-                    height={30}
+                    width={24}
+                    height={24}
                     alt="camera"
                   />
                 </button>
@@ -377,12 +377,12 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                 >
                   <Image
                     src="/bookopened.svg"
-                    width={30}
-                    height={30}
+                    width={24}
+                    height={24}
                     alt="book opened"
                   />
                 </button>
-                <p className="text-lg px-3">
+                <p className="text-m px-10">
                   {selectedCard !== null
                     ? categories[selectedCard].conceptCategory
                     : "atoms"}
@@ -433,8 +433,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
             </div>
           </div>
 
-          <div className="col-span-2">
-            <div className=" h-[530px] overflow-auto">
+          <div className="col-span-1 ">
+            <div className=" h-[520px] overflow-auto">
               {showVideo && (
                 <>
                   {content
@@ -452,9 +452,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                               <Image
                                 src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
                                 alt={`Thumbnail ${index}`}
-                                width={140}
+                                width={100}
                                 height={90}
-                                className={`relative w-40 h-28 bg-black cursor-pointer rounded-lg ${
+                                className={`relative w-30 h-18 bg-black cursor-pointer rounded-lg ${
                                   currentContentId === video.id && isPlaying
                                     ? "border-4 border-white"
                                     : ""
@@ -478,7 +478,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                       <div
                         key={index}
                         onClick={() => handleContentClick(pdf.id)}
-                        className={`cursor-pointer w-40 h-28 flex items-center justify-center bg-gray-200 rounded-lg overflow-hidden ${
+                        className={`cursor-pointer w-40 h-28 flex items-center justify-center bg-[#001226] rounded-lg overflow-hidden ${
                           currentContentId === pdf.id
                             ? "border-4 border-blue-500"
                             : ""
@@ -486,7 +486,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                       >
                         <div className="text-center p-2">
                           <svg
-                            className="w-12 h-12 mx-auto mb-2 text-gray-500"
+                            className="w-4 h-4 mx-auto mb-1 text-black"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -499,7 +499,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                               d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
                             />
                           </svg>
-                          <p className="text-xs font-medium text-gray-800 truncate">
+                          <p className="text-xs font-medium text-white">
                             {pdf.title}
                           </p>
                         </div>
