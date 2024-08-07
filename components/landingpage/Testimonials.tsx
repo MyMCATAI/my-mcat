@@ -19,6 +19,7 @@ const Testimonials = () => {
   const paragraph1Ref = useRef(null);
   const paragraph2Ref = useRef(null);
   const paragraph3Ref = useRef(null);
+  const paragraph4Ref = useRef(null);
   const statsRef = useRef(null);
 
   useEffect(() => {
@@ -27,9 +28,10 @@ const Testimonials = () => {
     const p1 = paragraph1Ref.current;
     const p2 = paragraph2Ref.current;
     const p3 = paragraph3Ref.current;
+    const p4 = paragraph4Ref.current;
     const stats = statsRef.current;
-  
-    gsap.set([title, p1, p2, p3, stats], { opacity: 0, y: 50 });
+
+    gsap.set([title, p1, p2, p3, p4, stats], { opacity: 0, y: 50 });
 
     const timeline = gsap.timeline({
       scrollTrigger: {
@@ -45,6 +47,7 @@ const Testimonials = () => {
       .to(p1, { opacity: 1, y: 0, duration: 0.3 }, "+=0.1")
       .to(p2, { opacity: 1, y: 0, duration: 0.3 }, "+=0.1")
       .to(p3, { opacity: 1, y: 0, duration: 0.3 }, "+=0.1")
+      .to(p4, { opacity: 1, y: 0, duration: 0.3 }, "+=0.1")
       .to(stats, { opacity: 1, y: 0, duration: 0.9 }, "+=0.5");
 
     return () => {
@@ -54,7 +57,7 @@ const Testimonials = () => {
 
   const testimonials = [
     {
-      text: `I'm gonna be real. I had no clue what I was doing. Kalypso got me from my middling
+      text: `I&apos;m gonna be real. I had no clue what I was doing. Kalypso got me from my middling
                   diagnostic to a 516 on my actual test, all within three months.`,
       name: "Yasmin Maurice",
       description: "516, Tulane",
@@ -63,7 +66,7 @@ const Testimonials = () => {
     },
     {
       text: `My first test was SO stressful and chaotic. I did poorly. On my retake, I needed a plan.
-                  Kalypso developed one that got me a score I would've never imagined possible.`,
+                  Kalypso developed one that got me a score I would&apos;ve never imagined possible.`,
       name: "Ali Nassari",
       description: "517, UT Austin",
       image: ali,
@@ -81,13 +84,14 @@ const Testimonials = () => {
     {
       text: `Brilliant, eager to help, hilarious, with an infectious energy that just inspired me to keep
                   pushing.
-                  Couldn't recommend Kalypso more.`,
+                  Couldn&apos;t recommend Kalypso more.`,
       name: `Arthur Cowan`,
       description: "519, SDSU",
       image: arthur,
       rating: 5,
     },
   ];
+
   return (
     <section ref={sectionRef} className="bg-white py-32">
       <div className="container mx-auto px-6 max-w-6xl">
@@ -101,7 +105,10 @@ const Testimonials = () => {
             We use the latest technology and algorithms to deliver your potential.
           </p>
           <p ref={paragraph3Ref} className="text-2xl mb-20">
-            Because your patients deserve only the best.
+            Because our patients deserve only the best...
+          </p>
+          <p ref={paragraph4Ref} className="text-2xl mb-20">
+            ...And that&apos;s you!
           </p>
         </div>
         <div ref={statsRef} className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-24 mb-24">

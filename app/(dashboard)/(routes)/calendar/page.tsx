@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Image from 'next/image';
 import Schedule from "./Schedule";
 import KnowledgeProfile from "./KnowledgeProfile";
 import AdaptiveTutoring from "./AdaptiveTutoring";
@@ -110,7 +111,7 @@ const Page = () => {
         </div>
         <div className="w-1/4">
           <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
-            Knowledge profile
+            &nbsp;
           </h2>
           <div className="gradientbg p-3" style={{ minHeight: height }}>
             <KnowledgeProfile activities={activities} />
@@ -133,9 +134,11 @@ const Page = () => {
             onClick={() => setShowChatbot((prev) => !prev)}
             aria-label={showChatbot ? "Close Chat" : "Open Chat"}
           >
-            <img
+            <Image
               src="/Kalypso.png"
               alt="Chat with Kalypso"
+              width={80}
+              height={80}
               className="w-full h-full object-cover"
             />
           </button>

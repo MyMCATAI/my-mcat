@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
-import profile from "../../../../public/profile.svg";
+import profile from "../../../../public/profile.png";
 import { format, isBefore, isAfter, startOfDay } from 'date-fns';
 import { FetchedActivity } from '@/types';
 
@@ -22,9 +22,9 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities }) => {
   }, [activities]);
 
   const tabs = [
-    { id: "tab1", label: "future", content: categorizedActivities.future, image: profile },
-    { id: "tab2", label: "present", content: categorizedActivities.present, image: "/setting.svg" },
-    { id: "tab3", label: "past", content: categorizedActivities.past, image: profile },
+    { id: "tab1", label: "present", content: categorizedActivities.future, image: profile },
+    { id: "tab2", label: "past", content: categorizedActivities.present, image: "/setting.svg" },
+    { id: "tab3", label: "profile", content: categorizedActivities.past, image: profile },
   ];
 
   const activeImage = tabs.find(tab => tab.id === activeTab)?.image || profile;
