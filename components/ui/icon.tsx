@@ -22,7 +22,6 @@ const Icon: React.FC<IconProps> = ({ name, className, color }) => {
       <IconComponent style={{
         fill: color,
         stroke: color,
-        '& *': { fill: color, stroke: color }
       }} />
     </span>
   );
