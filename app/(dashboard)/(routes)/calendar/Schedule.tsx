@@ -7,9 +7,10 @@ import { NewActivity, FetchedActivity } from "@/types";
 
 interface ScheduleProps {
   activities: FetchedActivity[];
+  onShowDiagnosticTest: () => void;
 }
 
-const Schedule: React.FC<ScheduleProps> = ({ activities }) => {
+const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
   const [showNewActivityForm, setShowNewActivityForm] = useState(false);
@@ -115,7 +116,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities }) => {
 
         {showSettings && (
           <div className="absolute top-10 right-1 w-100 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
-            <SettingContent />
+              <SettingContent onShowDiagnosticTest={onShowDiagnosticTest} />
           </div>
         )}
 
