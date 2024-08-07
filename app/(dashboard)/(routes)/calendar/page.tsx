@@ -11,6 +11,17 @@ import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
 import TestPage from "../test/page";
 import TestingSuit from "./TestingSuit";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import TestComponent from "@/components/test-component";
+
 const Page = () => {
   const [activeTab, setActiveTab] = useState("Schedule");
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
@@ -22,6 +33,9 @@ const Page = () => {
   const [tests, setTests] = useState<Test[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [showDiagnosticTest, setShowDiagnosticTest] = useState(false);
+  const [diagnosticTestId, setDiagnosticTestId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchActivities();
@@ -57,10 +71,26 @@ const Page = () => {
     }
   };
 
+  const handleShowDiagnosticTest = async () => {
+    try {
+      const response = await fetch('/api/test?diagnostic=true');
+      if (response.ok) {
+        const { testId } = await response.json();
+        setDiagnosticTestId(testId);
+        setShowDiagnosticTest(true);
+      }
+    } catch (error) {
+      console.error('Error fetching diagnostic test:', error);
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "Schedule":
-        return <Schedule activities={activities} />;
+        return <Schedule 
+        activities={activities} 
+        onShowDiagnosticTest={handleShowDiagnosticTest}
+      />;
       case "KnowledgeProfile":
         return (
           <AdaptiveTutoring
@@ -102,6 +132,13 @@ const Page = () => {
               ? "testing suite"
               : ""}
           </h2>
+          <Button 
+              onClick={handleShowDiagnosticTest}
+              variant="outline"
+              className="bg-blue-500 text-white hover:bg-blue-600"
+            >
+              Open Diagnostic Test
+            </Button>
           <div className="relative">
             <div className="p-3 gradientbg" style={{ minHeight: height }}>
               {renderContent()}
@@ -144,6 +181,28 @@ const Page = () => {
           </button>
         </div>
       </div>
+      {/* Diagnostic Test Dialog */}
+      <Dialog open={showDiagnosticTest} onOpenChange={setShowDiagnosticTest}>
+        <DialogContent className="max-w-4xl w-full max-h-[90vh] flex flex-col bg-[#001326] text-white border border-sky-500">
+          <DialogHeader className="border-b border-sky-500 pb-4">
+            <DialogTitle className="text-2xl font-semibold text-sky-300">Diagnostic Test</DialogTitle>
+            <DialogDescription className="text-gray-300">
+              Complete this test to help us understand your current knowledge level.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-grow overflow-auto py-4">
+            {diagnosticTestId && <TestComponent testId={diagnosticTestId} />}
+          </div>
+          <div className="flex justify-end pt-4 border-t border-sky-500">
+            <Button 
+              onClick={() => setShowDiagnosticTest(false)}
+              className="bg-sky-500 hover:bg-sky-600 text-white"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
