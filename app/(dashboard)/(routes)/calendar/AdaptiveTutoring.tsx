@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import SettingContent from "./SettingContent";
 import Image from "next/image";
 import Quiz, { QuizQuestion } from "@/components/quiz";
@@ -44,11 +44,27 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
   const { toast } = useToast();
 
+  const fetchContent = useCallback(async (conceptCategory: string) => {
+    try {
+      const response = await fetch(
+        `/api/content?conceptCategory=${conceptCategory.replace(/ /g, "_")}`
+      );
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      setContent(data.content);
+      updateContentVisibility(data.content);
+    } catch (error) {
+      console.error("Error fetching content:", error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchContent("atoms");
     fetchQuestions("atoms");
     fetchCategories(true);
-  }, []);
+  }, [fetchContent]);
 
   useEffect(() => {
     if (content.length > 0) {
@@ -92,22 +108,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
   const handleChatClick = () => {
     toggleChatBot();
-  };
-
-  const fetchContent = async (conceptCategory: string) => {
-    try {
-      const response = await fetch(
-        `/api/content?conceptCategory=${conceptCategory.replace(/ /g, "_")}`
-      );
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      setContent(data.content);
-      updateContentVisibility(data.content);
-    } catch (error) {
-      console.error("Error fetching content:", error);
-    }
   };
 
   const fetchQuestions = async (conceptCategory: string) => {
@@ -251,17 +251,14 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
   const currentContent = content.find((item) => item.id === currentContentId);
 
-
-
   return (
     <div className="relative p-1">
       <div className="relative z-10 text-white rounded-lg">
         {showSettings && (
-          <div className="absolute top-10 right-2 w-100 bg-white text-black p-4 rounded-lg shadow-lg z-50">
+          <div className="absolute top-10 right-2 w-200 bg-white text-black p-4 rounded-lg shadow-lg z-50">
             <SettingContent />
           </div>
         )}
-
         {showSearch && (
           <div className="flex mb-4">
             <input
@@ -274,44 +271,43 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
             </button>
           </div>
         )}
-
-        <div className="grid grid-cols-12 gap-4 mb-2">
-          <div className={`col-span-10`}>
-            <div className="grid grid-cols-5 gap-4 mb-2">
+        <div className="flex items-stretch w-full mb-2">
+          <div className="flex-grow mr-5">
+            <div className="grid grid-cols-7 gap-3">
               {categories.slice(0, 5).map((category, index) => (
                 <div
                   key={index}
-                  className="text-white overflow-hidden rounded-lg text-center mb-2 relative group min-h-[120px] cursor-pointer transition-all hover:scale-105 hover:shadow-xl flex flex-col justify-between items-center"
+                  className="text-white overflow-hidden rounded-lg text-center mb-2 relative group min-h-[80px] cursor-pointer transition-all hover:scale-105 hover:shadow-xl flex flex-col justify-between items-center"
                   style={{ backgroundColor: category.color }}
                   onClick={() => handleCardClick(index)}
                 >
                   <div className="relative w-full h-full flex flex-col justify-center items-center">
                     <div className="opacity-0 group-hover:opacity-100 absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center transition-opacity duration-300">
-                      <p className="text-white text-sm font-semibold">
+                      <p className="text-white text-sm" style={{ fontSize: '0.70rem'}}>
                         {category?.conceptCategory || "No title"}
                       </p>
                     </div>
                     <div className="m-auto">
-                      <Icon name={category.icon} className="w-8 h-8" />
+                      <Icon name={category.icon} className="w-10 h-10" />
                     </div>
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-          {/* <div className="col-span-4">
-            <div className="flex flex-col w-full">
-              <div className="card bg-[#446695] p-2 rounded-[20px] mb-2">
-                <p className="text-white text-center text-sm mb-2">
-                  (paste your own content link here)
-                </p>
-                <input
-                  type="text"
-                  className="w-full p-2 rounded border border-gray-300 bg-[#D9D9D9] rounded-[30px] text-black"
-                />
+              <div className="col-span-2">
+                <div className="flex flex-col w-full">
+                    <div className="card bg-[#042b61] p-3 rounded-[0px] mb-2">
+                      <p className="text-white text-center text-sm [] mb-2"style={{fontSize: '0.70rem'}}>
+                      </p>
+                      <input
+                        type="text"
+                        className="w-full p-1 rounded border border-gray-300 bg-[#294773] rounded-[5px] text-[#808080]"
+                        defaultValue="link new content"                    
+                     />
+                    </div>
+                </div>
               </div>
             </div>
-          </div> */}
+          </div>
           <div className="col-span-1">
             <div className="flex items-end">
               <button onClick={toggleSearch} className="p-2">
@@ -415,7 +411,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                       playing={isPlaying}
                       muted
                       width="100%"
-                      height="330px"
+                      height="430px"
                       onEnded={() => setIsPlaying(false)}
                       controls={true}
                     />
@@ -427,7 +423,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                     <iframe
                       src={currentContent.link.replace("/view", "/preview")}
                       className="w-full rounded-lg"
-                      height="320"
+                      height="430"
                       title={currentContent.title}
                     ></iframe>
                   )}
@@ -438,7 +434,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
           </div>
 
           <div className="col-span-2">
-            <div className=" h-[420px] overflow-auto">
+            <div className=" h-[530px] overflow-auto">
               {showVideo && (
                 <>
                   {content
@@ -457,7 +453,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                                 src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
                                 alt={`Thumbnail ${index}`}
                                 width={140}
-                                height={60}
+                                height={90}
                                 className={`relative w-40 h-28 bg-black cursor-pointer rounded-lg ${
                                   currentContentId === video.id && isPlaying
                                     ? "border-4 border-white"
