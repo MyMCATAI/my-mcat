@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import cat from "../public/hero.gif";
 import laptop from "../public/laptop.png";
-import bernie from "../public/Bernie.svg"
 import { useEffect, useRef } from 'react';
+import BernieSvg from "../public/Bernie.svg";
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -72,14 +72,14 @@ export const LandingHero = () => {
         <div className="container mx-auto px-6 max-w-7xl">
           <div className="flex flex-col md:flex-row items-center gap-8" ref={quoteRef}>
             <div>
-              <Image src={bernie} alt="Bernie Sanders" width={210} height={210} />
+              <BernieSvg width={260} height={260} />
             </div>
             <div className="mt-8 md:mt-0">
               <h1 className="text-2xl md:text-3xl text-[#0e2247] font-bold mb-4">
                 &ldquo;Higher education should be a right for all, not a privilege for the few.&rdquo;
               </h1>
-              <p className="text-xl text-[#0e2247] font-bold mb-2 ms-2">
-                Senator Bernie Sanders of Vermont
+              <p className="text-xl text-[#0e2247] font-bold mb-1 ms-1">
+              Senator Bernie Sanders of Vermont
               </p>
             </div>
           </div>
