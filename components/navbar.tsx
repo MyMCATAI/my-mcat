@@ -23,7 +23,7 @@ export const Navbar = ({ isPro = false }: { isPro: boolean }) => {
         </div>
       </div>
       <div className="flex items-end h-full">
-        <div className="flex h-1/2">
+        {/* <div className="flex h-1/2">
           {[
             // { href: "/home", label: "Home" },
             { href: "/calendar", label: "Calendar" },
@@ -48,7 +48,7 @@ export const Navbar = ({ isPro = false }: { isPro: boolean }) => {
               {link.label}
             </Link>
           ))}
-        </div>
+        </div> */}
         <div className="flex h-full items-center ml-6 space-x-4">
           <Search className="text-gray-500" size={20} />
           <UserButton afterSignOutUrl="/" />
