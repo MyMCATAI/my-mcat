@@ -1,35 +1,17 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <!-- Uploaded to: SVG Repo, www.svgrepo.com, Transformed by: SVG Repo Mixer Tools -->
-<svg width="64px" height="64px" viewBox="0 0 64 64" id="_x31_-outline-expand" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000">
-<g id="SVGRepo_bgCarrier" stroke-width="0"/>
-<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
-<g id="SVGRepo_iconCarrier">
-<rect height="2" style="fill:#62C4C3;" width="12" x="6" y="6.999"/>
-<rect height="2" style="fill:#62C4C3;" width="12" x="6" y="10.999"/>
-<rect height="2" style="fill:#62C4C3;" width="12" x="6" y="14.999"/>
-<rect height="2" style="fill:#62C4C3;" width="12" x="6" y="18.999"/>
-<rect height="2" style="fill:#62C4C3;" width="12" x="6" y="22.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="48" y="4.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="48" y="8.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="48" y="12.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="47" y="16.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="46" y="20.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="43" y="24.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="40" y="28.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="36" y="32.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="34" y="36.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="32" y="40.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="32" y="44.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="32" y="48.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="32" y="52.999"/>
-<rect height="2" style="fill:#62C4C3;" width="13" x="32" y="56.999"/>
-<path d="M58,4v9.37c0,6.755-2.916,13.182-8,17.63c-5.084,4.448-8,10.875-8,17.63V60c0,1.104,0.896,2,2,2 s2-0.896,2-2v-9.37c0-6.755,2.916-13.182,8-17.63c5.084-4.448,8-10.875,8-17.63V4c0-1.104-0.896-2-2-2S58,2.896,58,4L58,4z" style="fill:#2800e7;"/>
-<rect height="2" style="fill:#62C4C3;" width="12" x="6" y="38.999"/>
-<rect height="2" style="fill:#62C4C3;" width="12" x="6" y="42.999"/>
-<rect height="2" style="fill:#62C4C3;" width="12" x="6" y="46.999"/>
-<rect height="2" style="fill:#62C4C3;" width="12" x="6" y="50.999"/>
-<rect height="2" style="fill:#62C4C3;" width="12" x="6" y="54.999"/>
-<path d="M18,60v-9.37c0-6.755-2.916-13.182-8-17.63c-5.084-4.448-8-10.875-8-17.63V4c0-1.104,0.896-2,2-2 s2,0.896,2,2v9.37C6,20.125,8.916,26.552,14,31c5.084,4.448,8,10.875,8,17.63V60c0,1.104-0.896,2-2,2S18,61.104,18,60L18,60z" style="fill:#e20007;"/>
-<path d="M18,4v9.37c0,6.755-2.916,13.182-8,17.63c-5.084,4.448-8,10.875-8,17.63V60c0,1.104,0.896,2,2,2 s2-0.896,2-2v-9.37C6,43.875,8.916,37.448,14,33c5.084-4.448,8-10.875,8-17.63V4c0-1.104-0.896-2-2-2S18,2.896,18,4L18,4z" style="fill:#2800e7;"/>
-</g>
-</svg>
+<svg width="64px" height="64px" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="#7b475a" stroke="#7b475a">
+
+<g id="SVGRepo_bgCarrier" stroke-width="0"/>
+
+<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+
+<g id="SVGRepo_iconCarrier">
+
+<path d="M432 768h208v32H432v104c0 9.6-6.4 16-16 16s-16-6.4-16-16V672c0-9.6 6.4-16 16-16s16 6.4 16 16v96z m96-416c9.6 0 16 6.4 16 16s-6.4 16-16 16H336c-9.6 0-16-6.4-16-16s6.4-16 16-16h192z m352 0c9.6 0 16 6.4 16 16s-6.4 16-16 16h-96c-9.6 0-16-6.4-16-16s6.4-16 16-16h96zM624 160c0-9.6 6.4-16 16-16s16 6.4 16 16v112c0 9.6-6.4 16-16 16s-16-6.4-16-16v-112z m-67.2 102.4c6.4 6.4 6.4 16 0 22.4-6.4 6.4-16 6.4-22.4 0l-67.2-67.2c-6.4-6.4-6.4-16 0-22.4 6.4-6.4 16-6.4 22.4 0l67.2 67.2z m24 182.4c6.4-6.4 16-4.8 22.4 1.6 6.4 6.4 4.8 16-1.6 22.4l-432 392c-6.4 6.4-16 4.8-22.4-1.6s-4.8-16 1.6-22.4l432-392z m-169.6 136l-22.4 22.4-96-96 22.4-22.4 96 96zM640 112c9.6 0 16 6.4 16 16s-6.4 16-16 16h-96c-9.6 0-16-6.4-16-16s6.4-16 16-16h96z" fill="#7b475afefef"/>
+
+<path d="M640 528c-88 0-160-72-160-160s72-160 160-160 160 72 160 160-72 160-160 160zM160 880c-17.6 0-32-14.4-32-32s14.4-32 32-32 32 14.4 32 32-14.4 32-32 32z m400-64c-17.6 0-32-14.4-32-32s14.4-32 32-32 32 14.4 32 32-14.4 32-32 32z m80 0c-17.6 0-32-14.4-32-32s14.4-32 32-32 32 14.4 32 32-14.4 32-32 32z m-224 0c-17.6 0-32-14.4-32-32s14.4-32 32-32 32 14.4 32 32-14.4 32-32 32z m0 112c-17.6 0-32-14.4-32-32s14.4-32 32-32 32 14.4 32 32-14.4 32-32 32z m83.2-745.6c12.8 12.8 12.8 32 0 44.8-12.8 12.8-32 12.8-44.8 0-12.8-12.8-12.8-32 0-44.8 12.8-12.8 33.6-12.8 44.8 0zM416 704c-44.8 0-80-35.2-80-80s35.2-80 80-80 80 35.2 80 80-35.2 80-80 80z m224-544c-17.6 0-32-14.4-32-32s14.4-32 32-32 32 14.4 32 32-14.4 32-32 32zM320 400c-17.6 0-32-14.4-32-32s14.4-32 32-32 32 14.4 32 32-14.4 32-32 32z m-16 128c-17.6 0-32-14.4-32-32s14.4-32 32-32 32 14.4 32 32-14.4 32-32 32z m-24 240c-17.6 0-32-14.4-32-32s14.4-32 32-32 32 14.4 32 32-14.4 32-32 32z" fill="#7b475a"/>
+
+</g>
+
+</svg>
