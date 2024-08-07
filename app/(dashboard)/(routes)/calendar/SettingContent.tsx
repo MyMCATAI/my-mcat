@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { StudyPlan } from '@/types';
+import TestComponent from "@/components/test-component";
 
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
@@ -34,7 +35,11 @@ const days: string[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
 
 const resources: string[] = ["UWorld", "AAMC", "Kaplan Books"];
 
-const SettingContent: React.FC = () => {
+interface SettingContentProps {
+  onShowDiagnosticTest: () => void;
+}
+
+const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest }) => {
   const [activeTab, setActiveTab] = useState<string>("tab1");
   const [activeOption, setActiveOption] = useState<string | null>(null);
   const [calendarValue, setCalendarValue] = useState<Value>(new Date());
@@ -51,7 +56,6 @@ const SettingContent: React.FC = () => {
   const [contentCategory, setContentCategory] = useState('');
   const [conceptCategory, setConceptCategory] = useState('');
   const [numberOfQuestions, setNumberOfQuestions] = useState('');
-
 
   useEffect(() => {
     fetchExistingStudyPlan();
@@ -171,6 +175,8 @@ const SettingContent: React.FC = () => {
         if (response.ok) {
           const newPlan = await response.json();
           setExistingStudyPlan(newPlan);
+          // Show the diagnostic test
+          onShowDiagnosticTest();
         }
       }
       alert('Study plan saved successfully!');
@@ -181,7 +187,6 @@ const SettingContent: React.FC = () => {
       setIsSaving(false);
     }
   };
-
 
   const renderOptionContent = () => {
     switch (activeOption) {
@@ -248,7 +253,7 @@ const SettingContent: React.FC = () => {
 
 
   return (
-    <div className="bg-blue-100 p-2 rounded-lg shadow-lg">
+    <div className="bg-blue-100 p-2 rounded-lg shadow-lg relative">
       <div className="bg-white rounded-t-lg overflow-hidden">
         <div className="flex">
           {tabs.map((tab) => (

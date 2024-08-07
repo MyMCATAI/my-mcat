@@ -14,8 +14,15 @@ export async function GET(req: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
     const testId = searchParams.get('id');
+    const isDiagnostic = searchParams.get('diagnostic') === 'true';
 
-    if (testId) {
+    if (isDiagnostic) {
+      // Return the diagnostic test ID
+      return new NextResponse(JSON.stringify({ testId: 'clzikfkwt0000b3k9qtcfz7ko' }), { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } else if (testId) {
       // Fetch a single test by ID with its questions
       const test = await prisma.test.findUnique({
         where: { id: testId },

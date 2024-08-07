@@ -26,11 +26,15 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
   onAnswer,
   userAnswer,
 }) => {
+  const [randomNumber, setRandomNumber] = useState(0);
+
   const [randomizedOptions, setRandomizedOptions] = useState<string[]>([]);
   const options = JSON.parse(question.questionOptions);
   const correctAnswer = options[0];
 
   useEffect(() => {
+    const generateRandomNumber = () => Math.floor(Math.random() * 21);
+    setRandomNumber(generateRandomNumber());
     const shuffled = [...options];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -40,8 +44,6 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
   }, [question]);
 
   const handleAnswerChange = (value: string) => {
-    console.log("handleAnswerChange", value);
-
     const isCorrect = value === correctAnswer;
     console.log("isCorrect", isCorrect);
     onAnswer(question.id, value, isCorrect);
@@ -52,7 +54,7 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
       <Card className="max-w-3xl border-0 shadow-none">
         <CardHeader className=" ">
           <CardTitle className="text-2xl font-bold text-black">
-            Question {question.questionID}
+            {question.questionID}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
@@ -80,28 +82,7 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
           </RadioGroup>
         </CardContent>
       </Card>
-      <div className="text-[#555555] mt-2 flex justify-start gap-1 items-center">
-        <div>
-          <p>Discuss </p>
-        </div>
-        <div className="h-[6px] w-[6px] rounded-[60px] bg-[#555555]"></div>
-        <div>
-          <p>35</p>
-        </div>
-      </div>
-      <div>
-        <div className="flex gap-2">
-          <div>
-          <Image src="/avatar.jpg" width={50} height={50} alt="exam" />
-          </div>
-          <div className="w-full">
-            <textarea className="border w-full p-2" placeholder="Add a public comment..." rows={3} id=""></textarea>
-          </div>
-        </div>
-      </div>
-      <div className="border-b"> </div>
-
-      {/* <div className="flex justify-between mt-6 max-w-3xl mx-auto">
+      <div className="flex justify-between mt-6 max-w-3xl mx-auto">
         <Button
           onClick={onPrevious}
           disabled={isFirst}
@@ -118,7 +99,30 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
         >
           Next <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
-      </div> */}
+      </div>
+
+      <div className="text-[#555555] mt-2 flex justify-start gap-1 items-center">
+        <div>
+          <p>Discuss </p>
+        </div>
+        <div className="h-[6px] w-[6px] rounded-[60px] bg-[#555555]"></div>
+        <div>
+        <p>{randomNumber}</p>
+        </div>
+      </div>
+      <div>
+        <div className="flex gap-2 mt-2">
+          <div>
+          <Image src="/avatar.jpg" width={50} height={50} alt="exam" />
+          </div>
+          <div className="w-full">
+            <textarea className="border w-full p-2" placeholder="Add a public comment..." rows={3} id=""></textarea>
+          </div>
+        </div>
+      </div>
+      <div className="border-b"> </div>
+
+     
     </div>
   );
 };
