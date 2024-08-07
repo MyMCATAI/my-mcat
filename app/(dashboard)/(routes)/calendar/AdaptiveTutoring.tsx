@@ -298,7 +298,12 @@
                 <div
                   key={index}
                   className="text-white overflow-hidden rounded-lg text-center mb-2 relative group min-h-[100px] cursor-pointer transition-all hover:scale-105 hover:shadow-xl flex flex-col justify-between items-center"
-                  style={{ backgroundColor: '#001226' }}
+                  style={{ 
+                    backgroundColor: '#001226',
+                    boxShadow: '0 0 10px 2px rgba(0, 123, 255, 0.5)',
+                    transition: 'box-shadow 0.3s ease-in-out'}}
+                  onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 0 15px 5px rgba(0, 123, 255, 0.8)'}
+                  onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 0 10px 2px rgba(0, 123, 255, 0.5)'}
                   onClick={() => handleCardClick(index)}
                 >
                   <div className="relative w-full h-full flex flex-col justify-center items-center">
