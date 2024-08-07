@@ -101,8 +101,8 @@ body :root {
   margin-left: 0 !important;
 }
 .gradientbg {
-  background: rgb(97,119,145);
-background: linear-gradient(0deg, rgba(97,119,145,1) 0%, rgba(3,39,95,1) 100%);
+  background: rgb(6, 58, 122);
+background: linear-gradient(0deg, #00397f 0%, #002c69 100%);
 }
 
 
