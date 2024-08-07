@@ -1,9 +1,9 @@
-"use client";
 import React, { useState, useEffect } from "react";
 import { format, addDays, isSameDay, startOfDay } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import SettingContent from "./SettingContent";
 import { NewActivity, FetchedActivity } from "@/types";
+import Image from 'next/image'
 
 interface ScheduleProps {
   activities: FetchedActivity[];
@@ -15,7 +15,10 @@ const Schedule: React.FC<ScheduleProps> = ({ activities }) => {
   const [showNewActivityForm, setShowNewActivityForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const [showGif, setShowGif] = useState(true);
+  const [todayActivities, setTodayActivities] = useState('');
+  const [noActivitiesText, setNoActivitiesText] = useState('');
+  
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
     activityText: "",
@@ -25,14 +28,47 @@ const Schedule: React.FC<ScheduleProps> = ({ activities }) => {
   });
 
   const { user } = useUser();
+  const activitiesText = ``;
 
   useEffect(() => {
     setCurrentDate(new Date());
+    // Simulate GIF playing for 4.5 seconds
+    const timer = setTimeout(() => {
+      setShowGif(false);
+      startTypingAnimation();
+    }, 4500);
+
+    return () => clearTimeout(timer);
   }, []);
 
+  const startTypingAnimation = () => {
+    let index = 0;
+    const timer = setInterval(() => {
+      setTodayActivities(activitiesText.slice(0, index));
+      index++;
+      if (index > activitiesText.length) {
+        clearInterval(timer);
+        if (getActivitiesForDate(startOfDay(new Date())).length === 0) {
+          typeNoActivitiesMessage();
+        }
+      }
+    }, 25); // Adjust the speed of typing here
+  };
+
+  const typeNoActivitiesMessage = () => {
+    const message = "nothing for today! yay, break!";
+    let index = 0;
+    const timer = setInterval(() => {
+      setNoActivitiesText(message.slice(0, index));
+      index++;
+      if (index > message.length) {
+        clearInterval(timer);
+      }
+    }, 25); // Adjust the speed of typing here
+  };
+
   const toggleSettings = () => setShowSettings(!showSettings);
-  const toggleNewActivityForm = () =>
-    setShowNewActivityForm(!showNewActivityForm);
+  const toggleNewActivityForm = () => setShowNewActivityForm(!showNewActivityForm);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -88,16 +124,25 @@ const Schedule: React.FC<ScheduleProps> = ({ activities }) => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative p-3">
       <div className="relative z-10 text-white rounded-lg">
-        <div className="flex justify-between items-center mb-3">
-          <button
+        <div className="flex justify-between items-center mb-2">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
             onClick={toggleNewActivityForm}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            className="cursor-pointer hover:opacity-80 transition-opacity"
           >
-            add new activity
-          </button>
-          <button onClick={toggleSettings} className="ms-auto">
+            <g id="SVGRepo_iconCarrier">
+              <path d="M11 8C11 7.44772 11.4477 7 12 7C12.5523 7 13 7.44772 13 8V11H16C16.5523 11 17 11.4477 17 12C17 12.5523 16.5523 13 16 13H13V16C13 16.5523 12.5523 17 12 17C11.4477 17 11 16.5523 11 16V13H8C7.44771 13 7 12.5523 7 12C7 11.4477 7.44772 11 8 11H11V8Z" fill="#efefef"/>
+              <path fillRule="evenodd" clipRule="evenodd" d="M23 12C23 18.0751 18.0751 23 12 23C5.92487 23 1 18.0751 1 12C1 5.92487 5.92487 1 12 1C18.0751 1 23 5.92487 23 12ZM3.00683 12C3.00683 16.9668 7.03321 20.9932 12 20.9932C16.9668 20.9932 20.9932 16.9668 20.9932 12C20.9932 7.03321 16.9668 3.00683 12 3.00683C7.03321 3.00683 3.00683 7.03321 3.00683 12Z" fill="#efefef"/>
+            </g>
+          </svg>
+          <div className="flex-grow"></div>
+          <button onClick={toggleSettings}>
             <svg
               width="24"
               height="24"
@@ -112,7 +157,6 @@ const Schedule: React.FC<ScheduleProps> = ({ activities }) => {
             </svg>
           </button>
         </div>
-
         {showSettings && (
           <div className="absolute top-10 right-1 w-100 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
             <SettingContent />
@@ -123,7 +167,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities }) => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl w-96">
               <h3 className="text-xl font-bold mb-4 text-black">
-              add new activity
+                add new activity
               </h3>
               <form onSubmit={createNewActivity}>
                 <input
@@ -191,61 +235,73 @@ const Schedule: React.FC<ScheduleProps> = ({ activities }) => {
           </div>
         )}
 
-        <div className="bg-[#2D4778] text-white px-4 py-4 rounded-[30px] text-center mb-5 transition-transform duration-300 ease-in-out transform hover:scale-105 shadow-lg">
-          <p className="text-[#FFFCFC] text-2xl font-light leading-normal shadow-text">today</p>
-          <div className="px-4 mt-3 overflow-auto">
-            <p className="py-4 text-[16px] text-white font-light leading-normal shadow-text">
-              hi, {user?.firstName ?? "Guest"}. here are your activities for
-              today:
-            </p>
-            {getActivitiesForDate(startOfDay(new Date())).map(
-              (activity, index) => (
-                <div key={index} className="text-sm mt-2">
-                  {activity.activityTitle} - {activity.hours} hours
+        {/* Updated Fixed-size Today Section with GIF and content */}
+        <div className="bg-[#001226] text-white px-6 py-8 rounded-[30px] mb-5 shadow-lg overflow-hidden">
+          <div className="relative w-full h-[185px]">
+            {showGif ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <p className="text-[#FFFCFC] text-lg font-light leading-normal shadow-text mb-3">building your schedule...</p>
+                <div className="w-[300px] h-[300px] relative">
+                  <Image 
+                    src="/kalypsotyping.gif" 
+                    alt="Eating catnip..." 
+                    layout="fill" 
+                    objectFit="contain" 
+                  />
                 </div>
-              )
+              </div>
+            ) : (
+              <div className="absolute inset-0 overflow-visible flex">
+                <div className="w-1/2 pr-4 h-full flex items-center justify-center">
+                  <div className="w-full h-full bg-transparent flex items-center justify-center rounded-lg overflow-visible">
+                    <Image
+                      src="/profile.png"
+                      alt="Profile"
+                      width={250}
+                      height={250}
+                      objectFit="cover"
+                    />
+                  </div>
+                </div>
+                <div className="w-1/2 pl-2 h-full">
+                  <div className="bg-[black] p-4 rounded-lg h-full overflow-y-auto" style={{
+                    boxShadow: '0 0 12px 8px rgba(0, 123, 255, 0.5)',
+                    transition: 'box-shadow 0.3s ease-in-out'}}>
+                    {getActivitiesForDate(startOfDay(new Date())).length === 0 ? (
+                      <p className="py-2 text-[15px] text-white font-light leading-normal">
+                        {noActivitiesText}
+                      </p>
+                    ) : (
+                      getActivitiesForDate(startOfDay(new Date())).map(
+                        (activity, index) => (
+                          <div key={index} className="text-sm mt-4">
+                            <p className="font-semibold">{activity.activityTitle}</p>
+                            <p className="mt-1">{activity.activityText}</p>
+                            <p className="mt-1">{activity.hours} hours</p>
+                          </div>
+                        )
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-5">
-          {[1, 2].map((dayOffset) => {
-            const date = addDays(currentDate, dayOffset);
-            const dayActivities = getActivitiesForDate(date);
-            return (
-              <div
-                key={dayOffset}
-                className="bg-[#5D84CE] text-white px-4 py-2 rounded-[10px] text-center relative group transition-transform duration-300 ease-in-out transform hover:scale-105 shadow-lg"
-              >
-                <p className="text-[#FFFCFC] text-xl font-light leading-normal shadow-text">{format(date, "EEEE")}</p>
-                <div className="px-4 py-3 mt-3 overflow-auto">
-                  {dayActivities.length > 0 ? (
-                    dayActivities.map((activity, index) => (
-                      <p key={index} className="text-sm mt-2 text-[#FFFCFC] text-lg font-light leading-normal shadow-text">
-                        {activity.activityTitle} - {activity.hours} hours
-                      </p>
-                    ))
-                  ) : (
-                    <p className="text-[#FFFCFC] text-lg font-light leading-normal shadow-text">No activities scheduled</p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
+        {/* Future Days Grid */}
         <div className="grid grid-cols-4 gap-4 mb-4">
           {[...Array(12)].map((_, index) => {
-            const futureDate = addDays(currentDate, index + 3);
+            const futureDate = addDays(new Date(), index + 1);
             const dayActivities = getActivitiesForDate(futureDate);
             return (
               <div
-                key={index}
-                className="bg-[#7AA3E4] text-white p-3 rounded-[10px] h-[80px] relative flex flex-col justify-between group overflow-hidden shadow-md transition-transform duration-300 ease-in-out transform hover:scale-105"
+                key={`future-day-${index}`}
+                className="bg-[#001226] text-white p-3 rounded-[10px] h-[80px] relative flex flex-col justify-between group overflow-hidden shadow-md transition-transform duration-300 ease-in-out transform hover:scale-105"
               >
                 <div className="flex justify-between">
-                  <div className="text-sm  text-white text-lg font-light leading-normal shadow-text">{format(futureDate, "d")}</div>
-                  <span className="text-sm  text-white text-lg font-light leading-normal shadow-text">{format(futureDate, "MMM")}</span>
+                  <div className="text-sm text-white text-lg font-light leading-normal shadow-text">{format(futureDate, "d")}</div>
+                  <span className="text-sm text-white text-lg font-light leading-normal shadow-text">{format(futureDate, "MMM")}</span>
                 </div>
                 <div className="flex-grow overflow-y-auto">
                   {dayActivities.map((activity, idx) => (
@@ -255,7 +311,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities }) => {
                   ))}
                 </div>
                 {dayActivities.length === 0 && (
-                  <div className="text-sm mt-1  text-white text-lg font-light leading-normal shadow-text">No tasks</div>
+                  <div className="text-sm mt-1 text-white text-lg font-light leading-normal shadow-text">No tasks</div>
                 )}
               </div>
             );
