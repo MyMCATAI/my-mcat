@@ -3,6 +3,9 @@ import { format, addDays, isSameDay, startOfDay } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import SettingContent from "./SettingContent";
 import { NewActivity, FetchedActivity } from "@/types";
+import { DialogHeader, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogOverlay } from "@radix-ui/react-dialog";
+import { Button } from "@/components/ui/button";
 import Image from 'next/image'
 
 interface ScheduleProps {
@@ -16,6 +19,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
   const [showNewActivityForm, setShowNewActivityForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showThankYouDialog, setShowThankYouDialog] = useState(false);
   const [showGif, setShowGif] = useState(true);
   const [todayActivities, setTodayActivities] = useState('');
   const [noActivitiesText, setNoActivitiesText] = useState('');
@@ -41,6 +45,16 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
 
     return () => clearTimeout(timer);
   }, []);
+
+  const handleStudyPlanSaved = () => {
+    setShowSettings(false);
+    setShowThankYouDialog(true);
+  };
+
+  const handleTakeDiagnosticTest = () => {
+    setShowThankYouDialog(false);
+    onShowDiagnosticTest();
+  };
 
   const startTypingAnimation = () => {
     let index = 0;
@@ -158,10 +172,33 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
             </svg>
           </button>
         </div>
+
+        <Dialog open={showThankYouDialog} onOpenChange={setShowThankYouDialog}>
+          <DialogOverlay className="fixed inset-0 bg-black bg-opacity-50 z-50" />
+          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold mb-4 text-gray-800">Thank You!</DialogTitle>
+              <DialogDescription className="text-gray-600 mb-6">
+                Your study plan has been saved successfully. We recommend taking a diagnostic test to help us personalize your learning experience.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex justify-end space-x-4">
+              <Button variant="outline" onClick={() => setShowThankYouDialog(false)} className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors">
+                Maybe Later
+              </Button>
+              <Button onClick={handleTakeDiagnosticTest} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                Take Diagnostic Test
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         {showSettings && (
-          <div className="absolute top-10 right-1 w-100 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
-              <SettingContent onShowDiagnosticTest={onShowDiagnosticTest} />
-          </div>
+           <div className="absolute top-10 right-1 w-100 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
+          <SettingContent 
+            onShowDiagnosticTest={onShowDiagnosticTest} 
+            onStudyPlanSaved={handleStudyPlanSaved}
+          />
+        </div>
         )}
 
         {showNewActivityForm && (

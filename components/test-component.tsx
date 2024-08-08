@@ -3,12 +3,20 @@ import { useStopwatch } from 'react-timer-hook';
 import PassageComponent from "@/components/test/Passage";
 import QuestionComponent from "@/components/test/Question";
 import { Test, TestQuestion, Passage, Question, UserResponse } from "@/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface TestComponentProps {
   testId: string;
+  onTestComplete: (score: number) => void;
 }
 
-const TestComponent: React.FC<TestComponentProps> = ({ testId }) => {
+const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete }) => {
   const [test, setTest] = useState<Test | null>(null);
   const [userTest, setUserTest] = useState<{ id: string } | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -22,6 +30,9 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId }) => {
   const [testCreated, setTestCreated] = useState(false);
   const [isCreatingTest, setIsCreatingTest] = useState(false);
   const [questionIdToResponseId, setQuestionIdToResponseId] = useState<Record<string, string>>({});
+
+  const [showScorePopup, setShowScorePopup] = useState(false);
+  const [finalScore, setFinalScore] = useState(0);
 
   const {
     seconds,
@@ -55,6 +66,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId }) => {
     reset();
   }, [currentQuestionIndex, test]);
 
+
+  
   const fetchTest = async () => {
     if (!testId) {
       setError("No test ID provided");
@@ -218,6 +231,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId }) => {
     setIsSubmitting(true)
     if (!userTest) return;
     const score = calculateScore();
+    setFinalScore(score);
     try {
       const response = await fetch(`/api/user-test/${userTest.id}`, {
         method: 'PUT',
@@ -229,13 +243,12 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId }) => {
         throw new Error('Failed to update test');
       }
 
-      // Redirect to the user-test page
-      window.location.href = `/user-test/${userTest.id}`;
+      setShowScorePopup(true);
+      onTestComplete(score);
 
     } catch (err) {
       console.error('Error finishing test:', err);
       // Optionally, show an error message to the user
-      // setError('Failed to finish the test. Please try again.');
     } finally {
       setIsSubmitting(false)
     }
@@ -345,6 +358,28 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId }) => {
           </button>
         </div>
       )}
+
+<Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
+        <DialogContent className="bg-[#0A2540] text-white border border-sky-500">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold text-sky-300">Test Completed!</DialogTitle>
+            <DialogDescription className="text-gray-300">
+              Congratulations on completing the test.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-xl">Your Score: <span className="font-bold text-sky-300">{finalScore.toFixed(2)}%</span></p>
+          </div>
+          <div className="flex justify-end">
+            <button 
+              onClick={() => window.location.href = `/user-test/${userTest?.id}`}
+              className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded"
+            >
+              View Details
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -259,7 +259,7 @@
         <div className="relative z-10 text-white rounded-lg">
           {showSettings && (
             <div className="absolute top-10 right-2 w-200 bg-white text-black p-4 rounded-lg shadow-lg z-50">
-              <SettingContent />
+              <SettingContent onShowDiagnosticTest={()=>console.log("todo, implement this")} />
             </div>
           )}
           {showSearch && (
