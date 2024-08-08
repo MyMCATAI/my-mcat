@@ -130,7 +130,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities }) => {
               </button>
             ))}
           </div>
-          <div className="mt-4 bg-[#7A99E4] h-[330px] p-1">
+          <div className="mt-4 bg-[#001226] h-[367px] p-1">
             {renderContent(tabs.find(tab => tab.id === activeTab)!.content)}
           </div>
         </div>
