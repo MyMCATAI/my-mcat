@@ -41,10 +41,24 @@ export async function POST(req: Request) {
     const examDate = new Date(studyPlan.examDate);
     const totalDays = Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
     
-    const hoursPerDay = JSON.parse(studyPlan.hoursPerDay as string);
-    const fullLengthDays = JSON.parse(studyPlan.fullLengthDays);
+    // Parse hoursPerDay
+    let hoursPerDay: { [key: string]: number };
+    try {
+      hoursPerDay = JSON.parse(studyPlan.hoursPerDay as string);
+    } catch (error) {
+      console.error("Error parsing hoursPerDay:", error);
+      hoursPerDay = {
+        Sunday: 2, Monday: 2, Tuesday: 2, Wednesday: 1,
+        Thursday: 2, Friday: 2, Saturday: 2
+      };
+    }
+
+    // todo Parse fullLengthDays
+    // const fullLengthDays = (studyPlan.fullLengthDays as string)
+    //   .split('')
+    //   .map(char => char === '1');
     
-    const totalStudyHours = calculateTotalStudyHours(hoursPerDay, fullLengthDays, totalDays);
+    const totalStudyHours = calculateTotalStudyHours(hoursPerDay, totalDays);
     console.log("Total study days:", totalDays, "Total study hours:", totalStudyHours);
 
     // 3. Sort categories (already done in knowledgeProfiles query)
@@ -86,12 +100,19 @@ export async function POST(req: Request) {
   }
 }
 
-function calculateTotalStudyHours(hoursPerDay: number[], fullLengthDays: boolean[], totalDays: number): number {
+function calculateTotalStudyHours(
+  hoursPerDay: { [key: string]: number },
+  // fullLengthDays: boolean[],
+  totalDays: number
+): number {
   console.log("Calculating total study hours...");
   let totalHours = 0;
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   for (let i = 0; i < totalDays; i++) {
     const dayOfWeek = (i + new Date().getDay()) % 7;
-    totalHours += fullLengthDays[dayOfWeek] ? hoursPerDay[dayOfWeek] : hoursPerDay[dayOfWeek] / 2;
+    const dayName = daysOfWeek[dayOfWeek];
+    // totalHours += fullLengthDays[dayOfWeek] ? hoursPerDay[dayName] : hoursPerDay[dayName] / 2;
+    totalHours += hoursPerDay[dayName]
   }
   console.log("Total study hours calculated:", totalHours);
   return totalHours;
@@ -142,55 +163,70 @@ function generateCalendarActivities(selectedContent: any[], studyPlan: any, star
   console.log("Generating calendar activities...");
   const activities = [];
   let currentDate = new Date(startDate);
-  const hoursPerDay = JSON.parse(studyPlan.hoursPerDay as string);
-  const fullLengthDays = JSON.parse(studyPlan.fullLengthDays);
+  
+  // Parse hoursPerDay
+  let hoursPerDay: { [key: string]: number };
+  try {
+    hoursPerDay = JSON.parse(studyPlan.hoursPerDay as string);
+  } catch (error) {
+    console.error("Error parsing hoursPerDay:", error);
+    hoursPerDay = {
+      Sunday: 2, Monday: 2, Tuesday: 2, Wednesday: 1,
+      Thursday: 2, Friday: 2, Saturday: 2
+    };
+  }
 
-  for (const categoryContent of selectedContent) {
-    console.log(`- Category: ${categoryContent.category.subjectCategory}`);
-    for (const content of categoryContent.content) {
-      while (true) {
-        const dayOfWeek = currentDate.getDay();
-        const availableHours = fullLengthDays[dayOfWeek] ? hoursPerDay[dayOfWeek] : hoursPerDay[dayOfWeek] / 2;
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-        if (content.minutes_estimate / 60 <= availableHours) {
-          activities.push({
-            userId: studyPlan.userId,
-            studyPlanId: studyPlan.id,
-            categoryId: categoryContent.category.id,
-            contentId: content.id,
-            activityText: `Study ${content.title}`,
-            activityTitle: content.title,
-            hours: content.minutes_estimate / 60,
-            activityType: content.type,
-            link: content.link,
-            scheduledDate: new Date(currentDate),
-            status: "Not Started"
-          });
+  let contentIndex = 0;
+  let categoryIndex = 0;
 
-          console.log(`  Scheduled: ${content.title} on ${currentDate.toISOString().split('T')[0]} (${(content.minutes_estimate / 60).toFixed(2)} hours)`);
+  while (currentDate < studyPlan.examDate) {
+    const dayOfWeek = currentDate.getDay();
+    const dayName = daysOfWeek[dayOfWeek];
+    const availableHours = hoursPerDay[dayName];
+    let dailyActivities = 0;
+    let dailyHours = 0;
 
-          currentDate.setHours(currentDate.getHours() + content.minutes_estimate / 60);
-          break;
-        } else {
-          currentDate.setDate(currentDate.getDate() + 1);
-          currentDate.setHours(9, 0, 0, 0); // Reset to 9 AM for the next day
-          console.log(`  Moving to next day: ${currentDate.toISOString().split('T')[0]}`);
-        }
+    while (dailyActivities < 2 && dailyHours < availableHours && categoryIndex < selectedContent.length) {
+      const categoryContent = selectedContent[categoryIndex];
+      const content = categoryContent.content[contentIndex];
 
-        if (currentDate >= studyPlan.examDate) {
-          console.log("  Reached exam date, stopping activity generation");
-          break;
-        }
+      if (!content) {
+        categoryIndex++;
+        contentIndex = 0;
+        continue;
       }
 
-      if (currentDate >= studyPlan.examDate) {
+      const contentHours = content.minutes_estimate / 60;
+
+      if (dailyHours + contentHours <= availableHours) {
+        activities.push({
+          userId: studyPlan.userId,
+          studyPlanId: studyPlan.id,
+          categoryId: categoryContent.category.id,
+          contentId: content.id,
+          activityText: `Study ${content.title}`,
+          activityTitle: content.title,
+          hours: contentHours,
+          activityType: content.type,
+          link: content.link,
+          scheduledDate: new Date(currentDate),
+          status: "Not Started"
+        });
+
+        console.log(`Scheduled: ${content.title} on ${currentDate.toISOString().split('T')[0]} (${contentHours.toFixed(2)} hours)`);
+
+        dailyActivities++;
+        dailyHours += contentHours;
+        contentIndex++;
+      } else {
         break;
       }
     }
 
-    if (currentDate >= studyPlan.examDate) {
-      break;
-    }
+    currentDate.setDate(currentDate.getDate() + 1);
+    currentDate.setHours(9, 0, 0, 0); // Reset to 9 AM for the next day
   }
 
   console.log(`Total activities generated: ${activities.length}`);
