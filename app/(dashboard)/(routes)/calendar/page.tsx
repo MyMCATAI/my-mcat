@@ -27,12 +27,13 @@ const Page = () => {
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
   const [showChatbot, setShowChatbot] = useState(false);
   const [chatbotContext, setChatbotContext] = useState("");
-
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const scrollPosition = 130;
   const height = "660px";
   const [tests, setTests] = useState<Test[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [showScorePopup, setShowScorePopup] = useState(false);
+  const [testScore, setTestScore] = useState(0);
 
   const [showDiagnosticTest, setShowDiagnosticTest] = useState(false);
   const [diagnosticTestId, setDiagnosticTestId] = useState<string | null>(null);
@@ -41,6 +42,12 @@ const Page = () => {
     fetchActivities();
     fetchTests();
   }, []);
+
+  const handleTestComplete = (score: number) => {
+    setTestScore(score);
+    setShowScorePopup(true);
+    setShowDiagnosticTest(false);
+  };
 
   const fetchActivities = async () => {
     try {
@@ -54,6 +61,7 @@ const Page = () => {
       console.error("Error fetching activities:", error);
     }
   };
+
   const fetchTests = async () => {
     try {
       setIsLoading(true);
@@ -132,13 +140,6 @@ const Page = () => {
               ? "testing suite"
               : ""}
           </h2>
-          <Button 
-              onClick={handleShowDiagnosticTest}
-              variant="outline"
-              className="bg-blue-500 text-white hover:bg-blue-600"
-            >
-              Open Diagnostic Test
-            </Button>
           <div className="relative">
             <div className="p-3 gradientbg" style={{ minHeight: height }}>
               {renderContent()}
@@ -181,7 +182,7 @@ const Page = () => {
           </button>
         </div>
       </div>
-      {/* Diagnostic Test Dialog */}
+       {/* Diagnostic Test Dialog */}
       <Dialog open={showDiagnosticTest} onOpenChange={setShowDiagnosticTest}>
         <DialogContent className="max-w-4xl w-full max-h-[90vh] flex flex-col bg-[#001326] text-white border border-sky-500">
           <DialogHeader className="border-b border-sky-500 pb-4">
@@ -191,11 +192,26 @@ const Page = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex-grow overflow-auto py-4">
-            {diagnosticTestId && <TestComponent testId={diagnosticTestId} />}
+            {diagnosticTestId && <TestComponent testId={diagnosticTestId} onTestComplete={handleTestComplete} />}
           </div>
-          <div className="flex justify-end pt-4 border-t border-sky-500">
+        </DialogContent>
+      </Dialog>
+
+      {/* Score Popup */}
+      <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
+        <DialogContent className="bg-[#0A2540] text-white border border-sky-500">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold text-sky-300">Test Completed!</DialogTitle>
+            <DialogDescription className="text-gray-300">
+              Great job on completing the diagnostic test.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-xl">Your Score: <span className="font-bold text-sky-300">{testScore.toFixed(2)}%</span></p>
+          </div>
+          <div className="flex justify-end">
             <Button 
-              onClick={() => setShowDiagnosticTest(false)}
+              onClick={() => setShowScorePopup(false)}
               className="bg-sky-500 hover:bg-sky-600 text-white"
             >
               Close
