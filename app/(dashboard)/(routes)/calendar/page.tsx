@@ -37,6 +37,7 @@ const Page = () => {
   const [showScorePopup, setShowScorePopup] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [isGeneratingActivities, setIsGeneratingActivities] = useState(false);
 
   const [showDiagnosticTest, setShowDiagnosticTest] = useState(false);
   const [diagnosticTestId, setDiagnosticTestId] = useState<string | null>(null);
@@ -59,7 +60,7 @@ const Page = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ score }), // You might want to send the score or other relevant data
+        body: JSON.stringify({ score }),
       });
 
       if (!response.ok) {
@@ -72,9 +73,9 @@ const Page = () => {
         duration: 3000,
       });
 
-      // Refresh activities and tests after updating profile
-      await fetchActivities();
-      await fetchTests();
+      // Generate and fetch new activities
+      await generateAndFetchActivities();
+
     } catch (error) {
       console.error("Error updating knowledge profile:", error);
       toast({
@@ -85,6 +86,39 @@ const Page = () => {
       });
     } finally {
       setIsUpdatingProfile(false);
+    }
+  };
+  const generateAndFetchActivities = async () => {
+    setIsGeneratingActivities(true);
+    try {
+      // Generate new activities
+      const generateResponse = await fetch("/api/generate-study-plan", {
+        method: "POST",
+      });
+
+      if (!generateResponse.ok) {
+        throw new Error("Failed to generate new activities");
+      }
+
+      toast({
+        title: "Success",
+        description: "New study plan generated successfully!",
+        duration: 3000,
+      });
+
+      // Fetch the newly generated activities
+      await fetchActivities();
+      
+    } catch (error) {
+      console.error("Error generating or fetching activities:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate new study plan. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsGeneratingActivities(false);
     }
   };
 
@@ -98,6 +132,12 @@ const Page = () => {
       setActivities(activities);
     } catch (error) {
       console.error("Error fetching activities:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch activities. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
   };
 
@@ -132,12 +172,25 @@ const Page = () => {
   };
 
   const renderContent = () => {
+    if (isUpdatingProfile || isGeneratingActivities) {
+      return (
+        <div className="flex justify-center items-center h-full">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4"></div>
+            <p className="text-sky-300 text-xl">
+              {isUpdatingProfile ? "Updating knowledge profile..." : "Generating new study plan..."}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case "Schedule":
         return <Schedule 
-        activities={activities} 
-        onShowDiagnosticTest={handleShowDiagnosticTest}
-      />;
+          activities={activities} 
+          onShowDiagnosticTest={handleShowDiagnosticTest}
+        />;
       case "KnowledgeProfile":
         return (
           <AdaptiveTutoring
@@ -238,6 +291,7 @@ const Page = () => {
       </Dialog>
 
       {/* Score Popup */}
+      {/* Score Popup */}
       <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
         <DialogContent className="bg-[#0A2540] text-white border border-sky-500">
           <DialogHeader>
@@ -253,8 +307,9 @@ const Page = () => {
             <Button 
               onClick={() => setShowScorePopup(false)}
               className="bg-sky-500 hover:bg-sky-600 text-white"
+              disabled={isUpdatingProfile || isGeneratingActivities}
             >
-              Close
+              {isUpdatingProfile || isGeneratingActivities ? "Processing..." : "Close"}
             </Button>
           </div>
         </DialogContent>
