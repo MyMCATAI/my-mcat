@@ -141,6 +141,7 @@
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
+        console.log(data)
         setCategories(data.items);
       } catch (error) {
         console.error("Error fetching categories:", error);

@@ -10,6 +10,7 @@ import ChatBot from "@/components/chatbot/ChatBot";
 import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
 import TestPage from "../test/page";
 import TestingSuit from "./TestingSuit";
+import { toast } from "@/components/ui/use-toast";
 
 import {
   Dialog,
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import TestComponent from "@/components/test-component";
+import { DialogOverlay } from "@radix-ui/react-dialog";
 
 const Page = () => {
   const [activeTab, setActiveTab] = useState("Schedule");
@@ -34,6 +36,7 @@ const Page = () => {
   const [tests, setTests] = useState<Test[]>([]);
   const [showScorePopup, setShowScorePopup] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
   const [showDiagnosticTest, setShowDiagnosticTest] = useState(false);
   const [diagnosticTestId, setDiagnosticTestId] = useState<string | null>(null);
@@ -43,10 +46,46 @@ const Page = () => {
     fetchTests();
   }, []);
 
-  const handleTestComplete = (score: number) => {
+  const handleTestComplete = async (score: number) => {
     setTestScore(score);
     setShowScorePopup(true);
     setShowDiagnosticTest(false);
+
+    // Update knowledge profile
+    setIsUpdatingProfile(true);
+    try {
+      const response = await fetch("/api/knowledge-profile/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ score }), // You might want to send the score or other relevant data
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update knowledge profile");
+      }
+
+      toast({
+        title: "Success",
+        description: "Knowledge profile updated successfully!",
+        duration: 3000,
+      });
+
+      // Refresh activities and tests after updating profile
+      await fetchActivities();
+      await fetchTests();
+    } catch (error) {
+      console.error("Error updating knowledge profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update knowledge profile. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsUpdatingProfile(false);
+    }
   };
 
   const fetchActivities = async () => {
@@ -184,6 +223,7 @@ const Page = () => {
       </div>
        {/* Diagnostic Test Dialog */}
       <Dialog open={showDiagnosticTest} onOpenChange={setShowDiagnosticTest}>
+      <DialogOverlay className="fixed inset-0 bg-black bg-opacity-0 z-50" />
         <DialogContent className="max-w-4xl w-full max-h-[90vh] flex flex-col bg-[#001326] text-white border border-sky-500">
           <DialogHeader className="border-b border-sky-500 pb-4">
             <DialogTitle className="text-2xl font-semibold text-sky-300">Diagnostic Test</DialogTitle>
