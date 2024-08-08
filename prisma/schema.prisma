@@ -130,7 +130,7 @@ model StudyPlan {
   examDate           DateTime
   resources          Json
   hoursPerDay        Json
-  fullLengthDays     String // This will store the array of booleans as a string
+  fullLengthDays     Json
   updatedAt          DateTime           @updatedAt
   calendarActivities CalendarActivity[]
 
