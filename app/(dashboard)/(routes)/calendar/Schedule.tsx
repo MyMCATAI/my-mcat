@@ -335,7 +335,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
             return (
               <div
                 key={`future-day-${index}`}
-                className="bg-[#001226] text-white p-3 rounded-[10px] h-[80px] relative flex flex-col justify-between group overflow-hidden shadow-md transition-transform duration-300 ease-in-out transform hover:scale-105"
+                className="bg-[#7999e4] text-white p-3 rounded-[10px] h-[80px] relative flex flex-col justify-between group overflow-hidden shadow-md transition-transform duration-300 ease-in-out transform hover:scale-105"
               >
                 <div className="flex justify-between">
                   <div className="text-sm text-white text-lg font-light leading-normal shadow-text">{format(futureDate, "d")}</div>
