@@ -36,7 +36,7 @@ const days: string[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
 const resources: string[] = ["UWorld", "AAMC", "Kaplan Books"];
 
 interface SettingContentProps {
-  onShowDiagnosticTest: () => void;
+  onShowDiagnosticTest?: () => void;
 }
 
 const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest }) => {
@@ -176,7 +176,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest })
           const newPlan = await response.json();
           setExistingStudyPlan(newPlan);
           // Show the diagnostic test
-          onShowDiagnosticTest();
+          onShowDiagnosticTest && onShowDiagnosticTest();
         }
       }
       alert('Study plan saved successfully!');
