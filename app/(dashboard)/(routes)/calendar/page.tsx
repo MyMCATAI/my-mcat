@@ -32,7 +32,7 @@ const Page = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const scrollPosition = 130;
-  const height = "660px";
+  const height = "690px";
   const [tests, setTests] = useState<Test[]>([]);
   const [showScorePopup, setShowScorePopup] = useState(false);
   const [testScore, setTestScore] = useState(0);
