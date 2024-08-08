@@ -302,7 +302,7 @@
                     backgroundColor: '#001226',
                     boxShadow: '0 0 10px 2px rgba(0, 123, 255, 0.5)',
                     transition: 'box-shadow 0.3s ease-in-out'}}
-                  onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 0 15px 5px rgba(0, 123, 255, 0.8)'}
+                  onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 0 20px 7px rgba(0, 123, 255, 0.8)'}
                   onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 0 10px 2px rgba(0, 123, 255, 0.5)'}
                   onClick={() => handleCardClick(index)}
                 >
