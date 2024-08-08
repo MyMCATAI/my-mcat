@@ -52,8 +52,15 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
   const [selectedResources, setSelectedResources] = useState<Record<string, boolean>>({});
   const [existingStudyPlan, setExistingStudyPlan] = useState<StudyPlan | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [fullLengthDays, setFullLengthDays] = useState<boolean[]>(new Array(7).fill(false));
-  const [title, setTitle] = useState('');
+  const [fullLengthDays, setFullLengthDays] = useState<Record<string, boolean>>({
+    Monday: false,
+    Tuesday: false,
+    Wednesday: false,
+    Thursday: false,
+    Friday: false,
+    Saturday: false,
+    Sunday: false,
+  });  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [setName, setSetName] = useState('');
   const [section, setSection] = useState('');
@@ -126,12 +133,12 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
       if (response.ok) {
         const data = await response.json();
         if (data.studyPlans && data.studyPlans.length > 0) {
-          const plan = data.studyPlans[0]; // Assuming we're working with the most recent plan
+          const plan = data.studyPlans[0];
           setExistingStudyPlan(plan);
           setCalendarValue(new Date(plan.examDate));
           setSelectedResources(plan.resources.reduce((acc: any, resource: any) => ({ ...acc, [resource]: true }), {}));
           setHoursPerDay(plan.hoursPerDay);
-          setFullLengthDays(plan.fullLengthDays.split('').map((d: string) => d === '1'));
+          setFullLengthDays(plan.fullLengthDays);
         }
       }
     } catch (error) {
@@ -155,7 +162,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
       examDate: calendarValue,
       resources: Object.keys(selectedResources).filter(key => selectedResources[key]),
       hoursPerDay,
-      fullLengthDays: fullLengthDays.map(d => d ? '1' : '0').join(''),
+      fullLengthDays,
     };
 
     try {
@@ -171,8 +178,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
       if (response.ok) {
         const updatedPlan = await response.json();
         setExistingStudyPlan(updatedPlan);
-        if(!onStudyPlanSaved) return
-        onStudyPlanSaved(); // Call the callback function instead of showing the dialog
+        if (onStudyPlanSaved) onStudyPlanSaved();
       } else {
         // Create new study plan
         const response = await fetch('/api/study-plan', {
@@ -183,8 +189,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
         if (response.ok) {
           const newPlan = await response.json();
           setExistingStudyPlan(newPlan);
-          // Show the diagnostic test
-          onShowDiagnosticTest && onShowDiagnosticTest();
+          if (onShowDiagnosticTest) onShowDiagnosticTest();
         }
       }
     } catch (error) {
@@ -206,17 +211,13 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
       case "option2":
         return (
           <div className="bg-white p-4 rounded-lg shadow-md">
-            {days.map((day, index) => (
+            {days.map((day) => (
               <div key={day} className="flex items-center justify-between mb-2">
                 <span>{day}</span>
                 <input
                   type="checkbox"
-                  checked={fullLengthDays[index]}
-                  onChange={(e) => {
-                    const newFullLengthDays = [...fullLengthDays];
-                    newFullLengthDays[index] = e.target.checked;
-                    setFullLengthDays(newFullLengthDays);
-                  }}
+                  checked={fullLengthDays[day] || false}
+                  onChange={(e) => setFullLengthDays({ ...fullLengthDays, [day]: e.target.checked })}
                 />
               </div>
             ))}
