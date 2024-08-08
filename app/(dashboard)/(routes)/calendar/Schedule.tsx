@@ -304,8 +304,8 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
                         (activity, index) => (
                           <div key={index} className="text-sm mt-4">
                             <p className="font-semibold">{activity.activityTitle}</p>
-                            <p className="mt-1">{activity.activityText}</p>
-                            <p className="mt-1">{activity.hours} hours</p>
+                            {/* <p className="mt-1">{activity.activityText}</p> */}
+                            <p className="mt-1">{activity.hours.toFixed(1)} hours</p>
                           </div>
                         )
                       )
@@ -342,7 +342,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
                 </div>
                 <div className="flex-grow overflow-y-auto">
                   {dayActivities.map((activity, idx) => (
-                    <div key={idx} className="text-xs mt-1">
+                    <div key={idx} className="text-xs mt-1 truncate overflow-hidden whitespace-nowrap">
                       {activity.activityTitle}
                     </div>
                   ))}
