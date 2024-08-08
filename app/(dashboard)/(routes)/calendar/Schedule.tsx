@@ -182,7 +182,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
                 Your study plan has been saved successfully. We recommend taking a diagnostic test to help us personalize your learning experience.
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="flex justify-end space-x-4">
+            <DialogFooter className="flex justify-end space-x-4 mt-4">
               <Button variant="outline" onClick={() => setShowThankYouDialog(false)} className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors">
                 Maybe Later
               </Button>
