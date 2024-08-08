@@ -187,7 +187,6 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
           onShowDiagnosticTest && onShowDiagnosticTest();
         }
       }
-      alert('Study plan saved successfully!');
     } catch (error) {
       console.error('Error saving study plan:', error);
       alert('Error saving study plan. Please try again.');

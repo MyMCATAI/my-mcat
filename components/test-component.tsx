@@ -13,7 +13,7 @@ import {
 
 interface TestComponentProps {
   testId: string;
-  onTestComplete: (score: number) => void;
+  onTestComplete?: (score: number) => void;
 }
 
 const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete }) => {
@@ -244,7 +244,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       }
 
       setShowScorePopup(true);
-      onTestComplete(score);
+      onTestComplete && onTestComplete(score);
 
     } catch (err) {
       console.error('Error finishing test:', err);
@@ -315,13 +315,15 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                 <div className="p-4">
                   {currentQuestion && currentTestQuestion && (
                     <QuestionComponent
-                      question={currentQuestion} 
+                      question={currentQuestion}
                       onNext={handleNextQuestion}
                       onPrevious={handlePreviousQuestion}
                       isFirst={currentQuestionIndex === 0}
                       isLast={currentQuestionIndex === test?.questions.length - 1}
                       onAnswer={handleUserResponse}
-                      userAnswer={getCurrentUserResponse(currentQuestion.id)?.userAnswer}
+                      userAnswer={getCurrentUserResponse(currentQuestion.id)?.userAnswer} 
+                      currentQuestionIndex={currentQuestionIndex}
+                      totalQuestions={test?.questions.length || 0}
                     />
                   )}
                 </div>
@@ -333,13 +335,15 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
             <div className="max-w-2xl w-full p-8">
               {currentQuestion && currentTestQuestion && (
                 <QuestionComponent
-                  question={currentQuestion} 
+                  question={currentQuestion}
                   onNext={handleNextQuestion}
                   onPrevious={handlePreviousQuestion}
                   isFirst={currentQuestionIndex === 0}
                   isLast={currentQuestionIndex === test?.questions.length - 1}
                   onAnswer={handleUserResponse}
-                  userAnswer={getCurrentUserResponse(currentQuestion.id)?.userAnswer}
+                  userAnswer={getCurrentUserResponse(currentQuestion.id)?.userAnswer} 
+                  currentQuestionIndex={currentQuestionIndex}
+                  totalQuestions={test?.questions.length || 0}
                 />
               )}
             </div>

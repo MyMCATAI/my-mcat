@@ -19,46 +19,44 @@ export async function GET(req: Request) {
     let result;
 
     if (useKnowledgeProfiles) {
-      console.log("useKnowledgeProfiles")
-      // Fetch categories based on knowledge profiles
+      // Fetch all knowledge profiles for the user
       const knowledgeProfiles = await prisma.knowledgeProfile.findMany({
         where: { userId },
         orderBy: { conceptMastery: 'asc' },
-        take: pageSize,
-        select: { categoryId: true }
-      });
-      console.log("knowledgeProfiles",knowledgeProfiles)
-
-      const categoryIds = knowledgeProfiles.map(profile => profile.categoryId);
-
-      // If we don't have enough knowledge profiles, fetch additional random categories
-      if (categoryIds.length < pageSize) {
-        const additionalCategories = await prisma.category.findMany({
-          where: { id: { notIn: categoryIds } },
-          take: pageSize - categoryIds.length,
-          select: { id: true }
-        });
-        categoryIds.push(...additionalCategories.map(cat => cat.id));
-      }
-
-      // Fetch full category details
-      const categories = await prisma.category.findMany({
-        where: { id: { in: categoryIds } },
-        orderBy: { id: 'asc' },
+        include: { category: true }
       });
 
-      const total = await prisma.category.count();
+      // Fetch all categories
+      const allCategories = await prisma.category.findMany();
+
+      // Combine knowledge profiles with categories
+      const sortedCategories = allCategories.map(category => {
+        const profile = knowledgeProfiles.find(p => p.categoryId === category.id);
+        return {
+          ...category,
+          conceptMastery: profile ? profile.conceptMastery : null
+        };
+      });
+
+      // Sort categories: those with profiles first (by conceptMastery), then those without
+      sortedCategories.sort((a, b) => {
+        if (a.conceptMastery === null && b.conceptMastery === null) return 0;
+        if (a.conceptMastery === null) return 1;
+        if (b.conceptMastery === null) return -1;
+        return a.conceptMastery - b.conceptMastery;
+      });
+
+      // Paginate the results
+      const startIndex = (page - 1) * pageSize;
+      const paginatedCategories = sortedCategories.slice(startIndex, startIndex + pageSize);
 
       result = {
-        items: categories,
-        totalPages: Math.ceil(total / pageSize),
+        items: paginatedCategories,
+        totalPages: Math.ceil(sortedCategories.length / pageSize),
         currentPage: page
       };
     } else {
-      
-
       // Use the existing getCategories function for normal fetching
-      console.log("getCategories")
       result = await getCategories({ page, pageSize });
     }
 

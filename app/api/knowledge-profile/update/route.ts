@@ -9,64 +9,57 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Get all user responses grouped by category
-    const userResponses = await prisma.userResponse.groupBy({
-      by: ['categoryId'],
+    // Get all user responses for the current user
+    const userResponses = await prisma.userResponse.findMany({
       where: {
         userTest: {
           userId: userId
         },
         categoryId: { not: null }
       },
-      _count: {
-        _all: true,
-        isCorrect: true
-      },
-      _sum: {
-        timeSpent: true
-      },
-      orderBy: {
-        categoryId: 'asc'
+      include: {
+        Category: true
       }
     });
 
-    // Update KnowledgeProfile for each category
-    const updatePromises = userResponses.map(async (response) => {
-      const latestResponse = await prisma.userResponse.findFirst({
-        where: {
-          userTest: {
-            userId: userId
-          },
-          categoryId: response.categoryId
-        },
-        orderBy: {
-          answeredAt: 'desc'
-        }
-      });
+    // Group responses by category
+    const groupedResponses = userResponses.reduce((acc, response) => {
+      if (!acc[response.categoryId!]) {
+        acc[response.categoryId!] = [];
+      }
+      acc[response.categoryId!].push(response);
+      return acc;
+    }, {} as Record<string, typeof userResponses>);
 
-      const numCorrects = response._count.isCorrect;
-      const numIncorrects = response._count._all - numCorrects;
-      const conceptMastery = (numCorrects + 1) / ((numCorrects + 1) + (numIncorrects + 1));
+    // Update KnowledgeProfile for each category
+    const updatePromises = Object.entries(groupedResponses).map(async ([categoryId, responses]) => {
+      const numCorrects = responses.filter(r => r.isCorrect).length;
+      const numIncorrects = responses.length - numCorrects;
+      const conceptMastery = (numCorrects + 1) / (numCorrects + 1 + numIncorrects + 1);
+      
+      const latestResponse = responses.reduce((latest, current) => 
+        latest.answeredAt > current.answeredAt ? latest : current
+      );
 
       return prisma.knowledgeProfile.upsert({
         where: {
           userId_categoryId: {
             userId: userId,
-            categoryId: response.categoryId as string,
+            categoryId: categoryId,
           },
         },
         update: {
           correctAnswers: numCorrects,
-          totalAttempts: response._count._all,
-          lastAttemptAt: latestResponse?.answeredAt || new Date(),
+          totalAttempts: responses.length,
+          lastAttemptAt: latestResponse.answeredAt,
           conceptMastery: conceptMastery,
         },
         create: {
           userId: userId,
-          categoryId: response.categoryId as string,
+          categoryId: categoryId,
           correctAnswers: numCorrects,
-          totalAttempts: response._count._all,
-          lastAttemptAt: latestResponse?.answeredAt || new Date(),
+          totalAttempts: responses.length,
+          lastAttemptAt: latestResponse.answeredAt,
           conceptMastery: conceptMastery,
         },
       });

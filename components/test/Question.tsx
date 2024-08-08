@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Question } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
+import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 
 interface QuestionsProps {
   question: Question;
@@ -15,6 +17,8 @@ interface QuestionsProps {
   isLast: boolean;
   onAnswer: (questionId: string, answer: string, isCorrect: boolean) => void;
   userAnswer?: string;
+  currentQuestionIndex: number;
+  totalQuestions: number;
 }
 
 const QuestionComponent: React.FC<QuestionsProps> = ({
@@ -25,55 +29,51 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
   isLast,
   onAnswer,
   userAnswer,
+  currentQuestionIndex,
+  totalQuestions,
 }) => {
   const [randomNumber, setRandomNumber] = useState(0);
-
   const [randomizedOptions, setRandomizedOptions] = useState<string[]>([]);
   const options = JSON.parse(question.questionOptions);
   const correctAnswer = options[0];
 
   useEffect(() => {
-    const generateRandomNumber = () => Math.floor(Math.random() * 21);
-    setRandomNumber(generateRandomNumber());
-    const shuffled = [...options];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    setRandomizedOptions(shuffled);
+    setRandomNumber(Math.floor(Math.random() * 21));
+    setRandomizedOptions([...options].sort(() => Math.random() - 0.5));
   }, [question]);
 
   const handleAnswerChange = (value: string) => {
-    const isCorrect = value === correctAnswer;
-    console.log("isCorrect", isCorrect);
-    onAnswer(question.id, value, isCorrect);
+    onAnswer(question.id, value, value === correctAnswer);
   };
 
   return (
-    <div className="bg-[#ffffff] from-blue-900  h-[80vh] p-4 overflow-auto ">
-      <Card className="max-w-3xl border-0 shadow-none">
-        <CardHeader className=" ">
-          <CardTitle className="text-2xl font-bold text-black">
-            {question.questionID}
+    <div className="min-h-screen p-6 rounded-t-lg bg-[#001326]">
+      <Card className="max-w-3xl mx-auto shadow-lg">
+        <CardHeader className="bg-blue-600 text-white rounded-t-lg">
+          <CardTitle className="text-2xl font-bold">
+            Question {currentQuestionIndex + 1} of {totalQuestions}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <p className="text-xl mb-6 text-black">{question.questionContent}</p>
+          <p className="text-xl mb-6 text-gray-800 font-medium">{question.questionContent}</p>
           <RadioGroup
             onValueChange={handleAnswerChange}
             value={userAnswer}
             className="space-y-4"
           >
             {randomizedOptions.map((option: string, idx: number) => (
-              <div key={idx} className="flex items-center space-x-2">
+              <div key={idx} className="relative">
                 <RadioGroupItem
                   value={option}
                   id={`option-${idx}`}
-                  className="border-black text-black"
+                  className="absolute opacity-0 w-full h-full cursor-pointer"
                 />
                 <Label
                   htmlFor={`option-${idx}`}
-                  className="text-black hover:text-blue-200 cursor-pointer"
+                  className={`block p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
+                    ${userAnswer === option 
+                      ? 'bg-blue-100 border-blue-500 text-blue-700' 
+                      : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
                 >
                   {option}
                 </Label>
@@ -81,48 +81,53 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
             ))}
           </RadioGroup>
         </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="flex justify-between w-full">
+            <Button
+              onClick={onPrevious}
+              disabled={isFirst}
+              variant="outline"
+              className="bg-white hover:bg-blue-50 text-blue-600"
+            >
+              <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+            </Button>
+            <Button
+              onClick={onNext}
+              disabled={isLast}
+              variant="outline"
+              className="bg-white hover:bg-blue-50 text-blue-600"
+            >
+              Next <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+          <Progress value={(currentQuestionIndex + 1) / totalQuestions * 100} className="w-full" />
+        </CardFooter>
       </Card>
-      <div className="flex justify-between mt-6 max-w-3xl mx-auto">
-        <Button
-          onClick={onPrevious}
-          disabled={isFirst}
-          variant="outline"
-          className="bg-black/10 hover:bg-black/20 text-black"
-        >
-          <ChevronLeft className="mr-2 h-4 w-4" /> Previous
-        </Button>
-        <Button
-          onClick={onNext}
-          disabled={isLast}
-          variant="outline"
-          className="bg-black/10 hover:bg-black/20 text-black"
-        >
-          Next <ChevronRight className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
 
-      <div className="text-[#555555] mt-2 flex justify-start gap-1 items-center">
-        <div>
-          <p>Discuss </p>
-        </div>
-        <div className="h-[6px] w-[6px] rounded-[60px] bg-[#555555]"></div>
-        <div>
-        <p>{randomNumber}</p>
-        </div>
-      </div>
-      <div>
-        <div className="flex gap-2 mt-2">
-          <div>
-          <Image src="/avatar.jpg" width={50} height={50} alt="exam" />
+      <Card className="max-w-3xl mx-auto mt-6 shadow-md">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-gray-700 flex items-center">
+            <MessageCircle className="mr-2 h-5 w-5" />
+            Discussion ({randomNumber})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-start space-x-4">
+            <Avatar>
+              <AvatarImage src="/avatar.jpg" alt="User" />
+              <AvatarFallback>UN</AvatarFallback>
+            </Avatar>
+            <div className="flex-grow">
+              <Textarea 
+                placeholder="Add a public comment..."
+                className="w-full resize-none"
+                rows={3}
+              />
+              <Button className="mt-2" variant="secondary">Post</Button>
+            </div>
           </div>
-          <div className="w-full">
-            <textarea className="border w-full p-2" placeholder="Add a public comment..." rows={3} id=""></textarea>
-          </div>
-        </div>
-      </div>
-      <div className="border-b"> </div>
-
-     
+        </CardContent>
+      </Card>
     </div>
   );
 };
