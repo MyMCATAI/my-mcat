@@ -22,7 +22,8 @@ const Page = () => {
           </div>
           <div className="w-full max-w-full grid grid-cols-3 gap-4 p-4">
             <div className="p-4 col-span-1">
-              <ChatBot context={contextMessage} />
+              <ChatBot // context={contextMessage} 
+              />
             </div>
             <div className="p-4 col-span-2">
               <Image
