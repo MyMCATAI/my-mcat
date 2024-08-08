@@ -75,7 +75,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities }) => {
             {tabs.map(
               (tab) =>
                 activeTab === tab.id && (
-                  <div key={tab.id} className="bg-[#7A99E4] h-[330px] p-1">
+                  <div key={tab.id} className="bg-[#001226] h-[367px] p-1">
                     {renderActivities(tab.content)}
                   </div>
                 )

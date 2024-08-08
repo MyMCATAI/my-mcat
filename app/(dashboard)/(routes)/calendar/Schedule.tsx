@@ -7,6 +7,7 @@ import { DialogHeader, DialogFooter } from "@/components/ui/dialog";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogOverlay } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import Image from 'next/image'
+import DailyStudyTracker from "@/components/ui/dailystudytracker";
 
 interface ScheduleProps {
   activities: FetchedActivity[];
@@ -139,7 +140,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
   };
 
   return (
-    <div className="relative p-3">
+    <div className="relative p-2">
       <div className="relative z-10 text-white rounded-lg">
         <div className="flex justify-between items-center mb-2">
           <svg
@@ -274,7 +275,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
         )}
 
         {/* Updated Fixed-size Today Section with GIF and content */}
-        <div className="bg-[#001226] text-white px-6 py-8 rounded-[30px] mb-5 shadow-lg overflow-hidden">
+        <div className="bg-transparent text-white px-6 py-8 rounded-[30px] mb-5 shadow-lg overflow-hidden">
           <div className="relative w-full h-[185px]">
             {showGif ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -290,18 +291,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
               </div>
             ) : (
               <div className="absolute inset-0 overflow-visible flex">
-                <div className="w-1/2 pr-4 h-full flex items-center justify-center">
-                  <div className="w-full h-full bg-transparent flex items-center justify-center rounded-lg overflow-visible">
-                    <Image
-                      src="/profile.png"
-                      alt="Profile"
-                      width={250}
-                      height={250}
-                      objectFit="cover"
-                    />
-                  </div>
-                </div>
-                <div className="w-1/2 pl-2 h-full">
+                <div className="w-1/2 pr-4 h-full">
                   <div className="bg-[black] p-4 rounded-lg h-full overflow-y-auto" style={{
                     boxShadow: '0 0 12px 8px rgba(0, 123, 255, 0.5)',
                     transition: 'box-shadow 0.3s ease-in-out'}}>
@@ -322,6 +312,12 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
                     )}
                   </div>
                 </div>
+                <div className="w-1/2 pl-8 h-full flex items-center justify-center">
+                  <div className="w-full h-full bg-transparent flex items-center justify-center rounded-lg overflow-visible">
+                    <DailyStudyTracker
+                    />
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -335,8 +331,11 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
             return (
               <div
                 key={`future-day-${index}`}
-                className="bg-[#7999e4] text-white p-3 rounded-[10px] h-[80px] relative flex flex-col justify-between group overflow-hidden shadow-md transition-transform duration-300 ease-in-out transform hover:scale-105"
-              >
+                className="bg-[#001226] text-white p-3 rounded-[10px] h-[100px] relative flex flex-col justify-between group overflow-hidden shadow-md transition-transform duration-300 ease-in-out transform hover:scale-105"
+              style={{
+                boxShadow: '0 0 8px 2px rgba(37, 100, 171, 1.0)',
+                transition: 'box-shadow 0.3s ease-in-out'
+              }}>
                 <div className="flex justify-between">
                   <div className="text-sm text-white text-lg font-light leading-normal shadow-text">{format(futureDate, "d")}</div>
                   <span className="text-sm text-white text-lg font-light leading-normal shadow-text">{format(futureDate, "MMM")}</span>
