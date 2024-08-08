@@ -224,7 +224,7 @@ const Page = () => {
        {/* Diagnostic Test Dialog */}
       <Dialog open={showDiagnosticTest} onOpenChange={setShowDiagnosticTest}>
       <DialogOverlay className="fixed inset-0 bg-black bg-opacity-0 z-50" />
-        <DialogContent className="max-w-4xl w-full max-h-[90vh] flex flex-col bg-[#001326] text-white border border-sky-500">
+        <DialogContent className="max-w-4xl w-full max-h-[90vh] flex flex-col bg-[#001226] text-white border border-sky-500">
           <DialogHeader className="border-b border-sky-500 pb-4">
             <DialogTitle className="text-2xl font-semibold text-sky-300">Diagnostic Test</DialogTitle>
             <DialogDescription className="text-gray-300">
