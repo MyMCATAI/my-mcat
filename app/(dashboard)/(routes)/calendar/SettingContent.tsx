@@ -3,7 +3,10 @@ import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { StudyPlan } from '@/types';
-import TestComponent from "@/components/test-component";
+import { DialogHeader, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@radix-ui/react-dialog";
+import { Button } from "@/components/ui/button";
+
 
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
@@ -37,9 +40,11 @@ const resources: string[] = ["UWorld", "AAMC", "Kaplan Books"];
 
 interface SettingContentProps {
   onShowDiagnosticTest?: () => void;
+  onStudyPlanSaved?: () => void;
 }
 
-const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest }) => {
+
+const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, onStudyPlanSaved }) => {
   const [activeTab, setActiveTab] = useState<string>("tab1");
   const [activeOption, setActiveOption] = useState<string | null>(null);
   const [calendarValue, setCalendarValue] = useState<Value>(new Date());
@@ -154,17 +159,20 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest })
     };
 
     try {
-      if (existingStudyPlan) {
-        // Update existing study plan
-        const response = await fetch('/api/study-plan', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...studyPlanData, id: existingStudyPlan.id }),
-        });
-        if (response.ok) {
-          const updatedPlan = await response.json();
-          setExistingStudyPlan(updatedPlan);
-        }
+      const method = existingStudyPlan ? 'PUT' : 'POST';
+      const body = existingStudyPlan ? JSON.stringify({ ...studyPlanData, id: existingStudyPlan.id }) : JSON.stringify(studyPlanData);
+
+      const response = await fetch('/api/study-plan', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
+
+      if (response.ok) {
+        const updatedPlan = await response.json();
+        setExistingStudyPlan(updatedPlan);
+        if(!onStudyPlanSaved) return
+        onStudyPlanSaved(); // Call the callback function instead of showing the dialog
       } else {
         // Create new study plan
         const response = await fetch('/api/study-plan', {
