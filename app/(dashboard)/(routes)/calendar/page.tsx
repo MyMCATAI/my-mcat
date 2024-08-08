@@ -28,7 +28,10 @@ const Page = () => {
   const [activeTab, setActiveTab] = useState("Schedule");
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
   const [showChatbot, setShowChatbot] = useState(false);
-  const [chatbotContext, setChatbotContext] = useState("");
+  const [chatbotContext, setChatbotContext] = useState({
+    contentTitle: "",
+    context: ""
+  });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const scrollPosition = 130;
@@ -256,7 +259,12 @@ const Page = () => {
               className="bg-white rounded-lg shadow-lg overflow-hidden mb-4"
               style={{ width: "370px", height: "600px" }}
             >
-              <ChatBot context={chatbotContext} />
+            <ChatBot 
+              chatbotContext={{
+                contentTitle: chatbotContext?.contentTitle || "",
+                context: chatbotContext?.context || ""
+              }} 
+            />
             </div>
           )}
           <button
