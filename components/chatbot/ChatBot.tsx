@@ -6,17 +6,35 @@ import FileUploadComponent from './fileUpload';
 const ChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
 
 interface MyChatBotProps {
-  context?: string;
+  chatbotContext?: {
+    contentTitle: string;
+    context: string;
+  };  
 }
 
-const MyChatBot: React.FC<MyChatBotProps> = ({ context }) => {
+const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
+  const context = chatbotContext?.context
+  const contentTitle = chatbotContext?.contentTitle
 
   useEffect(() => {
     setIsMounted(true);
+
+    // Set a timer to send a message after a certain time
+    const timer = setTimeout(() => {
+      const botMessage = "Howdy"; // The message you want the bot to send
+      // This is where you can programmatically push the message to the chat
+      window.dispatchEvent(new CustomEvent('chatbot-event', {
+        detail: {
+          message: botMessage,
+        },
+      }));
+    }, 1000);
+
+    return () => clearTimeout(timer); // Cleanup the timer on unmount
   }, []);
 
   const sendMessage = async (message: string) => {
@@ -68,7 +86,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ context }) => {
 
   const flow = {
     start: {
-      message: `Hi! I'm Kalypso the cat, your MCAT assistant. I have some context about your studies: ${context}. How can I help you today?`,
+      message: `Hi! I'm Kalypso the cat, your MCAT assistant. ${contentTitle ? `looks like you're working on ${contentTitle}`:""}. How can I help you today?`,
       path: "loop"
     },
     loop: {
@@ -129,16 +147,16 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ context }) => {
         themes={themes}
         flow={flow}
       />
-      {isLoading && <p>Loading...</p>}
+      {/* {isLoading && <p>Loading...</p>} */}
       {error && <p style={{color: 'red'}}>{error}</p>}
     </div>
   );
 };
 
-const App: React.FC<MyChatBotProps> = ({ context }) => {
+const App: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
   return (
     <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
-      <MyChatBot context={context} />
+      <MyChatBot chatbotContext={chatbotContext} />
     </div>
   );
 };

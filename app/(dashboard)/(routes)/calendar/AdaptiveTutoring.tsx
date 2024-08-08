@@ -18,7 +18,7 @@
 
   interface AdaptiveTutoringProps {
     toggleChatBot: () => void;
-    setChatbotContext: (context: string) => void;
+    setChatbotContext: (context: { contentTitle: string; context: string }) => void;
   }
 
   const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
@@ -60,8 +60,6 @@
     }, []);
 
     useEffect(() => {
-      fetchContent("atoms");
-      fetchQuestions("atoms");
       fetchCategories(true);
     }, [fetchContent]);
 
@@ -82,6 +80,7 @@
     };
 
     const handleContentClick = (contentId: string) => {
+
       setCurrentContentId(contentId);
       const clickedContent = content.find((item) => item.id === contentId);
       if (clickedContent) {
@@ -94,14 +93,21 @@
           setShowVideo(false);
         }
 
+        if (clickedContent.transcript) {
+          setTimeout(() => {
+              toggleChatBot();
+          }, 10000);
+      }      
         console.log(clickedContent.transcript);
-        setChatbotContext(
-          clickedContent.transcript
+        setChatbotContext({
+          contentTitle: clickedContent.title,
+          context: clickedContent.transcript
             ? "Here's a transcript of the content that I'm currently looking at: " +
-                clickedContent.transcript +
-                " Only refer to this if I ask a question directly about what I'm studying"
+              clickedContent.transcript +
+              " Only refer to this if I ask a question directly about what I'm studying"
             : ""
-        );
+        });
+        
       }
     };
 
@@ -143,6 +149,11 @@
         const data = await response.json();
         console.log(data)
         setCategories(data.items);
+        fetchContent(data.items[0].conceptCategory);
+        console.log(data.items[0].conceptCategory)
+        fetchQuestions(data.items[0].conceptCategory);
+  
+
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
@@ -385,7 +396,7 @@
                 <p className="text-m px-10">
                   {selectedCard !== null
                     ? categories[selectedCard].conceptCategory
-                    : "atoms"}
+                    : "Enzymes"}
                 </p>
                 <button
                   onClick={handleQuizTabClick}
