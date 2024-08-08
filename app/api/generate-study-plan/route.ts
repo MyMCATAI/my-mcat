@@ -180,6 +180,7 @@ function generateCalendarActivities(selectedContent: any[], studyPlan: any, star
 
   let contentIndex = 0;
   let categoryIndex = 0;
+  let isStudy = true; // Toggle between "study" and "practice"
 
   while (currentDate < studyPlan.examDate) {
     const dayOfWeek = currentDate.getDay();
@@ -201,13 +202,15 @@ function generateCalendarActivities(selectedContent: any[], studyPlan: any, star
       const contentHours = content.minutes_estimate / 60;
 
       if (dailyHours + contentHours <= availableHours) {
+        const activityType = isStudy ? 'Study' : 'Practice';
+        
         activities.push({
           userId: studyPlan.userId,
           studyPlanId: studyPlan.id,
           categoryId: categoryContent.category.id,
           contentId: content.id,
-          activityText: `Study ${content.title}`,
-          activityTitle: content.title,
+          activityText: `${activityType} ${content.title}`,
+          activityTitle: `${activityType} ${content.title}`,
           hours: contentHours,
           activityType: content.type,
           link: content.link,
@@ -215,11 +218,12 @@ function generateCalendarActivities(selectedContent: any[], studyPlan: any, star
           status: "Not Started"
         });
 
-        console.log(`Scheduled: ${content.title} on ${currentDate.toISOString().split('T')[0]} (${contentHours.toFixed(2)} hours)`);
+        console.log(`Scheduled: ${activityType} ${content.title} on ${currentDate.toISOString().split('T')[0]} (${contentHours.toFixed(2)} hours)`);
 
         dailyActivities++;
         dailyHours += contentHours;
         contentIndex++;
+        isStudy = !isStudy; // Toggle between "study" and "practice"
       } else {
         break;
       }

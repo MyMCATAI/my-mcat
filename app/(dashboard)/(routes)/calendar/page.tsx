@@ -291,7 +291,6 @@ const Page = () => {
       </Dialog>
 
       {/* Score Popup */}
-      {/* Score Popup */}
       <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
         <DialogContent className="bg-[#0A2540] text-white border border-sky-500">
           <DialogHeader>
