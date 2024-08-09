@@ -67,3 +67,35 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+export async function PUT(req: NextRequest) {
+
+  try {
+    const { userId } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { id, scheduledDate, activityTitle, activityText, hours } = body;
+
+    if (!id || !scheduledDate || !activityTitle || !activityText || !hours) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    const updatedActivity = await prisma.calendarActivity.update({
+      where: { id: id, userId: userId },
+      data: {
+        scheduledDate: new Date(scheduledDate),
+        activityTitle,
+        activityText,
+        hours: parseFloat(hours),
+      },
+    });
+
+    return NextResponse.json(updatedActivity);
+  } catch (error) {
+    console.error('Error updating calendar activity:', error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
