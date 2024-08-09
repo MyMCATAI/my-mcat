@@ -41,6 +41,7 @@
     "date-fns": "^3.6.0",
     "flowbite": "^2.4.1",
     "flowbite-react": "^0.10.1",
+    "framer-motion": "^11.3.24",
     "gsap": "^3.12.5",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.288.0",
