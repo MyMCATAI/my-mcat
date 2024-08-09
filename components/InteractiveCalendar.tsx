@@ -110,21 +110,24 @@ const InteractiveCalendar: React.FC = () => {
 
   const updateEventInBackend = async (event: CalendarEvent) => {
     try {
-      const response = await fetch(`/api/calendar-activity/${event.id}`, {
+      const response = await fetch(`/api/calendar-activity`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: event.id,
           scheduledDate: event.start.toISOString(),
           activityTitle: event.title,
           activityText: event.activityText,
           hours: event.hours
         })
       });
-
+  
       if (!response.ok) throw new Error('Failed to update activity');
+      
+      return await response.json(); // Return the updated event data
     } catch (error) {
       console.error("Error updating activity:", error);
-      throw error; // Re-throw to be caught in the calling function
+      throw error;
     }
   };
 
