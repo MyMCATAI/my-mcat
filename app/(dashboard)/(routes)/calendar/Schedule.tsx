@@ -7,23 +7,22 @@ import { DialogHeader, DialogFooter } from "@/components/ui/dialog";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogOverlay } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import Image from 'next/image'
-import DailyStudyTracker from "@/components/ui/dailystudytracker";
+import InteractiveCalendar from "@/components/InteractiveCalendar";
 
 interface ScheduleProps {
   activities: FetchedActivity[];
   onShowDiagnosticTest: () => void;
 }
 
-const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) => {
+const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
   const [showNewActivityForm, setShowNewActivityForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showThankYouDialog, setShowThankYouDialog] = useState(false);
-  const [showGif, setShowGif] = useState(true);
-  const [todayActivities, setTodayActivities] = useState('');
-  const [noActivitiesText, setNoActivitiesText] = useState('');
+  const [showInterlude, setShowInterlude] = useState(true);
+  const [typedText, setTypedText] = useState('');
   
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
@@ -34,17 +33,24 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
   });
 
   const { user } = useUser();
-  const activitiesText = ``;
+  const activitiesText = "Welcome to myMCAT.ai!\n\It looks like you're going to learn about enzymes today!";
 
   useEffect(() => {
     setCurrentDate(new Date());
-    // Simulate GIF playing for 4.5 seconds
-    const timer = setTimeout(() => {
-      setShowGif(false);
-      startTypingAnimation();
-    }, 4500);
 
-    return () => clearTimeout(timer);
+    // Start typing animation
+    let index = 0;
+    const typingTimer = setInterval(() => {
+      setTypedText(activitiesText.slice(0, index));
+      index++;
+      if (index > activitiesText.length) {
+        clearInterval(typingTimer);
+      }
+    }, 25); // Adjusted typing speed for a more terminal-like feel
+
+    return () => {
+      clearInterval(typingTimer);
+    };
   }, []);
 
   const handleStudyPlanSaved = () => {
@@ -55,32 +61,6 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
   const handleTakeDiagnosticTest = () => {
     setShowThankYouDialog(false);
     onShowDiagnosticTest();
-  };
-
-  const startTypingAnimation = () => {
-    let index = 0;
-    const timer = setInterval(() => {
-      setTodayActivities(activitiesText.slice(0, index));
-      index++;
-      if (index > activitiesText.length) {
-        clearInterval(timer);
-        if (getActivitiesForDate(startOfDay(new Date())).length === 0) {
-          typeNoActivitiesMessage();
-        }
-      }
-    }, 25); // Adjust the speed of typing here
-  };
-
-  const typeNoActivitiesMessage = () => {
-    const message = "nothing for today! yay, break!";
-    let index = 0;
-    const timer = setInterval(() => {
-      setNoActivitiesText(message.slice(0, index));
-      index++;
-      if (index > message.length) {
-        clearInterval(timer);
-      }
-    }, 25); // Adjust the speed of typing here
   };
 
   const toggleSettings = () => setShowSettings(!showSettings);
@@ -140,8 +120,9 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
   };
 
   return (
-    <div className="relative p-2">
-      <div className="relative z-10 text-white rounded-lg">
+    <div className="relative p-2 h-full flex flex-col">
+      <div className="relative z-10 text-white rounded-lg flex-grow flex flex-col">
+        {/* Top Container */}
         <div className="flex justify-between items-center mb-2">
           <svg
             width="24"
@@ -174,6 +155,47 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
           </button>
         </div>
 
+        {/* Interlude */}
+        <div className="flex-grow flex flex-col h-[550px]">
+          {showInterlude ? (
+            <div className="flex-grow flex items-center justify-center">
+              <div className="relative w-full h-full flex items-center pl-8 pr-8 pb-6 justify-center">
+                <div className="absolute bottom-2 left-3 w-1/4">
+                  <Image 
+                    src="/kalypsotyping.gif" 
+                    alt="Typing animation" 
+                    width={300}
+                    height={300}
+                    objectFit="contain" 
+                  />
+                </div>
+                <div className="bg-black rounded-lg p-4 w-full h-full flex flex-col justify-between overflow-hidden" style={{
+                  boxShadow: '0 0 15px 5px rgba(0, 123, 255, 0.5)'
+                }}>
+                  <pre className="pl-5 pt-5 text-blue-200 font-mono text-m whitespace-pre-wrap">
+                    {typedText}
+                  </pre>
+                  <button 
+                    onClick={() => setShowInterlude(false)}
+                    className="self-end text-blue-200 font-mono text-lg hover:text-blue-600 transition-colors animate-pulse" style={{
+                      animation: 'pulse 2s cubic-bezier(0.6, 0, 0.6, 1) infinite',
+                      background: 'transparent',
+                      borderRadius: '5px',
+                      padding: '5px 10px',
+                    }}
+                  >
+                    &gt;&gt; click for calendar
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-grow">
+              <InteractiveCalendar></InteractiveCalendar>
+            </div>
+          )}
+        </div>
+
         <Dialog open={showThankYouDialog} onOpenChange={setShowThankYouDialog}>
           <DialogOverlay className="fixed inset-0 bg-black bg-opacity-50 z-50" />
           <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
@@ -193,6 +215,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
         {showSettings && (
            <div className="absolute top-10 right-1 w-100 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
           <SettingContent 
@@ -273,87 +296,6 @@ const Schedule: React.FC<ScheduleProps> = ({ activities,onShowDiagnosticTest }) 
             </div>
           </div>
         )}
-
-        {/* Updated Fixed-size Today Section with GIF and content */}
-        <div className="bg-transparent text-white px-6 py-8 rounded-[30px] mb-5 shadow-lg overflow-hidden">
-          <div className="relative w-full h-[185px]">
-            {showGif ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <p className="text-[#FFFCFC] text-lg font-light leading-normal shadow-text mb-3">building your schedule...</p>
-                <div className="w-[300px] h-[300px] relative">
-                  <Image 
-                    src="/kalypsotyping.gif" 
-                    alt="Eating catnip..." 
-                    layout="fill" 
-                    objectFit="contain" 
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="absolute inset-0 overflow-visible flex">
-                <div className="w-1/2 pr-4 h-full">
-                  <div className="bg-[black] p-4 rounded-lg h-full overflow-y-auto" style={{
-                    boxShadow: '0 0 12px 8px rgba(0, 123, 255, 0.5)',
-                    transition: 'box-shadow 0.3s ease-in-out'}}>
-                    {getActivitiesForDate(startOfDay(new Date())).length === 0 ? (
-                      <p className="py-2 text-[15px] text-white font-light leading-normal">
-                        {noActivitiesText}
-                      </p>
-                    ) : (
-                      getActivitiesForDate(startOfDay(new Date())).map(
-                        (activity, index) => (
-                          <div key={index} className="text-sm mt-4">
-                            <p className="font-semibold">{activity.activityTitle}</p>
-                            {/* <p className="mt-1">{activity.activityText}</p> */}
-                            <p className="mt-1">{activity.hours.toFixed(1)} hours</p>
-                          </div>
-                        )
-                      )
-                    )}
-                  </div>
-                </div>
-                <div className="w-1/2 pl-8 h-full flex items-center justify-center">
-                  <div className="w-full h-full bg-transparent flex items-center justify-center rounded-lg overflow-visible">
-                    <DailyStudyTracker
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Future Days Grid */}
-        <div className="grid grid-cols-4 gap-4 mb-4">
-          {[...Array(12)].map((_, index) => {
-            const futureDate = addDays(new Date(), index + 1);
-            const dayActivities = getActivitiesForDate(futureDate);
-            return (
-              <div
-                key={`future-day-${index}`}
-                className="bg-[#001226] text-white p-3 rounded-[10px] h-[100px] relative flex flex-col justify-between group overflow-hidden shadow-md transition-transform duration-300 ease-in-out transform hover:scale-105"
-              style={{
-                boxShadow: '0 0 8px 2px rgba(37, 100, 171, 1.0)',
-                transition: 'box-shadow 0.3s ease-in-out'
-              }}>
-                <div className="flex justify-between">
-                  <div className="text-sm text-white text-lg font-light leading-normal shadow-text">{format(futureDate, "d")}</div>
-                  <span className="text-sm text-white text-lg font-light leading-normal shadow-text">{format(futureDate, "MMM")}</span>
-                </div>
-                <div className="flex-grow overflow-y-auto">
-                  {dayActivities.map((activity, idx) => (
-                    <div key={idx} className="text-xs mt-1 truncate overflow-hidden whitespace-nowrap">
-                      {activity.activityTitle}
-                    </div>
-                  ))}
-                </div>
-                {dayActivities.length === 0 && (
-                  <div className="text-sm mt-1 text-white text-lg font-light leading-normal shadow-text">No tasks</div>
-                )}
-              </div>
-            );
-          })}
-        </div>
       </div>
     </div>
   );
