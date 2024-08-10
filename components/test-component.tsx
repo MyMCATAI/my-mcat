@@ -314,17 +314,30 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
               <div className="flex-grow overflow-auto">
                 <div className="p-4">
                   {currentQuestion && currentTestQuestion && (
-                    <QuestionComponent
-                      question={currentQuestion}
-                      onNext={handleNextQuestion}
-                      onPrevious={handlePreviousQuestion}
-                      isFirst={currentQuestionIndex === 0}
-                      isLast={currentQuestionIndex === test?.questions.length - 1}
-                      onAnswer={handleUserResponse}
-                      userAnswer={getCurrentUserResponse(currentQuestion.id)?.userAnswer} 
-                      currentQuestionIndex={currentQuestionIndex}
-                      totalQuestions={test?.questions.length || 0}
-                    />
+                    <>
+                      <QuestionComponent
+                        question={currentQuestion}
+                        onNext={handleNextQuestion}
+                        onPrevious={handlePreviousQuestion}
+                        isFirst={currentQuestionIndex === 0}
+                        isLast={currentQuestionIndex === test?.questions.length - 1}
+                        onAnswer={handleUserResponse}
+                        userAnswer={getCurrentUserResponse(currentQuestion.id)?.userAnswer} 
+                        currentQuestionIndex={currentQuestionIndex}
+                        totalQuestions={test?.questions.length || 0}
+                      />
+                      {currentQuestionIndex === test?.questions.length - 1 && (
+                        <div className="mt-4 mb-4">
+                          <button 
+                            onClick={handleFinishTest} 
+                            disabled={isSubmitting}
+                            className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isSubmitting ? 'Finishing...' : 'Finish Test'}
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -334,34 +347,35 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           <div className="w-full flex items-center justify-center">
             <div className="max-w-2xl w-full p-8">
               {currentQuestion && currentTestQuestion && (
-                <QuestionComponent
-                  question={currentQuestion}
-                  onNext={handleNextQuestion}
-                  onPrevious={handlePreviousQuestion}
-                  isFirst={currentQuestionIndex === 0}
-                  isLast={currentQuestionIndex === test?.questions.length - 1}
-                  onAnswer={handleUserResponse}
-                  userAnswer={getCurrentUserResponse(currentQuestion.id)?.userAnswer} 
-                  currentQuestionIndex={currentQuestionIndex}
-                  totalQuestions={test?.questions.length || 0}
-                />
+                <>
+                  <QuestionComponent
+                    question={currentQuestion}
+                    onNext={handleNextQuestion}
+                    onPrevious={handlePreviousQuestion}
+                    isFirst={currentQuestionIndex === 0}
+                    isLast={currentQuestionIndex === test?.questions.length - 1}
+                    onAnswer={handleUserResponse}
+                    userAnswer={getCurrentUserResponse(currentQuestion.id)?.userAnswer} 
+                    currentQuestionIndex={currentQuestionIndex}
+                    totalQuestions={test?.questions.length || 0}
+                  />
+                  {currentQuestionIndex === test?.questions.length - 1 && (
+                    <div className="mt-4 mb-4">
+                      <button 
+                        onClick={handleFinishTest} 
+                        disabled={isSubmitting}
+                        className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? 'Finishing...' : 'Finish Test'}
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
         )}
       </div>
-      
-      {currentQuestionIndex === test?.questions.length - 1 && (
-        <div className="p-4 flex justify-center">
-          <button 
-            onClick={handleFinishTest} 
-            disabled={isSubmitting}
-            className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Finishing...' : 'Finish Test'}
-          </button>
-        </div>
-      )}
 
 <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
         <DialogContent className="bg-[#0A2540] text-white border border-sky-500">

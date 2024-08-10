@@ -104,7 +104,7 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
         </CardFooter>
       </Card>
 
-      <Card className="max-w-3xl mx-auto mt-6 shadow-md">
+      {/* <Card className="max-w-3xl mx-auto mt-6 shadow-md">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-gray-700 flex items-center">
             <MessageCircle className="mr-2 h-5 w-5" />
@@ -127,7 +127,7 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 };

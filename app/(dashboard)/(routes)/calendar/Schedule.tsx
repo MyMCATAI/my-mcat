@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { format, addDays, isSameDay, startOfDay } from "date-fns";
+import { format, addDays, isSameDay, startOfDay, isToday, isTomorrow } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import SettingContent from "./SettingContent";
 import { NewActivity, FetchedActivity } from "@/types";
@@ -23,7 +23,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest })
   const [showThankYouDialog, setShowThankYouDialog] = useState(false);
   const [showInterlude, setShowInterlude] = useState(true);
   const [typedText, setTypedText] = useState('');
-  
+
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
     activityText: "",
@@ -33,7 +33,26 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest })
   });
 
   const { user } = useUser();
-  const activitiesText = "Welcome to myMCAT.ai!\n\It looks like you're going to learn about enzymes today!";
+  const getActivitiesText = () => {
+    if (activities.length === 0) {
+      return "Welcome to myMCAT.ai! It looks like this is your first time here. Let's get started by answering some questions about your test and study schedule. Would you like to take a diagnostic test to help us personalize your learning experience?";
+    }
+
+    const todayActivities = activities.filter(activity => isToday(new Date(activity.scheduledDate)));
+    const tomorrowActivities = activities.filter(activity => isTomorrow(new Date(activity.scheduledDate)));
+
+    if (todayActivities.length > 0) {
+      const activityList = todayActivities.map(activity => activity.activityTitle).join(", ");
+      return `Welcome back to myMCAT.ai! Here's what you have scheduled for today: ${activityList}. Let's get studying!`;
+    } else if (tomorrowActivities.length > 0) {
+      const activityList = tomorrowActivities.map(activity => activity.activityTitle).join(", ");
+      return `Welcome back to myMCAT.ai! You don't have any activities scheduled for today, but tomorrow you'll be working on: ${activityList}. Take some time to prepare!`;
+    } else {
+      return "Welcome back to myMCAT.ai! You don't have any activities scheduled for today or tomorrow. Would you like to add some new study tasks?";
+    }
+  };
+  const activitiesText = getActivitiesText();
+
 
   useEffect(() => {
     setCurrentDate(new Date());
@@ -46,8 +65,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest })
       if (index > activitiesText.length) {
         clearInterval(typingTimer);
       }
-    }, 25); // Adjusted typing speed for a more terminal-like feel
-
+    }, 25);
     return () => {
       clearInterval(typingTimer);
     };
@@ -176,7 +194,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest })
                     {typedText}
                   </pre>
                   <button 
-                    onClick={() => setShowInterlude(false)}
+                    onClick={() => activities.length === 0 ? setShowSettings(true) : setShowInterlude(false)}
                     className="self-end text-blue-200 font-mono text-lg hover:text-blue-600 transition-colors animate-pulse" style={{
                       animation: 'pulse 2s cubic-bezier(0.6, 0, 0.6, 1) infinite',
                       background: 'transparent',
@@ -184,7 +202,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest })
                       padding: '5px 10px',
                     }}
                   >
-                    &gt;&gt; click for calendar
+                    {activities.length === 0 ?  `>> Get Started`: `>> click for calendar`}
                   </button>
                 </div>
               </div>
