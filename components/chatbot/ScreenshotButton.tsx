@@ -23,7 +23,7 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({ onScreenshot }) => 
   return (
     <button
       onClick={takeScreenshot}
-      className="p-1.5 bg-blue-400 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+      className="p-1.5 bg-gray-400 text-white rounded-full hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
       title="Send screen to your study buddy <3"
     >
       <Camera size={22} />

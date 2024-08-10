@@ -39,6 +39,7 @@
     "crisp-sdk-web": "^1.0.21",
     "csv-parser": "^3.0.0",
     "date-fns": "^3.6.0",
+    "elevenlabs": "^0.14.0",
     "flowbite": "^2.4.1",
     "flowbite-react": "^0.10.1",
     "framer-motion": "^11.3.24",
@@ -73,6 +74,7 @@
   "devDependencies": {
     "@hookform/resolvers": "^3.3.2",
     "@svgr/webpack": "^8.1.0",
+    "@types/dotenv": "^6.1.1",
     "@types/node": "20.14.12",
     "@types/react": "18.3.3",
     "@types/react-big-calendar": "^1.8.9",

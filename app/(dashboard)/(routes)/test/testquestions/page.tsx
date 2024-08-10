@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 import TestComponent from "@/components/test-component";
 import ChatBot from "@/components/chatbot/ChatBot";
 
@@ -30,10 +31,12 @@ const TestQuestions = () => {
           onClick={() => setShowChatbot((prev) => !prev)}
           aria-label={showChatbot ? 'Close Chat' : 'Open Chat'}
         >
-          <img
+          <Image
             src="/Kalypso.png"
             alt="Chat with Kalypso"
-            className="w-full h-full object-cover"
+            width={80}
+            height={80}
+            className="object-cover"
           />
         </button>
       </div>
