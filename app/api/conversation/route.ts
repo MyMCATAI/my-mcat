@@ -1,9 +1,14 @@
 import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { ElevenLabsClient } from "elevenlabs";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const elevenlabs = new ElevenLabsClient({
+  apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
 });
 
 const assistantId: string = process.env.ASSISTANT_ID || "";
@@ -13,6 +18,34 @@ if (!assistantId) {
 
 // In-memory store for thread IDs (replace with a database in production)
 const userThreads = new Map<string, string>();
+
+// Move function declarations outside of the main function
+function extractTextFromMessage(message: any): string {
+  if (Array.isArray(message.content)) {
+    return message.content
+      .filter((content: any) => content.type === 'text')
+      .map((content: any) => content.text.value)
+      .join('\n');
+  } else if (typeof message.content === 'string') {
+    return message.content;
+  }
+  return '';
+}
+
+async function createAudioStreamFromText(text: string): Promise<Buffer> {
+  const audioStream = await elevenlabs.generate({
+    voice: "Kalypso",
+    model_id: "eleven_multilingual_v2",
+    text,
+  });
+
+  const chunks: Uint8Array[] = [];
+  for await (const chunk of audioStream) {
+    chunks.push(chunk);
+  }
+
+  return Buffer.concat(chunks);
+}
 
 export async function POST(req: Request) {
   try {
@@ -80,30 +113,22 @@ export async function POST(req: Request) {
 
     console.log('Received response from Assistant');
 
-    // Handle different content types
-    if (Array.isArray(lastMessage.content)) {
-      const textContents = lastMessage.content
-        .filter((content): content is OpenAI.Beta.Threads.Messages.TextContentBlock => 
-          content.type === 'text')
-        .map(content => content.text.value);
-      
-      return NextResponse.json({
-        message: textContents.join('\n'),
-        threadId: currentThreadId
-      }, { status: 200 });
-    } else {
-      // Fallback for unexpected content structure
-      return NextResponse.json({
-        message: "Unexpected response format from assistant",
-        threadId: currentThreadId
-      }, { status: 200 });
-    }
+    const textToConvert = extractTextFromMessage(lastMessage);
+    const audioBuffer = await createAudioStreamFromText(textToConvert);
+    const audioBase64 = audioBuffer.toString('base64');
+
+    return NextResponse.json({
+      message: textToConvert,
+      audio: audioBase64,
+      threadId: currentThreadId
+    }, { status: 200 });
+
   } catch (error) {
     console.error('[CONVERSATION_ERROR]', error);
     return NextResponse.json({
       error: error instanceof Error ? `Internal Error: ${error.message}` : "Internal Error"
     }, {
-      status: error instanceof Error ? 507 : 505
+      status: error instanceof Error ? 500 : 500
     });
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
 import FileUploadComponent from './fileUpload';
@@ -17,59 +17,50 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
-  const context = chatbotContext?.context
-  const contentTitle = chatbotContext?.contentTitle
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const context = chatbotContext?.context;
+  const contentTitle = chatbotContext?.contentTitle;
 
   useEffect(() => {
     setIsMounted(true);
 
-    // Set a timer to send a message after a certain time
     const timer = setTimeout(() => {
-      const botMessage = "Howdy"; // The message you want the bot to send
-      // This is where you can programmatically push the message to the chat
+      const botMessage = "Howdy";
       window.dispatchEvent(new CustomEvent('chatbot-event', {
-        detail: {
-          message: botMessage,
-        },
+        detail: { message: botMessage },
       }));
     }, 1000);
 
-    return () => clearTimeout(timer); // Cleanup the timer on unmount
+    return () => clearTimeout(timer);
   }, []);
 
   const sendMessage = async (message: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      console.log('Sending message:', message);
       const response = await fetch('/api/conversation', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, context, threadId }),
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
-      const contentType = response.headers.get("content-type");
-      let data;
-  
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        data = await response.json();
-        console.log('Received JSON response:', data);
-      } else {
-        data = await response.text();
-        console.log('Received text response:', data);
-      }
-  
+
+      const data = await response.json();
+      console.log('Received response:', data);
+
       if (data.threadId) {
         setThreadId(data.threadId);
       }
-  
-      return typeof data === 'string' ? data : data.message;
+
+      if (data.audio) {
+        playAudio(data.audio);
+      }
+
+      return data.message;
     } catch (error) {
       console.error('Error:', error);
       setError(`An error occurred: ${error instanceof Error ? error.message : String(error)}`);
@@ -78,7 +69,37 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
       setIsLoading(false);
     }
   };
-  
+
+  const playAudio = (audioBase64: string) => {
+    const audioData = atob(audioBase64);
+    const arrayBuffer = new ArrayBuffer(audioData.length);
+    const view = new Uint8Array(arrayBuffer);
+    for (let i = 0; i < audioData.length; i++) {
+      view[i] = audioData.charCodeAt(i);
+    }
+    const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
+    const audioUrl = URL.createObjectURL(audioBlob);
+    
+    if (audioRef.current) {
+      audioRef.current.src = audioUrl;
+      audioRef.current.play();
+    } else {
+      const audioElement = new Audio(audioUrl);
+      audioElement.onplay = () => setIsPlaying(true);
+      audioElement.onended = () => setIsPlaying(false);
+      audioElement.play();
+      audioRef.current = audioElement;
+    }
+  };
+
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsPlaying(false);
+    }
+  };
+
   const handleScreenshot = (blob: Blob) => {
     console.log('Screenshot taken:', blob);
     // Add logic here to handle the screenshot
@@ -86,7 +107,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
 
   const flow = {
     start: {
-      message: `Hi! I'm Kalypso the cat, your MCAT assistant. ${contentTitle ? `looks like you're working on ${contentTitle}`:""}. How can I help you today?`,
+      message: `Hi! I'm Kalypso the cat, your MCAT assistant. ${contentTitle ? `Looks like you're working on ${contentTitle}.` : ""} How can I help you today?`,
       path: "loop"
     },
     loop: {
@@ -99,12 +120,8 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
   };
 
   const settings = {
-    general: {
-      embedded: true
-    },
-    chatHistory: {
-      storageKey: "mcat_assistant_chat_history"
-    },
+    general: { embedded: true },
+    chatHistory: { storageKey: "mcat_assistant_chat_history" },
     header: {
       showAvatar: false,
       title: (
@@ -124,17 +141,13 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
       defaultToggledOn: false,
       language: "en-US",
       autoSendDisabled: false,
-      autoSendPeriod: 1000,
+      autoSendPeriod: 2000,
       sendAsAudio: false,
     },
-    botBubble: {
-      simStream: true
-    },
+    botBubble: { simStream: true },
   };
 
-  const themes = [
-    {id: "simple_blue", version: "0.1.0"},
-  ];
+  const themes = [{ id: "midnight_black", version: "0.1.0" }];
 
   if (!isMounted) {
     return null; // or a loading spinner
@@ -147,8 +160,8 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
         themes={themes}
         flow={flow}
       />
-      {/* {isLoading && <p>Loading...</p>} */}
       {error && <p style={{color: 'red'}}>{error}</p>}
+      {isPlaying && <button onClick={stopAudio}>Stop Audio</button>}
     </div>
   );
 };
