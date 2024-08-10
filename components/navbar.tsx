@@ -7,19 +7,10 @@ import { Search } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SubscriptionButton } from "./subscription-button";
-import { gsap } from "gsap";
 
 export const Navbar = ({ isPro = false }: { isPro: boolean }) => {
   const pathname = usePathname();
   const ballerSectionRef = useRef(null);
-
-  useEffect(() => {
-    gsap.fromTo(
-      ballerSectionRef.current,
-      { x: 200, opacity: 0 },
-      { x: 0, opacity: 1, duration: 1.5, ease: "sine.out" }
-    );
-  }, []);
 
   return (
     <>
