@@ -75,7 +75,7 @@ export const LandingHero = () => {
           </div>
         </div>
       </section>
-      <section className="bg-[#080c1c] py-20">
+      <section className="bg-gradient-to-b from-[#000412] to-[#020b17] py-20">
         <div className="container mx-auto px-6 max-w-7xl">
           <div className="flex flex-col md:flex-row items-center gap-8" ref={quoteRef}>
             <div>
