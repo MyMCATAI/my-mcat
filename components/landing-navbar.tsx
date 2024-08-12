@@ -40,7 +40,7 @@ export const LandingNavbar = () => {
   }, [handleScroll]);
 
   return (
-    <nav className="bg-white p-4 fixed top-0 left-0 w-full z-50 shadow-lg">
+    <nav className="bg-black p-4 fixed top-0 left-0 w-full z-50 shadow-lg">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
       <Link href={"/"}>
         <div className="flex items-center">
@@ -50,7 +50,7 @@ export const LandingNavbar = () => {
            
             
           </div>
-          <span className="text-black text-2xl font-semibold">myMCAT.ai</span>
+          <span className="text-white text-2xl pl-4">myMCAT.ai</span>
         </div>
         </Link>
 

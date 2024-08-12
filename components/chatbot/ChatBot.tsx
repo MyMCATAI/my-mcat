@@ -120,7 +120,10 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
   };
 
   const settings = {
-    general: { embedded: true },
+    general: { embedded: true,
+      showHeader: false,
+      showFooter: false,
+     },
     chatHistory: { storageKey: "mcat_assistant_chat_history" },
     header: {
       showAvatar: false,
@@ -146,8 +149,16 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
     },
     botBubble: { simStream: true },
   };
+  const styles = {
+    chatWindowStyle: {
+      backgroundColor: '#033979',
+    },
+    botBubbleStyle: {fontSize: "16px", fontFamily: "Consolas, monospace", color: "#aec8e8"},
+    userBubbleStyle: {fontSize: "16px", fontFamily: "Consolas, monospace"},
+  };
 
-  const themes = [{ id: "midnight_black", version: "0.1.0" }];
+  const themes = [{ id: "terminal", version: "0.1.0" },
+  ];
 
   if (!isMounted) {
     return null; // or a loading spinner
@@ -157,6 +168,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
     <div>
       <ChatBot
         settings={settings}
+        styles={styles}
         themes={themes}
         flow={flow}
       />
