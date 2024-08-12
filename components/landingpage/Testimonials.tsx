@@ -93,37 +93,47 @@ const Testimonials = () => {
   ];
 
   return (
-    <section ref={sectionRef} className="bg-white py-32">
-      <div className="container mx-auto px-6 max-w-6xl">
+    <section 
+      ref={sectionRef} 
+      className="bg-[#050c1b] py-32 relative"
+      style={{
+        backgroundImage: 'url("/stars.jpeg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      <div className="absolute inset-0 bg-[#050c1b] opacity-80"></div>
+      <div className="container mx-auto px-6 max-w-6xl relative z-10">
         <div className="w-full md:w-[80%] mx-auto mb-40 text-center space-y-12">
-          <h2 ref={titleRef} className="text-4xl font-bold mb-16 pt-16">Meow there!</h2>
-          <p ref={paragraph1Ref} className="text-2xl mb-12">
-            Kalypso is an MCAT tech company and social business built by premeds for premeds, focused on{" "}
+          <h2 ref={titleRef} className="text-4xl text-center text-white font-bold mb-16 pt-16">Meow there!</h2>
+          <p ref={paragraph1Ref} className="text-2xl text-center text-white mb-12">
+            MyMCAT is an tech company and social business built by premeds for premeds, focused on{" "}
             <strong className="font-bold">innovation & accessibility.</strong>
           </p>
-          <p ref={paragraph2Ref} className="text-2xl mb-12">
+          <p ref={paragraph2Ref} className="text-2xl text-center text-white mb-12">
             We use the latest technology and algorithms to deliver your potential.
           </p>
-          <p ref={paragraph3Ref} className="text-2xl mb-20">
+          <p ref={paragraph3Ref} className="text-2xl text-center text-white mb-20">
             Because our patients deserve only the best...
           </p>
-          <p ref={paragraph4Ref} className="text-2xl mb-20">
+          <p ref={paragraph4Ref} className="text-2xl text-center text-white mb-20">
             ...And that&apos;s you!
           </p>
         </div>
         <div ref={statsRef} className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-24 mb-24">
           <div className="px-2 text-center col-span-1">
             <div className="mt-20">
-              <div className="text-center text-5xl font-bold">
+              <div className="text-center text-5xl text-white font-bold">
                 <CountUp start={0} end={14} duration={4.75} suffix=" +" />
               </div>
-              <p className="text-black text-2xl mb-0">Average increase in beta</p>
+              <p className="text-white text-2xl mb-0">Average increase in beta</p>
             </div>
             <div className="mt-20">
-              <div className="text-center text-5xl font-bold">
+              <div className="text-white text-5xl font-bold">
                 <CountUp start={0} end={514} duration={4.75} suffix=" +" />
               </div>
-              <p className="text-black text-2xl mb-0">Average score in beta</p>
+              <p className="text-whit text-2xl mb-0">Average score in beta</p>
             </div>
           </div>
           <div className="col-span-1 lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8 py-8">
