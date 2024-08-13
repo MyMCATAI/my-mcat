@@ -235,7 +235,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest })
         </Dialog>
 
         {showSettings && (
-           <div className="absolute top-10 right-1 w-100 bg-white text-black p-1 rounded-lg shadow-lg z-[9999999]">
+           <div className="absolute top-8 right-2 w-200 bg-blue-200 text-black p-1 rounded-lg shadow-lg z-[9999999]">
           <SettingContent 
             onShowDiagnosticTest={onShowDiagnosticTest} 
             onStudyPlanSaved={handleStudyPlanSaved}

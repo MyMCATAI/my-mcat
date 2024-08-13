@@ -261,7 +261,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
 
 
   return (
-    <div className="bg-blue-100 p-2 rounded-lg shadow-lg relative">
+    <div className="bg-transparent p rounded-lg shadow-lg relative">
       <div className="bg-white rounded-t-lg overflow-hidden">
         <div className="flex">
           {tabs.map((tab) => (
@@ -280,116 +280,130 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
         </div>
       </div>
 
-      {activeTab === "tab1" && (
-        <div className="bg-white p-4 space-y-4">
-          {options.map((option) => (
-            <div key={option.id} className="relative">
-              <button
-                className={`w-full text-left p-3 rounded-lg ${
-                  activeOption === option.id
-                    ? "bg-purple-500 text-white"
-                    : "bg-gray-100 text-black hover:bg-gray-200"
-                }`}
-                onClick={() => handleOptionClick(option.id)}
-              >
-               <div className="flex justify-between items-center">
-                <span>{option.label}</span>
-                {option.id === "option1" && calendarValue instanceof Date && (
-                  <span className="text-sm font-medium">
-                    {formatDate(calendarValue)}
-                  </span>
-                )}
-              </div>
-              </button>
-              {activeOption === option.id && (
-                <div className="mt-2">
-                  {renderOptionContent()}
+      <div className="bg-transparent p-4 space-y-4 relative">
+        <div 
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: 'url("/glass.png")',
+            backgroundRepeat: 'repeat',
+            opacity: 0.5,
+          }}
+        ></div>
+
+        <div className="relative z-10">
+          {activeTab === "tab1" && (
+            <div className="bg-white p-4 space-y-4">
+              {options.map((option) => (
+                <div key={option.id} className="relative">
+                  <button
+                    className={`w-full text-left p-3 rounded-lg ${
+                      activeOption === option.id
+                        ? "bg-purple-500 text-white"
+                        : "bg-gray-100 text-black hover:bg-gray-200"
+                    }`}
+                    onClick={() => handleOptionClick(option.id)}
+                  >
+                   <div className="flex justify-between items-center">
+                    <span>{option.label}</span>
+                    {option.id === "option1" && calendarValue instanceof Date && (
+                      <span className="text-sm font-medium">
+                        {formatDate(calendarValue)}
+                      </span>
+                    )}
+                  </div>
+                  </button>
+                  {activeOption === option.id && (
+                    <div className="mt-2">
+                      {renderOptionContent()}
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
+              
+              <button
+                className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-200"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : (existingStudyPlan ? 'Update Study Plan' : 'Save Study Plan')}
+              </button>
             </div>
-          ))}
-          
-          <button
-            className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-200"
-            onClick={handleSave}
-            disabled={isSaving}
-          >
-            {isSaving ? 'Saving...' : (existingStudyPlan ? 'Update Study Plan' : 'Save Study Plan')}
-          </button>
+          )}
+          {activeTab === "tab2" && (
+            <div className="bg-white p-4 space-y-4">
+              <h1 className="text-2xl font-bold">Generate New Test</h1>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Test Title (required)"
+                  className="w-full p-2 border rounded"
+                  required
+                />
+                <input
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Test Description (required)"
+                  className="w-full p-2 border rounded"
+                  required
+                />
+                <input
+                  type="text"
+                  value={setName}
+                  onChange={(e) => setSetName(e.target.value)}
+                  placeholder="Test Set Name (required)"
+                  className="w-full p-2 border rounded"
+                  required
+                />
+                <input
+                  type="text"
+                  value={section}
+                  onChange={(e) => setSection(e.target.value)}
+                  placeholder="Section (optional)"
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="text"
+                  value={subjectCategory}
+                  onChange={(e) => setSubjectCategory(e.target.value)}
+                  placeholder="Subject Category (optional)"
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="text"
+                  value={contentCategory}
+                  onChange={(e) => setContentCategory(e.target.value)}
+                  placeholder="Content Category (optional)"
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="text"
+                  value={conceptCategory}
+                  onChange={(e) => setConceptCategory(e.target.value)}
+                  placeholder="Concept Category (optional)"
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="number"
+                  value={numberOfQuestions}
+                  onChange={(e) => setNumberOfQuestions(e.target.value)}
+                  placeholder="Number of Questions (optional)"
+                  className="w-full p-2 border rounded"
+                  min="1"
+                />
+              </div>
+              <button
+                onClick={generateNewTest}
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Generate New Test
+              </button>
+            </div>
+          )}
         </div>
-      )}
-        {activeTab === "tab2" && (
-      <div className="bg-white p-4 space-y-4">
-        <h1 className="text-2xl font-bold">Generate New Test</h1>
-        <div className="space-y-2">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Test Title (required)"
-            className="w-full p-2 border rounded"
-            required
-          />
-          <input
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Test Description (required)"
-            className="w-full p-2 border rounded"
-            required
-          />
-          <input
-            type="text"
-            value={setName}
-            onChange={(e) => setSetName(e.target.value)}
-            placeholder="Test Set Name (required)"
-            className="w-full p-2 border rounded"
-            required
-          />
-          <input
-            type="text"
-            value={section}
-            onChange={(e) => setSection(e.target.value)}
-            placeholder="Section (optional)"
-            className="w-full p-2 border rounded"
-          />
-          <input
-            type="text"
-            value={subjectCategory}
-            onChange={(e) => setSubjectCategory(e.target.value)}
-            placeholder="Subject Category (optional)"
-            className="w-full p-2 border rounded"
-          />
-          <input
-            type="text"
-            value={contentCategory}
-            onChange={(e) => setContentCategory(e.target.value)}
-            placeholder="Content Category (optional)"
-            className="w-full p-2 border rounded"
-          />
-          <input
-            type="text"
-            value={conceptCategory}
-            onChange={(e) => setConceptCategory(e.target.value)}
-            placeholder="Concept Category (optional)"
-            className="w-full p-2 border rounded"
-          />
-          <input
-            type="number"
-            value={numberOfQuestions}
-            onChange={(e) => setNumberOfQuestions(e.target.value)}
-            placeholder="Number of Questions (optional)"
-            className="w-full p-2 border rounded"
-            min="1"
-          />
-        </div>
-        <button
-          onClick={generateNewTest}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Generate New Test
-        </button>
-      </div>)}
+      </div>
     </div>
   );
 };
