@@ -47,7 +47,7 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
   };
 
   return (
-    <div className="min-h-screen p-6 rounded-t-lg bg-[#001326]">
+    <div className="min-h-screen p-6 rounded-t-lg bg-white">
       <Card className="max-w-3xl mx-auto shadow-lg">
         <CardHeader className="bg-blue-600 text-white rounded-t-lg">
           <CardTitle className="text-2xl font-bold">

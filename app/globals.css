@@ -105,7 +105,6 @@ body :root {
   background: linear-gradient(0deg, rgba(0, 57, 127, 0.9) 0%, rgba(0, 44, 105, 0.8) 100%);
 }
 
-
-
-
-
+.translate-x-full {
+  transform: translateX(100%);
+}

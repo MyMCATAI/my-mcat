@@ -12,6 +12,11 @@ export const Navbar = ({ isPro = false }: { isPro: boolean }) => {
   const pathname = usePathname();
   const ballerSectionRef = useRef(null);
 
+  // Hiding navbar on test questions page
+  if (pathname.includes('/test/testquestions')) {
+    return null;
+  }
+
   return (
     <>
       <nav className="flex items-center justify-between bg-transparent shadow-sm h-24 ps-4">
