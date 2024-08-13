@@ -30,8 +30,8 @@ const TestPage: React.FC = () => {
   };
 
   return (
-    <div className="bg-white min-h-[80vh] text-black flex justify-center flex-col">
-      <div className="max-w-[full] w-full flex-grow">
+    <div className="bg-blue- min-h-[80vh] text-black flex justify-center flex-col">
+      <div className="max-w-full w-full flex-grow">
         {isLoading ? (
           <p className="text-white text-center">Loading tests...</p>
         ) : error ? (
