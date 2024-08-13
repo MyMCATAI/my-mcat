@@ -185,6 +185,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest })
                     width={300}
                     height={300}
                     objectFit="contain" 
+                    unoptimized
                   />
                 </div>
                 <div className="bg-black rounded-lg p-4 w-full h-full flex flex-col justify-between overflow-hidden" style={{
