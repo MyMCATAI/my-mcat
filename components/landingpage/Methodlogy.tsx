@@ -20,7 +20,7 @@ const Methodology = () => {
   const restEasyRef = useRef(null);
 
   const items = [
-    { heading: 'Take a practice test.', text: 'in our testing suite that figures out what you know and don&apos;t know.', icon: test },
+    { heading: 'Take a practice test.', text: "in our testing suite that figures out what you know and don't know.", icon: test },
     { heading: 'Diagnose weaknesses.', text: 'with algorithms designed by a Princeton PhD.', icon: cards },
     { heading: 'Plan your prep.', text: 'Every day of your prep planned out in an adaptive schedule that syncs to your weaknesses & Google Calendar.', icon: calender },
     { heading: '24/7 tutoring assistance.', text: 'Kalypso is trained on 100+ hours worth of content (and helps you study!)', icon: assistance },

@@ -57,7 +57,7 @@ const Testimonials = () => {
 
   const testimonials = [
     {
-      text: `I&apos;m gonna be real. I had no clue what I was doing. Kalypso got me from my middling
+      text: `I'm gonna be real. I had no clue what I was doing. Kalypso got me from my middling
                   diagnostic to a 516 on my actual test, all within three months.`,
       name: "Yasmin Maurice",
       description: "516, Tulane",
@@ -66,7 +66,7 @@ const Testimonials = () => {
     },
     {
       text: `My first test was SO stressful and chaotic. I did poorly. On my retake, I needed a plan.
-                  Kalypso developed one that got me a score I would&apos;ve never imagined possible.`,
+                  Kalypso developed one that got me a score I would've never imagined possible.`,
       name: "Ali Nassari",
       description: "517, UT Austin",
       image: ali,
@@ -84,7 +84,7 @@ const Testimonials = () => {
     {
       text: `Brilliant, eager to help, hilarious, with an infectious energy that just inspired me to keep
                   pushing.
-                  Couldn&apos;t recommend Kalypso more.`,
+                  Couldn't recommend Kalypso more.`,
       name: `Arthur Cowan`,
       description: "519, SDSU",
       image: arthur,
@@ -118,7 +118,7 @@ const Testimonials = () => {
             Because our patients deserve only the best...
           </p>
           <p ref={paragraph4Ref} className="text-2xl text-center text-white mb-20">
-            ...And that&apos;s you!
+            ...And that's you!
           </p>
         </div>
         <div ref={statsRef} className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-24 mb-24">
