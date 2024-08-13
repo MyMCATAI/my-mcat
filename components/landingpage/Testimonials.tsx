@@ -118,7 +118,7 @@ const Testimonials = () => {
             Because our patients deserve only the best...
           </p>
           <p ref={paragraph4Ref} className="text-2xl text-center text-white mb-20">
-            ...And that's you!
+            ...And that&apos;s you!
           </p>
         </div>
         <div ref={statsRef} className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-24 mb-24">
