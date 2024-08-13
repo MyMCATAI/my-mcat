@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { format, addDays, isSameDay, startOfDay, isToday, isTomorrow } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import SettingContent from "./SettingContent";
@@ -8,13 +8,22 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogOverlay } 
 import { Button } from "@/components/ui/button";
 import Image from 'next/image'
 import InteractiveCalendar from "@/components/InteractiveCalendar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { InterludeAction } from "@/components/home/InterludeAction";
 
 interface ScheduleProps {
   activities: FetchedActivity[];
   onShowDiagnosticTest: () => void;
+  handleSetTab: (tab: string ) => void;
+
 }
 
-const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest }) => {
+const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,handleSetTab }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
   const [showNewActivityForm, setShowNewActivityForm] = useState(false);
@@ -23,6 +32,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest })
   const [showThankYouDialog, setShowThankYouDialog] = useState(false);
   const [showInterlude, setShowInterlude] = useState(true);
   const [typedText, setTypedText] = useState('');
+  const [isTypingComplete, setIsTypingComplete] = useState(false);
 
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
@@ -33,7 +43,8 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest })
   });
 
   const { user } = useUser();
-  const getActivitiesText = () => {
+  const getActivitiesText = useMemo(() => {
+
     if (activities.length === 0) {
       return "Welcome to myMCAT.ai! It looks like this is your first time here. Let's get started by answering some questions about your test and study schedule. Would you like to take a diagnostic test to help us personalize your learning experience?";
     }
@@ -50,26 +61,28 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest })
     } else {
       return "Welcome back to myMCAT.ai! You don't have any activities scheduled for today or tomorrow. Would you like to add some new study tasks?";
     }
-  };
-  const activitiesText = getActivitiesText();
-
+  }, [activities]);
 
   useEffect(() => {
     setCurrentDate(new Date());
+    setTypedText('');
+    setIsTypingComplete(false);
 
-    // Start typing animation
     let index = 0;
     const typingTimer = setInterval(() => {
-      setTypedText(activitiesText.slice(0, index));
+      setTypedText(prev => getActivitiesText.slice(0, prev.length + 1));
       index++;
-      if (index > activitiesText.length) {
+      if (index > getActivitiesText.length) {
         clearInterval(typingTimer);
+        setIsTypingComplete(true);
       }
     }, 25);
+
     return () => {
       clearInterval(typingTimer);
     };
-  }, []);
+  }, [getActivitiesText]);
+
 
   const handleStudyPlanSaved = () => {
     setShowSettings(false);
@@ -137,6 +150,16 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest })
     );
   };
 
+
+  const handleActionClick = () => {
+    if (activities.length === 0) {
+      setShowSettings(true);
+    } else {
+      handleSetTab("KnowledgeProfile")
+      setShowInterlude(false);
+    }
+  };
+
   return (
     <div className="relative p-2 h-full flex flex-col">
       <div className="relative z-10 text-white rounded-lg flex-grow flex flex-col">
@@ -157,7 +180,11 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest })
             </g>
           </svg>
           <div className="flex-grow"></div>
-          <button onClick={toggleSettings}>
+
+          <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+        <button onClick={toggleSettings}>
             <svg
               width="24"
               height="24"
@@ -171,49 +198,64 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest })
               />
             </svg>
           </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            Settings
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
         </div>
 
-        {/* Interlude */}
-        <div className="flex-grow flex flex-col h-[550px]">
-          {showInterlude ? (
-            <div className="flex-grow flex items-center justify-center">
-              <div className="relative w-full h-full flex items-center pl-8 pr-8 pb-6 justify-center">
-                <div className="absolute bottom-2 left-3 w-1/4">
-                  <Image 
-                    src="/kalypsotyping.gif" 
-                    alt="Typing animation" 
-                    width={300}
-                    height={300}
-                    objectFit="contain" 
-                    unoptimized
+       {/* Interlude */}
+       <div className="flex-grow flex flex-col h-[550px]">
+        {showInterlude ? (
+          <div className="flex-grow flex items-center justify-center">
+            <div className="relative w-full h-full flex items-center pl-8 pr-8 pb-6 justify-center">
+              <div className="absolute bottom-2 left-3 w-1/4">
+                <Image 
+                  src="/kalypsotyping.gif" 
+                  alt="Typing animation" 
+                  width={300}
+                  height={300}
+                  objectFit="contain" 
+                  unoptimized
+                />
+              </div>
+              <div className="bg-black rounded-lg p-4 w-full h-full flex flex-col justify-between overflow-hidden" style={{
+                boxShadow: '0 0 15px 5px rgba(0, 123, 255, 0.5)'
+              }}>
+                <pre className="pl-5 pt-5 text-blue-200 font-mono text-m whitespace-pre-wrap">
+                  {typedText}
+                </pre>
+                {isTypingComplete && (
+                  <InterludeAction 
+                    activities={activities}
+                    onActionClick={handleActionClick}
+                    onSkip={() => setShowInterlude(false)}
                   />
-                </div>
-                <div className="bg-black rounded-lg p-4 w-full h-full flex flex-col justify-between overflow-hidden" style={{
-                  boxShadow: '0 0 15px 5px rgba(0, 123, 255, 0.5)'
-                }}>
-                  <pre className="pl-5 pt-5 text-blue-200 font-mono text-m whitespace-pre-wrap">
-                    {typedText}
-                  </pre>
-                  <button 
-                    onClick={() => activities.length === 0 ? setShowSettings(true) : setShowInterlude(false)}
-                    className="self-end text-blue-200 font-mono text-lg hover:text-blue-600 transition-colors animate-pulse" style={{
-                      animation: 'pulse 2s cubic-bezier(0.6, 0, 0.6, 1) infinite',
-                      background: 'transparent',
-                      borderRadius: '5px',
-                      padding: '5px 10px',
-                    }}
-                  >
-                    {activities.length === 0 ?  `>> Get Started`: `>> click for calendar`}
-                  </button>
-                </div>
+                )}
+                <button 
+                  onClick={handleActionClick}
+
+                  className="self-end text-blue-200 font-mono text-lg hover:text-blue-600 transition-colors animate-pulse"
+                  style={{
+                    animation: 'pulse 2s cubic-bezier(0.6, 0, 0.6, 1) infinite',
+                    background: 'transparent',
+                    borderRadius: '5px',
+                    padding: '5px 10px',
+                  }}
+                >
+                  {activities.length === 0 ? `>> Get Started` : `>> click for calendar`}
+                </button>
               </div>
             </div>
-          ) : (
-            <div className="flex-grow">
-              <InteractiveCalendar></InteractiveCalendar>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="flex-grow">
+            <InteractiveCalendar></InteractiveCalendar>
+          </div>
+        )}
+      </div>
 
         <Dialog open={showThankYouDialog} onOpenChange={setShowThankYouDialog}>
           <DialogOverlay className="fixed inset-0 bg-black bg-opacity-50 z-50" />

@@ -197,6 +197,7 @@ const Page = () => {
         return <Schedule 
           activities={activities} 
           onShowDiagnosticTest={handleShowDiagnosticTest}
+          handleSetTab={setActiveTab}
         />;
       case "KnowledgeProfile":
         return (
@@ -263,14 +264,14 @@ const Page = () => {
         <div className="w-3/4 relative">
           <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
             {activeTab === "Schedule"
-              ? "calendar."
+              ? "Home."
               : activeTab === "KnowledgeProfile"
-              ? "adaptive tutoring suite."
+              ? "Adaptive Tutoring Suite."
               : activeTab === "flashcards"
-              ? "flashcards"
+              ? "Flashcards"
               : activeTab === "test"
-              ? "testing suite"
-              : ""}
+              ? "Testing suite"
+              : "Home"}
           </h2>
           <div className="relative">
             <div className="p-3 gradientbg overflow-auto" style={{ height: "690px" }}>
