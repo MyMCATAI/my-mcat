@@ -27,10 +27,11 @@ model UserSubscription {
 }
 
 model Passage {
-  id        String     @id @default(cuid())
-  text      String     @db.Text
-  citation  String     @db.Text
-  questions Question[]
+  id          String     @id @default(cuid())
+  passageName String     // New field added
+  text        String     @db.Text
+  citation    String     @db.Text
+  questions   Question[]
 }
 
 model Question {
