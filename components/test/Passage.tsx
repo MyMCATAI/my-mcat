@@ -38,7 +38,7 @@ const Passage: React.FC<PassageProps> = ({ passageData, highlightActive, striket
         setEditorState(RichUtils.toggleInlineStyle(editorState, 'STRIKETHROUGH'));
       }
     }
-  }, [highlightActive, strikethroughActive]);
+  }, [highlightActive, strikethroughActive, editorState]);
 
   const styleMap = {
     'HIGHLIGHT': {
@@ -49,11 +49,11 @@ const Passage: React.FC<PassageProps> = ({ passageData, highlightActive, striket
     },
   };
 
-  const handleBeforeInput = (chars: string) => {
+  const handleBeforeInput = (chars: string, editorState: EditorState): DraftHandleValue => {
     return 'handled';
   };
 
-  const handlePastedText = (text: string, html: string | undefined) => {
+  const handlePastedText = (text: string, html: string | undefined, editorState: EditorState): DraftHandleValue => {
     return 'handled';
   };
 
