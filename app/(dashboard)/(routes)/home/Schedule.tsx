@@ -15,6 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { InterludeAction } from "@/components/home/InterludeAction";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 
 interface ScheduleProps {
   activities: FetchedActivity[];
@@ -33,6 +34,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
   const [showInterlude, setShowInterlude] = useState(true);
   const [typedText, setTypedText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
@@ -76,13 +78,12 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
         clearInterval(typingTimer);
         setIsTypingComplete(true);
       }
-    }, 25);
+    }, 18);
 
     return () => {
       clearInterval(typingTimer);
     };
   }, [getActivitiesText]);
-
 
   const handleStudyPlanSaved = () => {
     setShowSettings(false);
@@ -155,8 +156,14 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
     if (activities.length === 0) {
       setShowSettings(true);
     } else {
+      handleSetTab("KnowledgeProfile")
       setShowInterlude(false);
     }
+  };
+
+  const toggleCalendarView = () => {
+    setShowCalendar(!showCalendar);
+    setShowInterlude(!showInterlude);
   };
 
   return (
@@ -205,9 +212,9 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
       </TooltipProvider>
         </div>
 
-       {/* Interlude */}
+       {/* Interlude or Calendar */}
        <div className="flex-grow flex flex-col h-[550px]">
-        {showInterlude ? (
+        {showInterlude && (
           <div className="flex-grow flex items-center justify-center">
             <div className="relative w-full h-full flex items-center pl-8 pr-8 pb-6 justify-center">
               <div className="absolute bottom-2 left-3 w-1/4">
@@ -233,10 +240,9 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
                     onSkip={() => setShowInterlude(false)}
                   />
                 )}
-                <button 
+                <div 
                   onClick={handleActionClick}
-
-                  className="self-end text-blue-200 font-mono text-lg hover:text-blue-600 transition-colors animate-pulse"
+                  className="self-end text-blue-200 font-mono text-lg hover:text-blue-600 transition-colors animate-pulse cursor-pointer"
                   style={{
                     animation: 'pulse 2s cubic-bezier(0.6, 0, 0.6, 1) infinite',
                     background: 'transparent',
@@ -244,17 +250,35 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
                     padding: '5px 10px',
                   }}
                 >
-                  {activities.length === 0 ? `>> Get Started` : `>> click for calendar`}
-                </button>
+                </div>
               </div>
             </div>
           </div>
-        ) : (
+        )}
+        {showCalendar && (
           <div className="flex-grow">
-            <InteractiveCalendar></InteractiveCalendar>
+            <InteractiveCalendar />
           </div>
         )}
       </div>
+
+        {/* Calendar toggle button */}
+        <div 
+          className={`absolute bottom-7 ${showInterlude ? 'right-6' : 'left-6'} cursor-pointer`}
+          onClick={toggleCalendarView}
+        >
+          {showInterlude ? (
+            <ChevronRight 
+              size={60} 
+              className="text-white-600 transition-transform duration-300 ease-in-out hover:text-blue-600"
+            />
+          ) : (
+            <ChevronLeft 
+              size={60} 
+              className="text-white-600 transition-transform duration-300 ease-in-out hover:text-blue-600"
+            />
+          )}
+        </div>
 
         <Dialog open={showThankYouDialog} onOpenChange={setShowThankYouDialog}>
           <DialogOverlay className="fixed inset-0 bg-black bg-opacity-50 z-50" />
@@ -277,12 +301,12 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
         </Dialog>
 
         {showSettings && (
-           <div className="absolute top-8 right-2 w-200 bg-blue-200 text-black p-1 rounded-lg shadow-lg z-[9999999]">
-          <SettingContent 
-            onShowDiagnosticTest={onShowDiagnosticTest} 
-            onStudyPlanSaved={handleStudyPlanSaved}
-          />
-        </div>
+          <div className="absolute right-20 left-20 bottom-20 top-1/4 w-50 bg-transparent">
+            <SettingContent 
+              onShowDiagnosticTest={onShowDiagnosticTest} 
+              onStudyPlanSaved={handleStudyPlanSaved}
+            />
+          </div>
         )}
 
         {showNewActivityForm && (
