@@ -4,17 +4,22 @@ import { useSpring, animated } from '@react-spring/web'
 import { useDrag } from '@use-gesture/react';
 
 interface Flashcard {
+  id: string;
   problem: string;
   answer: string;
+  category: string;
+  conceptMastery: number | null;
+  contentMastery: number | null;
+  correctAnswers: number;
+  totalAttempts: number;
+  lastAttemptAt: string | null;
 }
 
-const flashcards: Flashcard[] = [
-  { problem: "What is the function of the mitochondria?", answer: "The powerhouse of the cell, responsible for producing ATP through cellular respiration." },
-  { problem: "What is the Henderson-Hasselbalch equation used for?", answer: "To calculate the pH of a buffer solution given the pKa and the concentrations of the acid and conjugate base." },
-  { problem: "What is the role of tRNA in protein synthesis?", answer: "Transfer RNA (tRNA) brings specific amino acids to the ribosome during translation, matching them to the mRNA codons." },
-  { problem: "What is Coulomb's law?", answer: "The electrostatic force between two charged particles is directly proportional to the product of their charges and inversely proportional to the square of the distance between them." },
-  { problem: "What is the function of the nephron in the kidney?", answer: "The nephron is the functional unit of the kidney, responsible for blood filtration, reabsorption of useful substances, and secretion of wastes." },
-];
+interface ApiResponse {
+  flashcards: Flashcard[];
+  totalPages: number;
+  currentPage: number;
+}
 
 const settings = {
   swipeThreshold: 0.5,
@@ -27,11 +32,15 @@ const physics = {
 };
 
 const FlashcardStack: React.FC = () => {
+  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
-  const [nextCardIndex, setNextCardIndex] = useState((currentCardIndex + 1) % flashcards.length);
+  const [nextCardIndex, setNextCardIndex] = useState(1);
   const [clickTimeout, setClickTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const correctSoundRef = useRef<HTMLAudioElement | null>(null);
   const incorrectSoundRef = useRef<HTMLAudioElement | null>(null);
@@ -39,7 +48,31 @@ const FlashcardStack: React.FC = () => {
   useEffect(() => {
     correctSoundRef.current = new Audio('/correctflash_v2.mp3');
     incorrectSoundRef.current = new Audio('/incorrectflash_v2.mp3');
+    fetchFlashcards(1);
   }, []);
+
+  const fetchFlashcards = async (page: number) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/flashcard?page=${page}&pageSize=10`);
+      const data: ApiResponse = await response.json();
+
+      console.log(data)
+      setFlashcards(prevCards => [...prevCards, ...data.flashcards]);
+      setTotalPages(data.totalPages);
+      setCurrentPage(data.currentPage);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching flashcards:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const loadMoreCards = () => {
+    if (currentPage < totalPages) {
+      fetchFlashcards(currentPage + 1);
+    }
+  };
 
   const [{ x, y, rotation, cardOpacity }, api] = useSpring(() => ({
     x: 0,
@@ -77,8 +110,14 @@ const FlashcardStack: React.FC = () => {
       cardOpacity: 0,
       config: { duration: 300 },
       onRest: () => {
-        setCurrentCardIndex((prevIndex) => (prevIndex + 1) % flashcards.length);
-        setNextCardIndex((prevIndex) => (prevIndex + 1) % flashcards.length);
+        setCurrentCardIndex(prevIndex => {
+          const newIndex = (prevIndex + 1) % flashcards.length;
+          if (newIndex === flashcards.length - 1) {
+            loadMoreCards();
+          }
+          return newIndex;
+        });
+        setNextCardIndex(prevIndex => (prevIndex + 1) % flashcards.length);
         setIsRevealed(false);
         setIsAnimatingOut(false);
         api.start({ x: 0, y: 0, rotation: 0, cardOpacity: 1, immediate: true });
@@ -235,34 +274,54 @@ const FlashcardStack: React.FC = () => {
         </button>
         {/* Search, Add, and Settings buttons */}
       </div>
-      <div className="relative w-[75%] h-80 mb-4 mt-8">
-        {/* Background cards */}
-        <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-4 translate-y-6 border-blue-400 border-2" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
-        <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-2 translate-y-3 border-blue-400 border-2 bg-[url('/circuitpattern2.png')] bg-cover bg-blend-overlay" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
-        
-        {/* Next card (always visible) */}
-        <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}>
-          <p className="text-2xl text-center text-white">{flashcards[nextCardIndex]?.problem}</p>
-        </div>
-        
-        {/* Current card */}
-        <animated.div
-          {...bind()}
-          className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 cursor-pointer border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay"
-          style={{
-            x,
-            y,
-            rotateZ: rotation,
-            opacity: cardOpacity,
-            touchAction: 'none',
-            boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)',
-          }}
-        >
-          <p className="text-2xl text-center text-white">
-            {isRevealed ? flashcards[currentCardIndex]?.answer : flashcards[currentCardIndex]?.problem}
-          </p>
+      {isLoading && flashcards.length === 0 ? (
+        <div className="text-white">Loading flashcards...</div>
+      ) : (
+        <>
+          <div className="relative w-[75%] h-80 mb-4 mt-8">
+            {/* Background cards */}
+            <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-4 translate-y-6 border-blue-400 border-2" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
+            <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-2 translate-y-3 border-blue-400 border-2 bg-[url('/circuitpattern2.png')] bg-cover bg-blend-overlay" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
+            
+            {/* Next card (always visible) */}
+            <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}>
+              <p className="text-2xl text-center text-white">{flashcards[nextCardIndex]?.problem}</p>
+            </div>
+            
+            {/* Current card */}
+            <animated.div
+              {...bind()}
+              className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 cursor-pointer border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay"
+              style={{
+                x,
+                y,
+                rotateZ: rotation,
+                opacity: cardOpacity,
+                touchAction: 'none',
+                boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)',
+              }}
+            >
+              <div className="text-center">
+                <p className="text-2xl text-white mb-2">
+                  {isRevealed ? flashcards[currentCardIndex]?.answer : flashcards[currentCardIndex]?.problem}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Category: {flashcards[currentCardIndex]?.category}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Concept Mastery: {flashcards[currentCardIndex]?.conceptMastery !== null ? `${flashcards[currentCardIndex]?.conceptMastery?.toFixed(2)}%` : 'N/A'}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Content Mastery: {flashcards[currentCardIndex]?.contentMastery !== null ? `${flashcards[currentCardIndex]?.contentMastery?.toFixed(2)}%` : 'N/A'}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Correct: {flashcards[currentCardIndex]?.correctAnswers} / {flashcards[currentCardIndex]?.totalAttempts}
+                </p>
+              </div>
         </animated.div>
       </div>
+        </>
+      )}
       <div className="flex justify-between w-full mt-12 text-sm">
         <p className="text-gray-500">←Swipe left (or A) for incorrect</p>
         <p className="text-gray-500">Spacebar to reveal answer</p>
