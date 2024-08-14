@@ -83,5 +83,6 @@ npm run "script-name"
 
 
 ### Todo
-- Set up initial diagnostic quiz
+- Set up AWS for image storage
+- Implement detailed weakness and calendar algos
 

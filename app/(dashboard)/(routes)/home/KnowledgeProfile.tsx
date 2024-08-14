@@ -10,8 +10,62 @@ interface KnowledgeProfileProps {
   activities: FetchedActivity[];
 }
 
-const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities }) => {
+const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initialActivities }) => {
   const [activeTab, setActiveTab] = useState("tab2");
+  const [activities, setActivities] = useState(initialActivities);
+
+  const statusOrder = ["Not Started", "In Progress", "Complete"];
+  
+
+  useEffect(() => {
+    setActivities(initialActivities)
+  }, [initialActivities]);
+
+
+  const updateActivityStatus = async (activityId: string, newStatus: string) => {
+    try {
+      const response = await fetch('/api/calendar-activity', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: activityId, status: newStatus }),
+      });
+      if (!response.ok) throw new Error('Failed to update activity status');
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating activity status:', error);
+      // Optionally, revert the optimistic update here
+      throw error;
+    }
+  };
+
+  const handleStatusToggle = async (activityId: string) => {
+    const activityToUpdate = activities.find(activity => activity.id === activityId);
+    if (!activityToUpdate) return;
+
+    const currentStatusIndex = statusOrder.indexOf(activityToUpdate.status);
+    const nextStatusIndex = (currentStatusIndex + 1) % statusOrder.length;
+    const newStatus = statusOrder[nextStatusIndex];
+
+    // Optimistic update
+    setActivities(prevActivities => 
+      prevActivities.map(activity => 
+        activity.id === activityId ? { ...activity, status: newStatus } : activity
+      )
+    );
+
+    try {
+      await updateActivityStatus(activityId, newStatus);
+    } catch (error) {
+      // Revert the optimistic update if the API call fails
+      setActivities(prevActivities => 
+        prevActivities.map(activity => 
+          activity.id === activityId ? { ...activity, status: activityToUpdate.status } : activity
+        )
+      );
+    }
+  };
 
   const categorizedActivities = useMemo(() => {
     const today = startOfDay(new Date());
@@ -27,47 +81,48 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities }) => {
     { id: "tab2", label: "Today", activities: categorizedActivities.present },
     { id: "tab3", label: "Future", activities: categorizedActivities.future },
   ];
-  
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Complete": return "bg-green-800";
+      case "In Progress": return "bg-yellow-800";
+      default: return "bg-red-800";
+    }
+  };
+
   const renderActivities = (activities: FetchedActivity[]) => (
     <ScrollArea className="h-[330px]">
       {activities.length > 0 ? (
         activities.map((activity) => {
           const minutesFormatted = (activity.hours * 60).toFixed(2);
           
-          const activityContent = (
-            <>
-              <h3 className="text-sm font-bold text-white leading-normal shadow-text mb-1">{activity.activityTitle}</h3>
+          return (
+            <div key={activity.id} className="mb-4 p-3 bg-[#021326] rounded">
+              {activity.link ? (
+                <Link
+                  href={activity.link}
+                  className="block text-sm font-bold text-white leading-normal shadow-text mb-1 hover:underline"
+                >
+                  {activity.activityTitle}
+                </Link>
+              ) : (
+                <h3 className="text-sm font-bold text-white leading-normal shadow-text mb-1">
+                  {activity.activityTitle}
+                </h3>
+              )}
               <p className="text-xs text-gray-300 mb-1">{activity.activityText}</p>
               <div className="flex justify-between items-center text-xs text-gray-400">
                 <span>{format(new Date(activity.scheduledDate), 'MMM d, yyyy')}</span>
                 <span>{minutesFormatted} minutes</span>
               </div>
               <div className="mt-2 flex justify-between items-center text-xs">
-                <span className={`px-2 py-1 rounded ${
-                  activity.status === 'completed' ? 'bg-green-800' : 
-                  activity.status === 'in_progress' ? 'bg-yellow-800' : 'bg-red-800'
-                }`}>
+                <button
+                  onClick={() => handleStatusToggle(activity.id)}
+                  className={`px-2 py-1 rounded ${getStatusColor(activity.status)} hover:opacity-80 transition-opacity`}
+                >
                   {activity.status}
-                </span>
+                </button>
                 <span className="text-blue-300">{activity.activityType}</span>
               </div>
-            </>
-          );
-
-          return activity.link ? (
-            <Link
-              key={activity.id}
-              href={activity.link}
-              className="block mb-2 p-3 bg-[#021326] rounded hover:bg-[#032040] transition-colors duration-200 cursor-pointer"
-            >
-              {activityContent}
-            </Link>
-          ) : (
-            <div
-              key={activity.id}
-              className="mb-2 p-3 bg-[#021326] rounded"
-            >
-              {activityContent}
             </div>
           );
         })

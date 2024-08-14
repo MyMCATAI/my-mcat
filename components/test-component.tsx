@@ -314,20 +314,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           <span>{seconds.toString().padStart(2, '0')}</span>
         </div>
       </div>
-      <div className="bg-[#61a5fa] p-2 border-b-2 border-t-2 border-white flex justify-left">
-        <button 
-          onClick={handleHighlight} 
-          className={`bg-[#ffffff] text-black py-2 px-3 mx-3 rounded ${highlightActive ? 'bg-yellow-300' : ''}`}
-        >
-          Highlight
-        </button>
-        <button 
-          onClick={handleStrikethrough} 
-          className={`bg-[#ffffff] text-black py-2 px-3 rounded ${strikethroughActive ? 'bg-red-300' : ''}`}
-        >
-          StrikeThrough
-        </button>
-      </div>
       <div className="bg-[#a1a1aa] p-4"></div>
       <div className="flex flex-grow">
         {currentPassage ? (

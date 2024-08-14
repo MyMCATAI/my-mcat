@@ -68,8 +68,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function PUT(req: NextRequest) {
 
+export async function PUT(req: NextRequest) {
   try {
     const { userId } = auth();
     if (!userId) {
@@ -77,20 +77,29 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, scheduledDate, activityTitle, activityText, hours } = body;
+    const { id, scheduledDate, activityTitle, activityText, hours, status } = body;
 
-    if (!id || !scheduledDate || !activityTitle || !activityText || !hours) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: "Missing activity id" }, { status: 400 });
+    }
+
+    // Prepare update data
+    const updateData: any = {};
+    
+    if (scheduledDate) updateData.scheduledDate = new Date(scheduledDate);
+    if (activityTitle) updateData.activityTitle = activityTitle;
+    if (activityText) updateData.activityText = activityText;
+    if (hours) updateData.hours = parseFloat(hours);
+    if (status) updateData.status = status;
+
+    // Check if we have any data to update
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: "No fields to update" }, { status: 400 });
     }
 
     const updatedActivity = await prisma.calendarActivity.update({
       where: { id: id, userId: userId },
-      data: {
-        scheduledDate: new Date(scheduledDate),
-        activityTitle,
-        activityText,
-        hours: parseFloat(hours),
-      },
+      data: updateData,
     });
 
     return NextResponse.json(updatedActivity);

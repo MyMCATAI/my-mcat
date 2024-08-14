@@ -155,7 +155,6 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
     if (activities.length === 0) {
       setShowSettings(true);
     } else {
-      handleSetTab("KnowledgeProfile")
       setShowInterlude(false);
     }
   };
