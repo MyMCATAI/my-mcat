@@ -37,7 +37,6 @@ const Passages: React.FC<TestListingProps> = ({ tests }) => {
     if (percentage >= 50 && percentage <= 80) return "text-yellow-500";
     return "text-green-500";
   };
-  console.log("test", tests);
   return (
     <div className="p-8 text-white justify-center">
       <div className="max-w-screen-xl w-full">

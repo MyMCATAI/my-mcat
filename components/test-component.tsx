@@ -34,9 +34,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const [showScorePopup, setShowScorePopup] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
 
-  const [highlightActive, setHighlightActive] = useState(false);
-  const [strikethroughActive, setStrikethroughActive] = useState(false);
-
   const {
     seconds,
     minutes,
@@ -284,16 +281,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     return userResponses[responseId] || pendingResponses[questionId];
   };
 
-  const handleHighlight = () => {
-    setHighlightActive(!highlightActive);
-    setStrikethroughActive(false);
-  };
-
-  const handleStrikethrough = () => {
-    setStrikethroughActive(!strikethroughActive);
-    setHighlightActive(false);
-  };
-
   if (loading) return <div className="text-white">Loading...</div>;
   if (error) return <div className="text-white">Error: {error}</div>;
   if (!test) return <div className="text-white">No test found</div>;
@@ -314,20 +301,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           <span>{seconds.toString().padStart(2, '0')}</span>
         </div>
       </div>
-      <div className="bg-[#61a5fa] p-2 border-b-2 border-t-2 border-white flex justify-left">
-        <button 
-          onClick={handleHighlight} 
-          className={`bg-[#ffffff] text-black py-2 px-3 mx-3 rounded ${highlightActive ? 'bg-yellow-300' : ''}`}
-        >
-          Highlight
-        </button>
-        <button 
-          onClick={handleStrikethrough} 
-          className={`bg-[#ffffff] text-black py-2 px-3 rounded ${strikethroughActive ? 'bg-red-300' : ''}`}
-        >
-          StrikeThrough
-        </button>
-      </div>
       <div className="bg-[#a1a1aa] p-4"></div>
       <div className="flex flex-grow">
         {currentPassage ? (
@@ -336,8 +309,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
               <div className="p-4">
                 <PassageComponent 
                   passageData={currentPassage} 
-                  highlightActive={highlightActive}
-                  strikethroughActive={strikethroughActive}
+                  allowHighlight={true}
                 />
               </div>
             </div>

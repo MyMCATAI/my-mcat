@@ -1,15 +1,12 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
 import Schedule from "./Schedule";
 import KnowledgeProfile from "./KnowledgeProfile";
 import AdaptiveTutoring from "./AdaptiveTutoring";
 import FloatingButton from "./FloatingButton";
 import { FetchedActivity, Test } from "@/types";
 import ChatBot from "@/components/chatbot/ChatBot";
-import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
-import TestPage from "../test/page";
 import TestingSuit from "./TestingSuit";
 import { toast } from "@/components/ui/use-toast";
 const FlashcardDeck = dynamic(() => import('./FlashcardDeck'), { ssr: false });
@@ -25,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import TestComponent from "@/components/test-component";
 import { DialogOverlay } from "@radix-ui/react-dialog";
+import ChatbotWidget from "@/components/chatbot/ChatBotWidget";
 
 
 const Page = () => {
@@ -289,37 +287,9 @@ const Page = () => {
           </div>
         </div>
       </div>
-      {/* Chatbot */}
-      <div className="fixed inset-0 pointer-events-none z-50">
-        <div className="absolute bottom-6 right-8 flex flex-col items-end pointer-events-auto">
-          {showChatbot && (
-            <div
-              className="bg-black rounded-lg shadow-lg overflow-hidden mb-4"
-              style={{ width: "375px", height: "490px" ,
-                boxShadow: '0 0 20px 8px rgba(0, 123, 255, 0.5)',}}
-            >
-            <ChatBot 
-              chatbotContext={{
-                contentTitle: chatbotContext?.contentTitle || "",
-                context: chatbotContext?.context || ""
-              }} 
-            />
-            </div>
-          )}
-          <button
-            className="w-60 h-60 rounded-full overflow-hidden shadow-lg transition duration-120 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
-            onClick={toggleChatBot}
-            aria-label={showChatbot ? "Close Chat" : "Open Chat"}
-          >
-            <img
-              ref={kalypsoRef}
-              src="/kalypsowait.gif"
-              alt="Chat with Kalypso"
-              className="w-full h-full object-cover"
-            />
-          </button>
-        </div>
-      </div>
+     {/* ChatbotWidget */}
+     <ChatbotWidget chatbotContext={chatbotContext} />
+
        {/* Diagnostic Test Dialog */}
       <Dialog open={showDiagnosticTest} onOpenChange={setShowDiagnosticTest}>
       <DialogOverlay className="fixed inset-0 bg-black bg-opacity-80 z-50" />
