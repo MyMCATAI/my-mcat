@@ -3,49 +3,15 @@ import Image from "next/image";
 import profile from "../../../../public/knowledge.png";
 import { format, isBefore, isAfter, startOfDay } from 'date-fns';
 import { FetchedActivity } from '@/types';
-import Icon from "@/components/ui/icon";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface Category {
-  conceptCategory: string;
-  icon: string;
-  color: string;
-}
+import Link from 'next/link';
 
 interface KnowledgeProfileProps {
   activities: FetchedActivity[];
 }
 
-type TabContent = {
-  categories: Category[];
-  activities: FetchedActivity[];
-};
-
 const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities }) => {
-  const [activeTab, setActiveTab] = useState("tab0");
-  const [categories, setCategories] = useState<Category[]>([]);
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const url = new URL("/api/category", window.location.origin);
-      url.searchParams.append("page", "1");
-      url.searchParams.append("pageSize", "7");
-      url.searchParams.append("useKnowledgeProfiles", "true");
-
-      const response = await fetch(url.toString());
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      setCategories(data.items);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
+  const [activeTab, setActiveTab] = useState("tab2");
 
   const categorizedActivities = useMemo(() => {
     const today = startOfDay(new Date());
@@ -57,54 +23,59 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities }) => {
   }, [activities]);
 
   const tabs = [
-    { id: "tab0", label: "KC", content: { categories, activities: [] } },
-    { id: "tab1", label: "Future", content: { categories: [], activities: categorizedActivities.future } },
-    { id: "tab2", label: "Present", content: { categories: [], activities: categorizedActivities.present } },
-    { id: "tab3", label: "Past", content: { categories: [], activities: categorizedActivities.past } },
+    { id: "tab1", label: "Past", activities: categorizedActivities.past },
+    { id: "tab2", label: "Today", activities: categorizedActivities.present },
+    { id: "tab3", label: "Future", activities: categorizedActivities.future },
   ];
-
+  
   const renderActivities = (activities: FetchedActivity[]) => (
     <ScrollArea className="h-[330px]">
       {activities.length > 0 ? (
-        activities.map((activity, index) => (
-          <div key={index} className="mb-2 p-2 bg-[#021326] rounded">
-            <p className="text-sm font-bold text-center text-white leading-normal shadow-text">{activity.activityTitle}</p>
-            <p className="text-sm font-bold text-center text-white leading-normal shadow-text">{format(new Date(activity.scheduledDate), 'MMM d, yyyy')}</p>
-          </div>
-        ))
+        activities.map((activity) => {
+          const minutesFormatted = (activity.hours * 60).toFixed(2);
+          
+          const activityContent = (
+            <>
+              <h3 className="text-sm font-bold text-white leading-normal shadow-text mb-1">{activity.activityTitle}</h3>
+              <p className="text-xs text-gray-300 mb-1">{activity.activityText}</p>
+              <div className="flex justify-between items-center text-xs text-gray-400">
+                <span>{format(new Date(activity.scheduledDate), 'MMM d, yyyy')}</span>
+                <span>{minutesFormatted} minutes</span>
+              </div>
+              <div className="mt-2 flex justify-between items-center text-xs">
+                <span className={`px-2 py-1 rounded ${
+                  activity.status === 'completed' ? 'bg-green-800' : 
+                  activity.status === 'in_progress' ? 'bg-yellow-800' : 'bg-red-800'
+                }`}>
+                  {activity.status}
+                </span>
+                <span className="text-blue-300">{activity.activityType}</span>
+              </div>
+            </>
+          );
+
+          return activity.link ? (
+            <Link
+              key={activity.id}
+              href={activity.link}
+              className="block mb-2 p-3 bg-[#021326] rounded hover:bg-[#032040] transition-colors duration-200 cursor-pointer"
+            >
+              {activityContent}
+            </Link>
+          ) : (
+            <div
+              key={activity.id}
+              className="mb-2 p-3 bg-[#021326] rounded"
+            >
+              {activityContent}
+            </div>
+          );
+        })
       ) : (
         <p className="text-center mt-4 text-white text-lg font-light leading-normal shadow-text">No activities</p>
       )}
     </ScrollArea>
   );
-
-  const renderCategories = (categories: Category[]) => (
-    <ScrollArea className="h-[330px]">
-      {categories.map((category, index) => (
-        <div
-          key={index}
-          className="flex items-center p-2 mb-2 bg-[#021326] rounded-lg hover:bg-[#072E6F] transition-colors duration-200"
-        >
-          <div className="mr-3">
-            <Icon 
-              name={category.icon} 
-              className="w-6 h-6" 
-              color={category.color}
-            />
-          </div>
-          <p className="text-white text-sm">{category.conceptCategory}</p>
-        </div>
-      ))}
-    </ScrollArea>
-  );
-
-  const renderContent = (content: TabContent) => {
-    if (content.categories.length > 0) {
-      return renderCategories(content.categories);
-    } else {
-      return renderActivities(content.activities);
-    }
-  };
 
   return (
     <div className="relative p-2 mt-4">
@@ -131,7 +102,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities }) => {
             ))}
           </div>
           <div className="mt-4 bg-[#001226] h-[367px] p-1">
-            {renderContent(tabs.find(tab => tab.id === activeTab)!.content)}
+            {renderActivities(tabs.find(tab => tab.id === activeTab)?.activities || [])}
           </div>
         </div>
       </div>
