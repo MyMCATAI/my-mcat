@@ -23,6 +23,8 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
   const contentTitle = chatbotContext?.contentTitle;
 
   useEffect(() => {
+
+    console.log("context",chatbotContext)
     setIsMounted(true);
 
     const timer = setTimeout(() => {
