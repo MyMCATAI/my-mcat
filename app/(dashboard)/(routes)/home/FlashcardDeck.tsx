@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Check, X, Undo2, Star, Trash2 } from 'lucide-react';
+import { Check, X, Undo2, Skull, Dumbbell } from 'lucide-react';
 import { useSpring, animated } from '@react-spring/web'
 import { useDrag } from '@use-gesture/react';
 
@@ -277,14 +277,14 @@ const FlashcardStack: React.FC = () => {
         <button className="p-2 bg-red-500 text-white rounded-full" onClick={() => handleButtonAction('incorrect')}>
          <X size={24} />
         </button>
-        <button className="p-2 bg-gray-500 text-white rounded-full hover:bg-blue-500 transition-colors duration-200" onClick={() => handleButtonAction('incorrect')}>
-          <Trash2 size={24} />
+        <button className="p-2 bg-gray-500 text-white rounded-full hover:bg-blue-500 transition-colors duration-200" onClick={() => handleButtonAction('strength')}>
+          <Dumbbell size={24} />
         </button>
         <button className="p-2 bg-gray-500 text-white rounded-full hover:bg-blue-500 transition-colors duration-200" onClick={() => handleButtonAction('undo')}>
           <Undo2 size={24} />
         </button>
-        <button className="p-2 bg-gray-500 text-white rounded-full hover:bg-blue-500 transition-colors duration-200" onClick={() => handleButtonAction('correct')}>
-          <Star size={24} />
+        <button className="p-2 bg-gray-500 text-white rounded-full hover:bg-blue-500 transition-colors duration-200" onClick={() => handleButtonAction('weakness')}>
+          <Skull size={24} />
         </button>
         <button className="p-2 bg-green-500 text-white rounded-full" onClick={() => handleButtonAction('correct')}>
           <Check size={24} />

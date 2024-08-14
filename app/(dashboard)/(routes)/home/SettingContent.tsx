@@ -204,16 +204,20 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
     switch (activeOption) {
       case "option1":
         return (
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <Calendar onChange={setCalendarValue} value={calendarValue} />
+          <div className="flex justify-center items-center bg-transparent p-4 rounded-lg shadow-md">
+            <Calendar 
+              onChange={setCalendarValue} 
+              value={calendarValue} 
+              className="text-black"
+            />
           </div>
         );
       case "option2":
         return (
-          <div className="bg-white p-4 rounded-lg shadow-md">
+          <div className="bg-black p-4 rounded-lg shadow-md">
             {days.map((day) => (
               <div key={day} className="flex items-center justify-between mb-2">
-                <span>{day}</span>
+                <span className="text-white">{day}</span>
                 <input
                   type="checkbox"
                   checked={fullLengthDays[day] || false}
@@ -225,15 +229,15 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
         );
       case "option3":
         return (
-          <div className="bg-white p-4 rounded-lg shadow-md">
+          <div className="bg-black p-4 rounded-lg shadow-md">
             {days.map((day) => (
               <div key={day} className="flex items-center justify-between mb-2">
-                <span>{day}</span>
+                <span className="text-white">{day}</span>
                 <input
                   type="number"
                   value={hoursPerDay[day] || ""}
                   onChange={(e) => setHoursPerDay({ ...hoursPerDay, [day]: e.target.value })}
-                  className="w-16 p-1 border rounded"
+                  className="w-16 p-1 border rounded text-black"
                 />
               </div>
             ))}
@@ -241,7 +245,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
         );
       case "option4":
         return (
-          <div className="bg-white p-4 rounded-lg shadow-md">
+          <div className="bg-black p-4 rounded-lg shadow-md">
             {resources.map((resource) => (
               <div key={resource} className="flex items-center mb-2">
                 <input
@@ -249,7 +253,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
                   checked={selectedResources[resource] || false}
                   onChange={(e) => setSelectedResources({ ...selectedResources, [resource]: e.target.checked })}
                 />
-                <span className="ml-2">{resource}</span>
+                <span className="ml-2 text-white">{resource}</span>
               </div>
             ))}
           </div>
@@ -261,16 +265,16 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
 
 
   return (
-    <div className="bg-transparent p rounded-lg border-gray-600 border shadow-lg relative">
+    <div className="bg-transparent rounded-lg border-gray-500 border shadow-lg relative">
       <div className="bg-transparent rounded-lg overflow-hidden">
         <div className="flex">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              className={`flex-1 py-2 px-4 text-sm font-medium ${
+              className={`flex-1 py-2 px-4 text-sm font-medium [box-shadow:inset_0_0_10px_rgba(0,0,246,0.9)] ${
                 activeTab === tab.id
-                  ? "bg-[#000b17] text-blue-600 border-b-2 border-blue-600 shadow-[0_-8px_15px_-1px_rgba(83,125,220,0.5)]"
-                  : "bg-[#000b17] text-white hover:text-blue-600"
+                  ? "text-blue-600 relative"
+                  : "text-white hover:text-blue-600"
               }`}
               onClick={() => setActiveTab(tab.id)}
             >
@@ -279,15 +283,17 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
           ))}
         </div>
 
-        <div className="relative z-10">
+        <div className="relative z-10 ">
           {activeTab === "tab1" && (
             <div 
-              className="bg-black p-4 space-y-4"
+              className="bg-transparent p-4 space-y-4"
               style={{
-                backgroundImage: "linear-gradient(rgba(0, 18, 38, 0.6), rgba(0, 18, 38, 0.6)), url('/circuitpattern2.png')",
+                backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 18, 38, 0.6)), url('/circuitpattern2.png')",
                 backgroundSize: 'cover',
                 backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center'
+                backgroundPosition: 'center',
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                boxShadow: 'inset 0 0 20px rgba(0, 0, 246, 0.7)'
               }}
             >
               {options.map((option) => (
@@ -295,8 +301,8 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
                   <button
                     className={`w-full text-left p-3 rounded-lg ${
                       activeOption === option.id
-                        ? "bg-blue-400 text-white font-mono"
-                        : "bg-gray-800 text-blue-200 font-mono text-sm hover:bg-blue-400"
+                        ? "bg-transparent text-sm text-blue-600 font-mono"
+                        : "bg-transparent text-blue-200 font-mono text-sm hover:text-blue-600"
                     }`}
                     onClick={() => handleOptionClick(option.id)}
                   >
@@ -318,7 +324,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
               ))}
               
               <button
-                className="w-full bg-gray-500 text-white text-blue-200 font-mono py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200"
+                className="w-full text-blue-500 font-mono py-2 px-4 rounded-lg hover:text-blue-600 transition duration-200"
                 onClick={handleSave}
                 disabled={isSaving}
               >
@@ -328,7 +334,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
           )}
           {activeTab === "tab2" && (
             <div className="bg-white p-4 space-y-4">
-              <h1 className="text-2xl font-bold">Generate New Test</h1>
+              <h1 className="text-lg text-blue-600">Generate New Test</h1>
               <div className="space-y-2">
                 <input
                   type="text"
@@ -393,7 +399,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
               </div>
               <button
                 onClick={generateNewTest}
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                className="bg-blue-500 hover:bg-blue-700 text-black font-bold py-2 px-4 rounded"
               >
                 Generate New Test
               </button>
