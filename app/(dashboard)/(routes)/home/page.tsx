@@ -324,14 +324,11 @@ const Page = () => {
        {/* Diagnostic Test Dialog */}
       <Dialog open={showDiagnosticTest} onOpenChange={setShowDiagnosticTest}>
       <DialogOverlay className="fixed inset-0 bg-black bg-opacity-80 z-50" />
-        <DialogContent className="max-w-4xl w-full max-h-[90vh] flex flex-col bg-[#001226] text-white border border-sky-500">
+        <DialogContent className="max-w-4xl w-full max-h-[95vh] flex flex-col bg-[#001226] text-white border border-sky-500">
           <DialogHeader className="border-b border-sky-500 pb-4">
-            <DialogTitle className="text-2xl font-semibold text-sky-300">Diagnostic Test</DialogTitle>
-            <DialogDescription className="text-gray-300">
-              Complete this test to help us understand your current knowledge level.
-            </DialogDescription>
+            <DialogTitle className="text-2xl font-semibold text-gray-300">Complete this test to help us understand your current knowledge level.</DialogTitle>
           </DialogHeader>
-          <div className="flex-grow overflow-auto py-4">
+          <div className="flex-grow py-3">
             {diagnosticTestId && <TestComponent testId={diagnosticTestId} onTestComplete={handleTestComplete} />}
           </div>
         </DialogContent>
