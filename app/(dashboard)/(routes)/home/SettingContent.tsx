@@ -261,16 +261,16 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
 
 
   return (
-    <div className="bg-transparent p rounded-lg shadow-lg relative">
-      <div className="bg-white rounded-t-lg overflow-hidden">
+    <div className="bg-transparent p rounded-lg border-gray-600 border shadow-lg relative">
+      <div className="bg-transparent rounded-lg overflow-hidden">
         <div className="flex">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               className={`flex-1 py-2 px-4 text-sm font-medium ${
                 activeTab === tab.id
-                  ? "bg-[#021326] text-white"
-                  : "bg-white text-black hover:bg-gray-100"
+                  ? "bg-[#000b17] text-blue-600 border-b-2 border-blue-600 shadow-[0_-8px_15px_-1px_rgba(83,125,220,0.5)]"
+                  : "bg-[#000b17] text-white hover:text-blue-600"
               }`}
               onClick={() => setActiveTab(tab.id)}
             >
@@ -278,28 +278,25 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
             </button>
           ))}
         </div>
-      </div>
-
-      <div className="bg-transparent p-4 space-y-4 relative">
-        <div 
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: 'url("/glass.png")',
-            backgroundRepeat: 'repeat',
-            opacity: 0.5,
-          }}
-        ></div>
 
         <div className="relative z-10">
           {activeTab === "tab1" && (
-            <div className="bg-white p-4 space-y-4">
+            <div 
+              className="bg-black p-4 space-y-4"
+              style={{
+                backgroundImage: "linear-gradient(rgba(0, 18, 38, 0.6), rgba(0, 18, 38, 0.6)), url('/circuitpattern2.png')",
+                backgroundSize: 'cover',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center'
+              }}
+            >
               {options.map((option) => (
                 <div key={option.id} className="relative">
                   <button
                     className={`w-full text-left p-3 rounded-lg ${
                       activeOption === option.id
-                        ? "bg-purple-500 text-white"
-                        : "bg-gray-100 text-black hover:bg-gray-200"
+                        ? "bg-blue-400 text-white font-mono"
+                        : "bg-gray-800 text-blue-200 font-mono text-sm hover:bg-blue-400"
                     }`}
                     onClick={() => handleOptionClick(option.id)}
                   >
@@ -321,7 +318,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
               ))}
               
               <button
-                className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-200"
+                className="w-full bg-gray-500 text-white text-blue-200 font-mono py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200"
                 onClick={handleSave}
                 disabled={isSaving}
               >

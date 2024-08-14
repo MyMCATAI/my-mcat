@@ -234,10 +234,9 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
                     onSkip={() => setShowInterlude(false)}
                   />
                 )}
-                <button 
+                <div 
                   onClick={handleActionClick}
-
-                  className="self-end text-blue-200 font-mono text-lg hover:text-blue-600 transition-colors animate-pulse"
+                  className="self-end text-blue-200 font-mono text-lg hover:text-blue-600 transition-colors animate-pulse cursor-pointer"
                   style={{
                     animation: 'pulse 2s cubic-bezier(0.6, 0, 0.6, 1) infinite',
                     background: 'transparent',
@@ -246,7 +245,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
                   }}
                 >
                   {activities.length === 0 ? `>> Get Started` : `>> click for calendar`}
-                </button>
+                </div>
               </div>
             </div>
           </div>
@@ -278,12 +277,12 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
         </Dialog>
 
         {showSettings && (
-           <div className="absolute top-8 right-2 w-200 bg-blue-200 text-black p-1 rounded-lg shadow-lg z-[9999999]">
-          <SettingContent 
-            onShowDiagnosticTest={onShowDiagnosticTest} 
-            onStudyPlanSaved={handleStudyPlanSaved}
-          />
-        </div>
+          <div className="absolute right-8 w-50 rounded-lg shadow-lg z-[9999999] bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 text-black opacity-98">
+            <SettingContent 
+              onShowDiagnosticTest={onShowDiagnosticTest} 
+              onStudyPlanSaved={handleStudyPlanSaved}
+            />
+          </div>
         )}
 
         {showNewActivityForm && (
