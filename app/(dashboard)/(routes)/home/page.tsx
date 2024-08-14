@@ -137,6 +137,7 @@ const Page = () => {
         throw new Error("Failed to fetch activities");
       }
       const activities = await response.json();
+      console.error("activities:", activities);
       setActivities(activities);
     } catch (error) {
       console.error("Error fetching activities:", error);
