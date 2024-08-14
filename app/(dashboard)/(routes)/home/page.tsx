@@ -27,6 +27,10 @@ import TestComponent from "@/components/test-component";
 import { DialogOverlay } from "@radix-ui/react-dialog";
 
 
+interface HandleShowDiagnosticTestParams {
+  reset?: boolean;
+}
+
 const Page = () => {
   const [activeTab, setActiveTab] = useState("Schedule");
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
@@ -167,18 +171,36 @@ const Page = () => {
     }
   };
 
-  const handleShowDiagnosticTest = async () => {
+  const handleShowDiagnosticTest = async ({ reset = true }: HandleShowDiagnosticTestParams = {}) => {
     try {
+      if (reset) {
+        // Call the delete API to reset everything - BE CAREFUL about this
+        const resetResponse = await fetch('/api/knowledge-profile/reset', {
+          method: 'DELETE',
+        });
+        
+        if (!resetResponse.ok) {
+          throw new Error('Failed to reset user data');
+        }
+        
+        console.log('User data reset successfully');
+      }
+
+      // Fetch the diagnostic test
       const response = await fetch('/api/test?diagnostic=true');
       if (response.ok) {
         const { testId } = await response.json();
         setDiagnosticTestId(testId);
         setShowDiagnosticTest(true);
+      } else {
+        throw new Error('Failed to fetch diagnostic test');
       }
     } catch (error) {
-      console.error('Error fetching diagnostic test:', error);
+      console.error('Error in handleShowDiagnosticTest:', error);
+      // Handle the error appropriately (e.g., show an error message to the user)
     }
   };
+
   const renderContent = () => {
     if (isUpdatingProfile || isGeneratingActivities) {
       return (
