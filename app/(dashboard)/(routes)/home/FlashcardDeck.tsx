@@ -51,6 +51,42 @@ const FlashcardStack: React.FC = () => {
     fetchFlashcards(1);
   }, []);
 
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    return now.toISOString().replace(/[:.]/g, '-').slice(0, -5); // Format: YYYY-MM-DDTHH-mm
+  };
+
+  const handleUserResponse = async (action: 'correct' | 'incorrect' | 'weakness' | 'strength') => {
+    const currentCard = flashcards[currentCardIndex];
+    if (!currentCard) return;
+
+    const isCorrect = action === 'correct' || action === 'strength';
+    const weight = action === 'weakness' || action === 'strength' ? 2 : 0.5;
+
+    try {
+      console.log("handle")
+      const response = await fetch('/api/user-test/response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          questionId: currentCard.id,
+          userAnswer: isCorrect ? currentCard.answer : 'Incorrect', // Simplification
+          isCorrect,
+          userNotes: `Action: ${action}, Weight: ${weight}`,
+          weighting: weight,
+          userTestId: `Flashcard-${getCurrentDateTime()}`,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save user response');
+      }
+
+    } catch (error) {
+      console.error('Error saving flashcard response:', error);
+    }
+  };
+
   const fetchFlashcards = async (page: number) => {
     setIsLoading(true);
     try {
@@ -111,13 +147,13 @@ const FlashcardStack: React.FC = () => {
       config: { duration: 300 },
       onRest: () => {
         setCurrentCardIndex(prevIndex => {
-          const newIndex = (prevIndex + 1) % flashcards.length;
+          const newIndex = (prevIndex + 1);
           if (newIndex === flashcards.length - 1) {
             loadMoreCards();
           }
           return newIndex;
         });
-        setNextCardIndex(prevIndex => (prevIndex + 1) % flashcards.length);
+        setNextCardIndex(prevIndex => (prevIndex + 1));
         setIsRevealed(false);
         setIsAnimatingOut(false);
         api.start({ x: 0, y: 0, rotation: 0, cardOpacity: 1, immediate: true });
@@ -129,11 +165,13 @@ const FlashcardStack: React.FC = () => {
       case 'up':
         playSound(false);
         console.log('Incorrect');
+        handleUserResponse(direction === 'up' ? 'weakness' : 'incorrect');
         break;
       case 'right':
       case 'down':
         playSound(true);
         console.log('Correct');
+        handleUserResponse(direction === 'down' ? 'strength' : 'correct');
         break;
     }
   };
@@ -305,17 +343,10 @@ const FlashcardStack: React.FC = () => {
                 <p className="text-2xl text-white mb-2">
                   {isRevealed ? flashcards[currentCardIndex]?.answer : flashcards[currentCardIndex]?.problem}
                 </p>
+
+                {/* can remove this, for debugging purposes only rn */}
                 <p className="text-sm text-gray-400">
                   Category: {flashcards[currentCardIndex]?.category}
-                </p>
-                <p className="text-sm text-gray-400">
-                  Concept Mastery: {flashcards[currentCardIndex]?.conceptMastery !== null ? `${flashcards[currentCardIndex]?.conceptMastery?.toFixed(2)}%` : 'N/A'}
-                </p>
-                <p className="text-sm text-gray-400">
-                  Content Mastery: {flashcards[currentCardIndex]?.contentMastery !== null ? `${flashcards[currentCardIndex]?.contentMastery?.toFixed(2)}%` : 'N/A'}
-                </p>
-                <p className="text-sm text-gray-400">
-                  Correct: {flashcards[currentCardIndex]?.correctAnswers} / {flashcards[currentCardIndex]?.totalAttempts}
                 </p>
               </div>
         </animated.div>
