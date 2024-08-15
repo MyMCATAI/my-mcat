@@ -11,40 +11,40 @@ datasource db {
 model UserInfo {
   id        String   @id @default(cuid())
   userId    String   @unique
-  bio       String
-  updatedAt DateTime @updatedAt
   apiCount  Int      @default(0)
+  bio       String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model UserSubscription {
   id                     String    @id @default(cuid())
   userId                 String    @unique
-  stripeCustomerId       String?   @unique @map("stripe_customer_id")
-  stripeSubscriptionId   String?   @unique @map("stripe_subscription_id")
-  stripePriceId          String?   @map("stripe_price_id")
-  stripeCurrentPeriodEnd DateTime? @map("stripe_current_period_end")
+  stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")
+  stripeSubscriptionId   String?   @unique @map(name: "stripe_subscription_id")
+  stripePriceId          String?   @map(name: "stripe_price_id")
+  stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
 }
 
 model Passage {
   id        String     @id @default(cuid())
+  title     String?     @db.Text
   text      String     @db.Text
   citation  String     @db.Text
-  title     String?    @db.Text
   questions Question[]
 }
 
 model Question {
   id                  String         @id @default(cuid())
-  questionContent     String         @db.Text
-  questionOptions     String         @db.Text
-  questionAnswerNotes String?        @db.Text
-  passageId           String?
-  categoryId          String
-  contentCategory     String
   questionID          String
+  questionContent     String         @db.Text
+  questionOptions     String         @db.Text // string is really an array, first option is correct
+  questionAnswerNotes String?        @db.Text
+  contentCategory     String
+  passageId           String?
   passage             Passage?       @relation(fields: [passageId], references: [id])
   category            Category       @relation(fields: [categoryId], references: [id])
+  categoryId          String
   testQuestions       TestQuestion[]
   userResponses       UserResponse[]
 
@@ -54,11 +54,11 @@ model Question {
 
 model Category {
   id                 String             @id @default(cuid())
+  section            String
   subjectCategory    String
   contentCategory    String
   conceptCategory    String
   generalWeight      Float
-  section            String
   color              String             @default("")
   icon               String             @default("")
   questions          Question[]
@@ -72,9 +72,9 @@ model Test {
   id          String         @id @default(cuid())
   title       String
   description String?        @db.Text
+  setName     String?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
-  setName     String?
   questions   TestQuestion[]
   userTests   UserTest[]
 }
@@ -107,21 +107,18 @@ model UserTest {
 
 model UserResponse {
   id         String    @id @default(cuid())
-  userId String?
   userTestId String?
   questionId String
   userAnswer String
   isCorrect  Boolean
   categoryId String?
   timeSpent  Float?
-  weighting  Float @default(1)
   userNotes  String?   @db.Text
   answeredAt DateTime  @default(now())
   userTest   UserTest? @relation(fields: [userTestId], references: [id])
   question   Question  @relation(fields: [questionId], references: [id])
   Category   Category? @relation(fields: [categoryId], references: [id])
 
-  @@index([userId])
   @@index([userTestId])
   @@index([questionId])
   @@index([categoryId])
@@ -146,6 +143,7 @@ model CalendarActivity {
   userId        String
   studyPlanId   String
   categoryId    String?
+  contentId     String?
   activityText  String    @db.Text
   activityTitle String
   hours         Float
@@ -155,7 +153,6 @@ model CalendarActivity {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   status        String    @default("Not Started")
-  contentId     String?
   studyPlan     StudyPlan @relation(fields: [studyPlanId], references: [id])
   category      Category? @relation(fields: [categoryId], references: [id])
   content       Content?  @relation(fields: [contentId], references: [id])
@@ -191,8 +188,8 @@ model KnowledgeProfile {
   correctAnswers Int      @default(0)
   totalAttempts  Int      @default(0)
   lastAttemptAt  DateTime @default(now())
-  conceptMastery Float?
-  contentMastery Float?
+  conceptMastery  Float?
+  contentMastery  Float?
   category       Category @relation(fields: [categoryId], references: [id])
 
   @@unique([userId, categoryId])

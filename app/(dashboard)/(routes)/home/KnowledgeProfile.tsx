@@ -5,51 +5,17 @@ import { format, isBefore, isAfter, startOfDay } from 'date-fns';
 import { FetchedActivity } from '@/types';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from 'next/link';
-import Icon from "@/components/ui/icon";
 
 interface KnowledgeProfileProps {
   activities: FetchedActivity[];
 }
 
-interface Category {
-  conceptCategory: string;
-  icon: string;
-  color: string;
-}
-
-type TabContent = {
-  categories: Category[];
-  activities: FetchedActivity[];
-};
-
 const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initialActivities }) => {
   const [activeTab, setActiveTab] = useState("tab2");
   const [activities, setActivities] = useState(initialActivities);
-  const [categories, setCategories] = useState<Category[]>([]);
 
   const statusOrder = ["Not Started", "In Progress", "Complete"];
   
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const url = new URL("/api/category", window.location.origin);
-      url.searchParams.append("page", "1");
-      url.searchParams.append("pageSize", "7");
-      url.searchParams.append("useKnowledgeProfiles", "true");
-
-      const response = await fetch(url.toString());
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      setCategories(data.items);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
 
   useEffect(() => {
     setActivities(initialActivities)
@@ -111,10 +77,9 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   }, [activities]);
 
   const tabs = [
-    { id: "tab1", label: "Future", content: { categories: [], activities: categorizedActivities.future } },
-    { id: "tab2", label: "Present", content: { categories: [], activities: categorizedActivities.present } },
-    { id: "tab3", label: "Past", content: { categories: [], activities: categorizedActivities.past } },
-    { id: "tab4", label: "KC", content: { categories, activities: [] } },
+    { id: "tab1", label: "Past", activities: categorizedActivities.past },
+    { id: "tab2", label: "Today", activities: categorizedActivities.present },
+    { id: "tab3", label: "Future", activities: categorizedActivities.future },
   ];
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -167,33 +132,6 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
     </ScrollArea>
   );
 
-  const renderCategories = (categories: Category[]) => (
-    <ScrollArea className="h-[330px]">
-      {categories.map((category, index) => (
-        <div
-          key={index}
-          className="flex items-center p-2 mb-2 bg-[#021326] rounded-lg hover:bg-[#072E6F] transition-colors duration-200"
-        >
-          <div className="mr-3">
-            <Icon 
-              name={category.icon} 
-              className="w-6 h-6" 
-              color={category.color}
-            />
-          </div>
-          <p className="text-white text-sm">{category.conceptCategory}</p>
-        </div>
-      ))}
-    </ScrollArea>
-  );
-
-  const renderContent = (content: TabContent) => {
-    if (content.categories.length > 0) {
-      return renderCategories(content.categories);
-    } else {
-      return renderActivities(content.activities);
-    }
-  };
   return (
     <div className="relative p-2 mt-4">
       <div className="relative z-10 text-white p-2 rounded-lg">
@@ -219,7 +157,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
             ))}
           </div>
           <div className="mt-4 bg-[#001226] h-[367px] p-1">
-          {renderContent(tabs.find(tab => tab.id === activeTab)!.content)}
+            {renderActivities(tabs.find(tab => tab.id === activeTab)?.activities || [])}
           </div>
         </div>
       </div>

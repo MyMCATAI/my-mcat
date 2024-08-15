@@ -105,15 +105,3 @@ export interface FetchedActivity {
   status: string;
   scheduledDate: string;
 }
-
-export interface Flashcard {
-  id: string;
-  problem: string;
-  answer: string;
-  category: string;
-  conceptMastery: number | null;
-  contentMastery: number | null;
-  correctAnswers: number;
-  totalAttempts: number;
-  lastAttemptAt: string | null;
-}

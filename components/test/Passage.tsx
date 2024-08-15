@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFromRaw, SelectionState, DraftHandleValue, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js';
 import 'draft-js/dist/Draft.css';
-import { Button } from "../ui/button";
 
 export interface PassageData {
   id: string;
@@ -11,13 +10,11 @@ export interface PassageData {
 
 interface PassageProps {
   passageData: PassageData;
-  allowHighlight: boolean;
+  highlightActive: boolean;
+  strikethroughActive: boolean;
 }
 
-const Passage: React.FC<PassageProps> = ({ passageData, allowHighlight }) => {
-  const [highlightActive, setHighlightActive] =useState(false)
-  const [strikethroughActive, setStrikethroughActive] =useState(false)
-
+const Passage: React.FC<PassageProps> = ({ passageData, highlightActive, strikethroughActive }) => {
   const [editorState, setEditorState] = useState(() => {
     const savedContent = localStorage.getItem(`passage-${passageData.id}`);
     if (savedContent) {
@@ -42,16 +39,6 @@ const Passage: React.FC<PassageProps> = ({ passageData, allowHighlight }) => {
       }
     }
   }, [highlightActive, strikethroughActive, editorState]);
-
-  const handleHighlight = () => {
-    setHighlightActive(!highlightActive);
-    setStrikethroughActive(false);
-  };
-
-  const handleStrikethrough = () => {
-    setStrikethroughActive(!strikethroughActive);
-    setHighlightActive(false);
-  };
 
   const styleMap = {
     'HIGHLIGHT': {
@@ -86,30 +73,6 @@ const Passage: React.FC<PassageProps> = ({ passageData, allowHighlight }) => {
 
   return (
     <div className="bg-[#ffffff] from-blue-900 h-[80vh] p-4 overflow-auto">
-       {allowHighlight && (
-        <div className="mt-4 space-x-2">
-         <div className="mt-4 space-x-2">
-          <Button
-            className={`text-black ${
-              highlightActive ? 'bg-[#80BFFF] hover:bg-[#E6F3FF]/90' : 'hover:text-black'
-            }`}
-            onClick={handleHighlight}
-            variant={highlightActive ? "default" : "outline"}
-          >
-            Highlight
-          </Button>
-          <Button
-            className={`text-black ${
-              strikethroughActive ? 'bg-[#80BFFF] hover:bg-[#E6F3FF]/90' : 'hover:text-black'
-            }`}
-            onClick={handleStrikethrough}
-            variant={strikethroughActive ? "default" : "outline"}
-          >
-            Strikethrough
-          </Button>
-        </div>
-        </div>
-      )}
       <div className="px-4">
         <h1 className="text-black font-['Calibri'] text-2xl font-bold mt-5">
           Passage {passageData.id}

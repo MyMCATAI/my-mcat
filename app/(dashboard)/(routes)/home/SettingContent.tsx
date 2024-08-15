@@ -73,7 +73,6 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
     fetchExistingStudyPlan();
   }, []);
 
-  // use later for admin things
   const generateNewTest = async () => {
     try {
       const testData: {
@@ -264,24 +263,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
     }
   };
 
-  const handleUpdateKnowledgeProfile = async () => {
-    //todo, make this look nicer
-    try {
-      const response = await fetch("/api/knowledge-profile/update", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
 
-      if (!response.ok) {
-        throw new Error("Failed to update knowledge profile");
-      }
-      console.log(response)
-    } catch (error) {
-      console.error("Error updating knowledge profile:", error);
-    } 
-  };
   return (
     <div className="bg-transparent rounded-lg border-gray-500 border shadow-lg relative">
       <div className="bg-transparent rounded-lg overflow-hidden">
@@ -352,14 +334,74 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
           )}
           {activeTab === "tab2" && (
             <div className="bg-white p-4 space-y-4">
-              <h1 className="text-lg text-blue-600">Regenerate Study Plan</h1>
-              
-                
+              <h1 className="text-lg text-blue-600">Generate New Test</h1>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Test Title (required)"
+                  className="w-full p-2 border rounded"
+                  required
+                />
+                <input
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Test Description (required)"
+                  className="w-full p-2 border rounded"
+                  required
+                />
+                <input
+                  type="text"
+                  value={setName}
+                  onChange={(e) => setSetName(e.target.value)}
+                  placeholder="Test Set Name (required)"
+                  className="w-full p-2 border rounded"
+                  required
+                />
+                <input
+                  type="text"
+                  value={section}
+                  onChange={(e) => setSection(e.target.value)}
+                  placeholder="Section (optional)"
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="text"
+                  value={subjectCategory}
+                  onChange={(e) => setSubjectCategory(e.target.value)}
+                  placeholder="Subject Category (optional)"
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="text"
+                  value={contentCategory}
+                  onChange={(e) => setContentCategory(e.target.value)}
+                  placeholder="Content Category (optional)"
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="text"
+                  value={conceptCategory}
+                  onChange={(e) => setConceptCategory(e.target.value)}
+                  placeholder="Concept Category (optional)"
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="number"
+                  value={numberOfQuestions}
+                  onChange={(e) => setNumberOfQuestions(e.target.value)}
+                  placeholder="Number of Questions (optional)"
+                  className="w-full p-2 border rounded"
+                  min="1"
+                />
+              </div>
               <button
-                onClick={handleUpdateKnowledgeProfile}
+                onClick={generateNewTest}
                 className="bg-blue-500 hover:bg-blue-700 text-black font-bold py-2 px-4 rounded"
               >
-                Regenerate
+                Generate New Test
               </button>
             </div>
           )}

@@ -12,9 +12,9 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes,weighting } = body;
-    console.log()
-    if ( !questionId || !userAnswer) {
+    const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes } = body;
+
+    if (!userTestId || !questionId || !userAnswer) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -29,13 +29,11 @@ export async function POST(req: Request) {
     }
 
     const responseData = {
-      userId,
       userTestId,
       questionId,
       categoryId: question.categoryId,
       userAnswer,
       isCorrect,
-      weighting,
       timeSpent: timeSpent || undefined,
       userNotes: userNotes || undefined,
       answeredAt: new Date(),

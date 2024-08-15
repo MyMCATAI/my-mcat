@@ -12,8 +12,6 @@ import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
 import TestPage from "../test/page";
 import TestingSuit from "./TestingSuit";
 import { toast } from "@/components/ui/use-toast";
-import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
-
 const FlashcardDeck = dynamic(() => import('./FlashcardDeck'), { ssr: false });
 
 import {
@@ -36,6 +34,7 @@ interface HandleShowDiagnosticTestParams {
 const Page = () => {
   const [activeTab, setActiveTab] = useState("Schedule");
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
+  const [showChatbot, setShowChatbot] = useState(false);
   const [chatbotContext, setChatbotContext] = useState({
     contentTitle: "",
     context: ""
@@ -51,17 +50,14 @@ const Page = () => {
   const [kalypsoState, setKalypsoState] = useState<'wait' | 'talk' | 'end' | 'start'>('wait');
   const kalypsoRef = useRef<HTMLImageElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [test, setTest] = useState<Test | null>(null);
-  const [loading, setLoading] = useState(true);
+
   const [showDiagnosticTest, setShowDiagnosticTest] = useState(false);
   const [diagnosticTestId, setDiagnosticTestId] = useState<string | null>(null);
-  
+
   useEffect(() => {
     fetchActivities();
     fetchTests();
   }, []);
-
-  
 
   const handleTestComplete = async (score: number) => {
     setTestScore(score);
@@ -104,7 +100,6 @@ const Page = () => {
       setIsUpdatingProfile(false);
     }
   };
-
   const generateAndFetchActivities = async () => {
     setIsGeneratingActivities(true);
     try {
@@ -258,7 +253,23 @@ const Page = () => {
   };
 
   const toggleChatBot = () => {
-   console.log("todo, set this up to widget")
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    if (!showChatbot) {
+      switchKalypsoState('talk');
+      timeoutRef.current = setTimeout(() => {
+        switchKalypsoState('end');
+        setShowChatbot(true);
+      }, 2000); // Adjust this delay to match your talk animation duration
+    } else {
+      setShowChatbot(false);
+      switchKalypsoState('start');
+      timeoutRef.current = setTimeout(() => {
+        switchKalypsoState('wait');
+      }, 5000); // Adjust this delay to match your start animation duration
+    }
   };
 
   useEffect(() => {
@@ -301,8 +312,37 @@ const Page = () => {
           </div>
         </div>
       </div>
-     {/* Chatbot */}
-     <ChatbotWidget chatbotContext={chatbotContext} />
+      {/* Chatbot */}
+      <div className="fixed inset-0 pointer-events-none z-50">
+        <div className="absolute bottom-6 right-8 flex flex-col items-end pointer-events-auto">
+          {showChatbot && (
+            <div
+              className="bg-black rounded-lg shadow-lg overflow-hidden mb-4"
+              style={{ width: "375px", height: "490px" ,
+                boxShadow: '0 0 20px 8px rgba(0, 123, 255, 0.5)',}}
+            >
+            <ChatBot 
+              chatbotContext={{
+                contentTitle: chatbotContext?.contentTitle || "",
+                context: chatbotContext?.context || ""
+              }} 
+            />
+            </div>
+          )}
+          <button
+            className="w-60 h-60 rounded-full overflow-hidden shadow-lg transition duration-120 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
+            onClick={toggleChatBot}
+            aria-label={showChatbot ? "Close Chat" : "Open Chat"}
+          >
+            <img
+              ref={kalypsoRef}
+              src="/kalypsowait.gif"
+              alt="Chat with Kalypso"
+              className="w-full h-full object-cover"
+            />
+          </button>
+        </div>
+      </div>
        {/* Diagnostic Test Dialog */}
       <Dialog open={showDiagnosticTest} onOpenChange={setShowDiagnosticTest}>
       <DialogOverlay className="fixed inset-0 bg-black bg-opacity-80 z-50" />
