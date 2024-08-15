@@ -1,22 +1,55 @@
 // app/user-test/[id]/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import UserTestDetails from '@/components/user-test/UserTestDetails';
-import { UserTest } from '@/types';
+import { UserTest, UserResponse, Passage, Question } from '@/types';
+import PassageComponent from "@/components/test/Passage";
+import ReviewQuestionComponent from "./ReviewQuestion";
+import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
 
-export default function UserTestDetailsPage() {
+export default function UserTestReviewPage() {
   const [userTest, setUserTest] = useState<UserTest | null>(null);
+  const [currentResponseIndex, setCurrentResponseIndex] = useState(0);
+  const [currentPassage, setCurrentPassage] = useState<Passage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const passageCacheRef = useRef<Record<string, Passage>>({});
   const params = useParams();
   const { id } = params;
+
+  const [chatbotContext, setChatbotContext] = useState({
+    contentTitle: "",
+    context: ""
+  });
 
   useEffect(() => {
     if (id) fetchUserTest(id as string);
   }, [id]);
+
+  useEffect(() => {
+    if (userTest && userTest.responses.length > 0) {
+      const currentResponse = userTest.responses[currentResponseIndex];
+      if (currentResponse?.question?.passageId) {
+        updateCurrentPassage(currentResponse.question.passageId);
+      } else {
+        setCurrentPassage(null);
+      }
+      const correctAnswer = JSON.parse(currentResponse.question?.questionOptions || "[]")[0];
+      const answernotes = currentResponse.question?.questionAnswerNotes
+      const contextText = 
+      (currentPassage?.text ? `Here's a passage that I'm looking at right now, use it as context for your answers: ${currentPassage.text}\n` : '') +
+      (currentResponse?.question?.questionContent ? `Here's the question I'm currently looking at: ${currentResponse.question.questionContent}\n` : '') +
+      (correctAnswer ? `The correct answer is: ${correctAnswer}\n` : '') +
+      (answernotes ? `Here are some notes on why: ${answernotes}` : '');
+      // Update chatbot context
+      setChatbotContext({
+        contentTitle: userTest.test.title,
+        context: contextText
+      });
+    }
+  }, [userTest, currentResponseIndex, currentPassage]);
 
   const fetchUserTest = async (testId: string) => {
     try {
@@ -32,40 +65,101 @@ export default function UserTestDetailsPage() {
     }
   };
 
+  const updateCurrentPassage = async (passageId: string) => {
+    if (passageCacheRef.current[passageId]) {
+      setCurrentPassage(passageCacheRef.current[passageId]);
+    } else {
+      try {
+        const response = await fetch(`/api/passage?id=${passageId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch passage');
+        }
+        const passageData: Passage = await response.json();
+        passageCacheRef.current[passageId] = passageData;
+        setCurrentPassage(passageData);
+      } catch (err) {
+        console.error('Error fetching passage:', err);
+        setCurrentPassage(null);
+      }
+    }
+  };
+
+  const handleNextQuestion = () => {
+    if (userTest && currentResponseIndex < userTest.responses.length - 1) {
+      setCurrentResponseIndex(currentResponseIndex + 1);
+    }
+  };
+
+  const handlePreviousQuestion = () => {
+    if (currentResponseIndex > 0) {
+      setCurrentResponseIndex(currentResponseIndex - 1);
+    }
+  };
+
+  if (loading) return <div className="text-white">Loading...</div>;
+  if (error) return <div className="text-white">Error: {error}</div>;
+  if (!userTest) return <div className="text-white">No test found</div>;
+
+  const currentResponse = userTest.responses[currentResponseIndex];
+
   return (
-    <div className="bg-[#001326] min-h-screen text-white">
-      <div className="max-w-4xl mx-auto p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Test Details</h1>
-          <Link href="/review" className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300">
-            Back to Review
-          </Link>
-        </div>
-        
-        {loading && (
-          <div className="bg-[#0A2744] p-4 rounded-lg">
-            Loading...
-          </div>
-        )}
-        
-        {error && (
-          <div className="bg-red-900 text-red-100 p-4 rounded-lg">
-            Error: {error}
-          </div>
-        )}
-        
-        {!loading && !error && !userTest && (
-          <div className="bg-yellow-900 text-yellow-100 p-4 rounded-lg">
-            Test not found
-          </div>
-        )}
-        
-        {!loading && !error && userTest && (
-          <div className="bg-[#0A2744] p-6 rounded-lg">
-            <UserTestDetails userTest={userTest} />
+    <div className="relative bg-white h-screen flex flex-col text-white">
+      <div className="bg-[#006dab] p-3 flex justify-between items-center border-b-3 border-sky-500">
+        <h1 className="text-lg font-semibold">{userTest.test.title} - Review</h1>
+        <Link href="/review" className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded transition duration-300">
+          Back to Review
+        </Link>
+      </div>
+      <div className="bg-[#a1a1aa] p-4">
+        <p>Score: {userTest.score !== null ? `${userTest.score?.toFixed(2)}%` : 'Not scored'}</p>
+        <p>Completed: {userTest.finishedAt ? new Date(userTest.finishedAt).toLocaleString() : 'Not finished'}</p>
+      </div>
+      <div className="flex flex-grow overflow-hidden">
+        {currentPassage ? (
+          <>
+            <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto">
+              <div className="p-4">
+                <PassageComponent 
+                  passageData={currentPassage} 
+                  allowHighlight={false}
+                />
+              </div>
+            </div>
+            <div className="w-1/2 flex flex-col">
+              <div className="flex-grow overflow-auto">
+                <ReviewQuestionComponent
+                  question={currentResponse.question}
+                  userResponse={currentResponse}
+                  onNext={handleNextQuestion}
+                  onPrevious={handlePreviousQuestion}
+                  isFirst={currentResponseIndex === 0}
+                  isLast={currentResponseIndex === userTest.responses.length - 1}
+                  currentQuestionIndex={currentResponseIndex}
+                  totalQuestions={userTest.responses.length}
+                />
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="w-full flex flex-col">
+            <div className="flex-grow overflow-auto">
+              <ReviewQuestionComponent
+                question={currentResponse.question}
+                userResponse={currentResponse}
+                onNext={handleNextQuestion}
+                onPrevious={handlePreviousQuestion}
+                isFirst={currentResponseIndex === 0}
+                isLast={currentResponseIndex === userTest.responses.length - 1}
+                currentQuestionIndex={currentResponseIndex}
+                totalQuestions={userTest.responses.length}
+              />
+            </div>
           </div>
         )}
       </div>
+      
+      {/* Chatbot */}
+      <ChatbotWidget chatbotContext={chatbotContext} />
     </div>
   );
 }

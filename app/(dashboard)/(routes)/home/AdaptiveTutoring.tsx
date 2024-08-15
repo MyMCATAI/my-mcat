@@ -396,7 +396,7 @@
                 <p className="text-m px-10">
                   {selectedCard !== null
                     ? categories[selectedCard].conceptCategory
-                    : "Enzymes"}
+                    : ""}
                 </p>
                 <button
                   onClick={handleQuizTabClick}
