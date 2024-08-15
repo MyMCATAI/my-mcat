@@ -20,12 +20,12 @@ export const Navbar = ({ isPro = false }: { isPro: boolean }) => {
   return (
     <>
       <nav className="flex items-center justify-between bg-transparent shadow-sm h-24 ps-4">
-        <div className="flex items-center space-x-4">
-          <Image src="/logo.png" alt="Kalypso Education" width={48} height={48} />
-          <div className="flex flex-col">
-            <span className="text-xl text-white pl-3">myMCAT.ai</span>
-          </div>
+        <Link href="/home" className="flex items-center space-x-4">
+        <Image src="/logo.png" alt="Kalypso Education" width={48} height={48} />
+        <div className="flex flex-col">
+          <span className="text-xl text-white pl-3">myMCAT.ai</span>
         </div>
+      </Link>
         <div className="flex items-end h-full">
           <div className="flex h-full items-center ml-4 space-x-4 transform -translate-y-2">
             <UserButton afterSignOutUrl="/" />
