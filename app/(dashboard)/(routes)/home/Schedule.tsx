@@ -78,7 +78,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
         clearInterval(typingTimer);
         setIsTypingComplete(true);
       }
-    }, 18);
+    }, 15);
 
     return () => {
       clearInterval(typingTimer);
@@ -212,6 +212,16 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
       </TooltipProvider>
         </div>
 
+        {/* Settings positioned in top right */}
+        {showSettings && (
+          <div className="absolute top-8 right-4 w-80 bg-transparent rounded-lg shadow-lg z-50">
+            <SettingContent 
+              onShowDiagnosticTest={onShowDiagnosticTest} 
+              onStudyPlanSaved={handleStudyPlanSaved}
+            />
+          </div>
+        )}
+
        {/* Interlude or Calendar */}
        <div className="flex-grow flex flex-col h-[550px]">
         {showInterlude && (
@@ -299,15 +309,6 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        {showSettings && (
-          <div className="absolute right-20 left-20 bottom-20 top-1/4 w-50 bg-transparent">
-            <SettingContent 
-              onShowDiagnosticTest={onShowDiagnosticTest} 
-              onStudyPlanSaved={handleStudyPlanSaved}
-            />
-          </div>
-        )}
 
         {showNewActivityForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

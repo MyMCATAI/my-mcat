@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Question } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 
 interface QuestionsProps {
   question: Question;
@@ -43,64 +41,54 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
   };
 
   return (
-    <div className="h-screen flex items-center justify-center p-6 bg-red">
-      <Card className="w-full max-w-3xl shadow-lg max-h-[70vh] flex flex-col">
-        <CardHeader className="bg-blue-400 text-white rounded-t-lg flex-shrink-0">
-          <CardTitle className="text-xl font-bold">
-            Question {currentQuestionIndex + 1} of {totalQuestions}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="overflow-y-auto flex-grow">
-          <div className="pt-6">
-            <p className="text-xl mb-6 text-gray-800 font-medium">{question.questionContent}</p>
-            <RadioGroup
-              onValueChange={handleAnswerChange}
-              value={userAnswer}
-              className="space-y-4"
-            >
-              {randomizedOptions.map((option: string, idx: number) => (
-                <div key={idx} className="relative">
-                  <RadioGroupItem
-                    value={option}
-                    id={`option-${idx}`}
-                    className="absolute opacity-0 w-full h-full cursor-pointer"
-                  />
-                  <Label
-                    htmlFor={`option-${idx}`}
-                    className={`block p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
-                      ${userAnswer === option 
-                        ? 'bg-blue-100 border-blue-500 text-blue-700' 
-                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
-                  >
-                    {option}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4 flex-shrink-0">
-          <div className="flex justify-between w-full">
-            <Button
-              onClick={onPrevious}
-              disabled={isFirst}
-              variant="outline"
-              className="bg-white hover:bg-blue-50 text-blue-600"
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" /> Previous
-            </Button>
-            <Button
-              onClick={onNext}
-              disabled={isLast}
-              variant="outline"
-              className="bg-white hover:bg-blue-50 text-blue-600"
-            >
-              Next <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-          <Progress value={(currentQuestionIndex + 1) / totalQuestions * 100} className="w-full" />
-        </CardFooter>
-      </Card>
+    <div className="flex flex-col items-center px-6 font-serif text-black">
+      <div className="w-full max-w-3xl flex flex-col">
+        <h2 className="text-lg mt-2 font-bold mb-4 pt-6">
+          Question {currentQuestionIndex + 1} of {totalQuestions}
+        </h2>
+        <div className="max-h-[70vh] overflow-y-auto mb-4">
+          <p className="text-lg mb-6">{question.questionContent}</p>
+          <RadioGroup
+            onValueChange={handleAnswerChange}
+            value={userAnswer}
+            className="space-y-4"
+          >
+            {randomizedOptions.map((option: string, idx: number) => (
+              <div key={idx} className="flex items-center">
+                <RadioGroupItem
+                  value={option}
+                  id={`option-${idx}`}
+                  className="mr-3"
+                />
+                <Label
+                  htmlFor={`option-${idx}`}
+                  className="text-lg cursor-pointer flex-grow"
+                >
+                  <strong>{String.fromCharCode(65 + idx)}.</strong> {option}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+        <div className="flex justify-between w-full mt-4">
+          <Button
+            onClick={onPrevious}
+            disabled={isFirst}
+            variant="outline"
+            className="bg-white hover:bg-blue-50 text-blue-600"
+          >
+            <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+          </Button>
+          <Button
+            onClick={onNext}
+            disabled={isLast}
+            variant="outline"
+            className="bg-white hover:bg-blue-50 text-blue-600"
+          >
+            Next <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

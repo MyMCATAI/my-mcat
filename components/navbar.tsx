@@ -27,15 +27,16 @@ export const Navbar = ({ isPro = false }: { isPro: boolean }) => {
           </div>
         </div>
         <div className="flex items-end h-full">
-          <div className="flex h-full items-center ml-4 space-x-4 transform -translate-y-3">
+          <div className="flex h-full items-center ml-4 space-x-4 transform -translate-y-2">
             <UserButton afterSignOutUrl="/" />
           </div>
           <span
             ref={ballerSectionRef}
-            className="flex items-start h-full ml-5 pl-2 bg-[#021226]"
+            className="flex items-start h-full ml-4 pl-2 bg-[#021226]"
             style={{
               clipPath:
                 "polygon(100% 0%, 100% 51%, 100% 73%, 18% 72%, 11% 48%, 0 0)",
+              transform: "translateY(3px)", // Add this line to move the polygon down by 3px
             }}
           >
             <p className="text-white ms-12 mt-4 pr-1 text-sm">
