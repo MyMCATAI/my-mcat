@@ -121,7 +121,7 @@ export default function UserTestReviewPage() {
               <div className="p-4">
                 <PassageComponent 
                   passageData={currentPassage} 
-                  allowHighlight={false}
+                  allowHighlight={true}
                 />
               </div>
             </div>
