@@ -308,7 +308,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
               <div className="p-4">
               <PassageComponent 
                   passageData={currentPassage} 
-                  allowHighlight={false}
+                  allowHighlight={true}
                 />
               </div>
             </div>
