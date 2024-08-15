@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Check, X, Undo2, Skull, Dumbbell } from 'lucide-react';
 import { useSpring, animated } from '@react-spring/web'
 import { useDrag } from '@use-gesture/react';
@@ -45,6 +45,18 @@ const FlashcardStack: React.FC = () => {
   const correctSoundRef = useRef<HTMLAudioElement | null>(null);
   const incorrectSoundRef = useRef<HTMLAudioElement | null>(null);
 
+  const flashcardsRef = useRef<Flashcard[]>([]);
+  const currentCardIndexRef = useRef<number>(0);
+  
+  useEffect(() => {
+    flashcardsRef.current = flashcards;
+  }, [flashcards]);
+  
+  useEffect(() => {
+    currentCardIndexRef.current = currentCardIndex;
+  }, [currentCardIndex]);
+
+
   useEffect(() => {
     correctSoundRef.current = new Audio('/correctflash_v2.mp3');
     incorrectSoundRef.current = new Audio('/incorrectflash_v2.mp3');
@@ -56,15 +68,15 @@ const FlashcardStack: React.FC = () => {
     return now.toISOString().replace(/[:.]/g, '-').slice(0, -5); // Format: YYYY-MM-DDTHH-mm
   };
 
-  const handleUserResponse = async (action: 'correct' | 'incorrect' | 'weakness' | 'strength') => {
-    const currentCard = flashcards[currentCardIndex];
+  const handleUserResponse = useCallback(async (action: 'correct' | 'incorrect' | 'weakness' | 'strength') => {
+    const currentCard = flashcardsRef.current[currentCardIndexRef.current];
+
     if (!currentCard) return;
 
     const isCorrect = action === 'correct' || action === 'strength';
     const weight = action === 'weakness' || action === 'strength' ? 2 : 0.5;
 
     try {
-      console.log("handle")
       const response = await fetch('/api/user-test/response', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,7 +97,7 @@ const FlashcardStack: React.FC = () => {
     } catch (error) {
       console.error('Error saving flashcard response:', error);
     }
-  };
+  }, []);
 
   const fetchFlashcards = async (page: number) => {
     setIsLoading(true);
@@ -347,6 +359,9 @@ const FlashcardStack: React.FC = () => {
                 {/* can remove this, for debugging purposes only rn */}
                 <p className="text-sm text-gray-400">
                   Category: {flashcards[currentCardIndex]?.category}
+
+                  {currentCardIndex}
+                  {nextCardIndex}
                 </p>
               </div>
         </animated.div>
