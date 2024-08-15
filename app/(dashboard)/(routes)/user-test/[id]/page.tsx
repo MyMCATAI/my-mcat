@@ -125,6 +125,10 @@ export default function UserTestReviewPage() {
                     <PassageComponent 
                       passageData={currentPassage} 
                       allowHighlight={true}
+                      highlightActive={false}
+                      strikethroughActive={false}
+                      onHighlight={() => {}}
+                      onStrikethrough={() => {}}
                     />
                   </div>
                 </div>
