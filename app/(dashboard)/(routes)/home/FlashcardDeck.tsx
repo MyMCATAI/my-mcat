@@ -328,44 +328,46 @@ const FlashcardStack: React.FC = () => {
         <div className="text-white">Loading flashcards...</div>
       ) : (
         <>
-          <div className="relative w-[75%] h-80 mb-4 mt-8">
+          <div className="relative w-[75%] h-80 mb-5 mt-7">
             {/* Background cards */}
             <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-4 translate-y-6 border-blue-400 border-2" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
             <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-2 translate-y-3 border-blue-400 border-2 bg-[url('/circuitpattern2.png')] bg-cover bg-blend-overlay" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
             
             {/* Next card (always visible) */}
-            <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}>
-              <p className="text-2xl text-center text-white">{flashcards[nextCardIndex]?.problem}</p>
+            <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay overflow-hidden" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}>
+              <div className="w-full h-full mb-2 overflow-y-auto flex flex-col justify-center items-center">
+                <p className="text-lg text-center text-white">{flashcards[nextCardIndex]?.problem}</p>
+              </div>
             </div>
             
             {/* Current card */}
             <animated.div
-              {...bind()}
-              className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 cursor-pointer border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay"
+              {...bind()} 
+              className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 cursor-pointer border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay overflow-hidden"
               style={{
                 x,
                 y,
                 rotateZ: rotation,
                 opacity: cardOpacity,
                 touchAction: 'none',
-                boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)',
+                boxShadow: '0 0 3px 1px rgba(0, 123, 255, 0.5)',
               }}
             >
-              <div className="text-center">
-                <p className="text-2xl text-white mb-2">
+              <div className="w-full h-full overflow-y-auto flex flex-col justify-center items-center">
+                <p className="text-lg text-center text-white mb-2">
                   {isRevealed ? flashcards[currentCardIndex]?.answer : flashcards[currentCardIndex]?.problem}
                 </p>
 
-                {/* can remove this, for debugging purposes only rn */}
-                <p className="text-sm text-gray-400">
+                {/* can remove this, for debugging purposes only rn 
+                <p className="text-xs text-gray-400 flex justify-center items-center">
                   Category: {flashcards[currentCardIndex]?.category}
 
                   {currentCardIndex}
                   {nextCardIndex}
-                </p>
+                </p>*/}
               </div>
-        </animated.div>
-      </div>
+            </animated.div>
+          </div>
         </>
       )}
       <div className="flex justify-between w-full mt-12 text-sm">

@@ -10,6 +10,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Pencil, Highlighter, Flag } from 'lucide-react';
 
 interface TestComponentProps {
   testId: string;
@@ -34,12 +36,18 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const [showScorePopup, setShowScorePopup] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
 
+  const [flashHighlight, setFlashHighlight] = useState(false);
+  const [flashStrikethrough, setFlashStrikethrough] = useState(false);
+  const [flashFlag, setFlashFlag] = useState(false);
+
   const {
     seconds,
     minutes,
     hours,
     reset,
   } = useStopwatch({ autoStart: true });
+
+  const passageRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
 
   useEffect(() => {
     fetchTest();
@@ -281,6 +289,24 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     return userResponses[responseId] || pendingResponses[questionId];
   };
 
+  const handleHighlight = () => {
+    setFlashHighlight(true);
+    passageRef.current?.applyStyle('HIGHLIGHT');
+    setTimeout(() => setFlashHighlight(false), 300); 
+  };
+
+  const handleStrikethrough = () => {
+    setFlashStrikethrough(true);
+    passageRef.current?.applyStyle('STRIKETHROUGH');
+    setTimeout(() => setFlashStrikethrough(false), 300);
+  };
+
+  const handleFlag = () => {
+    setFlashFlag(true);
+    // Add your flag logic here
+    setTimeout(() => setFlashFlag(false), 300);
+  };
+
   if (loading) return <div className="text-white">Loading...</div>;
   if (error) return <div className="text-white">Error: {error}</div>;
   if (!test) return <div className="text-white">No test found</div>;
@@ -289,9 +315,9 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const currentQuestion = getCurrentQuestion();
 
   return (
-    <div className="bg-white flex flex-col text-white overflow-hidden">
-      <div className="bg-[#006dab] p-2 flex justify-between items-center border-3 border-sky-500">
-        <h1 className="text-lg font-semibold">
+    <div className="bg-white flex flex-col text-white overflow-hidden h-screen">
+      <div className="bg-[#006dab] p-2 h-15 flex justify-between items-center border-3 border-sky-500">
+        <h1 className="text-lg font-semibold ml-6">
           {test?.title}
           {isCreatingTest && <span className="ml-2 text-sm text-gray-400">Creating test...</span>}
         </h1>
@@ -301,29 +327,72 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           <span>{seconds.toString().padStart(2, '0')}</span>
         </div>
       </div>
-      <div className="flex relative">
+      <div className="h-9 border-t-2 border-b-2 border-white bg-[#84aedd] flex items-center justify-between">
+        <div className="flex items-center ml-2">
+          <button
+            className={`mr-2 px-3 py-1 rounded transition-colors duration-200 flex items-center ${
+              flashHighlight
+                ? 'bg-transparent text-yellow-300'
+                : 'bg-transparent text-white hover:bg-white/10'
+            }`}
+            onClick={handleHighlight}
+          >
+            <Highlighter className="w-4 h-4 mr-2 ml-3" />
+            Highlight
+          </button>
+          <button
+            className={`mr-2 px-3 py-1 rounded transition-colors duration-200 flex items-center ${
+              flashStrikethrough
+                ? 'bg-transparent text-yellow-300'
+                : 'bg-transparent text-white hover:bg-white/10'
+            }`}
+            onClick={handleStrikethrough}
+          >
+            <Pencil className="w-4 h-4 mr-1" />
+            Strikethrough
+          </button>
+        </div>
+        <div className="flex items-center mr-2">
+          <button
+            className={`mr-2 px-3 py-1 rounded transition-colors duration-200 flex items-center ${
+              flashFlag
+                ? 'bg-transparent text-yellow-300'
+                : 'bg-transparent text-white hover:bg-white/10'
+            }`}
+            onClick={handleFlag}
+          >
+            <Flag className="w-4 h-4 mr-2" />
+            Flag for Review
+          </button>
+        </div>
+      </div>
+      <div className="h-7 bg-[#a6a6a6]"></div>
+      <div className="flex relative flex-grow overflow-hidden">
         {currentPassage ? (
           <>
             <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto">
               <div className="p-4">
-              <PassageComponent 
+                <PassageComponent 
+                  ref={passageRef}
                   passageData={currentPassage} 
                   allowHighlight={true}
+                  highlightActive={flashHighlight}
+                  strikethroughActive={flashStrikethrough}
+                  onHighlight={handleHighlight}
+                  onStrikethrough={handleStrikethrough}
                 />
               </div>
             </div>
-            <div className="w-1/2 relative">
-              {/* {currentQuestionIndex === test?.questions.length - 1 && ( */}
-                <div className="absolute top-11 right-5 z-10 mr-20">
-                  <button 
-                    onClick={handleFinishTest} 
-                    disabled={isSubmitting}
-                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? 'Finishing...' : 'Finish Test'}
-                  </button>
-                </div>
-              {/* )} */}
+            <div className="w-1/2 relative overflow-auto">
+              <div className="absolute top-11 right-5 z-10 mr-20">
+                {/*<button 
+                  onClick={handleFinishTest} 
+                  disabled={isSubmitting}
+                  className="bg-blue-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Finishing...' : 'Finish Test'}
+                </button>*/}
+              </div>
               {currentQuestion && currentTestQuestion && (
                 <QuestionComponent
                   question={currentQuestion}
@@ -342,17 +411,15 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         ) : (
           <div className="w-full h-full flex items-center justify-center overflow-hidden">
             <div className="max-w-2xl w-full h-full overflow-y-auto relative">
-              {currentQuestionIndex === test?.questions.length - 1 && (
-                <div className="absolute top-11 right-5 z-10 mr-20">
+              <div className="absolute top-11 right-5 z-10 mr-20">
                 <button 
-                    onClick={handleFinishTest} 
-                    disabled={isSubmitting}
-                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? 'Finishing...' : 'Finish Test'}
-                  </button>
-                </div>
-              )}
+                  onClick={handleFinishTest} 
+                  disabled={isSubmitting}
+                  className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Finishing...' : 'Finish Test'}
+                </button>
+              </div>
               {currentQuestion && currentTestQuestion && (
                 <QuestionComponent
                   question={currentQuestion}
@@ -370,6 +437,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           </div>
         )}
       </div>
+      <div className="bg-[#006dab] h-15 border-t-3 border-sky-500"></div>
 
       <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
         <DialogContent className="bg-[#0A2540] text-white border border-sky-500">
