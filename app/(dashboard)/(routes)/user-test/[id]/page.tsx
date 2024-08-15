@@ -99,6 +99,7 @@ export default function UserTestReviewPage() {
   if (loading) return <div className="text-white">Loading...</div>;
   if (error) return <div className="text-white">Error: {error}</div>;
   if (!userTest) return <div className="text-white">No test found</div>;
+  if (!userTest.responses || userTest.responses.length === 0) return <div className="text-white">No responses found for this test</div>;
 
   const currentResponse = userTest.responses[currentResponseIndex];
 
@@ -115,45 +116,53 @@ export default function UserTestReviewPage() {
         <p>Completed: {userTest.finishedAt ? new Date(userTest.finishedAt).toLocaleString() : 'Not finished'}</p>
       </div>
       <div className="flex flex-grow overflow-hidden">
-        {currentPassage ? (
+        {currentResponse ? (
           <>
-            <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto">
-              <div className="p-4">
-                <PassageComponent 
-                  passageData={currentPassage} 
-                  allowHighlight={true}
-                />
+            {currentPassage ? (
+              <>
+                <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto">
+                  <div className="p-4">
+                    <PassageComponent 
+                      passageData={currentPassage} 
+                      allowHighlight={true}
+                    />
+                  </div>
+                </div>
+                <div className="w-1/2 flex flex-col">
+                  <div className="flex-grow overflow-auto">
+                    <ReviewQuestionComponent
+                      question={currentResponse.question}
+                      userResponse={currentResponse}
+                      onNext={handleNextQuestion}
+                      onPrevious={handlePreviousQuestion}
+                      isFirst={currentResponseIndex === 0}
+                      isLast={currentResponseIndex === userTest.responses.length - 1}
+                      currentQuestionIndex={currentResponseIndex}
+                      totalQuestions={userTest.responses.length}
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="w-full flex flex-col">
+                <div className="flex-grow overflow-auto">
+                  <ReviewQuestionComponent
+                    question={currentResponse.question}
+                    userResponse={currentResponse}
+                    onNext={handleNextQuestion}
+                    onPrevious={handlePreviousQuestion}
+                    isFirst={currentResponseIndex === 0}
+                    isLast={currentResponseIndex === userTest.responses.length - 1}
+                    currentQuestionIndex={currentResponseIndex}
+                    totalQuestions={userTest.responses.length}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="w-1/2 flex flex-col">
-              <div className="flex-grow overflow-auto">
-                <ReviewQuestionComponent
-                  question={currentResponse.question}
-                  userResponse={currentResponse}
-                  onNext={handleNextQuestion}
-                  onPrevious={handlePreviousQuestion}
-                  isFirst={currentResponseIndex === 0}
-                  isLast={currentResponseIndex === userTest.responses.length - 1}
-                  currentQuestionIndex={currentResponseIndex}
-                  totalQuestions={userTest.responses.length}
-                />
-              </div>
-            </div>
+            )}
           </>
         ) : (
-          <div className="w-full flex flex-col">
-            <div className="flex-grow overflow-auto">
-              <ReviewQuestionComponent
-                question={currentResponse.question}
-                userResponse={currentResponse}
-                onNext={handleNextQuestion}
-                onPrevious={handlePreviousQuestion}
-                isFirst={currentResponseIndex === 0}
-                isLast={currentResponseIndex === userTest.responses.length - 1}
-                currentQuestionIndex={currentResponseIndex}
-                totalQuestions={userTest.responses.length}
-              />
-            </div>
+          <div className="w-full flex flex-col justify-center items-center">
+            <p className="text-black flex justify-center items-center">No response data available for this question.</p>
           </div>
         )}
       </div>

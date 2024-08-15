@@ -9,7 +9,7 @@ interface InterludeActionProps {
   
   export const InterludeAction: React.FC<InterludeActionProps> = ({ activities, onActionClick, onSkip }) => {
     const buttonText = activities.length === 0
-      ? "Would you like to enter information on your calendar?"
+      ? "Enter information on your calendar!"
       : ">> I'm ready to begin!";
 
   
