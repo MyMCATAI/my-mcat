@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFromRaw, SelectionState, DraftHandleValue, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js';
+import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFromRaw, DraftHandleValue, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import { Button } from "../ui/button";
 
@@ -15,8 +15,8 @@ interface PassageProps {
 }
 
 const Passage: React.FC<PassageProps> = ({ passageData, allowHighlight }) => {
-  const [highlightActive, setHighlightActive] =useState(false)
-  const [strikethroughActive, setStrikethroughActive] =useState(false)
+  const [highlightActive, setHighlightActive] = useState(false);
+  const [strikethroughActive, setStrikethroughActive] = useState(false);
 
   const [editorState, setEditorState] = useState(() => {
     const savedContent = localStorage.getItem(`passage-${passageData.id}`);
@@ -85,37 +85,35 @@ const Passage: React.FC<PassageProps> = ({ passageData, allowHighlight }) => {
   };
 
   return (
-    <div className="bg-[#ffffff] from-blue-900 h-[80vh] p-4 overflow-auto">
-       {allowHighlight && (
-        <div className="mt-4 space-x-2">
-         <div className="mt-4 space-x-2">
-          <Button
-            className={`text-black ${
-              highlightActive ? 'bg-[#80BFFF] hover:bg-[#E6F3FF]/90' : 'hover:text-black'
-            }`}
-            onClick={handleHighlight}
-            variant={highlightActive ? "default" : "outline"}
-          >
-            Highlight
-          </Button>
-          <Button
-            className={`text-black ${
-              strikethroughActive ? 'bg-[#80BFFF] hover:bg-[#E6F3FF]/90' : 'hover:text-black'
-            }`}
-            onClick={handleStrikethrough}
-            variant={strikethroughActive ? "default" : "outline"}
-          >
-            Strikethrough
-          </Button>
-        </div>
-        </div>
-      )}
-      <div className="px-4">
-        <h1 className="text-black font-['Calibri'] text-2xl font-bold mt-5">
+    <div className="bg-[#ffffff] h-[80vh] flex flex-col">
+      <div className="sticky top-0 bg-white p-4 z-10">
+        <h1 className="text-black font-['Calibri'] text-2xl font-bold">
           Passage {passageData.id}
         </h1>
+        {allowHighlight && (
+          <div className="mt-4 space-x-2">
+            <Button
+              className={`text-black ${
+                highlightActive ? 'bg-[#80BFFF] hover:bg-[#E6F3FF]/90' : 'hover:text-black'
+              }`}
+              onClick={handleHighlight}
+              variant={highlightActive ? "default" : "outline"}
+            >
+              Highlight
+            </Button>
+            <Button
+              className={`text-black ${
+                strikethroughActive ? 'bg-[#80BFFF] hover:bg-[#E6F3FF]/90' : 'hover:text-black'
+              }`}
+              onClick={handleStrikethrough}
+              variant={strikethroughActive ? "default" : "outline"}
+            >
+              Strikethrough
+            </Button>
+          </div>
+        )}
       </div>
-      <div className="p-4">
+      <div className="flex-grow overflow-auto p-4">
         <div className="text-black">
           <Editor
             editorState={editorState}
