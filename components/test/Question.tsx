@@ -1,3 +1,5 @@
+
+// QuestionComponent.tsx
 import React, { useEffect, useState } from "react";
 import { Question } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -15,6 +17,8 @@ interface QuestionsProps {
   userAnswer?: string;
   currentQuestionIndex: number;
   totalQuestions: number;
+  onFinish: () => void;
+  isSubmitting: boolean;
 }
 
 const QuestionComponent: React.FC<QuestionsProps> = ({
@@ -27,6 +31,8 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
   userAnswer,
   currentQuestionIndex,
   totalQuestions,
+  onFinish,
+  isSubmitting,
 }) => {
   const [randomizedOptions, setRandomizedOptions] = useState<string[]>([]);
   const options = JSON.parse(question.questionOptions);
@@ -79,14 +85,24 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
           >
             <ChevronLeft className="mr-2 h-4 w-4" /> Previous
           </Button>
-          <Button
-            onClick={onNext}
-            disabled={isLast}
-            variant="outline"
-            className="bg-white hover:bg-blue-50 text-blue-600"
-          >
-            Next <ChevronRight className="ml-2 h-4 w-4" />
-          </Button>
+          {isLast ? (
+            <Button
+              onClick={onFinish}
+              disabled={isSubmitting}
+              variant="default"
+              className="bg-green-500 hover:bg-green-600 text-white"
+            >
+              {isSubmitting ? 'Finishing...' : 'Finish Test'}
+            </Button>
+          ) : (
+            <Button
+              onClick={onNext}
+              variant="outline"
+              className="bg-white hover:bg-blue-50 text-blue-600"
+            >
+              Next <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
     </div>

@@ -235,8 +235,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   const handleFinishTest = async () => {
     setIsSubmitting(true);
+    console.log('submit')
     if (!userTest) return;
+    
     const score = calculateScore();
+    console.log('score',score)
     setFinalScore(score);
     try {
       const response = await fetch(`/api/user-test/${userTest.id}`, {
@@ -384,15 +387,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
               </div>
             </div>
             <div className="w-1/2 relative overflow-auto">
-              <div className="absolute top-11 right-5 z-10 mr-20">
-                {/*<button 
-                  onClick={handleFinishTest} 
-                  disabled={isSubmitting}
-                  className="bg-blue-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? 'Finishing...' : 'Finish Test'}
-                </button>*/}
-              </div>
               {currentQuestion && currentTestQuestion && (
                 <QuestionComponent
                   question={currentQuestion}
@@ -404,6 +398,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                   userAnswer={getCurrentUserResponse(currentQuestion.id)?.userAnswer} 
                   currentQuestionIndex={currentQuestionIndex}
                   totalQuestions={test?.questions.length || 0}
+                  onFinish={handleFinishTest}
+                  isSubmitting={isSubmitting}
                 />
               )}
             </div>
@@ -411,15 +407,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         ) : (
           <div className="w-full h-full flex items-center justify-center overflow-hidden">
             <div className="max-w-2xl w-full h-full overflow-y-auto relative">
-              <div className="absolute top-11 right-5 z-10 mr-20">
-                <button 
-                  onClick={handleFinishTest} 
-                  disabled={isSubmitting}
-                  className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? 'Finishing...' : 'Finish Test'}
-                </button>
-              </div>
               {currentQuestion && currentTestQuestion && (
                 <QuestionComponent
                   question={currentQuestion}
@@ -431,6 +418,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                   userAnswer={getCurrentUserResponse(currentQuestion.id)?.userAnswer} 
                   currentQuestionIndex={currentQuestionIndex}
                   totalQuestions={test?.questions.length || 0}
+                  onFinish={handleFinishTest}
+                  isSubmitting={isSubmitting}
                 />
               )}
             </div>

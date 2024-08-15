@@ -88,7 +88,7 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                   >
                     <div className="flex justify-center">
                       <div className="flex gap-1">
-                        <Link href="#">
+                        <Link href={`/test/testquestions?id=${test.id}`}>
                           <Image
                             className="mt-1"
                             src={"/computer.svg"}
@@ -97,7 +97,7 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                             alt="icon"
                           />
                         </Link>
-                        <Link href="#">
+                        <Link href={`/test/testquestions?id=${test.id}`}>
                           <Image
                             className="mt-1"
                             src={"/verticalbar.svg"}
@@ -106,7 +106,7 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                             alt="icon"
                           />
                         </Link>
-                        <Link href="#">
+                        <Link href={`/test/testquestions?id=${test.id}`}>
                           <Image
                             className="mt-1"
                             src={"/clipboard.svg"}
