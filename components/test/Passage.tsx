@@ -118,7 +118,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
         </h1>
       </div>
       <div className="bg-[#ffffff] flex-grow overflow-auto p-4">
-        <div className="text-black">
+        <div className="text-black" style={editorStyle}>
           <Editor
             editorState={editorState}
             onChange={setEditorState}
@@ -128,7 +128,6 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
             handleKeyCommand={handleKeyCommand}
             keyBindingFn={keyBindingFn}
             blockStyleFn={blockStyleFn}
-            style={editorStyle}
           />
         </div>
         {passageData.citation && (
@@ -138,5 +137,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     </div>
   );
 });
+
+Passage.displayName = 'Passage';
 
 export default Passage;
