@@ -34,9 +34,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const [showScorePopup, setShowScorePopup] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
 
-  const [highlightActive, setHighlightActive] = useState(false);
-  const [strikethroughActive, setStrikethroughActive] = useState(false);
-
   const {
     seconds,
     minutes,
@@ -284,16 +281,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     return userResponses[responseId] || pendingResponses[questionId];
   };
 
-  const handleHighlight = () => {
-    setHighlightActive(!highlightActive);
-    setStrikethroughActive(false);
-  };
-
-  const handleStrikethrough = () => {
-    setStrikethroughActive(!strikethroughActive);
-    setHighlightActive(false);
-  };
-
   if (loading) return <div className="text-white">Loading...</div>;
   if (error) return <div className="text-white">Error: {error}</div>;
   if (!test) return <div className="text-white">No test found</div>;
@@ -319,10 +306,9 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           <>
             <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto">
               <div className="p-4">
-                <PassageComponent 
+              <PassageComponent 
                   passageData={currentPassage} 
-                  highlightActive={highlightActive}
-                  strikethroughActive={strikethroughActive}
+                  allowHighlight={false}
                 />
               </div>
             </div>
