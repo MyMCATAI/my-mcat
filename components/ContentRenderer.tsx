@@ -25,7 +25,6 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick 
 
   return (
     <ReactMarkdown
-      children={sanitizedContent}
       remarkPlugins={[remarkMath]}
       rehypePlugins={[rehypeKatex]}
       components={{
@@ -66,7 +65,9 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick 
         }
       }}
       className="text-lg text-left text-white space-y-2"
-    />
+    >
+      {sanitizedContent}
+    </ReactMarkdown>
   );
 };
 
