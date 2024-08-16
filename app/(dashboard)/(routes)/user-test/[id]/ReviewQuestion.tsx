@@ -1,6 +1,7 @@
 // components/review/ReviewQuestion.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Question, UserResponse } from '@/types';
+import ChatBotWidget from '@/components/chatbot/ChatbotWidget';
 
 interface ReviewQuestionComponentProps {
   question?: Question;
@@ -23,39 +24,68 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   currentQuestionIndex,
   totalQuestions
 }) => {
+  const [selectedOption, setSelectedOption] = useState<string>(userResponse.userAnswer);
+  const [selectedAnswerNote, setSelectedAnswerNote] = useState<string>('');
+
+  useEffect(() => {
+    if (question) {
+      setSelectedOption(userResponse.userAnswer);
+      const options = JSON.parse(question.questionOptions);
+      const answerNotes = JSON.parse(question.questionAnswerNotes || '[]');
+      const userAnswerIndex = options.indexOf(userResponse.userAnswer);
+      setSelectedAnswerNote(answerNotes[userAnswerIndex] || '');
+    }
+  }, [question, userResponse]);
+
   if(!question) return null
   const options = JSON.parse(question.questionOptions);
+  const answerNotes = JSON.parse(question.questionAnswerNotes || '[]');
+
+  const handleOptionClick = (option: string, index: number) => {
+    setSelectedOption(option);
+    setSelectedAnswerNote(answerNotes[index] || '');
+  };
+
+  const chatbotContext = {
+    contentTitle: question.passageId ? question.passageId.toString() : 'Unknown Passage',
+    context: answerNotes.join(' ')
+  };
 
   return (
-    <div className="p-6 bg-[#0A2744] text-white h-full flex flex-col">
+    <div className="p-6 bg-white text-black h-full flex flex-col">
       <h2 className="text-xl font-semibold mb-4">Question {currentQuestionIndex + 1} of {totalQuestions}</h2>
       <div className="mb-4 flex-grow">
-        <h3 className="font-semibold">{question.questionContent}</h3>
-        <div className="mt-4">
+        <h3 className="">{question.questionContent}</h3>
+        <div className="mt-4 text-white">
           {options.map((option: string, index: number) => (
             <div 
               key={index} 
-              className={`p-2 mb-2 rounded ${
-                option === userResponse.userAnswer
-                  ? userResponse.isCorrect
+              className={`p-2 mb-2 rounded cursor-pointer ${
+                option === selectedOption
+                  ? option === options[0]
                     ? 'bg-green-500'
                     : 'bg-red-500'
-                  : option === options[0]
-                    ? 'bg-green-500'
-                    : 'bg-gray-700'
+                  : 'bg-gray-700 hover:bg-gray-600'
               }`}
+              onClick={() => handleOptionClick(option, index)}
             >
               {option}
             </div>
           ))}
         </div>
         <div className="mt-4">
-          <p>Your answer: {userResponse.userAnswer}</p>
+          <p>Your original answer: {userResponse.userAnswer}</p>
           <p>Correct answer: {options[0]}</p>
           <p className={userResponse.isCorrect ? "text-green-500" : "text-red-500"}>
             {userResponse.isCorrect ? "Correct" : "Incorrect"}
           </p>
           <p>Time spent: {userResponse.timeSpent || "0"} seconds</p>
+          {selectedAnswerNote && (
+            <div className="mt-2">
+              <h4 className="font-semibold">Explanation for selected answer:</h4>
+              <p>{selectedAnswerNote}</p>
+            </div>
+          )}
           {userResponse.userNotes && <p>Your notes: {userResponse.userNotes}</p>}
         </div>
       </div>
@@ -74,6 +104,9 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
         >
           Next
         </button>
+      </div>
+      <div className="mt-4">
+        <ChatBotWidget chatbotContext={chatbotContext} />
       </div>
     </div>
   );

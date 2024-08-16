@@ -42,7 +42,7 @@ const UWorldBlitzPage: React.FC = () => {
   ];
 
   return (
-    <div className="bg-[#001326] min-h-screen p-8 text-white">
+    <div className="bg-white min-h-screen p-8 text-black">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-8 text-center">UWorld Blitz</h1>
         
