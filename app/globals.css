@@ -108,3 +108,30 @@ body :root {
 .translate-x-full {
   transform: translateX(100%);
 }
+
+
+.summary-content h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #ffffff;
+}
+
+.summary-content p {
+  margin-bottom: 1rem;
+}
+
+.summary-content ul {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.summary-content li {
+  margin-bottom: 0.5rem;
+  list-style-type: disc;
+}
+
+.summary-content li::marker {
+  color: #ffffff;
+}
