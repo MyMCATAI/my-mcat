@@ -7,13 +7,16 @@
   import { useToast } from "@/components/ui/use-toast";
   import { Category } from "@/types";
   import Icon from "@/components/ui/icon";
-
+  import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+  import { ChevronDown, ChevronUp } from "lucide-react";
+  
   interface ContentItem {
     id: string;
     title: string;
     link: string;
     type: string;
     transcript?: string;
+    summary?: string
   }
 
   interface AdaptiveTutoringProps {
@@ -25,6 +28,7 @@
     toggleChatBot,
     setChatbotContext,
   }) => {
+    const [isSummaryOpen, setIsSummaryOpen] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [showVideo, setShowVideo] = useState(true);
     const [showPDF, setShowPDF] = useState(false);
@@ -98,7 +102,6 @@
               toggleChatBot();
           }, 10000);
       }      
-        console.log(clickedContent.transcript);
         setChatbotContext({
           contentTitle: clickedContent.title,
           context: clickedContent.transcript
@@ -413,9 +416,10 @@
               </div>
 
               <div className="p-4">
-                {showVideo &&
-                  currentContent &&
-                  currentContent.type === "video" && (
+              {showVideo &&
+                currentContent &&
+                currentContent.type === "video" && (
+                  <>
                     <ReactPlayer
                       className="w-full h-full"
                       url={currentContent.link}
@@ -426,23 +430,68 @@
                       onEnded={() => setIsPlaying(false)}
                       controls={true}
                     />
-                  )}
+                    <Collapsible className="mt-4">
+                      <CollapsibleTrigger
+                        className="flex items-center text-sm text-blue-400 cursor-pointer"
+                        onClick={() => setIsSummaryOpen(!isSummaryOpen)}
+                      >
+                        {isSummaryOpen ? (
+                          <>
+                            <ChevronUp className="w-4 h-4 mr-1" />
+                            Hide Summary
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-4 h-4 mr-1" />
+                            Show Summary
+                          </>
+                        )}
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="text-sm text-gray-300 mt-2 pl-2 border-l border-gray-700">
+                        {currentContent.summary || "No summary available."}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </>
+                )}
 
-                {showPDF &&
-                  currentContent &&
-                  currentContent.type === "reading" && (
+              {showPDF &&
+                currentContent &&
+                currentContent.type === "reading" && (
+                  <>
                     <iframe
                       src={currentContent.link.replace("/view", "/preview")}
                       className="w-full rounded-lg"
                       height="430"
                       title={currentContent.title}
                     ></iframe>
-                  )}
+                    <Collapsible className="mt-4">
+                      <CollapsibleTrigger
+                        className="flex items-center text-sm text-blue-400 cursor-pointer"
+                        onClick={() => setIsSummaryOpen(!isSummaryOpen)}
+                      >
+                        {isSummaryOpen ? (
+                          <>
+                            <ChevronUp className="w-4 h-4 mr-1" />
+                            Hide Summary
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-4 h-4 mr-1" />
+                            Show Summary
+                          </>
+                        )}
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="text-sm text-gray-300 mt-2 pl-2 border-l border-gray-700">
+                        {currentContent.summary || "No summary available."}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </>
+                )}
 
-                {showQuiz && <Quiz questions={questions} shuffle={true} />}
-              </div>
+              {showQuiz && <Quiz questions={questions} shuffle={true} />}
             </div>
           </div>
+        </div>
 
           <div className="col-span-1">
             <div className="h-[500px] overflow-auto">
