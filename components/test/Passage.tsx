@@ -26,14 +26,19 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
   onHighlight, 
   onStrikethrough 
 }, ref) => {
-  const [editorState, setEditorState] = useState(() => {
+  const [editorState, setEditorState] = useState(() => 
+    EditorState.createWithContent(ContentState.createFromText(passageData.text))
+  );
+
+  useEffect(() => {
     const savedContent = localStorage.getItem(`passage-${passageData.id}`);
     if (savedContent) {
       const content = convertFromRaw(JSON.parse(savedContent));
-      return EditorState.createWithContent(content);
+      setEditorState(EditorState.createWithContent(content));
+    } else {
+      setEditorState(EditorState.createWithContent(ContentState.createFromText(passageData.text)));
     }
-    return EditorState.createWithContent(ContentState.createFromText(passageData.text));
-  });
+  }, [passageData.id, passageData.text]);
 
   useEffect(() => {
     const content = convertToRaw(editorState.getCurrentContent());
