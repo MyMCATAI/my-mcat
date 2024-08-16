@@ -78,11 +78,8 @@ const FlashcardStack: React.FC = () => {
     window.open(href, '_blank', 'noopener,noreferrer');
   }, []);
 
-  const handleCardClick = useCallback((event: React.MouseEvent) => {
-    // Only toggle reveal if the click is directly on the card, not on a link
-    if (event.target === event.currentTarget) {
-      toggleReveal();
-    }
+  const handleCardClick = useCallback(() => {
+    toggleReveal();
   }, []);
 
 
@@ -255,9 +252,9 @@ const FlashcardStack: React.FC = () => {
     } else if (!active && trigger) {
       handleSwipe(dir);
     } else if (!active && !trigger) {
-      if (type === 'pointerup' && event.target === event.currentTarget) {
+      if (type === 'pointerup') {
         const timeout = setTimeout(() => {
-          handleCardClick(event as unknown as React.MouseEvent);
+          handleCardClick();
         }, 100);
         setClickTimeout(timeout);
       }
@@ -392,7 +389,7 @@ const FlashcardStack: React.FC = () => {
                 boxShadow: '0 0 3px 1px rgba(0, 123, 255, 0.5)',
               }}
             >
-              <div className="w-full h-full overflow-y-auto flex flex-col justify-center items-center">
+              <div className="w-full h-full overflow-y-auto flex mb-2 flex-col justify-center items-center">
               <ContentRenderer 
                 content={getCurrentCardContent()} 
                 onLinkClick={(href: string, event: React.MouseEvent<Element, MouseEvent>) => handleLinkClick(href, event as React.MouseEvent)} 
