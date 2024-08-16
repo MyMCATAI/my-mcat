@@ -166,7 +166,6 @@ model CalendarActivity {
   @@index([scheduledDate])
   @@index([contentId])
 }
-
 model Content {
   id                 String             @id @default(cuid())
   title              String             @default("")
@@ -176,6 +175,7 @@ model Content {
   total_timing       Float              @default(0)
   minutes_estimate   Float              @default(0)
   transcript         String?            @db.Text
+  summary            String?            @db.Text
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   category           Category           @relation(fields: [categoryId], references: [id])
