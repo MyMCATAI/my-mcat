@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Check, X, Undo2, Skull, Dumbbell } from 'lucide-react';
 import { useSpring, animated } from '@react-spring/web'
 import { useDrag } from '@use-gesture/react';
+import ContentRenderer from '@/components/ContentRenderer';
 
 interface Flashcard {
   id: string;
@@ -48,6 +49,43 @@ const FlashcardStack: React.FC = () => {
   const flashcardsRef = useRef<Flashcard[]>([]);
   const currentCardIndexRef = useRef<number>(0);
   
+
+  useEffect(() => {
+    fetchFlashcards(1);
+  }, []);
+
+  const fetchFlashcards = async (page: number) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/flashcard?page=${page}&pageSize=10`);
+      const data: ApiResponse = await response.json();
+
+      console.log('Fetched flashcards:', data.flashcards);
+      setFlashcards(prevCards => [...prevCards, ...data.flashcards]);
+      setTotalPages(data.totalPages);
+      setCurrentPage(data.currentPage);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching flashcards:', error);
+      setIsLoading(false);
+    }
+  };
+
+  
+  const handleLinkClick = useCallback((href: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent the click from bubbling up to the card
+    console.log(href);
+    window.open(href, '_blank', 'noopener,noreferrer');
+  }, []);
+
+  const handleCardClick = useCallback((event: React.MouseEvent) => {
+    // Only toggle reveal if the click is directly on the card, not on a link
+    if (event.target === event.currentTarget) {
+      toggleReveal();
+    }
+  }, []);
+
+
   useEffect(() => {
     flashcardsRef.current = flashcards;
   }, [flashcards]);
@@ -56,12 +94,26 @@ const FlashcardStack: React.FC = () => {
     currentCardIndexRef.current = currentCardIndex;
   }, [currentCardIndex]);
 
-
   useEffect(() => {
     correctSoundRef.current = new Audio('/correctflash_v2.mp3');
     incorrectSoundRef.current = new Audio('/incorrectflash_v2.mp3');
     fetchFlashcards(1);
   }, []);
+
+
+  const getCurrentCardContent = () => {
+    if (flashcards.length === 0 || currentCardIndex >= flashcards.length) {
+      return '';
+    }
+    return isRevealed ? flashcards[currentCardIndex].answer : flashcards[currentCardIndex].problem;
+  };
+
+  const getNextCardContent = () => {
+    if (flashcards.length === 0 || nextCardIndex >= flashcards.length) {
+      return '';
+    }
+    return flashcards[nextCardIndex].problem;
+  };
 
   const getCurrentDateTime = () => {
     const now = new Date();
@@ -98,23 +150,6 @@ const FlashcardStack: React.FC = () => {
       console.error('Error saving flashcard response:', error);
     }
   }, []);
-
-  const fetchFlashcards = async (page: number) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/flashcard?page=${page}&pageSize=10`);
-      const data: ApiResponse = await response.json();
-
-      console.log(data)
-      setFlashcards(prevCards => [...prevCards, ...data.flashcards]);
-      setTotalPages(data.totalPages);
-      setCurrentPage(data.currentPage);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error fetching flashcards:', error);
-      setIsLoading(false);
-    }
-  };
 
   const loadMoreCards = () => {
     if (currentPage < totalPages) {
@@ -220,9 +255,9 @@ const FlashcardStack: React.FC = () => {
     } else if (!active && trigger) {
       handleSwipe(dir);
     } else if (!active && !trigger) {
-      if (type === 'pointerup') {
+      if (type === 'pointerup' && event.target === event.currentTarget) {
         const timeout = setTimeout(() => {
-          toggleReveal();
+          handleCardClick(event as unknown as React.MouseEvent);
         }, 100);
         setClickTimeout(timeout);
       }
@@ -235,6 +270,7 @@ const FlashcardStack: React.FC = () => {
       config: active ? physics.touchResponsive : physics.animateBack,
     });
   });
+
 
   const handlePrevious = () => {
     const newCurrentIndex = (currentCardIndex - 1 + flashcards.length) % flashcards.length;
@@ -336,7 +372,10 @@ const FlashcardStack: React.FC = () => {
             {/* Next card (always visible) */}
             <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay overflow-hidden" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}>
               <div className="w-full h-full mb-2 overflow-y-auto flex flex-col justify-center items-center">
-                <p className="text-lg text-center text-white">{flashcards[nextCardIndex]?.problem}</p>
+              <ContentRenderer 
+                content={getNextCardContent()} 
+                onLinkClick={(href: string, event: React.MouseEvent<Element, MouseEvent>) => handleLinkClick(href, event as React.MouseEvent)} 
+              />
               </div>
             </div>
             
@@ -354,17 +393,10 @@ const FlashcardStack: React.FC = () => {
               }}
             >
               <div className="w-full h-full overflow-y-auto flex flex-col justify-center items-center">
-                <p className="text-lg text-center text-white mb-2">
-                  {isRevealed ? flashcards[currentCardIndex]?.answer : flashcards[currentCardIndex]?.problem}
-                </p>
-
-                {/* can remove this, for debugging purposes only rn 
-                <p className="text-xs text-gray-400 flex justify-center items-center">
-                  Category: {flashcards[currentCardIndex]?.category}
-
-                  {currentCardIndex}
-                  {nextCardIndex}
-                </p>*/}
+              <ContentRenderer 
+                content={getCurrentCardContent()} 
+                onLinkClick={(href: string, event: React.MouseEvent<Element, MouseEvent>) => handleLinkClick(href, event as React.MouseEvent)} 
+              />
               </div>
             </animated.div>
           </div>
