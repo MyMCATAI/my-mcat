@@ -9,6 +9,7 @@
   import Icon from "@/components/ui/icon";
   import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
   import { ChevronDown, ChevronUp } from "lucide-react";
+  import ReactMarkdown from 'react-markdown';
   
   interface ContentItem {
     id: string;
@@ -16,7 +17,7 @@
     link: string;
     type: string;
     transcript?: string;
-    summary?: string
+    summary?: string; 
   }
 
   interface AdaptiveTutoringProps {
@@ -46,6 +47,8 @@
     const [categories, setCategories] = useState<Category[]>([]);
 
     const { toast } = useToast();
+
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
     const fetchContent = useCallback(async (conceptCategory: string) => {
       try {
@@ -77,6 +80,14 @@
         }
       }
     }, [content]);
+
+    useEffect(() => {
+      if (categories.length > 0) {
+        setSelectedCategory(categories[0].conceptCategory);
+        fetchContent(categories[0].conceptCategory);
+        fetchQuestions(categories[0].conceptCategory);
+      }
+    }, [categories]);
 
     const extractVideoId = (url: string) => {
       const urlParams = new URLSearchParams(new URL(url).search);
@@ -238,6 +249,7 @@
 
     const handleCardClick = (index: number) => {
       setSelectedCard(index);
+      setSelectedCategory(categories[index].conceptCategory);
       fetchContent(categories[index].conceptCategory);
       fetchQuestions(categories[index].conceptCategory);
     };
@@ -269,6 +281,19 @@
 
     const currentContent = content.find((item) => item.id === currentContentId);
 
+    useEffect(() => {
+      if (currentContent && currentContent.summary) {
+        setIsSummaryOpen(true);
+      }
+    }, [currentContent]);
+
+    const formatSummary = (summary: string) => {
+      return summary
+        .replace(/^(\w+.*?):/gm, '\n\n## $1\n\n')  // Use ## for main headers
+        .replace(/^•\s*/gm, '\n- ')  // Replace bullet points with markdown list items
+        .trim();  // Remove any leading/trailing whitespace
+    };
+    
     return (
       <div className="relative p-2">
         <div className="relative z-10 text-white rounded-lg">
@@ -373,7 +398,7 @@
         <div className="grid grid-cols-12 gap-3 px-2">
           <div className="col-span-11">
             <div className="bg-[#001226] rounded-lg overflow-hidden px-4">
-              <div className="bg-[#001226] py-1 flex items-center justify-center gap-4 mt-3">
+              <div className="bg-[#001226] py-1 flex items-center justify-center gap-4 mt-2">
                 <button
                   onClick={handleCameraClick}
                   className="p-2 hover:bg-[#3D5788] rounded"
@@ -397,9 +422,7 @@
                   />
                 </button>
                 <p className="text-m px-10">
-                  {selectedCard !== null
-                    ? categories[selectedCard].conceptCategory
-                    : ""}
+                  {selectedCategory || ""}
                 </p>
                 <button
                   onClick={handleQuizTabClick}
@@ -415,7 +438,7 @@
                 </button>
               </div>
 
-              <div className="p-4">
+              <div className="p-2">
               {showVideo &&
                 currentContent &&
                 currentContent.type === "video" && (
@@ -437,18 +460,26 @@
                       >
                         {isSummaryOpen ? (
                           <>
-                            <ChevronUp className="w-4 h-4 mr-1" />
-                            Hide Summary
+                            <ChevronDown className="w-4 h-4 mr-1" />
+                            Show Summary
                           </>
                         ) : (
                           <>
-                            <ChevronDown className="w-4 h-4 mr-1" />
-                            Show Summary
+                            <ChevronUp className="w-4 h-4 mr-1" />
+                            Hide Summary
                           </>
                         )}
                       </CollapsibleTrigger>
                       <CollapsibleContent className="text-sm text-gray-300 mt-2 pl-2 border-l border-gray-700">
-                        {currentContent.summary || "No summary available."}
+                        {currentContent && currentContent.summary ? (
+                          <div className="summary-content">
+                            <ReactMarkdown className="markdown-content">
+                              {formatSummary(currentContent.summary)}
+                            </ReactMarkdown>
+                          </div>
+                        ) : (
+                          "No summary available."
+                        )}
                       </CollapsibleContent>
                     </Collapsible>
                   </>
@@ -482,7 +513,13 @@
                         )}
                       </CollapsibleTrigger>
                       <CollapsibleContent className="text-sm text-gray-300 mt-2 pl-2 border-l border-gray-700">
-                        {currentContent.summary || "No summary available."}
+                        {currentContent && currentContent.summary ? (
+                          <ReactMarkdown className="markdown-content">
+                            {formatSummary(currentContent.summary)}
+                          </ReactMarkdown>
+                        ) : (
+                          "No summary available."
+                        )}
                       </CollapsibleContent>
                     </Collapsible>
                   </>
