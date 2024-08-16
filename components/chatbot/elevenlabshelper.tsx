@@ -9,7 +9,7 @@ export const useElevenLabs = () => {
     try {
       const audioStream = await elevenlabs.generate({
         stream: true,
-        voice: "Rachel", // You can change this to any voice you prefer
+        voice: "Kalypso", // You can change this to any voice you prefer
         text: text,
         model_id: "eleven_multilingual_v2"
       });
