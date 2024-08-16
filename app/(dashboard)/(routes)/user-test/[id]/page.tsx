@@ -104,16 +104,18 @@ export default function UserTestReviewPage() {
   const currentResponse = userTest.responses[currentResponseIndex];
 
   return (
-    <div className="relative bg-white h-screen flex flex-col text-white">
-      <div className="bg-[#006dab] p-3 flex justify-between items-center border-b-3 border-sky-500">
+    <div className="relative bg-white h-full flex flex-col text-white">
+      <div className="bg-[#002355] p-3 flex justify-between items-center border-b-3 border-sky-500">
         <h1 className="text-lg font-semibold">{userTest.test.title} - Review</h1>
-        <Link href="/review" className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded transition duration-300">
-          Back to Review
-        </Link>
-      </div>
-      <div className="bg-[#a1a1aa] p-4">
-        <p>Score: {userTest.score !== null ? `${userTest.score?.toFixed(2)}%` : 'Not scored'}</p>
-        <p>Completed: {userTest.finishedAt ? new Date(userTest.finishedAt).toLocaleString() : 'Not finished'}</p>
+        <div className="flex items-center space-x-4">
+          <div className="text-right">
+            <p className="text-sm">Score: {userTest.score !== null ? `${userTest.score?.toFixed(2)}%` : 'Not scored'}</p>
+            <p className="text-sm">Completed: {userTest.finishedAt ? new Date(userTest.finishedAt).toLocaleString() : 'Not finished'}</p>
+          </div>
+          <Link href="/review" className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded transition duration-300">
+            Back to Review
+          </Link>
+        </div>
       </div>
       <div className="flex flex-grow overflow-hidden">
         {currentResponse ? (
@@ -170,9 +172,6 @@ export default function UserTestReviewPage() {
           </div>
         )}
       </div>
-      
-      {/* Chatbot */}
-      <ChatbotWidget chatbotContext={chatbotContext} />
     </div>
   );
 }
