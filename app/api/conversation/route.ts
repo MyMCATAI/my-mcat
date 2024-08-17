@@ -51,10 +51,11 @@ export async function POST(req: Request) {
   try {
     const { userId } = auth();
     const body = await req.json();
-    const { message, context, threadId } = body;
+    const { message, context, threadId, generateAudio } = body;
 
     console.log('Received message:', message);
     if (context) console.log('Received context:', context);
+    console.log('Generate audio:', generateAudio);
 
     if (!userId) {
       console.log('Unauthorized: No userId');
@@ -114,8 +115,12 @@ export async function POST(req: Request) {
     console.log('Received response from Assistant');
 
     const textToConvert = extractTextFromMessage(lastMessage);
-    const audioBuffer = await createAudioStreamFromText(textToConvert);
-    const audioBase64 = audioBuffer.toString('base64');
+    
+    let audioBase64 = null;
+    if (generateAudio) {
+      const audioBuffer = await createAudioStreamFromText(textToConvert);
+      audioBase64 = audioBuffer.toString('base64');
+    }
 
     return NextResponse.json({
       message: textToConvert,

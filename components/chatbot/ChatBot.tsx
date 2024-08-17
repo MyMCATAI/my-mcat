@@ -13,12 +13,13 @@ interface MyChatBotProps {
   isVoiceEnabled?: boolean;
 }
 
-const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = false }) => {
+const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = true }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(isVoiceEnabled);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const context = chatbotContext?.context;
   const contentTitle = chatbotContext?.contentTitle;
@@ -43,7 +44,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
       const response = await fetch('/api/conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, context, threadId, generateAudio: isVoiceEnabled }),
+        body: JSON.stringify({ message, context, threadId, generateAudio: audioEnabled }),
       });
 
       if (!response.ok) {
@@ -57,7 +58,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
         setThreadId(data.threadId);
       }
 
-      if (isVoiceEnabled && data.audio) {
+      if (audioEnabled && data.audio) {
         playAudio(data.audio);
       }
 
@@ -106,6 +107,10 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
     // Add logic here to handle the screenshot
   };
 
+  const toggleAudio = () => {
+    setAudioEnabled(!audioEnabled);
+  };
+
   const flow = {
     start: {
       message: `Hi! I'm Kalypso the cat, your MCAT assistant. ${contentTitle ? `Looks like you're working on ${contentTitle}.` : ""} How can I help you today?`,
@@ -123,7 +128,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
   const settings = {
     general: { 
       embedded: true,
-      showHeader: false,
+      showHeader: true,
       showFooter: false,
     },
     chatHistory: { storageKey: "mcat_assistant_chat_history" },
@@ -136,14 +141,20 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
             onClick={() => window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")}
           >
           </div>
-          <ScreenshotButton onScreenshot={handleScreenshot} />
-          <FileUploadComponent />
+          {/* <ScreenshotButton onScreenshot={handleScreenshot} />
+          <FileUploadComponent /> */}
+          <button 
+            onClick={toggleAudio}
+            className="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            {audioEnabled ? '🔊' : '🔇'}
+          </button>
         </div>
       )
     },
     voice: {
-      disabled: !isVoiceEnabled,
-      defaultToggledOn: isVoiceEnabled,
+      disabled: !audioEnabled,
+      defaultToggledOn: audioEnabled,
       language: "en-US",
       autoSendDisabled: false,
       autoSendPeriod: 2000,
@@ -168,6 +179,11 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
 
   return (
     <div>
+       <style jsx global>{`
+        .rcb-chat-input::before {
+          content: none !important;
+        }
+      `}</style>
       <ChatBot
         settings={settings}
         styles={styles}
