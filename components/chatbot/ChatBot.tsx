@@ -106,11 +106,9 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
     console.log('Screenshot taken:', blob);
     // Add logic here to handle the screenshot
   };
-
   const toggleAudio = () => {
     setAudioEnabled(!audioEnabled);
   };
-
   const flow = {
     start: {
       message: `Hi! I'm Kalypso the cat, your MCAT assistant. ${contentTitle ? `Looks like you're working on ${contentTitle}.` : ""} How can I help you today?`,
@@ -162,7 +160,6 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
     },
     botBubble: { simStream: true },
   };
-
   const styles = {
     chatWindowStyle: {
       backgroundColor: '#033979',

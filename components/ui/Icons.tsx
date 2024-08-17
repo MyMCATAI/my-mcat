@@ -81,7 +81,6 @@ import { default as uterusIcon } from '@/public/icons/uterus.svg';
 import { default as virusIcon } from '@/public/icons/virus.svg';
 
 export type IconName = 'acid-base' | 'aerobic' | 'amino' | 'atoms' | 'attitude' | 'attribution' | 'benzene' | 'bioenergetics' | 'body' | 'bonds' | 'bone' | 'brain'| 'car' | 'cell' | 'circuit' | 'cognition' | 'culture' | 'digestion' | 'dna_n_biotechnology' | 'electrochemistry' | 'electrostatics' | 'embryo' | 'emotion' | 'endocrine' | 'energy' | 'enzyme' | 'equi' | 'evolution' | 'expression' | 'eye-scan' | 'fat' | 'fluids' | 'force' | 'gases' | 'genetics' | 'glycolysis' | 'graph' | 'identityformation' | 'immune' | 'institution' | 'interaction' | 'intermolecular' | 'kidney' | 'kinematics' | 'language' | 'learning' | 'light' | 'lipid' | 'lungs' | 'meiosis' | 'mitosis' | 'motivation' | 'muscle' | 'optics' | 'perception' | 'periodic' | 'personality' | 'plasma' | 'presentation' | 'prokaryotes' | 'proteins' | 'rna' | 'self-identity' | 'seperations' | 'shift' | 'skin' | 'soconcom' | 'soconind' | 'solutions' | 'sound' | 'spectroscopy' | 'stereotype' | 'stoi' | 'stratification' | 'structure' | 'sugar' | 'therm' | 'uterus' | 'virus';
-
 export const Icons: Record<IconName, FC<SVGProps<SVGSVGElement>>> = {
   'acid-base': acidBaseIcon,
   'aerobic': aerobicIcon,
