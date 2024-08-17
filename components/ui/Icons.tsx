@@ -12,6 +12,7 @@ import { default as bodyIcon } from '@/public/icons/body.svg';
 import { default as bondsIcon } from '@/public/icons/bonds.svg';
 import { default as boneIcon } from '@/public/icons/bone.svg';
 import { default as brainIcon } from '@/public/icons/brain.svg';
+import { default as carIcon } from '@/public/icons/car.svg';
 import { default as cellIcon } from '@/public/icons/cell.svg';
 import { default as circuitIcon } from '@/public/icons/circuit.svg';
 import { default as cognitionIcon } from '@/public/icons/cognition.svg';
@@ -79,7 +80,7 @@ import { default as thermIcon } from '@/public/icons/therm.svg';
 import { default as uterusIcon } from '@/public/icons/uterus.svg';
 import { default as virusIcon } from '@/public/icons/virus.svg';
 
-export type IconName = 'acid-base' | 'aerobic' | 'amino' | 'atoms' | 'attitude' | 'attribution' | 'benzene' | 'bioenergetics' | 'body' | 'bonds' | 'bone' | 'brain' | 'cell' | 'circuit' | 'cognition' | 'culture' | 'digestion' | 'dna_n_biotechnology' | 'electrochemistry' | 'electrostatics' | 'embryo' | 'emotion' | 'endocrine' | 'energy' | 'enzyme' | 'equi' | 'evolution' | 'expression' | 'eye-scan' | 'fat' | 'fluids' | 'force' | 'gases' | 'genetics' | 'glycolysis' | 'graph' | 'identityformation' | 'immune' | 'institution' | 'interaction' | 'intermolecular' | 'kidney' | 'kinematics' | 'language' | 'learning' | 'light' | 'lipid' | 'lungs' | 'meiosis' | 'mitosis' | 'motivation' | 'muscle' | 'optics' | 'perception' | 'periodic' | 'personality' | 'plasma' | 'presentation' | 'prokaryotes' | 'proteins' | 'rna' | 'self-identity' | 'seperations' | 'shift' | 'skin' | 'soconcom' | 'soconind' | 'solutions' | 'sound' | 'spectroscopy' | 'stereotype' | 'stoi' | 'stratification' | 'structure' | 'sugar' | 'therm' | 'uterus' | 'virus';
+export type IconName = 'acid-base' | 'aerobic' | 'amino' | 'atoms' | 'attitude' | 'attribution' | 'benzene' | 'bioenergetics' | 'body' | 'bonds' | 'bone' | 'brain'| 'car' | 'cell' | 'circuit' | 'cognition' | 'culture' | 'digestion' | 'dna_n_biotechnology' | 'electrochemistry' | 'electrostatics' | 'embryo' | 'emotion' | 'endocrine' | 'energy' | 'enzyme' | 'equi' | 'evolution' | 'expression' | 'eye-scan' | 'fat' | 'fluids' | 'force' | 'gases' | 'genetics' | 'glycolysis' | 'graph' | 'identityformation' | 'immune' | 'institution' | 'interaction' | 'intermolecular' | 'kidney' | 'kinematics' | 'language' | 'learning' | 'light' | 'lipid' | 'lungs' | 'meiosis' | 'mitosis' | 'motivation' | 'muscle' | 'optics' | 'perception' | 'periodic' | 'personality' | 'plasma' | 'presentation' | 'prokaryotes' | 'proteins' | 'rna' | 'self-identity' | 'seperations' | 'shift' | 'skin' | 'soconcom' | 'soconind' | 'solutions' | 'sound' | 'spectroscopy' | 'stereotype' | 'stoi' | 'stratification' | 'structure' | 'sugar' | 'therm' | 'uterus' | 'virus';
 
 export const Icons: Record<IconName, FC<SVGProps<SVGSVGElement>>> = {
   'acid-base': acidBaseIcon,
@@ -94,6 +95,7 @@ export const Icons: Record<IconName, FC<SVGProps<SVGSVGElement>>> = {
   'bonds': bondsIcon,
   'bone': boneIcon,
   'brain': brainIcon,
+  'car': carIcon,
   'cell': cellIcon,
   'circuit': circuitIcon,
   'cognition': cognitionIcon,
