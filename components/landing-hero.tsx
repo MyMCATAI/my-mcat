@@ -77,24 +77,6 @@ export const LandingHero = () => {
         </div>
       </section>
       <AppleCardsCarouselDemo />
-
-      {/*<section className="bg-white py-20">
-        <div className="container mx-auto px-6 max-w-7xl">
-          <div className="flex flex-col md:flex-row items-center gap-8" ref={quoteRef}>
-            <div>
-              <BernieSvg width={260} height={260}/>
-            </div>
-            <div className="mt-8 md:mt-0">
-              <h1 className="text-2xl md:text-3xl text-black font-bold mb-4">
-                &ldquo;Higher education should be a right for all, not a privilege for the few.&rdquo;
-              </h1>
-              <p className="text-xl text-white font-bold mb-1 ms-1">
-                - Senator Bernie Sanders of Vermont
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>*/}
     </>
   );
 };
@@ -197,15 +179,15 @@ const DummyContent = () => {
             >
               Your browser does not support the video tag.
             </video>
-          ) : (
+          ) : item.imageSrc ? (
             <Image
               src={item.imageSrc}
-              alt={item.imageAlt}
+              alt={item.imageAlt || ""}
               height={700}
               width={700}
               className="md:w-full md:h-full h-full w-full mx-auto mt-3 object-contain"
             />
-          )}
+          ) : null}
         </div>
       ))}
     </>
@@ -258,14 +240,14 @@ const DummyContent2 = () => {
               {item.videoSrc === "/landingpage/card2video2.mp4" && (
                 <button
                   onClick={() => {
-                    const video = document.querySelector('video[src="/landingpage/card2video2.mp4"]');
+                    const video = document.querySelector('video[src="/landingpage/card2video2.mp4"]') as HTMLVideoElement;
                     if (video) {
                       if (video.requestFullscreen) {
                         video.requestFullscreen();
-                      } else if (video.webkitRequestFullscreen) {
-                        video.webkitRequestFullscreen();
-                      } else if (video.msRequestFullscreen) {
-                        video.msRequestFullscreen();
+                      } else if ((video as any).webkitRequestFullscreen) {
+                        (video as any).webkitRequestFullscreen();
+                      } else if ((video as any).msRequestFullscreen) {
+                        (video as any).msRequestFullscreen();
                       }
                     }
                   }}
@@ -275,15 +257,15 @@ const DummyContent2 = () => {
                 </button>
               )}
             </div>
-          ) : (
+          ) : item.imageSrc ? (
             <Image
               src={item.imageSrc}
-              alt={item.imageAlt}
+              alt={item.imageAlt || ""}
               height={700}
               width={700}
               className="md:w-full md:h-full h-full w-full mx-auto object-contain"
             />
-          )}
+          ) : null}
         </div>
       ))}
     </>
@@ -331,15 +313,15 @@ const DummyContent3 = () => {
             >
               Your browser does not support the video tag.
             </video>
-          ) : (
+          ) : item.imageSrc ? (
             <Image
               src={item.imageSrc}
-              alt={item.imageAlt}
+              alt={item.imageAlt || ""}
               height={700}
               width={700}
               className="md:w-full md:h-full h-full w-full mx-auto mt-3 object-contain"
             />
-          )}
+          ) : null}
         </div>
       ))}
     </>
