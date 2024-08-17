@@ -9,15 +9,17 @@ interface MyChatBotProps {
   chatbotContext?: {
     contentTitle: string;
     context: string;
-  };  
+  };
+  isVoiceEnabled?: boolean;
 }
 
-const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
+const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = true }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(isVoiceEnabled);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const context = chatbotContext?.context;
   const contentTitle = chatbotContext?.contentTitle;
@@ -42,7 +44,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
       const response = await fetch('/api/conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, context, threadId }),
+        body: JSON.stringify({ message, context, threadId, generateAudio: audioEnabled }),
       });
 
       if (!response.ok) {
@@ -56,7 +58,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
         setThreadId(data.threadId);
       }
 
-      if (data.audio) {
+      if (audioEnabled && data.audio) {
         playAudio(data.audio);
       }
 
@@ -104,7 +106,9 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
     console.log('Screenshot taken:', blob);
     // Add logic here to handle the screenshot
   };
-
+  const toggleAudio = () => {
+    setAudioEnabled(!audioEnabled);
+  };
   const flow = {
     start: {
       message: `Hi! I'm Kalypso the cat, your MCAT assistant. ${contentTitle ? `Looks like you're working on ${contentTitle}.` : ""} How can I help you today?`,
@@ -120,10 +124,11 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
   };
 
   const settings = {
-    general: { embedded: true,
-      showHeader: false,
+    general: { 
+      embedded: true,
+      showHeader: true,
       showFooter: false,
-     },
+    },
     chatHistory: { storageKey: "mcat_assistant_chat_history" },
     header: {
       showAvatar: false,
@@ -134,14 +139,20 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
             onClick={() => window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")}
           >
           </div>
-          <ScreenshotButton onScreenshot={handleScreenshot} />
-          <FileUploadComponent />
+          {/* <ScreenshotButton onScreenshot={handleScreenshot} />
+          <FileUploadComponent /> */}
+          <button 
+            onClick={toggleAudio}
+            className="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            {audioEnabled ? '🔊' : '🔇'}
+          </button>
         </div>
       )
     },
     voice: {
-      disabled: false,
-      defaultToggledOn: false,
+      disabled: !audioEnabled,
+      defaultToggledOn: audioEnabled,
       language: "en-US",
       autoSendDisabled: false,
       autoSendPeriod: 2000,
@@ -157,8 +168,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
     userBubbleStyle: {fontSize: "16px", fontFamily: "Consolas, monospace"},
   };
 
-  const themes = [{ id: "terminal", version: "0.1.0" },
-  ];
+  const themes = [{ id: "terminal", version: "0.1.0" }];
 
   if (!isMounted) {
     return null; // or a loading spinner
@@ -166,6 +176,11 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
 
   return (
     <div>
+       <style jsx global>{`
+        .rcb-chat-input::before {
+          content: none !important;
+        }
+      `}</style>
       <ChatBot
         settings={settings}
         styles={styles}
@@ -173,15 +188,15 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
         flow={flow}
       />
       {error && <p style={{color: 'red'}}>{error}</p>}
-      {isPlaying && <button onClick={stopAudio}>Stop Audio</button>}
+      {isPlaying && isVoiceEnabled && <button onClick={stopAudio}>Stop Audio</button>}
     </div>
   );
 };
 
-const App: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
+const App: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled }) => {
   return (
     <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
-      <MyChatBot chatbotContext={chatbotContext} />
+      <MyChatBot chatbotContext={chatbotContext} isVoiceEnabled={isVoiceEnabled} />
     </div>
   );
 };

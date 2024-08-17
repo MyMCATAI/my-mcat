@@ -229,10 +229,13 @@ const Page = () => {
         />;
       case "KnowledgeProfile":
         return (
+          <>
           <AdaptiveTutoring
             toggleChatBot={toggleChatBot}
             setChatbotContext={setChatbotContext}
           />
+          {chatbotContext.contentTitle}
+          </>
         );
       case "AdaptiveTutoring":
         return "";
