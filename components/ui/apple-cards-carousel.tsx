@@ -128,7 +128,7 @@ export const Card = ({
               className="max-w-5xl mx-auto bg-[#001226] h-fit z-[60] my-10 p-4 md:p-10 rounded-3xl font-sans relative"
             >
               <button
-                className="sticky top-4 h-8 w-8 right-0 ml-auto bg-black rounded-full flex items-center justify-center"
+                className="sticky top-2 h-8 mt-10 w-8 right-0 ml-auto bg-black rounded-full flex items-center justify-center"
                 onClick={handleClose}
               >
                 <IconX className="h-6 w-6 text-neutral-100" />
@@ -153,7 +153,7 @@ export const Card = ({
       <motion.button
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
-        className="rounded-3xl bg-gray-100 dark:bg-neutral-900 h-80 w-56 md:h-[40rem] md:w-96 overflow-hidden flex flex-col items-start justify-start relative z-10 group"
+        className="rounded-3xl bg-gray-100 dark:bg-neutral-900 h-80 w-[80vw] sm:w-56 md:h-[40rem] md:w-96 overflow-hidden flex flex-col items-start justify-start relative z-10 group"
         style={{ boxShadow: '0 0 10px 3px rgba(0, 123, 255, 0.7)' }}
         whileHover={{
           scale: 1.05,
@@ -171,16 +171,16 @@ export const Card = ({
         </motion.div>
         <div className="absolute h-full top-0 inset-x-0 bg-gradient-to-b from-black/50 via-black/30 to-black/20 z-30 pointer-events-none transition-opacity duration-300 group-hover:opacity-0" />
         <div className="absolute h-fullx top-0 inset-x-0 bg-black/20 z-30 pointer-events-none transition-opacity duration-300 group-hover:opacity-0" />
-        <div className="relative z-40 p-8">
+        <div className="relative z-40 p-4 sm:p-8">
           <motion.p
             layoutId={layout ? `category-${card.category}` : undefined}
-            className="text-white text-sm md:text-base font-medium font-sans text-left"
+            className="text-white text-xs sm:text-sm md:text-base font-medium font-sans text-left"
           >
             {card.category}
           </motion.p>
           <motion.p
             layoutId={layout ? `title-${card.title}` : undefined}
-            className="text-white text-xl md:text-3xl font-semibold max-w-xs text-left [text-wrap:balance] font-sans mt-2"
+            className="text-white text-lg sm:text-xl md:text-3xl font-semibold max-w-xs text-left [text-wrap:balance] font-sans mt-2"
           >
             {card.title}
           </motion.p>

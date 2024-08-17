@@ -150,6 +150,9 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
         </div>
       )
     },
+    notification: {
+      disabled: true,
+    },
     voice: {
       disabled: !audioEnabled,
       defaultToggledOn: audioEnabled,
@@ -166,6 +169,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
     },
     botBubbleStyle: {fontSize: "16px", fontFamily: "Consolas, monospace", color: "#aec8e8"},
     userBubbleStyle: {fontSize: "16px", fontFamily: "Consolas, monospace"},
+    headerStyle: {background: "#033979"},
   };
 
   const themes = [{ id: "terminal", version: "0.1.0" }];
