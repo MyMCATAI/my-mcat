@@ -77,24 +77,6 @@ export const LandingHero = () => {
         </div>
       </section>
       <AppleCardsCarouselDemo />
-
-      {/*<section className="bg-white py-20">
-        <div className="container mx-auto px-6 max-w-7xl">
-          <div className="flex flex-col md:flex-row items-center gap-8" ref={quoteRef}>
-            <div>
-              <BernieSvg width={260} height={260}/>
-            </div>
-            <div className="mt-8 md:mt-0">
-              <h1 className="text-2xl md:text-3xl text-black font-bold mb-4">
-                &ldquo;Higher education should be a right for all, not a privilege for the few.&rdquo;
-              </h1>
-              <p className="text-xl text-white font-bold mb-1 ms-1">
-                - Senator Bernie Sanders of Vermont
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>*/}
     </>
   );
 };
@@ -161,19 +143,19 @@ const DummyContent = () => {
     {
       title: "No more worrying about when to study.",
       description: "Enter information about your schedule and we'll automatically plan your prep around your life.",
-      imageSrc: "/landingpage/calendar-min.gif",
-      imageAlt: "Kalypso calendar algorithm demonstration"
+      videoSrc: "/landingpage/card1video1.mp4",
+      videoAlt: "Kalypso calendar algorithm demonstration"
     },
     {
       title: "Personalized & adaptive study plans.",
       description: "Up until the day of your test, we'll create a personalized & flexible study plan that targets your weaknesses.",
-      imageSrc: "/landingpage/landingpagecard1image2.png",
+      imageSrc: "/landingpage/card1image2.png",
       imageAlt: "Personalized study plan demonstration"
     },
     {
       title: "Accountability checks and progress reports.",
       description: "Kalypso will provide daily reports on your progress and pester you to hold you accountable.",
-      imageSrc: "/landingpage/landingpagecard1image3.png",
+      imageSrc: "/landingpage/card1image3.png",
       imageAlt: "Progress tracking demonstration"
     }
   ];
@@ -186,13 +168,26 @@ const DummyContent = () => {
             <span className="font-bold text-blue-400">{item.title}</span>{"   "}
             {item.description}
           </p>
-          <Image
-            src={item.imageSrc}
-            alt={item.imageAlt}
-            height={700}
-            width={700}
-            className="md:w-full md:h-full h-full w-full mx-auto object-contain"
-          />
+          {item.videoSrc ? (
+            <video
+              src={item.videoSrc}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="md:w-full md:h-full h-full w-full mx-auto object-contain"
+            >
+              Your browser does not support the video tag.
+            </video>
+          ) : item.imageSrc ? (
+            <Image
+              src={item.imageSrc}
+              alt={item.imageAlt || ""}
+              height={700}
+              width={700}
+              className="md:w-full md:h-full h-full w-full mx-auto mt-3 object-contain"
+            />
+          ) : null}
         </div>
       ))}
     </>
@@ -204,19 +199,19 @@ const DummyContent2 = () => {
     {
       title: "Our innovative Adaptive Tutoring Suite (ATS) is all you need.",
       description: "Nearly 300 videos & readings organized by yield and weakness. Watch videos, read textbooks, and do practice questions without leaving our site.",
-      imageSrc: "/landingpage/adaptivetutoringsuite.gif",
-      imageAlt: "Kalypso content integration demonstration"
+      videoSrc: "/landingpage/card2video1.mp4",
+      videoAlt: "Kalypso content integration demonstration"
     },
     {
       title: "Kalypso is an AI-powered superkitty that studies WITH you.",
-      description: "Trained on over 10,000 hours of MCAT data and programmed with the latest in ITS research, Kalypso not only answers your questions, but ASKS you questions as you study. Oh, and he talks too!",
-      imageSrc: "/landingpage/interactive-modules.gif",
-      imageAlt: "Interactive learning modules demonstration"
+      description: "Kalypso is trained on over 10,000 hours of MCAT data. He not only answers your questions, but ASKS you questions as you study. Oh, and he talks too!",
+      videoSrc: "/landingpage/card2video2.mp4",
+      videoAlt: "Interactive learning modules demonstration"
     },
     {
       title: "Cutting edge weakness algorithms designed by PhDs.",
-      description: "Our team of experts regularly updates the content to ensure you're always studying the most relevant and up-to-date material.",
-      imageSrc: "/landingpage/content-updates.gif",
+      description: "We're constantly putting the most relevant content in front of you based on your responses to quizzes, flashcards, and tests. Study YOUR high yield.",
+      imageSrc: "/landingpage/card2image3.png",
       imageAlt: "Content updates demonstration"
     }
   ];
@@ -229,13 +224,104 @@ const DummyContent2 = () => {
             <span className="font-bold text-green-400">{item.title}</span>{"   "}
             {item.description}
           </p>
-          <Image
-            src={item.imageSrc}
-            alt={item.imageAlt}
-            height={700}
-            width={700}
-            className="md:w-full md:h-full h-full w-full mx-auto object-contain"
-          />
+          {item.videoSrc ? (
+            <div className="relative mt-6">
+              <video
+                src={item.videoSrc}
+                autoPlay={item.videoSrc !== "/landingpage/card2video2.mp4"}
+                loop
+                playsInline
+                controls={item.videoSrc === "/landingpage/card2video2.mp4"}
+                muted={item.videoSrc !== "/landingpage/card2video2.mp4"}
+                className="md:w-full md:h-full h-full w-full mx-auto object-contain"
+              >
+                Your browser does not support the video tag.
+              </video>
+              {item.videoSrc === "/landingpage/card2video2.mp4" && (
+                <button
+                  onClick={() => {
+                    const video = document.querySelector('video[src="/landingpage/card2video2.mp4"]') as HTMLVideoElement;
+                    if (video) {
+                      if (video.requestFullscreen) {
+                        video.requestFullscreen();
+                      } else if ((video as any).webkitRequestFullscreen) {
+                        (video as any).webkitRequestFullscreen();
+                      } else if ((video as any).msRequestFullscreen) {
+                        (video as any).msRequestFullscreen();
+                      }
+                    }
+                  }}
+                  className="absolute bottom-4 right-4 bg-white text-black px-3 py-1 rounded-md"
+                >
+                  Full Screen
+                </button>
+              )}
+            </div>
+          ) : item.imageSrc ? (
+            <Image
+              src={item.imageSrc}
+              alt={item.imageAlt || ""}
+              height={700}
+              width={700}
+              className="md:w-full md:h-full h-full w-full mx-auto object-contain"
+            />
+          ) : null}
+        </div>
+      ))}
+    </>
+  );
+};
+
+const DummyContent3 = () => {
+  const content = [
+    {
+      title: "Better than UWorld.",
+      description: "Practice questions are crafted entirely within AAMC logic and beta-tested thoroughly with top-scorers. Plus, they're fun reads.",
+      videoSrc: "/landingpage/card3video1.mp4",
+      videoAlt: "AAMC-style question example"
+    },
+    {
+      title: "Supercharged review developed in beta testing with 524+ scorers.",
+      description: "Our research has shown that the best learning is not a lecture, but a conversation. Kalypso will question your logic to improve critical thinking.",
+      imageSrc: "/landingpage/card3image2a.png",
+      imageAlt: "Kalypso-assisted review demonstration"
+    },
+    {
+      title: "Data that works for you.",
+      description: "Our testing suite suggests improvements to your approach using data on your timing, accuracy, and decision-making.",
+      imageSrc: "/landingpage/card3image3.png",
+      imageAlt: "Adaptive question selection visualization"
+    }
+  ];
+
+  return (
+    <>
+      {content.map((item, index) => (
+        <div key={`dummy-content3-${index}`} className="bg-black p-9 md:p-15 rounded-3xl mb-4">
+          <p className="text-white text-base md:text-2xl font-sans max-w-3xl mx-auto">
+            <span className="font-bold text-purple-400">{item.title}</span>{"   "}
+            {item.description}
+          </p>
+          {item.videoSrc ? (
+            <video
+              src={item.videoSrc}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="md:w-full md:h-full h-full w-full mx-auto mt-3 object-contain"
+            >
+              Your browser does not support the video tag.
+            </video>
+          ) : item.imageSrc ? (
+            <Image
+              src={item.imageSrc}
+              alt={item.imageAlt || ""}
+              height={700}
+              width={700}
+              className="md:w-full md:h-full h-full w-full mx-auto mt-3 object-contain"
+            />
+          ) : null}
         </div>
       ))}
     </>
@@ -246,19 +332,19 @@ const data = [
   {
     category: "Advanced calendar algorithm.",
     title: "Your study should be planned around your life —— not the other way around.",
-    src: "/landingpage/kalypsocard1.png",
+    src: "/landingpage/landingpageaa.png",
     content: <DummyContent />,
   },
   {
     category: "State-of-the-art content.",
-    title: "Education software that personalizes Khan Academy, OpenStax, AAMC, and more.",
-    src: "/landingpage/landingpagecardimage2.png",
+    title: "Tutoring software that personalizes Khan Academy, OpenStax, AAMC, and more.",
+    src: "/landingpage/landingpagecarda.png",
     content: <DummyContent2 />,
   },
   {
     category: "High-quality practice.",
-    title: "Written by a 99% scorer, identical to AAMC, with Kalypso-assisted review.",
-    src: "/landingpage/landingpageimage3.png",
-    content: <DummyContent />,
+    title: "Developed by 132-scorers, written in AAMC logic, with Kalypso-assisted review.",
+    src: "/landingpage/landingcardc.png",
+    content: <DummyContent3 />,
   },
 ];
