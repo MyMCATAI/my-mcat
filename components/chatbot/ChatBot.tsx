@@ -9,10 +9,11 @@ interface MyChatBotProps {
   chatbotContext?: {
     contentTitle: string;
     context: string;
-  };  
+  };
+  isVoiceEnabled?: boolean;
 }
 
-const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
+const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = false }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -42,7 +43,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
       const response = await fetch('/api/conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, context, threadId }),
+        body: JSON.stringify({ message, context, threadId, generateAudio: isVoiceEnabled }),
       });
 
       if (!response.ok) {
@@ -56,7 +57,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
         setThreadId(data.threadId);
       }
 
-      if (data.audio) {
+      if (isVoiceEnabled && data.audio) {
         playAudio(data.audio);
       }
 
@@ -120,10 +121,11 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
   };
 
   const settings = {
-    general: { embedded: true,
+    general: { 
+      embedded: true,
       showHeader: false,
       showFooter: false,
-     },
+    },
     chatHistory: { storageKey: "mcat_assistant_chat_history" },
     header: {
       showAvatar: false,
@@ -140,8 +142,8 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
       )
     },
     voice: {
-      disabled: false,
-      defaultToggledOn: false,
+      disabled: !isVoiceEnabled,
+      defaultToggledOn: isVoiceEnabled,
       language: "en-US",
       autoSendDisabled: false,
       autoSendPeriod: 2000,
@@ -149,6 +151,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
     },
     botBubble: { simStream: true },
   };
+
   const styles = {
     chatWindowStyle: {
       backgroundColor: '#033979',
@@ -157,8 +160,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
     userBubbleStyle: {fontSize: "16px", fontFamily: "Consolas, monospace"},
   };
 
-  const themes = [{ id: "terminal", version: "0.1.0" },
-  ];
+  const themes = [{ id: "terminal", version: "0.1.0" }];
 
   if (!isMounted) {
     return null; // or a loading spinner
@@ -173,15 +175,15 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
         flow={flow}
       />
       {error && <p style={{color: 'red'}}>{error}</p>}
-      {isPlaying && <button onClick={stopAudio}>Stop Audio</button>}
+      {isPlaying && isVoiceEnabled && <button onClick={stopAudio}>Stop Audio</button>}
     </div>
   );
 };
 
-const App: React.FC<MyChatBotProps> = ({ chatbotContext }) => {
+const App: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled }) => {
   return (
     <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
-      <MyChatBot chatbotContext={chatbotContext} />
+      <MyChatBot chatbotContext={chatbotContext} isVoiceEnabled={isVoiceEnabled} />
     </div>
   );
 };
