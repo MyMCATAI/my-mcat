@@ -162,7 +162,7 @@ const DummyContent = () => {
     {
       title: "No more worrying about when to study.",
       description: "Enter information about your schedule and we'll automatically plan your prep around your life.",
-      imageSrc: "/landingpage/landingpagecard1image0.gif",
+      imageSrc: "/landingpage/calendar-min.gif",
       imageAlt: "Kalypso calendar algorithm demonstration"
     },
     {
@@ -205,7 +205,7 @@ const DummyContent2 = () => {
     {
       title: "Our innovative Adaptive Tutoring Suite (ATS) is all you need.",
       description: "Nearly 300 videos & readings organized by yield and weakness. Watch videos, read textbooks, and do practice questions without leaving our site.",
-      imageSrc: "/landingpage/ats1.gif",
+      imageSrc: "/landingpage/adaptivetutoringsuite.gif",
       imageAlt: "Kalypso content integration demonstration"
     },
     {
