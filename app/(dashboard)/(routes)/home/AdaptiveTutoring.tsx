@@ -285,6 +285,16 @@
       if (currentContent && currentContent.summary) {
         setIsSummaryOpen(true);
       }
+      if (currentContent && currentContent.transcript) {
+        console.log("fetch content ",currentContent.title)
+        setChatbotContext({
+          contentTitle: currentContent.title || "Untitled",
+          context: currentContent.transcript
+            ? `Here's a transcript of the content that I'm currently looking at: ${currentContent.transcript} Only refer to this if I ask a question directly about what I'm studying`
+            : "No transcript available"
+        });
+        
+      }
     }, [currentContent]);
 
     const formatSummary = (summary: string) => {
@@ -453,7 +463,7 @@
                       onEnded={() => setIsPlaying(false)}
                       controls={true}
                     />
-                    <Collapsible className="mt-4">
+                    <Collapsible className="mt-4" open={isSummaryOpen}> 
                       <CollapsibleTrigger
                         className="flex items-center text-sm text-blue-400 cursor-pointer"
                         onClick={() => setIsSummaryOpen(!isSummaryOpen)}

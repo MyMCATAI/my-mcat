@@ -76,7 +76,6 @@ export const LandingHero = () => {
           </div>
         </div>
       </section>
-
       <AppleCardsCarouselDemo />
 
       {/*<section className="bg-white py-20">
