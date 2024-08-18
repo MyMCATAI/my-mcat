@@ -1,5 +1,6 @@
 import { Passage } from "@/types";
 import React, { useState, useEffect } from "react";
+import ContentRenderer from "./ContentRenderer";
 
 export interface QuizQuestion {
   categoryId: string;
@@ -65,10 +66,18 @@ const Quiz: React.FC<QuizProps> = ({ questions, shuffle = false }) => {
       </div>
 
       <div className="mb-2">
-        <p className="text-lg mb-4 text-white drop-shadow-lg">{currentQuestion.questionContent}</p>
+        <div className="text-lg mb-4 text-white drop-shadow-lg">
+          <ContentRenderer
+            content={currentQuestion.questionContent}
+          />
+        </div>
         {currentQuestion.passage && (
           <div className="mb-4 p-4 bg-gray-100 rounded">
-            <p className="text-sm">{currentQuestion.passage.text}</p>
+            <div className="text-sm text-black">
+              <ContentRenderer
+                content={currentQuestion.passage.text}
+              />
+            </div>
           </div>
         )}
         <div className="space-y-2">
