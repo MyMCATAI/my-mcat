@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Methodlogy from "./Methodlogy";
+import Methodlogy from "./Mission";
 import CheckListing from "./CheckListing";
 import Faqs from "./Faqs";
 

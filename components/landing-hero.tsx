@@ -183,12 +183,12 @@ const AppleCardsCarouselDemo = () => {
   ));
 
   return (
-    <div className="relative z-10">
-      <h2 ref={headingRef} className="max-w-7xl pl-4 flex flex-col justify-center items-center mx-auto mt-16 mb-7 text-center">
+    <div id="about" className="relative z-10">
+      <h2 ref={headingRef} className="max-w-7xl pl-4 flex flex-col justify-center items-center mx-auto mt-10 mb-7 text-center">
         <span className="text-5xl text-blue-200 font-semibold">
           Increase your MCAT score past 520+
         </span>
-        <span className="text-2xl text-gray-300 mt-6">
+        <span className="text-2xl text-gray-300 mt-3 mb-6">
           with our first-of-its-kind tutoring software
         </span>
       </h2>

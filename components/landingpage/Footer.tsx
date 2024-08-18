@@ -101,8 +101,8 @@ const Footer = () => {
                   <Image src={logo} alt="Logo" className="w-full mr-4" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-white text-2xl font">Study Smart AI</span>
-                  <span className="text-gray-400 text-sm">makers of MyMCAT</span>
+                  <span className="text-white text-2xl font">MyMCAT.ai</span>
+                  <span className="text-gray-400 text-xs">by Study Smart</span>
                 </div>
               </div>
             </a>
