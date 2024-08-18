@@ -12,12 +12,12 @@ const CheckListing = () => {
     const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
     const items = [
-        { heading: "We&apos;re experts", text: 'Just relax! Our study methodology is tried and tested by 520+ scorers.', icon: icon },
+        { heading: "We're experts", text: 'Just relax! Our study methodology is tried and tested by 520+ scorers.', icon: icon },
         { heading: "We work with your schedule", text: `Even if you're busy, we prioritize content for you to maximize your score by test day.`, icon: icon },
-        { heading: "We know what&apos;s on the test", text: `You won't miss a thing. Our content is based on the AAMC's content categories.`, icon: icon },
-        { heading: "We&apos;re focused on impact above all else. ", text: `Students are our number one investment. We work for you and put you first above all else.`, icon: icon },
+        { heading: "We know what's on the test", text: `You won't miss a thing. Our content is based on the AAMC's content categories.`, icon: icon },
+        { heading: "We're focused on impact above all else. ", text: `Students are our number one investment. We work for you and put you first above all else.`, icon: icon },
         { heading: "We know the best resources", text: 'Professionally curated content and resources from trusted sources like Khan Academy, UWorld, AAMC.', icon: icon },
-        { heading: "We&apos;re just like you!", text: `Most test prep companies are staffed by people who haven't taken the test-but we're made by premeds for premeds.`, icon: icon },
+        { heading: "We're just like you!", text: `Most test prep companies are staffed by people who haven't taken the test-but we're made by premeds for premeds.`, icon: icon },
     ];
 
     const setItemRef = useCallback((el: HTMLLIElement | null, index: number) => {

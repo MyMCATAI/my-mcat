@@ -15,10 +15,6 @@ import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import Image, { ImageProps } from "next/image";
 import { useOutsideClick } from "@/hooks/use-outside-click";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination } from "swiper/modules";
-import 'swiper/css';
-import 'swiper/css/pagination';
 
 interface CarouselProps {
   items: JSX.Element[];
@@ -41,33 +37,33 @@ export const CarouselContext = createContext<{
 
 export const Carousel = ({ items }: CarouselProps) => {
   return (
-    <Swiper
-      slidesPerView={2}
-      spaceBetween={10}
-      pagination={{
-        clickable: true,
-      }}
-      breakpoints={{
-        640: {
-          slidesPerView: 2,
-          spaceBetween: 20,
-        },
-        768: {
-          slidesPerView: 3,
-          spaceBetween: 30,
-        },
-        1024: {
-          slidesPerView: 3,
-          spaceBetween: 40,
-        },
-      }}
-      modules={[Pagination]}
-      className="mySwiper"
-    >
-      {items.map((item, index) => (
-        <SwiperSlide key={index}>{item}</SwiperSlide>
-      ))}
-    </Swiper>
+    <div className="relative w-full">
+      <div className="py-10 md:py-20">
+        <div className="flex flex-wrap justify-center gap-8 md:gap-10 max-w-7xl mx-auto px-4">
+          {items.map((item, index) => (
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                transition: {
+                  duration: 0.5,
+                  delay: 0.2 * index,
+                  ease: "easeOut",
+                },
+              }}
+              key={"card" + index}
+              className="rounded-3xl"
+            >
+              {item}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -157,7 +153,7 @@ export const Card = ({
       <motion.button
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
-        className="rounded-3xl bg-gray-100 dark:bg-neutral-900 h-[50vh] sm:h-64 w-[80vw] sm:w-56 md:h-[37rem] md:w-96 overflow-hidden flex flex-col items-start justify-start relative z-10 group"
+        className="rounded-3xl bg-gray-100 dark:bg-neutral-900 h-80 sm:h-64 w-[80vw] sm:w-56 md:h-[37rem] md:w-96 overflow-hidden flex flex-col items-start justify-start relative z-10 group"
         style={{ boxShadow: '0 0 10px 3px rgba(0, 123, 255, 0.7)' }}
         whileHover={{
           scale: 1.05,
