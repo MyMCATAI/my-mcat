@@ -8,11 +8,26 @@ interface ChatbotContext {
 
 interface ChatbotWidgetProps {
   chatbotContext: ChatbotContext;
+  chatbotWidth?: number | string;
+  chatbotHeight?: number | string;
+  buttonSize?: number | string;
+  isAnimationEnabled?: boolean;
+  backgroundColor?: string;
+  isVoiceEnabled?: boolean
 }
 
 type KalypsoState = 'wait' | 'talk' | 'end' | 'start';
 
-const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ chatbotContext }) => {
+const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ 
+  chatbotContext, 
+  chatbotWidth = 400, 
+  chatbotHeight = 490, 
+  buttonSize = 150,
+  isAnimationEnabled ,
+  backgroundColor,
+  isVoiceEnabled
+
+}) => {
   const [showChatbot, setShowChatbot] = useState<boolean>(false);
   const [kalypsoState, setKalypsoState] = useState<KalypsoState>('wait');
   const kalypsoRef = useRef<HTMLImageElement>(null);
@@ -26,6 +41,10 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ chatbotContext }) => {
   };
 
   const toggleChatBot = (): void => {
+    if (isAnimationEnabled){
+      setShowChatbot(true);
+      return
+    }
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -56,23 +75,27 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ chatbotContext }) => {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-50">
-      <div className="absolute bottom-6 right-8 flex flex-col items-end pointer-events-auto">
+      <div className="absolute bottom-6 right-12 flex flex-col items-end pointer-events-auto">
         {showChatbot && (
           <div
-            className="bg-black rounded-lg shadow-lg overflow-hidden mb-4"
+            className="rounded-lg shadow-lg overflow-hidden mb-4"
             style={{
-              width: "375px",
-              height: "490px",
-              boxShadow: '0 0 20px 8px rgba(0, 123, 255, 0.5)',
+              width: chatbotWidth,
+              height: chatbotHeight,
+              boxShadow: '0 0 15px 6px rgba(0, 123, 255, 0.4)',
             }}
           >
-            <ChatBot chatbotContext={chatbotContext} />
+            <ChatBot chatbotContext={chatbotContext} width={chatbotWidth} backgroundColor={backgroundColor}  isVoiceEnabled={isVoiceEnabled}/>
           </div>
         )}
         <button
-          className="w-60 h-60 rounded-full overflow-hidden shadow-lg transition duration-120 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
+          className="overflow-hidden transition duration-120 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
           onClick={toggleChatBot}
           aria-label={showChatbot ? "Close Chat" : "Open Chat"}
+          style={{
+            width: buttonSize,
+            height: buttonSize,
+          }}
         >
           <img
             ref={kalypsoRef}

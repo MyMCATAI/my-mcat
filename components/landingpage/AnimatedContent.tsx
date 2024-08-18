@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Methodlogy from "./Mission";
+import Methodology from "./Mission";
 import CheckListing from "./CheckListing";
 import Faqs from "./Faqs";
 
@@ -61,7 +61,7 @@ const AnimatedContent = () => {
   return (
     <div style={{ position: 'relative', zIndex: 1 }}>
       <div ref={methodologyRef} style={{ background: 'white' }}>
-        <Methodlogy />
+        <Methodology />
       </div>
       <div ref={checkListingRef} style={{ background: 'white' }}>
         <CheckListing />
