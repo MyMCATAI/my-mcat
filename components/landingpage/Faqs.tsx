@@ -21,7 +21,7 @@ const Faqs = () => {
         { heading: "How does Kalypso differ from ChatGPT?", text: 'Kalypso is trained on the MCAT with dozens of textbooks and fine-tuned over hundreds of hours. They’re trained on the latest in ITS research and programmed to be interesting and engaging. Who doesn’t love cats?', icon: icon },
         { heading: "What if I bought Kaplan, UWorld, AAMC?", text: `Good news. We strive to be the best resource so we integrate with what you have in our adaptive calendar so you can get the most out of the resources you already have.`, icon: icon },
         { heading: "Does MyMCAT include practice questions and full practice tests?", text: `Yes! We include thousands of novel practic equations, flashcards, AAMC-level passages, and a diagnostic test that’s the best in the industry. `, icon: icon },
-        { heading: "Does MyMCAT offer more than MCAT prep?", text: `MCAT Prep is only the first step of our journey, but an important one: the data we get from our customer base is more valuable than anything else right now. `, icon: icon },
+        { heading: "Does StudySmart offer more than MCAT prep?", text: `MCAT Prep is only the first step of our journey, but an important one. We hope to create an outstanding product with users whose data will inform our approach to medical education and beyond. `, icon: icon },
     ];
 
     return (

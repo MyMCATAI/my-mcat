@@ -131,7 +131,7 @@ const MethodologyAndTestimonials = () => {
               <h1 className="text-5xl md:text-5xl font-bold text-green-500 text-left" ref={titleRef}>
                 A mission-based social business.
               </h1>
-              <div className="mt-12 bg-black p-5 rounded-lg mr-[10em]" style={{  boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
+              <div className="mt-12 bg-black p-5 rounded-lg w-full md:w-auto md:mr-[10em]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
                 <p className="text-white text-xl">
                   Make the world a smarter place. 
                 </p>
@@ -156,16 +156,27 @@ const MethodologyAndTestimonials = () => {
             <Swiper
               modules={[Autoplay]}
               spaceBetween={20}
-              slidesPerView={4}
+              slidesPerView={1}
               loop={true}
               autoplay={{
                 delay: 2000,
                 disableOnInteraction: false,
               }}
+              breakpoints={{
+                640: {
+                  slidesPerView: 2,
+                },
+                768: {
+                  slidesPerView: 3,
+                },
+                1024: {
+                  slidesPerView: 4,
+                },
+              }}
               className="mt-4"
             >
               {universityLogos.map((logo, index) => (
-                <SwiperSlide key={index} className="flex items-center justify-center">
+                <SwiperSlide key={index} className="flex items-center justify-center h-[150px]">
                   <Image src={logo} alt={`University logo ${index + 1}`} width={200} height={200} objectFit="contain" />
                 </SwiperSlide>
               ))}

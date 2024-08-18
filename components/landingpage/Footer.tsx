@@ -97,7 +97,7 @@ const Footer = () => {
           <div className="mb-6 md:mb-0">
             <a href="#" className="flex items-center">
               <div className="flex items-center">
-                <div className="h-20 w-20">
+                <div className="h-32 w-32">
                   <Image src={logo} alt="Logo" className="w-full mr-4" />
                 </div>
                 <div className="flex flex-col">
