@@ -153,7 +153,7 @@ export const Card = ({
       <motion.button
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
-        className="rounded-3xl bg-gray-100 dark:bg-neutral-900 h-80 w-[80vw] sm:w-56 md:h-[40rem] md:w-96 overflow-hidden flex flex-col items-start justify-start relative z-10 group"
+        className="rounded-3xl bg-gray-100 dark:bg-neutral-900 h-64 sm:h-64 w-[80vw] sm:w-56 md:h-[37rem] md:w-96 overflow-hidden flex flex-col items-start justify-start relative z-10 group"
         style={{ boxShadow: '0 0 10px 3px rgba(0, 123, 255, 0.7)' }}
         whileHover={{
           scale: 1.05,
@@ -169,8 +169,7 @@ export const Card = ({
         >
           <span className="text-lg md:text-lg font-bold">Click to find out more!</span>
         </motion.div>
-        <div className="absolute h-full top-0 inset-x-0 bg-gradient-to-b from-black/50 via-black/30 to-black/20 z-30 pointer-events-none transition-opacity duration-300 group-hover:opacity-0" />
-        <div className="absolute h-fullx top-0 inset-x-0 bg-black/20 z-30 pointer-events-none transition-opacity duration-300 group-hover:opacity-0" />
+        <div className="absolute h-full top-0 inset-x-0 bg-gradient-to-b from-black/70 via-black/25 to-black/70 z-30 pointer-events-none transition-opacity duration-300 group-hover:opacity-0" />
         <div className="relative z-40 p-4 sm:p-8">
           <motion.p
             layoutId={layout ? `category-${card.category}` : undefined}
