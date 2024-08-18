@@ -138,6 +138,7 @@ export default function UserTestReviewPage() {
                   <div className="flex-grow overflow-auto">
                     <ReviewQuestionComponent
                       question={currentResponse.question}
+                      passageData={currentPassage} 
                       userResponse={currentResponse}
                       onNext={handleNextQuestion}
                       onPrevious={handlePreviousQuestion}

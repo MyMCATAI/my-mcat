@@ -11,9 +11,16 @@ interface MyChatBotProps {
     context: string;
   };
   isVoiceEnabled?: boolean;
+  width?: string | number;
+  backgroundColor?: string;
 }
 
-const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = true }) => {
+const MyChatBot: React.FC<MyChatBotProps> = ({ 
+  chatbotContext, 
+  isVoiceEnabled = true, 
+  width = '100%',
+  backgroundColor = '#033979'
+}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -106,9 +113,11 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
     console.log('Screenshot taken:', blob);
     // Add logic here to handle the screenshot
   };
+
   const toggleAudio = () => {
     setAudioEnabled(!audioEnabled);
   };
+
   const flow = {
     start: {
       message: `Hi! I'm Kalypso the cat, your MCAT assistant. ${contentTitle ? `Looks like you're working on ${contentTitle}.` : ""} How can I help you today?`,
@@ -139,8 +148,6 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
             onClick={() => window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")}
           >
           </div>
-          {/* <ScreenshotButton onScreenshot={handleScreenshot} />
-          <FileUploadComponent /> */}
           <button 
             onClick={toggleAudio}
             className="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
@@ -163,13 +170,15 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
     },
     botBubble: { simStream: true },
   };
+
   const styles = {
     chatWindowStyle: {
-      backgroundColor: '#033979',
+      backgroundColor: backgroundColor,
+      width: width,
     },
     botBubbleStyle: {fontSize: "16px", fontFamily: "Consolas, monospace", color: "#aec8e8"},
     userBubbleStyle: {fontSize: "16px", fontFamily: "Consolas, monospace"},
-    headerStyle: {background: "#033979"},
+    headerStyle: {background: backgroundColor},
   };
 
   const themes = [{ id: "terminal", version: "0.1.0" }];
@@ -179,8 +188,8 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
   }
 
   return (
-    <div>
-       <style jsx global>{`
+    <div style={{ width: width, backgroundColor: backgroundColor }}>
+      <style jsx global>{`
         .rcb-chat-input::before {
           content: none !important;
         }
@@ -197,10 +206,15 @@ const MyChatBot: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled = 
   );
 };
 
-const App: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled }) => {
+const App: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled, width, backgroundColor }) => {
   return (
     <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
-      <MyChatBot chatbotContext={chatbotContext} isVoiceEnabled={isVoiceEnabled} />
+      <MyChatBot 
+        chatbotContext={chatbotContext} 
+        isVoiceEnabled={isVoiceEnabled} 
+        width={width} 
+        backgroundColor={backgroundColor}
+      />
     </div>
   );
 };
