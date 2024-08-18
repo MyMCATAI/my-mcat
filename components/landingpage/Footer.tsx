@@ -1,5 +1,5 @@
 import React from "react";
-import logo from "../../public/logo.png";
+import logo from "../../public/StudySmartLogo.png";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
@@ -88,7 +88,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-[#2D4778] ">
+    <footer className="bg-black ">
       <div className="mx-auto max-w-screen-xl py-6 ">
         <div
           className="block lg:flex justify-between"
@@ -97,10 +97,13 @@ const Footer = () => {
           <div className="mb-6 md:mb-0">
             <a href="#" className="flex items-center">
               <div className="flex items-center">
-                <div className="h-16 w-16">
+                <div className="h-20 w-20">
                   <Image src={logo} alt="Logo" className="w-full mr-4" />
                 </div>
-                <span className="text-white text-2xl font-semibold">Karki</span>
+                <div className="flex flex-col">
+                  <span className="text-white text-2xl font">Study Smart AI</span>
+                  <span className="text-gray-400 text-sm">makers of MyMCAT</span>
+                </div>
               </div>
             </a>
           </div>
@@ -128,7 +131,7 @@ const Footer = () => {
           <span className="text-md text-gray-400 sm:text-center">
             © 2024{" "}
             <a href="#" className="hover:underline ">
-              KarkiSuit
+              StudySmartAI
             </a>
             . All Rights Reserved.
           </span>

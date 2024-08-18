@@ -4,35 +4,71 @@ import Image from "next/image";
 import Link from "next/link";
 import cat from "../public/hero.gif";
 import laptop from "../public/laptop.png";
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import BernieSvg from "../public/Bernie.svg";
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Carousel, Card } from "@/components/ui/apple-cards-carousel";
 
+gsap.registerPlugin(ScrollTrigger);
+
 export const LandingHero = () => {
   const quoteRef = useRef(null);
   const videoRef = useRef(null);
+  const meowSectionRef = useRef(null);
+  const titleRef = useRef(null);
+  const paragraph1Ref = useRef(null);
+  const paragraph2Ref = useRef(null);
+  const paragraph3Ref = useRef(null);
+  const paragraph4Ref = useRef(null);
+  const paragraph5Ref = useRef(null);
 
-  useEffect(() => {
-    const quoteElement = quoteRef.current;
-    gsap.set(quoteElement, { opacity: 0, y: 50 });
-    gsap.to(quoteElement, {
-      opacity: 1,
-      y: 0,
-      duration: 1,
-      ease: "power2.out",
-      scrollTrigger: {
-        trigger: quoteElement,
-        start: "top 50%",
-        end: "top 10%",
-        toggleActions: "play none none reverse"
-      }
+  useLayoutEffect(() => {
+    let ctx = gsap.context(() => {
+      const quoteElement = quoteRef.current;
+      gsap.set(quoteElement, { opacity: 0, y: 50 });
+      gsap.to(quoteElement, {
+        opacity: 1,
+        y: 0,
+        duration: 1,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: quoteElement,
+          start: "top 50%",
+          end: "top 10%",
+          toggleActions: "play none none reverse"
+        }
+      });
+
+      const section = meowSectionRef.current;
+      const title = titleRef.current;
+      const p1 = paragraph1Ref.current;
+      const p2 = paragraph2Ref.current;
+      const p3 = paragraph3Ref.current;
+      const p4 = paragraph4Ref.current;
+      const p5 = paragraph5Ref.current;
+
+      gsap.set([title, p1, p2, p3, p4, p5], { opacity: 0, y: 50 });
+
+      const timeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: "top 40%",
+          end: "bottom 10%",
+          toggleActions: "play none none reverse",
+        }
+      });
+
+      timeline
+        .to(title, { opacity: 1, y: 0, duration: 0.3 })
+        .to(p1, { opacity: 1, y: 0, duration: 0.6 }, "+=0.3")
+        .to(p2, { opacity: 1, y: 0, duration: 0.6 }, "+=0.3")
+        .to(p3, { opacity: 1, y: 0, duration: 0.6 }, "+=0.3")
+        .to(p4, { opacity: 1, y: 0, duration: 0.6 }, "+=0.3")
+        .to(p5, { opacity: 1, y: 0, duration: 0.6 }, "+=0.3");
     });
 
-    return () => {
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-    };
+    return () => ctx.revert();
   }, []);
 
   return (
@@ -76,7 +112,44 @@ export const LandingHero = () => {
           </div>
         </div>
       </section>
-      <AppleCardsCarouselDemo />
+
+      <section 
+        ref={meowSectionRef} 
+        className="w-full py-32 bg-[#000c1e] relative"
+      >
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: 'url("/stars.jpeg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            mixBlendMode: 'screen',
+          }}
+        ></div>
+        <div className="container mx-auto px-6 max-w-6xl relative z-10">
+          <div className="w-full md:w-[80%] mx-auto mb-40 text-center space-y-12">
+            <h2 ref={titleRef} className="text-4xl text-center text-white font-bold mb-16 pt-16">Meow there!</h2>
+            <p ref={paragraph1Ref} className="text-2xl text-center text-white mb-12">
+              MyMCAT is a tech venture built by passionate, top-scoring students.
+            </p>
+            <p ref={paragraph2Ref} className="text-2xl text-center text-white mb-12">
+              We believe the world needs <strong className="font-bold">a revolution in learning.</strong>
+            </p>
+            <p ref={paragraph3Ref} className="text-2xl text-center text-white mb-12">
+              Where everyone has <strong className="font-bold">a fair shot.</strong>
+            </p>
+            <p ref={paragraph4Ref} className="text-2xl text-center text-white mb-12">
+              Anyone can <strong className="font-bold">achieve greatness.</strong>
+            </p>
+            <p ref={paragraph5Ref} className="text-2xl text-center text-white mb-20">
+              And that, no matter where you begin, you can...
+            </p>
+          </div>
+        </div>
+
+        <AppleCardsCarouselDemo />
+      </section>
     </>
   );
 };
@@ -84,27 +157,25 @@ export const LandingHero = () => {
 const AppleCardsCarouselDemo = () => {
   const headingRef = useRef(null);
 
-  useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
-    
-    const headingElement = headingRef.current;
-    gsap.set(headingElement, { opacity: 0, y: 50 });
-    gsap.to(headingElement, {
-      opacity: 1,
-      y: 0,
-      duration: 1,
-      ease: "power2.out",
-      scrollTrigger: {
-        trigger: headingElement,
-        start: "top 80%",
-        end: "top 20%",
-        toggleActions: "play none none reverse"
-      }
+  useLayoutEffect(() => {
+    let ctx = gsap.context(() => {
+      const headingElement = headingRef.current;
+      gsap.set(headingElement, { opacity: 0, y: 50 });
+      gsap.to(headingElement, {
+        opacity: 1,
+        y: 0,
+        duration: 1,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: headingElement,
+          start: "top 40%",
+          end: "top 20%",
+          toggleActions: "play none none reverse"
+        }
+      });
     });
 
-    return () => {
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-    };
+    return () => ctx.revert();
   }, []);
 
   const cards = data.map((card, index) => (
@@ -112,28 +183,17 @@ const AppleCardsCarouselDemo = () => {
   ));
 
   return (
-    <div className="w-full h-full py-20 bg-[#000c1e] relative">
-      <div 
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: 'url("/stars.jpeg")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      ></div>
-      <div className="relative z-10">
-        <h2 ref={headingRef} className="max-w-7xl pl-4 flex flex-col justify-center items-center mx-auto mt-20 mb-7 text-center">
-          <span className="text-5xl text-blue-200 font-semibold">
-            Increase your MCAT score past 520+
-          </span>
-          <span className="text-2xl text-gray-300 mt-6">
-            with our first-of-its-kind tutoring software
-          </span>
-        </h2>
+    <div className="relative z-10">
+      <h2 ref={headingRef} className="max-w-7xl pl-4 flex flex-col justify-center items-center mx-auto mt-20 mb-7 text-center">
+        <span className="text-5xl text-blue-200 font-semibold">
+          Increase your MCAT score past 520+
+        </span>
+        <span className="text-2xl text-gray-300 mt-6">
+          with our first-of-its-kind tutoring software
+        </span>
+      </h2>
 
-        <Carousel items={cards} />
-      </div>
+      <Carousel items={cards} />
     </div>
   );
 };
@@ -225,45 +285,24 @@ const DummyContent2 = () => {
             {item.description}
           </p>
           {item.videoSrc ? (
-            <div className="relative mt-6">
-              <video
-                src={item.videoSrc}
-                autoPlay={item.videoSrc !== "/landingpage/card2video2.mp4"}
-                loop
-                playsInline
-                controls={item.videoSrc === "/landingpage/card2video2.mp4"}
-                muted={item.videoSrc !== "/landingpage/card2video2.mp4"}
-                className="md:w-full md:h-full h-full w-full mx-auto object-contain"
-              >
-                Your browser does not support the video tag.
-              </video>
-              {item.videoSrc === "/landingpage/card2video2.mp4" && (
-                <button
-                  onClick={() => {
-                    const video = document.querySelector('video[src="/landingpage/card2video2.mp4"]') as HTMLVideoElement;
-                    if (video) {
-                      if (video.requestFullscreen) {
-                        video.requestFullscreen();
-                      } else if ((video as any).webkitRequestFullscreen) {
-                        (video as any).webkitRequestFullscreen();
-                      } else if ((video as any).msRequestFullscreen) {
-                        (video as any).msRequestFullscreen();
-                      }
-                    }
-                  }}
-                  className="absolute bottom-4 right-4 bg-white text-black px-3 py-1 rounded-md"
-                >
-                  Full Screen
-                </button>
-              )}
-            </div>
+            <video
+              src={item.videoSrc}
+              autoPlay={item.videoSrc !== "/landingpage/card2video2.mp4"}
+              loop
+              playsInline
+              controls={item.videoSrc === "/landingpage/card2video2.mp4"}
+              muted={item.videoSrc !== "/landingpage/card2video2.mp4"}
+              className="md:w-full md:h-full h-full w-full mx-auto object-contain mt-6"
+            >
+              Your browser does not support the video tag.
+            </video>
           ) : item.imageSrc ? (
             <Image
               src={item.imageSrc}
               alt={item.imageAlt || ""}
               height={700}
               width={700}
-              className="md:w-full md:h-full h-full w-full mx-auto object-contain"
+              className="md:w-full md:h-full h-full w-full mx-auto mt-3 object-contain"
             />
           ) : null}
         </div>
@@ -331,7 +370,7 @@ const DummyContent3 = () => {
 const data = [
   {
     category: "Advanced calendar algorithm.",
-    title: "Your study should be planned around your life —— not the other way around.",
+    title: "Your study should be planned around your life — not the other way around.",
     src: "/landingpage/landingpageaa.png",
     content: <DummyContent />,
   },
