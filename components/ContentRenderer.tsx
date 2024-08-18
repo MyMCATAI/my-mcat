@@ -2,6 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
@@ -17,16 +18,21 @@ SyntaxHighlighter.registerLanguage('python', python);
 
 interface ContentRendererProps {
   content: string;
-  onLinkClick: (href: string, event: React.MouseEvent) => void;
+  onLinkClick?: (href: string, event: React.MouseEvent) => void;
 }
 
 const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick }) => {
   const sanitizedContent = DOMPurify.sanitize(content);
 
+  const generateAwsS3Url = (imageName: string): string => {
+    const baseUrl = process.env.NEXT_PUBLIC_AWS_S3_URL || 'https://my-mcat.s3.us-east-2.amazonaws.com/';
+    return `${baseUrl}content/${encodeURIComponent(imageName)}`;
+  };
+
   return (
     <ReactMarkdown
       remarkPlugins={[remarkMath]}
-      rehypePlugins={[rehypeKatex]}
+      rehypePlugins={[rehypeKatex, rehypeRaw]}
       components={{
         code({node, inline, className, children, ...props}: any) {
           const match = /language-(\w+)/.exec(className || '');
@@ -52,7 +58,7 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick 
               className="text-blue-400 hover:underline" 
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
-                onLinkClick(href || '', e);
+                onLinkClick && onLinkClick(href || '', e);
               }}
               {...props}
             >
@@ -61,7 +67,20 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick 
           )
         },
         img({node, alt, src, ...props}: any) {
-          return <img src={src} alt={alt} className="max-w-full h-auto my-2" {...props} />
+          const awsImageUrl = generateAwsS3Url(src);
+          return <img src={awsImageUrl} alt={alt} className="max-w-full h-auto my-2" {...props} />
+        },
+        em({node, children, ...props}: any) {
+          return <em className="italic" {...props}>{children}</em>
+        },
+        strong({node, children, ...props}: any) {
+          return <strong className="font-bold" {...props}>{children}</strong>
+        },
+        u({node, children, ...props}: any) {
+          return <u className="underline" {...props}>{children}</u>
+        },
+        div({node, children, ...props}: any) {
+          return <div className="my-2" {...props}>{children}</div>
         }
       }}
       className="text-lg text-left text-white space-y-2"
