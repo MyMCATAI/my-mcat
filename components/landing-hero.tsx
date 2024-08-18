@@ -61,11 +61,11 @@ export const LandingHero = () => {
 
       timeline
         .to(title, { opacity: 1, y: 0, duration: 0.3 })
-        .to(p1, { opacity: 1, y: 0, duration: 0.6 }, "+=0.3")
-        .to(p2, { opacity: 1, y: 0, duration: 0.6 }, "+=0.3")
-        .to(p3, { opacity: 1, y: 0, duration: 0.6 }, "+=0.3")
-        .to(p4, { opacity: 1, y: 0, duration: 0.6 }, "+=0.3")
-        .to(p5, { opacity: 1, y: 0, duration: 0.6 }, "+=0.3");
+        .to(p1, { opacity: 1, y: 0, duration: 0.4 }, "+=0.2")
+        .to(p2, { opacity: 1, y: 0, duration: 0.4 }, "+=0.2")
+        .to(p3, { opacity: 1, y: 0, duration: 0.4 }, "+=0.2")
+        .to(p4, { opacity: 1, y: 0, duration: 0.4 }, "+=0.2")
+        .to(p5, { opacity: 1, y: 0, duration: 0.4 }, "+=0.2");
     });
 
     return () => ctx.revert();
