@@ -98,21 +98,21 @@ const IntroPage = () => {
           />
         </div>
       )}
-
       {formSubmitted && (
         <div className="animate-fadeIn mt-8">
-          <iframe
-            width="1200"
-            height="660"
-            src="https://www.youtube.com/embed/H58vbez_m4E?autoplay=1"
-            title="YouTube video player"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
+          <Typewriter
+            onInit={(typewriter) => {
+              typewriter
+                .typeString("Thanks! We'll reach out to you when we open our beta :)")
+                .start();
+            }}
+            options={{
+              delay: 50,
+              cursor: '',
+            }}
+          />
         </div>
       )}
-
       <style jsx global>{`
         .Typewriter__wrapper {
           font-size: 1.0rem;

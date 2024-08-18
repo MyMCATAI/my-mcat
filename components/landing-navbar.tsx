@@ -16,7 +16,7 @@ export const LandingNavbar = () => {
 
   const navLinks = useMemo(() => [
     { name: "Home", href: "#home" },
-    { name: "Methodology", href: "#methodology" },
+    { name: "About", href: "#about" },
     { name: "Mission", href: "#mission" },
     { name: "Keypoints", href: "#keypoints" },
   ], []);
@@ -88,7 +88,7 @@ export const LandingNavbar = () => {
           className={`lg:flex ${
             isOpen ? "hidden" : "hidden"
           } lg:block justify-center lg:justify-center py-2 px-5 rounded-[60px]`}
-          style={{ backgroundColor: "#efeff0" }}
+          style={{ backgroundColor: "#0c4ea7" }}
         >
           {navLinks.map((link) => (
             <a
@@ -96,8 +96,8 @@ export const LandingNavbar = () => {
               href={link.href}
               className={`px-4 py-1 ${
                 activeSection === link.name
-                  ? "text-[#007AFF] bg-white lg:rounded-[60px] lg:text-[#007AFF] lg:bg-white"
-                  : "text-black"
+                  ? "text-black bg-white lg:rounded-[60px]"
+                  : "text-white"
               }`}
             >
               {link.name}
@@ -107,7 +107,7 @@ export const LandingNavbar = () => {
 
         <div className="flex items-center hidden lg:block">
           <Link href={"/intro"}>
-            <button className="bg-[#2D4778] text-white py-2 text-lg md:text-[16px] px-4 rounded-[8px]">
+            <button className="bg-white text-black py-2 text-lg md:text-[16px] px-4 rounded-[8px]">
               Join the waitlist
             </button>
           </Link>
