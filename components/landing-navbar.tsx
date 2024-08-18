@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import logo from "../public/logo.png";
+import logo from "../public/StudySmartLogo.png";
 
 export const LandingNavbar = () => {
   const { isSignedIn } = useAuth();
@@ -44,13 +44,16 @@ export const LandingNavbar = () => {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
       <Link href={"/"}>
         <div className="flex items-center">
-          <div className="h-16 w-16">
+          <div className="h-20 w-20">
            
             <Image src={logo} alt="Logo" className="w-full mr-4" />
            
             
           </div>
-          <span className="text-white text-2xl pl-4">myMCAT.ai</span>
+          <div className="flex flex-col">
+            <span className="text-white text-2xl pl-4">MyMCAT.ai</span>
+            <span className="text-gray-400 text-xs pl-4">by Study Smart</span>
+          </div>
         </div>
         </Link>
 

@@ -39,7 +39,7 @@ export const Carousel = ({ items }: CarouselProps) => {
   return (
     <div className="relative w-full">
       <div className="py-10 md:py-20">
-        <div className="flex flex-wrap justify-center gap-10 md:gap-12 max-w-7xl mx-auto px-4">
+        <div className="flex flex-wrap justify-center gap-8 md:gap-10 max-w-7xl mx-auto px-4">
           {items.map((item, index) => (
             <motion.div
               initial={{
