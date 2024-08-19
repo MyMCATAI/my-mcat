@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Question, UserResponse } from '@/types';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
+import { ChevronDown, ChevronUp, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { PassageData } from '@/components/test/Passage';
 
 interface ReviewQuestionComponentProps {
@@ -15,6 +17,11 @@ interface ReviewQuestionComponentProps {
   isLast: boolean;
   currentQuestionIndex: number;
   totalQuestions: number;
+}
+
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
@@ -30,11 +37,20 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
 }) => {
   const [explanations, setExplanations] = useState<string[]>([]);
   const [selectedExplanationIndex, setSelectedExplanationIndex] = useState<number | null>(null);
-  const [isOpen, setIsOpen] = useState(true);
-  const [chatbotContext, setChatbotContext] = useState({
-    contentTitle: "",
-    context: ""
-  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isExplanationsOpen, setIsExplanationsOpen] = useState(false);
+  const [defense, setDefense] = useState('');
+  const [aiResponse, setAiResponse] = useState('');
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [showExplanations, setShowExplanations] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+
+  useEffect(() => {
+    setDefense('');
+    setAiResponse('');
+    setShowExplanations(false);
+  }, [question]);
+
   useEffect(() => {
     if (question) {
       const options = JSON.parse(question.questionOptions);
@@ -60,26 +76,60 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       
       Explanation for correct answer: ${answerNotes[0] || 'No explanation available.'} \n
             
-      Please provide any insights, clarifications, or additional information about this question and the answers.
-            `.trim();
-      setChatbotContext({
-        contentTitle: question.questionContent.slice(0.60),
-        context
-      })
+      I'm going to explain my line of thinking and defend my answer, help me use this context to learn.
+      `.trim();
+
+      setChatMessages([{ role: 'user', content: context }, { role: 'assistant', content: "Ok, thank you for the context, now send me your defense for why you chose that answer." }]);
     }
+  }, [question, userResponse, passageData]);
+  const handleSubmitDefense = async () => {
+    if (!defense.trim()) return;
+    setIsLoading(true);
 
+    try {
+      setHasSubmitted(true);
 
-  }, [question, userResponse]);
+      const context = `
+        Here's my answer: ${userResponse.userAnswer}
+        \n
+        and here's my reasoning for it: ${defense}
+        
+        Please provide feedback on my answer. Be encouraging but also point out any misunderstandings.
+      `;
+
+      const response = await fetch('/api/conversation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: defense,
+          context,
+          assistantId: "asst_61EMvczy4MpaJqUObrWceV9V", // todo, put this in env
+          generateAudio: false,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch response');
+
+      const data = await response.json();
+      setAiResponse(data.message);
+      setShowExplanations(true);
+    } catch (error) {
+      console.error('Error:', error);
+      setAiResponse('Sorry, there was an error processing your request.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!question) return null;
   const options = JSON.parse(question.questionOptions);
   const correctAnswerIndex = 0; // Assuming the correct answer is always the first option
 
   const getOptionClass = (index: number) => {
-    if (index === correctAnswerIndex) {
+    if (index === correctAnswerIndex && showExplanations) {
       return 'bg-green-500 text-white';
     }
-    if (index === options.indexOf(userResponse.userAnswer) && !userResponse.isCorrect) {
+    if (index === options.indexOf(userResponse.userAnswer) && !userResponse.isCorrect && showExplanations) {
       return 'bg-red-500 text-white';
     }
     if (index === selectedExplanationIndex) {
@@ -108,45 +158,89 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
             </div>
           ))}
         </div>
-        <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4 border border-gray-200 rounded-lg">
+        
+        <h4 className="font-semibold mb-2">Defend your answer:</h4>
+        {!hasSubmitted ?
+        <div className="mt-4">
+        <div className="flex items-center justify-center m-2">
+          <Textarea
+            value={defense}
+            onChange={(e) => setDefense(e.target.value)}
+            placeholder="Explain your reasoning..."
+            className="flex-grow mr-2"
+            disabled={hasSubmitted}
+          />
+          <div className="flex items-center justify-center ">
+          <Button 
+            onClick={handleSubmitDefense} 
+            disabled={isLoading || hasSubmitted || !defense}
+            className="self-start"
+          >
+            {isLoading ? 'Sending...' : 'Send'}
+          </Button>
+          </div>
+
+        </div>
+      </div>
+        : (
+          <div className="mt-4 bg-gray-100 p-4 rounded-lg">
+            <div className="mb-2 flex justify-end">
+              <p className="inline-block p-2 rounded-lg bg-white max-w-[80%]">{defense}</p>
+            </div>
+            <div className="mb-1 flex justify-start">
+              <span className="text-sm text-gray-600 ml-2">Kalypso 🐱</span>
+            </div>
+            <div className="flex justify-start">
+              <p className="inline-block p-2 rounded-lg bg-blue-100 text-blue-800 max-w-[80%]">{aiResponse}</p>
+            </div>
+          </div>
+        )}
+            <div className="max-h-[400px] overflow-y-auto">
+            {showExplanations && (
+        <Collapsible
+          open={isExplanationsOpen}
+          onOpenChange={setIsExplanationsOpen}
+          className="mt-4 border border-gray-200 rounded-lg"
+        >
           <CollapsibleTrigger className="flex justify-between items-center w-full p-4 font-semibold">
-            Explanation and Notes
-            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            Explanations and Details
+            {isExplanationsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
           <CollapsibleContent className="p-4">
-            <div className="max-h-[400px] overflow-y-auto">
-              <p><strong>Your answer:</strong> {userResponse.userAnswer}</p>
-              <p><strong>Correct answer:</strong> {options[correctAnswerIndex]}</p>
-              <p className={userResponse.isCorrect ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
-                {userResponse.isCorrect ? "Correct" : "Incorrect"}
-              </p>
-              <p><strong>Time spent:</strong> {userResponse.timeSpent || "0"} seconds</p>
-              
-              {selectedExplanationIndex !== null && (
-                <div className="mt-4">
-                  <h4 className="font-semibold">Explanation for selected answer:</h4>
-                  <p className={`p-3 rounded ${selectedExplanationIndex === correctAnswerIndex ? 'bg-green-100' : 'bg-red-100'}`}>
-                    {explanations[selectedExplanationIndex]}
-                  </p>
-                </div>
-              )}
+            <p><strong>Your answer:</strong> {userResponse.userAnswer}</p>
+            <p><strong>Time spent:</strong> {userResponse.timeSpent || "0"} seconds</p>
+            <p><strong>Correct answer:</strong> {options[correctAnswerIndex]}</p>
+            <p className={userResponse.isCorrect ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
+              {userResponse.isCorrect ? "Correct" : "Incorrect"}
+            </p>
 
-              {selectedExplanationIndex !== correctAnswerIndex && (
-                <div className="mt-4">
-                  <h4 className="font-semibold">Explanation for correct answer:</h4>
-                  <p className="bg-green-100 p-3 rounded">{explanations[correctAnswerIndex]}</p>
-                </div>
-              )}
+            {selectedExplanationIndex !== null && (
+              <div className="mt-4">
+                <h4 className="font-semibold">Explanation for selected answer:</h4>
+                <p className={`p-3 rounded ${selectedExplanationIndex === correctAnswerIndex ? 'bg-green-100' : 'bg-red-100'}`}>
+                  {explanations[selectedExplanationIndex]}
+                </p>
+              </div>
+            )}
 
-              {userResponse.userNotes && (
-                <div className="mt-4">
-                  <h4 className="font-semibold">Your notes:</h4>
-                  <p className="bg-blue-100 p-3 rounded">{userResponse.userNotes}</p>
-                </div>
-              )}
-            </div>
+            {selectedExplanationIndex !== correctAnswerIndex && (
+              <div className="mt-4">
+                <h4 className="font-semibold">Explanation for correct answer:</h4>
+                <p className="bg-green-100 p-3 rounded">{explanations[correctAnswerIndex]}</p>
+              </div>
+            )}
+
+            {userResponse.userNotes && (
+              <div className="mt-4">
+                <h4 className="font-semibold">Your notes:</h4>
+                <p className="bg-blue-100 p-3 rounded">{userResponse.userNotes}</p>
+              </div>
+            )}
           </CollapsibleContent>
         </Collapsible>
+      )}
+
+            </div>
       </div>
       <div className="flex justify-between mt-4">
         <button
@@ -163,11 +257,6 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
         >
           Next
         </button>
-      </div>
-      <div className="mt-4">
-        <ChatbotWidget chatbotContext={chatbotContext} buttonSize={120} chatbotWidth={750} chatbotHeight={300}
-        isVoiceEnabled={false}
-        />
       </div>
     </div>
   );
