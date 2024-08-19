@@ -64,7 +64,7 @@ const CustomChatbot: React.FC<CustomChatbotProps> = ({ assistantId, threadId: in
           </Button>
           {response && (
             <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-              <h4 className="font-semibold mb-2">Assistant's Response:</h4>
+              <h4 className="font-semibold mb-2">Assistant&apos;s Response:</h4>
               <p>{response}</p>
             </div>
           )}
