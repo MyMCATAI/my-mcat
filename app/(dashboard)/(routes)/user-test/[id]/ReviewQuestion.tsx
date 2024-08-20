@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Question, UserResponse } from '@/types';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, Send } from "lucide-react";
@@ -39,17 +39,13 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   const [selectedExplanationIndex, setSelectedExplanationIndex] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isExplanationsOpen, setIsExplanationsOpen] = useState(false);
-  const [defense, setDefense] = useState('');
-  const [aiResponse, setAiResponse] = useState('');
+  const [userInput, setUserInput] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [showExplanations, setShowExplanations] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [context, setContext] = useState("");
 
-  useEffect(() => {
-    setDefense('');
-    setAiResponse('');
-    setShowExplanations(false);
-  }, [question]);
+  const [showExplanations, setShowExplanations] = useState(false);
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (question) {
@@ -62,10 +58,10 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       const correctAnswer = options[0];
       const userAnswer = options[userAnswerIndex];
 
-      const context = `
-      I'm reviewing a test question I've answered, here's some context
+      setContext(`
+      I'm reviewing a test question I've answered, here's some context on my answer
 
-      ${passageData ? "Questions Passage: " + passageData.text : ""} \n
+      ${passageData ? "Questions Passage: " + passageData.text : ""} \n\n
       Question: ${question.questionContent} \n
       Options: ${question.questionOptions} \n
       Correct Answer: ${correctAnswer} \n
@@ -77,32 +73,38 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       Explanation for correct answer: ${answerNotes[0] || 'No explanation available.'} \n
             
       I'm going to explain my line of thinking and defend my answer, help me use this context to learn.
-      `.trim();
 
-      setChatMessages([{ role: 'user', content: context }, { role: 'assistant', content: "Ok, thank you for the context, now send me your defense for why you chose that answer." }]);
+      Here's my explanation: 
+      `)
     }
   }, [question, userResponse, passageData]);
-  const handleSubmitDefense = async () => {
-    if (!defense.trim()) return;
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
+  
+  const handleSendMessage = async () => {
+
+    let message = ""
+
+    if (chatMessages.length<1){
+      message = context 
+    }
+    message = message + userInput
+    if (!userInput.trim()) return;
     setIsLoading(true);
+    const newUserMessage: ChatMessage = { role: 'user', content: userInput };
+    setChatMessages(prevMessages => [...prevMessages, newUserMessage]);
+    setUserInput('');
 
     try {
-      setHasSubmitted(true);
-
-      const context = `
-        Here's my answer: ${userResponse.userAnswer}
-        \n
-        and here's my reasoning for it: ${defense}
-        
-        Please provide feedback on my answer. Be encouraging but also point out any misunderstandings.
-      `;
-
       const response = await fetch('/api/conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: defense,
-          context,
+          message: message,
+          threadId: threadId,
           assistantId: "asst_61EMvczy4MpaJqUObrWceV9V", // todo, put this in env
           generateAudio: false,
         }),
@@ -111,11 +113,16 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       if (!response.ok) throw new Error('Failed to fetch response');
 
       const data = await response.json();
-      setAiResponse(data.message);
-      setShowExplanations(true);
+      const newAssistantMessage: ChatMessage = { role: 'assistant', content: data.message };
+      setChatMessages(prevMessages => [...prevMessages, newAssistantMessage]);
+      setThreadId(data.threadId);
+
+      if (!showExplanations) {
+        setShowExplanations(true);
+      }
     } catch (error) {
       console.error('Error:', error);
-      setAiResponse('Sorry, there was an error processing your request.');
+      setChatMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Sorry, there was an error processing your request.' }]);
     } finally {
       setIsLoading(false);
     }
@@ -160,20 +167,45 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
         </div>
         
         <h4 className="font-semibold mb-2">Defend your answer:</h4>
-        {!hasSubmitted ?
         <div className="mt-4">
+        {chatMessages.length>0 && (
+        <div className="mt-4 bg-gray-100 p-4 rounded-lg max-h-[400px] overflow-y-auto">
+        <div className="space-y-4">
+          {chatMessages.map((message, index) => (
+            <React.Fragment key={index}>
+              {message.role === 'user' && (
+                <div className="flex justify-end">
+                  <p className="inline-block p-2 rounded-lg bg-white max-w-[80%]">{message.content}</p>
+                </div>
+              )}
+              {message.role === 'assistant' && (
+                <div className="space-y-1">
+                  <div className="flex justify-start">
+                    <span className="text-sm text-gray-600 ml-2">Kalypso 🐱</span>
+                  </div>
+                  <div className="flex justify-start">
+                    <p className="inline-block p-2 rounded-lg bg-blue-100 text-blue-800 max-w-[80%]">{message.content}</p>
+                  </div>
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+        )
+        }
         <div className="flex items-center justify-center m-2">
+          
           <Textarea
-            value={defense}
-            onChange={(e) => setDefense(e.target.value)}
-            placeholder="Explain your reasoning..."
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            placeholder={chatMessages.length>1?"Type your Message":"Why did you choose your answer? Explain your line of thinking..."}
             className="flex-grow mr-2"
-            disabled={hasSubmitted}
           />
           <div className="flex items-center justify-center ">
           <Button 
-            onClick={handleSubmitDefense} 
-            disabled={isLoading || hasSubmitted || !defense}
+            onClick={handleSendMessage} 
+            disabled={isLoading || !userInput}
             className="self-start"
           >
             {isLoading ? 'Sending...' : 'Send'}
@@ -182,19 +214,6 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
 
         </div>
       </div>
-        : (
-          <div className="mt-4 bg-gray-100 p-4 rounded-lg">
-            <div className="mb-2 flex justify-end">
-              <p className="inline-block p-2 rounded-lg bg-white max-w-[80%]">{defense}</p>
-            </div>
-            <div className="mb-1 flex justify-start">
-              <span className="text-sm text-gray-600 ml-2">Kalypso 🐱</span>
-            </div>
-            <div className="flex justify-start">
-              <p className="inline-block p-2 rounded-lg bg-blue-100 text-blue-800 max-w-[80%]">{aiResponse}</p>
-            </div>
-          </div>
-        )}
             <div className="max-h-[400px] overflow-y-auto">
             {showExplanations && (
         <Collapsible
