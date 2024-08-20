@@ -173,7 +173,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
 
   const styles = {
     chatWindowStyle: {
-      backgroundColor: backgroundColor,
+      backgroundColor: "backgroundColor",
       width: width,
     },
     botBubbleStyle: {fontSize: "16px", fontFamily: "Consolas, monospace", color: "#aec8e8"},
