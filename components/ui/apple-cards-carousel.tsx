@@ -169,7 +169,7 @@ export const Card = ({
         >
           <span className="text-lg md:text-lg font-bold">Click to find out more!</span>
         </motion.div>
-        <div className="absolute h-full top-0 inset-x-0 bg-gradient-to-b from-black/70 via-black/25 to-black/70 z-30 pointer-events-none transition-opacity duration-300 group-hover:opacity-0" />
+        <div className="absolute h-full top-0 inset-x-0 bg-gradient-to-b from-black/40 via-black/20 to-black/50 z-30 pointer-events-none transition-opacity duration-300 group-hover:opacity-0" />
         <div className="relative z-40 p-4 sm:p-8">
           <motion.p
             layoutId={layout ? `category-${card.category}` : undefined}
