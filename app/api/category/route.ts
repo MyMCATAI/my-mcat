@@ -15,6 +15,7 @@ export async function GET(req: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
     const useKnowledgeProfiles = searchParams.get('useKnowledgeProfiles') === 'true';
+    const includeCARS = searchParams.get('includeCARS') === 'true';
 
     let result;
 
@@ -27,7 +28,12 @@ export async function GET(req: Request) {
       });
 
       // Fetch all categories
-      const allCategories = await prisma.category.findMany();
+      let allCategories = await prisma.category.findMany();
+
+      // If includeCARS is false, filter out categories with subjectCategory "CARs"
+      if (!includeCARS) {
+        allCategories = allCategories.filter(category => category.subjectCategory !== "CARs");
+      }
 
       // Combine knowledge profiles with categories
       const sortedCategories = allCategories.map(category => {
