@@ -10,7 +10,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Pencil, Highlighter, Flag } from 'lucide-react';
 
 interface TestComponentProps {
@@ -54,7 +53,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   }, [testId]);
 
   useEffect(() => {
-    if (test && test.questions.length > 0) {
+    if (test && test.questions?.length > 0) {
       const firstQuestion = test.questions[0].question;
       if (firstQuestion.passageId) {
         updateCurrentPassage(firstQuestion.passageId);
@@ -100,7 +99,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   };
 
   const updateCurrentPassage = async (passageId: string) => {
-    if (passageCacheRef.current[passageId]) {
+    if (passageCacheRef?.current[passageId]) {
       setCurrentPassage(passageCacheRef.current[passageId]);
     } else {
       try {
@@ -378,15 +377,12 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                 <PassageComponent 
                   ref={passageRef}
                   passageData={currentPassage} 
-                  allowHighlight={true}
-                  highlightActive={flashHighlight}
-                  strikethroughActive={flashStrikethrough}
                   onHighlight={handleHighlight}
                   onStrikethrough={handleStrikethrough}
                 />
               </div>
             </div>
-            <div className="w-1/2 relative overflow-auto">
+            <div className="w-1/a2 relative overflow-auto">
               {currentQuestion && currentTestQuestion && (
                 <QuestionComponent
                   question={currentQuestion}

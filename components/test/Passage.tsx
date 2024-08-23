@@ -3,35 +3,34 @@ import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFrom
 import 'draft-js/dist/Draft.css';
 import styles from './Passage.module.css';
 
+
+interface PassageProps {
+  passageData: PassageData;
+  onHighlight: () => void;
+  onStrikethrough: () => void;
+}
 export interface PassageData {
   id: string;
   text: string;
   citation: string;
 }
 
-interface PassageProps {
-  passageData: PassageData;
-  allowHighlight: boolean;
-  highlightActive: boolean;
-  strikethroughActive: boolean;
-  onHighlight: () => void;
-  onStrikethrough: () => void;
-}
-
 const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps>(({ 
   passageData, 
-  allowHighlight, 
-  highlightActive, 
-  strikethroughActive, 
   onHighlight, 
   onStrikethrough 
 }, ref) => {
+
+  if (!passageData || !passageData.text || !passageData.id) {
+    return null;
+  }
+
   const [editorState, setEditorState] = useState(() => 
-    EditorState.createWithContent(ContentState.createFromText(passageData.text))
+    EditorState.createWithContent(ContentState.createFromText(passageData.text || ""))
   );
 
   useEffect(() => {
-    const savedContent = localStorage.getItem(`passage-${passageData.id}`);
+    const savedContent = typeof window !== 'undefined' ? localStorage.getItem(`passage-${passageData.id}`) : null;
     if (savedContent) {
       const content = convertFromRaw(JSON.parse(savedContent));
       setEditorState(EditorState.createWithContent(content));

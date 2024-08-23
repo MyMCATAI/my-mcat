@@ -31,12 +31,10 @@
   }) => {
     const [isSummaryOpen, setIsSummaryOpen] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
-    const [showVideo, setShowVideo] = useState(true);
-    const [showPDF, setShowPDF] = useState(false);
+    const [contentType, setContentType] = useState("video");
     const [showSearch, setShowSearch] = useState(false);
     const [showLink, setShowLink] = useState(false);
     const [selectedCard, setSelectedCard] = useState<number | null>(null);
-    const [showQuiz, setShowQuiz] = useState(false);
     const [content, setContent] = useState<ContentItem[]>([]);
     const [currentContentId, setCurrentContentId] = useState<string | null>(null);
 
@@ -50,44 +48,75 @@
 
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-    const fetchContent = useCallback(async (conceptCategory: string) => {
-      try {
-        const response = await fetch(
-          `/api/content?conceptCategory=${conceptCategory.replace(/ /g, "_")}`
-        );
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
+    // Fetch categories and set initial category
+    useEffect(() => {
+      const fetchInitialData = async () => {
+        try {
+          const categoriesData = await fetchCategories(true);
+          console.log(categoriesData)
+          setCategories(categoriesData);
+          if (categoriesData.length > 0) {
+            const initialCategory = categoriesData[0].conceptCategory;
+            setSelectedCategory(initialCategory);
+            await fetchContentAndQuestions(initialCategory);
+          }
+        } catch (error) {
+          console.error("Error fetching initial data:", error);
         }
-        const data = await response.json();
-        setContent(data.content);
-        updateContentVisibility(data.content);
-      } catch (error) {
-        console.error("Error fetching content:", error);
-      }
+      };
+
+      fetchInitialData();
     }, []);
 
     useEffect(() => {
-      fetchCategories(true);
-    }, [fetchContent]);
-
-    useEffect(() => {
-      if (content.length > 0) {
-        const firstItem = content.find(
-          (item) => item.type === "video" || item.type === "reading"
-        );
-        if (firstItem) {
-          setCurrentContentId(firstItem.id);
-        }
+      const currentContent = content.find((item) => item.id === currentContentId);
+      if (currentContent && currentContent.type === "video") {
+        setIsPlaying(true);
+      } else {
+        setIsPlaying(false);
       }
-    }, [content]);
+    }, [currentContentId, content]);
 
-    useEffect(() => {
-      if (categories.length > 0) {
-        setSelectedCategory(categories[0].conceptCategory);
-        fetchContent(categories[0].conceptCategory);
-        fetchQuestions(categories[0].conceptCategory);
+
+    
+  // Update chatbot context when current content changes
+  useEffect(() => {
+    const currentContent = content.find((item) => item.id === currentContentId);
+    if (currentContent && currentContent.transcript) {
+      setChatbotContext({
+        contentTitle: currentContent.title || "Untitled",
+        context: `Here's a transcript of the content that I'm currently looking at: ${currentContent.transcript} Only refer to this if I ask a question directly about what I'm studying`,
+      });
+    }
+  }, [currentContentId, content, setChatbotContext]);
+
+  const updateContentVisibility = useCallback((fetchedContent: ContentItem[]) => {
+    const hasVideos = fetchedContent.some((item) => item.type === "video");
+    const hasReadings = fetchedContent.some((item) => item.type === "reading");
+
+    if (hasVideos) {
+      setContentType("video");
+    } else if (hasReadings) {
+      setContentType("reading");
+    } else {
+      setContentType("quiz");
+    }
+
+    if (hasVideos) {
+      const firstVideo = fetchedContent.find((item) => item.type === "video");
+      if (firstVideo) {
+        setCurrentContentId(firstVideo.id);
       }
-    }, [categories]);
+    } else if (hasReadings) {
+      const firstReading = fetchedContent.find((item) => item.type === "reading");
+      if (firstReading) {
+        setCurrentContentId(firstReading.id);
+      }
+    } else {
+      setCurrentContentId(null);
+    }
+  }, []);
+
 
     const extractVideoId = (url: string) => {
       const urlParams = new URLSearchParams(new URL(url).search);
@@ -99,13 +128,10 @@
       setCurrentContentId(contentId);
       const clickedContent = content.find((item) => item.id === contentId);
       if (clickedContent) {
+        setContentType(clickedContent.type)
+        
         if (clickedContent.type === "video") {
-          setShowVideo(true);
-          setShowPDF(false);
           setIsPlaying(true);
-        } else if (clickedContent.type === "reading") {
-          setShowPDF(true);
-          setShowVideo(false);
         }
 
         if (clickedContent.transcript) {
@@ -129,25 +155,73 @@
       toggleChatBot();
     };
 
-    const fetchQuestions = async (conceptCategory: string) => {
+    const fetchContent = useCallback(async (conceptCategory: string) => {
       try {
         const response = await fetch(
-          `/api/question?conceptCategory=${conceptCategory.replace(
-            / /g,
-            "_"
-          )}&page=1&pageSize=10`
+          `/api/content?conceptCategory=${conceptCategory.replace(/ /g, "_")}`
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
-        setQuestions(data.category.questions);
+        return data.content;
+      } catch (error) {
+        console.error("Error fetching content:", error);
+        return [];
+      }
+    }, []);
+  
+    const fetchQuestions = useCallback(async (conceptCategory: string) => {
+      try {
+        const response = await fetch(
+          `/api/question?conceptCategory=${conceptCategory.replace(/ /g, "_")}&page=1&pageSize=10`
+        );
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        return data.category.questions;
       } catch (error) {
         console.error("Error fetching questions:", error);
+        return [];
       }
-    };
+    }, []);
+  
+    const fetchContentAndQuestions = useCallback(async (category: string) => {
+      try {
+        const [contentData, questionsData] = await Promise.all([
+          fetchContent(category),
+          fetchQuestions(category),
+        ]);
+        setContent(contentData);
+        setQuestions(questionsData);
+        updateContentVisibility(contentData);
+      } catch (error) {
+        console.error("Error fetching content and questions:", error);
+      }
+    }, [fetchContent, fetchQuestions]);
+  
+  // Fetch content and questions when selected category changes
+  useEffect(() => {
+    if (selectedCategory) {
+      fetchContentAndQuestions(selectedCategory);
+    }
+  }, [selectedCategory, fetchContentAndQuestions]);
 
-    const fetchCategories = async (useKnowledgeProfiles: boolean = false) => {
+  // Update current content when content changes
+  useEffect(() => {
+    if (content.length > 0) {
+      const firstItem = content.find(
+        (item) => item.type === "video" || item.type === "reading"
+      );
+      if (firstItem) {
+        setCurrentContentId(firstItem.id);
+        setContentType(firstItem.type);
+      }
+    }
+  }, [content]);
+
+    const fetchCategories = useCallback(async (useKnowledgeProfiles: boolean = false) => {
       try {
         const url = new URL("/api/category", window.location.origin);
         url.searchParams.append("page", "1");
@@ -155,24 +229,19 @@
         if (useKnowledgeProfiles) {
           url.searchParams.append("useKnowledgeProfiles", "true");
         }
-
+  
         const response = await fetch(url.toString());
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
-        console.log(data)
-        setCategories(data.items);
-        fetchContent(data.items[0].conceptCategory);
-        console.log(data.items[0].conceptCategory)
-        fetchQuestions(data.items[0].conceptCategory);
-  
-
+        return data.items;
       } catch (error) {
         console.error("Error fetching categories:", error);
+        return [];
       }
-    };
-
+    }, []);
+  
     const handleUpdateKnowledgeProfile = async () => {
       setIsUpdatingProfile(true);
       try {
@@ -214,10 +283,8 @@
     };
 
     const handleCameraClick = () => {
-      setShowVideo(true);
-      setShowPDF(false);
-      setShowQuiz(false);
-
+      setContentType("video")
+      
       const firstVideo = content.find((item) => item.type === "video");
       if (firstVideo) {
         setCurrentContentId(firstVideo.id);
@@ -226,9 +293,7 @@
     };
 
     const handleBookClick = () => {
-      setShowPDF(true);
-      setShowVideo(false);
-      setShowQuiz(false);
+      setContentType("reading")
 
       const firstPDF = content.find((item) => item.type === "reading");
       if (firstPDF) {
@@ -237,9 +302,7 @@
     };
 
     const handleQuizTabClick = () => {
-      setShowQuiz(true);
-      setShowVideo(false);
-      setShowPDF(false);
+      setContentType("quiz")
       setCurrentContentId(null);
     };
 
@@ -254,48 +317,7 @@
       fetchQuestions(categories[index].conceptCategory);
     };
 
-    const updateContentVisibility = (fetchedContent: ContentItem[]) => {
-      const hasVideos = fetchedContent.some((item) => item.type === "video");
-      const hasReadings = fetchedContent.some((item) => item.type === "reading");
-
-      setShowVideo(hasVideos);
-      setShowPDF(hasReadings && !hasVideos);
-      setShowQuiz(!hasVideos && !hasReadings);
-
-      if (hasVideos) {
-        const firstVideo = fetchedContent.find((item) => item.type === "video");
-        if (firstVideo) {
-          setCurrentContentId(firstVideo.id);
-        }
-      } else if (hasReadings) {
-        const firstReading = fetchedContent.find(
-          (item) => item.type === "reading"
-        );
-        if (firstReading) {
-          setCurrentContentId(firstReading.id);
-        }
-      } else {
-        setCurrentContentId(null);
-      }
-    };
-
     const currentContent = content.find((item) => item.id === currentContentId);
-
-    useEffect(() => {
-      if (currentContent && currentContent.summary) {
-        setIsSummaryOpen(true);
-      }
-      if (currentContent && currentContent.transcript) {
-        console.log("fetch content ",currentContent.title)
-        setChatbotContext({
-          contentTitle: currentContent.title || "Untitled",
-          context: currentContent.transcript
-            ? `Here's a transcript of the content that I'm currently looking at: ${currentContent.transcript} Only refer to this if I ask a question directly about what I'm studying`
-            : "No transcript available"
-        });
-        
-      }
-    }, [currentContent]);
 
     const formatSummary = (summary: string) => {
       return summary
@@ -344,7 +366,7 @@
         <div className="flex items-stretch w-full mb-3">
           <div className="flex-grow mr-4">
             <div className="grid grid-cols-7 gap-3">
-              {categories.slice(0, 7).map((category, index) => (
+              {categories?.slice(0, 7).map((category, index) => (
                 <div
                   key={index}
                   className="text-white overflow-hidden rounded-lg text-center mb-2 relative group min-h-[100px] cursor-pointer transition-all hover:scale-105 hover:shadow-xl flex flex-col justify-between items-center"
@@ -449,7 +471,7 @@
               </div>
 
               <div className="p-2">
-              {showVideo &&
+              {contentType ==="video" &&
                 currentContent &&
                 currentContent.type === "video" && (
                   <>
@@ -495,7 +517,7 @@
                   </>
                 )}
 
-              {showPDF &&
+              {contentType ==="reading" &&
                 currentContent &&
                 currentContent.type === "reading" && (
                   <>
@@ -535,14 +557,14 @@
                   </>
                 )}
 
-              {showQuiz && <Quiz questions={questions} shuffle={true} />}
+              {contentType ==="quiz" && <Quiz questions={questions} shuffle={true} />}
             </div>
           </div>
         </div>
 
           <div className="col-span-1">
             <div className="h-[500px] overflow-auto">
-              {showVideo && (
+              {contentType ==="video" && (
                 <>
                   {content
                     .filter((item) => item.type === "video")
@@ -577,7 +599,7 @@
                     })}
                 </>
               )}
-              {showPDF && (
+              {contentType ==="reading" && (
                 <div className="flex flex-wrap gap-4">
                   {content
                     .filter((item) => item.type === "reading")
