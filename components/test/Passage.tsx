@@ -21,12 +21,8 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
   onStrikethrough 
 }, ref) => {
 
-  if (!passageData || !passageData.text || !passageData.id) {
-    return null;
-  }
-
   const [editorState, setEditorState] = useState(() => 
-    EditorState.createWithContent(ContentState.createFromText(passageData.text || ""))
+    EditorState.createWithContent(ContentState.createFromText(passageData?.text || ""))
   );
 
   useEffect(() => {
