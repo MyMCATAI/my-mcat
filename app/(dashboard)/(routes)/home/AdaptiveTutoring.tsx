@@ -10,7 +10,9 @@
   import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
   import { ChevronDown, ChevronUp } from "lucide-react";
   import ReactMarkdown from 'react-markdown';
-  
+import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSkeleton } from "./ATSSkeleton";
+
   interface ContentItem {
     id: string;
     title: string;
@@ -34,6 +36,8 @@
     const [contentType, setContentType] = useState("video");
     const [showSearch, setShowSearch] = useState(false);
     const [showLink, setShowLink] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
     const [selectedCard, setSelectedCard] = useState<number | null>(null);
     const [content, setContent] = useState<ContentItem[]>([]);
     const [currentContentId, setCurrentContentId] = useState<string | null>(null);
@@ -53,7 +57,6 @@
       const fetchInitialData = async () => {
         try {
           const categoriesData = await fetchCategories(true);
-          console.log(categoriesData)
           setCategories(categoriesData);
           if (categoriesData.length > 0) {
             const initialCategory = categoriesData[0].conceptCategory;
@@ -188,6 +191,7 @@
     }, []);
   
     const fetchContentAndQuestions = useCallback(async (category: string) => {
+      setIsLoading(true)
       try {
         const [contentData, questionsData] = await Promise.all([
           fetchContent(category),
@@ -198,6 +202,8 @@
         updateContentVisibility(contentData);
       } catch (error) {
         console.error("Error fetching content and questions:", error);
+      } finally{
+        setIsLoading(false)
       }
     }, [fetchContent, fetchQuestions]);
   
@@ -471,7 +477,12 @@
               </div>
 
               <div className="p-2">
-              {contentType ==="video" &&
+
+              {isLoading ? (
+                <LoadingSkeleton />
+              ) : (
+              <>
+                {contentType ==="video" &&
                 currentContent &&
                 currentContent.type === "video" && (
                   <>
@@ -558,12 +569,22 @@
                 )}
 
               {contentType ==="quiz" && <Quiz questions={questions} shuffle={true} />}
+
+              </>
+              )}
+            
             </div>
           </div>
         </div>
 
           <div className="col-span-1">
             <div className="h-[500px] overflow-auto">
+            {isLoading ? (
+              Array(5).fill(0).map((_, index) => (
+                <Skeleton key={index} className="h-[90px] w-full rounded-lg mb-2" />
+              ))
+            ) : (
+              <>
               {contentType ==="video" && (
                 <>
                   {content
@@ -636,6 +657,8 @@
                     ))}
                 </div>
               )}
+              </>
+            )}
             </div>
           </div>
         </div>
