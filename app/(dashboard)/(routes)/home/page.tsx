@@ -1,15 +1,11 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
 import Schedule from "./Schedule";
 import KnowledgeProfile from "./KnowledgeProfile";
 import AdaptiveTutoring from "./AdaptiveTutoring";
 import FloatingButton from "./FloatingButton";
 import { FetchedActivity, Test } from "@/types";
-import ChatBot from "@/components/chatbot/ChatBot";
-import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
-import TestPage from "../test/page";
 import TestingSuit from "./TestingSuit";
 import { toast } from "@/components/ui/use-toast";
 import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
@@ -22,7 +18,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import TestComponent from "@/components/test-component";
@@ -51,8 +46,6 @@ const Page = () => {
   const [kalypsoState, setKalypsoState] = useState<'wait' | 'talk' | 'end' | 'start'>('wait');
   const kalypsoRef = useRef<HTMLImageElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [test, setTest] = useState<Test | null>(null);
-  const [loading, setLoading] = useState(true);
   const [showDiagnosticTest, setShowDiagnosticTest] = useState(false);
   const [diagnosticTestId, setDiagnosticTestId] = useState<string | null>(null);
   
