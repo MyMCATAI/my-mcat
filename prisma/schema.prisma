@@ -31,6 +31,7 @@ model Passage {
   text      String     @db.Text
   citation  String     @db.Text
   title     String?    @db.Text
+  difficulty Float      @default(1)
   questions Question[]
 }
 

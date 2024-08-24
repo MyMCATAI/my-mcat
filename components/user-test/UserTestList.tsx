@@ -15,7 +15,7 @@ export default function UserTestList({ userTests }: UserTestListProps) {
           <p>Started: {new Date(test.startedAt).toLocaleString()}</p>
           <p>Score: {test.score !== null ? `${test.score?.toFixed(2)}%` : 'Not finished'}</p>
           <Link href={`/user-test/${test.id}`} className="text-blue-500 hover:underline">
-            View Details
+            Review Answers
           </Link>
         </div>
       ))}
