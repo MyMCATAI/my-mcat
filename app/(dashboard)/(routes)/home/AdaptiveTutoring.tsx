@@ -12,6 +12,7 @@
   import ReactMarkdown from 'react-markdown';
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSkeleton } from "./ATSSkeleton";
+import { ThemedSkeleton } from "@/components/ATS/ThemedSkeleton";
 
   interface ContentItem {
     id: string;
@@ -229,6 +230,7 @@ import { LoadingSkeleton } from "./ATSSkeleton";
 
     const fetchCategories = useCallback(async (useKnowledgeProfiles: boolean = false) => {
       try {
+        setIsLoading(true)
         const url = new URL("/api/category", window.location.origin);
         url.searchParams.append("page", "1");
         url.searchParams.append("pageSize", "7");
@@ -245,6 +247,8 @@ import { LoadingSkeleton } from "./ATSSkeleton";
       } catch (error) {
         console.error("Error fetching categories:", error);
         return [];
+      }finally{
+        setIsLoading(false)
       }
     }, []);
   
@@ -372,14 +376,19 @@ import { LoadingSkeleton } from "./ATSSkeleton";
         <div className="flex items-stretch w-full mb-3">
           <div className="flex-grow mr-4">
             <div className="grid grid-cols-7 gap-3">
-              {categories?.slice(0, 7).map((category, index) => (
+            {isLoading
+              ? (['cat', 'medicine', 'study', 'vaccine', 'science', 'education', 'genetics'] as const).map((theme, index) => (
+                <ThemedSkeleton key={index} theme={theme} />
+              ))
+              : categories?.slice(0, 7).map((category, index) => (
                 <div
                   key={index}
                   className="text-white overflow-hidden rounded-lg text-center mb-2 relative group min-h-[100px] cursor-pointer transition-all hover:scale-105 hover:shadow-xl flex flex-col justify-between items-center"
                   style={{ 
                     backgroundColor: '#001226',
                     boxShadow: '0 0 10px 2px rgba(0, 123, 255, 0.5)',
-                    transition: 'box-shadow 0.3s ease-in-out'}}
+                    transition: 'box-shadow 0.3s ease-in-out'
+                  }}
                   onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 0 20px 7px rgba(0, 123, 255, 0.8)'}
                   onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 0 10px 2px rgba(0, 123, 255, 0.5)'}
                   onClick={() => handleCardClick(index)}
@@ -391,15 +400,16 @@ import { LoadingSkeleton } from "./ATSSkeleton";
                       </p>
                     </div>
                     <div className="m-auto">
-                    <Icon 
-                      name={category.icon} 
-                      className="w-6 h-6" 
-                      color={category.color}
-                     />
+                      <Icon 
+                        name={category.icon} 
+                        className="w-6 h-6" 
+                        color={category.color}
+                      />
                     </div>
                   </div>
                 </div>
-              ))}
+              ))
+            }
             </div>
           </div>
           <div className="col-span-1">

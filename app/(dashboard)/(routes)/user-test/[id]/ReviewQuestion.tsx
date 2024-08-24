@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PassageData } from '@/components/test/Passage';
+import InlineChatbot from '@/components/chatbot/InlineChatbot';
 
 interface ReviewQuestionComponentProps {
   question?: Question;
@@ -84,50 +85,6 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   }, [chatMessages]);
 
   
-  const handleSendMessage = async () => {
-
-    let message = ""
-
-    if (chatMessages.length<1){
-      message = context 
-    }
-    message = message + userInput
-    if (!userInput.trim()) return;
-    setIsLoading(true);
-    const newUserMessage: ChatMessage = { role: 'user', content: userInput };
-    setChatMessages(prevMessages => [...prevMessages, newUserMessage]);
-    setUserInput('');
-
-    try {
-      const response = await fetch('/api/conversation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: message,
-          threadId: threadId,
-          assistantId: "asst_61EMvczy4MpaJqUObrWceV9V", // todo, put this in env
-          generateAudio: false,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch response');
-
-      const data = await response.json();
-      const newAssistantMessage: ChatMessage = { role: 'assistant', content: data.message };
-      setChatMessages(prevMessages => [...prevMessages, newAssistantMessage]);
-      setThreadId(data.threadId);
-
-      if (!showExplanations) {
-        setShowExplanations(true);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setChatMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Sorry, there was an error processing your request.' }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   if (!question) return null;
   const options = JSON.parse(question.questionOptions);
   const correctAnswerIndex = 0; // Assuming the correct answer is always the first option
@@ -167,53 +124,10 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
         </div>
         
         <h4 className="font-semibold mb-2">Defend your answer:</h4>
-        <div className="mt-4">
-        {chatMessages.length>0 && (
-        <div className="mt-4 bg-gray-100 p-4 rounded-lg max-h-[400px] overflow-y-auto">
-        <div className="space-y-4">
-          {chatMessages.map((message, index) => (
-            <React.Fragment key={index}>
-              {message.role === 'user' && (
-                <div className="flex justify-end">
-                  <p className="inline-block p-2 rounded-lg bg-white max-w-[80%]">{message.content}</p>
-                </div>
-              )}
-              {message.role === 'assistant' && (
-                <div className="space-y-1">
-                  <div className="flex justify-start">
-                    <span className="text-sm text-gray-600 ml-2">Kalypso 🐱</span>
-                  </div>
-                  <div className="flex justify-start">
-                    <p className="inline-block p-2 rounded-lg bg-blue-100 text-blue-800 max-w-[80%]">{message.content}</p>
-                  </div>
-                </div>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-        )
-        }
-        <div className="flex items-center justify-center m-2">
-          
-          <Textarea
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            placeholder={chatMessages.length>1?"Type your Message":"Why did you choose your answer? Explain your line of thinking..."}
-            className="flex-grow mr-2"
-          />
-          <div className="flex items-center justify-center ">
-          <Button 
-            onClick={handleSendMessage} 
-            disabled={isLoading || !userInput}
-            className="self-start"
-          >
-            {isLoading ? 'Sending...' : 'Send'}
-          </Button>
-          </div>
-
-        </div>
-      </div>
+        <InlineChatbot 
+          context={context}
+          onShowExplanations={() => setShowExplanations(true)}
+        />
             <div className="max-h-[400px] overflow-y-auto">
             {showExplanations && (
         <Collapsible

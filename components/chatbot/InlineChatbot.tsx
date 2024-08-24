@@ -1,77 +1,134 @@
-import React, { useState, useCallback } from 'react';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, Send } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-interface CustomChatbotProps {
-  assistantId: string;
-  threadId?: string;
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
-const CustomChatbot: React.FC<CustomChatbotProps> = ({ assistantId, threadId: initialThreadId }) => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [input, setInput] = useState<string>('');
-  const [response, setResponse] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [threadId, setThreadId] = useState<string | undefined>(initialThreadId);
+interface InlineChatbotProps {
+  context: string;
+  onShowExplanations: () => void;
+}
 
-  const handleSubmit = useCallback(async () => {
-    if (!input.trim()) return;
+const LoadingDots = () => (
+  <div className="flex space-x-1 mt-2">
+    <div className="w-2 h-2 bg-gray-500 rounded-full animate-pulse" style={{animationDelay: '0s'}}></div>
+    <div className="w-2 h-2 bg-gray-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+    <div className="w-2 h-2 bg-gray-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+  </div>
+);
 
+const InlineChatbot: React.FC<InlineChatbotProps> = ({ context, onShowExplanations }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [userInput, setUserInput] = useState('');
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, isLoading]);
+
+  const handleSendMessage = async () => {
+    let message = chatMessages.length < 1 ? context : userInput;
+    if (!message.trim()) return;
     setIsLoading(true);
+    const newUserMessage: ChatMessage = { role: 'user', content: userInput };
+    setChatMessages(prevMessages => [...prevMessages, newUserMessage]);
+    setUserInput('');
+
     try {
-      const res = await fetch('/api/conversation', {
+      const response = await fetch('/api/conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: input,
-          threadId,
+          message: message,
+          threadId: threadId,
+          assistantId: process.env.CARS_ASSISTANT_ID,
           generateAudio: false,
-          assistantId
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to fetch response');
+      if (!response.ok) throw new Error('Failed to fetch response');
 
-      const data: { message: string; threadId: string } = await res.json();
-      setResponse(data.message);
+      const data = await response.json();
+      const newAssistantMessage: ChatMessage = { role: 'assistant', content: data.message };
+      setChatMessages(prevMessages => [...prevMessages, newAssistantMessage]);
       setThreadId(data.threadId);
+
+      onShowExplanations();
     } catch (error) {
       console.error('Error:', error);
-      setResponse('Sorry, there was an error processing your request.');
+      setChatMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Sorry, there was an error processing your request.' }]);
     } finally {
       setIsLoading(false);
     }
-  }, [input, threadId, assistantId]);
+  };
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full border border-gray-200 rounded-lg">
-      <CollapsibleTrigger className="flex justify-between items-center w-full p-4 font-semibold">
-        Ask the AI Assistant
-        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-      </CollapsibleTrigger>
-      <CollapsibleContent className="p-4">
-        <div className="flex flex-col space-y-4">
-          <Textarea
-            value={input}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
-            placeholder="Type your message here..."
-            className="w-full p-2 border rounded"
-          />
-          <Button onClick={handleSubmit} disabled={isLoading} className="self-end">
-            {isLoading ? 'Sending...' : <Send className="h-4 w-4" />}
-          </Button>
-          {response && (
-            <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-              <h4 className="font-semibold mb-2">Assistant&apos;s Response:</h4>
-              <p>{response}</p>
-            </div>
-          )}
+    <div className="mt-4">
+      {(chatMessages.length > 0 || isLoading) && (
+        <div className="mt-4 bg-gray-100 p-4 rounded-lg max-h-[400px] overflow-y-auto">
+          <div className="space-y-4">
+            {chatMessages.map((message, index) => (
+              <React.Fragment key={index}>
+                {message.role === 'user' && (
+                  <div className="flex justify-end">
+                    <p className="inline-block p-2 rounded-lg bg-white max-w-[80%]">{message.content}</p>
+                  </div>
+                )}
+                {message.role === 'assistant' && (
+                  <div className="space-y-1">
+                    <div className="flex justify-start">
+                      <span className="text-sm text-gray-600 ml-2">Kalypso 🐱</span>
+                    </div>
+                    <div className="flex justify-start">
+                      <p className="inline-block p-2 rounded-lg bg-blue-100 text-blue-800 max-w-[80%]">{message.content}</p>
+                    </div>
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
+            {isLoading && (
+              <div className="space-y-1">
+                <div className="flex justify-start">
+                  <span className="text-sm text-gray-600 ml-2">Kalypso 🐱</span>
+                </div>
+                <div className="flex justify-start">
+                  <div className="inline-block p-2 rounded-lg bg-blue-100 text-blue-800">
+                    <LoadingDots />
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+      )}
+      <div className="flex items-center justify-center m-2">
+        <Textarea
+          disabled={isLoading}
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+          placeholder={chatMessages.length > 0 ? "Type your Message" : "Why did you choose your answer? Explain your line of thinking..."}
+          className="flex-grow mr-2"
+        />
+        <div className="flex items-center justify-center">
+          <Button 
+            onClick={handleSendMessage} 
+            disabled={isLoading || !userInput}
+            className="self-start"
+          >
+            {isLoading ? 'Sending...' : 'Send'}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default CustomChatbot;
+export default InlineChatbot;
