@@ -48,7 +48,7 @@ const InlineChatbot: React.FC<InlineChatbotProps> = ({ context, onShowExplanatio
         body: JSON.stringify({
           message: message,
           threadId: threadId,
-          assistantId: process.env.CARS_ASSISTANT_ID,
+          assistantId: process.env.NEXT_PUBLIC_CARS_ASSISTANT_ID,
           generateAudio: false,
         }),
       });
