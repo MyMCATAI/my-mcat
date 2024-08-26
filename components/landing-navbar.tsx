@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import logo from "../public/StudySmartLogo.png";
+import logo from "../public/logo.png";
 
 export const LandingNavbar = () => {
   const { isSignedIn } = useAuth();
@@ -44,9 +44,9 @@ export const LandingNavbar = () => {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
       <Link href={"/"}>
         <div className="flex items-center">
-          <div className="h-20 w-20">
+          <div className="h-24 w-24 relative">
            
-            <Image src={logo} alt="Logo" className="w-full mr-4" />
+            <Image src={logo} alt="Logo" layout="fill" objectFit="contain" className="w-full" />
            
             
           </div>
