@@ -1,5 +1,5 @@
 import React from "react";
-import logo from "../../public/StudySmartLogo.png";
+import logo from "../../public/logo.png";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
@@ -96,8 +96,8 @@ const Footer = () => {
         >
           <div className="mb-6 md:mb-0">
             <a href="#" className="flex items-center">
-              <div className="flex items-center">
-                <div className="h-32 w-32">
+              <div className="flex items-center justify-center">
+                <div className="h-20 w-20">
                   <Image src={logo} alt="Logo" className="w-full mr-4" />
                 </div>
                 <div className="flex flex-col">
