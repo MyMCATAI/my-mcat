@@ -52,7 +52,6 @@ export const LandingNavbar = () => {
           </div>
           <div className="flex flex-col">
             <span className="text-white text-2xl pl-4">MyMCAT.ai</span>
-            <span className="text-gray-400 text-xs pl-4">by Study Smart</span>
           </div>
         </div>
         </Link>
