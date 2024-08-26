@@ -32,7 +32,7 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
         <Link href="/home" className="flex items-center space-x-4">
           <Image src="/logo.png" alt="Kalypso Education" width={48} height={48} />
           <div className="flex flex-col">
-            <span className="text-xl text-white pl-3">myMCAT.ai</span>
+            <span className="text-xl text-white pl-3">MyMCAT.ai</span>
           </div>
         </Link>
         <div className="flex items-end h-full">
