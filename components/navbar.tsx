@@ -7,36 +7,60 @@ import { Search } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SubscriptionButton } from "./subscription-button";
+import { Badge } from "@/components/ui/badge";
+import { useProModal } from "@/hooks/use-pro-modal";
+import { motion } from "framer-motion";
 
-export const Navbar = ({ isPro = false }: { isPro: boolean }) => {
+export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
   const pathname = usePathname();
   const ballerSectionRef = useRef(null);
+  const proModal = useProModal();
 
   // Hiding navbar on test questions page
   if (pathname.includes('/test/testquestions')) {
     return null;
   }
 
+  const handleBadgeClick = () => {
+      proModal.onOpen();
+  };
+  const isPro = subscription !== "free"
+
   return (
     <>
       <nav className="flex items-center justify-between bg-transparent shadow-sm h-24 ps-4">
         <Link href="/home" className="flex items-center space-x-4">
-        <Image src="/logo.png" alt="Kalypso Education" width={48} height={48} />
-        <div className="flex flex-col">
-          <span className="text-xl text-white pl-3">myMCAT.ai</span>
-        </div>
-      </Link>
-        <div className="flex items-end h-full">
-          <div className="flex h-full items-center ml-4 space-x-4 transform -translate-y-2">
-            <UserButton afterSignOutUrl="/" />
+          <Image src="/logo.png" alt="Kalypso Education" width={48} height={48} />
+          <div className="flex flex-col">
+            <span className="text-xl text-white pl-3">myMCAT.ai</span>
           </div>
+        </Link>
+        <div className="flex items-end h-full">
+        <div className="flex items-center space-x-4">
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Badge 
+            variant={isPro ? "default" : "secondary"} 
+            className={cn(
+              "cursor-pointer px-4 py-2 text-sm font-medium",
+              isPro ? "bg-gradient-to-r from-purple-400 to-pink-500 text-white" : "hover:bg-secondary-hover"
+            )}
+            onClick={handleBadgeClick}
+          >
+            {isPro ? "Pro Plan" : "Upgrade to Pro"}
+          </Badge>
+        </motion.div>
+        <UserButton afterSignOutUrl="/" />
+      </div>
           <span
             ref={ballerSectionRef}
             className="flex items-start h-full ml-4 pl-2 bg-[#021226]"
             style={{
               clipPath:
                 "polygon(100% 0%, 100% 51%, 100% 73%, 18% 72%, 11% 48%, 0 0)",
-              transform: "translateY(3px)", // Add this line to move the polygon down by 3px
+              transform: "translateY(3px)",
             }}
           >
             <p className="text-white ms-12 mt-4 pr-1 text-sm">
