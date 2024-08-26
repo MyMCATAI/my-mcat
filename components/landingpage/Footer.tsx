@@ -97,8 +97,8 @@ const Footer = () => {
           <div className="mb-6 md:mb-0">
             <a href="#" className="flex items-center">
               <div className="flex items-center justify-center">
-                <div className="h-20 w-20">
-                  <Image src={logo} alt="Logo" className="w-full mr-4" />
+                <div className="mr-5">
+                  <Image src={logo} alt="Logo" className="w-full mr-4" width={64} height={64}/>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-white text-2xl font">MyMCAT.ai</span>
