@@ -102,7 +102,6 @@ const Footer = () => {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-white text-2xl font">MyMCAT.ai</span>
-                  <span className="text-gray-400 text-xs">by Study Smart</span>
                 </div>
               </div>
             </a>
@@ -131,7 +130,7 @@ const Footer = () => {
           <span className="text-md text-gray-400 sm:text-center">
             © 2024{" "}
             <a href="#" className="hover:underline ">
-              StudySmartAI
+              MyStudy
             </a>
             . All Rights Reserved.
           </span>
