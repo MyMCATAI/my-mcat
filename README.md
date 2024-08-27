@@ -47,10 +47,14 @@ Backend DB
 - reset with `npx prisma migrate reset`
 
 Stripe
-- Currently set up with josh@method-ai.com
-- Need to consider taxes, etc. long term
-- currently - only card is excepted, should this be other methods of payment a well?
-- Need to run `stripe listen --forward-to localhost:3000/api/webhook` in terminal when developing with Stripe
+- stripe login
+- stripe listen --forward-to localhost:4242/webhook
+
+run 
+`stripe listen --forward-to localhost:3000/api/webhook`
+
+
+
 
 Customer Support
 - Crisp Chat -> methodAI email setup app.crisp.chat
