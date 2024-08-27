@@ -46,12 +46,12 @@ export const LandingNavbar = () => {
         <div className="flex items-center">
           <div className="relative">
            
-            <Image src={logo} alt="Logo" objectFit="contain" className="w-full" width={48} height={48} />
+            {/*<Image src={logo} alt="Logo" objectFit="contain" className="w-full" width={48} height={48} />*/}
            
             
           </div>
           <div className="flex flex-col">
-            <span className="text-white text-2xl pl-4">MyMCAT.ai</span>
+            <span className="text-white text-2xl">MyMCAT.ai</span>
           </div>
         </div>
         </Link>
