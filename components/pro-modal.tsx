@@ -4,26 +4,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useProModal } from "@/hooks/use-pro-modal";
 import React from "react";
 import { useEffect, useState } from "react";
-
-
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'stripe-pricing-table': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        'pricing-table-id': string;
-        'publishable-key': string;
-      };
-    }
-  }
-}
+import { useAuth } from "@clerk/nextjs";
 
 const StripePricingTable = () => {
+  const { userId } = useAuth();
+
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://js.stripe.com/v3/pricing-table.js";
     script.async = true;
     document.body.appendChild(script);
 
+    console.log(userId)
     return () => {
       document.body.removeChild(script);
     };
@@ -32,8 +24,7 @@ const StripePricingTable = () => {
   return React.createElement("stripe-pricing-table", {
     "pricing-table-id": process.env.NEXT_PUBLIC_STRIPE_PRICING_TABLE_ID,
     "publishable-key": process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
-    // client-reference-id="{{CLIENT_REFERENCE_ID}}"
-
+    "client-reference-id":userId
   });
 };
 
