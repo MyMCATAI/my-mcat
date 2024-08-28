@@ -2,19 +2,33 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useProModal } from "@/hooks/use-pro-modal";
+import React from "react";
 import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+
+const StripePricingTable = () => {
+  const { userId } = useAuth();
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://js.stripe.com/v3/pricing-table.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    console.log(userId)
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  return React.createElement("stripe-pricing-table", {
+    "pricing-table-id": process.env.NEXT_PUBLIC_STRIPE_PRICING_TABLE_ID,
+    "publishable-key": process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    "client-reference-id":userId
+  });
+};
 
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'stripe-pricing-table': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        'pricing-table-id': string;
-        'publishable-key': string;
-      };
-    }
-  }
-}
 
 export const ProModal = () => {
   const proModal = useProModal();
@@ -23,8 +37,6 @@ export const ProModal = () => {
   useEffect(() => {
     setIsMounted(true);
   }, []);
-  // const tableKey=process.env.NEXT_PUBLIC_STRIPE_PRICING_TABLE_KEY
-  // const stripeAPIKey = process.env.NEXT_PUBLIC_STRIPE_API_KEY
    if (!isMounted) {
     return null;
   }
@@ -32,12 +44,7 @@ export const ProModal = () => {
   return (
     <Dialog open={proModal.isOpen} onOpenChange={proModal.onClose}>
       <DialogContent className="lg:max-w-[1200px] bg-[#2d4778]">
-          <stripe-pricing-table
-            pricing-table-id="prctbl_1PrpLIAtAHX4wxMZOKvg5iZb"
-            publishable-key="pk_test_51PTtB0AtAHX4wxMZJ8rT8lyenj8B7yFFtSKLIlnflc4cbWYokmW9VbULWOd7EcwgoNj33mexicFJd5mOCK8BEqDL008HE43E6Y"
-            // client-reference-id="{{CLIENT_REFERENCE_ID}}"
-
-          />
+        <StripePricingTable />
       </DialogContent>
     </Dialog>
   );
