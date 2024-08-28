@@ -20,47 +20,21 @@ export async function GET() {
       where: {
         userId
       }
-    })
+    });
 
-    if(userSubscription && userSubscription.stripeCustomerId){
-        const stripeSession = await stripe.billingPortal.sessions.create({
-            customer: userSubscription.stripeCustomerId,
-            return_url: settingsUrl,
-          });
-          return new NextResponse(JSON.stringify({ url: stripeSession.url }))
+    if (!userSubscription?.stripeCustomerId) {
+      // User doesn't have a Stripe customer ID
+      return new NextResponse("No active subscription", { status: 400 });
     }
-    const stripeSession = await stripe.checkout.sessions.create({
-        success_url: settingsUrl,
-        cancel_url: settingsUrl,
-        payment_method_types: ["card"],
-        mode: "subscription",
-        billing_address_collection: "auto",
-        customer_email: user.emailAddresses[0].emailAddress,
-        line_items: [
-          {
-            price_data: {
-              currency: "USD",
-              product_data: {
-                name: "Genius Pro",
-                description: "Unlimited AI Generations"
-              },
-              unit_amount: 2000, // equal to $20
-              recurring: {
-                interval: "month"
-              }
-            },
-            quantity: 1,
-          },
-        ],
-        metadata: {
-          userId,
-        },
-      })
-  
-      return new NextResponse(JSON.stringify({ url: stripeSession.url }))
 
+      const session = await stripe.billingPortal.sessions.create({
+        customer: userSubscription.stripeCustomerId,
+        return_url: settingsUrl,
+      });
+      return new NextResponse(JSON.stringify(session));
+    
   } catch (error) {
     console.log("[STRIPE_ERROR]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
-};
+}
