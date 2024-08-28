@@ -173,8 +173,8 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
 
   const styles = {
     chatWindowStyle: {
-      backgroundColor: "backgroundColor",
-      width: width,
+      backgroundColor: backgroundColor,
+      inlineSize: width,
     },
     botBubbleStyle: {fontSize: "16px", fontFamily: "Consolas, monospace", color: "#aec8e8"},
     userBubbleStyle: {fontSize: "16px", fontFamily: "Consolas, monospace"},
@@ -188,7 +188,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   }
 
   return (
-    <div style={{ width: width, backgroundColor: backgroundColor }}>
+    <div style={{ inlineSize: width, backgroundColor: backgroundColor }}>
       <style jsx global>{`
         .rcb-chat-input::before {
           content: none !important;

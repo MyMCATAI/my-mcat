@@ -22,7 +22,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.633.0",
     "@clerk/nextjs": "^4.25.7",
-    "@prisma/client": "^5.18.0",
+    "@prisma/client": "^5.19.0",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-checkbox": "^1.1.1",
     "@radix-ui/react-collapsible": "^1.1.0",
@@ -71,6 +71,7 @@
     "react-chatbotify": "^2.0.0-beta.4",
     "react-countup": "^6.5.3",
     "react-dom": "^18",
+    "react-draggable": "^4.4.6",
     "react-hook-form": "^7.47.0",
     "react-hot-toast": "^2.4.1",
     "react-markdown": "^9.0.1",
@@ -112,6 +113,7 @@
     "@types/react-slick": "^0.23.13",
     "@types/react-star-ratings": "^2.3.3",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@types/tailwindcss": "^3.1.0",
     "@types/uuid": "^10.0.0",
     "autoprefixer": "^10",
     "csv-parse": "^5.5.6",
@@ -120,10 +122,10 @@
     "eslint": "^8.57.0",
     "eslint-config-next": "13.5.6",
     "postcss": "^8",
-    "prisma": "^5.18.0",
+    "prisma": "^5.19.0",
     "react-quiz-component": "^0.8.2",
     "svgo": "^3.3.2",
-    "tailwindcss": "^3",
+    "tailwindcss": "^3.4.10",
     "ts-node": "^10.9.2",
     "typescript": "5.5.4"
   }

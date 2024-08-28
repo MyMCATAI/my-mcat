@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   LineChart,
@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import Image from "next/image";
 
 const data = [
   { name: "Page A", uv: 4000 },
@@ -19,7 +20,6 @@ const data = [
   { name: "Page G", uv: 3490 },
 ];
 import { Test } from "@/types";
-import Image from "next/image";
 
 interface TestListingProps {
   tests: Test[];
@@ -33,108 +33,162 @@ const truncateTitle = (title: string, maxLength: number) => {
 };
 
 const Exams: React.FC<TestListingProps> = ({ tests }) => {
+  const [typedText, setTypedText] = useState('');
+  const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const [profileImage, setProfileImage] = useState("/kyle.png");
+
+  const examDescription = "Today, you're going to be doing the x exam. This is a tough passage & prynce will add a custom description here, with a lot of RBT/RWT/CMP.";
+
+  useEffect(() => {
+    setTypedText('');
+    setIsTypingComplete(false);
+
+    let index = 0;
+    const typingTimer = setInterval(() => {
+      setTypedText(prev => examDescription.slice(0, prev.length + 1));
+      index++;
+      if (index > examDescription.length) {
+        clearInterval(typingTimer);
+        setIsTypingComplete(true);
+      }
+    }, 15);
+
+    return () => {
+      clearInterval(typingTimer);
+    };
+  }, []);
+
   const getPercentageColor = (percentage: number) => {
     if (percentage < 50) return "text-red-500";
     if (percentage >= 50 && percentage <= 80) return "text-yellow-500";
     return "text-green-500";
   };
   console.log("test", tests);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
-    <div className="p-8 text-white justify-center">
-      <div className="max-w-screen-xl w-full">
-        <div className="rounded-[30px]">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-5">
-            <div className="md:col-span-2">
-              <div className="h-[400px] gradientbg rounded-[30px] p-4">
-                <div className="flex justify-between mt-[-60px]">
-                  <div className="">
-                    <Image
-                      className="mt-1"
-                      src={"/summarycat.svg"}
-                      width={100}
-                      height={100}
-                      alt="icon"
-                    />
+    <div className="h-full flex flex-col p-4 text-white">
+      <div className="flex-grow grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="md:col-span-3 mr-4 mb-4">
+          <div 
+            className="h-full bg-black rounded-[10px] p-4 flex flex-col" 
+            style={{
+              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 18, 38, 0.9)), url('/circuitpattern2.png')",
+              backgroundSize: 'cover',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              boxShadow: '0 0 10px 3px rgba(0, 123, 255, 0.5), inset 0 0 20px rgba(0, 0, 246, 0.7)'
+            }}
+          >
+            <div className="flex mb-4">
+              <div className="w-[84px] h-[84px] bg-gray-400 rounded-lg mr-4 flex-shrink-0 overflow-hidden">
+                <label htmlFor="profile-upload" className="cursor-pointer block w-full h-full">
+                  <Image
+                    src={profileImage}
+                    alt="Upload profile picture"
+                    width={84}
+                    height={84}
+                    className="object-cover w-full h-full"
+                  />
+                </label>
+                <input
+                  id="profile-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </div>
+              <div className="flex-grow p-2 bg-transparent text-white border-blue-500 border rounded-lg">
+                <div className="flex justify-center items-center h-full space-x-10">
+                  <div className="flex flex-col items-center">
+                    <Image src="/game-components/PixelHeart.png" alt="Heart" width={30} height={30} className="animate-float" />
+                    <span className="text-xs mt-1">80%</span>
+                    <span className="text-xs">score</span>
                   </div>
-                  <div className=" flex justify-end items-end mb-2">
-                    <p className="text-[#00C2FF] text-sm">
-                      kalypso’s testing summary
-                    </p>
+                  <div className="flex flex-col items-center">
+                    <Image src="/game-components/PixelWatch.png" alt="Watch" width={30} height={30} className="animate-float animation-delay-200" />
+                    <span className="text-xs mt-1">15:30</span>
+                    <span className="text-xs">time</span>
                   </div>
-                </div>
-                <div className="h-[330px] bg-[#0E2247] rounded-[10px]  p-4 flex justify-center items-center">
-                  <p className="text-white text-xs leading-[20px] tracking-[0.4px] ">
-                    Hey-o! Congratulations on your score increase. We’re seeing
-                    a great trend with your recent progress, but your last full
-                    length shows that you tend to run out of time on C/P and
-                    CARs. For your next exam, we suggest focus on keeping pace!
-                    It took you 6 minutes to do question 14 on FL3 when you
-                    could’ve flagged and moved on. According to your reports,
-                    you also tend to guess a lot -- seems like you could benefit
-                    from more content review!
-                  </p>
+                  <div className="flex flex-col items-center">
+                    <Image src="/game-components/PixelDiamond.png" alt="Diamond" width={30} height={30} className="animate-float animation-delay-400" />
+                    <span className="text-xs mt-1">50</span>
+                    <span className="text-xs">reward</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Image src="/game-components/PixelFlex.png" alt="Flex" width={30} height={30} className="animate-float animation-delay-600" />
+                    <span className="text-xs mt-1">1/52</span>
+                    <span className="text-xs">passages</span>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className=" md:col-span-3  pb-10 h-[385px] overflow-auto p-2 mt-2 rounded-lg overflow-hidden">
-              {tests.map((test) => (
-                <div key={test.id} className="text-lg font-medium mb-2">
-                  <div
-                    className="flex justify-between bg-[#021226]  mb-4 text-center text-md text-white rounded-[15px] px-4 py-2 w-full"
-                    style={{
-                      boxShadow:
-                        "rgba(61, 165, 233, 0.25) 0px 54px 55px, rgba(61, 165, 233, 0.12) 0px -12px 30px, rgba(61, 165, 233, 0.12) 0px 4px 6px, rgba(61, 165, 233, 0.17) 0px 12px 13px, rgba(61, 165, 233, 0.09) 0px -3px 5px",
-                    }}
-                  >
-                    <div className="flex justify-center">
-                      <div className="flex gap-1">
-                        <Link href={`/test/testquestions?id=${test.id}`}>
-                          <Image
-                            className="mt-1"
-                            src={"/computer.svg"}
-                            width={34}
-                            height={34}
-                            alt="icon"
-                          />
-                        </Link>
-                        <Link href={`/test/testquestions?id=${test.id}`}>
-                          <Image
-                            className="mt-1"
-                            src={"/verticalbar.svg"}
-                            width={34}
-                            height={34}
-                            alt="icon"
-                          />
-                        </Link>
-                        <Link href={`/test/testquestions?id=${test.id}`}>
-                          <Image
-                            className="mt-1"
-                            src={"/clipboard.svg"}
-                            width={34}
-                            height={34}
-                            alt="icon"
-                          />
-                        </Link>
-                      </div>
-                      <div>
-                        <h2 className="text-md text-[#ffffff] font-normal  m-2">
-                          {truncateTitle(test.title, 10)}
-                        </h2>
-                      </div>
+            <pre className="text-blue-200 font-mono text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap flex-1 mt-4 ml-2">
+              {typedText}
+            </pre>
+          </div>
+        </div>
+        <div className="md:col-span-2">
+          <div 
+            className="h-[576px] overflow-y-auto rounded-lg p-4"
+            style={{
+              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 18, 38, 0.7)), url('/circuitpattern2.png')",
+              backgroundSize: 'cover',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              boxShadow: 'inset 0 0 20px rgba(0, 0, 246, 0.7), 0 0 15px rgba(0, 123, 255, 0.6)'
+            }}
+          >
+            <h3 className="text-white text-lg font-semibold mt-3 mb-2 text-center font-mono">Upcoming Passages</h3>
+            {tests.map((test) => (
+              <div key={test.id} className="mb-4 mt-4">
+                <div
+                  className="flex justify-between items-center bg-gray-700 opacity-100 rounded-[15px] px-4 py-2 hover:bg-white hover:opacity-100 transition-all duration-300 group"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <Link href={`/test/testquestions?id=${test.id}`}>
+                        <Image
+                          className="mt-1 group-hover:filter group-hover:invert"
+                          src={"/computer.svg"}
+                          width={34}
+                          height={34}
+                          alt="icon"
+                        />
+                      </Link>
+                      <Link href={`/test/testquestions?id=${test.id}`}>
+                        <Image
+                          className="mt-1 group-hover:filter group-hover:invert"
+                          src={"/verticalbar.svg"}
+                          width={34}
+                          height={34}
+                          alt="icon"
+                        />
+                      </Link>
                     </div>
-                    <div>
-                      <h2
-                        className={`text-md font-medium mb-2 ${getPercentageColor(
-                          512
-                        )}`}
-                      >
-                        512
-                      </h2>
-                    </div>
+                    <h2 className="text-md text-white font-normal group-hover:text-black">
+                      {truncateTitle(test.title, 10)}
+                    </h2>
                   </div>
+                  <h2 className={`text-md font-medium ${getPercentageColor(500)} group-hover:text-black`}>
+                    0%
+                  </h2>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

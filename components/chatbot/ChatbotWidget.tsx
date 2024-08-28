@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ChatBot from "@/components/chatbot/ChatBot";
+import Draggable, { DraggableEventHandler } from 'react-draggable';
 
 interface ChatbotContext {
   contentTitle: string;
@@ -11,7 +12,6 @@ interface ChatbotWidgetProps {
   chatbotWidth?: number | string;
   chatbotHeight?: number | string;
   buttonSize?: number | string;
-  isAnimationEnabled?: boolean;
   backgroundColor?: string;
   isVoiceEnabled?: boolean
 }
@@ -22,16 +22,17 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
   chatbotContext, 
   chatbotWidth = 400, 
   chatbotHeight = 490, 
-  buttonSize = 150,
-  isAnimationEnabled ,
+  buttonSize = 175,
   backgroundColor,
   isVoiceEnabled
-
 }) => {
   const [showChatbot, setShowChatbot] = useState<boolean>(false);
   const [kalypsoState, setKalypsoState] = useState<KalypsoState>('wait');
   const kalypsoRef = useRef<HTMLImageElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const switchKalypsoState = (newState: KalypsoState): void => {
     setKalypsoState(newState);
@@ -41,20 +42,15 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
   };
 
   const toggleChatBot = (): void => {
-    if (isAnimationEnabled){
-      setShowChatbot(true);
-      return
-    }
+    if (isDragging) return;
+
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
 
     if (!showChatbot) {
       switchKalypsoState('talk');
-      timeoutRef.current = setTimeout(() => {
-        switchKalypsoState('end');
-        setShowChatbot(true);
-      }, 2000);
+      setShowChatbot(true);
     } else {
       setShowChatbot(false);
       switchKalypsoState('start');
@@ -62,6 +58,29 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         switchKalypsoState('wait');
       }, 5000);
     }
+  };
+
+  const handleDragStart = () => {
+    dragTimeoutRef.current = setTimeout(() => {
+      setIsDragging(true);
+    }, 200); // Set drag after 200ms of holding
+  };
+
+  const handleDragStop = () => {
+    if (dragTimeoutRef.current) {
+      clearTimeout(dragTimeoutRef.current);
+    }
+    setTimeout(() => {
+      setIsDragging(false);
+    }, 0);
+  };
+
+  const handleDrag: DraggableEventHandler = (e, data) => {
+    setPosition({ x: data.x, y: data.y });
+  };
+
+  const preventImageDrag = (e: React.DragEvent<HTMLImageElement>) => {
+    e.preventDefault();
   };
 
   useEffect(() => {
@@ -74,8 +93,14 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50">
-      <div className="absolute bottom-6 right-12 flex flex-col items-end pointer-events-auto">
+    <Draggable
+      position={position}
+      onStart={handleDragStart}
+      onDrag={handleDrag}
+      onStop={handleDragStop}
+      bounds="parent"
+    >
+      <div className="fixed bottom-6 right-12 flex flex-col items-end pointer-events-auto z-50">
         {showChatbot && (
           <div
             className="rounded-lg shadow-lg overflow-hidden mb-4"
@@ -85,11 +110,11 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
               boxShadow: '0 0 15px 6px rgba(0, 123, 255, 0.4)',
             }}
           >
-            <ChatBot chatbotContext={chatbotContext} width={chatbotWidth} backgroundColor={backgroundColor}  isVoiceEnabled={isVoiceEnabled}/>
+            <ChatBot chatbotContext={chatbotContext} width={chatbotWidth} backgroundColor={backgroundColor} isVoiceEnabled={isVoiceEnabled}/>
           </div>
         )}
         <button
-          className="overflow-hidden transition duration-120 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
+          className="overflow-hidden transition duration-120 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none cursor-move"
           onClick={toggleChatBot}
           aria-label={showChatbot ? "Close Chat" : "Open Chat"}
           style={{
@@ -101,11 +126,12 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             ref={kalypsoRef}
             src="/kalypsowait.gif"
             alt="Chat with Kalypso"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover pointer-events-none"
+            onDragStart={preventImageDrag}
           />
         </button>
       </div>
-    </div>
+    </Draggable>
   );
 };
 
