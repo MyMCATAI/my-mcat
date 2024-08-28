@@ -28,35 +28,35 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
 
   return (
     <>
-      <nav className="flex items-center justify-between bg-transparent shadow-sm h-24 ps-4">
+      <nav className="flex items-center justify-between bg-transparent shadow-sm h-24 px-4">
         <Link href="/home" className="flex items-center space-x-4">
           {/*<Image src="/logo2.png" alt="Kalypso Education" width={49} height={49} />*/}
           <div className="flex flex-col">
             <span className="text-xl text-white">MyMCAT.ai</span>
           </div>
         </Link>
-        <div className="flex items-end h-full">
-        <div className="flex items-center space-x-4">
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Badge 
-            variant={isPro ? "default" : "secondary"} 
-            className={cn(
-              "cursor-pointer px-4 py-2 text-sm font-medium",
-              isPro ? "bg-gradient-to-r from-purple-400 to-pink-500 text-white" : "hover:bg-secondary-hover"
-            )}
-            onClick={handleBadgeClick}
-          >
-            {isPro ? "Pro Plan" : "Upgrade to Pro"}
-          </Badge>
-        </motion.div>
-        <UserButton afterSignOutUrl="/" />
-      </div>
+        <div className="flex items-center h-full">
+          <div className="flex items-center space-x-4 mr-4">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Badge 
+                variant={isPro ? "default" : "secondary"} 
+                className={cn(
+                  "cursor-pointer px-4 py-2 text-sm font-medium",
+                  isPro ? "bg-gradient-to-r from-purple-400 to-pink-500 text-white" : "hover:bg-secondary-hover"
+                )}
+                onClick={handleBadgeClick}
+              >
+                {isPro ? "Pro Plan" : "Upgrade to Pro"}
+              </Badge>
+            </motion.div>
+            <UserButton afterSignOutUrl="/" />
+          </div>
           <span
             ref={ballerSectionRef}
-            className="flex items-start h-full ml-4 pl-2 bg-[#021226]"
+            className="flex items-start h-full bg-[#021226]"
             style={{
               clipPath:
                 "polygon(100% 0%, 100% 51%, 100% 73%, 18% 72%, 11% 48%, 0 0)",
@@ -76,13 +76,15 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
               />
             </div>
             <div className="mt-5">
-              <Image
-                src="/insta.svg"
-                className="mx-2 bg-[#007AFF] p-1 rounded-lg"
-                alt="Kalypso Education"
-                width={30}
-                height={30}
-              />
+              <Link href="https://www.instagram.com/an0thermanicmonday/" target="_blank" rel="noopener noreferrer">
+                <Image
+                  src="/insta.svg"
+                  className="mx-2 bg-[#007AFF] p-1 rounded-lg cursor-pointer"
+                  alt="Instagram"
+                  width={30}
+                  height={30}
+                />
+              </Link>
             </div>
           </span>
         </div>

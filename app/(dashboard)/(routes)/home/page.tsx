@@ -278,7 +278,7 @@ const Page = () => {
               : activeTab === "flashcards"
               ? "Flashcards"
               : activeTab === "test"
-              ? "Testing suite"
+              ? "Daily CARs Practice"
               : "Home"}
           </h2>
           <div className="relative">
