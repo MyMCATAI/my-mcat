@@ -195,7 +195,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
     }
   };
   return (
-    <div className="relative p-2 mt-4 h-full">
+    <div className="relative p-2 mt h-[683px]">
       <div className="relative z-10 text-white p-2 rounded-lg h-full flex flex-col">
         <div className="flex w-full">
           {tabs.map((tab) => (
