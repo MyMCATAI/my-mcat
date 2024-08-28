@@ -19,6 +19,7 @@ const TestingSuit: React.FC<TestListingProps> = ({ tests }) => {
 
   return (
     <div className="testing-suit h-full flex flex-col">
+      {/* Commented out buttons
       <div className="flex justify-end gap-2 p-2">
         {tabs.map((tab, index) => (
           <button
@@ -41,6 +42,7 @@ const TestingSuit: React.FC<TestListingProps> = ({ tests }) => {
           </button>
         </Link>
       </div>
+      */}
       <div className="tab-content flex-grow overflow-auto">
         {tabs[activeTab].content}
       </div>
