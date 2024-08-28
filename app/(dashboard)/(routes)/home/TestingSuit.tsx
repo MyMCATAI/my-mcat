@@ -18,16 +18,15 @@ const TestingSuit: React.FC<TestListingProps> = ({ tests }) => {
   ];
 
   return (
-    <div className="testing-suit">
-      <div className="tab-content">{tabs[activeTab].content}</div>
-      <div className="tab-container flex justify-between mx-auto w-[70%] gap-4">
+    <div className="testing-suit h-full flex flex-col">
+      <div className="flex justify-end gap-2 p-2">
         {tabs.map((tab, index) => (
           <button
             key={index}
             className={clsx(
-              "tab-button py-[30px] mt-10 rounded-[15px] flex-1",
+              "px-3 py-1 text-xs rounded",
               {
-                "bg-[#C9C9C9] text-black hover:bg-[#a0a0a0]": activeTab !== index,
+                "bg-gray-200 text-black hover:bg-gray-300": activeTab !== index,
                 "bg-blue-500 text-white": activeTab === index,
               }
             )}
@@ -36,11 +35,14 @@ const TestingSuit: React.FC<TestListingProps> = ({ tests }) => {
             {tab.label}
           </button>
         ))}
-        <Link href="/review" className="flex-1">
-          <button className="tab-button py-[30px] mt-10 rounded-[15px] w-full bg-green-500 text-white hover:bg-green-600">
+        <Link href="/review">
+          <button className="px-3 py-1 text-xs rounded bg-green-500 text-white hover:bg-green-600">
             Review
           </button>
         </Link>
+      </div>
+      <div className="tab-content flex-grow overflow-auto">
+        {tabs[activeTab].content}
       </div>
     </div>
   );

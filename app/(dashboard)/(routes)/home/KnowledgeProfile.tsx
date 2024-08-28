@@ -125,7 +125,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   };
 
   const renderActivities = (activities: FetchedActivity[]) => (
-    <ScrollArea className="h-[330px]">
+    <ScrollArea className="h-full">
       {activities.length > 0 ? (
         activities.map((activity) => {
           const minutesFormatted = (activity.hours * 60).toFixed(2);
@@ -168,7 +168,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   );
 
   const renderCategories = (categories: Category[]) => (
-    <ScrollArea className="h-[330px]">
+    <ScrollArea className="h-full">
       {categories.map((category, index) => (
         <div
           key={index}
@@ -195,32 +195,25 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
     }
   };
   return (
-    <div className="relative p-2 mt-4">
-      <div className="relative z-10 text-white p-2 rounded-lg">
-        <div className="p-2 flex justify-center bg-[rgba(7,46,111,0.5)]">
-          <div className="w-[200px] h-[170px]">
-            <Image src={profile} alt="Profile" width={200} height={170} className="w-full h-full object-cover" />
-          </div>
+    <div className="relative p-2 mt-4 h-full">
+      <div className="relative z-10 text-white p-2 rounded-lg h-full flex flex-col">
+        <div className="flex w-full">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              className={`flex-1 text-[12px] py-1 border border-[#79747E] text-center ${
+                activeTab === tab.id
+                  ? "bg-[#021326] text-white"
+                  : "bg-white text-black"
+              }`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
-        <div className="mt-4">
-          <div className="flex w-full">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                className={`flex-1 text-[12px] py-1 border border-[#79747E] text-center ${
-                  activeTab === tab.id
-                    ? "bg-[#021326] text-white"
-                    : "bg-white text-black"
-                }`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          <div className="mt-4 bg-[#001226] h-[367px] p-1">
+        <div className="mt-4 bg-[#001226] flex-grow mb-8 overflow-hidden">
           {renderContent(tabs.find(tab => tab.id === activeTab)!.content)}
-          </div>
         </div>
       </div>
     </div>
