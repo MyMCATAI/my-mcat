@@ -135,3 +135,29 @@ body :root {
 .summary-content li::marker {
   color: #ffffff;
 }
+
+/* Add these new styles for the floating animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+
+.animation-delay-600 {
+  animation-delay: 600ms;
+}
