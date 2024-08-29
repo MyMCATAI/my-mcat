@@ -291,13 +291,15 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     return userResponses[responseId] || pendingResponses[questionId];
   };
 
-  const handleHighlight = () => {
+  const handleHighlight = (text: string) => {
+    console.log(text)
     setFlashHighlight(true);
     passageRef.current?.applyStyle('HIGHLIGHT');
     setTimeout(() => setFlashHighlight(false), 300); 
   };
 
-  const handleStrikethrough = () => {
+  const handleStrikethrough = (text: string) => {
+    console.log(text)
     setFlashStrikethrough(true);
     passageRef.current?.applyStyle('STRIKETHROUGH');
     setTimeout(() => setFlashStrikethrough(false), 300);
