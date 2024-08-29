@@ -202,6 +202,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   };
 
   const createUserTest = async (): Promise<{ id: string } | null> => {
+    console.log("createUserTest")
     if (!testId || testCreated) return null;
     setIsCreatingTest(true);
   
@@ -268,6 +269,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   };
 
   const getCurrentQuestion = (): Question | null => {
+    console.log("get current question")
     const currentTestQuestion = getCurrentTestQuestion();
     return currentTestQuestion?.question || null;
   };
@@ -287,6 +289,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   };
 
   const getCurrentUserResponse = (questionId: string): UserResponse | undefined => {
+    console.log("getCurrentUserResponse")
     const responseId = questionIdToResponseId[questionId];
     return userResponses[responseId] || pendingResponses[questionId];
   };
@@ -294,7 +297,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const handleHighlight = () => {
     setFlashHighlight(true);
     passageRef.current?.applyStyle('HIGHLIGHT');
-    setTimeout(() => setFlashHighlight(false), 300); 
+    setTimeout(() => setFlashHighlight(false), 300);
   };
 
   const handleStrikethrough = () => {
@@ -302,6 +305,97 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     passageRef.current?.applyStyle('STRIKETHROUGH');
     setTimeout(() => setFlashStrikethrough(false), 300);
   };
+
+  
+  const saveNote = async (text: string) => {
+    console.log("Starting saveNote function");
+    let currentUserTest = userTest
+    if (!currentUserTest) {
+      console.log("No userTest, creating new one");
+      currentUserTest = await createUserTest();
+      if (!currentUserTest) {
+        console.error('Failed to create user test');
+        return;
+      }
+      setUserTest(currentUserTest);
+      setTestCreated(true);
+    }
+
+    console.log("UserTest state:", currentUserTest);
+    if (!currentUserTest) {
+      console.error("UserTest is still null after creation attempt");
+      return;
+    }
+
+    const currentQuestion = getCurrentQuestion();
+    console.log("Current question:", currentQuestion);
+    if (!currentQuestion) {
+      console.error("No current question found");
+      return;
+    }
+
+    const existingResponse = getCurrentUserResponse(currentQuestion.id);
+    console.log("Existing response:", existingResponse);
+    const timeSpent = hours * 3600 + minutes * 60 + seconds;
+
+
+
+    const timestamp = new Date().toISOString();
+    const formattedAction = `[${timestamp}] - ${text}`;
+
+    let updatedUserNotes = formattedAction;
+    if (existingResponse?.userNotes) {
+      updatedUserNotes = `${existingResponse.userNotes}\n${formattedAction}`;
+    }
+
+    const responseData = {
+      userTestId: currentUserTest.id,
+      questionId: currentQuestion.id,
+      userAnswer: existingResponse?.userAnswer || '',
+      isCorrect: existingResponse?.isCorrect || false,
+      timeSpent,
+      userNotes: updatedUserNotes,
+      answeredAt: new Date().toISOString(),
+    };
+
+    console.log("Response data to be sent:", responseData);
+
+    try {
+      const response = await fetch('/api/user-test/response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(responseData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        throw new Error(`Failed to save user response: ${response.status} ${response.statusText}`);
+      }
+
+      const savedResponse: UserResponse = await response.json();
+      console.log("Saved response:", savedResponse);
+
+      setUserResponses(prev => ({
+        ...prev,
+        [savedResponse.id]: savedResponse
+      }));
+
+      setQuestionIdToResponseId(prev => ({
+        ...prev,
+        [currentQuestion.id]: savedResponse.id
+      }));
+
+    } catch (err) {
+      console.error('Error saving user response:', err);
+    }
+  };
+
+  const onNote = (text: string) => {
+    console.log('Noted:', text);
+    saveNote(text);
+  };
+
 
   const handleFlag = () => {
     setFlashFlag(true);
@@ -315,6 +409,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   const currentTestQuestion = getCurrentTestQuestion();
   const currentQuestion = getCurrentQuestion();
+
+  const userAnswer = currentQuestion?.id && getCurrentUserResponse(currentQuestion?.id)?.userAnswer || undefined
 
   return (
     <div className="bg-white flex flex-col text-white overflow-hidden h-screen">
@@ -377,8 +473,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                 <PassageComponent 
                   ref={passageRef}
                   passageData={currentPassage} 
-                  onHighlight={handleHighlight}
-                  onStrikethrough={handleStrikethrough}
+                  onNote={onNote}
                 />
               </div>
             </div>
@@ -391,7 +486,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                   isFirst={currentQuestionIndex === 0}
                   isLast={currentQuestionIndex === test?.questions.length - 1}
                   onAnswer={handleUserResponse}
-                  userAnswer={getCurrentUserResponse(currentQuestion.id)?.userAnswer} 
+                  userAnswer={userAnswer} 
                   currentQuestionIndex={currentQuestionIndex}
                   totalQuestions={test?.questions.length || 0}
                   onFinish={handleFinishTest}
@@ -411,7 +506,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                   isFirst={currentQuestionIndex === 0}
                   isLast={currentQuestionIndex === test?.questions.length - 1}
                   onAnswer={handleUserResponse}
-                  userAnswer={getCurrentUserResponse(currentQuestion.id)?.userAnswer} 
+                  userAnswer={userAnswer} 
                   currentQuestionIndex={currentQuestionIndex}
                   totalQuestions={test?.questions.length || 0}
                   onFinish={handleFinishTest}

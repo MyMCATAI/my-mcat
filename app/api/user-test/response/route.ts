@@ -7,15 +7,23 @@ import prisma from "@/lib/prismadb";
 export async function POST(req: Request) {
   const { userId } = auth();
   if (!userId) {
+    console.log("Unauthorized request: No userId");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const body = await req.json();
-    const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes,weighting } = body;
-    console.log()
-    if ( !questionId || !userAnswer) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes, weighting } = body;
+
+    // Validate required fields
+    const missingFields = [];
+    if (!userTestId) missingFields.push('userTestId');
+    if (!questionId) missingFields.push('questionId');
+    if (userAnswer === undefined) missingFields.push('userAnswer');
+
+    if (missingFields.length > 0) {
+      console.log(`Missing required fields: ${missingFields.join(', ')}`);
+      return NextResponse.json({ error: `Missing required fields: ${missingFields.join(', ')}` }, { status: 400 });
     }
 
     // Fetch the question with its category
@@ -25,6 +33,7 @@ export async function POST(req: Request) {
     });
 
     if (!question) {
+      console.log(`Question not found: ${questionId}`);
       return NextResponse.json({ error: "Question not found" }, { status: 404 });
     }
 
@@ -41,6 +50,8 @@ export async function POST(req: Request) {
       answeredAt: new Date(),
     };
 
+    console.log("Response data to be saved:", responseData);
+
     // Check if a response for this question already exists
     const existingResponse = await prisma.userResponse.findFirst({
       where: {
@@ -51,7 +62,7 @@ export async function POST(req: Request) {
 
     let savedResponse;
     if (existingResponse) {
-      // Update existing response
+      console.log(`Updating existing response: ${existingResponse.id}`);
       savedResponse = await prisma.userResponse.update({
         where: { id: existingResponse.id },
         data: responseData,
@@ -62,7 +73,7 @@ export async function POST(req: Request) {
         },
       });
     } else {
-      // Create new response
+      console.log("Creating new response");
       savedResponse = await prisma.userResponse.create({
         data: responseData,
         include: {
@@ -72,6 +83,8 @@ export async function POST(req: Request) {
         },
       });
     }
+
+    console.log("Saved response:", savedResponse);
 
     // Update or create KnowledgeProfile
     await prisma.knowledgeProfile.upsert({
@@ -102,6 +115,6 @@ export async function POST(req: Request) {
     return NextResponse.json(savedResponse, { status: 201 });
   } catch (error) {
     console.error('Error handling user response:', error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error", details: error }, { status: 500 });
   }
 }
