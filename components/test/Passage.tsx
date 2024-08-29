@@ -6,8 +6,8 @@ import styles from './Passage.module.css';
 
 interface PassageProps {
   passageData: PassageData;
-  onHighlight: () => void;
-  onStrikethrough: () => void;
+  onHighlight: (text: string) => void;
+  onStrikethrough: (text: string) => void;
 }
 export interface PassageData {
   id: string;
@@ -43,12 +43,29 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
   const applyStyle = (style: string) => {
     const newState = RichUtils.toggleInlineStyle(editorState, style);
     setEditorState(newState);
-  };
+    const selectedText = getSelectedText(editorState);
+    console.log(`${styleMap.HIGHLIGHT} text:`, selectedText); 
+    if (style === 'HIGHLIGHT') {
+      onHighlight(selectedText);
+    } else if (style === 'STRIKETHROUGH') {
+      onStrikethrough(selectedText);
+    }
+  }
 
   useImperativeHandle(ref, () => ({
     applyStyle
   }));
 
+  const getSelectedText = (editorState: EditorState): string => {
+    const selectionState = editorState.getSelection();
+    const anchorKey = selectionState.getAnchorKey();
+    const currentContent = editorState.getCurrentContent();
+    const currentContentBlock = currentContent.getBlockForKey(anchorKey);
+    const start = selectionState.getStartOffset();
+    const end = selectionState.getEndOffset();
+    const selectedText = currentContentBlock.getText().slice(start, end);
+    return selectedText;
+  };
   const styleMap = {
     'HIGHLIGHT': {
       backgroundColor: 'yellow',
