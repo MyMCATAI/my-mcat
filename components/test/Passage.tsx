@@ -6,8 +6,7 @@ import styles from './Passage.module.css';
 
 interface PassageProps {
   passageData: PassageData;
-  onHighlight: (text: string) => void;
-  onStrikethrough: (text: string) => void;
+  onNote: (text: string) => void;
 }
 export interface PassageData {
   id: string;
@@ -17,8 +16,7 @@ export interface PassageData {
 
 const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps>(({ 
   passageData, 
-  onHighlight, 
-  onStrikethrough 
+  onNote, 
 }, ref) => {
 
   const [editorState, setEditorState] = useState(() => 
@@ -40,18 +38,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     localStorage.setItem(`passage-${passageData.id}`, JSON.stringify(content));
   }, [editorState, passageData.id]);
 
-  const applyStyle = (style: string) => {
-    const newState = RichUtils.toggleInlineStyle(editorState, style);
-    setEditorState(newState);
-    const selectedText = getSelectedText(editorState);
-    console.log(`${styleMap.HIGHLIGHT} text:`, selectedText); 
-    if (style === 'HIGHLIGHT') {
-      onHighlight(selectedText);
-    } else if (style === 'STRIKETHROUGH') {
-      onStrikethrough(selectedText);
-    }
-  }
-
+  
   useImperativeHandle(ref, () => ({
     applyStyle
   }));
@@ -64,8 +51,9 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     const start = selectionState.getStartOffset();
     const end = selectionState.getEndOffset();
     const selectedText = currentContentBlock.getText().slice(start, end);
-    return selectedText;
+    return `[${start},${end}], "${selectedText}"`;
   };
+
   const styleMap = {
     'HIGHLIGHT': {
       backgroundColor: 'yellow',
@@ -95,17 +83,25 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     return 'handled';
   };
 
+  
+  const applyStyle = (style: string) => {
+    const newState = RichUtils.toggleInlineStyle(editorState, style);
+    const selectionInfo = getSelectedText(newState);
+
+      onNote(style + " : " +selectionInfo);
+
+    setEditorState(newState);
+  };
+
   const handleKeyCommand = (command: string): DraftHandleValue => {
     if (command === 'delete' || command === 'backspace') {
       return 'handled';
     }
     if (command === 'toggle-highlight') {
-      onHighlight();
       applyStyle('HIGHLIGHT');
       return 'handled';
     }
     if (command === 'toggle-strikethrough') {
-      onStrikethrough();
       applyStyle('STRIKETHROUGH');
       return 'handled';
     }
