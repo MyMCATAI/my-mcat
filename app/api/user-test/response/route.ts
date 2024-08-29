@@ -1,9 +1,10 @@
+// File: app/api/user-test/response/route.ts
+
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs";
 import prisma from "@/lib/prismadb";
 
 export async function POST(req: Request) {
-  console.log("Received POST request to /api/user-test/response");
   const { userId } = auth();
   if (!userId) {
     console.log("Unauthorized request: No userId");
@@ -12,7 +13,6 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    console.log("Received request body:", body);
     const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes, weighting } = body;
 
     // Validate required fields

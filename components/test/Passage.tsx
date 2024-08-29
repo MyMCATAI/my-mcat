@@ -6,7 +6,7 @@ import styles from './Passage.module.css';
 
 interface PassageProps {
   passageData: PassageData;
-  onNote: (text: string) => void;
+  onNote?: (text: string) => void;
 }
 export interface PassageData {
   id: string;
@@ -88,7 +88,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     const newState = RichUtils.toggleInlineStyle(editorState, style);
     const selectionInfo = getSelectedText(newState);
 
-      onNote(style + " : " +selectionInfo);
+    onNote && onNote(style + " : " +selectionInfo);
 
     setEditorState(newState);
   };
