@@ -126,8 +126,6 @@ export default function UserTestReviewPage() {
                   <div className="p-4">
                     <PassageComponent 
                       passageData={currentPassage} 
-                      onHighlight={() => {}}
-                      onStrikethrough={() => {}}
                     />
                   </div>
                 </div>
