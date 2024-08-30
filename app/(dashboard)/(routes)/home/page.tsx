@@ -22,14 +22,15 @@ import {
 import { Button } from "@/components/ui/button";
 import TestComponent from "@/components/test-component";
 import { DialogOverlay } from "@radix-ui/react-dialog";
-
+import { checkProStatus } from "@/lib/utils";
 
 interface HandleShowDiagnosticTestParams {
   reset?: boolean;
 }
 
 const Page = () => {
-  const [activeTab, setActiveTab] = useState("Schedule");
+  const [activeTab, setActiveTab] = useState("test");
+  const [isPro, setIsPro] = useState(false);
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
   const [chatbotContext, setChatbotContext] = useState({
     contentTitle: "",
@@ -53,8 +54,18 @@ const Page = () => {
     fetchActivities();
     fetchTests();
   }, []);
-
   
+  useEffect(() => {
+    const initializePage = async () => {
+      await fetchActivities();
+      await fetchTests();
+      const proStatus = await checkProStatus();
+      setIsPro(proStatus); // if not pro, then dont let user see other features
+      // note, this is semi jank right now and doesn't actually disable these features, just covers them. will want to make this more robust
+    };
+
+    initializePage();
+  }, []);
 
   const handleTestComplete = async (score: number) => {
     setTestScore(score);
@@ -199,6 +210,7 @@ const Page = () => {
     }
   };
 
+  
   const renderContent = () => {
     if (isUpdatingProfile || isGeneratingActivities) {
       return (
@@ -213,32 +225,55 @@ const Page = () => {
       );
     }
 
+    let content;
     switch (activeTab) {
       case "Schedule":
-        return <Schedule 
+        content = <Schedule 
           activities={activities} 
           onShowDiagnosticTest={handleShowDiagnosticTest}
           handleSetTab={setActiveTab}
         />;
+        break;
       case "KnowledgeProfile":
-        return (
+        content = (
           <>
-          <AdaptiveTutoring
-            toggleChatBot={toggleChatBot}
-            setChatbotContext={setChatbotContext}
-          />
-          {chatbotContext.contentTitle}
+            <AdaptiveTutoring
+              toggleChatBot={toggleChatBot}
+              setChatbotContext={setChatbotContext}
+            />
+            {chatbotContext.contentTitle}
           </>
         );
+        break;
       case "AdaptiveTutoring":
-        return "";
+        content = "";
+        break;
       case "test":
-        return <TestingSuit tests={tests} />;
+        content = <TestingSuit tests={tests} />;
+        break;
       case "flashcards":
-        return <FlashcardDeck />;
+        content = <FlashcardDeck />;
+        break;
       default:
-        return null;
+        content = null;
     }
+
+    if (!isPro && activeTab !== "test") {
+      return (
+        <div className="relative">
+          {content}
+          <div className="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center z-10">
+            <div className="text-white text-center p-8 bg-[#001226] border border-sky-500 rounded-lg">
+              <h3 className="text-2xl mb-4">Pro Feature</h3>
+              <p>This feature is available for Pro users only. Upgrade to access all features!</p>
+              <Button className="mt-4 bg-sky-500 hover:bg-sky-600">Upgrade to Pro</Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return content;
   };
 
 
@@ -280,6 +315,7 @@ const Page = () => {
               : activeTab === "test"
               ? "Daily CARs Practice"
               : "Home"}
+              {isPro && "proStatus"}
           </h2>
           <div className="relative">
             <div className="p-3 gradientbg overflow-auto" style={{ height: "690px" }}>

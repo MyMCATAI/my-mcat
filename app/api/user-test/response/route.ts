@@ -118,3 +118,57 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Internal server error", details: error }, { status: 500 });
   }
 }
+
+export async function PUT(req: Request) {
+  const { userId } = auth();
+  if (!userId) {
+    console.log("Unauthorized request: No userId");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json();
+    const { userTestId, questionId, userNotes } = body;
+
+    // Validate required fields
+    if (!userTestId || !questionId) {
+      console.log("Missing required fields: userTestId or questionId");
+      return NextResponse.json({ error: "Missing required fields: userTestId and questionId are required" }, { status: 400 });
+    }
+
+    // Find the existing response
+    const existingResponse = await prisma.userResponse.findFirst({
+      where: {
+        userTestId,
+        questionId,
+        userId, // Ensure the response belongs to the authenticated user
+      },
+    });
+
+    if (!existingResponse) {
+      console.log(`Response not found for userTestId: ${userTestId}, questionId: ${questionId}`);
+      return NextResponse.json({ error: "Response not found" }, { status: 404 });
+    }
+
+    // Update the response, focusing on userNotes
+    const updatedResponse = await prisma.userResponse.update({
+      where: { id: existingResponse.id },
+      data: {
+        userNotes: userNotes,
+        // You can add more fields here if needed in the future
+      },
+      include: {
+        question: true,
+        userTest: true,
+        Category: true,
+      },
+    });
+
+    console.log("Updated response:", updatedResponse);
+
+    return NextResponse.json(updatedResponse, { status: 200 });
+  } catch (error) {
+    console.error('Error updating user response:', error);
+    return NextResponse.json({ error: "Internal server error", details: error }, { status: 500 });
+  }
+}
