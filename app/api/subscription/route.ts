@@ -13,8 +13,8 @@ export async function GET() {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    //const isPro = await checkSubscription();
-    const isPro = false
+    const isPro = await checkSubscription();
+    
     const userInfo = await getUserInfo();
 
     return NextResponse.json({ isPro, userInfo });

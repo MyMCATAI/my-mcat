@@ -11,6 +11,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Pencil, Highlighter, Flag } from 'lucide-react';
+import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
 
 interface TestComponentProps {
   testId: string;
@@ -31,14 +32,15 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const [testCreated, setTestCreated] = useState(false);
   const [isCreatingTest, setIsCreatingTest] = useState(false);
   const [questionIdToResponseId, setQuestionIdToResponseId] = useState<Record<string, string>>({});
-
   const [showScorePopup, setShowScorePopup] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
-
   const [flashHighlight, setFlashHighlight] = useState(false);
   const [flashStrikethrough, setFlashStrikethrough] = useState(false);
   const [flashFlag, setFlashFlag] = useState(false);
-
+  const [chatbotContext, setChatbotContext] = useState({
+    contentTitle: "",
+    context: ""
+  });
   const {
     seconds,
     minutes,
@@ -188,6 +190,9 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         return rest;
       });
 
+      // Log the answer
+      await saveAnswerLog(currentUserTest.id, questionId, userAnswer, isCorrect);
+
     } catch (err) {
       console.error('Error saving user response:', err);
       setPendingResponses(prev => {
@@ -201,8 +206,82 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     }
   };
 
+  // Note to future Josh: this is super messy and spaghetti, you need to organize this all at some point. get rekt idiot 
+  // - past Josh
+
+  const saveAnswerLog = async (userTestId: string, questionId: string, userAnswer: string, isCorrect: boolean) => {
+    console.log("Starting saveAnswerLog function");
+  
+    const currentQuestion = getCurrentQuestion();
+    console.log("Current question:", currentQuestion);
+    if (!currentQuestion) {
+      console.error("No current question found");
+      return;
+    }
+  
+    const existingResponse = getCurrentUserResponse(questionId);
+    console.log("Existing response:", existingResponse);
+    const timeSpent = hours * 3600 + minutes * 60 + seconds;
+  
+    const timestamp = new Date().toISOString();
+    const formattedAction = `[${timestamp}] - Answered: "${userAnswer}" (${isCorrect ? 'Correct' : 'Incorrect'})`;
+  
+    let updatedUserNotes = formattedAction;
+    if (existingResponse?.userNotes) {
+      updatedUserNotes = `${existingResponse.userNotes}\n${formattedAction}`;
+    }
+  
+    const responseData = {
+      userTestId,
+      questionId,
+      userAnswer: existingResponse?.userAnswer || userAnswer,
+      isCorrect: existingResponse?.isCorrect || isCorrect,
+      timeSpent,
+      userNotes: updatedUserNotes,
+      answeredAt: new Date().toISOString(),
+    };
+  
+    console.log("Response data to be sent:", responseData);
+  
+    try {
+      const response = await fetch('/api/user-test/response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(responseData),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        throw new Error(`Failed to save user response: ${response.status} ${response.statusText}`);
+      }
+  
+      const savedResponse: UserResponse = await response.json();
+      console.log("Saved response:", savedResponse);
+  
+      setUserResponses(prev => ({
+        ...prev,
+        [savedResponse.id]: savedResponse
+      }));
+  
+      setQuestionIdToResponseId(prev => ({
+        ...prev,
+        [questionId]: savedResponse.id
+      }));
+  
+      // Update chatbot context
+      setChatbotContext(prevContext => ({
+        ...prevContext,
+        context: `${prevContext.context}\n\nI just answered this question: "${currentQuestion.questionContent}"\nMy answer was: "${userAnswer}" (${isCorrect ? 'Correct' : 'Incorrect'})`
+      }));
+  
+      console.log('Answer log appended and context updated successfully');
+    } catch (err) {
+      console.error('Error saving user response:', err);
+    }
+  };
+
   const createUserTest = async (): Promise<{ id: string } | null> => {
-    console.log("createUserTest")
     if (!testId || testCreated) return null;
     setIsCreatingTest(true);
   
@@ -235,11 +314,9 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   const handleFinishTest = async () => {
     setIsSubmitting(true);
-    console.log('submit')
     if (!userTest) return;
     
     const score = calculateScore();
-    console.log('score',score)
     setFinalScore(score);
     try {
       const response = await fetch(`/api/user-test/${userTest.id}`, {
@@ -294,6 +371,15 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     return userResponses[responseId] || pendingResponses[questionId];
   };
 
+  useEffect(() => {
+    if (currentPassage && getCurrentQuestion()) {
+      setChatbotContext({
+        contentTitle: "writing a practice test on" + currentPassage.id,
+        context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm considering is: ${getCurrentQuestion()?.questionContent}\n\nOnly refer to this if I ask about what I'm currently studying.`
+      });
+    }
+  }, [currentPassage, currentQuestionIndex]);
+
   const handleHighlight = () => {
     setFlashHighlight(true);
     passageRef.current?.applyStyle('HIGHLIGHT');
@@ -305,8 +391,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     passageRef.current?.applyStyle('STRIKETHROUGH');
     setTimeout(() => setFlashStrikethrough(false), 300);
   };
-
-  
+ 
   const saveNote = async (text: string) => {
     console.log("Starting saveNote function");
     let currentUserTest = userTest
@@ -337,8 +422,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     const existingResponse = getCurrentUserResponse(currentQuestion.id);
     console.log("Existing response:", existingResponse);
     const timeSpent = hours * 3600 + minutes * 60 + seconds;
-
-
 
     const timestamp = new Date().toISOString();
     const formattedAction = `[${timestamp}] - ${text}`;
@@ -384,6 +467,15 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       setQuestionIdToResponseId(prev => ({
         ...prev,
         [currentQuestion.id]: savedResponse.id
+      }));
+
+      // Update chatbot context
+      setChatbotContext(prevContext => ({
+        ...prevContext,
+        context: `${prevContext.context}\n\n
+        
+        Here's something I just noted about the passage
+        ${text}`
       }));
 
     } catch (err) {
@@ -518,6 +610,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         )}
       </div>
       <div className="bg-[#006dab] h-15 border-t-3 border-sky-500"></div>
+     {/* Chatbot */}
+     <ChatbotWidget chatbotContext={chatbotContext} />
 
       <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
         <DialogContent className="bg-[#0A2540] text-white border border-sky-500">
