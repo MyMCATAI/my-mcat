@@ -42,6 +42,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
   };
 
   const toggleChatBot = (): void => {
+
     if (isDragging) return;
 
     if (timeoutRef.current) {
