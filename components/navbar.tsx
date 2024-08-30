@@ -72,7 +72,7 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
           </div>
           <span
             ref={ballerSectionRef}
-            className="flex items-start h-full bg-[#021226]"
+            className="flex items-start h-full bg-[#052c5c]"
             style={{
               clipPath:
                 "polygon(100% 0%, 100% 51%, 100% 73%, 18% 72%, 11% 48%, 0 0)",
