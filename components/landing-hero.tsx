@@ -120,7 +120,7 @@ export const LandingHero = () => {
         <div 
           className="absolute inset-0 opacity-20"
           style={{
-            backgroundImage: `url("https://my-mcat.s3.us-east-2.amazonaws.com/public/stars.jpeg")`,
+            backgroundImage: 'url("/stars.jpeg")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useStopwatch } from 'react-timer-hook';
 import PassageComponent from "@/components/test/Passage";
 import QuestionComponent from "@/components/test/Question";
@@ -365,17 +365,18 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     }
   };
 
-  const getCurrentUserResponse = (questionId: string): UserResponse | undefined => {
+  const getCurrentUserResponse = useCallback((questionId: string): UserResponse | undefined => {
     console.log("getCurrentUserResponse")
     const responseId = questionIdToResponseId[questionId];
     return userResponses[responseId] || pendingResponses[questionId];
-  };
+  }, [questionIdToResponseId, userResponses, pendingResponses]);
 
   useEffect(() => {
-    if (currentPassage && getCurrentQuestion()) {
+    if (currentPassage) {
+      const currentQuestion = getCurrentQuestion();
       setChatbotContext({
         contentTitle: "writing a practice test on" + currentPassage.id,
-        context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm considering is: ${getCurrentQuestion()?.questionContent}\n\nOnly refer to this if I ask about what I'm currently studying.`
+        context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm considering is: ${currentQuestion?.questionContent}\n\nOnly refer to this if I ask about what I'm currently studying.`
       });
     }
   }, [currentPassage, currentQuestionIndex]);
@@ -502,7 +503,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const currentTestQuestion = getCurrentTestQuestion();
   const currentQuestion = getCurrentQuestion();
 
-  const userAnswer = currentQuestion?.id && getCurrentUserResponse(currentQuestion?.id)?.userAnswer || undefined
+  const userAnswer = currentQuestion?.id ? getCurrentUserResponse(currentQuestion?.id)?.userAnswer : undefined
 
   return (
     <div className="bg-white flex flex-col text-white overflow-hidden h-screen">

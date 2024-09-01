@@ -63,7 +63,6 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
     if (percentage >= 50 && percentage <= 80) return "text-yellow-500";
     return "text-green-500";
   };
-  console.log("test", tests);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -190,12 +189,12 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
             <h3 className="text-white text-m font-semibold mt-3 mb-2 text-center font-mono">Upcoming Passages</h3>
             {tests.map((test) => (
               <div key={test.id} className="mb-4 mt-4">
-                <div
-                  className="flex justify-between items-center bg-transparent border border-blue-500 opacity-100 rounded-[15px] px-3 py-2 hover:bg-white hover:opacity-100 transition-all duration-300 group"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <Link href={`/test/testquestions?id=${test.id}`}>
+                <Link href={`/test/testquestions?id=${test.id}`}>
+                  <div
+                    className="flex justify-between items-center bg-transparent border border-blue-500 opacity-100 rounded-[15px] px-3 py-2 hover:bg-white hover:opacity-100 transition-all duration-300 group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
                         <Image
                           className="mt-1 group-hover:filter group-hover:invert"
                           src={"/computer.svg"}
@@ -203,25 +202,23 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                           height={28}
                           alt="icon"
                         />
-                      </Link>
-                      <Link href={`/test/testquestions?id=${test.id}`}>
-                        <Image
+                        {/* <Image
                           className="mt-1 group-hover:filter group-hover:invert"
                           src={"/verticalbar.svg"}
                           width={28}
-                          height={28}
+                          height={28} 
                           alt="icon"
-                        />
-                      </Link>
+                        /> */}
+                      </div>
+                      <h2 className="text-sm text-white font-normal group-hover:text-black">
+                        {truncateTitle(test.title, 10)}
+                      </h2>
                     </div>
-                    <h2 className="text-sm text-white font-normal group-hover:text-black">
-                      {truncateTitle(test.title, 10)}
+                    <h2 className={`text-md font-medium ${getPercentageColor(500)} group-hover:text-black`}>
+                      0%
                     </h2>
                   </div>
-                  <h2 className={`text-md font-medium ${getPercentageColor(500)} group-hover:text-black`}>
-                    0%
-                  </h2>
-                </div>
+                </Link>
               </div>
             ))}
           </div>
