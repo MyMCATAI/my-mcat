@@ -17,7 +17,7 @@ interface MyChatBotProps {
 
 const MyChatBot: React.FC<MyChatBotProps> = ({ 
   chatbotContext, 
-  isVoiceEnabled = true, 
+  isVoiceEnabled = false, 
   width = '100%',
   backgroundColor = '#033979'
 }) => {
