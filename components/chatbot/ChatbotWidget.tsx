@@ -33,6 +33,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const switchKalypsoState = (newState: KalypsoState): void => {
     setKalypsoState(newState);
@@ -64,7 +65,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
   const handleDragStart = () => {
     dragTimeoutRef.current = setTimeout(() => {
       setIsDragging(true);
-    }, 200); // Set drag after 200ms of holding
+    }, 200);
   };
 
   const handleDragStop = () => {
@@ -94,45 +95,47 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
   }, []);
 
   return (
-    <Draggable
-      position={position}
-      onStart={handleDragStart}
-      onDrag={handleDrag}
-      onStop={handleDragStop}
-      bounds="parent"
-    >
-      <div className="fixed bottom-6 right-12 flex flex-col items-end pointer-events-auto z-50">
-        {showChatbot && (
-          <div
-            className="rounded-lg shadow-lg overflow-hidden mb-4"
+    <div ref={containerRef} className="fixed inset-0 pointer-events-none z-50">
+      <Draggable
+        position={position}
+        onStart={handleDragStart}
+        onDrag={handleDrag}
+        onStop={handleDragStop}
+        bounds="parent"
+      >
+        <div className="fixed bottom-6 right-12 flex flex-col items-end pointer-events-auto">
+          {showChatbot && (
+            <div
+              className="rounded-lg shadow-lg overflow-hidden mb-4"
+              style={{
+                width: chatbotWidth,
+                height: chatbotHeight,
+                boxShadow: '0 0 15px 6px rgba(0, 123, 255, 0.4)',
+              }}
+            >
+              <ChatBot chatbotContext={chatbotContext} width={chatbotWidth} backgroundColor={backgroundColor} isVoiceEnabled={isVoiceEnabled}/>
+            </div>
+          )}
+          <button
+            className="overflow-hidden transition duration-120 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none cursor-move"
+            onClick={toggleChatBot}
+            aria-label={showChatbot ? "Close Chat" : "Open Chat"}
             style={{
-              width: chatbotWidth,
-              height: chatbotHeight,
-              boxShadow: '0 0 15px 6px rgba(0, 123, 255, 0.4)',
+              width: buttonSize,
+              height: buttonSize,
             }}
           >
-            <ChatBot chatbotContext={chatbotContext} width={chatbotWidth} backgroundColor={backgroundColor} isVoiceEnabled={isVoiceEnabled}/>
-          </div>
-        )}
-        <button
-          className="overflow-hidden transition duration-120 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none cursor-move"
-          onClick={toggleChatBot}
-          aria-label={showChatbot ? "Close Chat" : "Open Chat"}
-          style={{
-            width: buttonSize,
-            height: buttonSize,
-          }}
-        >
-          <img
-            ref={kalypsoRef}
-            src="/kalypsowait.gif"
-            alt="Chat with Kalypso"
-            className="w-full h-full object-cover pointer-events-none"
-            onDragStart={preventImageDrag}
-          />
-        </button>
-      </div>
-    </Draggable>
+            <img
+              ref={kalypsoRef}
+              src="/kalypsowait.gif"
+              alt="Chat with Kalypso"
+              className="w-full h-full object-cover pointer-events-none"
+              onDragStart={preventImageDrag}
+            />
+          </button>
+        </div>
+      </Draggable>
+    </div>
   );
 };
 

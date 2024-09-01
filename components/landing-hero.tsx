@@ -82,7 +82,7 @@ export const LandingHero = () => {
           muted
           playsInline
         >
-          <source src="/brush3.mp4" type="video/mp4" />
+          <source src={"https://my-mcat.s3.us-east-2.amazonaws.com/public/brush3.mp4"} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
@@ -120,7 +120,7 @@ export const LandingHero = () => {
         <div 
           className="absolute inset-0 opacity-20"
           style={{
-            backgroundImage: 'url("/stars.jpeg")',
+            backgroundImage: `url("https://my-mcat.s3.us-east-2.amazonaws.com/public/stars.jpeg")`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
