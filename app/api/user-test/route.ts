@@ -16,7 +16,12 @@ export async function GET(req: NextRequest) {
 
   try {
     const userTests = await prisma.userTest.findMany({
-      where: { userId },
+      where: { 
+        userId,
+        responses: {
+          some: {}  // This ensures that only userTests with attached responses are returned
+        }
+      },
       include: {
         test: {
           select: {
@@ -24,16 +29,27 @@ export async function GET(req: NextRequest) {
             description: true,
           },
         },
+        responses: true,  // Include responses to check if they exist
       },
       orderBy: { startedAt: 'desc' },
       skip,
       take: limit,
     });
 
-    const totalCount = await prisma.userTest.count({ where: { userId } });
+    const totalCount = await prisma.userTest.count({ 
+      where: { 
+        userId,
+        responses: {
+          some: {}
+        }
+      } 
+    });
 
     return NextResponse.json({
-      userTests,
+      userTests: userTests.map(test => {
+        const { responses, ...testWithoutResponses } = test;
+        return testWithoutResponses;
+      }),
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(totalCount / limit),
