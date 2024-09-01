@@ -19,7 +19,9 @@ const data = [
   { name: "Page F", uv: 2390 },
   { name: "Page G", uv: 3490 },
 ];
-import { Test } from "@/types";
+import { Test, UserTest } from "@/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import TestList from "./TestList";
 
 interface TestListingProps {
   tests: Test[];
@@ -36,6 +38,9 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
   const [typedText, setTypedText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [profileImage, setProfileImage] = useState("/kyle.png");
+  const [userTests, setUserTests] = useState<UserTest[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const examDescription = "Today, you're going to be doing the x exam. This is a tough passage & prynce will add a custom description here, with a lot of RBT/RWT/CMP.";
 
@@ -57,12 +62,24 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
       clearInterval(typingTimer);
     };
   }, []);
+  useEffect(() => {
+    const fetchUserTests = async () => {
+      try {
+        const response = await fetch('/api/user-test');
+        if (!response.ok) throw new Error('Failed to fetch user tests');
+        const data = await response.json();
+        console.log(data);
+        setUserTests(data.userTests);
+      } catch (err) {
+        setError('Error fetching user tests');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const getPercentageColor = (percentage: number) => {
-    if (percentage < 50) return "text-red-500";
-    if (percentage >= 50 && percentage <= 80) return "text-yellow-500";
-    return "text-green-500";
-  };
+    fetchUserTests();
+  }, []);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -186,41 +203,19 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
               boxShadow: '0 0 8px 2px rgba(0, 123, 255, 0.5), inset 0 0 15px rgba(0, 0, 246, 0.7)'
             }}
           >
-            <h3 className="text-white text-m font-semibold mt-3 mb-2 text-center font-mono">Upcoming Passages</h3>
-            {tests.map((test) => (
-              <div key={test.id} className="mb-4 mt-4">
-                <Link href={`/test/testquestions?id=${test.id}`}>
-                  <div
-                    className="flex justify-between items-center bg-transparent border border-blue-500 opacity-100 rounded-[15px] px-3 py-2 hover:bg-white hover:opacity-100 transition-all duration-300 group"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1">
-                        <Image
-                          className="mt-1 group-hover:filter group-hover:invert"
-                          src={"/computer.svg"}
-                          width={28}
-                          height={28}
-                          alt="icon"
-                        />
-                        {/* <Image
-                          className="mt-1 group-hover:filter group-hover:invert"
-                          src={"/verticalbar.svg"}
-                          width={28}
-                          height={28} 
-                          alt="icon"
-                        /> */}
-                      </div>
-                      <h2 className="text-sm text-white font-normal group-hover:text-black">
-                        {truncateTitle(test.title, 10)}
-                      </h2>
-                    </div>
-                    <h2 className={`text-md font-medium ${getPercentageColor(500)} group-hover:text-black`}>
-                      0%
-                    </h2>
-                  </div>
-                </Link>
-              </div>
-            ))}
+            <h3 className="text-white text-m font-semibold mt-3 mb-2 text-center font-mono">CARs Tests</h3>
+            <Tabs defaultValue="upcoming" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                <TabsTrigger value="past">Past Tests</TabsTrigger>
+              </TabsList>
+              <TabsContent value="upcoming">
+                <TestList items={tests} type="upcoming" />
+              </TabsContent>
+              <TabsContent value="past">
+                <TestList items={userTests} type="past" />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>
