@@ -112,8 +112,8 @@ export default function UserTestReviewPage() {
             <p className="text-sm">Score: {userTest.score !== null ? `${userTest.score?.toFixed(2)}%` : 'Not scored'}</p>
             <p className="text-sm">Completed: {userTest.finishedAt ? new Date(userTest.finishedAt).toLocaleString() : 'Not finished'}</p>
           </div>
-          <Link href="/review" className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded transition duration-300">
-            Back to Review
+          <Link href="/home" className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded transition duration-300">
+            Return Home
           </Link>
         </div>
       </div>

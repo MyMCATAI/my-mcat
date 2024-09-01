@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Pencil, Highlighter, Flag } from 'lucide-react';
 import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
+import Link from 'next/link';
 
 interface TestComponentProps {
   testId: string;
@@ -508,15 +509,20 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   return (
     <div className="bg-white flex flex-col text-white overflow-hidden h-screen">
       <div className="bg-[#006dab] p-2 h-15 flex justify-between items-center border-3 border-sky-500">
-        <h1 className="text-lg font-semibold ml-6">
-          {test?.title}
-          {isCreatingTest && <span className="ml-2 text-sm text-gray-400">Creating test...</span>}
-        </h1>
+        <div className="flex items-center">
+          <h1 className="text-lg font-semibold ml-6">
+            {test?.title}
+            {isCreatingTest && <span className="ml-2 text-sm text-gray-400">Creating test...</span>}
+          </h1>
+        </div>
         <div className="timer text-sky-300">
           <span>{hours.toString().padStart(2, '0')}:</span>
           <span>{minutes.toString().padStart(2, '0')}:</span>
           <span>{seconds.toString().padStart(2, '0')}</span>
         </div>
+        <Link href="/home" className="ml-4 px-3 py-1 bg-sky-500 hover:bg-sky-600 text-white rounded transition duration-300">
+            Return Home
+          </Link>
       </div>
       <div className="h-9 border-t-2 border-b-2 border-white bg-[#84aedd] flex items-center justify-between">
         <div className="flex items-center ml-2">
@@ -558,57 +564,44 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         </div>
       </div>
       <div className="h-7 bg-[#a6a6a6]"></div>
+     
+      {/* Main content area */}
       <div className="flex relative flex-grow overflow-hidden">
-        {currentPassage ? (
-          <>
-            <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto">
-              <div className="p-4">
-                <PassageComponent 
-                  ref={passageRef}
-                  passageData={currentPassage} 
-                  onNote={onNote}
-                />
-              </div>
-            </div>
-            <div className="w-1/a2 relative overflow-auto">
-              {currentQuestion && currentTestQuestion && (
-                <QuestionComponent
-                  question={currentQuestion}
-                  onNext={handleNextQuestion}
-                  onPrevious={handlePreviousQuestion}
-                  isFirst={currentQuestionIndex === 0}
-                  isLast={currentQuestionIndex === test?.questions.length - 1}
-                  onAnswer={handleUserResponse}
-                  userAnswer={userAnswer} 
-                  currentQuestionIndex={currentQuestionIndex}
-                  totalQuestions={test?.questions.length || 0}
-                  onFinish={handleFinishTest}
-                  isSubmitting={isSubmitting}
-                />
-              )}
-            </div>
-          </>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center overflow-hidden">
-            <div className="max-w-2xl w-full h-full overflow-y-auto relative">
-              {currentQuestion && currentTestQuestion && (
-                <QuestionComponent
-                  question={currentQuestion}
-                  onNext={handleNextQuestion}
-                  onPrevious={handlePreviousQuestion}
-                  isFirst={currentQuestionIndex === 0}
-                  isLast={currentQuestionIndex === test?.questions.length - 1}
-                  onAnswer={handleUserResponse}
-                  userAnswer={userAnswer} 
-                  currentQuestionIndex={currentQuestionIndex}
-                  totalQuestions={test?.questions.length || 0}
-                  onFinish={handleFinishTest}
-                  isSubmitting={isSubmitting}
-                />
-              )}
+        {currentPassage && (
+          <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto">
+            <div className="p-4 h-full">
+              <PassageComponent 
+                ref={passageRef}
+                passageData={currentPassage} 
+                onNote={onNote}
+              />
             </div>
           </div>
         )}
+
+        <div className={`overflow-auto ${currentPassage ? 'w-1/2' : 'w-full'}`}>
+          <div className="p-4 h-full">
+            {currentQuestion && currentTestQuestion ? (
+              <QuestionComponent
+                question={currentQuestion}
+                onNext={handleNextQuestion}
+                onPrevious={handlePreviousQuestion}
+                isFirst={currentQuestionIndex === 0}
+                isLast={currentQuestionIndex === test?.questions.length - 1}
+                onAnswer={handleUserResponse}
+                userAnswer={userAnswer} 
+                currentQuestionIndex={currentQuestionIndex}
+                totalQuestions={test?.questions.length || 0}
+                onFinish={handleFinishTest}
+                isSubmitting={isSubmitting}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-500">No question available</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
       <div className="bg-[#006dab] h-15 border-t-3 border-sky-500"></div>
      {/* Chatbot */}
