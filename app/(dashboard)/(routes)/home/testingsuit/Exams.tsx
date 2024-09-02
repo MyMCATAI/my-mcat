@@ -118,18 +118,19 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
   };
 
   return (
-    <div className="h-full flex flex-col p-3 text-white">
+    <div className="h-full flex flex-col p-3" style={{ color: 'var(--theme-text-color)' }}>
       <div className="flex-grow grid grid-cols-1 md:grid-cols-7 gap-4">
         <div className="md:col-span-5 mr mb-4">
           <div 
-            className="h-full bg-[#001226] rounded-[10px] p-4 flex flex-col relative" 
+            className="h-full rounded-[10px] p-4 flex flex-col relative" 
             style={{
-              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.95), rgba(0, 18, 38, 0.95)), url('/circuitpattern2.png')",
+              backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
               backgroundSize: 'cover',
               backgroundRepeat: 'no-repeat',
               backgroundPosition: 'center',
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              boxShadow: '0 0 8px 2px rgba(0, 123, 255, 0.5), inset 0 0 15px rgba(0, 0, 246, 0.7)'
+              backgroundColor: 'var(--theme-mainbox-color)',
+              boxShadow: 'var(--theme-box-shadow)',
+              color: 'var(--theme-text-color)'
             }}
           >
             <div className="flex mb-4">
@@ -151,7 +152,7 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                   className="hidden"
                 />
               </div>
-              <div className="flex-grow p-2 bg-transparent text-white border-blue-500 border rounded-lg">
+              <div className="flex-grow p-2 bg-transparent border-blue-500 border rounded-lg" style={{ color: 'var(--theme-text-color)' }}>
                 <div className="flex justify-center items-center h-full space-x-12">
                   <div className="flex flex-col items-center">
                     <Image src="/game-components/PixelHeart.png" alt="Heart" width={30} height={30} className="animate-float" />
@@ -177,7 +178,7 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
               </div>
             </div>
             <div className="flex flex-col">
-              <pre className="text-white font-mono text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap flex-1 mt-4 ml-2">
+              <pre className="font-mono text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap flex-1 mt-4 ml-2" style={{ color: 'var(--theme-text-color)' }}>
                 {typedText}
               </pre>
               {isTypingComplete && (
@@ -203,15 +204,15 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                         />
                       </div>
                     </div>
-                    <span>Click to begin.</span>
+                    <span style={{ color: 'var(--theme-text-color)' }}>Click to begin.</span>
                   </Link>
                 </div>
               )}
             </div>
             <div className="absolute bottom-4 right-4 flex items-center">
-              <span className="text-white mr-2 text-sm animate-pulse">Next Passage</span>
+              <span className="mr-2 text-sm animate-pulse" style={{ color: 'var(--theme-text-color)' }}>Next Passage</span>
               <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-pulse">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
           </div>
@@ -220,15 +221,16 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
           <div 
             className="h-[625px] overflow-y-auto rounded-lg p-4 bg-[#001226]"
             style={{
-              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 18, 38, 0.85)), url('/circuitpattern2.png')",
+              backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
               backgroundSize: 'cover',
               backgroundRepeat: 'no-repeat',
               backgroundPosition: 'center',
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              boxShadow: '0 0 8px 2px rgba(0, 123, 255, 0.5), inset 0 0 15px rgba(0, 0, 246, 0.7)'
+              backgroundColor: 'var(--theme-mainbox-color)',
+              boxShadow: 'var(--theme-box-shadow)',
+              color: 'var(--theme-text-color)'
             }}
           >
-            <h3 className="text-white text-m font-semibold mt-3 mb-2 text-center font-mono">CARs Tests</h3>
+            <h3 className="text-m font-semibold mt-3 mb-2 text-center font-mono" style={{ color: 'var(--theme-text-color)' }}>CARs Tests</h3
             {loading ? (
               <div>Loading...</div>
             ) : (
@@ -242,9 +244,36 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                 </TabsContent>
                 <TabsContent value="past">
                   <TestList items={userTests} type="past" />
-                </TabsContent>
+                  </TabsContent>
               </Tabs>
             )}
+            {tests.map((test) => (
+              <div key={test.id} className="mb-4 mt-4">
+                <Link href={`/test/testquestions?id=${test.id}`}>
+                  <div
+                    className="flex justify-between items-center bg-transparent border border-blue-500 opacity-100 rounded-[15px] px-3 py-2 hover:bg-white hover:opacity-100 transition-all duration-300 group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <Image
+                          className="mt-1 group-hover:filter group-hover:invert"
+                          src={"/computer.svg"}
+                          width={28}
+                          height={28}
+                          alt="icon"
+                        />
+                      </div>
+                      <h2 className="text-sm font-normal group-hover:text-black group-hover:invert" style={{ color: 'var(--theme-text-color)' }}>
+                        {truncateTitle(test.title, 10)}
+                      </h2>
+                    </div>
+                    <h2 className={`text-md font-medium ${getPercentageColor(500)}`}>
+                      0%
+                    </h2>
+                  </div>
+                </Link>
+              </div>
+            ))}
           </div>
         </div>
       </div>

@@ -78,6 +78,8 @@ module.exports = {
   variants: {
     extend: {
       backfaceVisibility: ['responsive'],
+      filter: ['theme-sakuraTrees'],
+      invert: ['theme-sakuraTrees'],
     },
   },
   plugins: [

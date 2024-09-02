@@ -9,6 +9,7 @@ import { FetchedActivity, Test } from "@/types";
 import TestingSuit from "./TestingSuit";
 import { toast } from "@/components/ui/use-toast";
 import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
+import ThemeSwitcher from '@/components/home/ThemeSwitcher';
 
 const FlashcardDeck = dynamic(() => import('./FlashcardDeck'), { ssr: false });
 
@@ -305,18 +306,23 @@ const Page = () => {
     <div className="container py-10">
       <div className="text-white flex gap-6">
         <div className="w-3/4 relative">
-          <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
-            {activeTab === "Schedule"
-              ? "Home."
-              : activeTab === "KnowledgeProfile"
-              ? "Adaptive Tutoring Suite."
-              : activeTab === "flashcards"
-              ? "Flashcards"
-              : activeTab === "test"
-              ? "Daily CARs Practice"
-              : "Home"}
-              {isPro && "proStatus"}
-          </h2>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
+                {activeTab === "Schedule"
+                  ? "Home."
+                  : activeTab === "KnowledgeProfile"
+                  ? "Adaptive Tutoring Suite."
+                  : activeTab === "flashcards"
+                  ? "Flashcards"
+                  : activeTab === "test"
+                  ? "Daily CARs Practice"
+                  : "Home"}
+                {isPro && " Pro"}
+              </h2>
+              <ThemeSwitcher />
+            </div>
+          </div>
           <div className="relative">
             <div className="p-3 gradientbg overflow-auto" style={{ height: "690px" }}>
               {renderContent()}
@@ -350,7 +356,7 @@ const Page = () => {
 
       {/* Score Popup */}
       <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
-        <DialogContent className="bg-[#0A2540] text-white border border-sky-500">
+        <DialogContent className="bg-[#001226] text-white border border-sky-500">
           <DialogHeader>
             <DialogTitle className="text-2xl font-semibold text-sky-300">Test Completed!</DialogTitle>
             <DialogDescription className="text-gray-300">
