@@ -1,10 +1,23 @@
 'use client'
 
 import { Navbar } from "@/components/navbar";
-import { checkSubscription } from "@/lib/subscription";
 import { useEffect, useState } from "react";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import ThemeInitializer from "@/components/home/ThemeInitializer";
+
+const checkSubscription = async () => {
+  try {
+    const response = await fetch('/api/subscription');
+    if (!response.ok) {
+      throw new Error('Failed to fetch subscription status');
+    }
+    const data = await response.json();
+    return data.isPro;
+  } catch (error) {
+    console.error('Error checking subscription:', error);
+    return false;
+  }
+};
 
 const DashboardLayoutContent = ({
   children,
