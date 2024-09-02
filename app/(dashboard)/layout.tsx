@@ -23,7 +23,7 @@ const DashboardLayoutContent = ({
   }, []);
 
   const backgroundImage = theme === 'sakuraTrees' 
-    ? 'url(/sakuratreeslight.png)'
+    ? 'url(/sakuratreesbackground.png)'
     : 'url(/vaporandnightbackground.png)';
 
   const subscription = isPro ? "pro" : "free";
