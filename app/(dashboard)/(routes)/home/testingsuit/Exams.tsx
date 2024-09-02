@@ -19,25 +19,53 @@ const data = [
   { name: "Page F", uv: 2390 },
   { name: "Page G", uv: 3490 },
 ];
-import { Test } from "@/types";
+import { ReportData, Test, UserTest } from "@/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import TestList from "./TestList";
 
 interface TestListingProps {
   tests: Test[];
 }
 
-const truncateTitle = (title: string, maxLength: number) => {
-  if (title.length > maxLength) {
-    return `${title.substring(0, maxLength)}...`;
-  }
-  return title;
-};
-
 const Exams: React.FC<TestListingProps> = ({ tests }) => {
   const [typedText, setTypedText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [profileImage, setProfileImage] = useState("/kyle.png");
+  const [userTests, setUserTests] = useState<UserTest[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [reportData, setReportData] = useState<ReportData | null>(null);
 
   const examDescription = "Today, you're going to be doing the x exam. This is a tough passage & prynce will add a custom description here, with a lot of RBT/RWT/CMP.";
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [testsResponse, reportResponse] = await Promise.all([
+          fetch('/api/user-test'),
+          fetch('/api/user-report')
+        ]);
+
+        if (!testsResponse.ok) throw new Error('Failed to fetch user tests');
+        if (!reportResponse.ok) throw new Error('Failed to fetch user report');
+
+        const testsData = await testsResponse.json();
+        const reportData = await reportResponse.json();
+
+        setUserTests(testsData.userTests);
+        setReportData(reportData);
+
+        console.log(reportData);
+      } catch (err) {
+        setError('Error fetching data');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     setTypedText('');
@@ -58,11 +86,25 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
     };
   }, []);
 
-  const getPercentageColor = (percentage: number) => {
-    if (percentage < 50) return "text-red-500";
-    if (percentage >= 50 && percentage <= 80) return "text-yellow-500";
-    return "text-green-500";
-  };
+  useEffect(() => {
+    const fetchUserTests = async () => {
+      try {
+        const response = await fetch('/api/user-test');
+        if (!response.ok) throw new Error('Failed to fetch user tests');
+        const data = await response.json();
+        console.log(data);
+        setUserTests(data.userTests);
+      } catch (err) {
+        setError('Error fetching user tests');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+
+    fetchUserTests();
+  }, []);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -114,23 +156,23 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                 <div className="flex justify-center items-center h-full space-x-12">
                   <div className="flex flex-col items-center">
                     <Image src="/game-components/PixelHeart.png" alt="Heart" width={30} height={30} className="animate-float" />
-                    <span className="text-xs mt-1">80%</span>
+                    <span className="text-xs mt-1">{reportData ? `${reportData.averageTestScore.toFixed(2)}%` : 'N/A'}</span>
                     <span className="text-xs">score</span>
                   </div>
                   <div className="flex flex-col items-center">
                     <Image src="/game-components/PixelWatch.png" alt="Watch" width={30} height={30} className="animate-float animation-delay-200" />
-                    <span className="text-xs mt-1">15:30</span>
-                    <span className="text-xs">time</span>
+                    <span className="text-xs mt-1">{reportData ? `${reportData.averageTimePerQuestion.toFixed(2)}s` : 'N/A'}</span>
+                    <span className="text-xs">avg time</span>
                   </div>
                   <div className="flex flex-col items-center">
                     <Image src="/game-components/PixelDiamond.png" alt="Diamond" width={30} height={30} className="animate-float animation-delay-400" />
-                    <span className="text-xs mt-1">50</span>
-                    <span className="text-xs">reward</span>
+                    <span className="text-xs mt-1">{reportData ? reportData.totalQuestionsAnswered : 'N/A'}</span>
+                    <span className="text-xs">questions</span>
                   </div>
                   <div className="flex flex-col items-center">
                     <Image src="/game-components/PixelFlex.png" alt="Flex" width={30} height={30} className="animate-float animation-delay-600" />
-                    <span className="text-xs mt-1">1/52</span>
-                    <span className="text-xs">passages</span>
+                    <span className="text-xs mt-1">{reportData ? `${reportData.testsCompleted}/${reportData.totalTestsTaken}` : 'N/A'}</span>
+                    <span className="text-xs">tests</span>
                   </div>
                 </div>
               </div>
@@ -188,7 +230,23 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
               color: 'var(--theme-text-color)'
             }}
           >
-            <h3 className="text-m font-semibold mt-3 mb-2 text-center font-mono" style={{ color: 'var(--theme-text-color)' }}>Upcoming Passages</h3>
+            <h3 className="text-m font-semibold mt-3 mb-2 text-center font-mono" style={{ color: 'var(--theme-text-color)' }}>CARs Tests</h3
+            {loading ? (
+              <div>Loading...</div>
+            ) : (
+              <Tabs defaultValue="upcoming" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                  <TabsTrigger value="past">Past Tests</TabsTrigger>
+                </TabsList>
+                <TabsContent value="upcoming">
+                  <TestList items={tests} type="upcoming" />
+                </TabsContent>
+                <TabsContent value="past">
+                  <TestList items={userTests} type="past" />
+                  </TabsContent>
+              </Tabs>
+            )}
             {tests.map((test) => (
               <div key={test.id} className="mb-4 mt-4">
                 <Link href={`/test/testquestions?id=${test.id}`}>
