@@ -27,6 +27,15 @@ interface TestListingProps {
   tests: Test[];
 }
 
+
+const truncateTitle = (title: string, maxLength: number) => {
+  if (title.length > maxLength) {
+    return `${title.substring(0, maxLength)}...`;
+  }
+  return title;
+};
+
+
 const Exams: React.FC<TestListingProps> = ({ tests }) => {
   const [typedText, setTypedText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
@@ -37,6 +46,12 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
   const [reportData, setReportData] = useState<ReportData | null>(null);
 
   const examDescription = "Today, you're going to be doing the x exam. This is a tough passage & prynce will add a custom description here, with a lot of RBT/RWT/CMP.";
+
+  const getPercentageColor = (percentage: number) => {
+    if (percentage < 50) return "text-red-500";
+    if (percentage >= 50 && percentage <= 80) return "text-yellow-500";
+    return "text-green-500";
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -230,7 +245,7 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
               color: 'var(--theme-text-color)'
             }}
           >
-            <h3 className="text-m font-semibold mt-3 mb-2 text-center font-mono" style={{ color: 'var(--theme-text-color)' }}>CARs Tests</h3
+            <h3 className="text-m font-semibold mt-3 mb-2 text-center font-mono" style={{ color: 'var(--theme-text-color)' }}>CARs Tests</h3>
             {loading ? (
               <div>Loading...</div>
             ) : (
