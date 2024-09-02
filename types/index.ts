@@ -117,3 +117,13 @@ export interface Flashcard {
   totalAttempts: number;
   lastAttemptAt: string | null;
 }
+
+export interface ReportData {
+  totalTestsTaken: number;
+  testsCompleted: number;
+  completionRate: number;
+  totalQuestionsAnswered: number;
+  averageTestScore: number;
+  averageTimePerQuestion: number;
+  categoryAccuracy: Record<string, number>;
+}
