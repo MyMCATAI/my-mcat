@@ -10,6 +10,9 @@ body :root {
 
 @layer base {
   :root {
+    /* CyberSpace theme variables (default) */
+    --theme-box-shadow: 0 0 8px 2px rgba(0, 123, 255, 0.5), inset 0 0 15px rgba(0, 0, 246, 0.7);
+    --theme-interface-image: url('/circuitpattern2.png');
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
@@ -39,6 +42,13 @@ body :root {
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
+    --cyberspace-box-shadow: 0 0 8px 2px rgba(0, 123, 255, 0.5), inset 0 0 15px rgba(0, 0, 246, 0.7);
+    --theme-mainbox-color: #001226;
+    --theme-gradient-start: rgba(0, 0, 0, 0.9);
+    --theme-gradient-end: rgba(0, 18, 38, 0.9);
+    --theme-text-color: white;
+    --theme-svg-filter: invert(1);
+    --theme-hover-color: #001226;
   }
 
   .dark {
@@ -70,6 +80,9 @@ body :root {
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
   }
+
+  @import "../styles/themes/cyberSpace.css";
+  @import "../styles/themes/sakuraTrees.css";
 }
 
 @layer base {
@@ -105,6 +118,7 @@ body :root {
   background: linear-gradient(0deg, rgba(0, 57, 127, 0.9) 0%, rgba(0, 44, 105, 0.8) 100%);
 }
 
+
 .translate-x-full {
   transform: translateX(100%);
 }
@@ -115,7 +129,7 @@ body :root {
   font-weight: bold;
   margin-top: 2rem;
   margin-bottom: 1rem;
-  color: #ffffff;
+  color: var(--theme-text-color);
 }
 
 .summary-content p {
@@ -133,7 +147,7 @@ body :root {
 }
 
 .summary-content li::marker {
-  color: #ffffff;
+  color: var(--theme-text-color);
 }
 
 /* Add these new styles for the floating animation */
@@ -161,3 +175,24 @@ body :root {
 .animation-delay-600 {
   animation-delay: 600ms;
 }
+
+/* Sakura Trees theme */
+.theme-sakuraTrees {
+  /* Sakura Trees theme variables */
+  --theme-box-shadow: 0 0 8px 2px rgba(171, 0, 26, 0.5), inset 0 0 15px rgba(189, 53, 76, 0.7);
+  --theme-interface-image: url('/sakura-pattern.png');
+  --theme-mainbox-color: #FFF5EE; /* Light pink color for Sakura theme */
+  --theme-gradient-start: rgba(255, 255, 255, 0.8);
+  --theme-gradient-end: rgba(255, 240, 245, 0.8);
+  --theme-text-color: black;
+  --theme-svg-filter: none;
+  --theme-hover-color: #e298b3;
+}
+
+/* Add theme-specific gradients */
+.theme-sakuraTrees .gradientbg {
+  background: rgba(255, 182, 193, 0.9);
+  background: linear-gradient(0deg, #ffd6f1e6 0%, #ffd6f1e6 100%);
+}
+
+/* ... rest of your CSS ... */
