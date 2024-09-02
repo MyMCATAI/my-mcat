@@ -230,7 +230,7 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
               color: 'var(--theme-text-color)'
             }}
           >
-            <h3 className="text-m font-semibold mt-3 mb-2 text-center font-mono" style={{ color: 'var(--theme-text-color)' }}>CARs Tests</h3
+            <h3 className="text-m font-semibold mt-3 mb-2 text-center font-mono" style={{ color: 'var(--theme-text-color)' }}>CARs Tests</h3>
             {loading ? (
               <div>Loading...</div>
             ) : (
