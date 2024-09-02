@@ -131,16 +131,16 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
           const minutesFormatted = (activity.hours * 60).toFixed(2);
           
           return (
-            <div key={activity.id} className="mb-4 p-3 bg-[#021326] rounded">
+            <div key={activity.id} className="mb-4 p-3 bg-[--theme-mainbox-color] rounded">
               {activity.link ? (
                 <Link
                   href={activity.link}
-                  className="block text-sm font-bold text-white leading-normal shadow-text mb-1 hover:underline"
+                  className="block text-sm font-bold text-[--theme-text-color] leading-normal shadow-text mb-1 hover:underline"
                 >
                   {activity.activityTitle}
                 </Link>
               ) : (
-                <h3 className="text-sm font-bold text-white leading-normal shadow-text mb-1">
+                <h3 className="text-sm font-bold text-[--theme-text-color] leading-normal shadow-text mb-1">
                   {activity.activityTitle}
                 </h3>
               )}
@@ -162,7 +162,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
           );
         })
       ) : (
-        <p className="text-center mt-4 text-white text-lg font-light leading-normal shadow-text">No activities</p>
+        <p className="text-center mt-4 text-[--theme-text-color] text-lg font-light leading-normal shadow-text">No activities</p>
       )}
     </ScrollArea>
   );
@@ -172,7 +172,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
       {categories.map((category, index) => (
         <div
           key={index}
-          className="flex items-center p-2 mb-2 bg-[#021326] rounded-lg hover:bg-[#072E6F] transition-colors duration-200"
+          className="flex items-center p-2 mb-2 bg-[[#021326]] rounded-lg hover:bg-[#072E6F] transition-colors duration-200"
         >
           <div className="mr-3">
             <Icon 
@@ -181,7 +181,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
               color={category.color}
             />
           </div>
-          <p className="text-white text-sm">{category.conceptCategory}</p>
+          <p className="text-[--theme-text-color] text-sm">{category.conceptCategory}</p>
         </div>
       ))}
     </ScrollArea>
@@ -196,14 +196,14 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   };
   return (
     <div className="relative p-2 mt h-[683px]">
-      <div className="relative z-10 text-white p-2 rounded-lg h-full flex flex-col">
+      <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
         <div className="flex w-full">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               className={`flex-1 text-[12px] py-1 border border-[#79747E] text-center ${
                 activeTab === tab.id
-                  ? "bg-[#021326] text-white"
+                  ? "bg-[--theme-hover-color] text-[--theme-text-color]"
                   : "bg-white text-black"
               }`}
               onClick={() => setActiveTab(tab.id)}
@@ -212,7 +212,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
             </button>
           ))}
         </div>
-        <div className="mt-4 bg-[#001226] flex-grow mb-8 overflow-hidden">
+        <div className="mt-4 bg-[--theme-mainbox-color] flex-grow mb-8 overflow-hidden">
           {renderContent(tabs.find(tab => tab.id === activeTab)!.content)}
         </div>
       </div>

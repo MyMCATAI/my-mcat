@@ -1,0 +1,28 @@
+:root {
+  /* Primary colors */
+  --color-primary: #0EA5E9; /* sky-500 */
+  --color-primary-hover: #0284C7; /* sky-600 */
+  --color-primary-light: #7DD3FC; /* sky-300 */
+
+  /* Background colors */
+  --color-bg-dark: #001226;
+  --color-bg-darker: #0A2540;
+
+  /* Text colors */
+  --color-text-primary: #FFFFFF; /* white */
+  --color-text-secondary: #D1D5DB; /* gray-300 */
+
+  /* Border colors */
+  --color-border: #0EA5E9; /* sky-500 */
+
+  /* Gradient background */
+  --color-gradient-start: #001F3F;
+  --color-gradient-end: #003366;
+}
+
+/* You can add more theme-specific styles here if needed */
+.gradientbg {
+  background: linear-gradient(to bottom, var(--color-gradient-start), var(--color-gradient-end));
+}
+
+/* Add any other global styles for this theme */
