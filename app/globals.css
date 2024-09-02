@@ -179,11 +179,11 @@ body :root {
 /* Sakura Trees theme */
 .theme-sakuraTrees {
   /* Sakura Trees theme variables */
-  --theme-box-shadow: 0 0 8px 2px rgba(171, 0, 26, 0.5), inset 0 0 15px rgba(189, 53, 76, 0.7);
+  --theme-box-shadow: 0 0 8px 2px rgba(171, 0, 26, 0.5), inset 0 0 15px rgba(189, 53, 76, 0.659);
   --theme-interface-image: url('/sakura-pattern.png');
-  --theme-mainbox-color: #FFF5EE; /* Light pink color for Sakura theme */
-  --theme-gradient-start: rgba(255, 255, 255, 0.8);
-  --theme-gradient-end: rgba(255, 240, 245, 0.8);
+  --theme-mainbox-color: rgb(252, 245, 244); /* Light pink color for Sakura theme */
+  --theme-gradient-start: rgba(252, 245, 244, 0.85);
+  --theme-gradient-end: rgba(252, 245, 244, 0.85);
   --theme-text-color: black;
   --theme-svg-filter: none;
   --theme-hover-color: #e298b3;
@@ -191,8 +191,8 @@ body :root {
 
 /* Add theme-specific gradients */
 .theme-sakuraTrees .gradientbg {
-  background: rgba(255, 182, 193, 0.9);
-  background: linear-gradient(0deg, #ffd6f1e6 0%, #ffd6f1e6 100%);
+  background: rgba(255, 197, 205, 0.9);
+  background: linear-gradient(0deg, #ffebe8 0%, #ffebe8 100%);
 }
 
 /* ... rest of your CSS ... */
