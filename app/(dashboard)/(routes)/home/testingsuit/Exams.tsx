@@ -137,7 +137,7 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
       <div className="flex-grow grid grid-cols-1 md:grid-cols-7 gap-4">
         <div className="md:col-span-5 mr mb-4">
           <div 
-            className="h-full rounded-[10px] p-4 flex flex-col relative" 
+            className="h-[calc(100vh-8.3rem)] rounded-[10px] p-4 flex flex-col relative" 
             style={{
               backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
               backgroundSize: 'cover',
@@ -149,7 +149,7 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
             }}
           >
             <div className="flex mb-4">
-              <div className="w-[84px] h-[84px] bg-gray-300 rounded-lg mr-4 flex-shrink-0 overflow-hidden">
+              <div className="w-[8rem] h-[8rem] bg-gray-300 rounded-lg mr-4 flex-shrink-0 overflow-hidden">
                 <label htmlFor="profile-upload" className="cursor-pointer block w-full h-full">
                   <Image
                     src={profileImage}
@@ -167,27 +167,35 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                   className="hidden"
                 />
               </div>
-              <div className="flex-grow p-2 bg-transparent border-blue-500 border rounded-lg" style={{ color: 'var(--theme-text-color)' }}>
-                <div className="flex justify-center items-center h-full space-x-12">
-                  <div className="flex flex-col items-center">
-                    <Image src="/game-components/PixelHeart.png" alt="Heart" width={30} height={30} className="animate-float" />
-                    <span className="text-xs mt-1">{reportData ? `${reportData.averageTestScore.toFixed(2)}%` : 'N/A'}</span>
-                    <span className="text-xs">score</span>
+              <div className="flex-grow p-2 bg-transparent border-2 rounded-lg" style={{ color: 'var(--theme-text-color)', borderColor: 'var(--theme-border-color)' }}>
+                <div className="flex justify-between items-center h-full px-2 sm:px-4 md:px-6 lg:px-8 xl:px-16">
+                  <div className="flex flex-col items-center w-1/4">
+                    <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
+                      <Image src="/game-components/PixelHeart.png" alt="Heart" layout="fill" objectFit="contain" className="animate-float" />
+                    </div>
+                    <span className="text-[2vw] sm:text-xs mt-1">{reportData ? `${reportData.averageTestScore.toFixed(2)}%` : 'N/A'}</span>
+                    <span className="text-[2vw] sm:text-xs">score</span>
                   </div>
-                  <div className="flex flex-col items-center">
-                    <Image src="/game-components/PixelWatch.png" alt="Watch" width={30} height={30} className="animate-float animation-delay-200" />
-                    <span className="text-xs mt-1">{reportData ? `${reportData.averageTimePerQuestion.toFixed(2)}s` : 'N/A'}</span>
-                    <span className="text-xs">avg time</span>
+                  <div className="flex flex-col items-center w-1/4">
+                    <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
+                      <Image src="/game-components/PixelWatch.png" alt="Watch" layout="fill" objectFit="contain" className="animate-float animation-delay-200" />
+                    </div>
+                    <span className="text-[2vw] sm:text-xs mt-1">{reportData ? `${reportData.averageTimePerQuestion.toFixed(2)}s` : 'N/A'}</span>
+                    <span className="text-[2vw] sm:text-xs">avg time</span>
                   </div>
-                  <div className="flex flex-col items-center">
-                    <Image src="/game-components/PixelDiamond.png" alt="Diamond" width={30} height={30} className="animate-float animation-delay-400" />
-                    <span className="text-xs mt-1">{reportData ? reportData.totalQuestionsAnswered : 'N/A'}</span>
-                    <span className="text-xs">questions</span>
+                  <div className="flex flex-col items-center w-1/4">
+                    <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
+                      <Image src="/game-components/PixelDiamond.png" alt="Diamond" layout="fill" objectFit="contain" className="animate-float animation-delay-400" />
+                    </div>
+                    <span className="text-[2vw] sm:text-xs mt-1">{reportData ? reportData.totalQuestionsAnswered : 'N/A'}</span>
+                    <span className="text-[2vw] sm:text-xs">questions</span>
                   </div>
-                  <div className="flex flex-col items-center">
-                    <Image src="/game-components/PixelFlex.png" alt="Flex" width={30} height={30} className="animate-float animation-delay-600" />
-                    <span className="text-xs mt-1">{reportData ? `${reportData.testsCompleted}/${reportData.totalTestsTaken}` : 'N/A'}</span>
-                    <span className="text-xs">tests</span>
+                  <div className="flex flex-col items-center w-1/4">
+                    <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
+                      <Image src="/game-components/PixelFlex.png" alt="Flex" layout="fill" objectFit="contain" className="animate-float animation-delay-600" />
+                    </div>
+                    <span className="text-[2vw] sm:text-xs mt-1">{reportData ? `${reportData.testsCompleted}/${reportData.totalTestsTaken}` : 'N/A'}</span>
+                    <span className="text-[2vw] sm:text-xs">tests</span>
                   </div>
                 </div>
               </div>
@@ -200,22 +208,22 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                 <div className="flex items-center mt-6 ml-2">
                   <Link href="/test/testquestions" className="text-blue-500 hover:text-blue-200 transition-colors duration-200 flex items-center">
                     <div className="flex items-center mr-4">
-                      <div className="group mr-1">
+                      <div className="w-7 h-7 relative theme-box mr-1">
                         <Image
                           src="/computer.svg"
-                          width={28}
-                          height={28}
+                          layout="fill"
+                          objectFit="contain"
                           alt="Computer icon"
-                          className="transition-colors duration-200 group-hover:filter group-hover:brightness-0 group-hover:invert-[39%] group-hover:sepia-[98%] group-hover:saturate-[2138%] group-hover:hue-rotate-[190deg]"
+                          className="theme-svg"
                         />
                       </div>
-                      <div className="group">
+                      <div className="w-7 h-7 relative theme-box">
                         <Image
                           src="/verticalbar.svg"
-                          width={28}
-                          height={28}
+                          layout="fill"
+                          objectFit="contain"
                           alt="Vertical bar icon"
-                          className="transition-colors duration-200 group-hover:filter group-hover:brightness-0 group-hover:invert-[39%] group-hover:sepia-[98%] group-hover:saturate-[2138%] group-hover:hue-rotate-[190deg]"
+                          className="theme-svg"
                         />
                       </div>
                     </div>
@@ -234,7 +242,7 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
         </div>
         <div className="md:col-span-2">
           <div 
-            className="h-[625px] overflow-y-auto rounded-lg p-4 bg-[#001226]"
+            className="h-[calc(100vh-8.3rem)] overflow-y-auto rounded-lg p-4 bg-[#001226]"
             style={{
               backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
               backgroundSize: 'cover',
@@ -259,36 +267,9 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                 </TabsContent>
                 <TabsContent value="past">
                   <TestList items={userTests} type="past" />
-                  </TabsContent>
+                </TabsContent>
               </Tabs>
             )}
-            {tests.map((test) => (
-              <div key={test.id} className="mb-4 mt-4">
-                <Link href={`/test/testquestions?id=${test.id}`}>
-                  <div
-                    className="flex justify-between items-center bg-transparent border border-blue-500 opacity-100 rounded-[15px] px-3 py-2 hover:bg-white hover:opacity-100 transition-all duration-300 group"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1">
-                        <Image
-                          className="mt-1 group-hover:filter group-hover:invert"
-                          src={"/computer.svg"}
-                          width={28}
-                          height={28}
-                          alt="icon"
-                        />
-                      </div>
-                      <h2 className="text-sm font-normal group-hover:text-black group-hover:invert" style={{ color: 'var(--theme-text-color)' }}>
-                        {truncateTitle(test.title, 10)}
-                      </h2>
-                    </div>
-                    <h2 className={`text-md font-medium ${getPercentageColor(500)}`}>
-                      0%
-                    </h2>
-                  </div>
-                </Link>
-              </div>
-            ))}
           </div>
         </div>
       </div>
