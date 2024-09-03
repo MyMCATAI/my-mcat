@@ -52,14 +52,9 @@ const Page = () => {
   const [diagnosticTestId, setDiagnosticTestId] = useState<string | null>(null);
   
   useEffect(() => {
-    fetchActivities();
-    fetchTests();
-  }, []);
-  
-  useEffect(() => {
     const initializePage = async () => {
       await fetchActivities();
-      await fetchTests();
+      fetchTests(true);
       const proStatus = await checkProStatus();
       setIsPro(proStatus); // if not pro, then dont let user see other features
       // note, this is semi jank right now and doesn't actually disable these features, just covers them. will want to make this more robust
@@ -164,13 +159,22 @@ const Page = () => {
     }
   };
 
-  const fetchTests = async () => {
+  const fetchTests = async (ordered: boolean = false, page: number = 1, pageSize: number = 10) => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/test");
+      
+      const queryParams = new URLSearchParams({
+        ordered: ordered.toString(),
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+      });
+  
+      const response = await fetch(`/api/test?${queryParams}`);
+      
       if (!response.ok) throw new Error("Failed to fetch tests");
+      
       const data = await response.json();
-      setTests(data.tests);
+      setTests(data.tests)
     } catch (error) {
       console.error("Error fetching tests:", error);
       setError(

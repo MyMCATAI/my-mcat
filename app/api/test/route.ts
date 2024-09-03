@@ -2,7 +2,75 @@ import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs";
 import prisma from "@/lib/prismadb";
 
+
+
+async function getOrderedTests(userId: string, page: number, pageSize: number) {
+  console.log(`Getting ordered tests for user ${userId}, page ${page}, pageSize ${pageSize}`);
+  const skip = (page - 1) * pageSize;
+  console.log(`Calculated skip: ${skip}`);
+
+  // Fetch all tests
+  const allTests = await prisma.test.findMany({
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      createdAt: true,
+      updatedAt: true,
+      setName: true,
+      _count: {
+        select: { questions: true }
+      }
+    },
+  });
+  console.log(`Fetched ${allTests.length} tests`);
+
+  // Fetch user's test history
+  const userTests = await prisma.userTest.findMany({
+    where: { userId },
+    select: { testId: true, score: true }
+  });
+  console.log(`Fetched ${userTests.length} user test records`);
+
+  // Create a map of test scores
+  const userTestScores = new Map(userTests.map(test => [test.testId, test.score]));
+  console.log(`Created map of user test scores with ${userTestScores.size} entries`);
+
+  // Sort tests
+  const sortedTests = allTests.sort((a, b) => {
+    const scoreA = userTestScores.get(a.id);
+    const scoreB = userTestScores.get(b.id);
+
+    console.log(`Comparing test ${a.id} (score: ${scoreA}) with test ${b.id} (score: ${scoreB})`);
+
+    // Tests not taken come first
+    if (scoreA === undefined && scoreB === undefined) return 0;
+    if (scoreA === undefined) return -1;
+    if (scoreB === undefined) return 1;
+
+    // Then sort by lowest score
+    return (scoreA ?? 0) - (scoreB ?? 0);
+  });
+  console.log(`Sorted ${sortedTests.length} tests`);
+
+  // Apply pagination
+  const paginatedTests = sortedTests.slice(skip, skip + pageSize);
+  console.log(`Applied pagination, returning ${paginatedTests.length} tests`);
+
+  const totalPages = Math.ceil(allTests.length / pageSize);
+  console.log(`Calculated total pages: ${totalPages}`);
+
+  return {
+    tests: paginatedTests,
+    totalPages: totalPages,
+    currentPage: page,
+  };
+}
+
 export async function GET(req: Request) {
+
+  console.log("GET request tests");
+
   try {
     const { userId } = auth();
     
@@ -11,10 +79,13 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
+    console.log("ordered: ", searchParams.get('ordered'));
+
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
     const testId = searchParams.get('id');
     const isDiagnostic = searchParams.get('diagnostic') === 'true';
+    const isOrdered = searchParams.get('ordered') === 'true';
 
     if (isDiagnostic) {
       // Return the diagnostic test ID
@@ -58,31 +129,38 @@ export async function GET(req: Request) {
       });
     } else {
       // Fetch multiple tests
-      const skip = (page - 1) * pageSize;
+      let testsData;
 
-      const tests = await prisma.test.findMany({
-        skip,
-        take: pageSize,
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          createdAt: true,
-          updatedAt: true,
-          setName: true,
-          _count: {
-            select: { questions: true }
-          }
-        },
-      });
+      if (isOrdered) {
+        testsData = await getOrderedTests(userId, page, pageSize);
+      } else {
+        const skip = (page - 1) * pageSize;
+        const tests = await prisma.test.findMany({
+          skip,
+          take: pageSize,
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            createdAt: true,
+            updatedAt: true,
+            setName: true,
+            _count: {
+              select: { questions: true }
+            }
+          },
+        });
 
-      const totalTests = await prisma.test.count();
+        const totalTests = await prisma.test.count();
 
-      return new NextResponse(JSON.stringify({
-        tests,
-        totalPages: Math.ceil(totalTests / pageSize),
-        currentPage: page,
-      }), { 
+        testsData = {
+          tests,
+          totalPages: Math.ceil(totalTests / pageSize),
+          currentPage: page,
+        };
+      }
+
+      return new NextResponse(JSON.stringify(testsData), { 
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       });
