@@ -307,12 +307,12 @@ const Page = () => {
   }, []);
 
   return (
-    <div className="container py-10">
-      <div className="text-white flex gap-6">
+    <div className="w-full px-[2rem] lg:px-[3.5rem] xl:px-[7rem]">
+      <div className="text-white flex gap-[1.5rem]">
         <div className="w-3/4 relative">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
+              <h2 className="text-white text-2xl ml-3 font-thin leading-normal shadow-text">
                 {activeTab === "Schedule"
                   ? "Home."
                   : activeTab === "KnowledgeProfile"
@@ -328,7 +328,7 @@ const Page = () => {
             </div>
           </div>
           <div className="relative">
-            <div className="p-3 gradientbg overflow-auto" style={{ height: "690px" }}>
+            <div className="p-3 gradientbg overflow-auto h-[calc(100vh-5rem)] rounded-lg">
               {renderContent()}
             </div>
             <FloatingButton onTabChange={setActiveTab} />
@@ -338,7 +338,7 @@ const Page = () => {
           <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
             &nbsp;
           </h2>
-          <div className="gradientbg p-3" style={{ height: "690px" }}>
+          <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg">
             <KnowledgeProfile activities={activities} />
           </div>
         </div>
@@ -348,7 +348,7 @@ const Page = () => {
        {/* Diagnostic Test Dialog */}
       <Dialog open={showDiagnosticTest} onOpenChange={setShowDiagnosticTest}>
       <DialogOverlay className="fixed inset-0 bg-black bg-opacity-80 z-50" />
-        <DialogContent className="max-w-4xl w-full max-h-[95vh] flex flex-col bg-[#001226] text-white border border-sky-500">
+        <DialogContent className="max-w-4xl w-full max-h-[95vh] flex flex-col bg-[#001226] text-white border border-sky-500 rounded-lg">
           <DialogHeader className="border-b border-sky-500 pb-4">
             <DialogTitle className="text-2xl font-semibold text-gray-300">Complete this test to help us understand your current knowledge level.</DialogTitle>
           </DialogHeader>
@@ -360,7 +360,7 @@ const Page = () => {
 
       {/* Score Popup */}
       <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
-        <DialogContent className="bg-[#001226] text-white border border-sky-500">
+        <DialogContent className="bg-[#001226] text-white border border-sky-500 rounded-lg">
           <DialogHeader>
             <DialogTitle className="text-2xl font-semibold text-sky-300">Test Completed!</DialogTitle>
             <DialogDescription className="text-gray-300">

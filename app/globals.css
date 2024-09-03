@@ -6,6 +6,43 @@ html,
 body :root {
   height: 100%;
   scroll-behavior: smooth;
+  font-size: 13px; /* Base font size for mobile */
+}
+
+@media (min-width: 640px) {
+  html, body :root {
+    font-size: 14px; /* Small tablets */
+  }
+}
+
+@media (min-width: 768px) {
+  html, body :root {
+    font-size: 15px; /* Tablets */
+  }
+}
+
+@media (min-width: 1024px) {
+  html, body :root {
+    font-size: 14px; /* Laptops */
+  }
+}
+
+@media (min-width: 1440px) {
+  html, body :root {
+    font-size: 14px; /* Large laptops and small desktop monitors (e.g., MacBooks) */
+  }
+}
+
+@media (min-width: 1920px) {
+  html, body :root {
+    font-size: 16px; /* Full HD monitors */
+  }
+}
+
+@media (min-width: 2560px) {
+  html, body :root {
+    font-size: 16px; /* 4K and larger monitors */
+  }
 }
 
 @layer base {
@@ -47,8 +84,12 @@ body :root {
     --theme-gradient-start: rgba(0, 0, 0, 0.9);
     --theme-gradient-end: rgba(0, 18, 38, 0.9);
     --theme-text-color: white;
-    --theme-svg-filter: invert(1);
-    --theme-hover-color: #001226;
+    --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
+    --theme-hover-color: #ffffff;
+    --theme-hover-text: #000000;
+    --theme-border-color: #3b82f6; /* This is the default blue color */
+    --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
+    --svg-invert: 0;
   }
 
   .dark {
@@ -115,7 +156,7 @@ body :root {
 }
 .gradientbg {
   background: rgba(6, 58, 122, 0.9);
-  background: linear-gradient(0deg, rgba(0, 57, 127, 0.9) 0%, rgba(0, 44, 105, 0.8) 100%);
+  background: linear-gradient(0deg, rgba(0, 57, 127, 0.85) 0%, rgba(0, 44, 105, 0.8) 100%);
 }
 
 
@@ -179,20 +220,75 @@ body :root {
 /* Sakura Trees theme */
 .theme-sakuraTrees {
   /* Sakura Trees theme variables */
-  --theme-box-shadow: 0 0 8px 2px rgba(171, 0, 26, 0.5), inset 0 0 15px rgba(189, 53, 76, 0.659);
+  --theme-box-shadow: 0 0 8px 3px rgba(15,64,50,0.5), inset 0 0 20px rgba(70,127,65, 0.659);
   --theme-interface-image: url('/sakura-pattern.png');
   --theme-mainbox-color: rgb(252, 245, 244); /* Light pink color for Sakura theme */
   --theme-gradient-start: rgba(252, 245, 244, 0.85);
   --theme-gradient-end: rgba(252, 245, 244, 0.85);
   --theme-text-color: black;
-  --theme-svg-filter: none;
-  --theme-hover-color: #e298b3;
+  --theme-svg-color: #000000; /* Black for SakuraTrees theme */
+  --theme-hover-color: #79b481;
+  --theme-hover-text: #ffffff;
+  --theme-svg-color: #000000; /* Black for SakuraTrees theme */
+  --theme-border-color: #a3cf81; /* Light pink border color for Sakura theme */
+  --svg-invert: 1;
 }
 
 /* Add theme-specific gradients */
 .theme-sakuraTrees .gradientbg {
   background: rgba(255, 197, 205, 0.9);
-  background: linear-gradient(0deg, #ffebe8 0%, #ffebe8 100%);
+  background: linear-gradient(0deg, rgb(255, 235, 232,0.80) 0%, rgb(255, 235, 232,0.88) 100%);
 }
 
 /* ... rest of your CSS ... */
+
+.theme-cyberSpace .theme-svg {
+  filter: invert(0);
+}
+
+/* Hover state for CyberSpace (invert) */
+.theme-cyberSpace .theme-svg-container:hover .theme-svg {
+  filter: invert(1);
+}
+
+/* Default state for SakuraTrees (invert) */
+.theme-sakuraTrees .theme-svg {
+  filter: invert(1);
+}
+
+/* Hover state for SakuraTrees (no invert) */
+.theme-sakuraTrees .theme-svg-container:hover .theme-svg {
+  --svg-invert: calc(1 - var(--svg-invert));
+}
+
+.theme-box:hover .theme-svg {
+  --svg-invert: calc(1 - var(--svg-invert));
+}
+
+:root {
+  --svg-invert: 0;
+}
+
+/* CyberSpace theme is the default (root) */
+:root .theme-svg,
+.theme-cyberSpace .theme-svg {
+  filter: invert(0);
+}
+
+:root .theme-box:hover .theme-svg,
+.theme-cyberSpace .theme-box:hover .theme-svg {
+  filter: invert(1);
+}
+
+/* SakuraTrees theme */
+.theme-sakuraTrees .theme-svg {
+  filter: invert(1);
+}
+
+.theme-sakuraTrees .theme-box:hover .theme-svg {
+  filter: invert(0);
+}
+
+.theme-svg {
+  transition: filter 0.3s ease;
+}

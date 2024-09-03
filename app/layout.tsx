@@ -28,6 +28,7 @@ export default function RootLayout({
             src="https://js.stripe.com/v3/pricing-table.js"
             strategy="lazyOnload"
           />
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"></meta>
         </head>
         <body className={robotoSlab.className}>
             <ThemeInitializer />
