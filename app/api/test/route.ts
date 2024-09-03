@@ -3,11 +3,13 @@ import { auth } from "@clerk/nextjs";
 import prisma from "@/lib/prismadb";
 
 
-
 async function getOrderedTests(userId: string, page: number, pageSize: number) {
   console.log(`Getting ordered tests for user ${userId}, page ${page}, pageSize ${pageSize}`);
   const skip = (page - 1) * pageSize;
   console.log(`Calculated skip: ${skip}`);
+
+  // TODO: Fetch user's test history and performance data
+  // This should include timestamps of when tests were taken and scores for each question category
 
   // Fetch all tests
   const allTests = await prisma.test.findMany({
@@ -25,6 +27,10 @@ async function getOrderedTests(userId: string, page: number, pageSize: number) {
   });
   console.log(`Fetched ${allTests.length} tests`);
 
+  // TODO: Fetch additional data for each test:
+  // - Question categories
+  // - Passage difficulty scores
+
   // Fetch user's test history
   const userTests = await prisma.userTest.findMany({
     where: { userId },
@@ -32,11 +38,14 @@ async function getOrderedTests(userId: string, page: number, pageSize: number) {
   });
   console.log(`Fetched ${userTests.length} user test records`);
 
+  // TODO: Analyze user's performance across different categories
+
   // Create a map of test scores
   const userTestScores = new Map(userTests.map(test => [test.testId, test.score]));
   console.log(`Created map of user test scores with ${userTestScores.size} entries`);
 
-  // Sort tests
+  // TODO: Implement new sorting algorithm based on relevance score
+  // This should replace the current sorting logic
   const sortedTests = allTests.sort((a, b) => {
     const scoreA = userTestScores.get(a.id);
     const scoreB = userTestScores.get(b.id);
@@ -60,6 +69,9 @@ async function getOrderedTests(userId: string, page: number, pageSize: number) {
   const totalPages = Math.ceil(allTests.length / pageSize);
   console.log(`Calculated total pages: ${totalPages}`);
 
+  // TODO: Consider adding more information to the returned object,
+  // like as reasons why each test was recommended
+
   return {
     tests: paginatedTests,
     totalPages: totalPages,
@@ -68,7 +80,6 @@ async function getOrderedTests(userId: string, page: number, pageSize: number) {
 }
 
 export async function GET(req: Request) {
-
   console.log("GET request tests");
 
   try {
