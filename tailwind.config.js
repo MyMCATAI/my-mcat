@@ -73,6 +73,23 @@ module.exports = {
       rotate: {
         'y-180': '180deg',
       },
+      fontSize: {
+        root: '13px',
+        sm: '14px',
+        md: '15px',
+        lg: '16px',
+        xl: '17px',
+        '2xl': '18px',
+        '3xl': '20px',
+      },
+      screens: {
+        'sm': '640px',
+        'md': '768px',
+        'lg': '1024px',
+        'xl': '1920px',  // 4K resolution width
+        '2xl': '2560px', // You might want to keep this the same as xl
+        '3xl': '3840px', // You might want to keep this the same as xl
+      },
     },
   },
   variants: {
@@ -91,6 +108,29 @@ module.exports = {
         },
       }
       addUtilities(newUtilities, ['responsive'])
+    },
+    function({ addBase, theme }) {
+      addBase({
+        'html': { fontSize: theme('fontSize.root') },
+        '@screen sm': {
+          'html': { fontSize: theme('fontSize.sm') },
+        },
+        '@screen md': {
+          'html': { fontSize: theme('fontSize.md') },
+        },
+        '@screen lg': {
+          'html': { fontSize: theme('fontSize.lg') },
+        },
+        '@screen xl': {
+          'html': { fontSize: theme('fontSize.xl') },
+        },
+        '@screen 2xl': {
+          'html': { fontSize: theme('fontSize.2xl') },
+        },
+        '@screen 3xl': {
+          'html': { fontSize: theme('fontSize.3xl') },
+        },
+      })
     },
   ],
 }
