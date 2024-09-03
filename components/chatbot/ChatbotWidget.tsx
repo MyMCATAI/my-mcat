@@ -34,11 +34,18 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isTilted, setIsTilted] = useState(false);
 
-  const switchKalypsoState = (newState: KalypsoState): void => {
-    setKalypsoState(newState);
-    if (kalypsoRef.current) {
-      kalypsoRef.current.src = `/kalypso${newState}.gif`;
+  const switchKalypsoState = (newState: KalypsoState | 'floating'): void => {
+    if (newState === 'floating') {
+      if (kalypsoRef.current) {
+        kalypsoRef.current.src = "/kalypsofloating.gif";
+      }
+    } else {
+      setKalypsoState(newState as KalypsoState);
+      if (kalypsoRef.current) {
+        kalypsoRef.current.src = `/kalypso${newState}.gif`;
+      }
     }
   };
 
@@ -65,6 +72,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
   const handleDragStart = () => {
     dragTimeoutRef.current = setTimeout(() => {
       setIsDragging(true);
+      setIsTilted(true);
+      switchKalypsoState('floating');
     }, 200);
   };
 
@@ -74,6 +83,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     }
     setTimeout(() => {
       setIsDragging(false);
+      setIsTilted(false);
+      switchKalypsoState(showChatbot ? 'talk' : 'wait');
     }, 0);
   };
 
@@ -129,7 +140,10 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
               ref={kalypsoRef}
               src="/kalypsowait.gif"
               alt="Chat with Kalypso"
-              className="w-full h-full object-cover pointer-events-none"
+              className="w-full h-full object-cover pointer-events-none transition-transform duration-200"
+              style={{
+                transform: isTilted ? 'rotate(-20deg)' : 'none',
+              }}
               onDragStart={preventImageDrag}
             />
           </button>
