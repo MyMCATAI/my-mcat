@@ -227,7 +227,15 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                         />
                       </div>
                     </div>
-                    <span style={{ color: 'var(--theme-text-color)' }}>Click to begin.</span>
+                    <span style={{ color: 'var(--theme-text-color)' }}>
+                      {tests && tests.length > 0 ? (
+                        <Link href={`/test/testquestions?id=${tests[0].id}`}>
+                          Click to begin
+                        </Link>
+                      ) : (
+                        "No tests available."
+                      )}
+                    </span>
                   </Link>
                 </div>
               )}
