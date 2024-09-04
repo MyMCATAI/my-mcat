@@ -2,17 +2,57 @@ import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs";
 import prisma from "@/lib/prismadb";
 
-
-async function getOrderedTests(userId: string, page: number, pageSize: number) {
-  console.log(`Getting ordered tests for user ${userId}, page ${page}, pageSize ${pageSize}`);
+async function getOrderedTests(userId: string, page: number, pageSize: number, CARSonly: boolean = false) {
+  console.log(`Getting ordered tests for user ${userId}, page ${page}, pageSize ${pageSize}, CARSonly: ${CARSonly}`);
   const skip = (page - 1) * pageSize;
   console.log(`Calculated skip: ${skip}`);
 
-  // TODO: Fetch user's test history and performance data
-  // This should include timestamps of when tests were taken and scores for each question category
+  // Fetch user's knowledge profiles
+  const knowledgeProfiles = await prisma.knowledgeProfile.findMany({
+    where: { userId },
+    orderBy: { conceptMastery: 'asc' },
+    include: { category: true }
+  });
+  console.log(`Fetched ${knowledgeProfiles.length} knowledge profiles`);
 
-  // Fetch all tests
+  // Fetch all categories
+  let allCategories = await prisma.category.findMany();
+
+  // Filter categories based on CARSonly option
+  if (CARSonly) {
+    allCategories = allCategories.filter(category => category.subjectCategory === "CARs");
+  }
+
+  // Combine knowledge profiles with categories
+  const sortedCategories = allCategories.map(category => {
+    const profile = knowledgeProfiles.find(p => p.categoryId === category.id);
+    return {
+      ...category,
+      conceptMastery: profile ? profile.conceptMastery : null
+    };
+  });
+
+  // Sort categories: those with profiles first (by conceptMastery), then those without
+  sortedCategories.sort((a, b) => {
+    if (a.conceptMastery === null && b.conceptMastery === null) return 0;
+    if (a.conceptMastery === null) return 1;
+    if (b.conceptMastery === null) return -1;
+    return a.conceptMastery - b.conceptMastery;
+  });
+
+  // Fetch all tests with their categories
   const allTests = await prisma.test.findMany({
+    where: CARSonly ? {
+      questions: {
+        some: {
+          question: {
+            contentCategory: {
+              in: sortedCategories.map(c => c.contentCategory)
+            }
+          }
+        }
+      }
+    } : {},
     select: {
       id: true,
       title: true,
@@ -22,14 +62,19 @@ async function getOrderedTests(userId: string, page: number, pageSize: number) {
       setName: true,
       _count: {
         select: { questions: true }
+      },
+      questions: {
+        select: {
+          question: {
+            select: {
+              contentCategory: true
+            }
+          }
+        }
       }
     },
   });
   console.log(`Fetched ${allTests.length} tests`);
-
-  // TODO: Fetch additional data for each test:
-  // - Question categories
-  // - Passage difficulty scores
 
   // Fetch user's test history
   const userTests = await prisma.userTest.findMany({
@@ -38,29 +83,33 @@ async function getOrderedTests(userId: string, page: number, pageSize: number) {
   });
   console.log(`Fetched ${userTests.length} user test records`);
 
-  // TODO: Analyze user's performance across different categories
-
   // Create a map of test scores
   const userTestScores = new Map(userTests.map(test => [test.testId, test.score]));
-  console.log(`Created map of user test scores with ${userTestScores.size} entries`);
 
-  // TODO: Implement new sorting algorithm based on relevance score
-  // This should replace the current sorting logic
-  const sortedTests = allTests.sort((a, b) => {
-    const scoreA = userTestScores.get(a.id);
-    const scoreB = userTestScores.get(b.id);
+  // Calculate relevance score for each test
+  const testsWithRelevance = allTests.map(test => {
+    const testCategories = test.questions.map(q => q.question.contentCategory);
+    const uniqueCategories = Array.from(new Set(testCategories));
+    
+    const relevanceScore = uniqueCategories.reduce((score, category) => {
+      const categoryProfile = sortedCategories.find(c => c.contentCategory === category);
+      return score + (categoryProfile?.conceptMastery ?? 0);
+    }, 0) / uniqueCategories.length;
 
-    console.log(`Comparing test ${a.id} (score: ${scoreA}) with test ${b.id} (score: ${scoreB})`);
-
-    // Tests not taken come first
-    if (scoreA === undefined && scoreB === undefined) return 0;
-    if (scoreA === undefined) return -1;
-    if (scoreB === undefined) return 1;
-
-    // Then sort by lowest score
-    return (scoreA ?? 0) - (scoreB ?? 0);
+    return {
+      ...test,
+      relevanceScore,
+      taken: userTestScores.has(test.id)
+    };
   });
-  console.log(`Sorted ${sortedTests.length} tests`);
+
+  // Sort tests: untaken tests first (by relevance score), then taken tests (by relevance score)
+  const sortedTests = testsWithRelevance.sort((a, b) => {
+    if (!a.taken && !b.taken) return b.relevanceScore - a.relevanceScore;
+    if (!a.taken) return -1;
+    if (!b.taken) return 1;
+    return b.relevanceScore - a.relevanceScore;
+  });
 
   // Apply pagination
   const paginatedTests = sortedTests.slice(skip, skip + pageSize);
@@ -69,11 +118,8 @@ async function getOrderedTests(userId: string, page: number, pageSize: number) {
   const totalPages = Math.ceil(allTests.length / pageSize);
   console.log(`Calculated total pages: ${totalPages}`);
 
-  // TODO: Consider adding more information to the returned object,
-  // like as reasons why each test was recommended
-
   return {
-    tests: paginatedTests,
+    tests: paginatedTests.map(({ relevanceScore, taken, ...test }) => test),
     totalPages: totalPages,
     currentPage: page,
   };
@@ -90,13 +136,11 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
-    console.log("ordered: ", searchParams.get('ordered'));
-
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
     const testId = searchParams.get('id');
     const isDiagnostic = searchParams.get('diagnostic') === 'true';
-    const isOrdered = searchParams.get('ordered') === 'true';
+    const CARSonly = searchParams.get('CARSonly') === 'true';
 
     if (isDiagnostic) {
       // Return the diagnostic test ID
@@ -139,37 +183,8 @@ export async function GET(req: Request) {
         headers: { 'Content-Type': 'application/json' }
       });
     } else {
-      // Fetch multiple tests
-      let testsData;
-
-      if (isOrdered) {
-        testsData = await getOrderedTests(userId, page, pageSize);
-      } else {
-        const skip = (page - 1) * pageSize;
-        const tests = await prisma.test.findMany({
-          skip,
-          take: pageSize,
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            createdAt: true,
-            updatedAt: true,
-            setName: true,
-            _count: {
-              select: { questions: true }
-            }
-          },
-        });
-
-        const totalTests = await prisma.test.count();
-
-        testsData = {
-          tests,
-          totalPages: Math.ceil(totalTests / pageSize),
-          currentPage: page,
-        };
-      }
+      // Fetch multiple tests using the new getOrderedTests function
+      const testsData = await getOrderedTests(userId, page, pageSize, CARSonly);
 
       return new NextResponse(JSON.stringify(testsData), { 
         status: 200,

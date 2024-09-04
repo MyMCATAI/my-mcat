@@ -167,6 +167,7 @@ const Page = () => {
         ordered: ordered.toString(),
         page: page.toString(),
         pageSize: pageSize.toString(),
+        CARSonly: "true"
       });
   
       const response = await fetch(`/api/test?${queryParams}`);
