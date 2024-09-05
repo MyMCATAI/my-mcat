@@ -55,7 +55,7 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
   console.log("Sorted concept categories:", sortedConceptCategories);
 
   // Collect all content categories
-  const allContentCategories = sortedConceptCategories.flatMap(cc => cc.contentCategories);
+  const allContentCategories = sortedConceptCategories.reduce((acc, cc) => acc.concat(cc.contentCategories), [] as string[]);
 
   // Fetch all tests with their questions and categories
   let testQuery: any = {};
@@ -90,16 +90,7 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
     }
   });
   console.log(`Fetched ${allTests.length} tests`);
-
   // Log some information about the fetched tests
-  allTests.forEach((test, index) => {
-    console.log(`Test ${index + 1}:`);
-    console.log(`  ID: ${test.id}`);
-    console.log(`  Title: ${test.title}`);
-    console.log(`  Number of questions: ${test.questions.length}`);
-    console.log(`  Content Categories: ${[...new Set(test.questions.map(q => q.question.contentCategory))].join(', ')}`);
-  });
-
   // Fetch user's test history
   const userTests = await prisma.userTest.findMany({
     where: { userId },
@@ -150,7 +141,6 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
     conceptCategories: sortedConceptCategories
   };
 }
-
 
 
 export async function GET(req: Request) {
