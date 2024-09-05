@@ -22,9 +22,8 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
     include: { category: true }
   });
   console.log(`Fetched ${knowledgeProfiles.length} knowledge profiles`);
-
   // Calculate average scores for each concept category and collect content categories
-  const conceptCategories: { [key: string]: ConceptCategory } = {};
+  const conceptCategories: { [key: string]: ConceptCategory & { count: number } } = {};
   knowledgeProfiles.forEach(profile => {
     const { conceptCategory, contentCategory } = profile.category;
     if (!conceptCategories[conceptCategory]) {
