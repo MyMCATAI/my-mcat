@@ -302,6 +302,7 @@ const Page = () => {
     switchKalypsoState('wait'); // Start with waiting animation
     return () => {
       if (timeoutRef.current) {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         clearTimeout(timeoutRef.current);
       }
     };
