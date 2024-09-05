@@ -167,6 +167,7 @@ const Page = () => {
         ordered: ordered.toString(),
         page: page.toString(),
         pageSize: pageSize.toString(),
+        CARSonly: "true"
       });
   
       const response = await fetch(`/api/test?${queryParams}`);
@@ -301,6 +302,7 @@ const Page = () => {
     switchKalypsoState('wait'); // Start with waiting animation
     return () => {
       if (timeoutRef.current) {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         clearTimeout(timeoutRef.current);
       }
     };
