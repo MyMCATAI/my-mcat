@@ -2,7 +2,9 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Test, UserTest } from '@/types';
-import { useTheme } from 'next-themes'; // Import useTheme hook
+import { useTheme } from 'next-themes';
+import { Button } from '@/components/ui/button';
+import { handleUpdateKnowledgeProfile } from '@/components/util/apiHandlers';
 
 interface TestListProps {
   items: (Test | UserTest)[];
@@ -10,7 +12,7 @@ interface TestListProps {
 }
 
 const truncateTitle = (title: string | undefined, maxLength: number) => {
-  if (!title) return ''; // Return empty string if title is undefined
+  if (!title) return '';
   if (title.length > maxLength) {
     return `${title.substring(0, maxLength)}...`;
   }
@@ -24,13 +26,18 @@ const getPercentageColor = (percentage: number) => {
 };
 
 const TestList: React.FC<TestListProps> = ({ items, type }) => {
-  const { theme } = useTheme(); // Get the current theme
+  const { theme } = useTheme();
 
   return (
     <div className="w-full space-y-3">
+      {type === 'upcoming' && (
+        <Button className="w-full mb-3" onClick={handleUpdateKnowledgeProfile}>
+          Regenerate
+        </Button>
+      )}
       {items.map((item) => (
         <div key={item.id} className="w-full">
-          <Link href={`/test/testquestions?id=${item.id}`}>
+          <Link href={type === 'past' && 'score' in item ? `/user-test/${item.id}` : `/test/testquestions?id=${item.id}`}>
             <div className={`flex justify-between items-center bg-transparent border-2 opacity-100 rounded-[15px] px-3 py-2.5 hover:opacity-100 transition-all duration-300 group w-full hover:[background-color:var(--theme-hover-color)] theme-box ${theme}`}
                  style={{ 
                    borderColor: 'var(--theme-border-color)',
