@@ -3,72 +3,147 @@ import { auth } from "@clerk/nextjs";
 import prisma from "@/lib/prismadb";
 
 
+type ConceptCategory = {
+  name: string;
+  averageScore: number;
+  contentCategories: string[];
+};
 
-async function getOrderedTests(userId: string, page: number, pageSize: number) {
-  console.log(`Getting ordered tests for user ${userId}, page ${page}, pageSize ${pageSize}`);
+async function getOrderedTests(userId: string, page: number, pageSize: number, CARSonly: boolean = false) {
+  console.log(`Getting ordered tests for user ${userId}, page ${page}, pageSize ${pageSize}, CARSonly: ${CARSonly}`);
   const skip = (page - 1) * pageSize;
-  console.log(`Calculated skip: ${skip}`);
 
-  // Fetch all tests
-  const allTests = await prisma.test.findMany({
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      createdAt: true,
-      updatedAt: true,
-      setName: true,
-      _count: {
-        select: { questions: true }
-      }
+  // Fetch user's knowledge profiles
+  const knowledgeProfiles = await prisma.knowledgeProfile.findMany({
+    where: { 
+      userId,
+      ...(CARSonly && { category: { subjectCategory: "CARs" } })
     },
+    include: { category: true }
+  });
+  console.log(`Fetched ${knowledgeProfiles.length} knowledge profiles`);
+  // Calculate average scores for each concept category and collect content categories
+  const conceptCategories: { [key: string]: ConceptCategory & { count: number } } = {};
+  knowledgeProfiles.forEach(profile => {
+    const { conceptCategory, contentCategory } = profile.category;
+    if (!conceptCategories[conceptCategory]) {
+      conceptCategories[conceptCategory] = { 
+        name: conceptCategory, 
+        averageScore: 0, 
+        count: 0,
+        contentCategories: []
+      };
+    }
+    if (profile.conceptMastery !== null) {
+      conceptCategories[conceptCategory].averageScore += profile.conceptMastery;
+      conceptCategories[conceptCategory].count++;
+    }
+    if (!conceptCategories[conceptCategory].contentCategories.includes(contentCategory)) {
+      conceptCategories[conceptCategory].contentCategories.push(contentCategory);
+    }
+  });
+
+  // Calculate final average scores and sort categories
+  const sortedConceptCategories = Object.values(conceptCategories)
+    .map(category => ({
+      name: category.name,
+      averageScore: category.count > 0 ? category.averageScore / category.count : 0,
+      contentCategories: category.contentCategories
+    }))
+    .sort((a, b) => a.averageScore - b.averageScore);
+
+  console.log("Sorted concept categories:", sortedConceptCategories);
+
+  // Collect all content categories
+  const allContentCategories = sortedConceptCategories.reduce((acc, cc) => acc.concat(cc.contentCategories), [] as string[]);
+
+  // Fetch all tests with their questions and categories
+  let testQuery: any = {};
+  if (CARSonly) {
+    testQuery = {
+      questions: {
+        some: {
+          question: {
+            contentCategory: {
+              in: allContentCategories
+            }
+          }
+        }
+      }
+    };
+  }
+
+  console.log("Test query:", JSON.stringify(testQuery, null, 2));
+
+  const allTests = await prisma.test.findMany({
+    where: testQuery,
+    include: {
+      questions: {
+        include: {
+          question: {
+            select: {
+              contentCategory: true
+            }
+          }
+        }
+      }
+    }
   });
   console.log(`Fetched ${allTests.length} tests`);
-
+  // Log some information about the fetched tests
   // Fetch user's test history
   const userTests = await prisma.userTest.findMany({
     where: { userId },
-    select: { testId: true, score: true }
+    select: { testId: true }
   });
-  console.log(`Fetched ${userTests.length} user test records`);
+  const takenTestIds = new Set(userTests.map(test => test.testId));
+  console.log(`User has taken ${takenTestIds.size} tests`);
 
-  // Create a map of test scores
-  const userTestScores = new Map(userTests.map(test => [test.testId, test.score]));
-  console.log(`Created map of user test scores with ${userTestScores.size} entries`);
+  // Calculate relevance score for each test
+  const testsWithRelevance = allTests.map(test => {
+    const testContentCategories = [...new Set(test.questions.map(q => q.question.contentCategory))];
+    
+    const relevanceScore = testContentCategories.reduce((score, contentCategory) => {
+      const conceptCategory = sortedConceptCategories.find(cc => cc.contentCategories.includes(contentCategory));
+      return score + (1 - (conceptCategory?.averageScore || 0)); // Higher score for lower mastery
+    }, 0) / testContentCategories.length;
 
-  // Sort tests
-  const sortedTests = allTests.sort((a, b) => {
-    const scoreA = userTestScores.get(a.id);
-    const scoreB = userTestScores.get(b.id);
-
-    console.log(`Comparing test ${a.id} (score: ${scoreA}) with test ${b.id} (score: ${scoreB})`);
-
-    // Tests not taken come first
-    if (scoreA === undefined && scoreB === undefined) return 0;
-    if (scoreA === undefined) return -1;
-    if (scoreB === undefined) return 1;
-
-    // Then sort by lowest score
-    return (scoreA ?? 0) - (scoreB ?? 0);
+    return {
+      ...test,
+      relevanceScore,
+      taken: takenTestIds.has(test.id)
+    };
   });
+
+  console.log(`Calculated relevance scores for ${testsWithRelevance.length} tests`);
+
+  // Sort tests: untaken tests first (by relevance score), then taken tests (by relevance score)
+  const sortedTests = testsWithRelevance
+    .sort((a, b) => {
+      if (!a.taken && !b.taken) return b.relevanceScore - a.relevanceScore;
+      if (!a.taken) return -1;
+      if (!b.taken) return 1;
+      return b.relevanceScore - a.relevanceScore;
+    });
+
   console.log(`Sorted ${sortedTests.length} tests`);
 
   // Apply pagination
   const paginatedTests = sortedTests.slice(skip, skip + pageSize);
-  console.log(`Applied pagination, returning ${paginatedTests.length} tests`);
+  const totalPages = Math.ceil(sortedTests.length / pageSize);
 
-  const totalPages = Math.ceil(allTests.length / pageSize);
-  console.log(`Calculated total pages: ${totalPages}`);
+  console.log(`Returning ${paginatedTests.length} tests (page ${page} of ${totalPages})`);
 
   return {
-    tests: paginatedTests,
-    totalPages: totalPages,
+    tests: paginatedTests.map(({ relevanceScore, taken, ...test }) => test),
+    totalPages,
     currentPage: page,
+    conceptCategories: sortedConceptCategories
   };
 }
 
-export async function GET(req: Request) {
 
+export async function GET(req: Request) {
   console.log("GET request tests");
 
   try {
@@ -79,22 +154,18 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
-    console.log("ordered: ", searchParams.get('ordered'));
-
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
     const testId = searchParams.get('id');
     const isDiagnostic = searchParams.get('diagnostic') === 'true';
-    const isOrdered = searchParams.get('ordered') === 'true';
+    const CARSonly = searchParams.get('CARSonly') === 'true';
 
     if (isDiagnostic) {
-      // Return the diagnostic test ID
       return new NextResponse(JSON.stringify({ testId: 'clzikfkwt0000b3k9qtcfz7ko' }), { 
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       });
     } else if (testId) {
-      // Fetch a single test by ID with its questions
       const test = await prisma.test.findUnique({
         where: { id: testId },
         include: {
@@ -128,38 +199,9 @@ export async function GET(req: Request) {
         headers: { 'Content-Type': 'application/json' }
       });
     } else {
-      // Fetch multiple tests
-      let testsData;
+      const testsData = await getOrderedTests(userId, page, pageSize, CARSonly);
 
-      if (isOrdered) {
-        testsData = await getOrderedTests(userId, page, pageSize);
-      } else {
-        const skip = (page - 1) * pageSize;
-        const tests = await prisma.test.findMany({
-          skip,
-          take: pageSize,
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            createdAt: true,
-            updatedAt: true,
-            setName: true,
-            _count: {
-              select: { questions: true }
-            }
-          },
-        });
-
-        const totalTests = await prisma.test.count();
-
-        testsData = {
-          tests,
-          totalPages: Math.ceil(totalTests / pageSize),
-          currentPage: page,
-        };
-      }
-
+      console.log(testsData);
       return new NextResponse(JSON.stringify(testsData), { 
         status: 200,
         headers: { 'Content-Type': 'application/json' }
