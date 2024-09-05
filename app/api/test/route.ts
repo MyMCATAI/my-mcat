@@ -34,8 +34,10 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
         contentCategories: []
       };
     }
-    conceptCategories[conceptCategory].averageScore += profile.conceptMastery;
-    conceptCategories[conceptCategory].count++;
+    if (profile.conceptMastery !== null) {
+      conceptCategories[conceptCategory].averageScore += profile.conceptMastery;
+      conceptCategories[conceptCategory].count++;
+    }
     if (!conceptCategories[conceptCategory].contentCategories.includes(contentCategory)) {
       conceptCategories[conceptCategory].contentCategories.push(contentCategory);
     }
@@ -45,7 +47,7 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
   const sortedConceptCategories = Object.values(conceptCategories)
     .map(category => ({
       name: category.name,
-      averageScore: category.averageScore / category.count,
+      averageScore: category.count > 0 ? category.averageScore / category.count : 0,
       contentCategories: category.contentCategories
     }))
     .sort((a, b) => a.averageScore - b.averageScore);
