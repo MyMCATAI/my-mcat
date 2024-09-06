@@ -22,7 +22,11 @@ export const LandingHero = () => {
   const paragraph3Ref = useRef(null);
   const paragraph4Ref = useRef(null);
   const paragraph5Ref = useRef(null);
+  const laptopRef = useRef(null);
+  const catGifRef = useRef(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [laptopLoaded, setLaptopLoaded] = useState(false);
+  const [catGifLoaded, setCatGifLoaded] = useState(false);
 
   useLayoutEffect(() => {
     let ctx = gsap.context(() => {
@@ -82,6 +86,27 @@ export const LandingHero = () => {
     }
   }, [videoLoaded]);
 
+  useLayoutEffect(() => {
+    if (laptopLoaded) {
+      gsap.fromTo(laptopRef.current,
+        { opacity: 0 },
+        { 
+          opacity: 1, 
+          duration: 1, 
+          ease: "power2.inOut",
+          onComplete: () => {
+            if (catGifLoaded) {
+              gsap.fromTo(catGifRef.current, 
+                { y: '100%', opacity: 0 },
+                { y: '0%', opacity: 1, duration: 1, ease: "power2.out" }
+              );
+            }
+          }
+        }
+      );
+    }
+  }, [laptopLoaded, catGifLoaded]);
+
   return (
     <>
       <section className="relative h-screen overflow-hidden bg-[#050010]" id="home">
@@ -116,9 +141,25 @@ export const LandingHero = () => {
               </div>
             </div>
             <div className="relative flex justify-center mt-6 md:mt-0">
-              <Image src={laptop} alt="Laptop" className="w-full" />
-              <div className="absolute top-[5%] left-[10%] w-[80%] h-[80%]">
-                <Image src={cat} alt="GIF" layout="fill" objectFit="contain" unoptimized/>
+              <div ref={laptopRef} className="w-full opacity-0">
+                <Image 
+                  src={laptop} 
+                  alt="Laptop" 
+                  className="w-full" 
+                  onLoadingComplete={() => setLaptopLoaded(true)}
+                />
+              </div>
+              <div className="absolute top-[5%] left-[10%] w-[80%] h-[80%] overflow-hidden">
+                <div ref={catGifRef} className="w-full h-full opacity-0">
+                  <Image 
+                    src={cat} 
+                    alt="GIF" 
+                    layout="fill" 
+                    objectFit="contain" 
+                    unoptimized
+                    onLoadingComplete={() => setCatGifLoaded(true)}
+                  />
+                </div>
               </div>
             </div>
           </div>
