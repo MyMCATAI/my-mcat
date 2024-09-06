@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import cat from "../public/hero.gif";
 import laptop from "../public/laptop.png";
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import BernieSvg from "../public/Bernie.svg";
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -22,6 +22,7 @@ export const LandingHero = () => {
   const paragraph3Ref = useRef(null);
   const paragraph4Ref = useRef(null);
   const paragraph5Ref = useRef(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
   useLayoutEffect(() => {
     let ctx = gsap.context(() => {
@@ -71,20 +72,31 @@ export const LandingHero = () => {
     return () => ctx.revert();
   }, []);
 
+  useLayoutEffect(() => {
+    if (videoLoaded) {
+      gsap.to(videoRef.current, {
+        opacity: 1,
+        duration: 1,
+        ease: "power2.inOut"
+      });
+    }
+  }, [videoLoaded]);
+
   return (
     <>
-      <section className="relative h-screen overflow-hidden" id="home">
-        <video 
+      <section className="relative h-screen overflow-hidden bg-[#050010]" id="home">
+         <video 
           ref={videoRef}
-          className="absolute top-0 left-0 w-full h-full object-cover"
+          className="absolute top-0 left-0 w-full h-full object-cover opacity-0"
           autoPlay
           loop
           muted
           playsInline
+          onLoadedData={() => setVideoLoaded(true)}
         >
           <source src={"https://my-mcat.s3.us-east-2.amazonaws.com/public/brush3.mp4"} type="video/mp4" />
           Your browser does not support the video tag.
-        </video>
+        </video> 
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10 container mx-auto px-6 h-full flex items-center">
           <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-20">
