@@ -27,12 +27,13 @@ model UserSubscription {
 }
 
 model Passage {
-  id        String     @id @default(cuid())
-  text      String     @db.Text
-  citation  String     @db.Text
-  title     String?    @db.Text
-  difficulty Float      @default(1)
-  questions Question[]
+  id          String     @id @default(cuid())
+  text        String     @db.Text
+  citation    String     @db.Text
+  title       String?    @db.Text
+  description String?    @db.Text
+  difficulty  Float      @default(1)
+  questions   Question[]
 }
 
 model Question {
@@ -44,6 +45,7 @@ model Question {
   categoryId          String
   contentCategory     String
   questionID          String
+  difficulty          Float          @default(1)
   passage             Passage?       @relation(fields: [passageId], references: [id])
   category            Category       @relation(fields: [categoryId], references: [id])
   testQuestions       TestQuestion[]
@@ -76,6 +78,7 @@ model Test {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   setName     String?
+  difficulty  Float?
   questions   TestQuestion[]
   userTests   UserTest[]
 }
