@@ -18,8 +18,6 @@
     "create-diagnostic-questions": "ts-node --project tsconfig.server.json scripts/createDiagnosticQuizQuestions.ts",
     "create-diagnostic-test": "ts-node --project tsconfig.server.json scripts/createDiagnosticQuiz.ts",
     "update-content-transcripts": "ts-node --project tsconfig.server.json scripts/updateTranscripts.ts",
-    "create-Cars": "ts-node --project tsconfig.server.json scripts/createCars.ts"
-,
     "create-Cars": "ts-node --project tsconfig.server.json scripts/createCars.ts",
     "create-Cars-explanations": "ts-node --project tsconfig.server.json scripts/createCarsExplanations.ts"
 
