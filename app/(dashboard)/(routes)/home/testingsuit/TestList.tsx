@@ -5,10 +5,12 @@ import { Test, UserTest } from '@/types';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { handleUpdateKnowledgeProfile } from '@/components/util/apiHandlers';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface TestListProps {
   items: (Test | UserTest)[];
   type: 'upcoming' | 'past';
+  loading?: boolean;
 }
 
 const truncateTitle = (title: string | undefined, maxLength: number) => {
@@ -25,8 +27,22 @@ const getPercentageColor = (percentage: number) => {
   return "text-green-500";
 };
 
-const TestList: React.FC<TestListProps> = ({ items, type }) => {
+const TestList: React.FC<TestListProps> = ({ items, type, loading = false }) => {
   const { theme } = useTheme();
+
+  if (loading) {
+    return (
+      <div className="w-full space-y-3">
+        {[...Array(10)].map((_, index) => (
+          <Skeleton
+            key={index}
+            className="w-full h-[42px] rounded-[15px]"
+            style={{ backgroundColor: 'var(--theme-border-color)' }}
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-3">
@@ -55,7 +71,14 @@ const TestList: React.FC<TestListProps> = ({ items, type }) => {
                   />
                 </div>
                 <h2 className="text-sm font-normal group-hover:[color:var(--theme-hover-text)]">
-                  {truncateTitle('title' in item ? item.title : 'Untitled', 10)}
+                  {truncateTitle(
+                    type === 'past' && 'test' in item
+                      ? item.test.title
+                      : 'title' in item
+                      ? item.title
+                      : 'Untitled',
+                    10
+                  )}
                 </h2>
               </div>
               <h2 className={`text-sm font-medium ${getPercentageColor(type === 'past' && 'score' in item ? item.score || 0 : 0)}`}>

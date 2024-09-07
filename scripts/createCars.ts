@@ -24,192 +24,6 @@ interface Question {
   difficulty: number;
 }
 
-
-interface PassageWithQuestions extends Passage {
-  questions: Question[];
-}
-
-async function createPassagesQuestionsAndTests(processOnlyFirstPassage: boolean = false) {
-  console.log('Starting createPassagesQuestionsAndTests function');
-  const inputFilePath = path.join(process.cwd(), 'data', 'passages_and_questions.txt');
-  console.log(`Reading file from: ${inputFilePath}`);
-  const fileContent = fs.readFileSync(inputFilePath, { encoding: 'utf-8' });
-  console.log('File content read successfully');
-  const passagesWithQuestions = parsePassagesAndQuestions(fileContent);
-  console.log(`Parsed ${passagesWithQuestions.length} passages with questions`);
-
-  console.log('Fetching all categories');
-  const categories = await prisma.category.findMany();
-  console.log(`Fetched ${categories.length} categories`);
-
-  for (const [index, passageData] of passagesWithQuestions.entries()) {
-    if (processOnlyFirstPassage && index > 0) {
-      console.log('Processing only first passage. Exiting loop.');
-      break;
-    }
-
-    console.log(`Processing passage ${index + 1}: ${passageData.title}`);
-    try {
-      // Create passage
-      const passageId = passageData.title.split('-')[0].trim().replace(/\s+/g, '_').toLowerCase();
-      console.log(`Creating passage with ID: ${passageId}`);
-      const passage = await prisma.passage.create({
-        data: {
-          id: passageId,
-          title: passageData.title,
-          description: passageData.description,
-          citation: passageData.citation,
-          text: passageData.content,
-          difficulty: passageData.difficulty,
-        },
-      });
-      console.log(`Created passage: ${passage.id}`);
-
-      // Create questions
-      const questions = [];
-      console.log(`Creating ${passageData.questions.length} questions for passage ${passageId}`);
-      for (let i = 0; i < passageData.questions.length; i++) {
-        const questionData = passageData.questions[i];
-        console.log(`Processing question ${i + 1}`);
-        const category = categories.find(cat =>
-          cat.conceptCategory === questionData.conceptCategory &&
-          cat.contentCategory === questionData.contentCategory
-        );
-
-        if (!category) {
-          console.log(`No matching category found for question ${i + 1} in passage ${passageId}. Creating new category.`);
-          const newCategory = await prisma.category.create({
-            data: {
-              subjectCategory: 'CARs',
-              contentCategory: questionData.contentCategory,
-              conceptCategory: questionData.conceptCategory,
-              generalWeight: 1,
-              section: 'CARs',
-              color: '',
-              icon: '',
-            },
-          });
-          categories.push(newCategory); // Add new category to the array
-          console.log(`Created new category: ${newCategory.id}`);
-        }
-
-        const questionOptions = [questionData.correctAnswer, ...questionData.options.filter(opt => opt !== questionData.correctAnswer)];
-        console.log(`Creating question with ID: ${questionData.contentCategory}_${passageId}_${i + 1}`);
-        const question = await prisma.question.create({
-          data: {
-            questionID: `${questionData.contentCategory}_${passageId}_${i + 1}`,
-            questionContent: questionData.content,
-            questionOptions: JSON.stringify(questionOptions),
-            questionAnswerNotes: '',
-            contentCategory: questionData.contentCategory,
-            passageId: passage.id,
-            categoryId: category!.id,
-            difficulty: questionData.difficulty,
-          },
-        });
-        questions.push(question);
-        console.log(`Created question: ${question.questionID}`);
-      }
-
-      // Create tests
-      const createTest = async (title: string, questionIds: string[]) => {
-        console.log(`Creating test: ${title}`);
-        const test = await prisma.test.create({
-          data: {
-            title,
-            description: passageData.description,
-            difficulty: passageData.difficulty,
-            questions: {
-              create: questionIds.map((questionId, index) => ({
-                questionId,
-                sequence: index + 1,
-              })),
-            },
-          },
-        });
-        console.log(`Created test: ${test.id}`);
-      };
-
-      // Create Test Part 1 (first 5 questions)
-      console.log('Creating Test Part 1');
-      await createTest(`${passageData.title} - Part 1`, questions.slice(0, 5).map(q => q.id));
-
-      // Create Test Part 2 (remaining questions)
-      if (questions.length > 5) {
-        console.log('Creating Test Part 2');
-        await createTest(`${passageData.title} - Part 2`, questions.slice(5).map(q => q.id));
-      }
-
-    } catch (error) {
-      console.error(`Error processing passage ${passageData.title}:`, error);
-    }
-  }
-
-  await prisma.$disconnect();
-  console.log("Finished creating passages, questions, and tests.");
-}
-
-function parsePassagesAndQuestions(content: string): PassageWithQuestions[] {
-    const passages: PassageWithQuestions[] = [];
-    const passageRegex = /Title: (.+?) - (\d+)\n\nDescription: "(.+?)"\n\n(?:Caption|Citation): (.+?)\n\nPassage:\n([\s\S]+?)\nQuestions:/g;
-    const questionRegex = /^(.+?)\((.+?),(\d+)\)\n([\s\S]+?)(?=\n\n(?:Title:|$))/gm;
-  
-    let passageMatch;
-    let passageCount = 0;
-    let totalQuestionCount = 0;
-  
-    while ((passageMatch = passageRegex.exec(content)) !== null) {
-      passageCount++;
-      const [, title, difficulty, description, citation, passageContent] = passageMatch;
-      const questions: Question[] = [];
-  
-      console.log(`Parsing passage: ${title}`);
-  
-      let questionMatch;
-      const questionContent = content.slice(passageMatch.index + passageMatch[0].length);
-      while ((questionMatch = questionRegex.exec(questionContent)) !== null) {
-        const [, questionText, conceptCategory, questionDifficulty, optionsText] = questionMatch;
-        const options = optionsText.split('\n').map(opt => opt.trim().replace(/^\d+\.\s*/, ''));
-        const correctAnswer = options.find(opt => opt.includes('(Correct)'))?.replace(' (Correct)', '') || '';
-  
-        questions.push({
-          content: questionText.trim(),
-          options: options.map(opt => opt.replace(' (Correct)', '')),
-          correctAnswer,
-          conceptCategory,
-          contentCategory: 'CARs',
-          difficulty: parseInt(questionDifficulty),
-        });
-      }
-  
-      totalQuestionCount += questions.length;
-      console.log(`Parsed ${questions.length} questions for passage: ${title}`);
-  
-      passages.push({
-        title,
-        description,
-        citation,
-        content: passageContent.trim(),
-        difficulty: parseInt(difficulty),
-        questions,
-      });
-    }
-  
-    console.log(`Parsed ${passageCount} passages with a total of ${totalQuestionCount} questions`);
-    return passages;
-  }
-    
-  const inputFilePath = path.join(process.cwd(), 'data', 'passages_and_questions.txt');
-  const fileContent = fs.readFileSync(inputFilePath, { encoding: 'utf-8' });
-  const parsedData = parsePassagesAndQuestions(fileContent);
-  
-  console.log(`Parsed ${parsedData.length} passages with questions`);
-  parsedData.forEach((passage, index) => {
-    console.log(`Passage ${index + 1}: ${passage.title}`);
-    console.log(`Number of questions: ${passage.questions.length}`);
-  });
-
-// Usage
 console.log('Starting script');
 //createPassagesQuestionsAndTests(true).catch(console.error);
 function extractTitles(content: string): string[] {
@@ -256,7 +70,8 @@ function extractPassageTexts(content: string): string[] {
 
   return Array.from(matches).map(match => match[1].trim());
 }
-function extractQuestions(content: string): string[][] {
+
+function extractQuestions(content: string): [string, string[]][][] {
   const questionsRegex = /Questions:([\s\S]*?)(?=Title:|$)/g;
   const matches = content.matchAll(questionsRegex);
   
@@ -267,7 +82,8 @@ function extractQuestions(content: string): string[][] {
     const lines = questionBlock.split('\n');
     
     let questionText = '';
-    const questions = [];
+    let options: string[] = [];
+    const questions: [string, string[]][] = [];
 
     for (const line of lines) {
       if (!questionText && !/^\d+\./.test(line.trim())) {
@@ -276,32 +92,219 @@ function extractQuestions(content: string): string[][] {
       } else if (questionText && !line.trim().startsWith('1.')) {
         // Continue collecting question text
         questionText += ' ' + line.trim();
-      } else if (line.trim().startsWith('1.')) {
-        // We've reached the start of answer options
-        if (questionText.trim() !== '') {
-          questions.push(questionText);
+      } else if (/^\d+\./.test(line.trim())) {
+        // We've reached an answer option
+        if (line.trim().startsWith('1.')) {
+          // If it's the first option, add the previous question and start new options
+          if (questionText.trim() !== '') {
+            questions.push([questionText.trim(), []]);
+            questionText = '';
+          }
+          options = [];
         }
-        questionText = '';
+        // Remove the number and dot at the start of the option
+        options.push(line.replace(/^\d+\.\s*/, '').trim());
+        if (questions.length > 0) {
+          // Rearrange options to put the correct answer first and remove (Correct) text
+          const correctIndex = options.findIndex(opt => /\(correct\)/i.test(opt));
+          if (correctIndex !== -1) {
+            const correctOption = options.splice(correctIndex, 1)[0];
+            const cleanedCorrectOption = correctOption.replace(/\s*\(correct\)/i, '');
+            options.unshift(cleanedCorrectOption);
+          }
+          questions[questions.length - 1][1] = options;
+        }
       }
     }
 
     // Add the last question if there's any remaining
-    if (questionText) {
-      questions.push(questionText);
+    if (questionText.trim() !== '') {
+      questions.push([questionText.trim(), options]);
     }
-
-    console.log("Questions for this passage:");
-    questions.forEach((q, index) => {
-      const letter = String.fromCharCode(65 + index);
-      console.log(`${letter}. ${q}`);
-    });
-    console.log(); // Empty line for readability
     
     return questions;
   });
 }
+
+function extractQuestionInfo(questionText: string): { cleanedText: string; conceptCategory: string; difficulty: number } {
+  const regex = /^(.*?)\s*\(([^,]+),\s*(\d+)\)\s*(.*)$/;
+  const match = questionText.match(regex);
+
+  if (match) {
+    const [, prefix, conceptCategory, difficultyStr, suffix] = match;
+    const cleanedText = (prefix + ' ' + suffix).trim();
+    const difficulty = parseInt(difficultyStr, 10);
+
+    return {
+      cleanedText,
+      conceptCategory: conceptCategory.trim(),
+      difficulty
+    };
+  }
+
+  // If no match found, attempt to extract information from the question text
+  const fallbackRegex = /^(.*?)\s*\(([^,]+),\s*(\d+)\)$/;
+  const fallbackMatch = questionText.match(fallbackRegex);
+
+  if (fallbackMatch) {
+    const [, cleanedText, conceptCategory, difficultyStr] = fallbackMatch;
+    return {
+      cleanedText: cleanedText.trim(),
+      conceptCategory: conceptCategory.trim(),
+      difficulty: parseInt(difficultyStr, 10)
+    };
+  }
+
+  // If still no match, return original text and default values
+  return {
+    cleanedText: questionText,
+    conceptCategory: 'Unknown',
+    difficulty: 0
+  };
+}
+
+async function createPassage(
+    title: string,
+    difficulty: number,
+    description: string,
+    citation: string,
+    text: string
+  ): Promise<string> {
+    const existingPassage = await prisma.passage.findFirst({
+      where: {
+        title,
+        difficulty,
+      },
+    });
+
+    if (existingPassage) {
+      return existingPassage.id;
+    }
+
+    const passage = await prisma.passage.create({
+      data: {
+        id: title.toLowerCase().replace(/\s+/g, '_'),
+        title,
+        description,
+        citation,
+        text,
+        difficulty,
+      },
+    });
+    return passage.id;
+  }
   
-  function main() {
+  async function createTest(
+    title: string,
+    description: string,
+    difficulty: number
+  ): Promise<string> {
+    const existingTest = await prisma.test.findFirst({
+      where: {
+        title,
+        description,
+        difficulty,
+      },
+    });
+
+    if (existingTest) {
+      return existingTest.id;
+    }
+
+    const test = await prisma.test.create({
+      data: {
+        title,
+        description,
+        difficulty,
+      },
+    });
+  
+    return test.id;
+  }
+  
+  async function createQuestion(
+    passageId: string,
+    testId: string,
+    content: string,
+    options: string[],
+    conceptCategory: string,
+    difficulty: number,
+    index: number
+  ): Promise<string> {
+    const category = await prisma.category.findFirst({
+      where: {
+        conceptCategory,
+        contentCategory: 'CARs',
+      },
+    });
+  
+    if (!category) {
+      throw new Error(`Category not found for concept: ${conceptCategory}`);
+    }
+
+    const questionID = `CARs_${passageId}_${index + 1}`;
+    const existingQuestion = await prisma.question.findFirst({
+      where: {
+        questionID,
+        questionContent: content,
+        questionOptions: JSON.stringify(options),
+        contentCategory: 'CARs',
+        passageId,
+        categoryId: category.id,
+        difficulty,
+      },
+    });
+
+    if (existingQuestion) {
+      // Check if TestQuestion relationship already exists
+      const existingTestQuestion = await prisma.testQuestion.findFirst({
+        where: {
+          testId,
+          questionId: existingQuestion.id,
+        },
+      });
+
+      if (!existingTestQuestion) {
+        // Create the TestQuestion relationship if it doesn't exist
+        await prisma.testQuestion.create({
+          data: {
+            testId,
+            questionId: existingQuestion.id,
+            sequence: index + 1,
+          },
+        });
+      }
+
+      return existingQuestion.id;
+    }
+  
+    const question = await prisma.question.create({
+      data: {
+        questionID,
+        questionContent: content,
+        questionOptions: JSON.stringify(options),
+        questionAnswerNotes: '',
+        contentCategory: 'CARs',
+        passageId,
+        categoryId: category.id,
+        difficulty,
+      },
+    });
+  
+    // Create the TestQuestion relationship
+    await prisma.testQuestion.create({
+      data: {
+        testId,
+        questionId: question.id,
+        sequence: index + 1,
+      },
+    });
+  
+    return question.id;
+  }
+
+
+  async function main(startIndex: number = 0, processCount: number = 1) {
     const inputFilePath = path.join(process.cwd(), 'data', 'passages_and_questions.txt');
     console.log(`Reading file from: ${inputFilePath}`);
   
@@ -315,36 +318,79 @@ function extractQuestions(content: string): string[][] {
       const citations = extractCitations(fileContent);
       const passageTexts = extractPassageTexts(fileContent);
       const questions = extractQuestions(fileContent);
-      const totalPassages = titles.length;
   
-      console.log('Passage Titles, Difficulties, Descriptions, Citations, Texts, and Questions:');
-      const missingValues: string[] = [];
+      const endIndex = Math.min(startIndex + processCount, titles.length);
+      console.log(`Processing passages from index ${startIndex} to ${endIndex - 1}`);
   
-      titles.forEach((title, index) => {
-        console.log(`${index + 1}. ${title} - Difficulty: ${difficulties[index] || 'Missing'}`);
-        // console.log(`   Description: ${descriptions[index] || 'Missing'}`);
-        // console.log(`   Citation: ${citations[index] || 'Missing'}`);
-        // console.log(`   Passage Text: ${passageTexts[index] ? 'Present' : 'Missing'}`);
-        console.log(`   Questions: ${questions[index] ? questions[index].length : 'Missing'}`);
+      for (let i = startIndex; i < endIndex; i++) {
+        const passageId = await createPassage(
+          titles[i],
+          difficulties[i],
+          descriptions[i],
+          citations[i],
+          passageTexts[i]
+        );
+        console.log(`Created passage: ${passageId}`);
   
-        if (!difficulties[index]) missingValues.push(`Passage ${index + 1} is missing difficulty`);
-        if (!descriptions[index]) missingValues.push(`Passage ${index + 1} is missing description`);
-        if (!citations[index]) missingValues.push(`Passage ${index + 1} is missing citation`);
-        if (!passageTexts[index]) missingValues.push(`Passage ${index + 1} is missing passage text`);
-        if (!questions[index]) missingValues.push(`Passage ${index + 1} is missing questions`);
-      });
+        // Create Test Part 1
+        const testId1 = await createTest(
+          `${titles[i]} - Part 1`,
+          descriptions[i],
+          difficulties[i]
+        );
+        console.log(`Created test part 1: ${testId1}`);
   
-      console.log(`Total number of passages: ${totalPassages}`);
+        // Create Test Part 2 if there are more than 5 questions
+        let testId2 = null;
+        if (questions[i].length > 5) {
+          testId2 = await createTest(
+            `${titles[i]} - Part 2`,
+            descriptions[i],
+            difficulties[i]
+          );
+          console.log(`Created test part 2: ${testId2}`);
+        }
   
-      if (missingValues.length > 0) {
-        console.log('\nMissing values:');
-        missingValues.forEach(msg => console.log(msg));
-      } else {
-        console.log('\nAll passages have complete information.');
+        // Create questions and associate them with the appropriate test
+        for (let j = 0; j < questions[i].length; j++) {
+          const [questionText, options] = questions[i][j];
+          const { cleanedText, conceptCategory, difficulty } = extractQuestionInfo(questionText);
+          const currentTestId = j < 5 ? testId1 : testId2;
+          if (currentTestId) {
+            const questionId = await createQuestion(
+              passageId,
+              currentTestId,
+              cleanedText,
+              options,
+              conceptCategory,
+              difficulty,
+              j
+            );
+            console.log(`Created question: ${questionId} for test: ${currentTestId}`);
+          }
+        }
       }
+  
+      console.log('Finished creating passages, tests, and questions.');
     } catch (error) {
       console.error('An error occurred:', error);
+    } finally {
+      await prisma.$disconnect();
     }
   }
-
-  main()
+  
+  // Usage examples:
+  // To process only the first passage (default behavior):
+  // main().catch(console.error);
+  
+  // To skip the first passage and process the next one:
+  // main(1, 1).catch(console.error);
+  
+  // To process all passages starting from the second one:
+  // main(1).catch(console.error);
+  
+  // To process a specific number of passages starting from a specific index:
+  // main(2, 3).catch(console.error);  // Process 3 passages starting from index 2
+  
+  // Uncomment the line you want to use:
+   main(0, 25).catch(console.error);  // This will process the second passage
