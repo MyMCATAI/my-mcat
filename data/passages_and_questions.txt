@@ -356,9 +356,9 @@ Which of the following best summarizes the central argument of the passage? (Fou
 
 
 According to the passage, which of the following statements would the author mostly likely agree with? (Reasoning Beyond the Text,2)
-1. The president should use the powers of the executive branch to center power on the White House rather than federal agencies 
-2. It is justified to use levers to replace the members of these federal agencies with ones that act in accordance with the president’s will[as].
-3. Churches, mosques, and synagogues would become more powerful in a less centralized government[at].
+I. The president should use the powers of the executive branch to center power on the White House rather than federal agencies 
+II. It is justified to use levers to replace the members of these federal agencies with ones that act in accordance with the president’s will[as].
+III. Churches, mosques, and synagogues would become more powerful in a less centralized government[at].
 
 
 1. I and II
@@ -372,7 +372,7 @@ If research showed that federal agencies were more effective at implementing pol
 2. It would weaken his constitutional arguments for decentralization. 
 3. It would have no effect on his constitutional arguments. (Correct) 
 4. It would support the author's critique of the bureaucracy.
-The author calls for the president to “bend and break the bureaucracy to the presidential will” (paragraph 4) which: (Reasoning Within the Text, 1)
+The author calls for the president to “bend and break the bureaucracy to the presidential will” [paragraph 4] which: (Reasoning Within the Text, 1)
 1. demonstrates an example of the president “return[ing] power to the American people.”
 2. embodies the self-denial that will galvanize local governments.
 3. contradicts with the implied goals of “send[ing] power away from Washington.”[aw][ax][ay]  (Correct)
@@ -384,7 +384,7 @@ In paragraph 4, the author's call for "boldness" and "self-denial" suggests that
 2. Completely dismantle the federal bureaucracy and centralize power. 
 3. Assert control over agencies while ultimately reducing central authority. (Correct)
 4. Defer all decision-making to local governments and agencies.
-The author’s tone can be best described as: (Foundations of Comprehension)
+The author’s tone can be best described as: (Foundations of Comprehension, 1)
 1. vengeful and sarcastic.
 2. urgent and serious.[az][ba] (Correct)
 3. analytical and understanding[bb][bc].
@@ -425,9 +425,9 @@ The other political moments of Peppa’s Adventures are not as successful. “Re
 Peppa is, of course, a very young artist; one hopes that she will refine her political sensibility as she matures. Her influence, within and beyond the pop scene, is immense. The Wall Street Journal recently reported that Peppa’s most devoted American fans have developed British accents and adopted her slang. Peppa seems to have borne up remarkably well in this position of influence, with all its attendant pressures. She clearly benefits from the closeness of her family and friends, who appear throughout Peppa’s Adventures. As her profile rises, and her music reaches an even wider audience, Peppa will need their support to stay grounded. If her abundantly successful new record signals one thing, it is this: Peppa is some pig.
 Questions:
 Which of the following does the passage author state as a strength of Peppa Pig’s newest album? (Reasoning Within the Text,2)
-1. efficient construction of songs 
-2. innovative departures from formulas 
-3. mature political sensibility  
+I. efficient construction of songs 
+II. innovative departures from formulas 
+III. mature political sensibility  
 
 
 1. II only
@@ -577,7 +577,7 @@ Title: Material Darwinism - 3
 Description: “Ah, another treatise on the meaning of life - because clearly what the world needs now is more philosophers arguing about whether our existence has any value whatsoever. And especially presenting it in a confusing way that makes me want to take a nap in my litterbox. A hard passage with hard questions.”
 Citation: Brian F. Snyder. “The Darwinian Nihilist Critique of Environmental Ethics.” Ethics and the Environment 22, no. 2 (2017): 59–78. https://doi.org/10.2979/ethicsenviro.22.2.03.
 Passage:
-Sommers and Rosenberg (2003) make a strong case that materialistic Darwinism leads to nihilism. They define three philosophical alternatives: naturalism, nihilism, and intuitionism. That is, there are three options:
+Sommers and Rosenberg [2003] make a strong case that materialistic Darwinism leads to nihilism. They define three philosophical alternatives: naturalism, nihilism, and intuitionism. That is, there are three options:
 1. Values exist and they are derived from natural systems (naturalism);
 2. Values do not exist and are illusionary (nihilism); or
 3. Values exist and are derived from an intuition about a metaphysical reality (intuitionism).
@@ -629,7 +629,7 @@ Egoistic altruism is considered an argument for selflessness, where one helps ot
 1. further exemplifying altruism as a value-neutral process beyond moral paradigms.[bl] (Correct)
 2. providing a naturalist explanation for altruism grounded in moral teleologicalism.
 3. challenging the notion that objective good and bad cannot be ascribed to altruism.
-1. reinforcing that assumptions about rights and wrong are irrelevant to intuitionism.
+4. reinforcing that assumptions about rights and wrong are irrelevant to intuitionism.
 
 
 Given the logic of the passage, it is safe to assume which of the following constitutes an ethical argument: (Reasoning Beyond the Text,3)
@@ -642,7 +642,7 @@ Given the logic of the passage, it is safe to assume which of the following cons
 4. I and II[bm] (Correct)
 
 
-What is the significance of the statement “an evolutionary account of moral belief will not only explain ethics, but it will explain it away” (paragraph 5)? (Foundations of Comprehension,2)
+What is the significance of the statement “an evolutionary account of moral belief will not only explain ethics, but it will explain it away” [paragraph 5]? (Foundations of Comprehension,2)
 1. It explains how substrate-neutral algorithms create moral obligations. 
 2. It supports the argument of ethics as fundamentally important for survival.
 3. It suggests the discovery of new ethical principles through natural selection.
@@ -731,7 +731,7 @@ Citation: Schmeink, Lars. “Dystopia, Science Fiction, Posthumanism, and Liquid
 
 
 Passage:
-In 1923, the famed genetics professor J.B.S. Haldane, demonstrating a penchant for provocation and prophecy, gave a talk on the future of science. He claimed that scientific research would flourish in the years to come and that he would make no prophecies rasher than those made by H.G. Wells in his works. One very important aspect of science, to Haldane, had been left out of Wells’s imagination due to the shifting scientific interests of different times: the development of the biological sciences. Physics and chemistry, with their 'scientific ideas [...] of flying and radiotelegraphy,' were, by 1923, merely 'commercial problems,' whereas, he believed, the future 'center of scientific interest [lay] in biology.' Some of his prophecies were radical but proved quite accurate. Haldane was the first to foresee the necessary shift in energy production, from coal and oil to wind and sunlight, and proposed hydrogen-powered machinery. Regarding biology, his claims were the most outrageous and garnered the strongest opposition at the time. In a science-fictional essay, supposedly to be read by an undergraduate student of Cambridge University in 2073, on the development of biology in the twentieth century, he claimed, among other things, the birth of the first test-tube baby and genetic selection. His account was rather optimistic, both in terms of time frame (positing 1951 as the birth date of the first child by in vitro fertilization, whereas in reality, it took until 1977) and in terms of its potential to alter the species and offer 'great possibilities in the way of the direct improvement of the individual.'
+In 1923, the famed genetics professor J.B.S. Haldane, demonstrating a penchant for provocation and prophecy, gave a talk on the future of science. He claimed that scientific research would flourish in the years to come and that he would make no prophecies rasher than those made by H.G. Wells in his works. One very important aspect of science, to Haldane, had been left out of Wells’s imagination due to the shifting scientific interests of different times: the development of the biological sciences. Physics and chemistry, with their 'scientific ideas [...] of flying and radiotelegraphy,' were, by 1923, merely 'commercial problems,' whereas, he believed, the future 'center of scientific interest [lay] in biology.' Some of his prophecies were radical but proved quite accurate. Haldane was the first to foresee the necessary shift in energy production, from coal and oil to wind and sunlight, and proposed hydrogen-powered machinery. Regarding biology, his claims were the most outrageous and garnered the strongest opposition at the time. In a science-fictional essay, supposedly to be read by an undergraduate student of Cambridge University in 2073, on the development of biology in the twentieth century, he claimed, among other things, the birth of the first test-tube baby and genetic selection. His account was rather optimistic, both in terms of time frame [positing 1951 as the birth date of the first child by in vitro fertilization, whereas in reality, it took until 1977] and in terms of its potential to alter the species and offer 'great possibilities in the way of the direct improvement of the individual.'
 What is even more interesting than his claim about the importance of biological scientific progress, genetics in particular, is his claim that the inevitable human reaction towards it is repulsion. Drawing on the Greek mythological figures of Prometheus and Daedalus, Haldane argues that the chemical or physical inventor is always a Prometheus. There is no great invention, from fire to flying, which has not been hailed as an insult to some god. But if every physical and chemical invention is a blasphemy, every biological invention is a perversion. There is hardly one which would not appear as indecent and unnatural. Whereas Prometheus would be subject to the revenge of the gods, Daedalus—for his biological creation of the Minotaur—would go unpunished by Zeus and Poseidon. Instead, Haldane claims, the biologist is faced with 'the universal and agelong reprobation of a humanity to whom biological inventions are abhorrent.' The physicist threatens divine power to claim it for humanity, becoming in stature a god himself (or a titan, as Prometheus), and by his creation, in effect, granting humanity its superior status. In contrast, the biologist (especially the geneticist) threatens humanity, robbing it of its natural place, and is thus seen as a threat to and corruption of the human claim to godliness. Prometheus stole fire from the gods, bringing the light of progress to humanity and securing for himself a token position in the mythology of humankind. However, Daedalus’s inventions served as warnings that technology never quite turned out for the good and always demanded a price that was too high to pay—the youths of Athens sacrificed to the Minotaur.
 The Prometheus myth carries with it the utopian vision of a better future for humanity—fire, light, and technological progress facilitate this change and allow for a utopian view of what is to come. The hero himself might be punished by the gods, but his deed allowed for humanity to grow and become stronger. The myth of Daedalus is born of a similar utopian vision—his inventions are ingenious and tell of humanity’s potential for technological progress. However, the tables are turned when it comes to the repercussions. When Daedalus builds a device for the cursed queen of Crete, Pasiphae, which allows her to be mounted by the Minoan bull, and thus in effect helps birth the first xenogenetic creation, the Minotaur, it is not he that is punished but humankind. Because the Minotaur is an unnatural creation, its abhorrent nature shows in its diet of human flesh. From the bull that was supposed to be sacrificed springs forth a monster, to which humans must regularly be sacrificed to keep it appeased. Unwittingly, Daedalus had punished humanity for his unnatural creation by not considering the long-term effects of what he had invented. His tale, as utopian in vision as it might be, rather shows a dystopian stance towards social and technological progress—it is a cautionary tale.
 Questions:
@@ -773,7 +773,7 @@ How does the passage characterize the difference between the consequences of Pro
 4. Prometheus challenged the gods directly, while Daedalus challenged human nature. (Correct)
 
 
-The author’s purpose in mentioning the Minotaur (passage 3) is to: (Reasoning Within the Text,2)
+The author’s purpose in mentioning the Minotaur [passage 3] is to: (Reasoning Within the Text,2)
 1. provide historical context to strengthen his argument.
 2. use an example to challenge a previous assertion.
 3. warn readers against unnatural innovations in biology.
@@ -806,7 +806,7 @@ Which of the following quotes from the author indicates why biological innovatio
 1. “Unwittingly, Daedalus had punished humanity for his unnatural creation by not considering the long-term effects of what he had invented.”
 2. "The biologist (especially the geneticist) threatens humanity, robbing it of its natural place, and is thus seen as a threat to and corruption of the human claim to godliness.” (Correct)
 3. "There is no great invention, from fire to flying, which has not been hailed as an insult to some god."
-4. "His account was rather optimistic, both in terms of time frame (positing 1951 as the birth date of the first child by in vitro fertilization, whereas in reality, it took until 1977) and in terms of its potential to alter the species"
+4. "His account was rather optimistic, both in terms of time frame [positing 1951 as the birth date of the first child by in vitro fertilization, whereas in reality, it took until 1977] and in terms of its potential to alter the species"
 Title: Hellish Academia - 1
 Description: “In this passage, we’re going to talk about hell and academia. Or, in other words, academia. It’s fairly easy, but weird. You should get used to weird!”
 
@@ -842,7 +842,7 @@ The epitaph that prefaces the passage is: (Foundations of Comprehension,2)
 4. humorous; it exists to entertain the reader.
 
 
-Assume that the study in the passage had a sample size of 7,000 individuals. Using the estimate given in the passage, which of these housing options would reasonably house the range of people who had falsified data (assume little to no overflow)? (Reasoning Beyond the Text,2)
+Assume that the study in the passage had a sample size of 7,000 individuals. Using the estimate given in the passage, which of these housing options would reasonably house the range of people who had falsified data [assume little to no overflow]? (Reasoning Beyond the Text,2)
 1. A large lecture hall[cg]. (Correct)
 2. A city’s suburbs.
 3. A seventy-story skyscraper.
@@ -938,7 +938,7 @@ What is implied by the author’s comparison of the fifteenth century to the mod
 1. Technological progress has stalled. 
 2. Individuals must make cultural decisions.
 3. An epistemic revolution is underway. (Correct)
-1. The old world has continued preeminence.
+4. The old world has continued preeminence.
 
 
 The statement that "technologies do not, in themselves, change anything, but rather are socially constructed and deployed" most strongly suggests that: (Reasoning Within the Text,2)
@@ -962,21 +962,21 @@ The passage suggests that the current "algorithmic regime" differs from previous
 4. poses fewer ethical concerns than previous technologies.
 
 
-The mention of "the printing press and three-point perspective" (paragraph 3) serves primarily to: (Foundations of Comprehension,2)
+The mention of "the printing press and three-point perspective" [paragraph 3] serves primarily to: (Foundations of Comprehension,2)
 1. contrast outdated technologies with modern algorithms.
 2. provide examples of technologies that enhanced individual agency. (Correct) 
 3. argue for the superiority of algorithmic technology.
 4. illustrate the cyclical nature of technological advancement.
 
 
-The discussion of "retrofitting" new technology to serve "still-dominant interests" (paragraph 3) most likely serves to: (Reasoning Within the Text,2)
+The discussion of "retrofitting" new technology to serve "still-dominant interests" [paragraph 3] most likely serves to: (Reasoning Within the Text,2)
 1. advocate for the preservation of traditional power structures. 
 2. highlight a potential missed opportunity for social transformation. (Correct)
 3. suggest that new technologies are incompatible with existing systems. 
 4. argue that technological progress is inherently disruptive.
 
 
-The reference to "non-human actors" generating data (paragraph 2) is used to illustrate: (Reasoning Within the Text,1)
+The reference to "non-human actors" generating data [paragraph 2] is used to illustrate: (Reasoning Within the Text,1)
 1. the superiority of machine-generated data over human-generated data. 
 2. the increasing complexity of modern data collection methods.
 3. a shift in how data is produced and collected in the modern era. (Correct)
@@ -1001,9 +1001,9 @@ Tywin Lannister states that “Any king who says ‘I am the king’ is no true 
 
 
 According to the passage, which of the following types of authority does Daenarys utilize? (Foundations of Comprehension,1)
-1. Charismatic authority
-2. Traditional authority
-3. Rational-legal authority
+I. Charismatic authority
+II. Traditional authority
+III. Rational-legal authority
 1. I only 
 2. I and II (Correct)
 3. I, II, and III
@@ -1040,7 +1040,7 @@ Using information from the passage, it’s safe to assume that MOST rulers in Ga
 2. history and customs. (Correct)
 3. military might.
 4. royal decree.
-What is the function of the author’s discussion of fanfiction culture around Game of Thrones (final paragraph)? (Foundations of Comprehension,2)
+What is the function of the author’s discussion of fanfiction culture around Game of Thrones [final paragraph]? (Foundations of Comprehension,2)
 
 
 1. to demonstrate an application of Weber’s typology to a power structure. 
@@ -1420,15 +1420,15 @@ The text mentions that iron stains in the water can "completely upset the color 
 3. Iron stains are the most significant problem in pool water quality. 
 4. Tile-lined pools are more susceptible to water quality issues than other types of pools.
 In determining the quality of water in a pool with cement paint, which of these following factors is mandatory to consider?  (Foundations of Comprehension,2)
-1. Freedom from water coloration 
-2. Absence of sediment 
-3. Compatibility between watercolor and tile color
+I. Freedom from water coloration 
+II. Absence of sediment 
+III. Compatibility between watercolor and tile color
 
 
 1. I only (Correct)
-1. I and II only 
-2. I and III only 
-3. I, II, and III
+2. I and II only 
+3. I and III only 
+4. I, II, and III
 A pool-boy is tasked with refilling a pool between the hours of 10 AM to 1 PM. Based on the passage, the correct diameter of the supply pipe he should use would be: (Reasoning Beyond the Text,2)
 1. 6 inches.
 2. 4 inches. (Correct)
@@ -1475,7 +1475,7 @@ Suppose Isaac Asimov in his 1951 book “Foundation” wrote about the idea that
 4. It would support the claim that Sagan popularized the idea, if it was proven that Asimov originated the term.
 
 
-What is hinted by the phrase “How do you want to spend this time until I return to you, and you return to me” (paragraph 3)? (Foundations of Comprehension,2)
+What is hinted by the phrase “How do you want to spend this time until I return to you, and you return to me” [paragraph 3]? (Foundations of Comprehension,2)
 1. There’s a cyclic relationship between humans and stars. (Correct)
 2. Humans failed to take the future into account.
 3. Celestial bodies and human life were very similar.
@@ -1577,7 +1577,7 @@ III. China and Russia
 4. I, II, and III
 
 
-The author's use of the phrase "brinkmanship postures" (paragraph 4) suggests that North Korea's approach to international relations is characterized by: (Foundations of Comprehension,1)
+The author's use of the phrase "brinkmanship postures" [paragraph 4] suggests that North Korea's approach to international relations is characterized by: (Foundations of Comprehension,1)
 1. Unwillingness to ever entertain diplomatic negotiations.
 2. Aggressive or confrontational behavior. (Correct)
 3. Failure to communicate transparently.
@@ -1611,7 +1611,7 @@ As human knowledge of earth expands, and as the world becomes smaller, oni’s t
 Apocalyptic fiction became quite popular in the late 1960s and 70s as rapid economic growth came to Japan, and with it came pollution and societal anxieties. Even though the Cold War was over and the nuclear threat had receded, various apocalyptic fictions were created with a background of societal intransparency and other disasters facing mankind.
 One of the pioneering artists portraying apocalyptic and elegiac modes of manga through the utilization of oni and demonic creatures is Nagai Gō (born 1945). Nagai often depicts oni as members of a different tribe from the mainstream Japanese race or as creatures born out of grudge, enmity, and suffering. For example, the oni in Oni—2889 nen no hanran (Oni—The Rebellion in 2889), which appeared in December 1969, is a synthetic human—a creation of human technology. Similar to “replicants” in the film Blade Runner (1982), the oni are absolutely supposed to obey the humans. But the oni rebel against the humans and their cruel treatment. While the setting is literally futuristic, the core concept of an oni as a marginalized being borne out of grudge, enmity, and suffering remains unchanged.
 Questions:
-Which of the following challenges Napier’s view of anime (paragraph 2)? (Reasoning Beyond the Text,1)
+Which of the following challenges Napier’s view of anime [paragraph 2]? (Reasoning Beyond the Text,1)
 1. Japanese anthropology classes study anime as well as books.
 2. During times of crisis, there is a sharp uptick in consumption of horror anime.
 3. Japan’s economic crash in 1990 led to an increase in the consumption of older anime. 
@@ -1768,12 +1768,12 @@ According to the passage, which of the following is NOT a difference between the
 2. Perceived threat to the establishment.
 3. Characteristics of their overall messaging.
 4. Identification as an American subculture. (Correct) 
-The author's use of the phrase "It is impossible to exaggerate how much hair was on display" (paragraph 3) serves primarily to: (Foundations of Comprehension,2)
+The author's use of the phrase "It is impossible to exaggerate how much hair was on display" [paragraph 3] serves primarily to: (Foundations of Comprehension,2)
 1. Exaggerate the amount of hair on display. 
 2. Underscore the significance of hair in the hippie movement. (Correct)
 3. Hyperbolize the cultural impact of hippie hair on modern gender norms.
 4. Cast reasonable doubt on the humanized accounts of the Hippie hair movement.
-The author's description of hippie fashion as "conspicuous thrift" (paragraph 2) suggests that: (Reasoning Within the Text,2)
+The author's description of hippie fashion as "conspicuous thrift" [paragraph 2] suggests that: (Reasoning Within the Text,2)
 1. Hippies were primarily concerned with saving money on clothing.
 2. The apparent poverty of hippie clothing was often carefully cultivated. (Correct)
 3. Hippies rejected all forms of conspicuous behavior in their fashion choices.
@@ -1817,8 +1817,8 @@ The author’s ultimate argument is that: (Foundations of Comprehension,2)
 Based on the passage's explanation of Dante's hierarchy of sins, which of the following sins is considered the most heinous in the eyes of God? (Reasoning Beyond the Text,2)
 1. Stealing from the homeless.
 2. Assassinating a political opponent.
-1. Burning down an enemy village.
-2. Granting miracles for a fee. (Correct)
+3. Burning down an enemy village.
+4. Granting miracles for a fee. (Correct)
 According to the author, what distinguishes the sins of "lower Hell" from those in the upper circles? (Foundations of Comprehension,3)
 1. The severity of physical punishment inflicted.
 2. The conscious choice involved in committing the sin.
@@ -1829,7 +1829,7 @@ Based on the author's interpretation of Dante's Hell, how might one explain the 
 2. Suicide is considered a form of fraud as one robs oneself of life.
 3. Self-destruction is seen as a greater violation of God's versus destroying others. (Correct)
 4. Suicide is viewed as a conscious choice whereas premeditated murder is often accidental. 
-According to the passage, the example of 6ix9ine's lyrics (paragraph 3) is primarily used to illustrate: (Reasoning Within the Text,1)
+According to the passage, the example of 6ix9ine's lyrics [paragraph 3] is primarily used to illustrate: (Reasoning Within the Text,1)
 1. an explanation for the structure of Dante's classification of sins 
 2. the difficulty in distinguishing between wrath and violence. (Correct)
 3. the reliability of intent in determining the severity of a sin.
