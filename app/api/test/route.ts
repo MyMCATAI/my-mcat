@@ -22,8 +22,10 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
     include: { category: true }
   });
   console.log(`Fetched ${knowledgeProfiles.length} knowledge profiles`);
+  
   // Calculate average scores for each concept category and collect content categories
   const conceptCategories: { [key: string]: ConceptCategory & { count: number } } = {};
+  const userContentCategories = new Set<string>();
   knowledgeProfiles.forEach(profile => {
     const { conceptCategory, contentCategory } = profile.category;
     if (!conceptCategories[conceptCategory]) {
@@ -41,6 +43,7 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
     if (!conceptCategories[conceptCategory].contentCategories.includes(contentCategory)) {
       conceptCategories[conceptCategory].contentCategories.push(contentCategory);
     }
+    userContentCategories.add(contentCategory);
   });
 
   // Calculate final average scores and sort categories
@@ -53,19 +56,17 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
     .sort((a, b) => a.averageScore - b.averageScore);
 
   console.log("Sorted concept categories:", sortedConceptCategories);
+  console.log("User content categories:", Array.from(userContentCategories));
 
-  // Collect all content categories
-  const allContentCategories = sortedConceptCategories.reduce((acc, cc) => acc.concat(cc.contentCategories), [] as string[]);
-
-  // Fetch all tests with their questions and categories
+  // Fetch all available tests
   let testQuery: any = {};
-  if (CARSonly) {
+  if (CARSonly && userContentCategories.size > 0) {
     testQuery = {
       questions: {
         some: {
           question: {
             contentCategory: {
-              in: allContentCategories
+              in: Array.from(userContentCategories)
             }
           }
         }
@@ -90,7 +91,36 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
     }
   });
   console.log(`Fetched ${allTests.length} tests`);
-  // Log some information about the fetched tests
+
+  // If no tests were fetched, log a warning and fetch all tests without any filter
+  if (allTests.length === 0) {
+    console.warn("No tests fetched with the initial query. Fetching all available tests.");
+    const allAvailableTests = await prisma.test.findMany({
+      include: {
+        questions: {
+          include: {
+            question: {
+              select: {
+                contentCategory: true
+              }
+            }
+          }
+        }
+      }
+    });
+    console.log(`Fetched ${allAvailableTests.length} tests without filter`);
+    if (allAvailableTests.length === 0) {
+      console.error("No tests available in the database.");
+      return {
+        tests: [],
+        totalPages: 0,
+        currentPage: page,
+        conceptCategories: sortedConceptCategories
+      };
+    }
+    allTests.push(...allAvailableTests);
+  }
+
   // Fetch user's test history
   const userTests = await prisma.userTest.findMany({
     where: { userId },
@@ -104,9 +134,12 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
     const testContentCategories = [...new Set(test.questions.map(q => q.question.contentCategory))];
     
     const relevanceScore = testContentCategories.reduce((score, contentCategory) => {
-      const conceptCategory = sortedConceptCategories.find(cc => cc.contentCategories.includes(contentCategory));
-      return score + (1 - (conceptCategory?.averageScore || 0)); // Higher score for lower mastery
-    }, 0) / testContentCategories.length;
+      if (userContentCategories.has(contentCategory)) {
+        const conceptCategory = sortedConceptCategories.find(cc => cc.contentCategories.includes(contentCategory));
+        return score + (1 - (conceptCategory?.averageScore || 0)); // Higher score for lower mastery
+      }
+      return score;
+    }, 0) / testContentCategories.length || 0; // Default to 0 if no categories match
 
     return {
       ...test,
@@ -114,8 +147,6 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
       taken: takenTestIds.has(test.id)
     };
   });
-
-  console.log(`Calculated relevance scores for ${testsWithRelevance.length} tests`);
 
   // Sort tests: untaken tests first (by relevance score), then taken tests (by relevance score)
   const sortedTests = testsWithRelevance
@@ -125,8 +156,6 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
       if (!b.taken) return 1;
       return b.relevanceScore - a.relevanceScore;
     });
-
-  console.log(`Sorted ${sortedTests.length} tests`);
 
   // Apply pagination
   const paginatedTests = sortedTests.slice(skip, skip + pageSize);
@@ -141,7 +170,6 @@ async function getOrderedTests(userId: string, page: number, pageSize: number, C
     conceptCategories: sortedConceptCategories
   };
 }
-
 
 export async function GET(req: Request) {
   console.log("GET request tests");
@@ -159,6 +187,8 @@ export async function GET(req: Request) {
     const testId = searchParams.get('id');
     const isDiagnostic = searchParams.get('diagnostic') === 'true';
     const CARSonly = searchParams.get('CARSonly') === 'true';
+
+    console.log("Request parameters:", { page, pageSize, testId, isDiagnostic, CARSonly });
 
     if (isDiagnostic) {
       return new NextResponse(JSON.stringify({ testId: 'clzikfkwt0000b3k9qtcfz7ko' }), { 
@@ -188,20 +218,23 @@ export async function GET(req: Request) {
       });
 
       if (!test) {
+        console.log(`Test not found for id: ${testId}`);
         return new NextResponse(JSON.stringify({ error: "Test not found" }), { 
           status: 404,
           headers: { 'Content-Type': 'application/json' }
         });
       }
 
+      console.log(`Returning test with id: ${testId}`);
       return new NextResponse(JSON.stringify(test), { 
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       });
     } else {
+      console.log("Calling getOrderedTests");
       const testsData = await getOrderedTests(userId, page, pageSize, CARSonly);
 
-      console.log(testsData);
+      console.log("Tests data:", JSON.stringify(testsData, null, 2));
       return new NextResponse(JSON.stringify(testsData), { 
         status: 200,
         headers: { 'Content-Type': 'application/json' }

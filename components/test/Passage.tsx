@@ -2,16 +2,12 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle } from "rea
 import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFromRaw, DraftHandleValue, KeyBindingUtil, getDefaultKeyBinding, ContentBlock } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import styles from './Passage.module.css';
+import type { Passage } from '@/types';
 
 
 interface PassageProps {
-  passageData: PassageData;
+  passageData: Passage;
   onNote?: (text: string) => void;
-}
-export interface PassageData {
-  id: string;
-  text: string;
-  citation: string;
 }
 
 const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps>(({ 
@@ -127,7 +123,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     <div className="bg-[#ffffff] h-[80vh] flex flex-col font-serif text-lg">
       <div className="sticky top-0 bg-white p-4 z-10">
         <h1 className="text-black font-serif text-1xl font-bold">
-          Passage {passageData.id}
+          {passageData.title}
         </h1>
       </div>
       <div className="bg-[#ffffff] flex-grow overflow-auto p-4">
