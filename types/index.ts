@@ -6,6 +6,7 @@ export interface Passage {
   id: string;
   text: string;
   citation: string;
+  title: string
 }
 
 export interface Category {

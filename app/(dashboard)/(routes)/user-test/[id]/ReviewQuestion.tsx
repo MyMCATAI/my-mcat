@@ -5,12 +5,12 @@ import { ChevronDown, ChevronUp, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PassageData } from '@/components/test/Passage';
 import InlineChatbot from '@/components/chatbot/InlineChatbot';
+import { Passage } from '@/types';
 
 interface ReviewQuestionComponentProps {
   question?: Question;
-  passageData?: PassageData;
+  passageData?: Passage;
   userResponse: UserResponse;
   onNext: () => void;
   onPrevious: () => void;
