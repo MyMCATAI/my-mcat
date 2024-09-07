@@ -262,22 +262,18 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
             }}
           >
             <h3 className="text-m font-semibold mt-3 mb-2 text-center font-mono" style={{ color: 'var(--theme-text-color)' }}>CARs Tests</h3>
-            {loading ? (
-              <div>Loading...</div>
-            ) : (
-              <Tabs defaultValue="upcoming" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-                  <TabsTrigger value="past">Past Tests</TabsTrigger>
-                </TabsList>
-                <TabsContent value="upcoming">
-                  <TestList items={tests} type="upcoming" />
-                </TabsContent>
-                <TabsContent value="past">
-                  <TestList items={userTests} type="past" />
-                </TabsContent>
-              </Tabs>
-            )}
+            <Tabs defaultValue="upcoming" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                <TabsTrigger value="past">Past Tests</TabsTrigger>
+              </TabsList>
+              <TabsContent value="upcoming">
+                <TestList items={tests} type="upcoming" loading={loading} />
+              </TabsContent>
+              <TabsContent value="past">
+                <TestList items={userTests} type="past" loading={loading} />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>
