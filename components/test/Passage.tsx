@@ -2,16 +2,12 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle } from "rea
 import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFromRaw, DraftHandleValue, KeyBindingUtil, getDefaultKeyBinding, ContentBlock } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import styles from './Passage.module.css';
+import type { Passage } from '@/types';
 
 
 interface PassageProps {
-  passageData: PassageData;
+  passageData: Passage;
   onNote?: (text: string) => void;
-}
-export interface PassageData {
-  id: string;
-  text: string;
-  citation: string;
 }
 
 const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps>(({ 
