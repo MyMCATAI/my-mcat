@@ -6,14 +6,14 @@ const Page = () => {
   useEffect(() => {
     const script = document.createElement('script');
     script.src = "https://app.termly.io/embed-policy.min.js";
-    script.async = true;
     script.id = 'termly-jssdk';
+    script.async = true;
     document.body.appendChild(script);
 
     return () => {
       const scriptElement = document.getElementById('termly-jssdk');
-      if (scriptElement && scriptElement.parentNode) {
-        scriptElement.parentNode.removeChild(scriptElement);
+      if (scriptElement) {
+        document.body.removeChild(scriptElement);
       }
     };
   }, []);
@@ -21,7 +21,7 @@ const Page = () => {
   return (
     <div 
       data-name="termly-embed" 
-      data-id="356021de-5551-452f-b78c-27c35c12d4ec"
+      data-id="bbaa0360-e283-49d9-b273-19f54d765254"
     ></div>
   );
 };
