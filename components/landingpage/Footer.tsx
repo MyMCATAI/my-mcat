@@ -1,5 +1,5 @@
 import React from "react";
-import logo from "../../public/logo2.png";
+import logo from "../../public/cupcakelearninglogo.png";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
@@ -23,6 +23,9 @@ const Footer = () => {
       links: [
         { href: "/privacypolicy", text: "Privacy Policy" },
         { href: "/termsandconditions", text: "Terms & Conditions" },
+        { href: "/acceptableuse", text: "Acceptable Use" },
+        { href: "/cookiepolicy", text: "Cookie Policy" },
+        { href: "/disclaimer", text: "Disclaimer" },
       ],
     },
   ];
@@ -88,21 +91,17 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-black ">
-      <div className="mx-auto max-w-screen-xl py-6 ">
+    <footer className="bg-black">
+      <div className="mx-auto max-w-screen-xl py-6 px-4 sm:px-6 lg:px-8">
         <div
           className="block lg:flex justify-between"
           style={{ padding: "16px 0" }}
         >
           <div className="mb-6 md:mb-0">
-            <a href="#" className="flex items-center">
-              <div className="flex items-center justify-center">
-                <div className="">
-                 {/*<Image src={logo} alt="Logo" className="w-full mr-4" width={64} height={64}/>*/}
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-white text-2xl font">MyMCAT.ai</span>
-                </div>
+            <a href="#" className="flex flex-col items-center">
+              <p className="text-white text-medium mb-4">MyMCAT is brought to you by:</p>
+              <div className="w-[15vh] sm:w-[18vh] md:w-[24vh] lg:w-[28vh] pl-6">
+                <Image src={logo} alt="Logo" className="w-full h-auto"/>
               </div>
             </a>
           </div>
@@ -130,7 +129,7 @@ const Footer = () => {
           <span className="text-md text-gray-400 sm:text-center">
             © 2024{" "}
             <a href="#" className="hover:underline ">
-              MyStudy
+              Cupcake Learning Inc
             </a>
             . All Rights Reserved.
           </span>

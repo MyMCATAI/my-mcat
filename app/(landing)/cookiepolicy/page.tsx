@@ -12,8 +12,8 @@ const Page = () => {
 
     return () => {
       const scriptElement = document.getElementById('termly-jssdk');
-      if (scriptElement && scriptElement.parentNode) {
-        scriptElement.parentNode.removeChild(scriptElement);
+      if (scriptElement) {
+        document.body.removeChild(scriptElement);
       }
     };
   }, []);
@@ -21,7 +21,11 @@ const Page = () => {
   return (
     <div 
       data-name="termly-embed" 
-      data-id="356021de-5551-452f-b78c-27c35c12d4ec"
+      data-id="db28699d-6ab1-478a-810e-eff7605c7808"
+      style={{
+        color: 'white',
+        paddingTop: '2rem',
+      }}
     ></div>
   );
 };

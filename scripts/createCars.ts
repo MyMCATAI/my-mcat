@@ -9,7 +9,6 @@ const prisma = new PrismaClient();
 
 interface Passage {
   title: string;
-  description: string;
   citation: string;
   content: string;
   difficulty: number;
@@ -166,7 +165,6 @@ function extractQuestionInfo(questionText: string): { cleanedText: string; conce
 async function createPassage(
     title: string,
     difficulty: number,
-    description: string,
     citation: string,
     text: string
   ): Promise<string> {
@@ -185,7 +183,6 @@ async function createPassage(
       data: {
         id: title.toLowerCase().replace(/\s+/g, '_'),
         title,
-        description,
         citation,
         text,
         difficulty,
@@ -326,7 +323,6 @@ async function createPassage(
         const passageId = await createPassage(
           titles[i],
           difficulties[i],
-          descriptions[i],
           citations[i],
           passageTexts[i]
         );
