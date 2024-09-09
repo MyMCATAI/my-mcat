@@ -12,6 +12,7 @@ interface ChatMessage {
 interface InlineChatbotProps {
   context: string;
   onShowExplanations: () => void;
+  onMessageSent: (message: string) => void;
 }
 
 const LoadingDots = () => (
@@ -22,7 +23,7 @@ const LoadingDots = () => (
   </div>
 );
 
-const InlineChatbot: React.FC<InlineChatbotProps> = ({ context, onShowExplanations }) => {
+const InlineChatbot: React.FC<InlineChatbotProps> = ({ context, onShowExplanations, onMessageSent }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [userInput, setUserInput] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -40,6 +41,9 @@ const InlineChatbot: React.FC<InlineChatbotProps> = ({ context, onShowExplanatio
     const newUserMessage: ChatMessage = { role: 'user', content: userInput };
     setChatMessages(prevMessages => [...prevMessages, newUserMessage]);
     setUserInput('');
+
+    // Call onMessageSent with the user's message
+    onMessageSent(`User: ${userInput}`);
 
     try {
       const response = await fetch('/api/conversation', {
@@ -60,10 +64,16 @@ const InlineChatbot: React.FC<InlineChatbotProps> = ({ context, onShowExplanatio
       setChatMessages(prevMessages => [...prevMessages, newAssistantMessage]);
       setThreadId(data.threadId);
 
+      // Call onMessageSent with the assistant's message
+      onMessageSent(`Kalypso: ${data.message}`);
+
       onShowExplanations();
     } catch (error) {
       console.error('Error:', error);
       setChatMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Sorry, there was an error processing your request.' }]);
+      
+      // Call onMessageSent with the error message
+      onMessageSent(`Kalypso: Sorry, there was an error processing your request.`);
     } finally {
       setIsLoading(false);
     }

@@ -53,8 +53,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { message, context, threadId, generateAudio } = body;
 
-    console.log('Received message:', message);
-    if (context) console.log('Received context:', context);
+    console.log('Received message:');
     console.log('Generate audio:', generateAudio);
     if (!userId) {
       console.log('Unauthorized: No userId');

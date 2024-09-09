@@ -22,10 +22,17 @@ const truncateTitle = (title: string | undefined, maxLength: number) => {
   return title;
 };
 
-const getPercentageColor = (percentage: number) => {
+const getReviewProgressColor = (reviewedResponses: number, totalResponses: number) => {
+  const percentage = (reviewedResponses / totalResponses) * 100;
   if (percentage < 50) return "text-red-500";
   if (percentage >= 50 && percentage <= 80) return "text-yellow-500";
   return "text-green-500";
+};
+
+const getDifficultyColor = (difficulty: number) => {
+  if (difficulty < 3) return "text-green-500";
+  if (difficulty >= 3 && difficulty < 4) return "text-yellow-500";
+  return "text-red-500";
 };
 
 const TestList: React.FC<TestListProps> = ({ items, type, loading = false }) => {
@@ -49,7 +56,7 @@ const TestList: React.FC<TestListProps> = ({ items, type, loading = false }) => 
     <div className="w-full space-y-3">
       {items.map((item) => (
         <div key={item.id} className="w-full">
-          <Link href={type === 'past' && 'score' in item ? `/user-test/${item.id}` : `/test/testquestions?id=${item.id}`}>
+          <Link href={type === 'past' && 'reviewedResponses' in item ? `/user-test/${item.id}` : `/test/testquestions?id=${item.id}`}>
             <div className={`flex justify-between items-center bg-transparent border-2 opacity-100 rounded-[15px] px-3 py-2.5 hover:opacity-100 transition-all duration-300 group w-full hover:[background-color:var(--theme-hover-color)] theme-box ${theme}`}
                  style={{ 
                    borderColor: 'var(--theme-border-color)',
@@ -77,8 +84,18 @@ const TestList: React.FC<TestListProps> = ({ items, type, loading = false }) => 
                   )}
                 </h2>
               </div>
-              <h2 className={`text-sm font-medium ${getPercentageColor(type === 'past' && 'score' in item ? item.score || 0 : 0)}`}>
-                {type === 'past' && 'score' in item ? `${item.score || 0}%` : '0%'}
+              <h2 className={`text-sm font-medium ${
+                type === 'past' && 'reviewedResponses' in item && 'totalResponses' in item
+                  ? getReviewProgressColor(item.reviewedResponses, item.totalResponses)
+                  : 'difficulty' in item
+                  ? getDifficultyColor(item.difficulty as number)
+                  : ''
+              }`}>
+                {type === 'past' && 'reviewedResponses' in item && 'totalResponses' in item
+                  ? `${item.reviewedResponses}/${item.totalResponses}`
+                  : 'difficulty' in item
+                  ? `Difficulty: ${item.difficulty}`
+                  : 'N/A'}
               </h2>
             </div>
           </Link>

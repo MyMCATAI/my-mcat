@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ChatBot from "@/components/chatbot/ChatBot";
-import Draggable from 'react-draggable';
+import Draggable, { DraggableEventHandler } from 'react-draggable';
+import Image from 'next/image';
 
 interface ChatbotContext {
   contentTitle: string;
