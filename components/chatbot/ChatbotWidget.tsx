@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ChatBot from "@/components/chatbot/ChatBot";
-import Draggable, { DraggableEventHandler } from 'react-draggable';
+import Draggable from 'react-draggable';
 
 interface ChatbotContext {
   contentTitle: string;
@@ -20,80 +20,64 @@ type KalypsoState = 'wait' | 'talk' | 'end' | 'start';
 
 const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({ 
   chatbotContext, 
-  chatbotWidth = 400, 
+  chatbotWidth = 375, 
   chatbotHeight = 490, 
-  buttonSize = 175,
+  buttonSize = 240,
   backgroundColor,
   isVoiceEnabled
 }) => {
   const [showChatbot, setShowChatbot] = useState<boolean>(false);
   const [kalypsoState, setKalypsoState] = useState<KalypsoState>('wait');
-  const kalypsoRef = useRef<HTMLImageElement>(null);
+  const [kalypsoSrc, setKalypsoSrc] = useState('/kalypsowait.gif');
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isTilted, setIsTilted] = useState(false);
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const clickStartTimeRef = useRef<number | null>(null);
 
-  const switchKalypsoState = (newState: KalypsoState | 'floating'): void => {
-    if (newState === 'floating') {
-      if (kalypsoRef.current) {
-        kalypsoRef.current.src = "/kalypsofloating.gif";
-      }
-    } else {
-      setKalypsoState(newState as KalypsoState);
-      if (kalypsoRef.current) {
-        kalypsoRef.current.src = `/kalypso${newState}.gif`;
-      }
-    }
-  };
-
-  const toggleChatBot = (): void => {
-
-    if (isDragging) return;
-
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    if (!showChatbot) {
-      switchKalypsoState('talk');
-      setShowChatbot(true);
-    } else {
-      setShowChatbot(false);
-      switchKalypsoState('start');
-      timeoutRef.current = setTimeout(() => {
-        switchKalypsoState('wait');
-      }, 5000);
-    }
+  const switchKalypsoState = (newState: KalypsoState): void => {
+    setKalypsoState(newState);
+    setKalypsoSrc(`/kalypso${newState}.gif`);
   };
 
   const handleDragStart = () => {
     dragTimeoutRef.current = setTimeout(() => {
       setIsDragging(true);
-      setIsTilted(true);
-      switchKalypsoState('floating');
-    }, 200);
+      setKalypsoSrc('/kalypsofloating.gif');
+    }, 2000);
   };
 
   const handleDragStop = () => {
     if (dragTimeoutRef.current) {
       clearTimeout(dragTimeoutRef.current);
     }
-    setTimeout(() => {
-      setIsDragging(false);
-      setIsTilted(false);
-      switchKalypsoState(showChatbot ? 'talk' : 'wait');
-    }, 0);
+    setIsDragging(false);
+    if (showChatbot) {
+      switchKalypsoState('end');
+    } else {
+      switchKalypsoState('wait');
+    }
   };
 
-  const handleDrag: DraggableEventHandler = (e, data) => {
-    setPosition({ x: data.x, y: data.y });
-  };
+  const toggleChatBot = (): void => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
 
-  const preventImageDrag = (e: React.DragEvent<HTMLImageElement>) => {
-    e.preventDefault();
+    if (!showChatbot) {
+      setShowChatbot(true); // Immediately show the chatbot
+      switchKalypsoState('talk');
+      timeoutRef.current = setTimeout(() => {
+        switchKalypsoState('end');
+      }, 2000);
+    } else {
+      setShowChatbot(false); // Immediately hide the chatbot
+      switchKalypsoState('start');
+      timeoutRef.current = setTimeout(() => {
+        switchKalypsoState('wait');
+      }, 5000);
+    }
   };
 
   useEffect(() => {
@@ -106,29 +90,37 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
   }, []);
 
   return (
-    <div ref={containerRef} className="fixed inset-0 pointer-events-none z-50">
+    <div className="fixed inset-0 pointer-events-none z-50">
       <Draggable
         position={position}
         onStart={handleDragStart}
-        onDrag={handleDrag}
-        onStop={handleDragStop}
+        onStop={(e, data) => {
+          setPosition({ x: data.x, y: data.y });
+          handleDragStop();
+        }}
+        onDrag={(e, data) => {
+          if (isDragging) {
+            setPosition({ x: data.x, y: data.y });
+          }
+        }}
         bounds="parent"
       >
-        <div className="fixed bottom-6 right-12 flex flex-col items-end pointer-events-auto">
+        <div className="absolute bottom-7 right-8 flex flex-col items-end pointer-events-auto">
           {showChatbot && (
             <div
               className="rounded-lg shadow-lg overflow-hidden mb-4"
               style={{
                 width: chatbotWidth,
                 height: chatbotHeight,
-                boxShadow: '0 0 15px 6px rgba(0, 123, 255, 0.4)',
+                boxShadow: 'var(--theme-box-shadow)',
+                border: '2px solid var(--theme-border-color)',
               }}
             >
               <ChatBot chatbotContext={chatbotContext} width={chatbotWidth} backgroundColor={backgroundColor} isVoiceEnabled={isVoiceEnabled}/>
             </div>
           )}
           <button
-            className="overflow-hidden transition duration-120 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none cursor-move"
+            className="overflow-hidden transition duration-120 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
             onClick={toggleChatBot}
             aria-label={showChatbot ? "Close Chat" : "Open Chat"}
             style={{
@@ -137,14 +129,9 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             }}
           >
             <img
-              ref={kalypsoRef}
-              src="/kalypsowait.gif"
+              src={kalypsoSrc}
               alt="Chat with Kalypso"
-              className="w-full h-full object-cover pointer-events-none transition-transform duration-200"
-              style={{
-                transform: isTilted ? 'rotate(-20deg)' : 'none',
-              }}
-              onDragStart={preventImageDrag}
+              className="w-full h-full object-contain"
             />
           </button>
         </div>

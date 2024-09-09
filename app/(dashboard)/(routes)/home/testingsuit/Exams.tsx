@@ -185,14 +185,14 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                   </div>
                   <div className="flex flex-col items-center w-1/4">
                     <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
-                      <Image src="/game-components/PixelDiamond.png" alt="Diamond" layout="fill" objectFit="contain" className="animate-float animation-delay-400" />
+                      <Image src="/game-components/PixelCupcake.png" alt="Diamond" layout="fill" objectFit="contain" className="animate-float animation-delay-400" />
                     </div>
                     <span className="text-[2vw] sm:text-xs mt-1">{reportData ? reportData.totalQuestionsAnswered : 'N/A'}</span>
                     <span className="text-[2vw] sm:text-xs">questions</span>
                   </div>
                   <div className="flex flex-col items-center w-1/4">
                     <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
-                      <Image src="/game-components/PixelFlex.png" alt="Flex" layout="fill" objectFit="contain" className="animate-float animation-delay-600" />
+                      <Image src="/game-components/PixelBook.png" alt="Flex" layout="fill" objectFit="contain" className="animate-float animation-delay-600" />
                     </div>
                     <span className="text-[2vw] sm:text-xs mt-1">{reportData ? `${reportData.testsCompleted}/${reportData.totalTestsTaken}` : 'N/A'}</span>
                     <span className="text-[2vw] sm:text-xs">tests</span>
@@ -262,16 +262,16 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
             }}
           >
             <h3 className="text-m font-semibold mt-3 mb-2 text-center font-mono" style={{ color: 'var(--theme-text-color)' }}>CARs Tests</h3>
-            <Tabs defaultValue="upcoming" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+            <Tabs defaultValue="past" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-transparent">
                 <TabsTrigger value="past">Past Tests</TabsTrigger>
+                <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
               </TabsList>
-              <TabsContent value="upcoming">
-                <TestList items={tests} type="upcoming" loading={loading} />
-              </TabsContent>
               <TabsContent value="past">
                 <TestList items={userTests} type="past" loading={loading} />
+              </TabsContent>
+              <TabsContent value="upcoming">
+                <TestList items={tests} type="upcoming" loading={loading} />
               </TabsContent>
             </Tabs>
           </div>
