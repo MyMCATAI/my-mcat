@@ -67,10 +67,12 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
         const testsData = await testsResponse.json();
         const reportData = await reportResponse.json();
 
+        // Update this line to use the new structure
         setUserTests(testsData.userTests);
         setReportData(reportData);
 
-        console.log(reportData);
+        console.log('User Tests:', testsData.userTests);
+        console.log('Report Data:', reportData);
       } catch (err) {
         setError('Error fetching data');
         console.error(err);

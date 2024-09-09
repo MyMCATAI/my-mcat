@@ -83,8 +83,44 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
+  useEffect(() => {
+    setShowExplanations(userResponse.isReviewed === true);
+  }, [userResponse]);
 
-  
+  const updateUserResponse = async (newReviewNote: string) => {
+    if (!userResponse.id) return;
+
+    const updatedResponse = {
+      isReviewed: true,
+      reviewNotes: userResponse.reviewNotes 
+        ? `${userResponse.reviewNotes}\n\n${newReviewNote}`
+        : newReviewNote,
+      userTestId: userResponse.userTestId,
+      questionId: userResponse.questionId,
+    };
+
+    try {
+      const response = await fetch('/api/user-test/response', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedResponse),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user response');
+      }
+
+      console.log('User response updated successfully');
+    } catch (error) {
+      console.error('Error updating user response:', error);
+    }
+  };
+
+  const handleMessageSent = (message: string) => {
+    console.log("Message sent:", message);
+    updateUserResponse(message);
+  };
+
   if (!question) return null;
   const options = JSON.parse(question.questionOptions);
   const correctAnswerIndex = 0; // Assuming the correct answer is always the first option
@@ -126,7 +162,11 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
         <h4 className="font-semibold mb-2">Defend your answer:</h4>
         <InlineChatbot 
           context={context}
-          onShowExplanations={() => setShowExplanations(true)}
+          onShowExplanations={() => {
+            setShowExplanations(true);
+            console.log("User's initial response:", userResponse.userAnswer);
+          }}
+          onMessageSent={handleMessageSent}
         />
             <div className="max-h-[400px] overflow-y-auto">
             {showExplanations && (
