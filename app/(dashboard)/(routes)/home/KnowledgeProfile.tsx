@@ -203,7 +203,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
               key={tab.id}
               className={`flex-1 text-[12px] py-1 border border-[#79747E] text-center ${
                 activeTab === tab.id
-                  ? "bg-[--theme-hover-color] text-[--theme-text-color]"
+                  ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
                   : "bg-white text-black"
               }`}
               onClick={() => setActiveTab(tab.id)}

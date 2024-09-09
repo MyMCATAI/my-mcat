@@ -3,16 +3,10 @@ import { useStopwatch } from 'react-timer-hook';
 import PassageComponent from "@/components/test/Passage";
 import QuestionComponent from "@/components/test/Question";
 import { Test, TestQuestion, Passage, Question, UserResponse } from "@/types";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Pencil, Highlighter, Flag } from 'lucide-react';
 import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
 import Link from 'next/link';
+import ScoreDialog from '@/components/ScoreDialog';
 
 interface TestComponentProps {
   testId: string;
@@ -50,6 +44,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   } = useStopwatch({ autoStart: true });
 
   const passageRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
+
+  const [score, setScore] = useState(0);
+  const [timing, setTiming] = useState(0);
+  const [correctAnswer, setCorrectAnswer] = useState(0);
+  const [technique, setTechnique] = useState(0);
 
   useEffect(() => {
     fetchTest();
@@ -317,13 +316,20 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     setIsSubmitting(true);
     if (!userTest) return;
     
-    const score = calculateScore();
-    setFinalScore(score);
+    const calculatedScore = calculateScore();
+    setScore(calculatedScore);
+    
+    // For this example, we're setting dummy values. 
+    // In a real scenario, you'd calculate these based on user performance
+    setTiming(2);
+    setCorrectAnswer(2);
+    setTechnique(3);
+
     try {
       const response = await fetch(`/api/user-test/${userTest.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ score, finishedAt: new Date().toISOString() }),
+        body: JSON.stringify({ score: calculatedScore, finishedAt: new Date().toISOString() }),
       });
 
       if (!response.ok) {
@@ -331,11 +337,10 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       }
 
       setShowScorePopup(true);
-      onTestComplete && onTestComplete(score);
+      onTestComplete && onTestComplete(calculatedScore);
 
     } catch (err) {
       console.error('Error finishing test:', err);
-      // Optionally, show an error message to the user
     } finally {
       setIsSubmitting(false);
     }
@@ -607,27 +612,14 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
      {/* Chatbot */}
      <ChatbotWidget chatbotContext={chatbotContext} />
 
-      <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
-        <DialogContent className="bg-[#0A2540] text-white border border-sky-500">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold text-sky-300">Test Completed!</DialogTitle>
-            <DialogDescription className="text-gray-300">
-              Congratulations on completing the test.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-xl">Your Score: <span className="font-bold text-sky-300">{finalScore.toFixed(2)}%</span></p>
-          </div>
-          <div className="flex justify-end">
-            <button 
-              onClick={() => window.location.href = `/user-test/${userTest?.id}`}
-              className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded"
-            >
-              View Details
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ScoreDialog
+        open={showScorePopup}
+        onOpenChange={setShowScorePopup}
+        score={score}
+        timing={timing}
+        correctAnswer={correctAnswer}
+        technique={technique}
+      />
     </div>
   );
 };

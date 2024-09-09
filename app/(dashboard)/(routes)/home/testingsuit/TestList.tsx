@@ -6,6 +6,7 @@ import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { handleUpdateKnowledgeProfile } from '@/components/util/apiHandlers';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RefreshCw } from 'lucide-react';
 
 interface TestListProps {
   items: (Test | UserTest)[];
@@ -46,11 +47,6 @@ const TestList: React.FC<TestListProps> = ({ items, type, loading = false }) => 
 
   return (
     <div className="w-full space-y-3">
-      {type === 'upcoming' && (
-        <Button className="w-full mb-3" onClick={handleUpdateKnowledgeProfile}>
-          Regenerate
-        </Button>
-      )}
       {items.map((item) => (
         <div key={item.id} className="w-full">
           <Link href={type === 'past' && 'score' in item ? `/user-test/${item.id}` : `/test/testquestions?id=${item.id}`}>
@@ -88,6 +84,15 @@ const TestList: React.FC<TestListProps> = ({ items, type, loading = false }) => 
           </Link>
         </div>
       ))}
+      {type === 'upcoming' && (
+        <div 
+          className="flex items-center justify-center mt-3 text-sm cursor-pointer text-muted-foreground hover:text-primary transition-colors"
+          onClick={handleUpdateKnowledgeProfile}
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          <span>Regenerate</span>
+        </div>
+      )}
     </div>
   );
 };

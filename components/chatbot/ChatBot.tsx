@@ -19,7 +19,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   chatbotContext, 
   isVoiceEnabled = false, 
   width = '100%',
-  backgroundColor = '#033979'
+  backgroundColor = 'white'
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -150,7 +150,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
           </div>
           <button 
             onClick={toggleAudio}
-            className="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            className="px-2 py-1 text-sm bg-blue-500 text-black rounded hover:bg-blue-600 transition-colors"
           >
             {audioEnabled ? '🔊' : '🔇'}
           </button>
@@ -176,12 +176,12 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       backgroundColor: backgroundColor,
       inlineSize: width,
     },
-    botBubbleStyle: {fontSize: "16px", fontFamily: "Consolas, monospace", color: "#aec8e8"},
-    userBubbleStyle: {fontSize: "16px", fontFamily: "Consolas, monospace"},
-    headerStyle: {background: backgroundColor},
+    botBubbleStyle: {fontSize: "14px", fontFamily: "Consolas, monospace", color: 'white', backgroundColor: 'var(--theme-botchatbox-color)'},
+    userBubbleStyle: {fontSize: "14px", fontFamily: "Consolas, monospace", color: 'white', backgroundColor: 'var(--theme-userchatbox-color)'},
+    headerStyle: {background: 'var(--theme-hover-color)'},
   };
 
-  const themes = [{ id: "terminal", version: "0.1.0" }];
+  const themes = [{ id: "simple_blue", version: "0.1.0" }];
 
   if (!isMounted) {
     return null; // or a loading spinner
