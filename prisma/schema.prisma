@@ -121,6 +121,7 @@ model UserResponse {
   timeSpent  Float?
   weighting  Float @default(1)
   userNotes  String?   @db.Text
+  reviewNotes String?  @db.Text
   answeredAt DateTime  @default(now())
   isReviewed Boolean?  @default(false)
   userTest   UserTest? @relation(fields: [userTestId], references: [id])
