@@ -48,7 +48,7 @@ body :root {
 @layer base {
   :root {
     /* CyberSpace theme variables (default) */
-    --theme-box-shadow: 0 0 8px 2px rgba(0, 123, 255, 0.5), inset 0 0 15px rgba(0, 0, 246, 0.7);
+    --theme-box-shadow: 0 0 8px 2px #007bff80, inset 0 0 15px rgba(0, 0, 246, 0.7);
     --theme-interface-image: url('/circuitpattern2.png');
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -79,14 +79,16 @@ body :root {
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
-    --cyberspace-box-shadow: 0 0 8px 2px rgba(0, 123, 255, 0.5), inset 0 0 15px rgba(0, 0, 246, 0.7);
+    --theme-box-shadow: 0 0 8px 2px rgba(0, 123, 255, 0.5), inset 0 0 15px rgba(0, 0, 246, 0.7);
     --theme-mainbox-color: #001226;
     --theme-gradient-start: rgba(0, 0, 0, 0.9);
     --theme-gradient-end: rgba(0, 18, 38, 0.9);
     --theme-text-color: white;
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
-    --theme-hover-color: #ffffff;
-    --theme-hover-text: #000000;
+    --theme-hover-color: #3b82f6;
+    --theme-userchatbox-color: #007afc;
+    --theme-botchatbox-color: #001226;
+    --theme-hover-text: #ffffff;
     --theme-border-color: #3b82f6; /* This is the default blue color */
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
     --svg-invert: 0;
@@ -220,24 +222,26 @@ body :root {
 /* Sakura Trees theme */
 .theme-sakuraTrees {
   /* Sakura Trees theme variables */
-  --theme-box-shadow: 0 0 8px 3px rgba(15,64,50,0.5), inset 0 0 20px rgba(70,127,65, 0.659);
+  --theme-box-shadow: 0 0 10px 3px rgba(113, 30, 95, 0.5), inset 0 0 10px rgba(127, 65, 99, 0.659);
   --theme-interface-image: url('/sakura-pattern.png');
   --theme-mainbox-color: rgb(252, 245, 244); /* Light pink color for Sakura theme */
   --theme-gradient-start: rgba(252, 245, 244, 0.85);
   --theme-gradient-end: rgba(252, 245, 244, 0.85);
   --theme-text-color: black;
   --theme-svg-color: #000000; /* Black for SakuraTrees theme */
-  --theme-hover-color: #79b481;
+  --theme-hover-color: #b479ab;
+  --theme-botchatbox-color: #951d83;
+  --theme-userchatbox-color: #007afc;
   --theme-hover-text: #ffffff;
   --theme-svg-color: #000000; /* Black for SakuraTrees theme */
-  --theme-border-color: #a3cf81; /* Light pink border color for Sakura theme */
+  --theme-border-color: #cf81bf; /* Light pink border color for Sakura theme */
   --svg-invert: 1;
 }
 
 /* Add theme-specific gradients */
 .theme-sakuraTrees .gradientbg {
   background: rgba(255, 197, 205, 0.9);
-  background: linear-gradient(0deg, rgb(255, 235, 232,0.80) 0%, rgb(255, 235, 232,0.88) 100%);
+  background: linear-gradient(0deg, hsla(316, 48%, 77%, 0.8) 0%, #fbdaeae0 100%);
 }
 
 /* ... rest of your CSS ... */

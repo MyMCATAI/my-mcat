@@ -33,9 +33,8 @@ const DashboardLayoutContent = ({
     checkProStatus();
 
     const updateBackgroundImage = () => {
-      const isLargeScreen = window.innerWidth >= 1920;
       if (theme === 'sakuraTrees') {
-        setBackgroundImage(isLargeScreen ? 'url(/sakuratreesbackground.png)' : 'url(/sakuratreesbackgroundsmall.png)');
+        setBackgroundImage('url(/sakuratreesbackground.png)');
       } else {
         setBackgroundImage('url(/vaporandnightbackground.png)');
       }
