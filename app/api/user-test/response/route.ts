@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes, weighting } = body;
+    const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes, weighting, reviewNotes, isReviewed } = body;
 
     // Validate required fields
     const missingFields = [];
@@ -44,9 +44,11 @@ export async function POST(req: Request) {
       categoryId: question.categoryId,
       userAnswer,
       isCorrect,
-      weighting,
-      timeSpent: timeSpent || undefined,
-      userNotes: userNotes || undefined,
+      weighting: weighting || 1,
+      timeSpent: timeSpent || null,
+      userNotes: userNotes || null,
+      reviewNotes: reviewNotes || null,
+      isReviewed: isReviewed || false,
       answeredAt: new Date(),
     };
 
@@ -128,7 +130,7 @@ export async function PUT(req: Request) {
 
   try {
     const body = await req.json();
-    const { userTestId, questionId, userNotes } = body;
+    const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes, weighting, reviewNotes, isReviewed } = body;
 
     // Validate required fields
     if (!userTestId || !questionId) {
@@ -150,13 +152,27 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Response not found" }, { status: 404 });
     }
 
-    // Update the response, focusing on userNotes
+    // Prepare the update data
+    const updateData: any = {
+      userAnswer: userAnswer || existingResponse.userAnswer,
+      isCorrect: isCorrect !== undefined ? isCorrect : existingResponse.isCorrect,
+      timeSpent: timeSpent !== undefined ? timeSpent : existingResponse.timeSpent,
+      userNotes: userNotes !== undefined ? userNotes : existingResponse.userNotes,
+      weighting: weighting !== undefined ? weighting : existingResponse.weighting,
+      isReviewed: isReviewed !== undefined ? isReviewed : existingResponse.isReviewed,
+    };
+
+    // Append review notes if provided
+    if (reviewNotes !== undefined) {
+      updateData.reviewNotes = existingResponse.reviewNotes
+        ? `${existingResponse.reviewNotes}\n\n${reviewNotes}`
+        : reviewNotes;
+    }
+
+    // Update the response with all fields
     const updatedResponse = await prisma.userResponse.update({
       where: { id: existingResponse.id },
-      data: {
-        userNotes: userNotes,
-        // You can add more fields here if needed in the future
-      },
+      data: updateData,
       include: {
         question: true,
         userTest: true,
