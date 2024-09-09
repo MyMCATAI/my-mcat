@@ -92,7 +92,7 @@ const TestList: React.FC<TestListProps> = ({ items, type, loading = false }) => 
                 type === 'past' && 'reviewedResponses' in item && 'totalResponses' in item
                   ? getReviewProgressColor(item.reviewedResponses, item.totalResponses)
                   : 'difficulty' in item
-                  ? getDifficultyColor(item.difficulty)
+                  ? getDifficultyColor(item.difficulty as number)
                   : ''
               }`}>
                 {type === 'past' && 'reviewedResponses' in item && 'totalResponses' in item
