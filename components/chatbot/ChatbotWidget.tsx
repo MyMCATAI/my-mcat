@@ -141,8 +141,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
               ref={kalypsoRef}
               src="/kalypsowait.gif"
               alt="Chat with Kalypso"
-              width={buttonSize}
-              height={buttonSize}
+              width={Number(buttonSize)}
+              height={Number(buttonSize)}
               className="w-full h-full object-cover pointer-events-none transition-transform duration-200"
               style={{
                 transform: isTilted ? 'rotate(-20deg)' : 'none',
