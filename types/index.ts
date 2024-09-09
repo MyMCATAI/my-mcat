@@ -54,6 +54,8 @@ export interface UserResponse {
   userNotes?: string | null; 
   answeredAt?: Date;
   userTest?: UserTest | null;
+  reviewNotes?: string | null;
+  isReviewed?: Boolean | null;
 }
 
 export interface UserTest {
@@ -65,6 +67,8 @@ export interface UserTest {
   finishedAt?: Date;
   score?: number;
   responses: UserResponse[];
+  totalResponses: number;
+  reviewedResponses: number;
 }
 
 export interface Test {

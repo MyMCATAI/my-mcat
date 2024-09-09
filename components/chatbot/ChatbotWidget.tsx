@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ChatBot from "@/components/chatbot/ChatBot";
 import Draggable, { DraggableEventHandler } from 'react-draggable';
+import Image from 'next/image';
 
 interface ChatbotContext {
   contentTitle: string;
@@ -136,10 +137,12 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
               height: buttonSize,
             }}
           >
-            <img
+            <Image
               ref={kalypsoRef}
               src="/kalypsowait.gif"
               alt="Chat with Kalypso"
+              width={buttonSize}
+              height={buttonSize}
               className="w-full h-full object-cover pointer-events-none transition-transform duration-200"
               style={{
                 transform: isTilted ? 'rotate(-20deg)' : 'none',

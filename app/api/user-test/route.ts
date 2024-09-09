@@ -45,11 +45,20 @@ export async function GET(req: NextRequest) {
       } 
     });
 
+    const userTestsWithCounts = await Promise.all(userTests.map(async (test) => {
+      const totalResponses = test.responses.length;
+      const reviewedResponses = test.responses.filter(response => response.isReviewed).length;
+
+      const { responses, ...testWithoutResponses } = test;
+      return {
+        ...testWithoutResponses,
+        totalResponses,
+        reviewedResponses
+      };
+    }));
+
     return NextResponse.json({
-      userTests: userTests.map(test => {
-        const { responses, ...testWithoutResponses } = test;
-        return testWithoutResponses;
-      }),
+      userTests: userTestsWithCounts,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(totalCount / limit),

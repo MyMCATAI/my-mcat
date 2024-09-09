@@ -53,6 +53,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   useEffect(() => {
     fetchTest();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testId]);
 
   useEffect(() => {
@@ -74,6 +75,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       }
     }
     reset();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, test]);
 
   const fetchTest = async () => {
@@ -380,6 +382,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm considering is: ${currentQuestion?.questionContent}\n\nOnly refer to this if I ask about what I'm currently studying.`
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPassage, currentQuestionIndex]);
 
   const handleHighlight = () => {
