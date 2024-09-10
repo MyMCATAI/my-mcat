@@ -92,37 +92,8 @@ body :root {
     --theme-border-color: #3b82f6; /* This is the default blue color */
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
     --theme-leaguecard-color:#001226;
+    --theme-navbutton-color: #001226;
     --svg-invert: 0;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
   }
 
   @import "../styles/themes/cyberSpace.css";
@@ -237,6 +208,7 @@ body :root {
   --theme-svg-color: #000000; /* Black for SakuraTrees theme */
   --theme-border-color: #cf81bf; /* Light pink border color for Sakura theme */
   --theme-leaguecard-color:#ffffff; /* Light pink color for Sakura theme */
+  --theme-navbutton-color: #85004b;
   --svg-invert: 1;
 }
 

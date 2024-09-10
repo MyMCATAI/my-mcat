@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useProModal } from "@/hooks/use-pro-modal";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { FaLinkedin, FaInstagram } from 'react-icons/fa';
 
 export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
   const pathname = usePathname();
@@ -72,33 +73,33 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
           </div>
           <span
             ref={ballerSectionRef}
-            className="flex items-start h-full bg-[#052c5c] opacity-80"
+            className="flex items-start h-full gradientbg"
             style={{
-              clipPath:
-                "polygon(100% 0%, 100% 51%, 100% 73%, 18% 72%, 11% 48%, 0 0)",
+              clipPath: "polygon(100% 0%, 100% 51%, 100% 73%, 18% 72%, 11% 48%, 0 0)",
+              opacity: 1, // Remove opacity here if using gradientbg
               transform: "translateY(3px)",
             }}
           >
-            <p className="text-white ms-12 mt-4 pr-1 text-sm">
+            <p className="ms-12 mt-5 pr-1 text-xs" style={{ color: 'var(--theme-text-color)' }}>
               designed by <br />&nbsp;&nbsp;&nbsp;&nbsp;a certified baller
             </p>
-            <div className="mt-6">
-              <Image
-                src="/linkedin.svg"
-                className="mx-3"
-                alt="Kalypso Education"
-                width={25}
-                height={25}
+            <div className="mt-6 mx-3">
+              <FaLinkedin 
+                size={25} 
+                className="transition-colors duration-200 hover:fill-[var(--theme-hover-color)]"
+                style={{
+                  color: 'var(--theme-text-color)',
+                }}
               />
             </div>
-            <div className="mt-5">
+            <div className="mt-5 mx-2">
               <Link href="https://www.instagram.com/an0thermanicmonday/" target="_blank" rel="noopener noreferrer">
-                <Image
-                  src="/insta.svg"
-                  className="mx-2 bg-[#007AFF] p-1 rounded-lg cursor-pointer"
-                  alt="Instagram"
-                  width={30}
-                  height={30}
+                <FaInstagram 
+                  size={30} 
+                  className="transition-colors duration-200 hover:fill-[var(--theme-hover-color)]"
+                  style={{
+                    color: 'var(--theme-text-color)',
+                  }}
                 />
               </Link>
             </div>
