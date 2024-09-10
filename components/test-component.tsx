@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, forwardRef } from "react";
 import { useStopwatch } from 'react-timer-hook';
 import PassageComponent from "@/components/test/Passage";
 import QuestionComponent from "@/components/test/Question";
@@ -7,6 +7,7 @@ import { Pencil, Highlighter, Flag } from 'lucide-react';
 import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
 import Link from 'next/link';
 import ScoreDialog from '@/components/ScoreDialog';
+import TestHeader, { TestHeaderRef } from '@/components/test/TestHeader';
 
 interface TestComponentProps {
   testId: string;
@@ -36,20 +37,15 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     contentTitle: "",
     context: ""
   });
-  const {
-    seconds,
-    minutes,
-    hours,
-    reset,
-  } = useStopwatch({ autoStart: true });
 
   const passageRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
+  const testHeaderRef = useRef<TestHeaderRef>(null);
 
   const [score, setScore] = useState(0);
   const [timing, setTiming] = useState(0);
   const [correctAnswer, setCorrectAnswer] = useState(0);
   const [technique, setTechnique] = useState(0);
-
+  
   useEffect(() => {
     fetchTest();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,7 +69,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         setCurrentPassage(null);
       }
     }
-    reset();
+    testHeaderRef.current?.reset();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, test]);
 
@@ -120,10 +116,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       }
     }
   };
-
   const handleUserResponse = async (questionId: string, userAnswer: string, isCorrect: boolean) => {
     let currentUserTest = userTest;
-
     if (!testCreated) {
       currentUserTest = await createUserTest();
       if (!currentUserTest) {
@@ -138,7 +132,21 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       return;
     }
 
-    const timeSpent = hours * 3600 + minutes * 60 + seconds;
+    const timeSpent = testHeaderRef.current?.getElapsedTime() || 0;
+    const currentQuestion = getCurrentQuestion();
+    if (!currentQuestion) {
+      console.error("No current question found");
+      return;
+    }
+
+    const timestamp = new Date().toISOString();
+    const formattedAction = `[${timestamp}] - Answered: "${userAnswer}" (${isCorrect ? 'Correct' : 'Incorrect'})`;
+
+    const existingResponse = getCurrentUserResponse(questionId);
+    let updatedUserNotes = formattedAction;
+    if (existingResponse?.userNotes) {
+      updatedUserNotes = `${existingResponse.userNotes}\n${formattedAction}`;
+    }
 
     const optimisticResponse: UserResponse = {
       id: `temp-${questionId}`,
@@ -147,6 +155,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       userAnswer,
       isCorrect,
       timeSpent,
+      userNotes: updatedUserNotes,
       answeredAt: new Date(),
     };
 
@@ -160,6 +169,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       [questionId]: optimisticResponse.id
     }));
 
+    console.log("User Response:", userAnswer);
+    console.log("Is Correct:", isCorrect);
     try {
       const response = await fetch('/api/user-test/response', {
         method: 'POST',
@@ -170,12 +181,19 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           userAnswer,
           isCorrect,
           timeSpent,
+          userNotes: updatedUserNotes,
           answeredAt: new Date().toISOString(),
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to save user response');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        throw new Error(`Failed to save user response: ${response.status} ${response.statusText}`);
+      }
+
       const savedResponse: UserResponse = await response.json();
+      console.log("Saved response:", savedResponse);
 
       setUserResponses(prev => ({
         ...prev,
@@ -192,9 +210,13 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         return rest;
       });
 
-      // Log the answer
-      await saveAnswerLog(currentUserTest.id, questionId, userAnswer, isCorrect);
+      // Update chatbot context
+      setChatbotContext(prevContext => ({
+        ...prevContext,
+        context: `${prevContext.context}\n\nI just answered this question: "${currentQuestion.questionContent}"\nMy answer was: "${userAnswer}" (${isCorrect ? 'Correct' : 'Incorrect'})`
+      }));
 
+      console.log('Answer log appended and context updated successfully');
     } catch (err) {
       console.error('Error saving user response:', err);
       setPendingResponses(prev => {
@@ -205,81 +227,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         const { [questionId]: _, ...rest } = prev;
         return rest;
       });
-    }
-  };
-
-  // Note to future Josh: this is super messy and spaghetti, you need to organize this all at some point. get rekt idiot 
-  // - past Josh
-
-  const saveAnswerLog = async (userTestId: string, questionId: string, userAnswer: string, isCorrect: boolean) => {
-    console.log("Starting saveAnswerLog function");
-  
-    const currentQuestion = getCurrentQuestion();
-    console.log("Current question:", currentQuestion);
-    if (!currentQuestion) {
-      console.error("No current question found");
-      return;
-    }
-  
-    const existingResponse = getCurrentUserResponse(questionId);
-    console.log("Existing response:", existingResponse);
-    const timeSpent = hours * 3600 + minutes * 60 + seconds;
-  
-    const timestamp = new Date().toISOString();
-    const formattedAction = `[${timestamp}] - Answered: "${userAnswer}" (${isCorrect ? 'Correct' : 'Incorrect'})`;
-  
-    let updatedUserNotes = formattedAction;
-    if (existingResponse?.userNotes) {
-      updatedUserNotes = `${existingResponse.userNotes}\n${formattedAction}`;
-    }
-  
-    const responseData = {
-      userTestId,
-      questionId,
-      userAnswer: existingResponse?.userAnswer || userAnswer,
-      isCorrect: existingResponse?.isCorrect || isCorrect,
-      timeSpent,
-      userNotes: updatedUserNotes,
-      answeredAt: new Date().toISOString(),
-    };
-  
-    console.log("Response data to be sent:", responseData);
-  
-    try {
-      const response = await fetch('/api/user-test/response', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(responseData),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error response:', errorData);
-        throw new Error(`Failed to save user response: ${response.status} ${response.statusText}`);
-      }
-  
-      const savedResponse: UserResponse = await response.json();
-      console.log("Saved response:", savedResponse);
-  
-      setUserResponses(prev => ({
-        ...prev,
-        [savedResponse.id]: savedResponse
-      }));
-  
-      setQuestionIdToResponseId(prev => ({
-        ...prev,
-        [questionId]: savedResponse.id
-      }));
-  
-      // Update chatbot context
-      setChatbotContext(prevContext => ({
-        ...prevContext,
-        context: `${prevContext.context}\n\nI just answered this question: "${currentQuestion.questionContent}"\nMy answer was: "${userAnswer}" (${isCorrect ? 'Correct' : 'Incorrect'})`
-      }));
-  
-      console.log('Answer log appended and context updated successfully');
-    } catch (err) {
-      console.error('Error saving user response:', err);
     }
   };
 
@@ -354,7 +301,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   };
 
   const getCurrentQuestion = (): Question | null => {
-    console.log("get current question")
     const currentTestQuestion = getCurrentTestQuestion();
     return currentTestQuestion?.question || null;
   };
@@ -362,19 +308,18 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const handleNextQuestion = () => {
     if (test && currentQuestionIndex < test.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-      reset(); // Reset the timer when moving to the next question
+      testHeaderRef.current?.reset();
     }
   };
 
   const handlePreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
-      reset(); // Reset the timer when moving to the previous question
+      testHeaderRef.current?.reset();
     }
   };
 
   const getCurrentUserResponse = useCallback((questionId: string): UserResponse | undefined => {
-    console.log("getCurrentUserResponse")
     const responseId = questionIdToResponseId[questionId];
     return userResponses[responseId] || pendingResponses[questionId];
   }, [questionIdToResponseId, userResponses, pendingResponses]);
@@ -431,7 +376,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
     const existingResponse = getCurrentUserResponse(currentQuestion.id);
     console.log("Existing response:", existingResponse);
-    const timeSpent = hours * 3600 + minutes * 60 + seconds;
+    const timeSpent = testHeaderRef.current?.getElapsedTime() || 0;
 
     const timestamp = new Date().toISOString();
     const formattedAction = `[${timestamp}] - ${text}`;
@@ -498,7 +443,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     saveNote(text);
   };
 
-
   const handleFlag = () => {
     setFlashFlag(true);
     // Add your flag logic here
@@ -516,22 +460,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   return (
     <div className="bg-white flex flex-col text-white overflow-hidden h-screen">
-      <div className="bg-[#006dab] p-2 h-15 flex justify-between items-center border-3 border-sky-500">
-        <div className="flex items-center">
-          <h1 className="text-lg font-semibold ml-6">
-            {test?.title}
-            {isCreatingTest && <span className="ml-2 text-sm text-gray-400">Creating test...</span>}
-          </h1>
-        </div>
-        <div className="timer text-sky-300">
-          <span>{hours.toString().padStart(2, '0')}:</span>
-          <span>{minutes.toString().padStart(2, '0')}:</span>
-          <span>{seconds.toString().padStart(2, '0')}</span>
-        </div>
-        <Link href="/home" className="ml-4 px-3 py-1 bg-sky-500 hover:bg-sky-600 text-white rounded transition duration-300">
-            Return Home
-          </Link>
-      </div>
+      <TestHeader
+        ref={testHeaderRef}
+        title={test?.title}
+        isCreatingTest={isCreatingTest}
+      />
       <div className="h-9 border-t-2 border-b-2 border-white bg-[#84aedd] flex items-center justify-between">
         <div className="flex items-center ml-2">
           <button
