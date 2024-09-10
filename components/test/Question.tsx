@@ -1,11 +1,11 @@
-
-// QuestionComponent.tsx
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import { Question } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Highlighter, Pencil, Flag } from "lucide-react";
+import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFromRaw, DraftHandleValue } from 'draft-js';
+import 'draft-js/dist/Draft.css';
 
 interface QuestionsProps {
   question: Question;
@@ -21,7 +21,13 @@ interface QuestionsProps {
   isSubmitting: boolean;
 }
 
-const QuestionComponent: React.FC<QuestionsProps> = ({
+// Seeded random number generator
+function seededRandom(seed: number) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, QuestionsProps>(({
   question,
   onNext,
   onPrevious,
@@ -33,45 +39,169 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
   totalQuestions,
   onFinish,
   isSubmitting,
-}) => {
-  const [randomizedOptions, setRandomizedOptions] = useState<string[]>([]);
+}, ref) => {
   const options = JSON.parse(question.questionOptions);
   const correctAnswer = options[0];
 
+  const [strikedOptions, setStrikedOptions] = useState<Set<number>>(new Set());
+  const [editorState, setEditorState] = useState(() =>
+    EditorState.createWithContent(ContentState.createFromText(question.questionContent))
+  );
+  const [flashHighlight, setFlashHighlight] = useState(false);
+  const [flashStrikethrough, setFlashStrikethrough] = useState(false);
+  const [flashFlag, setFlashFlag] = useState(false);
+
+  const testHeaderRef = useRef(null);
+
   useEffect(() => {
-    setRandomizedOptions([...options].sort(() => Math.random() - 0.5));
+    setStrikedOptions(new Set());
+    const savedContent = typeof window !== 'undefined' ? localStorage.getItem(`question-${question.id}`) : null;
+    if (savedContent) {
+      const content = convertFromRaw(JSON.parse(savedContent));
+      setEditorState(EditorState.createWithContent(content));
+    } else {
+      setEditorState(EditorState.createWithContent(ContentState.createFromText(question.questionContent)));
+    }
   }, [question]);
+
+  useEffect(() => {
+    const content = convertToRaw(editorState.getCurrentContent());
+    localStorage.setItem(`question-${question.id}`, JSON.stringify(content));
+  }, [editorState, question.id]);
+
+  const randomizedOptions = useMemo(() => {
+    const seed = question.id.charCodeAt(question.id.length - 1);
+    return [...options].map((option, index) => ({ option, index }))
+      .sort((a, b) => seededRandom(seed + a.index) - seededRandom(seed + b.index))
+      .map(({ option }) => option);
+  }, [question.id, options]);
 
   const handleAnswerChange = (value: string) => {
     onAnswer(question.id, value, value === correctAnswer);
   };
 
+  const toggleStrikeout = (index: number) => {
+    setStrikedOptions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
+  const applyStyle = (style: string) => {
+    const newState = RichUtils.toggleInlineStyle(editorState, style);
+    setEditorState(newState);
+  };
+
+  useImperativeHandle(ref, () => ({
+    applyStyle
+  }));
+
+  const handleHighlight = () => {
+    applyStyle('HIGHLIGHT');
+    setFlashHighlight(true);
+    setTimeout(() => setFlashHighlight(false), 200);
+  };
+
+  const handleStrikethrough = () => {
+    applyStyle('STRIKETHROUGH');
+    setFlashStrikethrough(true);
+    setTimeout(() => setFlashStrikethrough(false), 200);
+  };
+
+  const handleFlag = () => {
+    // Implement flag functionality here
+    setFlashFlag(true);
+    setTimeout(() => setFlashFlag(false), 200);
+  };
+
+  const handleBeforeInput = (chars: string, editorState: EditorState): DraftHandleValue => {
+    return 'handled';
+  };
+
+  const handlePastedText = (text: string, html: string | undefined, editorState: EditorState): DraftHandleValue => {
+    return 'handled';
+  };
+
   return (
     <div className="flex flex-col items-center px-6 font-serif text-black">
       <div className="w-full max-w-3xl flex flex-col">
-        <h2 className="text-lg mt-2 font-bold mb-4 pt-6">
-          Question {currentQuestionIndex + 1} of {totalQuestions}
-        </h2>
-        <div className="max-h-[70vh] overflow-y-auto mb-4">
-          <p className="text-lg mb-6">{question.questionContent}</p>
+        <div className="flex justify-between items-center mt-2 mb-4 pt-6">
+          <h2 className="text-lg font-bold">
+            Question {currentQuestionIndex + 1} of {totalQuestions}
+          </h2>
+          <div className="flex items-center">
+            <button
+              className={`mr-2 p-2 rounded transition-colors duration-200 ${
+                flashHighlight
+                  ? 'bg-transparent text-yellow-300'
+                  : 'bg-transparent text-black hover:bg-gray-200'
+              }`}
+              onClick={handleHighlight}
+              title="Highlight"
+            >
+              <Highlighter className="w-5 h-5" />
+            </button>
+            <button
+              className={`mr-2 p-2 rounded transition-colors duration-200 ${
+                flashStrikethrough
+                  ? 'bg-transparent text-yellow-300'
+                  : 'bg-transparent text-black hover:bg-gray-200'
+              }`}
+              onClick={handleStrikethrough}
+              title="Strikethrough"
+            >
+              <Pencil className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+        <div className="mb-4">
+          <div className="text-lg mb-6">
+            <Editor
+              editorState={editorState}
+              onChange={setEditorState}
+              customStyleMap={{
+                'HIGHLIGHT': {
+                  background: 'yellow',
+                },
+                'STRIKETHROUGH': {
+                  textDecoration: 'line-through',
+                },
+              }}
+              handleBeforeInput={handleBeforeInput}
+              handlePastedText={handlePastedText}
+            />
+          </div>
           <RadioGroup
             onValueChange={handleAnswerChange}
             value={userAnswer}
             className="space-y-4"
           >
             {randomizedOptions.map((option: string, idx: number) => (
-              <div key={idx} className="flex items-center">
+              <div key={idx} className="flex items-start group relative">
                 <RadioGroupItem
                   value={option}
                   id={`option-${idx}`}
-                  className="mr-3"
+                  className="mr-3 mt-1"
                 />
                 <Label
                   htmlFor={`option-${idx}`}
-                  className="text-lg cursor-pointer flex-grow"
+                  className={`text-lg cursor-pointer flex-grow ${strikedOptions.has(idx) ? 'line-through' : ''}`}
                 >
                   <strong>{String.fromCharCode(65 + idx)}.</strong> {option}
                 </Label>
+                <Button
+                  onClick={() => toggleStrikeout(idx)}
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             ))}
           </RadioGroup>
@@ -107,6 +237,8 @@ const QuestionComponent: React.FC<QuestionsProps> = ({
       </div>
     </div>
   );
-};
+});
+
+QuestionComponent.displayName = 'QuestionComponent';
 
 export default QuestionComponent;
