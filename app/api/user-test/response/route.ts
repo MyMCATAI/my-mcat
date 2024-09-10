@@ -15,11 +15,12 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes, weighting, reviewNotes, isReviewed } = body;
 
+    console.log("userAnswer to be saved:", userAnswer);
+
     // Validate required fields
     const missingFields = [];
     if (!userTestId) missingFields.push('userTestId');
     if (!questionId) missingFields.push('questionId');
-    if (userAnswer === undefined) missingFields.push('userAnswer');
 
     if (missingFields.length > 0) {
       console.log(`Missing required fields: ${missingFields.join(', ')}`);
@@ -37,23 +38,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Question not found" }, { status: 404 });
     }
 
-    const responseData = {
-      userId,
-      userTestId,
-      questionId,
-      categoryId: question.categoryId,
-      userAnswer,
-      isCorrect,
-      weighting: weighting || 1,
-      timeSpent: timeSpent || null,
-      userNotes: userNotes || null,
-      reviewNotes: reviewNotes || null,
-      isReviewed: isReviewed || false,
-      answeredAt: new Date(),
-    };
-
-    console.log("Response data to be saved:", responseData);
-
     // Check if a response for this question already exists
     const existingResponse = await prisma.userResponse.findFirst({
       where: {
@@ -61,6 +45,23 @@ export async function POST(req: Request) {
         questionId,
       },
     });
+
+    let responseData: any = {
+      userId,
+      userTestId,
+      questionId,
+      categoryId: question.categoryId,
+      weighting: weighting || 1,
+      timeSpent: timeSpent !== undefined ? timeSpent : existingResponse?.timeSpent,
+      userNotes: userNotes !== undefined ? userNotes : existingResponse?.userNotes,
+      reviewNotes: reviewNotes !== undefined ? reviewNotes : existingResponse?.reviewNotes,
+      isReviewed: isReviewed !== undefined ? isReviewed : existingResponse?.isReviewed,
+      answeredAt: new Date(),
+    };
+
+    // Only update userAnswer and isCorrect if they are provided
+    if (userAnswer !== undefined) responseData.userAnswer = userAnswer;
+    if (isCorrect !== undefined) responseData.isCorrect = isCorrect;
 
     let savedResponse;
     if (existingResponse) {
@@ -76,6 +77,9 @@ export async function POST(req: Request) {
       });
     } else {
       console.log("Creating new response");
+      // Ensure userAnswer and isCorrect are set for new responses
+      if (userAnswer === undefined) responseData.userAnswer = '';
+      if (isCorrect === undefined) responseData.isCorrect = false;
       savedResponse = await prisma.userResponse.create({
         data: responseData,
         include: {
@@ -86,33 +90,33 @@ export async function POST(req: Request) {
       });
     }
 
-    console.log("Saved response:", savedResponse);
-
     // Update or create KnowledgeProfile
-    await prisma.knowledgeProfile.upsert({
-      where: {
-        userId_categoryId: {
+    if (isCorrect !== undefined) {
+      await prisma.knowledgeProfile.upsert({
+        where: {
+          userId_categoryId: {
+            userId,
+            categoryId: question.categoryId,
+          },
+        },
+        update: {
+          correctAnswers: {
+            increment: isCorrect ? 1 : 0,
+          },
+          totalAttempts: {
+            increment: 1,
+          },
+          lastAttemptAt: new Date(),
+        },
+        create: {
           userId,
           categoryId: question.categoryId,
+          correctAnswers: isCorrect ? 1 : 0,
+          totalAttempts: 1,
+          lastAttemptAt: new Date(),
         },
-      },
-      update: {
-        correctAnswers: {
-          increment: isCorrect ? 1 : 0,
-        },
-        totalAttempts: {
-          increment: 1,
-        },
-        lastAttemptAt: new Date(),
-      },
-      create: {
-        userId,
-        categoryId: question.categoryId,
-        correctAnswers: isCorrect ? 1 : 0,
-        totalAttempts: 1,
-        lastAttemptAt: new Date(),
-      },
-    });
+      });
+    }
 
     return NextResponse.json(savedResponse, { status: 201 });
   } catch (error) {
@@ -154,13 +158,15 @@ export async function PUT(req: Request) {
 
     // Prepare the update data
     const updateData: any = {
-      userAnswer: userAnswer || existingResponse.userAnswer,
-      isCorrect: isCorrect !== undefined ? isCorrect : existingResponse.isCorrect,
       timeSpent: timeSpent !== undefined ? timeSpent : existingResponse.timeSpent,
       userNotes: userNotes !== undefined ? userNotes : existingResponse.userNotes,
       weighting: weighting !== undefined ? weighting : existingResponse.weighting,
       isReviewed: isReviewed !== undefined ? isReviewed : existingResponse.isReviewed,
     };
+
+    // Only update userAnswer and isCorrect if they are provided
+    if (userAnswer !== undefined) updateData.userAnswer = userAnswer;
+    if (isCorrect !== undefined) updateData.isCorrect = isCorrect;
 
     // Append review notes if provided
     if (reviewNotes !== undefined) {
