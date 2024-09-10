@@ -39,6 +39,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   });
 
   const passageRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
+  const questionRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
   const testHeaderRef = useRef<TestHeaderRef>(null);
 
   const [score, setScore] = useState(0);
@@ -338,12 +339,14 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const handleHighlight = () => {
     setFlashHighlight(true);
     passageRef.current?.applyStyle('HIGHLIGHT');
+    questionRef.current?.applyStyle('HIGHLIGHT');
     setTimeout(() => setFlashHighlight(false), 300);
   };
 
   const handleStrikethrough = () => {
     setFlashStrikethrough(true);
     passageRef.current?.applyStyle('STRIKETHROUGH');
+    questionRef.current?.applyStyle('STRIKETHROUGH');
     setTimeout(() => setFlashStrikethrough(false), 300);
   };
  
@@ -524,6 +527,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           <div className="p-4 h-full">
             {currentQuestion && currentTestQuestion ? (
               <QuestionComponent
+                ref={questionRef}
                 question={currentQuestion}
                 onNext={handleNextQuestion}
                 onPrevious={handlePreviousQuestion}
