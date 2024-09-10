@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import dynamic from 'next/dynamic';
 import Schedule from "./Schedule";
-import KnowledgeProfile from "./KnowledgeProfile";
+import KnowledgeProfileCARsONLY from "./KnowledgeProfileCARsONLY";
 import AdaptiveTutoring from "./AdaptiveTutoring";
 import FloatingButton from "./FloatingButton";
 import { FetchedActivity, Test } from "@/types";
@@ -341,7 +341,7 @@ const Page = () => {
             &nbsp;
           </h2>
           <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg">
-            <KnowledgeProfile activities={activities} />
+            <KnowledgeProfileCARsONLY activities={activities} />
           </div>
         </div>
       </div>
