@@ -263,9 +263,9 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
               color: 'var(--theme-text-color)'
             }}
           >
-            <h3 className="text-m font-semibold mt-3 mb-2 text-center font-mono" style={{ color: 'var(--theme-text-color)' }}>CARs Tests</h3>
+            <h3 className="text-m font-semibold mt-3 mb-3 text-center font-mono" style={{ color: 'var(--theme-text-color)' }}>CARs Tests</h3>
             <Tabs defaultValue="past" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-transparent">
+              <TabsList className="grid w-full grid-cols-2 mb-6 bg-transparent">
                 <TabsTrigger value="past">Past Tests</TabsTrigger>
                 <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
               </TabsList>
