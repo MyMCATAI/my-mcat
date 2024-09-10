@@ -84,7 +84,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange }) => {
               <button
                 key={index}
                 className={clsx(
-                  "w-14 h-14 bg-[#0E2247] border border-white text-white rounded-full shadow-lg focus:outline-none transition-all transform hover:scale-110 absolute flex justify-center items-center",
+                  "w-14 h-14 bg-[var(--theme-navbutton-color)] border border-white text-white rounded-full shadow-lg focus:outline-none transition-all transform hover:scale-110 absolute flex justify-center items-center",
                   {
                     "w-20 h-20": isActive,
                     "opacity-100": isHovered || isActive,
@@ -95,6 +95,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange }) => {
                   top,
                   left,
                   transitionDelay: `${index * 50}ms`,
+                  color: 'var(--theme-navbutton-color)',
                 }}
                 onClick={() => handleButtonClick(pos.tab)}
               >
