@@ -3,7 +3,7 @@ import { Question } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, X, Highlighter, Pencil, Flag } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Flag } from "lucide-react";
 import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFromRaw, DraftHandleValue } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 
@@ -47,8 +47,6 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
   const [editorState, setEditorState] = useState(() =>
     EditorState.createWithContent(ContentState.createFromText(question.questionContent))
   );
-  const [flashHighlight, setFlashHighlight] = useState(false);
-  const [flashStrikethrough, setFlashStrikethrough] = useState(false);
   const [flashFlag, setFlashFlag] = useState(false);
 
   const testHeaderRef = useRef(null);
@@ -98,20 +96,11 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
   };
 
   useImperativeHandle(ref, () => ({
-    applyStyle
+    applyStyle: (style: string) => {
+      const newState = RichUtils.toggleInlineStyle(editorState, style);
+      setEditorState(newState);
+    }
   }));
-
-  const handleHighlight = () => {
-    applyStyle('HIGHLIGHT');
-    setFlashHighlight(true);
-    setTimeout(() => setFlashHighlight(false), 200);
-  };
-
-  const handleStrikethrough = () => {
-    applyStyle('STRIKETHROUGH');
-    setFlashStrikethrough(true);
-    setTimeout(() => setFlashStrikethrough(false), 200);
-  };
 
   const handleFlag = () => {
     // Implement flag functionality here
@@ -134,30 +123,6 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
           <h2 className="text-lg font-bold">
             Question {currentQuestionIndex + 1} of {totalQuestions}
           </h2>
-          <div className="flex items-center">
-            <button
-              className={`mr-2 p-2 rounded transition-colors duration-200 ${
-                flashHighlight
-                  ? 'bg-transparent text-yellow-300'
-                  : 'bg-transparent text-black hover:bg-gray-200'
-              }`}
-              onClick={handleHighlight}
-              title="Highlight"
-            >
-              <Highlighter className="w-5 h-5" />
-            </button>
-            <button
-              className={`mr-2 p-2 rounded transition-colors duration-200 ${
-                flashStrikethrough
-                  ? 'bg-transparent text-yellow-300'
-                  : 'bg-transparent text-black hover:bg-gray-200'
-              }`}
-              onClick={handleStrikethrough}
-              title="Strikethrough"
-            >
-              <Pencil className="w-5 h-5" />
-            </button>
-          </div>
         </div>
         <div className="mb-4">
           <div className="text-lg mb-6">
