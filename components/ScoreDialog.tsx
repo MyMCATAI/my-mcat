@@ -31,7 +31,14 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
 
   useEffect(() => {
     if (open) {
-      if (score >= 80 && audioRef.current) {
+      if (audioRef.current) {
+        if (score === 100) {
+          audioRef.current.src = "/fanfare.mp3";
+        } else if (score >= 60) {
+          audioRef.current.src = "/levelup.mp3";
+        } else {
+          audioRef.current.src = "/sadfanfare.mp3";
+        }
         audioRef.current.play();
       }
       
@@ -124,7 +131,7 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <audio ref={audioRef} src="/fanfare.mp3" />
+      <audio ref={audioRef} />
       <DialogContent className="bg-white text-black border-2 border-pink-600">
         <DialogHeader>
           <DialogTitle className="text-3xl font-semibold text-pink-600 text-center">{dialogContent.title}</DialogTitle>
