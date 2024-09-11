@@ -80,7 +80,7 @@ const TestList: React.FC<TestListProps> = ({ items, type, loading = false }) => 
                       : 'title' in item
                       ? item.title
                       : 'Untitled',
-                    10
+                    18  
                   )}
                 </h2>
               </div>
@@ -92,7 +92,7 @@ const TestList: React.FC<TestListProps> = ({ items, type, loading = false }) => 
                   : ''
               }`}>
                 {type === 'past' && 'reviewedResponses' in item && 'totalResponses' in item
-                  ? `${item.reviewedResponses}/${item.totalResponses}`
+                  ? `Review ${item.reviewedResponses}/${item.totalResponses}`
                   : 'difficulty' in item
                   ? `Difficulty: ${item.difficulty}`
                   : 'N/A'}
