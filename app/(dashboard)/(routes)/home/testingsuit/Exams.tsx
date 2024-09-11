@@ -9,16 +9,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import Image from "next/image";
-
-const data = [
-  { name: "Page A", uv: 4000 },
-  { name: "Page B", uv: 3000 },
-  { name: "Page C", uv: 2000 },
-  { name: "Page D" },
-  { name: "Page E", uv: 1890 },
-  { name: "Page F", uv: 2390 },
-  { name: "Page G", uv: 3490 },
-];
 import { ReportData, Test, UserTest } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TestList from "./TestList";
@@ -35,17 +25,22 @@ const truncateTitle = (title: string, maxLength: number) => {
   return title;
 };
 
+const getTimeOfDay = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'morning';
+  if (hour < 18) return 'afternoon';
+  return 'evening';
+};
 
 const Exams: React.FC<TestListingProps> = ({ tests }) => {
-  const [typedText, setTypedText] = useState('');
-  const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [profileImage, setProfileImage] = useState("/kyle.png");
   const [userTests, setUserTests] = useState<UserTest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState<ReportData | null>(null);
-
-  const examDescription = "Today, you're going to be doing the x exam. This is a tough passage & prynce will add a custom description here, with a lot of RBT/RWT/CMP.";
+  const [welcomeMessage, setWelcomeMessage] = useState('');
+  const [testDescription, setTestDescription] = useState('');
+  const [isWelcomeComplete, setIsWelcomeComplete] = useState(false);
 
   const getPercentageColor = (percentage: number) => {
     if (percentage < 50) return "text-red-500";
@@ -85,23 +80,39 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
   }, []);
 
   useEffect(() => {
-    setTypedText('');
-    setIsTypingComplete(false);
-
+    const welcomeText = `Welcome! Good ${getTimeOfDay()}!\n\nWe've analyzed your past scores and prepared the perfect test for you...`;
     let index = 0;
+
     const typingTimer = setInterval(() => {
-      setTypedText(prev => examDescription.slice(0, prev.length + 1));
-      index++;
-      if (index > examDescription.length) {
+      if (index <= welcomeText.length) {
+        setWelcomeMessage(welcomeText.slice(0, index));
+        index++;
+      } else {
         clearInterval(typingTimer);
-        setIsTypingComplete(true);
+        setIsWelcomeComplete(true);
       }
     }, 15);
 
-    return () => {
-      clearInterval(typingTimer);
-    };
+    return () => clearInterval(typingTimer);
   }, []);
+
+  useEffect(() => {
+    if (isWelcomeComplete && tests.length > 0) {
+      const testText = `Here's your test for today:\n\n${tests[0].title}\n\n${tests[0].description}`;
+      let index = 0;
+
+      const typingTimer = setInterval(() => {
+        if (index <= testText.length) {
+          setTestDescription(testText.slice(0, index));
+          index++;
+        } else {
+          clearInterval(typingTimer);
+        }
+      }, 15);
+
+      return () => clearInterval(typingTimer);
+    }
+  }, [isWelcomeComplete, tests]);
 
   useEffect(() => {
     const fetchUserTests = async () => {
@@ -118,7 +129,6 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
         setLoading(false);
       }
     };
-
 
     fetchUserTests();
   }, []);
@@ -204,11 +214,17 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
             </div>
             <div className="flex flex-col">
               <pre className="font-mono text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap flex-1 mt-4 ml-2" style={{ color: 'var(--theme-text-color)' }}>
-                {typedText}
+                
+                <span className="font-pixel text-lg text-gradient animate-pulse">
+                {welcomeMessage}
+                </span>
+                {isWelcomeComplete && '\n\n'}
+                  <i>{testDescription}</i>
+
               </pre>
-              {isTypingComplete && (
+              {testDescription.length > 0 && (
                 <div className="flex items-center mt-6 ml-2">
-                  <Link href="/test/testquestions" className="text-blue-500 hover:text-blue-200 transition-colors duration-200 flex items-center">
+                  <Link  href={`/test/testquestions?id=${tests[0].id}`} className="text-blue-500 hover:text-blue-200 transition-colors duration-200 flex items-center">
                     <div className="flex items-center mr-4">
                       <div className="w-7 h-7 relative theme-box mr-1">
                         <Image
@@ -235,7 +251,7 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                           Click to begin
                         </Link>
                       ) : (
-                        "No tests available."
+                        "Loading first test..."
                       )}
                     </span>
                   </Link>
