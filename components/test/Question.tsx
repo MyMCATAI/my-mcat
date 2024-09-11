@@ -27,6 +27,56 @@ function seededRandom(seed: number) {
   return x - Math.floor(x);
 }
 
+const preprocessContent = (content: string): string => {
+  const specialChars = ['I.', 'II.', 'III.'];
+  let lines = content.split('\n');
+
+  lines = lines.map(line => {
+    specialChars.forEach((char, index) => {
+      const regex = new RegExp(`^\\s*([IVX]+\\.)`);
+      const match = line.match(regex);
+      if (match) {
+        line = line.replace(regex, specialChars[index]);
+      }
+    });
+    return line;
+  });
+
+  // Combine lines that were incorrectly split
+  lines = lines.reduce((acc, line, index) => {
+    if (index === 0 || line.match(/^[I.]+\./)) {
+      acc.push(line);
+    } else {
+      acc[acc.length - 1] += ' ' + line;
+    }
+    return acc;
+  }, [] as string[]);
+
+  // Add newlines before Roman numerals if they're not at the start of a line
+  lines = lines.flatMap(line => {
+    const parts = line.split(/(\s+[I.]+\.)/);
+    return parts.map(part => part.trim()).filter(Boolean);
+  });
+
+  // Join Roman numerals with their content, add indentation, and extra newline before first Roman numeral
+  let firstRomanNumeralFound = false;
+  lines = lines.reduce((acc, line, index) => {
+    if (specialChars.includes(line) && index < lines.length - 1) {
+      if (!firstRomanNumeralFound) {
+        acc.push(''); // Add an extra empty line before the first Roman numeral
+        firstRomanNumeralFound = true;
+      }
+      acc.push('     ' + line + ' ' + lines[index + 1]); // Add 5 spaces for indentation
+      return acc;
+    } else if (!specialChars.includes(lines[index - 1])) {
+      acc.push(line);
+    }
+    return acc;
+  }, [] as string[]);
+
+  return lines.join('\n').trim();
+};
+
 const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, QuestionsProps>(({
   question,
   onNext,
@@ -44,9 +94,10 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
   const correctAnswer = options[0];
 
   const [strikedOptions, setStrikedOptions] = useState<Set<number>>(new Set());
-  const [editorState, setEditorState] = useState(() =>
-    EditorState.createWithContent(ContentState.createFromText(question.questionContent))
-  );
+  const [editorState, setEditorState] = useState(() => {
+    const processedContent = preprocessContent(question.questionContent);
+    return EditorState.createWithContent(ContentState.createFromText(processedContent));
+  });
   const [flashFlag, setFlashFlag] = useState(false);
 
   const testHeaderRef = useRef(null);
@@ -58,7 +109,8 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
       const content = convertFromRaw(JSON.parse(savedContent));
       setEditorState(EditorState.createWithContent(content));
     } else {
-      setEditorState(EditorState.createWithContent(ContentState.createFromText(question.questionContent)));
+      const processedContent = preprocessContent(question.questionContent);
+      setEditorState(EditorState.createWithContent(ContentState.createFromText(processedContent)));
     }
   }, [question]);
 
