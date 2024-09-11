@@ -46,6 +46,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const [timing, setTiming] = useState(0);
   const [correctAnswer, setCorrectAnswer] = useState(0);
   const [technique, setTechnique] = useState(0);
+  const [answeredQuestions, setAnsweredQuestions] = useState(0);
   
   useEffect(() => {
     fetchTest();
@@ -169,6 +170,10 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       ...prev,
       [questionId]: optimisticResponse.id
     }));
+
+    if (!getCurrentUserResponse(questionId)) {
+      setAnsweredQuestions(prev => prev + 1);
+    }
 
     console.log("User Response:", userAnswer);
     console.log("Is Correct:", isCorrect);
@@ -566,6 +571,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                 totalQuestions={test?.questions.length || 0}
                 onFinish={handleFinishTest}
                 isSubmitting={isSubmitting}
+                answeredQuestions={answeredQuestions}
               />
             ) : (
               <div className="flex items-center justify-center h-full">

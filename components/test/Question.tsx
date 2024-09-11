@@ -19,6 +19,7 @@ interface QuestionsProps {
   totalQuestions: number;
   onFinish: () => void;
   isSubmitting: boolean;
+  answeredQuestions: number; // Add this line
 }
 
 // Seeded random number generator
@@ -89,6 +90,7 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
   totalQuestions,
   onFinish,
   isSubmitting,
+  answeredQuestions, // Add this line
 }, ref) => {
   const options = JSON.parse(question.questionOptions);
   const correctAnswer = options[0];
@@ -223,7 +225,7 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
             ))}
           </RadioGroup>
         </div>
-        <div className="flex justify-between w-full mt-4">
+        <div className="flex justify-between items-center w-full mt-4">
           <Button
             onClick={onPrevious}
             disabled={isFirst}
@@ -232,6 +234,9 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
           >
             <ChevronLeft className="mr-2 h-4 w-4" /> Previous
           </Button>
+          <span className="text-sm font-semibold text-gray-600">
+            {answeredQuestions}/{totalQuestions} Answered
+          </span>
           {isLast ? (
             <Button
               onClick={onFinish}
