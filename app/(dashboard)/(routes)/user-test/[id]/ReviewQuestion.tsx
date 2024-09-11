@@ -77,24 +77,31 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
 
       Here's my explanation: 
       `)
+
+      // Reset chat messages when question changes
+      setChatMessages([]);
+      setThreadId(null);
     }
   }, [question, userResponse, passageData]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
+
   useEffect(() => {
     setShowExplanations(userResponse.isReviewed === true);
   }, [userResponse]);
 
-  const updateUserResponse = async (newReviewNote: string) => {
+  const updateUserResponse = async (newReviewNote: string | null) => {
     if (!userResponse.id) return;
 
     const updatedResponse = {
       isReviewed: true,
-      reviewNotes: userResponse.reviewNotes 
-        ? `${userResponse.reviewNotes}\n\n${newReviewNote}`
-        : newReviewNote,
+      reviewNotes: newReviewNote 
+        ? (userResponse.reviewNotes 
+          ? `${userResponse.reviewNotes}\n\n${newReviewNote}`
+          : newReviewNote)
+        : userResponse.reviewNotes,
       userTestId: userResponse.userTestId,
       questionId: userResponse.questionId,
     };
@@ -111,6 +118,7 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       }
 
       console.log('User response updated successfully');
+      setShowExplanations(true);
     } catch (error) {
       console.error('Error updating user response:', error);
     }
@@ -119,6 +127,11 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   const handleMessageSent = (message: string) => {
     console.log("Message sent:", message);
     updateUserResponse(message);
+  };
+
+  const handleSkipDefense = () => {
+    updateUserResponse(null);
+    setShowExplanations(true);
   };
 
   if (!question) return null;
@@ -159,17 +172,29 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
           ))}
         </div>
         
-        <h4 className="font-semibold mb-2">Defend your answer:</h4>
-        <InlineChatbot 
-          context={context}
-          onShowExplanations={() => {
-            setShowExplanations(true);
-            console.log("User's initial response:", userResponse.userAnswer);
-          }}
-          onMessageSent={handleMessageSent}
-        />
-            <div className="max-h-[400px] overflow-y-auto">
-            {showExplanations && (
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="font-semibold">Defend your answer:</h4>
+             {!showExplanations && ( <Button
+                onClick={handleSkipDefense}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs py-1 px-2 rounded"
+              >
+                Skip Defense
+              </Button>)}
+            </div>
+            <InlineChatbot 
+              context={context}
+              onShowExplanations={() => {
+                setShowExplanations(true);
+                console.log("User's initial response:", userResponse.userAnswer);
+              }}
+              onMessageSent={handleMessageSent}
+              key={question.id} // Add this line to reset the InlineChatbot when the question changes
+            />
+          </div>
+
+        <div className="max-h-[400px] overflow-y-auto">
+        {(showExplanations) && (
         <Collapsible
           open={isExplanationsOpen}
           onOpenChange={setIsExplanationsOpen}

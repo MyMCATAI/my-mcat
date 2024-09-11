@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import UserTestList from '@/components/user-test/UserTestList';
 import { UserTest } from '@/types';
+import { Loader2 } from "lucide-react";
 
 export default function UserTestListPage() {
   const [userTests, setUserTests] = useState<UserTest[]>([]);
@@ -28,7 +29,11 @@ export default function UserTestListPage() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
   if (error) return <div>Error: {error}</div>;
 
   return (
