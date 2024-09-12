@@ -175,15 +175,15 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
   };
 
   return (
-    <div className="flex flex-col items-center px-6 font-serif text-black">
+    <div className="flex flex-col items-center px-6 font-serif text-black text-sm">
       <div className="w-full max-w-3xl flex flex-col">
         <div className="flex justify-between items-center mt-2 mb-4 pt-6">
-          <h2 className="text-lg font-bold">
+          <h2 className="text-base font-bold">
             Question {currentQuestionIndex + 1} of {totalQuestions}
           </h2>
         </div>
         <div className="mb-4">
-          <div className="text-lg mb-6">
+          <div className="text-base mb-6">
             <Editor
               editorState={editorState}
               onChange={setEditorState}
@@ -214,7 +214,7 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
                 />
                 <Label
                   htmlFor={`option-${idx}`}
-                  className={`text-lg cursor-pointer flex-grow ${strikedOptions.has(idx) ? 'line-through' : ''}`}
+                  className={`text-base cursor-pointer flex-grow ${strikedOptions.has(idx) ? 'line-through' : ''}`}
                 >
                   <strong>{String.fromCharCode(65 + idx)}.</strong> {option}
                 </Label>
