@@ -120,7 +120,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
 
   const flow = {
     start: {
-      message: `Hi! I'm Kalypso the cat, your MCAT assistant. ${contentTitle ? `Looks like you're working on ${contentTitle}.` : ""} How can I help you today?`,
+      message: `Hmmmm. You seem stuck. ${contentTitle ? `Looks like you're working on Machine Learning. I think you did a good job highlighting the key points.` : ""} But what logic are you struggling with?`,
       path: "loop"
     },
     loop: {
