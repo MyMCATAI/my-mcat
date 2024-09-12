@@ -170,6 +170,10 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
     return 'handled';
   };
 
+  const handleDrop = (): DraftHandleValue => {
+    return 'handled';
+  };
+
   return (
     <div className="flex flex-col items-center px-6 font-serif text-black">
       <div className="w-full max-w-3xl flex flex-col">
@@ -193,6 +197,7 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
               }}
               handleBeforeInput={handleBeforeInput}
               handlePastedText={handlePastedText}
+              handleDrop={handleDrop}
             />
           </div>
           <RadioGroup
