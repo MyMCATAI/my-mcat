@@ -122,7 +122,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
   };
 
   return (
-    <div className="bg-[#ffffff] h-[80vh] flex flex-col font-serif text-lg">
+    <div className="bg-[#ffffff] h-[80vh] flex flex-col font-serif">
       <div className="sticky top-0 bg-white p-4 z-10">
         <h1 className="text-black font-serif text-1xl font-bold">
           {passageData.title}
