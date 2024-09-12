@@ -19,7 +19,8 @@
     "create-diagnostic-test": "ts-node --project tsconfig.server.json scripts/createDiagnosticQuiz.ts",
     "update-content-transcripts": "ts-node --project tsconfig.server.json scripts/updateTranscripts.ts",
     "create-Cars": "ts-node --project tsconfig.server.json scripts/createCars.ts",
-    "create-Cars-explanations": "ts-node --project tsconfig.server.json scripts/createCarsExplanations.ts"
+    "create-Cars-explanations": "ts-node --project tsconfig.server.json scripts/createCarsExplanations.ts",
+    "backfill-passageIds": "ts-node --project tsconfig.server.json scripts/backfillPassageIds.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.633.0",

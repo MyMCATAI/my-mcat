@@ -84,10 +84,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Test ID is required" }, { status: 400 });
     }
 
+    // Fetch the test to get the passageId
+    const test = await prisma.test.findUnique({
+      where: { id: testId },
+      select: { passageId: true },
+    });
+
+    if (!test) {
+      return NextResponse.json({ error: "Test not found" }, { status: 404 });
+    }
+
     const userTest = await prisma.userTest.create({
       data: {
         userId,
         testId,
+        passageId: test.passageId, // Add the passageId to the userTest
       },
     });
 

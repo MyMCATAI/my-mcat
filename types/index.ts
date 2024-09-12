@@ -62,6 +62,7 @@ export interface UserTest {
   id: string;
   userId: string;
   testId: string;
+  passageId?: string | null;
   test: Test;
   startedAt: Date;
   finishedAt?: Date;
@@ -78,6 +79,7 @@ export interface Test {
   setName?: string;
   createdAt: Date;
   updatedAt: Date;
+  passageId?: string | null;
   questions: TestQuestion[];
   userTests?: UserTest[]; 
 }
