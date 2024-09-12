@@ -4,7 +4,6 @@ import 'draft-js/dist/Draft.css';
 import styles from './Passage.module.css';
 import type { Passage } from '@/types';
 
-
 interface PassageProps {
   passageData: Passage;
   onNote?: (text: string) => void;
@@ -79,7 +78,10 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     return 'handled';
   };
 
-  
+  const handleDrop = (): DraftHandleValue => {
+    return 'handled';
+  };
+
   const applyStyle = (style: string) => {
     const newState = RichUtils.toggleInlineStyle(editorState, style);
     const selectionInfo = getSelectedText(newState);
@@ -137,6 +139,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
             handleKeyCommand={handleKeyCommand}
             keyBindingFn={keyBindingFn}
             blockStyleFn={blockStyleFn}
+            handleDrop={handleDrop}
           />
         </div>
         {passageData.citation && (

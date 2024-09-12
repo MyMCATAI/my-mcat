@@ -12,11 +12,11 @@ import Image from "next/image";
 import { ReportData, Test, UserTest } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TestList from "./TestList";
+import { useUser } from "@clerk/nextjs";
 
 interface TestListingProps {
   tests: Test[];
 }
-
 
 const truncateTitle = (title: string, maxLength: number) => {
   if (title.length > maxLength) {
@@ -33,6 +33,7 @@ const getTimeOfDay = () => {
 };
 
 const Exams: React.FC<TestListingProps> = ({ tests }) => {
+  const { user } = useUser();
   const [profileImage, setProfileImage] = useState("/kyle.png");
   const [userTests, setUserTests] = useState<UserTest[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +81,8 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
   }, []);
 
   useEffect(() => {
-    const welcomeText = `Welcome! Good ${getTimeOfDay()}!\n\nWe've analyzed your past scores and prepared the perfect test for you...`;
+    const userName = user ? user.firstName || 'there' : 'there';
+    const welcomeText = `Welcome ${userName.charAt(0).toUpperCase() + userName.slice(1)}! Good ${getTimeOfDay()}!\n\nWe've analyzed your past scores and prepared the perfect test for you...`;
     let index = 0;
 
     const typingTimer = setInterval(() => {
@@ -94,7 +96,7 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
     }, 15);
 
     return () => clearInterval(typingTimer);
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (isWelcomeComplete && tests.length > 0) {
