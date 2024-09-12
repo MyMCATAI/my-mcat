@@ -27,6 +27,8 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(isVoiceEnabled);
+  const [hintEnabled, setHintEnabled] = useState(false);
+  const [vocabEnabled, setVocabEnabled] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const context = chatbotContext?.context;
   const contentTitle = chatbotContext?.contentTitle;
@@ -117,7 +119,16 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   const toggleAudio = () => {
     setAudioEnabled(!audioEnabled);
   };
-	const helpOptions = ["Hint", "Vocab"];
+
+  const toggleHint = () => {
+    setHintEnabled(!hintEnabled);
+  };
+
+  const toggleVocab = () => {
+    setVocabEnabled(!vocabEnabled);
+  };
+
+  const helpOptions = ["Hint", "Vocab"];
   const flow = {
     start: {
       message: `Hi! I'm Kalypso the cat, your MCAT assistant. ${contentTitle ? `Looks like you're working on ${contentTitle}.` : ""} How can I help you today?`,
@@ -138,22 +149,39 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       showHeader: true,
       showFooter: false,
     },
+    chatWindow: {
+      showScrollbar: true, // Change this from 'true' to true
+    },
     chatHistory: { storageKey: "mcat_assistant_chat_history" },
     header: {
       showAvatar: false,
       title: (
         <div className="flex items-center justify-between w-full">
+          <div className="flex space-x-2">
+            <button 
+              onClick={toggleAudio}
+              className={`px-2 text-sm ${audioEnabled ? 'bg-blue-500' : 'bg-gray-400'} text-black rounded hover:bg-blue-600 transition-colors`}
+            >
+              {audioEnabled ? '🔊' : '🔇'}
+            </button>
+            <button 
+              onClick={toggleHint}
+              className={`px-2 text-sm ${hintEnabled ? 'bg-yellow-500' : 'bg-gray-400'} text-black rounded hover:bg-yellow-600 transition-colors`}
+            >
+              💡
+            </button>
+            <button 
+              onClick={toggleVocab}
+              className={`px-2 text-sm ${vocabEnabled ? 'bg-green-500' : 'bg-gray-400'} text-black rounded hover:bg-green-600 transition-colors`}
+            >
+              📖
+            </button>
+          </div>
           <div 
             style={{cursor: "pointer", margin: 0, fontSize: 10, fontWeight: ""}} 
             onClick={() => window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")}
           >
           </div>
-          <button 
-            onClick={toggleAudio}
-            className="px-2 py-1 text-sm bg-blue-500 text-black rounded hover:bg-blue-600 transition-colors"
-          >
-            {audioEnabled ? '🔊' : '🔇'}
-          </button>
         </div>
       )
     },
@@ -164,21 +192,43 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       disabled: !audioEnabled,
       defaultToggledOn: audioEnabled,
       language: "en-US",
-      autoSendDisabled: false,
-      autoSendPeriod: 2000,
+      autoSendDisabled: true,
       sendAsAudio: false,
     },
-    botBubble: { simStream: true },
+    botBubble: { 
+      simStream: true, 
+      streamSpeed: audioEnabled ? 80 : 20,
+    },
   };
 
   const styles = {
     chatWindowStyle: {
       backgroundColor: backgroundColor,
       inlineSize: width,
+      height: 'calc(100vh - 30rem)', // Subtracts 2rem from top and bottom
+      margin: '2rem .5rem', // Adds margin to top/bottom and sides
     },
-    botBubbleStyle: {fontSize: "14px", fontFamily: "Consolas, monospace", color: 'white', backgroundColor: 'var(--theme-botchatbox-color)'},
-    userBubbleStyle: {fontSize: "14px", fontFamily: "Consolas, monospace", color: 'white', backgroundColor: 'var(--theme-userchatbox-color)'},
-    headerStyle: {background: 'var(--theme-hover-color)'},
+    botBubbleStyle: {
+      fontSize: "0.75rem",
+      fontFamily: "Consolas, monospace",
+      color: 'white',
+      backgroundColor: '#3b3b3d'
+    },
+    userBubbleStyle: {
+      fontSize: "0.75rem",
+      fontFamily: "Consolas, monospace",
+      color: 'white',
+      backgroundColor: '#0e85ff'
+    },
+    headerStyle: {background: 'transparent', height: '0rem'},
+    chatInputContainerStyle: {
+      backgroundColor: 'transparent',
+    },
+    chatInputAreaStyle: {
+      border: '1px solid #ccc',
+      borderRadius: '8px',
+      backgroundColor: 'transparent',
+    },
   };
 
   const themes = [{ id: "simple_blue", version: "0.1.0" }];

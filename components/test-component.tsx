@@ -3,11 +3,12 @@ import { useStopwatch } from 'react-timer-hook';
 import PassageComponent from "@/components/test/Passage";
 import QuestionComponent from "@/components/test/Question";
 import { Test, TestQuestion, Passage, Question, UserResponse } from "@/types";
-import { Pencil, Highlighter, Flag } from 'lucide-react';
-import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
+import { Pencil, Highlighter, Flag, Cat } from 'lucide-react';
+import ChatBotInLine from '@/components/chatbot/ChatBotInLine'; // Import the ChatBotInLine component
 import Link from 'next/link';
 import ScoreDialog from '@/components/ScoreDialog';
 import TestHeader, { TestHeaderRef } from '@/components/test/TestHeader';
+import DictionaryLookup from './DictionaryLookup';
 
 interface TestComponentProps {
   testId: string;
@@ -37,6 +38,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     contentTitle: "",
     context: ""
   });
+  const [showChatbot, setShowChatbot] = useState(false);
 
   const passageRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
   const questionRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
@@ -48,6 +50,9 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const [technique, setTechnique] = useState(0);
   const [answeredQuestions, setAnsweredQuestions] = useState(0);
   
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [showDefinition, setShowDefinition] = useState(false);
+
   useEffect(() => {
     fetchTest();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -457,6 +462,24 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     setTimeout(() => setFlashFlag(false), 300);
   };
 
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.metaKey && event.key === 'i') {
+      const selection = window.getSelection();
+      if (selection && selection.toString().trim() !== '') {
+        const word = selection.toString().trim();
+        setSelectedWord(word);
+        setShowDefinition(true);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
+
   if (loading) return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
       <div className="text-center">
@@ -542,7 +565,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       <div className="h-7 bg-[#a6a6a6]"></div>
      
       {/* Main content area */}
-      <div className="flex relative flex-grow overflow-hidden">
+      <div className="flex relative flex-grow overflow-hidden text-base">
         {currentPassage && (
           <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto">
             <div className="p-4 h-full">
@@ -555,35 +578,61 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           </div>
         )}
 
-        <div className={`overflow-auto ${currentPassage ? 'w-1/2' : 'w-full'}`}>
-          <div className="p-4 h-full">
+        <div className={`${currentPassage ? 'w-1/2' : 'w-full'} flex flex-col relative`}>
+          <div className="flex-grow overflow-auto">
             {currentQuestion && currentTestQuestion ? (
-              <QuestionComponent
-                ref={questionRef}
-                question={currentQuestion}
-                onNext={handleNextQuestion}
-                onPrevious={handlePreviousQuestion}
-                isFirst={currentQuestionIndex === 0}
-                isLast={currentQuestionIndex === test?.questions.length - 1}
-                onAnswer={handleUserResponse}
-                userAnswer={userAnswer} 
-                currentQuestionIndex={currentQuestionIndex}
-                totalQuestions={test?.questions.length || 0}
-                onFinish={handleFinishTest}
-                isSubmitting={isSubmitting}
-                answeredQuestions={answeredQuestions}
-              />
+              <>
+                {/* AI Chat toggle button with Cat icon */}
+                <button
+                  className={`
+                    absolute top-4 right-4 p-2 rounded-full shadow-lg
+                    transition-colors duration-200
+                    ${showChatbot 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white'}
+                  `}
+                  onClick={() => setShowChatbot(!showChatbot)}
+                >
+                  <Cat className="w-6 h-6" />
+                </button>
+
+                <QuestionComponent
+                  ref={questionRef}
+                  question={currentQuestion}
+                  onNext={handleNextQuestion}
+                  onPrevious={handlePreviousQuestion}
+                  isFirst={currentQuestionIndex === 0}
+                  isLast={currentQuestionIndex === test?.questions.length - 1}
+                  onAnswer={handleUserResponse}
+                  userAnswer={userAnswer} 
+                  currentQuestionIndex={currentQuestionIndex}
+                  totalQuestions={test?.questions.length || 0}
+                  onFinish={handleFinishTest}
+                  isSubmitting={isSubmitting}
+                  answeredQuestions={answeredQuestions}
+                />
+              </>
             ) : (
               <div className="flex items-center justify-center h-full">
                 <p className="text-gray-500">No question available</p>
               </div>
             )}
           </div>
+          
+          {/* ChatBotInLine component */}
+          {showChatbot && (
+            <div className="rounded-lg mx-4 flex-shrink-0">
+              <ChatBotInLine
+                chatbotContext={chatbotContext}
+                isVoiceEnabled={false}
+                width="100%"
+                backgroundColor="white"
+              />
+            </div>
+          )}
         </div>
       </div>
       <div className="bg-[#006dab] h-15 border-t-3 border-sky-500"></div>
-     {/* Chatbot */}
-     <ChatbotWidget chatbotContext={chatbotContext} />
 
       <ScoreDialog
         open={showScorePopup}
@@ -593,6 +642,13 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         correctAnswer={correctAnswer}
         technique={technique}
       />
+
+      {showDefinition && selectedWord && (
+        <DictionaryLookup 
+          word={selectedWord} 
+          onClose={() => setShowDefinition(false)} 
+        />
+      )}
     </div>
   );
 };
