@@ -189,12 +189,11 @@ export const LandingHero = () => {
               allowFullScreen
             ></iframe>
           </div>
-          
           {/* New vertical sections */}
           <div className="space-y-8 text-white">
             <div className="text-center p-6 bg-opacity-20 bg-white rounded-lg">
               <h3 className="text-xl font-semibold mb-4">Fun, engaging passages with AAMC-level questions.</h3>
-              <p>Our MCAT passages are fun and engaging, with AI that tracks timing, accuracy, and drops HINTS when you're between two options.</p>
+              <p>Our MCAT passages are fun and engaging, with AI that tracks timing, accuracy, and drops HINTS when you&apos;re between two options.</p>
             </div>
             <div className="text-center p-6 bg-opacity-20 bg-white rounded-lg">
               <h3 className="text-xl font-semibold mb-4">Cupcake reward system incentivizes daily CARs as a habit.</h3>
@@ -206,7 +205,7 @@ export const LandingHero = () => {
             </div>
             <div className="text-center p-6 bg-opacity-20 bg-white rounded-lg">
               <h3 className="text-xl font-semibold mb-4">CARs prep that will forever be free.</h3>
-              <p>We're committed to making quality MCAT preparation accessible to all, with our core CARs prep always free.</p>
+              <p>We&apos;re committed to making quality MCAT preparation accessible to all, with our core CARs prep always free.</p>
             </div>
           </div>
         </div>
