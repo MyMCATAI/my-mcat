@@ -201,7 +201,7 @@ export const LandingHero = () => {
               <p>Stay motivated with our unique reward system that allows you to earn glory for your college.</p>
             </div>
             <div className="text-center p-6 bg-opacity-20 bg-white rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">>Kalypso helps you review passages intelligently.</h3>
+              <h3 className="text-xl font-semibold mb-4">Kalypso helps you review passages intelligently.</h3>
               <p>Our adaptive technology identifies your strengths and areas for improvement, tailoring the experience to you.</p>
             </div>
             <div className="text-center p-6 bg-opacity-20 bg-white rounded-lg">
