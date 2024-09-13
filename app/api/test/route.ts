@@ -178,14 +178,14 @@ async function getOrderedTests(
     .filter(
       (test) =>
         !test.questions.some((testQuestion) =>
-          recentlyTakenPassageIds.has(testQuestion.questionId)
-            ? prisma.question
-                .findUnique({
-                  where: { id: testQuestion.questionId },
-                  select: { passage: { select: { id: true } } },
-                })
-                .then((question) => question?.passage?.id)
-            : false
+          prisma.question
+            .findUnique({
+              where: { id: testQuestion.questionId },
+              select: { passage: { select: { id: true } } },
+            })
+            .then((question) =>
+              recentlyTakenPassageIds.has(question?.passage?.id ?? "")
+            )
         )
     );
 
