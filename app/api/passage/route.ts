@@ -14,11 +14,12 @@ export async function GET(req: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
     const passageId = searchParams.get('id');
+    const decodedPassageId = passageId ? decodeURIComponent(passageId) : null;
 
-    if (passageId) {
+    if (decodedPassageId) {
       // Fetch a single passage by ID with its questions
       const passage = await prisma.passage.findUnique({
-        where: { id: passageId },
+        where: { id: decodedPassageId },
         include: {
           questions: {
             select: {
