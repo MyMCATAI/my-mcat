@@ -8,7 +8,6 @@ import FloatingButton from "./FloatingButton";
 import { FetchedActivity, Test } from "@/types";
 import TestingSuit from "./TestingSuit";
 import { toast } from "@/components/ui/use-toast";
-import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
 import ThemeSwitcher from '@/components/home/ThemeSwitcher';
 
 const FlashcardDeck = dynamic(() => import('./FlashcardDeck'), { ssr: false });
@@ -33,10 +32,6 @@ const Page = () => {
   const [activeTab, setActiveTab] = useState("test");
   const [isPro, setIsPro] = useState(false);
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
-  const [chatbotContext, setChatbotContext] = useState({
-    contentTitle: "",
-    context: ""
-  });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const scrollPosition = 130;
@@ -50,6 +45,7 @@ const Page = () => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showDiagnosticTest, setShowDiagnosticTest] = useState(false);
   const [diagnosticTestId, setDiagnosticTestId] = useState<string | null>(null);
+  const [chatbotContext, setChatbotContext] = useState<{ contentTitle: string; context: string } | null>(null);
   
   useEffect(() => {
     const initializePage = async () => {
@@ -242,13 +238,10 @@ const Page = () => {
         break;
       case "KnowledgeProfile":
         content = (
-          <>
-            <AdaptiveTutoring
-              toggleChatBot={toggleChatBot}
-              setChatbotContext={setChatbotContext}
-            />
-            {chatbotContext.contentTitle}
-          </>
+          <AdaptiveTutoring
+            toggleChatBot={toggleChatBot}
+            setChatbotContext={setChatbotContext}
+          />
         );
         break;
       case "AdaptiveTutoring":
@@ -309,7 +302,7 @@ const Page = () => {
   }, []);
 
   return (
-    <div className="w-full px-[2rem] lg:px-[3.5rem] xl:px-[7rem]">
+    <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem]">
       <div className="text-white flex gap-[1.5rem]">
         <div className="w-3/4 relative">
           <div className="flex justify-between items-center">
@@ -345,8 +338,6 @@ const Page = () => {
           </div>
         </div>
       </div>
-     {/* Chatbot */}
-     <ChatbotWidget chatbotContext={chatbotContext} />
        {/* Diagnostic Test Dialog */}
       <Dialog open={showDiagnosticTest} onOpenChange={setShowDiagnosticTest}>
       <DialogOverlay className="fixed inset-0 bg-black bg-opacity-80 z-50" />

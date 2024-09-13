@@ -1,23 +1,14 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
-import profile from "../../../../public/knowledge.png";
-import { format, isBefore, isAfter, startOfDay } from 'date-fns';
 import { FetchedActivity } from '@/types';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Link from 'next/link';
-import Icon from "@/components/ui/icon";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Star } from 'lucide-react'; // Import the Star icon
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import MVPDialog from "@/components/MVPDialog";
+import RedditPosts from "../../../../components/RedditPosts"; // Updated import
 
 interface KnowledgeProfileProps {
   activities: FetchedActivity[];
-}
-
-interface Category {
-  conceptCategory: string;
-  icon: string;
-  color: string;
 }
 
 interface School {
@@ -28,16 +19,12 @@ interface School {
   funRanking: string;
 }
 
-type TabContent = {
-  categories: Category[];
-  activities?: FetchedActivity[];
-  schools?: School[];
-};
+type TabContent = 
+  | { type: 'insights'; videos: { id: string; title: string }[] }
+  | { type: 'league'; schools: School[] };
 
 const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initialActivities }) => {
   const [activeTab, setActiveTab] = useState("tab1");
-  const [activities, setActivities] = useState(initialActivities);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [schools, setSchools] = useState<School[]>([
     { name: "Pomona College", location: "Claremont, CA", rank: 1, tuition: 500, funRanking: "Cupcake Rankings" },
     { name: "Princeton University", location: "Princeton, NJ", rank: 2, tuition: 450, funRanking: "Cupcake Rankings" },
@@ -51,202 +38,70 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
     { name: "Northwestern University", location: "Evanston, IL", rank: 10, tuition: 50, funRanking: "Cupcake Rankings" }
   ]);
 
-  const statusOrder = ["Not Started", "In Progress", "Complete"];
-  
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const url = new URL("/api/category", window.location.origin);
-      url.searchParams.append("page", "1");
-      url.searchParams.append("pageSize", "7");
-      url.searchParams.append("useKnowledgeProfiles", "true");
-
-      const response = await fetch(url.toString());
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      setCategories(data.items);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
-
-  useEffect(() => {
-    setActivities(initialActivities)
-  }, [initialActivities]);
-
-
-  const updateActivityStatus = async (activityId: string, newStatus: string) => {
-    try {
-      const response = await fetch('/api/calendar-activity', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: activityId, status: newStatus }),
-      });
-      if (!response.ok) throw new Error('Failed to update activity status');
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating activity status:', error);
-      // Optionally, revert the optimistic update here
-      throw error;
-    }
-  };
-
-  const handleStatusToggle = async (activityId: string) => {
-    const activityToUpdate = activities.find(activity => activity.id === activityId);
-    if (!activityToUpdate) return;
-
-    const currentStatusIndex = statusOrder.indexOf(activityToUpdate.status);
-    const nextStatusIndex = (currentStatusIndex + 1) % statusOrder.length;
-    const newStatus = statusOrder[nextStatusIndex];
-
-    // Optimistic update
-    setActivities(prevActivities => 
-      prevActivities.map(activity => 
-        activity.id === activityId ? { ...activity, status: newStatus } : activity
-      )
-    );
-
-    try {
-      await updateActivityStatus(activityId, newStatus);
-    } catch (error) {
-      // Revert the optimistic update if the API call fails
-      setActivities(prevActivities => 
-        prevActivities.map(activity => 
-          activity.id === activityId ? { ...activity, status: activityToUpdate.status } : activity
-        )
-      );
-    }
-  };
-
-  const categorizedActivities = useMemo(() => {
-    const today = startOfDay(new Date());
-    return {
-      past: [], // Emptied out the past activities
-      present: activities.filter(activity => format(new Date(activity.scheduledDate), 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')),
-    };
-  }, [activities]);
-
-  const tabs = [
-    { id: "tab1", label: "Insights", content: { categories: categories, activities: categorizedActivities.present } },
-    { id: "tab2", label: "League", content: { categories: categories, schools: schools } },
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const videos = [
+    { id: "YzCSJKlmaOQ", title: "MCAT Study Guide 2023" },
+    { id: "VIDEO_ID_2", title: "Top 10 MCAT Practice Tests" },
+    { id: "VIDEO_ID_3", title: "MCAT Biology Review" },
+    { id: "VIDEO_ID_4", title: "CARS Strategy Guide" },
   ];
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Complete": return "bg-green-800";
-      case "In Progress": return "bg-yellow-800";
-      default: return "bg-red-800";
-    }
-  };
 
-  const renderActivities = (activities: FetchedActivity[]) => (
-    <ScrollArea className="h-full">
-      {activities.length > 0 ? (
-        activities.map((activity) => {
-          const minutesFormatted = (activity.hours * 60).toFixed(2);
-          
-          return (
-            <div key={activity.id} className="mb-4 p-3 bg-[--theme-mainbox-color] rounded">
-              {activity.link ? (
-                <Link
-                  href={activity.link}
-                  className="block text-sm font-bold text-[--theme-text-color] leading-normal shadow-text mb-1 hover:underline"
-                >
-                  {activity.activityTitle}
-                </Link>
-              ) : (
-                <h3 className="text-sm font-bold text-[--theme-text-color] leading-normal shadow-text mb-1">
-                  {activity.activityTitle}
-                </h3>
-              )}
-              <p className="text-xs text-gray-300 mb-1">{activity.activityText}</p>
-              <div className="flex justify-between items-center text-xs text-gray-400">
-                <span>{format(new Date(activity.scheduledDate), 'MMM d, yyyy')}</span>
-                <span>{minutesFormatted} minutes</span>
-              </div>
-              <div className="mt-2 flex justify-between items-center text-xs">
-                <button
-                  onClick={() => handleStatusToggle(activity.id)}
-                  className={`px-2 py-1 rounded ${getStatusColor(activity.status)} hover:opacity-80 transition-opacity`}
-                >
-                  {activity.status}
-                </button>
-                <span className="text-blue-300">{activity.activityType}</span>
-              </div>
-            </div>
-          );
-        })
-      ) : (
-        <p className="text-center mt-4 text-[--theme-text-color] text-lg font-light leading-normal shadow-text">No activities</p>
-      )}
-    </ScrollArea>
-  );
-
-  const renderCategories = (categories: Category[]) => (
-    <ScrollArea className="h-full">
-      {categories.map((category, index) => (
-        <div
-          key={index}
-          className="flex items-center p-2 mb-2 bg-[[#021326]] rounded-lg hover:bg-[#072E6F] transition-colors duration-200"
-        >
-          <div className="mr-3">
-            <Icon 
-              name={category.icon} 
-              className="w-6 h-6" 
-              color={category.color}
-            />
-          </div>
-          <p className="text-[--theme-text-color] text-sm">{category.conceptCategory}</p>
+  const renderInsights = (videos: { id: string; title: string }[]) => (
+    <div className="h-full p-4 flex flex-col">
+      <div className="space-y-4 mb-8">
+        <div className="relative">
+          <iframe
+            width="100%"
+            height="200"
+            className="lg:h-[150px]" // Reduced height for lg screens and below
+            src={`https://www.youtube.com/embed/${videos[currentVideoIndex].id}`}
+            title={videos[currentVideoIndex].title}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+          <button
+            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full"
+            onClick={() => setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length)}
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <button
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full"
+            onClick={() => setCurrentVideoIndex((prev) => (prev + 1) % videos.length)}
+          >
+            <ChevronRight size={24} />
+          </button>
         </div>
-      ))}
-    </ScrollArea>
+      </div>
+      {/* Reddit Posts Section */}
+      <div className="flex-grow overflow-hidden">
+        <RedditPosts />
+      </div>
+    </div>
   );
-
-  const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
-  const [isMVPDialogOpen, setIsMVPDialogOpen] = useState(false);
 
   const renderSchools = (schools: School[]) => (
     <ScrollArea className="h-full">
       {schools.map((school, index) => {
-        // Calculate cupcakes based on rank (320 for rank 1, decreasing by 20 for each rank)
-        const cupcakes = 320 - (school.rank - 1) * 20;
-        
         return (
           <div key={index} className="mb-4 p-4 bg-[--theme-leaguecard-color] rounded-lg shadow-md">
             <div className="flex items-start">
-              <div className="flex-shrink-0 mr-4">
+              <div className="mr-4 flex-shrink-0">
                 <Image
                   src={`/colleges/${school.name.replace(/\s+/g, '')}.png`}
                   alt={school.name}
-                  width={100}
-                  height={100}
-                  className="rounded-lg border border-[--theme-border-color]"
+                  width={80}
+                  height={80}
+                  className="rounded-lg border border-[--theme-border-color] object-cover xl:w-24 xl:h-24"
                 />
               </div>
               <div className="flex-grow">
-                <h3 className="text-lg font-bold text-[--theme-text-color]">{school.name}</h3>
+                <h3 className="text-sm font-semibold text-[--theme-text-color]">{school.name}</h3>
                 <p className="text-sm text-[--theme-text-color] opacity-80">{school.location}</p>
-                <div className="mt-2">
-                  <span className="inline-block bg-[--theme-hover-color] text-[--theme-hover-text] text-xs px-2 py-1 rounded-full">
+                <div className="mt-1">
+                  <span className="inline-block text-[--theme-hover-color] text-sm">
                     #{school.rank} in {school.funRanking}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`w-4 h-4 ${star <= 4 ? 'text-yellow-400' : 'text-gray-300'}`}
-                      fill={star <= 4 ? 'currentColor' : 'none'}
-                    />
-                  ))}
-                  <span className="ml-2 text-sm" style={{ color: 'var(--theme-hover-color)' }}>
-                    {cupcakes} cupcakes
                   </span>
                 </div>
               </div>
@@ -257,7 +112,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
             {school.rank === 1 && (
               <Dialog open={isMVPDialogOpen} onOpenChange={setIsMVPDialogOpen}>
                 <DialogTrigger asChild>
-                  <button className="mt-3 text-sm text-blue-600 hover:underline">
+                  <button className="mt-2 text-sm text-blue-600 hover:underline">
                     Highlighting the MVPs»
                   </button>
                 </DialogTrigger>
@@ -298,16 +153,24 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   };
 
   const renderContent = (content: TabContent) => {
-    if (content.activities) {
-      return renderActivities(content.activities);
-    } else if (content.schools) {
+    if (content.type === 'insights') {
+      return renderInsights(content.videos);
+    } else if (content.type === 'league') {
       return renderSchools(content.schools);
     }
     return null;
   };
 
+  const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
+  const [isMVPDialogOpen, setIsMVPDialogOpen] = useState(false);
+
+  const tabs: { id: string; label: string; content: TabContent }[] = [
+    { id: "tab1", label: "Insights", content: { type: 'insights', videos: videos } },
+    { id: "tab2", label: "League", content: { type: 'league', schools: schools } },
+  ];
+
   return (
-    <div className="relative p-2 overflow-auto h-[calc(100vh-6.5rem)]">
+    <div className="relative p-2  overflow-auto h-[calc(100vh-4.8rem)]">
       <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
         <div className="flex w-full">
           {tabs.map((tab) => (
