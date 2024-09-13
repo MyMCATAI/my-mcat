@@ -3,8 +3,6 @@ import { Test } from "@/types";
 import clsx from "clsx";
 import Link from 'next/link';
 import Exams from "./testingsuit/Exams";
-import Passages from "./testingsuit/Passages";
-
 interface TestListingProps {
   tests: Test[];
 }
@@ -14,7 +12,6 @@ const TestingSuit: React.FC<TestListingProps> = ({ tests }) => {
 
   const tabs = [
     { label: "Exams", content: <Exams tests={tests}/> },
-    { label: "Passages", content: <Passages tests={tests} /> },
   ];
 
   return (
