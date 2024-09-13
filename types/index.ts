@@ -50,6 +50,7 @@ export interface UserResponse {
   question?: Question;
   userAnswer: string;
   isCorrect: boolean;
+  flagged?: boolean;
   timeSpent?: number | null; 
   userNotes?: string | null; 
   answeredAt?: Date;
