@@ -456,10 +456,53 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     saveNote(text);
   };
 
-  const handleFlag = () => {
+  const handleFlag = async () => {
     setFlashFlag(true);
-    // Add your flag logic here
-    setTimeout(() => setFlashFlag(false), 300);
+    
+    const currentQuestion = getCurrentQuestion();
+    if (!currentQuestion || !userTest) {
+      console.error('No current question or user test available');
+      setFlashFlag(false);
+      return;
+    }
+
+    const existingResponse = getCurrentUserResponse(currentQuestion.id);
+    const responseId = questionIdToResponseId[currentQuestion.id];
+
+    if (!existingResponse) {
+      console.error('No existing response found');
+      setFlashFlag(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/user-test/response`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userTestId: userTest.id,
+          questionId: currentQuestion.id,
+          flagged: !existingResponse.flagged
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update flag status');
+      }
+
+      const savedResponse: UserResponse = await response.json();
+
+      setUserResponses(prev => ({
+        ...prev,
+        [responseId]: savedResponse
+      }));
+
+      console.log('Question flag status updated successfully');
+    } catch (err) {
+      console.error('Error updating question flag status:', err);
+    } finally {
+      setTimeout(() => setFlashFlag(false), 300);
+    }
   };
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -553,9 +596,13 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
             className={`mr-2 px-3 py-1 rounded transition-colors duration-200 flex items-center ${
               flashFlag
                 ? 'bg-transparent text-yellow-300'
-                : 'bg-transparent text-white hover:bg-white/10'
+                : currentQuestion && getCurrentUserResponse(currentQuestion.id)
+                ? 'bg-transparent text-white hover:bg-white/10'
+                : 'bg-transparent text-gray-400 cursor-not-allowed'
             }`}
             onClick={handleFlag}
+            disabled={currentQuestion?.id ? !getCurrentUserResponse(currentQuestion?.id)?.userAnswer : true}
+            
           >
             <Flag className="w-4 h-4 mr-2" />
             Flag for Review

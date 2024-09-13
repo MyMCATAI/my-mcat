@@ -15,8 +15,6 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes, weighting, reviewNotes, isReviewed } = body;
 
-    console.log("userAnswer to be saved:", userAnswer);
-
     // Validate required fields
     const missingFields = [];
     if (!userTestId) missingFields.push('userTestId');
@@ -127,6 +125,8 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   const { userId } = auth();
+  console.log("PUT request:");
+
   if (!userId) {
     console.log("Unauthorized request: No userId");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -134,8 +134,10 @@ export async function PUT(req: Request) {
 
   try {
     const body = await req.json();
-    const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes, weighting, reviewNotes, isReviewed } = body;
 
+    const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes, weighting, reviewNotes, isReviewed, flagged } = body;
+
+    console.log("Input body flag:", flagged);
     // Validate required fields
     if (!userTestId || !questionId) {
       console.log("Missing required fields: userTestId or questionId");
@@ -162,6 +164,7 @@ export async function PUT(req: Request) {
       userNotes: userNotes !== undefined ? userNotes : existingResponse.userNotes,
       weighting: weighting !== undefined ? weighting : existingResponse.weighting,
       isReviewed: isReviewed !== undefined ? isReviewed : existingResponse.isReviewed,
+      flagged: flagged !== undefined ? flagged : existingResponse.flagged,
     };
 
     // Only update userAnswer and isCorrect if they are provided
@@ -186,11 +189,18 @@ export async function PUT(req: Request) {
       },
     });
 
-    console.log("Updated response:", updatedResponse);
+    console.log("Updated response:", updatedResponse.flagged);
+    console.log("Output response:", {
+      status: 200,
+    });
 
     return NextResponse.json(updatedResponse, { status: 200 });
   } catch (error) {
     console.error('Error updating user response:', error);
+    console.log("Output response:", {
+      status: 500,
+      json: { error: "Internal server error", details: error }
+    });
     return NextResponse.json({ error: "Internal server error", details: error }, { status: 500 });
   }
 }
