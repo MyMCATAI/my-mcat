@@ -53,7 +53,7 @@ const DictionaryLookup: React.FC<DictionaryLookupProps> = ({ word, onClose }) =>
 
         // Automatically add all definitions to the vocab list
         if (uniqueDefinitions.length > 0) {
-          const allDefinitions = uniqueDefinitions.map(def => 
+          const allDefinitions = uniqueDefinitions.map((def: Definition) => 
             `(${def.partOfSpeech}) ${def.definition}`
           ).join('; ');
           addVocabWord(word, allDefinitions);

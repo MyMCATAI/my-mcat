@@ -18,6 +18,12 @@ interface TestComponentProps {
   onTestComplete?: (score: number) => void;
 }
 
+interface DictionaryPosition {
+  top: number | null;
+  bottom: number | null;
+  left: number;
+}
+
 const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete }) => {
   const [test, setTest] = useState<Test | null>(null);
   const [userTest, setUserTest] = useState<{ id: string } | null>(null);
@@ -55,7 +61,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [showDefinition, setShowDefinition] = useState(false);
-  const [dictionaryPosition, setDictionaryPosition] = useState({ top: null, bottom: null, left: 0 });
+  const [dictionaryPosition, setDictionaryPosition] = useState<DictionaryPosition>({ top: null, bottom: null, left: 0 });
 
   const { isCmdIEnabled, toggleCmdI, addVocabWord, removeVocabWord, showVocabList, toggleVocabList, vocabList } = useContext(VocabContext);
 
