@@ -27,7 +27,6 @@ export interface TestQuestion {
   sequence: number;
   question: Question;
 }
-
 export interface Question {
   id: string;
   questionID: string;
@@ -37,6 +36,7 @@ export interface Question {
   contentCategory: string;
   passageId?: string | null;  
   categoryId: string;  
+  context: string | null;
   passage?: Passage;  
   category?: Category;  
   testQuestions?: TestQuestion[]; 
@@ -50,6 +50,7 @@ export interface UserResponse {
   question?: Question;
   userAnswer: string;
   isCorrect: boolean;
+  flagged?: boolean;
   timeSpent?: number | null; 
   userNotes?: string | null; 
   answeredAt?: Date;

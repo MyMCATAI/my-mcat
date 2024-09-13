@@ -42,7 +42,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     context: ""
   });
   const [showChatbot, setShowChatbot] = useState(false);
-
+  const [highlightedStrings, setHighlightedStrings] = useState<string[]>([]);
   const passageRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
   const questionRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
   const testHeaderRef = useRef<TestHeaderRef>(null);
@@ -116,7 +116,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       setCurrentPassage(passageCacheRef.current[passageId]);
     } else {
       try {
-        const response = await fetch(`/api/passage?id=${passageId}`);
+        const encodedPassageId = encodeURIComponent(passageId);
+        const response = await fetch(`/api/passage?id=${encodedPassageId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch passage');
         }
@@ -211,7 +212,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       }
 
       const savedResponse: UserResponse = await response.json();
-      console.log("Saved response:", savedResponse);
 
       setUserResponses(prev => ({
         ...prev,
@@ -320,7 +320,13 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   const getCurrentQuestion = (): Question | null => {
     const currentTestQuestion = getCurrentTestQuestion();
-    return currentTestQuestion?.question || null;
+    
+    if (currentTestQuestion) {
+      const { question } = currentTestQuestion;      
+      return question;
+    }
+  
+    return null;
   };
 
   const handleNextQuestion = () => {
@@ -381,21 +387,18 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       setTestCreated(true);
     }
 
-    console.log("UserTest state:", currentUserTest);
     if (!currentUserTest) {
       console.error("UserTest is still null after creation attempt");
       return;
     }
 
     const currentQuestion = getCurrentQuestion();
-    console.log("Current question:", currentQuestion);
     if (!currentQuestion) {
       console.error("No current question found");
       return;
     }
 
     const existingResponse = getCurrentUserResponse(currentQuestion.id);
-    console.log("Existing response:", existingResponse);
     const timeSpent = testHeaderRef.current?.getElapsedTime() || 0;
 
     const timestamp = new Date().toISOString();
@@ -416,8 +419,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       answeredAt: new Date().toISOString(),
     };
 
-    console.log("Response data to be sent:", responseData);
-
     try {
       const response = await fetch('/api/user-test/response', {
         method: 'POST',
@@ -432,7 +433,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       }
 
       const savedResponse: UserResponse = await response.json();
-      console.log("Saved response:", savedResponse);
 
       setUserResponses(prev => ({
         ...prev,
@@ -460,10 +460,68 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     saveNote(text);
   };
 
-  const handleFlag = () => {
+  const handleFlag = async () => {
     setFlashFlag(true);
-    // Add your flag logic here
-    setTimeout(() => setFlashFlag(false), 300);
+    
+    const currentQuestion = getCurrentQuestion();
+    if (!currentQuestion || !userTest) {
+      console.error('No current question or user test available');
+      setFlashFlag(false);
+      return;
+    }
+
+    const existingResponse = getCurrentUserResponse(currentQuestion.id);
+    const responseId = questionIdToResponseId[currentQuestion.id];
+
+    if (!existingResponse) {
+      console.error('No existing response found');
+      setFlashFlag(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/user-test/response`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userTestId: userTest.id,
+          questionId: currentQuestion.id,
+          flagged: !existingResponse.flagged
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update flag status');
+      }
+
+      const savedResponse: UserResponse = await response.json();
+
+      setUserResponses(prev => ({
+        ...prev,
+        [responseId]: savedResponse
+      }));
+
+      console.log('Question flag status updated successfully');
+    } catch (err) {
+      console.error('Error updating question flag status:', err);
+    } finally {
+      setTimeout(() => setFlashFlag(false), 300);
+    }
+  };
+
+  function extractQuotedStrings(inputText: string): string[] {
+    const regex = /"([^"]+)"/g;
+    const matches = [];
+    let match;
+    while ((match = regex.exec(inputText)) !== null) {
+      matches.push(match[1]);
+    }
+    return matches;
+  }
+
+  const handleAssistantResponse = (responseText: string) => {
+    const quotedStrings = extractQuotedStrings(responseText);
+    setHighlightedStrings(quotedStrings);
   };
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -570,7 +628,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   const currentTestQuestion = getCurrentTestQuestion();
   const currentQuestion = getCurrentQuestion();
-
+ 
   const userAnswer = currentQuestion?.id ? getCurrentUserResponse(currentQuestion?.id)?.userAnswer : undefined
 
   return (
@@ -640,10 +698,13 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
             className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
               flashFlag
                 ? 'bg-transparent text-yellow-300'
-                : 'bg-transparent text-white hover:bg-white/10'
+                : currentQuestion && getCurrentUserResponse(currentQuestion.id)
+                ? 'bg-transparent text-white hover:bg-white/10'
+                : 'bg-transparent text-gray-400 cursor-not-allowed'
             }`}
             onClick={handleFlag}
             aria-label="Flag for Review"
+            disabled={currentQuestion?.id ? !getCurrentUserResponse(currentQuestion?.id)?.userAnswer : true}
           >
             <Flag className="w-4 h-4 mr-2" />
             Flag for Review
@@ -662,6 +723,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                 ref={passageRef}
                 passageData={currentPassage} 
                 onNote={onNote}
+                highlightedStrings={highlightedStrings}
               />
             </div>
           </div>
@@ -700,6 +762,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                   onFinish={handleFinishTest}
                   isSubmitting={isSubmitting}
                   answeredQuestions={answeredQuestions}
+                  onAssistantResponse={handleAssistantResponse}
                 />
               </>
             ) : (

@@ -158,6 +158,13 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   return (
     <div className="p-6 bg-white text-black h-full flex flex-col text-sm">
       <h2 className="text-lg font-semibold mb-4">Question {currentQuestionIndex + 1} of {totalQuestions}</h2>
+      
+      {userResponse.flagged && (
+        <p className="text-red-500 text-sm mb-2">
+          This question was flagged for review
+        </p>
+      )}
+
       <div className="mb-4 flex-grow overflow-auto">
         <h3 className="font-medium mb-2">{question.questionContent}</h3>
         <div className="mt-4">
