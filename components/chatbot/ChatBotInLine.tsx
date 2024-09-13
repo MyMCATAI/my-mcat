@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import dynamic from 'next/dynamic';
-import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
-import FileUploadComponent from './fileUpload';
 import { VocabContext } from '@/contexts/VocabContext';
 import VocabList from '@/components/VocabList';
-import DialogWrapper from './DialogWrapper'; // Import DialogWrapper
+import DialogWrapper from './DialogWrapper';
 
 const ChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
 
@@ -313,8 +311,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       <DialogWrapper
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onClose={closeDialog}
-      />
+        onClose={closeDialog} title={''} description={''}      />
     </div>
   );
 };
