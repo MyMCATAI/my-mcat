@@ -133,6 +133,7 @@ model UserResponse {
   reviewNotes String?  @db.Text
   answeredAt DateTime  @default(now())
   isReviewed Boolean?  @default(false)
+  flagged    Boolean?   @default(false)
   userTest   UserTest? @relation(fields: [userTestId], references: [id])
   question   Question  @relation(fields: [questionId], references: [id])
   Category   Category? @relation(fields: [categoryId], references: [id])
