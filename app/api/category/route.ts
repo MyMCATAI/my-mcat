@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs";
 import prisma from "@/lib/prismadb";
 import { getCategories } from "@/lib/category";
 
+// Returns JSON response of paginated categories, total pages, and current page number based on the knowledge profile, if given
 export async function GET(req: Request) {
   try {
     const { userId } = auth();
@@ -12,10 +13,11 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '10');
-    const useKnowledgeProfiles = searchParams.get('useKnowledgeProfiles') === 'true';
-    const includeCARS = searchParams.get('includeCARS') === 'true';
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "10");
+    const useKnowledgeProfiles =
+      searchParams.get("useKnowledgeProfiles") === "true";
+    const includeCARS = searchParams.get("includeCARS") === "true";
 
     let result;
 
@@ -23,8 +25,8 @@ export async function GET(req: Request) {
       // Fetch all knowledge profiles for the user
       const knowledgeProfiles = await prisma.knowledgeProfile.findMany({
         where: { userId },
-        orderBy: { conceptMastery: 'asc' },
-        include: { category: true }
+        orderBy: { conceptMastery: "asc" },
+        include: { category: true },
       });
 
       // Fetch all categories
@@ -32,15 +34,19 @@ export async function GET(req: Request) {
 
       // If includeCARS is false, filter out categories with subjectCategory "CARs"
       if (!includeCARS) {
-        allCategories = allCategories.filter(category => category.subjectCategory !== "CARs");
+        allCategories = allCategories.filter(
+          (category) => category.subjectCategory !== "CARs"
+        );
       }
 
       // Combine knowledge profiles with categories
-      const sortedCategories = allCategories.map(category => {
-        const profile = knowledgeProfiles.find(p => p.categoryId === category.id);
+      const sortedCategories = allCategories.map((category) => {
+        const profile = knowledgeProfiles.find(
+          (p) => p.categoryId === category.id
+        );
         return {
           ...category,
-          conceptMastery: profile ? profile.conceptMastery : null
+          conceptMastery: profile ? profile.conceptMastery : null,
         };
       });
 
@@ -54,12 +60,15 @@ export async function GET(req: Request) {
 
       // Paginate the results
       const startIndex = (page - 1) * pageSize;
-      const paginatedCategories = sortedCategories.slice(startIndex, startIndex + pageSize);
+      const paginatedCategories = sortedCategories.slice(
+        startIndex,
+        startIndex + pageSize
+      );
 
       result = {
         items: paginatedCategories,
         totalPages: Math.ceil(sortedCategories.length / pageSize),
-        currentPage: page
+        currentPage: page,
       };
     } else {
       // Use the existing getCategories function for normal fetching
@@ -68,7 +77,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.log('[CATEGORIES_GET]', error);
+    console.log("[CATEGORIES_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

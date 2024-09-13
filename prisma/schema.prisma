@@ -34,6 +34,8 @@ model Passage {
   description String?    @db.Text
   difficulty  Float      @default(1)
   questions   Question[]
+  tests       Test[]
+  userTests   UserTest[]
 }
 
 model Question {
@@ -80,8 +82,12 @@ model Test {
   updatedAt   DateTime       @updatedAt
   setName     String?
   difficulty  Float?
+  passageId   String?
+  passage     Passage?       @relation(fields: [passageId], references: [id])
   questions   TestQuestion[]
   userTests   UserTest[]
+
+  @@index([passageId])
 }
 
 model TestQuestion {
@@ -100,14 +106,17 @@ model UserTest {
   id         String         @id @default(cuid())
   userId     String
   testId     String?
+  passageId  String?
   startedAt  DateTime       @default(now())
   finishedAt DateTime?
   score      Float?
   test       Test?          @relation(fields: [testId], references: [id])
+  passage    Passage?       @relation(fields: [passageId], references: [id])
   responses  UserResponse[]
 
   @@index([userId])
   @@index([testId])
+  @@index([passageId])
 }
 
 model UserResponse {
@@ -121,7 +130,9 @@ model UserResponse {
   timeSpent  Float?
   weighting  Float @default(1)
   userNotes  String?   @db.Text
+  reviewNotes String?  @db.Text
   answeredAt DateTime  @default(now())
+  isReviewed Boolean?  @default(false)
   userTest   UserTest? @relation(fields: [userTestId], references: [id])
   question   Question  @relation(fields: [questionId], references: [id])
   Category   Category? @relation(fields: [categoryId], references: [id])
