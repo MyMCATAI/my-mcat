@@ -94,6 +94,7 @@ body :root {
     --theme-leaguecard-color:#001226;
     --theme-navbutton-color: #001226;
     --svg-invert: 0;
+    --theme-reddit-color: #082645;
   }
 
   @import "../styles/themes/cyberSpace.css";
@@ -210,6 +211,7 @@ body :root {
   --theme-leaguecard-color:#ffffff; /* Light pink color for Sakura theme */
   --theme-navbutton-color: #85004b;
   --svg-invert: 1;
+  --theme-reddit-color: #fdd7f6;
 }
 
 /* Add theme-specific gradients */
@@ -269,4 +271,39 @@ body :root {
 
 .theme-svg {
   transition: filter 0.3s ease;
+}
+
+.reddit-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.reddit-content p {
+  margin-bottom: 1em;
+}
+
+.reddit-content strong {
+  font-weight: bold;
+}
+
+.reddit-content em {
+  font-style: italic;
+}
+
+.reddit-content ul, .reddit-content ol {
+  margin-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.reddit-content li {
+  margin-bottom: 0.5em;
+}
+
+.reddit-content a {
+  color: #0000FF;
+  text-decoration: underline;
+}
+
+.transition-transform {
+  transition: transform 0.3s ease-out;
 }
