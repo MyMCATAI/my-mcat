@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import dynamic from 'next/dynamic';
 import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
 import FileUploadComponent from './fileUpload';
+import { VocabContext } from '@/contexts/VocabContext';
+import VocabList from '@/components/VocabList';
+import DialogWrapper from './DialogWrapper'; // Import DialogWrapper
 
 const ChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
 
@@ -29,9 +32,12 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   const [audioEnabled, setAudioEnabled] = useState(isVoiceEnabled);
   const [hintEnabled, setHintEnabled] = useState(false);
   const [vocabEnabled, setVocabEnabled] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // New state for dialog
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const context = chatbotContext?.context;
   const contentTitle = chatbotContext?.contentTitle;
+
+  const { toggleVocabList, isCmdIEnabled, toggleCmdI } = useContext(VocabContext);
 
   useEffect(() => {
     setIsMounted(true);
@@ -128,10 +134,18 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
     setVocabEnabled(!vocabEnabled);
   };
 
+  const openDialog = () => {
+    setIsDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    setIsDialogOpen(false);
+  };
+
   const helpOptions = ["Hint", "Vocab"];
   const flow = {
     start: {
-      message: `Hi! I'm Kalypso the cat, your MCAT assistant. ${contentTitle ? `Looks like you're working on ${contentTitle}.` : ""} How can I help you today?`,
+      message: `Meow there! You can press the question mark above to learn more about the interface, or just type something. I'm here to help (but not give you answers)!`,
      path: "loop"
     },
     loop: {
@@ -150,7 +164,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       showFooter: false,
     },
     chatWindow: {
-      showScrollbar: true, // Change this from 'true' to true
+      showScrollbar: true,
     },
     chatHistory: { storageKey: "mcat_assistant_chat_history" },
     header: {
@@ -160,28 +174,29 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
           <div className="flex space-x-2">
             <button 
               onClick={toggleAudio}
-              className={`px-2 text-sm ${audioEnabled ? 'bg-blue-500' : 'bg-gray-400'} text-black rounded hover:bg-blue-600 transition-colors`}
+              className={`px-2 text-sm ${audioEnabled ? 'bg-blue-500' : 'bg-gray-200'} text-black rounded hover:bg-blue-600 transition-colors`}
             >
               {audioEnabled ? '🔊' : '🔇'}
             </button>
             <button 
               onClick={toggleHint}
-              className={`px-2 text-sm ${hintEnabled ? 'bg-yellow-500' : 'bg-gray-400'} text-black rounded hover:bg-yellow-600 transition-colors`}
+              className={`px-2 text-sm ${hintEnabled ? 'bg-blue-500' : 'bg-gray-200'} text-black rounded hover:bg-blue-600 transition-colors`}
             >
               💡
             </button>
             <button 
-              onClick={toggleVocab}
-              className={`px-2 text-sm ${vocabEnabled ? 'bg-green-500' : 'bg-gray-400'} text-black rounded hover:bg-green-600 transition-colors`}
+              onClick={toggleCmdI}
+              className={`px-2 text-sm ${isCmdIEnabled ? 'bg-blue-500' : 'bg-gray-200'} text-black rounded hover:bg-blue-600 transition-colors`}
             >
               📖
             </button>
           </div>
-          <div 
-            style={{cursor: "pointer", margin: 0, fontSize: 10, fontWeight: ""}} 
-            onClick={() => window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")}
+          <button 
+            onClick={openDialog}
+            className="px-2 text-sm bg-transparent text-black rounded hover:bg-transparent transition-colors ml-2"
           >
-          </div>
+            ❓
+          </button>
         </div>
       )
     },
@@ -205,18 +220,18 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
     chatWindowStyle: {
       backgroundColor: backgroundColor,
       inlineSize: width,
-      height: 'calc(100vh - 30rem)', // Subtracts 2rem from top and bottom
-      margin: '2rem .5rem', // Adds margin to top/bottom and sides
+      height: 'calc(100vh - 30rem)',
+      margin: '2rem .5rem',
     },
     botBubbleStyle: {
-      fontSize: "0.75rem",
-      fontFamily: "Consolas, monospace",
-      color: 'white',
-      backgroundColor: '#3b3b3d'
+      fontSize: "0.875rem", // Slightly increased font size
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
+      color: 'black',
+      backgroundColor: '#e8e8ea'
     },
     userBubbleStyle: {
-      fontSize: "0.75rem",
-      fontFamily: "Consolas, monospace",
+      fontSize: "0.875rem", // Slightly increased font size
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
       color: 'white',
       backgroundColor: '#0e85ff'
     },
@@ -234,11 +249,18 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   const themes = [{ id: "simple_blue", version: "0.1.0" }];
 
   if (!isMounted) {
-    return null; // or a loading spinner
+    return null;
   }
 
   return (
-    <div style={{ inlineSize: width, backgroundColor: backgroundColor }}>
+    <div style={{ 
+      inlineSize: width, 
+      backgroundColor: backgroundColor, 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: '100%', 
+      position: 'relative' 
+    }}>
       <style jsx global>{`
         .rcb-chat-input::before {
           content: none !important;
@@ -252,6 +274,47 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       />
       {error && <p style={{color: 'red'}}>{error}</p>}
       {isPlaying && isVoiceEnabled && <button onClick={stopAudio}>Stop Audio</button>}
+      {vocabEnabled && (
+        <div className="vocab-list-container">
+          <VocabList />
+          <button
+            onClick={toggleVocab}
+            className="mt-2 px-4 py-2 bg-red-500 text-white rounded"
+          >
+            Close
+          </button>
+        </div>
+      )}
+      <style jsx>{`
+        .vocab-list-container {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          width: 300px;
+          max-height: 400px;
+          overflow-y: auto;
+          background-color: white;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          padding: 16px;
+          z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+          .vocab-list-container {
+            width: 90%;
+            left: 5%;
+            right: 5%;
+            top: 10px;
+          }
+        }
+      `}</style>
+      <DialogWrapper
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onClose={closeDialog}
+      />
     </div>
   );
 };
