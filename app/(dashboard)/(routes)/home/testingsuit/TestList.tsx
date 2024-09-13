@@ -57,14 +57,14 @@ const TestList: React.FC<TestListProps> = ({ items, type, loading = false }) => 
       {items.map((item) => (
         <div key={item.id} className="w-full">
           <Link href={type === 'past' && 'reviewedResponses' in item ? `/user-test/${item.id}` : `/test/testquestions?id=${item.id}`}>
-            <div className={`flex justify-between items-center bg-transparent border-2 opacity-100 rounded-[15px] px-3 py-2.5 hover:opacity-100 transition-all duration-300 group w-full hover:[background-color:var(--theme-hover-color)] theme-box ${theme}`}
+            <div className={`flex justify-between items-center bg-transparent border-2 opacity-100 rounded-[0.9375rem] px-3 py-2.5 hover:opacity-100 transition-all duration-300 group w-full h-[4rem] hover:[background-color:var(--theme-hover-color)] theme-box ${theme}`}
                  style={{ 
                    borderColor: 'var(--theme-border-color)',
                    color: 'var(--theme-text-color)'
                  }}
             >
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 relative">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="w-6 h-6 flex-shrink-0 relative">
                   <Image
                     className="theme-svg"
                     src={"/computer.svg"}
@@ -73,30 +73,29 @@ const TestList: React.FC<TestListProps> = ({ items, type, loading = false }) => 
                     alt="icon"
                   />
                 </div>
-                <h2 className="text-sm font-normal group-hover:[color:var(--theme-hover-text)]">
-                  {truncateTitle(
-                    type === 'past' && 'test' in item
-                      ? item.test.title
-                      : 'title' in item
-                      ? item.title
-                      : 'Untitled',
-                    18  
-                  )}
+                <h2 className="text-sm xl:text-base font-normal group-hover:[color:var(--theme-hover-text)] truncate">
+                  {type === 'past' && 'test' in item
+                    ? item.test.title
+                    : 'title' in item
+                    ? item.title
+                    : 'Untitled'}
                 </h2>
               </div>
-              <h2 className={`text-sm font-medium ${
-                type === 'past' && 'reviewedResponses' in item && 'totalResponses' in item
-                  ? getReviewProgressColor(item.reviewedResponses, item.totalResponses)
-                  : 'difficulty' in item
-                  ? getDifficultyColor(item.difficulty as number)
-                  : ''
-              }`}>
-                {type === 'past' && 'reviewedResponses' in item && 'totalResponses' in item
-                  ? `Review ${item.reviewedResponses}/${item.totalResponses}`
-                  : 'difficulty' in item
-                  ? `Difficulty: ${item.difficulty}`
-                  : 'N/A'}
-              </h2>
+              <div className="flex-shrink-0 ml-2">
+                <h2 className={`text-sm xl:text-base font-medium whitespace-nowrap ${
+                  type === 'past' && 'reviewedResponses' in item && 'totalResponses' in item
+                    ? getReviewProgressColor(item.reviewedResponses, item.totalResponses)
+                    : 'difficulty' in item
+                    ? getDifficultyColor(item.difficulty as number)
+                    : ''
+                }`}>
+                  {type === 'past' && 'reviewedResponses' in item && 'totalResponses' in item
+                    ? `Review ${item.reviewedResponses}/${item.totalResponses}`
+                    : 'difficulty' in item
+                    ? `Lvl ${item.difficulty}`
+                    : 'N/A'}
+                </h2>
+              </div>
             </div>
           </Link>
         </div>

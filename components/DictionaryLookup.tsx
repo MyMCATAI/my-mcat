@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import axios from 'axios';
+import { VocabContext } from '@/contexts/VocabContext'; // Update import path
 
 interface DictionaryLookupProps {
   word: string;
@@ -7,50 +8,92 @@ interface DictionaryLookupProps {
 }
 
 interface Definition {
+  partOfSpeech: string;
   definition: string;
   example?: string;
 }
 
 const DictionaryLookup: React.FC<DictionaryLookupProps> = ({ word, onClose }) => {
+  const { addVocabWord } = useContext(VocabContext);
   const [definitions, setDefinitions] = useState<Definition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    if (boxRef.current && !boxRef.current.contains(event.target as Node)) {
+      onClose();
+    }
+  }, [onClose]);
+
   useEffect(() => {
-    const fetchDefinition = async () => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [handleClickOutside]);
+
+  useEffect(() => {
+    const fetchDefinitions = async () => {
       try {
-        const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+        const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
         const data = response.data[0];
-        const meanings = data.meanings.flatMap((meaning: any) =>
-          meaning.definitions.map((def: any) => ({
-            definition: def.definition,
-            example: def.example,
-          }))
-        );
-        setDefinitions(meanings);
-        setLoading(false);
+        const uniqueDefinitions = data.meanings.reduce((acc: Definition[], meaning: any) => {
+          if (!acc.some(def => def.partOfSpeech === meaning.partOfSpeech)) {
+            acc.push({
+              partOfSpeech: meaning.partOfSpeech,
+              definition: meaning.definitions[0].definition,
+              example: meaning.definitions[0].example,
+            });
+          }
+          return acc;
+        }, []);
+        setDefinitions(uniqueDefinitions);
+
+        // Automatically add all definitions to the vocab list
+        if (uniqueDefinitions.length > 0) {
+          const allDefinitions = uniqueDefinitions.map(def => 
+            `(${def.partOfSpeech}) ${def.definition}`
+          ).join('; ');
+          addVocabWord(word, allDefinitions);
+        }
       } catch (err) {
-        setError('Unable to fetch definition');
+        console.error('Error fetching definitions:', err);
+        setError("Failed to fetch definitions.");
+        setDefinitions([]);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchDefinition();
-  }, [word]);
+    fetchDefinitions();
+  }, [word, addVocabWord]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  if (loading) return <div className="bg-black p-4 rounded shadow-lg text-white">Loading...</div>;
 
   return (
-    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded shadow-lg max-w-md w-full">
-      <h2 className="text-xl font-bold mb-2">{word}</h2>
-      {definitions.map((def, index) => (
-        <div key={index} className="mb-2">
-          <p>{def.definition}</p>
-          {def.example && <p className="text-gray-600 italic">Example: {def.example}</p>}
-        </div>
-      ))}
-      <button onClick={onClose} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Close</button>
+    <div ref={boxRef} className="bg-blue-100 text-black p-4 rounded shadow-lg max-w-md w-full max-h-[80vh] overflow-y-auto relative">
+      <button 
+        onClick={onClose} 
+        className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+        aria-label="Close"
+      >
+        &#x2715;
+      </button>
+      <h2 className="text-sm font-bold mb-2">{word}</h2>
+      {error && <p className="text-red-500">{error}</p>}
+      {definitions.length > 0 ? (
+        definitions.map((def, index) => (
+          <div key={index} className="mb-4">
+            <p className="font-semibold capitalize">{def.partOfSpeech}</p>
+            <p>{def.definition}</p>
+            {def.example && <p className="text-gray-600 italic">Example: {def.example}</p>}
+          </div>
+        ))
+      ) : (
+        !error && <p>No definitions found.</p>
+      )}
     </div>
   );
 };

@@ -1,14 +1,17 @@
-import React, { useEffect, useState, useRef, useCallback, forwardRef } from "react";
+import React, { useEffect, useState, useRef, useCallback, useContext } from "react";
+import axios from 'axios';
 import { useStopwatch } from 'react-timer-hook';
 import PassageComponent from "@/components/test/Passage";
 import QuestionComponent from "@/components/test/Question";
 import { Test, TestQuestion, Passage, Question, UserResponse } from "@/types";
 import { Pencil, Highlighter, Flag, Cat } from 'lucide-react';
-import ChatBotInLine from '@/components/chatbot/ChatBotInLine'; // Import the ChatBotInLine component
+import ChatBotInLine from '@/components/chatbot/ChatBotInLine';
 import Link from 'next/link';
 import ScoreDialog from '@/components/ScoreDialog';
 import TestHeader, { TestHeaderRef } from '@/components/test/TestHeader';
 import DictionaryLookup from './DictionaryLookup';
+import { VocabContext } from '@/contexts/VocabContext';
+import VocabList from '@/components/VocabList';
 
 interface TestComponentProps {
   testId: string;
@@ -52,10 +55,13 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [showDefinition, setShowDefinition] = useState(false);
+  const [dictionaryPosition, setDictionaryPosition] = useState({ top: null, bottom: null, left: 0 });
+
+  const { isCmdIEnabled, toggleCmdI, addVocabWord, removeVocabWord, showVocabList, toggleVocabList, vocabList } = useContext(VocabContext);
 
   useEffect(() => {
     fetchTest();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testId]);
 
   useEffect(() => {
@@ -77,7 +83,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       }
     }
     testHeaderRef.current?.reset();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, test]);
 
   const fetchTest = async () => {
@@ -123,6 +129,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       }
     }
   };
+
   const handleUserResponse = async (questionId: string, userAnswer: string, isCorrect: boolean) => {
     let currentUserTest = userTest;
     if (!testCreated) {
@@ -339,11 +346,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     if (currentPassage) {
       const currentQuestion = getCurrentQuestion();
       setChatbotContext({
-        contentTitle: "writing a practice test on" + currentPassage.id,
+        contentTitle: "writing a practice test on " + currentPassage.id,
         context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm considering is: ${currentQuestion?.questionContent}\n\nOnly refer to this if I ask about what I'm currently studying.`
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPassage, currentQuestionIndex]);
 
   const handleHighlight = () => {
@@ -440,10 +447,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       // Update chatbot context
       setChatbotContext(prevContext => ({
         ...prevContext,
-        context: `${prevContext.context}\n\n
-        
-        Here's something I just noted about the passage
-        ${text}`
+        context: `${prevContext.context}\n\nHere's something I just noted about the passage\n${text}`
       }));
 
     } catch (err) {
@@ -467,11 +471,62 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       const selection = window.getSelection();
       if (selection && selection.toString().trim() !== '') {
         const word = selection.toString().trim();
-        setSelectedWord(word);
-        setShowDefinition(true);
+
+        // Always fetch the definition and add to vocabList
+        fetchDefinitionAndAddToVocab(word);
+
+        // If Command-I is enabled, perform dictionary lookup
+        if (isCmdIEnabled) {
+          const range = selection.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+
+          const viewportHeight = window.innerHeight;
+          const viewportWidth = window.innerWidth;
+
+          const isBottomThird = rect.bottom > (viewportHeight * 2 / 3);
+
+          const leftPosition = Math.min(rect.left + rect.width, viewportWidth - 300);
+
+          setDictionaryPosition({
+            top: isBottomThird ? null : rect.bottom + 10,
+            bottom: isBottomThird ? viewportHeight - rect.top + 10 : null,
+            left: leftPosition
+          });
+
+          setSelectedWord(word);
+          setShowDefinition(true);
+        }
       }
     }
-  }, []);
+  }, [isCmdIEnabled]);
+
+  // New function to fetch definition and add to vocab list
+  const fetchDefinitionAndAddToVocab = async (word: string) => {
+    try {
+      const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+      const data = response.data[0];
+      const uniqueDefinitions = data.meanings.reduce((acc: any[], meaning: any) => {
+        if (!acc.some((def: any) => def.partOfSpeech === meaning.partOfSpeech)) {
+          acc.push({
+            partOfSpeech: meaning.partOfSpeech,
+            definition: meaning.definitions[0].definition,
+          });
+        }
+        return acc;
+      }, []);
+
+      const allDefinitions = uniqueDefinitions.map((def: any) => 
+        `(${def.partOfSpeech}) ${def.definition}`
+      ).join('; ');
+
+      addVocabWord(word, allDefinitions);
+      console.log(`Added "${word}" to vocabList with definition`);
+    } catch (err) {
+      console.error('Error fetching definition:', err);
+      addVocabWord(word, ''); // Add word with empty definition if fetch fails
+      console.log(`Added "${word}" to vocabList without definition`);
+    }
+  };
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
@@ -488,6 +543,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       </div>
     </div>
   );
+  
   if (error) return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
       <div className="text-center p-8 bg-white rounded-lg shadow-md">
@@ -499,6 +555,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       </div>
     </div>
   );
+
   if (!test) return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
       <div className="text-center p-8 bg-white rounded-lg shadow-md">
@@ -518,50 +575,82 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   return (
     <div className="bg-white flex flex-col text-white overflow-hidden h-screen">
+      {showDefinition && selectedWord && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: dictionaryPosition.top !== null ? `${dictionaryPosition.top}px` : 'auto',
+            bottom: dictionaryPosition.bottom !== null ? `${dictionaryPosition.bottom}px` : 'auto',
+            left: `${dictionaryPosition.left}px`,
+            zIndex: 1000
+          }}
+        >
+          <DictionaryLookup 
+            word={selectedWord} 
+            onClose={() => setShowDefinition(false)} 
+          />
+        </div>
+      )}
+
       <TestHeader
         ref={testHeaderRef}
         title={test?.title}
         isCreatingTest={isCreatingTest}
       />
-      <div className="h-9 border-t-2 border-b-2 border-white bg-[#84aedd] flex items-center justify-between">
-        <div className="flex items-center ml-2">
+
+      {/* Toolbar with highlight, strikethrough, flag, and vocab list toggle */}
+      <div className="h-9 border-t-2 border-b-2 border-white bg-[#84aedd] flex items-center justify-between px-4">
+        <div className="flex items-center space-x-2">
           <button
-            className={`mr-2 px-3 py-1 rounded transition-colors duration-200 flex items-center ${
+            className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
               flashHighlight
                 ? 'bg-transparent text-yellow-300'
                 : 'bg-transparent text-white hover:bg-white/10'
             }`}
             onClick={handleHighlight}
+            aria-label="Highlight"
           >
-            <Highlighter className="w-4 h-4 mr-2 ml-3" />
+            <Highlighter className="w-4 h-4 mr-2" />
             Highlight
           </button>
           <button
-            className={`mr-2 px-3 py-1 rounded transition-colors duration-200 flex items-center ${
+            className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
               flashStrikethrough
                 ? 'bg-transparent text-yellow-300'
                 : 'bg-transparent text-white hover:bg-white/10'
             }`}
             onClick={handleStrikethrough}
+            aria-label="Strikethrough"
           >
-            <Pencil className="w-4 h-4 mr-1" />
+            <Pencil className="w-4 h-4 mr-2" />
             Strikethrough
           </button>
         </div>
-        <div className="flex items-center mr-2">
+        <div className="flex items-center space-x-2">
+          {/*<button
+            onClick={toggleVocabList}
+            className={`rounded px-2 transition-colors duration-200 flex items-center ${
+              showVocabList ? 'bg-blue-500' : 'bg-transparent'
+            } text-white hover:bg-blue-600`}
+            aria-label={showVocabList ? "Hide Vocabulary List" : "Show Vocabulary List"}
+          >
+            📚
+          </button>*/}
           <button
-            className={`mr-2 px-3 py-1 rounded transition-colors duration-200 flex items-center ${
+            className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
               flashFlag
                 ? 'bg-transparent text-yellow-300'
                 : 'bg-transparent text-white hover:bg-white/10'
             }`}
             onClick={handleFlag}
+            aria-label="Flag for Review"
           >
             <Flag className="w-4 h-4 mr-2" />
             Flag for Review
           </button>
         </div>
       </div>
+
       <div className="h-7 bg-[#a6a6a6]"></div>
      
       {/* Main content area */}
@@ -592,6 +681,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                       : 'bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white'}
                   `}
                   onClick={() => setShowChatbot(!showChatbot)}
+                  aria-label="Toggle Chatbot"
                 >
                   <Cat className="w-6 h-6" />
                 </button>
@@ -631,7 +721,22 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
             </div>
           )}
         </div>
+
+        {/* Conditionally render the VocabList Sidebar */}
+        {showVocabList && (
+          <div className="fixed top-0 right-0 p-4 bg-white shadow-lg z-50 w-80 h-full overflow-auto transition-transform transform">
+            <VocabList />
+            <button
+              onClick={toggleVocabList}
+              className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
+              aria-label="Close Vocabulary List"
+            >
+              Close
+            </button>
+          </div>
+        )}
       </div>
+
       <div className="bg-[#006dab] h-15 border-t-3 border-sky-500"></div>
 
       <ScoreDialog
@@ -642,13 +747,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         correctAnswer={correctAnswer}
         technique={technique}
       />
-
-      {showDefinition && selectedWord && (
-        <DictionaryLookup 
-          word={selectedWord} 
-          onClose={() => setShowDefinition(false)} 
-        />
-      )}
     </div>
   );
 };

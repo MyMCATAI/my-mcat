@@ -2,6 +2,7 @@
 import { useSearchParams } from "next/navigation";
 import TestComponent from "@/components/test-component";
 import { useEffect } from "react";
+import { VocabProvider } from '@/contexts/VocabContext'; // Import VocabProvider
 
 const TestQuestions = () => {
   const searchParams = useSearchParams();
@@ -26,9 +27,11 @@ const TestQuestions = () => {
   }
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-black">
-      <TestComponent testId={testId} />
-    </div>
+    <VocabProvider> {/* Wrap the entire content with VocabProvider */}
+      <div className="fixed inset-0 overflow-hidden bg-black">
+        <TestComponent testId={testId} />
+      </div>
+    </VocabProvider>
   );
 };
 
