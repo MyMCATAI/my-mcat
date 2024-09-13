@@ -210,7 +210,8 @@ export async function GET(req: Request) {
                   questionOptions: true,
                   questionAnswerNotes: true,
                   contentCategory: true,
-                  passageId: true
+                  passageId: true,
+                  context: true
                 }
               }
             }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFromRaw, DraftHandleValue, KeyBindingUtil, getDefaultKeyBinding, ContentBlock } from 'draft-js';
+import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFromRaw, DraftHandleValue, KeyBindingUtil, getDefaultKeyBinding, ContentBlock, SelectionState, Modifier } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import styles from './Passage.module.css';
 import type { Passage } from '@/types';
@@ -7,11 +7,13 @@ import type { Passage } from '@/types';
 interface PassageProps {
   passageData: Passage;
   onNote?: (text: string) => void;
+  highlightedStrings?: string[];
 }
 
 const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps>(({ 
   passageData, 
-  onNote, 
+  onNote,
+  highlightedStrings
 }, ref) => {
 
   const [editorState, setEditorState] = useState(() => 
@@ -20,12 +22,13 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
 
   useEffect(() => {
     const savedContent = typeof window !== 'undefined' ? localStorage.getItem(`passage-${passageData.id}`) : null;
+    let contentState;
     if (savedContent) {
-      const content = convertFromRaw(JSON.parse(savedContent));
-      setEditorState(EditorState.createWithContent(content));
+      contentState = convertFromRaw(JSON.parse(savedContent));
     } else {
-      setEditorState(EditorState.createWithContent(ContentState.createFromText(passageData.text)));
+      contentState = ContentState.createFromText(passageData.text);
     }
+    setEditorState(EditorState.createWithContent(contentState));
   }, [passageData.id, passageData.text]);
 
   useEffect(() => {
@@ -33,7 +36,6 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     localStorage.setItem(`passage-${passageData.id}`, JSON.stringify(content));
   }, [editorState, passageData.id]);
 
-  
   useImperativeHandle(ref, () => ({
     applyStyle
   }));
@@ -120,6 +122,55 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     }
     return getDefaultKeyBinding(e);
   };
+
+  // Function to remove an inline style from the entire content
+  function removeInlineStyleFromContentState(contentState: ContentState, style: string): ContentState {
+    const blocks = contentState.getBlocksAsArray();
+    blocks.forEach(block => {
+      const blockKey = block.getKey();
+      const blockLength = block.getLength();
+      if (blockLength > 0) {
+        const selection = SelectionState.createEmpty(blockKey).merge({
+          anchorOffset: 0,
+          focusOffset: blockLength,
+        });
+        contentState = Modifier.removeInlineStyle(contentState, selection, style);
+      }
+    });
+    return contentState;
+  }
+
+  // Apply highlights when highlightedStrings change
+  useEffect(() => {
+    let contentState = editorState.getCurrentContent();
+
+    // Remove existing 'HIGHLIGHT' styles
+    contentState = removeInlineStyleFromContentState(contentState, 'HIGHLIGHT');
+
+    if (highlightedStrings && highlightedStrings.length > 0) {
+      highlightedStrings.forEach(str => {
+        const blocks = contentState.getBlocksAsArray();
+        blocks.forEach(block => {
+          const blockText = block.getText();
+          let start = 0;
+          while (true) {
+            const index = blockText.indexOf(str, start);
+            if (index === -1) break;
+            const selection = SelectionState.createEmpty(block.getKey()).merge({
+              anchorOffset: index,
+              focusOffset: index + str.length,
+            });
+            contentState = Modifier.applyInlineStyle(contentState, selection, 'HIGHLIGHT');
+            start = index + str.length;
+          }
+        });
+      });
+    }
+
+    const newEditorState = EditorState.push(editorState, contentState, 'change-inline-style');
+    setEditorState(newEditorState);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightedStrings]);
 
   return (
     <div className="bg-[#ffffff] h-[80vh] flex flex-col font-serif">
