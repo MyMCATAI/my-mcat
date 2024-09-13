@@ -88,10 +88,10 @@ const RedditPosts: React.FC = () => {
   };
 
   const formatContent = (content: string) => {
-    const htmlContent = marked(content);
+    const htmlContent: string = marked(content) as string; // Define type
     const sanitizedContent = DOMPurify.sanitize(htmlContent);
     return sanitizedContent.replace(/<\/p><p>/g, '</p><br><p>');
-  };
+  };  
 
   const handleNextPost = () => {
     setPostIndex((prevIndex) => prevIndex + 1);
