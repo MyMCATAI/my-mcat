@@ -13,6 +13,16 @@ import { ReportData, Test, UserTest } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TestList from "./TestList";
 import { useUser } from "@clerk/nextjs";
+import dynamic from 'next/dynamic';
+
+// Update the dynamic import
+const ChatBotWidgetNoChatBot = dynamic(
+  () => import('@/components/chatbot/ChatBotWidgetNoChatBot'),
+  { 
+    ssr: false,
+    loading: () => <div>Loading...</div>,
+  }
+);
 
 interface TestListingProps {
   tests: Test[];
@@ -34,7 +44,6 @@ const getTimeOfDay = () => {
 
 const Exams: React.FC<TestListingProps> = ({ tests }) => {
   const { user } = useUser();
-  const [profileImage, setProfileImage] = useState("/kyle.png");
   const [userTests, setUserTests] = useState<UserTest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +51,10 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [testDescription, setTestDescription] = useState('');
   const [isWelcomeComplete, setIsWelcomeComplete] = useState(false);
+  const [chatbotContext, setChatbotContext] = useState({
+    contentTitle: "",
+    context: ""
+  });
 
   const getPercentageColor = (percentage: number) => {
     if (percentage < 50) return "text-red-500";
@@ -135,17 +148,6 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
     fetchUserTests();
   }, []);
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   return (
     <div className="h-full flex flex-col p-3" style={{ color: 'var(--theme-text-color)' }}>
       <div className="flex-grow grid grid-cols-1 md:grid-cols-7 gap-4">
@@ -163,23 +165,8 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
             }}
           >
             <div className="flex mb-4">
-              <div className="w-[8rem] h-[8rem] bg-gray-300 rounded-lg mr-4 flex-shrink-0 overflow-hidden">
-                <label htmlFor="profile-upload" className="cursor-pointer block w-full h-full">
-                  <Image
-                    src={profileImage}
-                    alt="Upload profile picture"
-                    width={84}
-                    height={84}
-                    className="object-cover w-full h-full"
-                  />
-                </label>
-                <input
-                  id="profile-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
+              <div className="w-[8rem] h-[8rem] bg-transparent border-2 border-[--theme-border-color] rounded-lg mr-4 flex-shrink-0 overflow-hidden relative">
+                <ChatBotWidgetNoChatBot />
               </div>
               <div className="flex-grow p-2 bg-transparent border-2 rounded-lg" style={{ color: 'var(--theme-text-color)', borderColor: 'var(--theme-border-color)' }}>
                 <div className="flex justify-between items-center h-full px-2 sm:px-4 md:px-6 lg:px-8 xl:px-16">
