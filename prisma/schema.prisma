@@ -15,6 +15,7 @@ model UserInfo {
   updatedAt DateTime @updatedAt
   apiCount  Int      @default(0)
   createdAt DateTime @default(now())
+  score     Int      @default(0)
 }
 
 model UserSubscription {
