@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Question, UserResponse } from '@/types';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Send } from "lucide-react";
+import { ChevronDown, ChevronUp, Send, HelpCircle, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import InlineChatbot from '@/components/chatbot/InlineChatbot';
+import ChatBotInLineForReview from '@/components/chatbot/ChatBotInLineForReview';
 import { Passage } from '@/types';
 
 interface ReviewQuestionComponentProps {
@@ -48,6 +48,9 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   const [threadId, setThreadId] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  const [showHelp, setShowHelp] = useState(false);
+  const [showDictionary, setShowDictionary] = useState(false);
+
   useEffect(() => {
     if (question) {
       const options = JSON.parse(question.questionOptions);
@@ -71,7 +74,7 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       Time Spent: ${userResponse.timeSpent || "0"} seconds \n
       ${userResponse.isCorrect? "": `Explanation for my answer: ${answerNotes[userAnswerIndex] || 'No explanation available.'} \n`}
       
-      Explanation for correct answer: ${answerNotes[0] || 'No explanation available.'} \n
+      Explanation for correct answer: ${explanations[0] || 'No explanation available.'} \n
             
       I'm going to explain my line of thinking and defend my answer, help me use this context to learn.
 
@@ -156,8 +159,37 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   };
 
   return (
-    <div className="p-6 bg-white text-black h-full flex flex-col text-sm">
+    <div className="p-6 bg-white text-black h-full flex flex-col text-sm relative">
       <h2 className="text-lg font-semibold mb-4">Question {currentQuestionIndex + 1} of {totalQuestions}</h2>
+      
+      <div className="absolute top-4 right-4 flex space-x-2">
+        <button
+          className={`
+            p-2 rounded-full shadow-lg
+            transition-colors duration-200
+            ${showHelp 
+              ? 'bg-blue-500 text-white' 
+              : 'bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white'}
+          `}
+          onClick={() => setShowHelp(!showHelp)}
+          aria-label="Toggle Help"
+        >
+          <HelpCircle className="w-6 h-6" />
+        </button>
+        <button
+          className={`
+            p-2 rounded-full shadow-lg
+            transition-colors duration-200
+            ${showDictionary 
+              ? 'bg-blue-500 text-white' 
+              : 'bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white'}
+          `}
+          onClick={() => setShowDictionary(!showDictionary)}
+          aria-label="Toggle Dictionary"
+        >
+          <BookOpen className="w-6 h-6" />
+        </button>
+      </div>
       
       {userResponse.flagged && (
         <p className="text-red-500 text-sm mb-2">
@@ -181,7 +213,6 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
         
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
-              <h4 className="font-semibold">Defend your answer:</h4>
              {!showExplanations && ( <Button
                 onClick={handleSkipDefense}
                 className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs py-1 px-2 rounded"
@@ -189,14 +220,14 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
                 Skip Defense
               </Button>)}
             </div>
-            <InlineChatbot 
-              context={context}
+            <ChatBotInLineForReview 
+              chatbotContext={{ contentTitle: '', context }}
               onShowExplanations={() => {
                 setShowExplanations(true);
                 console.log("User's initial response:", userResponse.userAnswer);
               }}
               onMessageSent={handleMessageSent}
-              key={question.id} // Add this line to reset the InlineChatbot when the question changes
+              key={question.id} // Add this line to reset the ChatBotInLineForReview when the question changes
             />
           </div>
 
@@ -246,25 +277,25 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       )}
 
             </div>
-      </div>
-      <div className="flex justify-between mt-4">
-        <button
-          onClick={onPrevious}
-          disabled={isFirst}
-          className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <button
-          onClick={onNext}
-          disabled={isLast}
-          className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
     </div>
-  );
+    <div className="flex justify-between mt-4">
+      <button
+        onClick={onPrevious}
+        disabled={isFirst}
+        className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+      >
+        Previous
+      </button>
+      <button
+        onClick={onNext}
+        disabled={isLast}
+        className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+);
 };
 
 export default ReviewQuestionComponent;
