@@ -525,7 +525,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     return matches;
   }
 
-  const handleAssistantResponse = (responseText: string) => {
+  const handleShowHint = (responseText: string) => {
     const quotedStrings = extractQuotedStrings(responseText);
     setHighlightedStrings(quotedStrings);
   };
@@ -768,7 +768,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                   onFinish={handleFinishTest}
                   isSubmitting={isSubmitting}
                   answeredQuestions={answeredQuestions}
-                  onAssistantResponse={handleAssistantResponse}
                 />
               </>
             ) : (
@@ -786,6 +785,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                 isVoiceEnabled={false}
                 width="100%"
                 backgroundColor="white"
+                handleShowHint={handleShowHint}
+                question={currentQuestion}
               />
             </div>
           )}
