@@ -127,6 +127,7 @@ export interface Flashcard {
 }
 
 export interface ReportData {
+  userScore: number;
   totalTestsTaken: number;
   testsCompleted: number;
   completionRate: number;
