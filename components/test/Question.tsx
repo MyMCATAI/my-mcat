@@ -3,7 +3,7 @@ import { Question } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, X, Flag } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFromRaw, DraftHandleValue } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 
@@ -20,6 +20,7 @@ interface QuestionsProps {
   onFinish: () => void;
   isSubmitting: boolean;
   answeredQuestions: number;
+  onOptionCrossedOut: (optionText: string) => void;
 }
 
 // Seeded random number generator
@@ -91,6 +92,7 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
   onFinish,
   isSubmitting,
   answeredQuestions,
+  onOptionCrossedOut
 }, ref) => {
   const options = JSON.parse(question.questionOptions);
   const correctAnswer = options[0];
@@ -100,7 +102,6 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
     const processedContent = preprocessContent(question.questionContent);
     return EditorState.createWithContent(ContentState.createFromText(processedContent));
   });
-  const [flashFlag, setFlashFlag] = useState(false);
 
   const testHeaderRef = useRef(null);
   
@@ -139,14 +140,10 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
         newSet.delete(index);
       } else {
         newSet.add(index);
+        onOptionCrossedOut(randomizedOptions[index]);
       }
       return newSet;
     });
-  };
-
-  const applyStyle = (style: string) => {
-    const newState = RichUtils.toggleInlineStyle(editorState, style);
-    setEditorState(newState);
   };
 
   useImperativeHandle(ref, () => ({
@@ -155,12 +152,6 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
       setEditorState(newState);
     }
   }));
-
-  const handleFlag = () => {
-    // Implement flag functionality here
-    setFlashFlag(true);
-    setTimeout(() => setFlashFlag(false), 200);
-  };
 
   const handleBeforeInput = (chars: string, editorState: EditorState): DraftHandleValue => {
     return 'handled';
@@ -247,11 +238,15 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
           {isLast ? (
             <Button
               onClick={onFinish}
-              disabled={isSubmitting}
+              disabled={isSubmitting || answeredQuestions < totalQuestions}
               variant="default"
-              className="bg-green-500 hover:bg-green-600 text-white"
+              className={`${
+                answeredQuestions < totalQuestions
+                  ? 'bg-gray-400 hover:bg-gray-500 cursor-not-allowed'
+                  : 'bg-green-500 hover:bg-green-600'
+              } text-white`}
             >
-              {isSubmitting ? 'Finishing...' : 'Finish Test'}
+              {isSubmitting ? 'Finishing...' : "Finish Test"}
             </Button>
           ) : (
             <Button
