@@ -3,6 +3,28 @@ import {auth} from "@clerk/nextjs"
 import prismadb from "@/lib/prismadb"
 import { DEFAULT_BIO } from "@/constants"
 
+
+export const incrementUserScore = async (amount: number) => {
+  const { userId } = auth();
+  if (!userId) throw new Error('User not authenticated');
+
+  const updatedUserInfo = await prismadb.userInfo.upsert({
+    where: { userId },
+    update: {
+      score: {
+        increment: amount,
+      },
+    },
+    create: {
+      userId,
+      bio: DEFAULT_BIO,
+      score: amount,
+    },
+  });
+
+  return updatedUserInfo;
+};
+
 export const createUserInfo = async () =>{
     const {userId} = auth();
     if (!userId) {return;}

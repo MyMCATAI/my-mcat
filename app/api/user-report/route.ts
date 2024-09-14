@@ -10,6 +10,12 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Fetch user info to get the score
+    const userInfo = await prisma.userInfo.findUnique({
+      where: { userId },
+      select: { score: true },
+    });
+
     // Fetch all user tests and their responses
     const userTests = await prisma.userTest.findMany({
       where: { userId },
@@ -53,6 +59,7 @@ export async function GET(req: NextRequest) {
     }, {} as Record<string, number>);
 
     return NextResponse.json({
+      userScore: userInfo?.score || 0,
       totalTestsTaken,
       testsCompleted,
       completionRate,
