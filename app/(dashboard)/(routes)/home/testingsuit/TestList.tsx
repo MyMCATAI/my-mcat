@@ -90,7 +90,7 @@ const TestList: React.FC<TestListProps> = ({ items, type, loading = false }) => 
                     : ''
                 }`}>
                   {type === 'past' && 'reviewedResponses' in item && 'totalResponses' in item
-                    ? `Review ${item.reviewedResponses}/${item.totalResponses}`
+                    ? `${item.reviewedResponses}/${item.totalResponses}`
                     : 'difficulty' in item
                     ? `Lvl ${item.difficulty}`
                     : 'N/A'}

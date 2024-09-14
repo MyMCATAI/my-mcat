@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import UserTestList from '@/components/user-test/UserTestList';
 import { UserTest } from '@/types';
 import { Loader2 } from "lucide-react";
+import Link from 'next/link';
 
 export default function UserTestListPage() {
   const [userTests, setUserTests] = useState<UserTest[]>([]);
@@ -40,6 +41,12 @@ export default function UserTestListPage() {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Your Tests</h1>
       <UserTestList userTests={userTests} />
+      {/* Optionally, add a link to return home or other navigation */}
+      <div className="mt-4">
+        <Link href="/home" className="text-blue-500 hover:underline">
+          Return Home
+        </Link>
+      </div>
     </div>
   );
 }

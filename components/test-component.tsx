@@ -691,7 +691,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           </button>
         </div>
         <div className="flex items-center space-x-2">
-          {/*<button
+          <button
             onClick={toggleVocabList}
             className={`rounded px-2 transition-colors duration-200 flex items-center ${
               showVocabList ? 'bg-blue-500' : 'bg-transparent'
@@ -699,7 +699,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
             aria-label={showVocabList ? "Hide Vocabulary List" : "Show Vocabulary List"}
           >
             📚
-          </button>*/}
+          </button>
           <button
             className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
               flashFlag

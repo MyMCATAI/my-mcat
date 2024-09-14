@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TestList from "./TestList";
 import { useUser } from "@clerk/nextjs";
 import dynamic from 'next/dynamic';
+import { motion } from "framer-motion";
 
 // Update the dynamic import
 const ChatBotWidgetNoChatBot = dynamic(
@@ -26,6 +27,7 @@ const ChatBotWidgetNoChatBot = dynamic(
 
 interface TestListingProps {
   tests: Test[];
+  onAssistantResponse: (message: string, dismissFunc: () => void) => void;
 }
 
 const truncateTitle = (title: string, maxLength: number) => {
@@ -42,19 +44,20 @@ const getTimeOfDay = () => {
   return 'evening';
 };
 
-const Exams: React.FC<TestListingProps> = ({ tests }) => {
+const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
   const { user } = useUser();
   const [userTests, setUserTests] = useState<UserTest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState<ReportData | null>(null);
-  const [welcomeMessage, setWelcomeMessage] = useState('');
-  const [testDescription, setTestDescription] = useState('');
-  const [isWelcomeComplete, setIsWelcomeComplete] = useState(false);
+  const [welcomeAndTestMessage, setWelcomeAndTestMessage] = useState('');
   const [chatbotContext, setChatbotContext] = useState({
     contentTitle: "",
     context: ""
   });
+  const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
+  const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(null);
+  const [welcomeComplete, setWelcomeComplete] = useState(false);
 
   const getPercentageColor = (percentage: number) => {
     if (percentage < 50) return "text-red-500";
@@ -95,58 +98,37 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
 
   useEffect(() => {
     const userName = user ? user.firstName || 'there' : 'there';
-    const welcomeText = `Welcome ${userName.charAt(0).toUpperCase() + userName.slice(1)}! Good ${getTimeOfDay()}!\n\nWe've analyzed your past scores and prepared the perfect test for you...`;
-    let index = 0;
-
-    const typingTimer = setInterval(() => {
-      if (index <= welcomeText.length) {
-        setWelcomeMessage(welcomeText.slice(0, index));
-        index++;
-      } else {
-        clearInterval(typingTimer);
-        setIsWelcomeComplete(true);
-      }
-    }, 15);
-
-    return () => clearInterval(typingTimer);
-  }, [user]);
-
-  useEffect(() => {
-    if (isWelcomeComplete && tests.length > 0) {
-      const testText = `Here's your test for today:\n\n${tests[0].title}\n\n${tests[0].description}`;
+    const welcomeText = `Welcome ${userName.charAt(0).toUpperCase() + userName.slice(1)}! `;
+    
+    if (tests.length > 0) {
+      const fullText = welcomeText + tests[0].description;
       let index = 0;
 
       const typingTimer = setInterval(() => {
-        if (index <= testText.length) {
-          setTestDescription(testText.slice(0, index));
+        if (index <= fullText.length) {
+          setWelcomeAndTestMessage(fullText.slice(0, index));
           index++;
         } else {
           clearInterval(typingTimer);
+          setWelcomeComplete(true);
         }
       }, 15);
 
       return () => clearInterval(typingTimer);
     }
-  }, [isWelcomeComplete, tests]);
+  }, [user, tests]);
 
-  useEffect(() => {
-    const fetchUserTests = async () => {
-      try {
-        const response = await fetch('/api/user-test');
-        if (!response.ok) throw new Error('Failed to fetch user tests');
-        const data = await response.json();
-        console.log(data);
-        setUserTests(data.userTests);
-      } catch (err) {
-        setError('Error fetching user tests');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleAssistantResponse = (message: string, dismissFunc: () => void) => {
+    onAssistantResponse(message, dismissFunc);
+  };
 
-    fetchUserTests();
-  }, []);
+  const closeOverlay = () => {
+    if (dismissMessage) {
+      dismissMessage();
+    }
+    setAssistantMessage(null);
+    setDismissMessage(null);
+  };
 
   return (
     <div className="h-full flex flex-col p-3" style={{ color: 'var(--theme-text-color)' }}>
@@ -166,34 +148,50 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
           >
             <div className="flex mb-4">
               <div className="w-[8rem] h-[8rem] bg-transparent border-2 border-[--theme-border-color] rounded-lg mr-4 flex-shrink-0 overflow-hidden relative">
-                <ChatBotWidgetNoChatBot />
+                <ChatBotWidgetNoChatBot
+                  reportData={reportData}
+                  onResponse={handleAssistantResponse}
+                />
               </div>
+              {assistantMessage && (
+                <div className="ml-4 max-w-xs bg-blue-500 text-white rounded-lg p-3 relative animate-fadeIn">
+                  <div className="typing-animation">{assistantMessage}</div>
+                  <div className="absolute left-0 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-0 h-0 border-t-8 border-r-8 border-b-8 border-transparent border-r-blue-500"></div>
+                  <button
+                    onClick={closeOverlay}
+                    className="absolute top-1 right-1 text-white hover:text-gray-200"
+                    aria-label="Close"
+                  >
+                    &#10005;
+                  </button>
+                </div>
+              )}
               <div className="flex-grow p-2 bg-transparent border-2 rounded-lg" style={{ color: 'var(--theme-text-color)', borderColor: 'var(--theme-border-color)' }}>
                 <div className="flex justify-between items-center h-full px-2 sm:px-4 md:px-6 lg:px-8 xl:px-16">
                   <div className="flex flex-col items-center w-1/4">
                     <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
-                      <Image src="/game-components/PixelHeart.png" alt="Heart" layout="fill" objectFit="contain" className="animate-float" />
+                      <Image src="/game-components/PixelHeart.png" alt="Heart" layout="fill" objectFit="contain" />
                     </div>
                     <span className="text-[2vw] sm:text-xs mt-1">{reportData ? `${reportData.averageTestScore.toFixed(2)}%` : 'N/A'}</span>
                     <span className="text-[2vw] sm:text-xs">score</span>
                   </div>
                   <div className="flex flex-col items-center w-1/4">
                     <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
-                      <Image src="/game-components/PixelWatch.png" alt="Watch" layout="fill" objectFit="contain" className="animate-float animation-delay-200" />
+                      <Image src="/game-components/PixelWatch.png" alt="Watch" layout="fill" objectFit="contain" />
                     </div>
                     <span className="text-[2vw] sm:text-xs mt-1">{reportData ? `${reportData.averageTimePerQuestion.toFixed(2)}s` : 'N/A'}</span>
                     <span className="text-[2vw] sm:text-xs">avg time</span>
                   </div>
                   <div className="flex flex-col items-center w-1/4">
                     <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
-                      <Image src="/game-components/PixelCupcake.png" alt="Diamond" layout="fill" objectFit="contain" className="animate-float animation-delay-400" />
+                      <Image src="/game-components/PixelCupcake.png" alt="Diamond" layout="fill" objectFit="contain" />
                     </div>
                     <span className="text-[2vw] sm:text-xs mt-1">{reportData ? reportData.totalQuestionsAnswered : 'N/A'}</span>
                     <span className="text-[2vw] sm:text-xs">cupcakes</span>
                   </div>
                   <div className="flex flex-col items-center w-1/4">
                     <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
-                      <Image src="/game-components/PixelBook.png" alt="Flex" layout="fill" objectFit="contain" className="animate-float animation-delay-600" />
+                      <Image src="/game-components/PixelBook.png" alt="Flex" layout="fill" objectFit="contain" />
                     </div>
                     <span className="text-[2vw] sm:text-xs mt-1">{reportData ? `${reportData.testsCompleted}/${reportData.totalTestsTaken}` : 'N/A'}</span>
                     <span className="text-[2vw] sm:text-xs">tests</span>
@@ -203,17 +201,11 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
             </div>
             <div className="flex flex-col">
               <pre className="font-mono text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap flex-1 mt-4 ml-2" style={{ color: 'var(--theme-text-color)' }}>
-                
-                <span className="font-pixel text-lg text-gradient animate-pulse">
-                {welcomeMessage}
-                </span>
-                {isWelcomeComplete && '\n\n'}
-                  <i>{testDescription}</i>
-
+                {welcomeAndTestMessage}
               </pre>
-              {testDescription.length > 0 && (
+              {welcomeComplete && tests.length > 0 && (
                 <div className="flex items-center mt-6 ml-2">
-                  <Link  href={`/test/testquestions?id=${tests[0].id}`} className="text-blue-500 hover:text-blue-200 transition-colors duration-200 flex items-center">
+                  <Link href={`/test/testquestions?id=${tests[0].id}`} className="text-blue-500 transition-colors duration-200 flex items-center">
                     <div className="flex items-center mr-4">
                       <div className="w-7 h-7 relative theme-box mr-1">
                         <Image
@@ -234,24 +226,20 @@ const Exams: React.FC<TestListingProps> = ({ tests }) => {
                         />
                       </div>
                     </div>
-                    <span style={{ color: 'var(--theme-text-color)' }}>
-                      {tests && tests.length > 0 ? (
-                        <Link href={`/test/testquestions?id=${tests[0].id}`}>
-                          Click to begin
-                        </Link>
-                      ) : (
-                        "Loading first test..."
-                      )}
+                    <span 
+                      className="animate-pulse"
+                      style={{ 
+                        color: 'var(--theme-text-color)',
+                        transition: 'color 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--theme-hover-color)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--theme-text-color)'}
+                    >
+                      {tests && tests.length > 0 ? tests[0].title : "Loading first test..."}
                     </span>
                   </Link>
                 </div>
               )}
-            </div>
-            <div className="absolute bottom-4 right-4 flex items-center">
-              <span className="mr-2 text-sm animate-pulse" style={{ color: 'var(--theme-text-color)' }}>Next Passage</span>
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-pulse">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
             </div>
           </div>
         </div>
