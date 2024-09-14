@@ -3,10 +3,9 @@ import { Question } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, X, Flag, HelpCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Flag } from "lucide-react";
 import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFromRaw, DraftHandleValue } from 'draft-js';
 import 'draft-js/dist/Draft.css';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface QuestionsProps {
   question: Question;
@@ -21,7 +20,6 @@ interface QuestionsProps {
   onFinish: () => void;
   isSubmitting: boolean;
   answeredQuestions: number;
-  onAssistantResponse?: (responseText: string) => void;
 }
 
 // Seeded random number generator
@@ -93,7 +91,6 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
   onFinish,
   isSubmitting,
   answeredQuestions,
-  onAssistantResponse
 }, ref) => {
   const options = JSON.parse(question.questionOptions);
   const correctAnswer = options[0];
@@ -177,11 +174,6 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
     return 'handled';
   };
 
-  const handleShowHint = () => {
-    console.log("Show hint placeholder");
-    question.context && onAssistantResponse && onAssistantResponse(question.context)
-  };
-
   return (
     <div className="flex flex-col items-center px-6 font-serif text-black text-sm">
       <div className="w-full max-w-3xl flex flex-col">
@@ -190,42 +182,6 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
             <h2 className="text-base font-bold ">
               Question {currentQuestionIndex + 1} of {totalQuestions}
             </h2>
-           {question.context && <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={handleShowHint}
-                    variant="ghost"
-                    size="sm"
-                    className="px-5 mx-5 py-1 flex items-center text-gray-400"
-                  >
-                    <HelpCircle className="h-5 w-5 text-gray-400 mr-2" />
-                    <span>Hint</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" sideOffset={5} className="max-w-[600px] max-h-[800px] overflow-auto">
-                  <div className="markdown-content">
-                    {question.context.split('\n').map((paragraph, index) => {
-                      if (paragraph.startsWith('*')) {
-                        return (
-                          <ul key={index} className="list-disc pl-5 my-2">
-                            <li>{index === 0 ? <strong>{paragraph.substring(1).trim()}</strong> : paragraph.substring(1).trim()}</li>
-                          </ul>
-                        );
-                      } else if (/^\d+\./.test(paragraph)) {
-                        return (
-                          <ol key={index} className="list-decimal pl-5 my-2">
-                            <li>{index === 0 ? <strong>{paragraph.substring(paragraph.indexOf('.') + 1).trim()}</strong> : paragraph.substring(paragraph.indexOf('.') + 1).trim()}</li>
-                          </ol>
-                        );
-                      } else {
-                        return <p key={index} className="my-2">{index === 0 ? <strong>{paragraph}</strong> : paragraph}</p>;
-                      }
-                    })}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>}
           </div>
         </div>
         <div className="mb-4">
