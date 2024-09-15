@@ -47,8 +47,8 @@ const validateData = (data: any) => {
 };
 
 export async function POST(req: Request) {
+  const ip = (req.headers.get('x-forwarded-for') || 'unknown').split(',')[0].trim();
   try {
-    const ip = (req.headers.get('x-forwarded-for') || 'unknown').split(',')[0].trim();
     console.log(`[KALYPSO] Incoming request from IP: ${ip}`);
 
     await rateLimiter.consume(ip);
@@ -115,11 +115,14 @@ Please provide a cute and encouraging message based on the above statistics.`
       await new Promise(resolve => setTimeout(resolve, 1000));
       runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
     }
-
     // Get the assistant's response
     const messages = await openai.beta.threads.messages.list(thread.id);
     const assistantMessage = messages.data.find(message => message.role === "assistant");
-    const message = assistantMessage?.content[0]?.text?.value;
+    let message: string | undefined;
+
+    if (assistantMessage?.content[0]?.type === 'text') {
+      message = assistantMessage.content[0].text.value;
+    }
 
     if (!message) {
       throw new Error("Empty response from OpenAI Assistant");

@@ -50,7 +50,7 @@ const ChatBotWidgetNoChatBot: React.FC<ChatBotWidgetNoChatBotProps> = ({ reportD
         testsCompleted: reportData.testsCompleted,
         totalTestsTaken: reportData.totalTestsTaken,
         totalQuestionsAnswered: reportData.totalQuestionsAnswered,
-        totalCupcakes: reportData.totalCupcakes || 0,
+        totalCupcakes: reportData.userScore || 0,
       };
       const response = await axios.post('/api/kalypso', {
         data: kalypsoData,

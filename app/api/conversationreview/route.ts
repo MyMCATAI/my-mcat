@@ -11,7 +11,7 @@ const elevenlabs = new ElevenLabsClient({
   apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
 });
 
-const assistantId: string = process.env.CARSR_ASSISTANT_ID || "";
+const assistantId: string = process.env.CARS_ASSISTANT_ID || "";
 if (!assistantId) {
   throw new Error("Assistant ID not configured in .env file");
 }
