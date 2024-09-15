@@ -222,11 +222,6 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
             </div>
             <ChatBotInLineForReview 
               chatbotContext={{ contentTitle: '', context }}
-              onShowExplanations={() => {
-                setShowExplanations(true);
-                console.log("User's initial response:", userResponse.userAnswer);
-              }}
-              onMessageSent={handleMessageSent}
               key={question.id} // Add this line to reset the ChatBotInLineForReview when the question changes
             />
           </div>
