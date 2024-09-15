@@ -1,5 +1,6 @@
 import { LandingNavbar } from "@/components/landing-navbar";
 import Footer from "@/components/landingpage/Footer";
+import { Analytics } from '@vercel/analytics/react';
 
 const LandingLayout = ({
     children
@@ -13,6 +14,7 @@ const LandingLayout = ({
           {children}
           <Footer/>
         </div>
+        <Analytics />
       </main>
      );
   }
