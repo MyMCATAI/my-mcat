@@ -63,28 +63,15 @@ const MethodologyAndTestimonials = () => {
 
   useEffect(() => {
     const section = sectionRef.current;
-    const title = titleRef.current;
-    const polygon = polygonRef.current;
     const textBox = textBoxRef.current;
 
-    gsap.set([title, textBox], { opacity: 0, y: 50 });
-    gsap.set(polygon, { opacity: 0, x: -50 });
+    gsap.set(textBox, { opacity: 0, y: 50 });
 
-    // Title animation
-    gsap.to(title, {
+    // TextBox animation
+    gsap.to(textBox, {
       opacity: 1,
       y: 0,
-      duration: 0.7,
-      scrollTrigger: {
-        trigger: section,
-        start: 'top 60%',
-        end: 'bottom 20%',
-        scrub: 1,
-      }
-    });
-
-    // Polygon and textBox animations
-    const tl = gsap.timeline({
+      duration: 0.3,
       scrollTrigger: {
         trigger: section,
         start: 'top 100%',
@@ -93,16 +80,12 @@ const MethodologyAndTestimonials = () => {
       }
     });
 
-    tl.to(polygon, { opacity: 1, x: 0, duration: 0.1 })
-      .to(textBox, { opacity: 1, y: 0, duration: 0.3 }, '-=0.2');
-
-    // Removed GSAP animation for the university logos carousel
   }, []);
 
   return (
     <>
       <section 
-        className="bg-[#000c1e] pt-24 pb-32 relative opacity-90" 
+        className="bg-[#000c1e] pt-24 pb-32 relative opacity-90 overflow-hidden" 
         id="methodology" 
         ref={sectionRef}
         style={{
@@ -112,12 +95,11 @@ const MethodologyAndTestimonials = () => {
           backgroundRepeat: 'no-repeat',
         }}
       >
-        <div className="absolute inset-0 bg-[#011528] opacity-80"></div>
+        <div className="absolute inset-0 bg-[#011528] opacity-100"></div>
         <div 
-          className="polygon absolute top-0 left-0 right-0 h-full bg-blue-200 opacity-20" 
-          ref={polygonRef}
+          className="polygon absolute top-0 left-0 right-0 h-[120%] bg-[#292a58] opacity-100" 
           style={{
-            clipPath: 'polygon(0 0, 100% 0, 100% 80%, 0 100%)',
+            clipPath: 'polygon(0 0, 100% 0, 100% 85%, 0 100%)',
           }}
         ></div>
         <div className="container-fluid relative z-10">
@@ -128,7 +110,7 @@ const MethodologyAndTestimonials = () => {
               </div>
             </div>
             <div className="mx-4 mt-6">
-              <h1 className="text-5xl md:text-5xl font-bold text-green-500 text-left" ref={titleRef}>
+              <h1 className="text-5xl md:text-5xl font-bold text-green-500 text-left">
                 A mission-based social business.
               </h1>
               <div className="mt-12 bg-black p-5 rounded-lg w-full md:w-auto md:mr-[10em]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
