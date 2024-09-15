@@ -3,8 +3,6 @@ import { Question, UserResponse } from '@/types';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, Send, HelpCircle, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import ChatBotInLineForReview from '@/components/chatbot/ChatBotInLineForReview';
 import { Passage } from '@/types';
 
@@ -125,11 +123,6 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
     } catch (error) {
       console.error('Error updating user response:', error);
     }
-  };
-
-  const handleMessageSent = (message: string) => {
-    console.log("Message sent:", message);
-    updateUserResponse(message);
   };
 
   const handleSkipDefense = () => {

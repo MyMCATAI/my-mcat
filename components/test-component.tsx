@@ -58,6 +58,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   });
   const [showChatbot, setShowChatbot] = useState(false);
   const [highlightedStrings, setHighlightedStrings] = useState<string[]>([]);
+  const [tempHighlightedStrings, setTempHighlightedStrings] = useState<string[]>([]); // Temporary highlights
   const passageRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
   const questionRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
   const testHeaderRef = useRef<TestHeaderRef>(null);
@@ -73,6 +74,10 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const [dictionaryPosition, setDictionaryPosition] = useState<DictionaryPosition>({ top: null, bottom: null, left: 0 });
 
   const { isCmdIEnabled, toggleCmdI, addVocabWord, removeVocabWord, showVocabList, toggleVocabList, vocabList } = useContext(VocabContext);
+
+  
+  const passageStorageKey = test?.id && currentPassage?.id ? `passage-${test.id}-${currentPassage.id}` : undefined;
+
 
   useEffect(() => {
     fetchTest();
@@ -535,11 +540,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     }
   };
 
-  const onNote = (text: string) => {
-    console.log('Noted:', text);
-    saveNote(text);
-  };
-
   const handleFlag = async () => {
     setFlashFlag(true);
     
@@ -587,6 +587,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     } 
   };
 
+  // Function to extract quoted strings from context text
   function extractQuotedStrings(inputText: string): string[] {
     const regex = /"([^"]+)"/g;
     const matches = [];
@@ -599,7 +600,12 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   const handleShowHint = (responseText: string) => {
     const quotedStrings = extractQuotedStrings(responseText);
-    setHighlightedStrings(quotedStrings);
+    setTempHighlightedStrings(quotedStrings);
+
+    // Clear the temporary highlights after 5 seconds
+    setTimeout(() => {
+      setTempHighlightedStrings([]);
+    }, 5000);
   };
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -797,12 +803,12 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         {currentPassage && (
           <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto">
             <div className="p-4 h-full">
-              <PassageComponent 
-                ref={passageRef}
-                passageData={currentPassage} 
-                onNote={onNote}
-                highlightedStrings={highlightedStrings}
-              />
+            <PassageComponent
+              ref={passageRef}
+              passageData={currentPassage}
+              onNote={saveNote}
+              tempHighlightedStrings={tempHighlightedStrings}
+            />
             </div>
           </div>
         )}
