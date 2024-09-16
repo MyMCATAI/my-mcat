@@ -459,7 +459,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   
  
   const saveNote = async (text: string) => {
-    console.log("Starting saveNote function");
+    console.log("Starting saveNote function",text);
     let currentUserTest = userTest
     if (!currentUserTest) {
       console.log("No userTest, creating new one");

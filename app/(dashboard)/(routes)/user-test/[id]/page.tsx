@@ -164,6 +164,7 @@ export default function UserTestReviewPage() {
                   <PassageComponent 
                     passageData={currentPassage} 
                     userResponse={currentResponse}
+                    onNote={()=>{console.log("note")}}
                     />
                   </div>
                 </div>

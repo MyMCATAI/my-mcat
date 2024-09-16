@@ -17,10 +17,44 @@ import type { Passage, UserResponse } from "@/types";
 
 interface PassageProps {
   passageData: Passage;
-  onNote?: (text: string) => void;
+  onNote: (text: string) => void;
   tempHighlightedStrings?: string[];
   userResponse?: UserResponse;
 }
+
+
+interface Annotation {
+  style: string;
+  text: string;
+}
+
+function applyAnnotations(editorState: EditorState, annotations: Annotation[]): EditorState {
+  let contentState: ContentState = editorState.getCurrentContent();
+
+  // Sort annotations by start index to ensure consistent application
+  annotations.sort((a, b) => contentState.getPlainText().indexOf(a.text) - contentState.getPlainText().indexOf(b.text));
+
+  annotations.forEach(({ style, text }) => {
+    const blocks: ContentBlock[] = contentState.getBlocksAsArray();
+    blocks.forEach((block) => {
+      const blockText: string = block.getText();
+      let start: number = 0;
+      while (true) {
+        const index: number = blockText.indexOf(text, start);
+        if (index === -1) break;
+        const selection: SelectionState = SelectionState.createEmpty(block.getKey()).merge({
+          anchorOffset: index,
+          focusOffset: index + text.length,
+        });
+        contentState = Modifier.applyInlineStyle(contentState, selection, style);
+        start = index + 1; // Move only one character to catch overlapping annotations
+      }
+    });
+  });
+
+  return EditorState.push(editorState, contentState, 'change-inline-style');
+}
+
 
 const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps>(
   ({ passageData, onNote, tempHighlightedStrings, userResponse }, ref) => {
@@ -34,17 +68,42 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     useImperativeHandle(ref, () => ({
       applyStyle,
     }));
-
     const getSelectedText = (editorState: EditorState): string => {
       const selectionState = editorState.getSelection();
-      const start = selectionState.getStartOffset();
-      const end = selectionState.getEndOffset();
-      const content = editorState.getCurrentContent();
-      const block = content.getFirstBlock();
-      const selectedText = block.getText().slice(start, end);
-      return `[${start},${end}], "${selectedText}"`;
+      const startKey = selectionState.getStartKey();
+      const endKey = selectionState.getEndKey();
+      const startOffset = selectionState.getStartOffset();
+      const endOffset = selectionState.getEndOffset();
+    
+      const contentState = editorState.getCurrentContent();
+      const blockMap = contentState.getBlockMap();
+      const blocks = blockMap.toArray();
+    
+      const startIndex = blocks.findIndex((block) => block.getKey() === startKey);
+      const endIndex = blocks.findIndex((block) => block.getKey() === endKey);
+    
+      const selectedBlocks = blocks.slice(startIndex, endIndex + 1);
+    
+      const selectedTextArray = selectedBlocks.map((block) => {
+        const key = block.getKey();
+        const text = block.getText();
+        let blockStart = 0;
+        let blockEnd = text.length;
+    
+        if (key === startKey) {
+          blockStart = startOffset;
+        }
+        if (key === endKey) {
+          blockEnd = endOffset;
+        }
+    
+        return text.slice(blockStart, blockEnd);
+      });
+    
+      const selectedText = selectedTextArray.join('\n');
+      return `"${selectedText}"`;
     };
-
+    
     const styleMap = {
       HIGHLIGHT: {
         backgroundColor: "yellow",
@@ -89,7 +148,9 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
       const newState = RichUtils.toggleInlineStyle(editorState, style);
       const selectionInfo = getSelectedText(newState);
 
-      onNote && onNote(style + " : " + selectionInfo);
+      console.log("selectionInfo")
+      console.log(selectionInfo)
+      onNote(style + " : " + selectionInfo);
 
       setEditorState(newState);
       console.log(`Style ${style} applied to editor state`);
@@ -142,48 +203,35 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
       });
       return contentState;
     }
-
-    // New useEffect to apply annotations from userNotes
+          
     useEffect(() => {
       if (!userResponse?.userNotes || notesAppliedRef.current) return;
-
+    
       const contentState = editorState.getCurrentContent();
       if (contentState.getPlainText().trim() === '') return; // Ensure content is loaded
+    
+      const timer = setTimeout(() => {
+        let newContentState = contentState;
+    
+        // Remove existing 'HIGHLIGHT' and 'STRIKETHROUGH' styles
+        newContentState = removeInlineStyleFromContentState(newContentState, "HIGHLIGHT");
+        newContentState = removeInlineStyleFromContentState(newContentState, "STRIKETHROUGH");
+        console.log("Applying userNotes", userResponse?.userNotes);
 
-      console.log("Applying userNotes", userResponse.userNotes);
-      const annotations = parseUserNotes(userResponse.userNotes);
+        const annotations = parseUserNotes(userResponse.userNotes!);
+        console.log("Applying annotations", annotations);
+
+        if (annotations.length > 0) {
+          const newEditorState = applyAnnotations(EditorState.createWithContent(newContentState), annotations);
+          setEditorState(newEditorState);
+          console.log("Applied annotations to editor state after 3-second delay");
+          notesAppliedRef.current = true;
+        }
+      }, 3000); 
+    
+      return () => clearTimeout(timer);
       
-      if (annotations.length === 0) return;
-
-      let newContentState = removeInlineStyleFromContentState(contentState, "HIGHLIGHT");
-      newContentState = removeInlineStyleFromContentState(newContentState, "STRIKETHROUGH");
-
-      annotations.forEach(({ style, text }) => {
-        const blocks = newContentState.getBlocksAsArray();
-        blocks.forEach((block) => {
-          const blockText = block.getText();
-          let start = 0;
-          while (true) {
-            const index = blockText.indexOf(text, start);
-            if (index === -1) break;
-            const selection = SelectionState.createEmpty(block.getKey()).merge({
-              anchorOffset: index,
-              focusOffset: index + text.length,
-            });
-            newContentState = Modifier.applyInlineStyle(newContentState, selection, style);
-            start = index + text.length;
-          }
-        });
-      });
-
-      if (newContentState !== contentState) {
-        const newEditorState = EditorState.push(editorState, newContentState, "change-inline-style");
-        setEditorState(newEditorState);
-        console.log("Applied annotations to editor state");
-        notesAppliedRef.current = true;
-      }
-      
-    }, [userResponse?.userNotes, editorState]);
+    }, [userResponse?.userNotes]);
 
     // Reset the ref when userResponse?.userNotes changes
     useEffect(() => {
@@ -191,16 +239,14 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     }, [userResponse?.userNotes]);
 
     // Function to parse userNotes and extract annotations
-    function parseUserNotes(userNotes: string) {
-      const annotations = [];
+    function parseUserNotes(userNotes: string): Annotation[] {
+      const annotations: Annotation[] = [];
       const lines = userNotes.split("\n");
       for (let line of lines) {
         line = line.trim();
         if (line === "") continue;
-        // Example line:
-        // [timestamp] - STYLE : [start,end], "text"
-        const regex =
-          /^\[([^\]]+)\]\s*-\s*(HIGHLIGHT|STRIKETHROUGH)\s*:\s*\[[0-9]+,[0-9]+\],\s*"(.*)"$/;
+        // New regex pattern to match the actual format
+        const regex = /^\[([^\]]+)\]\s*-\s*(HIGHLIGHT|STRIKETHROUGH)\s*:\s*"(.*)"$/;
         const match = line.match(regex);
         if (match) {
           const style = match[2];
