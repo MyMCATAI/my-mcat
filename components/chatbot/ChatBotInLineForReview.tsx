@@ -227,6 +227,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       backgroundColor: backgroundColor,
       inlineSize: width,
       height: 'calc(100vh - 30rem)',
+      maxHeight: '500px',
       margin: '2rem .5rem',
     },
     botBubbleStyle: {
