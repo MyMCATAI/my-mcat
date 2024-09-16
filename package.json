@@ -25,6 +25,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.633.0",
+    "@ckeditor/ckeditor5-build-classic": "^43.1.0",
+    "@ckeditor/ckeditor5-react": "^9.1.0",
     "@clerk/nextjs": "^4.31.5",
     "@clerk/themes": "^2.1.27",
     "@prisma/client": "^5.19.0",
@@ -89,6 +91,7 @@
     "react-hotkeys-hook": "^4.5.1",
     "react-markdown": "^9.0.1",
     "react-player": "^2.16.0",
+    "react-quill": "^0.0.2",
     "react-scroll-parallax": "^3.4.5",
     "react-slick": "^0.30.2",
     "react-spring": "^9.7.4",
