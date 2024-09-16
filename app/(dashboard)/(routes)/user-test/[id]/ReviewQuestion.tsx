@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Question, UserResponse } from '@/types';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Send, HelpCircle, BookOpen } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp, HelpCircle, BookOpen } from "lucide-react";
 import ChatBotInLineForReview from '@/components/chatbot/ChatBotInLineForReview';
 import { Passage } from '@/types';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ReviewQuestionComponentProps {
   question?: Question;
@@ -16,11 +16,6 @@ interface ReviewQuestionComponentProps {
   isLast: boolean;
   currentQuestionIndex: number;
   totalQuestions: number;
-}
-
-interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
 }
 
 const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
@@ -36,18 +31,13 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
 }) => {
   const [explanations, setExplanations] = useState<string[]>([]);
   const [selectedExplanationIndex, setSelectedExplanationIndex] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [isExplanationsOpen, setIsExplanationsOpen] = useState(false);
-  const [userInput, setUserInput] = useState('');
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [context, setContext] = useState("");
-
-  const [showExplanations, setShowExplanations] = useState(false);
-  const [threadId, setThreadId] = useState<string | null>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
   const [showHelp, setShowHelp] = useState(false);
   const [showDictionary, setShowDictionary] = useState(false);
+
+  // State variables to track if explanations have been viewed
+  const [hasViewedUserExplanation, setHasViewedUserExplanation] = useState(false);
+  const [hasViewedCorrectExplanation, setHasViewedCorrectExplanation] = useState(false);
 
   useEffect(() => {
     if (question) {
@@ -57,42 +47,13 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       const userAnswerIndex = options.indexOf(userResponse.userAnswer);
       setSelectedExplanationIndex(userAnswerIndex);
 
-      const correctAnswer = options[0];
-      const userAnswer = options[userAnswerIndex];
-
-      setContext(`
-      I'm reviewing a test question I've answered, here's some context on my answer
-
-      ${passageData ? "Questions Passage: " + passageData.text : ""} \n\n
-      Question: ${question.questionContent} \n
-      Options: ${question.questionOptions} \n
-      Correct Answer: ${correctAnswer} \n
-      My Answer: ${userAnswer} \n
-      Result: ${userResponse.isCorrect ? 'Correct' : 'Incorrect'} \n
-      Time Spent: ${userResponse.timeSpent || "0"} seconds \n
-      ${userResponse.isCorrect? "": `Explanation for my answer: ${answerNotes[userAnswerIndex] || 'No explanation available.'} \n`}
-      
-      Explanation for correct answer: ${explanations[0] || 'No explanation available.'} \n
-            
-      I'm going to explain my line of thinking and defend my answer, help me use this context to learn.
-
-      Here's my explanation: 
-      `)
-
-      // Reset chat messages when question changes
-      setChatMessages([]);
-      setThreadId(null);
+      // Reset the viewed explanations when question changes
+      setHasViewedUserExplanation(false);
+      setHasViewedCorrectExplanation(false);
     }
-  }, [question, userResponse, passageData]);
+  }, [question, userResponse]);
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
-
-  useEffect(() => {
-    setShowExplanations(userResponse.isReviewed === true);
-  }, [userResponse]);
-
+  // Function to update the user response
   const updateUserResponse = async (newReviewNote: string | null) => {
     if (!userResponse.id) return;
 
@@ -119,36 +80,45 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       }
 
       console.log('User response updated successfully');
-      setShowExplanations(true);
     } catch (error) {
       console.error('Error updating user response:', error);
     }
   };
 
-  const handleSkipDefense = () => {
-    updateUserResponse(null);
-    setShowExplanations(true);
-  };
+  // Function to check if conditions are met to call updateUserResponse
+  useEffect(() => {
+    const userGotItRight = userResponse.isCorrect;
+    const needsToViewUserExplanation = !userGotItRight;
+
+    if (
+      hasViewedCorrectExplanation &&
+      (userGotItRight || hasViewedUserExplanation)
+    ) {
+      updateUserResponse(null);
+    }
+  }, [hasViewedUserExplanation, hasViewedCorrectExplanation, userResponse]);
 
   if (!question) return null;
   const options = JSON.parse(question.questionOptions);
   const correctAnswerIndex = 0; // Assuming the correct answer is always the first option
 
   const getOptionClass = (index: number) => {
-    if (index === correctAnswerIndex && showExplanations) {
+    if (index === correctAnswerIndex) {
       return 'bg-green-500 text-white';
     }
-    if (index === options.indexOf(userResponse.userAnswer) && !userResponse.isCorrect && showExplanations) {
+    if (index === options.indexOf(userResponse.userAnswer) && !userResponse.isCorrect) {
       return 'bg-red-500 text-white';
-    }
-    if (index === selectedExplanationIndex) {
-      return 'bg-blue-500 text-white';
     }
     return 'bg-gray-200 text-black hover:bg-gray-300 cursor-pointer';
   };
 
-  const handleOptionClick = (index: number) => {
-    setSelectedExplanationIndex(index);
+  // Handlers for viewing explanations
+  const handleViewUserExplanation = () => {
+    setHasViewedUserExplanation(true);
+  };
+
+  const handleViewCorrectExplanation = () => {
+    setHasViewedCorrectExplanation(true);
   };
 
   return (
@@ -193,97 +163,63 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       <div className="mb-4 flex-grow overflow-auto">
         <h3 className="font-medium mb-2">{question.questionContent}</h3>
         <div className="mt-4">
+        <TooltipProvider>
+
           {options.map((option: string, index: number) => (
-            <div 
-              key={index} 
-              className={`p-3 mb-2 rounded ${getOptionClass(index)}`}
-              onClick={() => handleOptionClick(index)}
-            >
-              {option}
-            </div>
+            <Tooltip key={index}>
+              <TooltipTrigger asChild>
+                <div 
+                  className={`p-3 mb-2 rounded ${getOptionClass(index)}`}
+                  onMouseEnter={() => {
+                    if (index === correctAnswerIndex) {
+                      handleViewCorrectExplanation();
+                    }
+                    if (index === options.indexOf(userResponse.userAnswer) && !userResponse.isCorrect) {
+                      handleViewUserExplanation();
+                    }
+                  }}
+                >
+                  {option}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" style={{ maxWidth: '30vw', minWidth: '800px' }}>
+                {explanations[index]
+                  ? explanations[index]
+                  : index === correctAnswerIndex
+                    ? 'This is the correct answer.'
+                    : 'This is an incorrect answer.'}
+              </TooltipContent>
+            </Tooltip>
           ))}
+          </TooltipProvider>
         </div>
-        
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-2">
-             {!showExplanations && ( <Button
-                onClick={handleSkipDefense}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs py-1 px-2 rounded"
-              >
-                Skip Defense
-              </Button>)}
-            </div>
-            <ChatBotInLineForReview 
-              chatbotContext={{ contentTitle: '', context }}
-              key={question.id} // Add this line to reset the ChatBotInLineForReview when the question changes
-            />
-          </div>
 
-        <div className="max-h-[400px] overflow-y-auto">
-        {(showExplanations) && (
-        <Collapsible
-          open={isExplanationsOpen}
-          onOpenChange={setIsExplanationsOpen}
-          className="mt-4 border border-gray-200 rounded-lg"
+        <div className="mb-4" >
+          <ChatBotInLineForReview 
+            chatbotContext={{ contentTitle: '', context: '' }}
+            key={question.id}
+          />
+        </div>
+
+      </div>
+      <div className="flex justify-between mt-4">
+        <button
+          onClick={onPrevious}
+          disabled={isFirst}
+          className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
         >
-          <CollapsibleTrigger className="flex justify-between items-center w-full p-4 font-semibold">
-            Explanations and Details
-            {isExplanationsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </CollapsibleTrigger>
-          <CollapsibleContent className="p-4">
-            <p><strong>Your answer:</strong> {userResponse.userAnswer}</p>
-            <p><strong>Time spent:</strong> {userResponse.timeSpent || "0"} seconds</p>
-            <p><strong>Correct answer:</strong> {options[correctAnswerIndex]}</p>
-            <p className={userResponse.isCorrect ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
-              {userResponse.isCorrect ? "Correct" : "Incorrect"}
-            </p>
-
-            {selectedExplanationIndex !== null && (
-              <div className="mt-4">
-                <h4 className="font-semibold">Explanation for selected answer:</h4>
-                <p className={`p-3 rounded ${selectedExplanationIndex === correctAnswerIndex ? 'bg-green-100' : 'bg-red-100'}`}>
-                  {explanations[selectedExplanationIndex]}
-                </p>
-              </div>
-            )}
-
-            {selectedExplanationIndex !== correctAnswerIndex && (
-              <div className="mt-4">
-                <h4 className="font-semibold">Explanation for correct answer:</h4>
-                <p className="bg-green-100 p-3 rounded">{explanations[correctAnswerIndex]}</p>
-              </div>
-            )}
-
-            {userResponse.userNotes && (
-              <div className="mt-4">
-                <h4 className="font-semibold">Your notes:</h4>
-                <p className="bg-blue-100 p-3 rounded">{userResponse.userNotes}</p>
-              </div>
-            )}
-          </CollapsibleContent>
-        </Collapsible>
-      )}
-
-            </div>
+          Previous
+        </button>
+        <button
+          onClick={onNext}
+          disabled={isLast}
+          className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
     </div>
-    <div className="flex justify-between mt-4">
-      <button
-        onClick={onPrevious}
-        disabled={isFirst}
-        className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-      >
-        Previous
-      </button>
-      <button
-        onClick={onNext}
-        disabled={isLast}
-        className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-      >
-        Next
-      </button>
-    </div>
-  </div>
-);
+  );
 };
 
 export default ReviewQuestionComponent;
