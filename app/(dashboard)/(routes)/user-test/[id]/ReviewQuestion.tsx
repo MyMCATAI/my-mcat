@@ -222,7 +222,7 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
             </div>
             <ChatBotInLineForReview 
               chatbotContext={{ contentTitle: '', context }}
-              key={question.id} // Add this line to reset the ChatBotInLineForReview when the question changes
+              key={question.id} 
             />
           </div>
 

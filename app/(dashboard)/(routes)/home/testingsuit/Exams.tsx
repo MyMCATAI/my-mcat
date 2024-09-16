@@ -101,7 +101,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
     const welcomeText = `Welcome ${userName.charAt(0).toUpperCase() + userName.slice(1)}! `;
     
     if (tests.length > 0) {
-      const fullText = welcomeText + tests[0].description;
+      const fullText = welcomeText +'\n\n' +tests[0].description;
       let index = 0;
 
       const typingTimer = setInterval(() => {
@@ -259,7 +259,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
             <h3 className="text-m font-semibold mt-3 mb-3 text-center font-mono" style={{ color: 'var(--theme-text-color)' }}>CARs Tests</h3>
             <Tabs defaultValue="past" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6 bg-transparent">
-                <TabsTrigger value="past">Past Tests</TabsTrigger>
+                <TabsTrigger value="past">Review</TabsTrigger>
                 <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
               </TabsList>
               <TabsContent value="past">

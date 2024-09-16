@@ -203,7 +203,7 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
                 <RadioGroupItem
                   value={option}
                   id={`option-${idx}`}
-                  className="mr-3 mt-1"
+                  className="mr-3 mt-1 w-4 h-4"
                 />
                 <Label
                   htmlFor={`option-${idx}`}
