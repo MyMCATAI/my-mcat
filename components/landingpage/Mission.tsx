@@ -124,7 +124,7 @@ const MethodologyAndTestimonials = () => {
               </h1>
               <div className="mt-12 bg-black p-5 rounded-lg w-full md:w-auto md:mr-[10em]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
                 <p className="text-white text-xl mb-4">
-                  Test prep companies have failed to innovate. Kaplan's books haven't changed since 2015. Jack Westin and Blueprint rely on expensive and often inexperienced tutors, promising score increases that they often fail to deliver. They want you to believe you can buy a good score.
+                  Test prep companies have failed to innovate. Kaplan&apos;s books haven&apos;t changed since 2015. Jack Westin and Blueprint rely on expensive and often inexperienced tutors, promising score increases that they often fail to deliver. They want you to believe you can buy a good score.
                 </p>
                 <p className="text-white text-xl mb-2">
                 </p>
@@ -132,7 +132,7 @@ const MethodologyAndTestimonials = () => {
                   But you can only work for it.
                 </p>
                 <p className="text-white text-xl mb-4">
-                  At MyMCAT.ai, we're dedicated to helping students succeed through innovation and constant feedback. While we charge to stay healthy as an organization, all profits go toward improving our services so students can earn the score they deserve.
+                  At MyMCAT.ai, we&apos;re dedicated to helping students succeed through innovation and constant feedback. While we charge to stay healthy as an organization, all profits go toward improving our services so students can earn the score they deserve.
                 </p>
                 <p className="text-white text-xl mb-4">
                   As former premeds, we know firsthand how stressful and costly this process is. As current students, we know the value of a service that makes studying easy, effective, and engaging.
