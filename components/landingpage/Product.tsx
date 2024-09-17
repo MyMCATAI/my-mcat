@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Image from 'next/image';
-import YouTube from 'react-youtube';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -39,7 +38,7 @@ const Product = () => {
         scrollTrigger: {
           trigger: parallaxRef.current,
           start: "top top",
-          end: "2000 bottom",
+          end: "2500 bottom",
           scrub: 1, // Changed from true to 1 for smoother scrubbing
           pin: true,
           onUpdate: (self) => {
@@ -64,8 +63,8 @@ const Product = () => {
       tl.to(cloudsBottom.current, { opacity: 0 }, 0);
       tl.to(cloudsLeft.current, { x: "-20%", opacity: 0 }, 0);
       tl.to(cloudsRight.current, { x: "20%", opacity: 0 }, 0);
-      tl.to(copy.current, { y: "-10%", opacity: 1 }, 0.6);
-      tl.to(video.current, { opacity: 1 }, 0.8);
+      tl.to(copy.current, { opacity: 1 }, 0.5);
+      tl.to(video.current, { opacity: 1 }, 0.6);
       tl.to(btn.current, { opacity: 1 }, 0.9);
     });
     return () => ctx.revert();
@@ -76,7 +75,7 @@ const Product = () => {
       <div
         ref={parallaxRef}
         style={{ background: `linear-gradient(#021125, #143A6B ${background}%, #A74A67, #EDFC54 )` }}
-        className='parallax overflow-hidden'
+        className='parallax overflow-hidden relative'
       >
         <Image ref={sun} className='sun absolute' src="/parallex test/sun.svg" alt="Sun" width={300} height={300} style={{ bottom: isMobile ? '10%' : '5%' }} />
         <Image ref={mountain3} className='mountain-3 absolute bottom-0 left-0 w-full' src="/parallex test/mountain-3.svg" alt="Mountain 3" layout="responsive" width={300} height={100} />
@@ -86,21 +85,17 @@ const Product = () => {
         <Image ref={cloudsLeft} className='clouds-left' src="/parallex test/clouds-left.svg" alt="Clouds Left" width={300} height={250} />
         <Image ref={cloudsRight} className='clouds-right' src="/parallex test/clouds-right.svg" alt="Clouds Right" width={300} height={250} />
         <Image ref={stars} className='stars' src="/parallex test/stars.svg" alt="Stars" width={300} height={300} />
-        <div ref={copy} className="copy lg:bottom-[5%] xl:bottom-[15%] relative z-100 w-full max-w-screen-xl mx-auto">
-          <h1 className="text-2xl md:text-4xl font-bold mb-8">The Anti-Test Prep Software</h1>
-          <div ref={video} className="youtube-video animate-fadeIn" style={{ opacity: 0 }}>
-            <div className="video-wrapper border-4 border-white rounded-lg overflow-hidden shadow-1xl mb-8 mx-auto" style={{ maxWidth: '1200px', width: '100%' }}>
-              <YouTube
-                videoId="9Vi2AUgOfZU"
-                opts={{
-                  width: '100%',
-                  height: '100%',
-                  playerVars: {
-                    autoplay: 0,
-                  },
-                }}
-                className="aspect-video mt-3 h-[180px] sm:h-[300px]"
-              />
+        <div ref={copy} className="copy absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-screen-xl">
+          <h1 className="text-2xl md:text-2xl font-bold mb-8 text-center text-white">The Anti-Test Prep Software</h1>
+          <div ref={video} className="video-container animate-fadeIn" style={{ opacity: 0 }}>
+            <div className="video-wrapper border-4 border-white rounded-lg overflow-hidden shadow-1xl mx-auto" style={{ maxWidth: '80vw', width: '100%' }}>
+              <video
+                controls
+                className="w-full aspect-video"
+              >
+                <source src="/mymcat.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
             </div>
           </div>
         </div>
