@@ -2,6 +2,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs";
 import prisma from "@/lib/prismadb";
+import page from "@/app/(landing)/page";
+import { skip } from "node:test";
+import { Test } from "@/types";
 
 type ConceptCategory = {
   name: string;
@@ -35,31 +38,37 @@ async function getOrderedTests(
     [key: string]: ConceptCategory & { count: number };
   } = {};
   const userContentCategories = new Set<string>();
-  knowledgeProfiles.forEach((profile) => {
-    const { conceptCategory, contentCategory } = profile.category;
-    if (!conceptCategories[conceptCategory]) {
-      conceptCategories[conceptCategory] = {
-        name: conceptCategory,
-        averageScore: 0,
-        count: 0,
-        contentCategories: [],
-      };
+  knowledgeProfiles.forEach(
+    (profile: {
+      category: { conceptCategory: any; contentCategory: any };
+      conceptMastery: number | null;
+    }) => {
+      const { conceptCategory, contentCategory } = profile.category;
+      if (!conceptCategories[conceptCategory]) {
+        conceptCategories[conceptCategory] = {
+          name: conceptCategory,
+          averageScore: 0,
+          count: 0,
+          contentCategories: [],
+        };
+      }
+      if (profile.conceptMastery !== null) {
+        conceptCategories[conceptCategory].averageScore +=
+          profile.conceptMastery;
+        conceptCategories[conceptCategory].count++;
+      }
+      if (
+        !conceptCategories[conceptCategory].contentCategories.includes(
+          contentCategory
+        )
+      ) {
+        conceptCategories[conceptCategory].contentCategories.push(
+          contentCategory
+        );
+      }
+      userContentCategories.add(contentCategory);
     }
-    if (profile.conceptMastery !== null) {
-      conceptCategories[conceptCategory].averageScore += profile.conceptMastery;
-      conceptCategories[conceptCategory].count++;
-    }
-    if (
-      !conceptCategories[conceptCategory].contentCategories.includes(
-        contentCategory
-      )
-    ) {
-      conceptCategories[conceptCategory].contentCategories.push(
-        contentCategory
-      );
-    }
-    userContentCategories.add(contentCategory);
-  });
+  );
 
   // Calculate final average scores and sort categories
   const sortedConceptCategories = Object.values(conceptCategories)
@@ -140,86 +149,181 @@ async function getOrderedTests(
   }
 
   // Fetch user's test history
-  const userTests = await prisma.userTest.findMany({
-    where: { userId },
-    select: { testId: true },
-  });
-  const takenTestIds = new Set(userTests.map((test) => test.testId));
+  const [userTests, userResponses] = await Promise.all([
+    prisma.userTest.findMany({
+      where: { userId },
+      select: { testId: true, passageId: true },
+    }),
+    //Fetch user responses
+    prisma.userResponse.findMany({
+      where: { userId },
+      select: { question: { select: { passageId: true } } },
+      orderBy: { answeredAt: "desc" },
+      take: 25,
+    }),
+  ]);
+  const takenTestIds = new Set(userTests.map((test: any) => test.testId));
   console.log(`User has taken ${takenTestIds.size} tests`);
 
-  //Fetch user responses
-  const userResponses = await prisma.userResponse.findMany({
-    where: {
-      userId,
-    },
-    orderBy: {
-      answeredAt: "desc",
-    },
-    take: 25,
-    select: {
-      question: {
-        select: {
-          passageId: true,
-        },
-      },
-    },
-  });
-
   const recentlyTakenPassageIds = new Set(
-    userResponses
-      .map((response) => response.question.passageId)
-      .filter((passageId) => passageId !== null) as string[]
+    userTests.map((test: any) => test.passageId)
   );
 
   //Filter tests that have already been taken and tests that have passages that have already been taken
 
   const filteredTests = allTests
-    .filter((test) => !takenTestIds.has(test.id))
+    .filter((test: { id: unknown }) => !takenTestIds.has(test.id))
     .filter(
-      (test) =>
-        !test.questions.some((testQuestion) =>
+      (test: { questions: any[] }) =>
+        !test.questions.some((testQuestion: { questionId: any }) =>
           prisma.question
             .findUnique({
               where: { id: testQuestion.questionId },
               select: { passage: { select: { id: true } } },
             })
-            .then((question) =>
+            .then((question: { passage: { id: string } | null } | null) =>
               recentlyTakenPassageIds.has(question?.passage?.id ?? "")
             )
         )
     );
 
-  // Calculate relevance score for each test
-  const testsWithRelevance = filteredTests.map((test) => {
-    const testContentCategories = [
-      ...new Set(test.questions.map((q) => q.question.contentCategory)),
-    ];
-
-    const relevanceScore =
-      testContentCategories.reduce((score, contentCategory) => {
-        if (userContentCategories.has(contentCategory)) {
-          const conceptCategory = sortedConceptCategories.find((cc) =>
-            cc.contentCategories.includes(contentCategory)
-          );
-          return score + (1 - (conceptCategory?.averageScore || 0)); // Higher score for lower mastery
+  async function getNextTestOfSamePassage(userId: string) {
+    const passageTests: { [x: string]: any[] } = allTests.reduce(
+      (acc, test) => {
+        if (test.passageId !== null) {
+          // Check for null before using as index
+          if (!acc[test.passageId]) {
+            acc[test.passageId] = [];
+          }
+          acc[test.passageId].push(test.id);
         }
-        return score;
-      }, 0) / testContentCategories.length || 0; // Default to 0 if no categories match
+        return acc;
+      },
+      {} as { [key: string]: any[] }
+    );
 
-    return {
-      ...test,
-      relevanceScore,
-      taken: takenTestIds.has(test.id),
-    };
-  });
+    for (const test of userTests) {
+      if (test.passageId !== null) {
+        // Check for null before using as index
+        const passageId = test.passageId;
+        const testId = test.testId;
+        if (passageTests[passageId] && passageTests[passageId].length > 1) {
+          const nextTestId = passageTests[passageId].find(
+            (id) => id !== testId
+          );
+          if (nextTestId && !takenTestIds.has(nextTestId)) {
+            return nextTestId;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  // Calculate relevance score for each test
+  const testsWithRelevance = filteredTests.map(
+    (test: { questions: any[]; id: unknown }) => {
+      const testContentCategories = [
+        ...new Set(
+          test.questions.map(
+            (q: { question: { contentCategory: any } }) =>
+              q.question.contentCategory
+          )
+        ),
+      ];
+
+      const relevanceScore =
+        testContentCategories.reduce((score, contentCategory) => {
+          if (userContentCategories.has(contentCategory)) {
+            const conceptCategory = sortedConceptCategories.find(
+              (cc: { contentCategories: string | any[] }) =>
+                cc.contentCategories.includes(contentCategory)
+            );
+            return score + (1 - (conceptCategory?.averageScore || 0)); // Higher score for lower mastery
+          }
+          return score;
+        }, 0) / testContentCategories.length || 0; // Default to 0 if no categories match
+
+      return {
+        ...test,
+        relevanceScore,
+        taken: takenTestIds.has(test.id),
+      };
+    }
+  );
 
   // Sort tests: untaken tests first (by relevance score), then taken tests (by relevance score)
-  const sortedTests = testsWithRelevance.sort((a, b) => {
-    if (!a.taken && !b.taken) return b.relevanceScore - a.relevanceScore;
-    if (!a.taken) return -1;
-    if (!b.taken) return 1;
-    return b.relevanceScore - a.relevanceScore;
-  });
+  const sortedTests = testsWithRelevance.sort(
+    (
+      a: { taken: any; relevanceScore: number },
+      b: { taken: any; relevanceScore: number }
+    ) => {
+      if (!a.taken && !b.taken) return b.relevanceScore - a.relevanceScore;
+      if (!a.taken) return -1;
+      if (!b.taken) return 1;
+      return b.relevanceScore - a.relevanceScore;
+    }
+  );
+
+  async function recommendTest(userId: any, testsWithRelevance: any[]) {
+    // Get the user's knowledge profile to determine their current level
+    const userKnowledgeProfile = await prisma.knowledgeProfile.findMany({
+      where: { userId },
+    });
+
+    // Determine the user's current level based on their knowledge profile
+    const userLevel = getUserLevel(userKnowledgeProfile);
+
+    // Filter tests based on the user's level and relevance score
+    const recommendedTests = testsWithRelevance.filter(
+      (test: { difficulty: any; relevanceScore: number }) => {
+        // Check if the test's difficulty level matches the user's level
+        const difficultyMatch = getDifficultyMatch(test.difficulty, userLevel);
+
+        // Check if the test's relevance score is above a certain threshold
+        const relevanceThreshold = 0.5;
+        const relevanceMatch = test.relevanceScore >= relevanceThreshold;
+
+        return difficultyMatch && relevanceMatch;
+      }
+    );
+
+    // Sort the recommended tests by relevance score in descending order
+    recommendedTests.sort(
+      (a: { relevanceScore: number }, b: { relevanceScore: number }) =>
+        b.relevanceScore - a.relevanceScore
+    );
+
+    // Return the top recommended test
+    return recommendedTests[0];
+  }
+
+  // Helper function to determine the user's level based on their knowledge profile
+  function getUserLevel(knowledgeProfile: any[]) {
+    // Calculate the user's average mastery level
+    const averageMastery =
+      knowledgeProfile.reduce(
+        (sum: any, profile: { conceptMastery: any }) =>
+          sum + profile.conceptMastery,
+        0
+      ) / knowledgeProfile.length;
+
+    // Determine the user's level based on their average mastery level
+    if (averageMastery < 0.3) {
+      return 1; // Beginner
+    } else if (averageMastery < 0.6) {
+      return 2; // Intermediate
+    } else {
+      return 3; // Advanced
+    }
+  }
+
+  // Helper function to determine if the test's difficulty level matches the user's level
+  function getDifficultyMatch(testDifficulty: number, userLevel: number) {
+    // Check if the test's difficulty level is within one level of the user's level
+    return Math.abs(testDifficulty - userLevel) <= 1;
+  }
 
   // Apply pagination
   const paginatedTests = sortedTests.slice(skip, skip + pageSize);
@@ -230,7 +334,9 @@ async function getOrderedTests(
   );
 
   return {
-    tests: paginatedTests.map(({ relevanceScore, taken, ...test }) => test),
+    tests: paginatedTests.map(
+      ({ relevanceScore, taken, ...test }) => test as Test
+    ),
     totalPages,
     currentPage: page,
     conceptCategories: sortedConceptCategories,
