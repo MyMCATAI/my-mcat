@@ -313,7 +313,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     return (
       <div className="bg-[#ffffff] h-[80vh] flex flex-col font-serif">
         <div className="sticky top-0 bg-white p-4 z-10">
-          <h1 className="text-black font-serif text-1xl font-bold">{passageData.title}</h1>
+          <h1 className="text-black font-['Times_New_Roman',_Times,_serif] text-1xl font-bold font-override">{passageData.title}</h1>
         </div>
         <div className="bg-[#ffffff] flex-grow overflow-auto p-4">
           <div className="text-black" style={editorStyle}>
