@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import { Navbar } from "@/components/navbar";
 import { useEffect, useState } from "react";
@@ -14,11 +14,11 @@ const checkSubscription = async (): Promise<boolean> => {
 const DashboardLayoutContent = ({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) => {
   const { theme } = useTheme();
   const [isPro, setIsPro] = useState(false);
-  const [backgroundImage, setBackgroundImage] = useState("");
+  const [backgroundImage, setBackgroundImage] = useState('');
 
   useEffect(() => {
     const checkProStatus = async () => {
@@ -26,41 +26,43 @@ const DashboardLayoutContent = ({
         const proStatus = await checkSubscription();
         setIsPro(proStatus);
       } catch (error) {
-        console.error("Error checking subscription status:", error);
+        console.error('Error checking subscription status:', error);
         setIsPro(false); // Default to free if there's an error
       }
     };
     checkProStatus();
 
     const updateBackgroundImage = () => {
-      if (theme === "sakuraTrees") {
-        setBackgroundImage("url(/sakuratreesbackground.png)");
+      if (theme === 'sakuraTrees') {
+        setBackgroundImage('url(/sakuratreesbackground.png)');
       } else {
-        setBackgroundImage("url(/vaporandnightbackground.png)");
+        setBackgroundImage('url(/vaporandnightbackground.png)');
       }
     };
 
     updateBackgroundImage();
-    window.addEventListener("resize", updateBackgroundImage);
+    window.addEventListener('resize', updateBackgroundImage);
 
-    return () => window.removeEventListener("resize", updateBackgroundImage);
+    return () => window.removeEventListener('resize', updateBackgroundImage);
   }, [theme]);
 
   const subscription = isPro ? "pro" : "free";
 
-  console.log("Current theme:", theme);
-  console.log("Background image:", backgroundImage);
+  console.log('Current theme:', theme);
+  console.log('Background image:', backgroundImage);
 
-  return (
-    <div
-      className="flex flex-col min-h-screen bg-cover bg-center bg-no-repeat"
+  return ( 
+    <div 
+      className="flex flex-col min-h-screen bg-cover bg-center bg-no-repeat" 
       style={{ backgroundImage }}
     >
-      <Navbar subscription={subscription} />
-      <main className="w-full pb-10">{children}</main>
+      <Navbar subscription={subscription}/>
+      <main className="w-full pb-10">
+        {children}
+      </main>
     </div>
-  );
-};
+   );
+}
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>

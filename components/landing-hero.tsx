@@ -122,7 +122,7 @@ const LandingHero = () => {
         <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
           <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-10">
             <div className="text-center">
-              <h1 className="text-5xl md:text-6xl font-bold text-white font-override font-roboto mb-4 text-center">
+              <h1 className="text-4xl md:text-5xl font-bold text-white font-krungthep mb-4 text-center">
                 <span>
                   <span className="text-[#f2f64f]">Increase</span> your CARs score.
                 </span>

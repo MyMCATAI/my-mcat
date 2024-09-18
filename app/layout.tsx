@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Inter, Roboto_Slab } from 'next/font/google'
-import localFont from 'next/font/local'
 import './globals.css'
 import { ClerkProvider } from '@clerk/nextjs'
 import { ModalProvider } from '@/components/modal-provider'
@@ -11,10 +10,6 @@ import { Analytics } from '@vercel/analytics/react';
 
 const inter = Inter({ subsets: ['latin'] })
 const robotoSlab = Roboto_Slab({ subsets: ['latin'] })
-const krungthep = localFont({
-  src: '../public/Krungthep.ttf',
-  variable: '--font-krungthep',
-})
 
 export const metadata: Metadata = {
   title: 'My MCAT',
@@ -29,22 +24,15 @@ export default function RootLayout({
   return (
     <>
     <ClerkProvider>
-      <html lang="en" className={`${krungthep.variable}`}>
+      <html lang="en">
         <head>
           <Script
             src="https://js.stripe.com/v3/pricing-table.js"
             strategy="lazyOnload"
           />
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"></meta>
-          <link
-            rel="preload"
-            href="/fonts/Krungthep.ttf"
-            as="font"
-            type="font/ttf"
-            crossOrigin="anonymous"
-          />
         </head>
-        <body className={`${robotoSlab.className} ${krungthep.variable}`}>
+        <body className={robotoSlab.className}>
             <ThemeInitializer />
             <ModalProvider />
             <ToasterProvider />
