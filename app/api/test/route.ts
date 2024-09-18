@@ -318,8 +318,12 @@ async function getOrderedTests(
       return 3; // Advanced
     }
   }
-
   // Helper function to determine if the test's difficulty level matches the user's level
+
+  function getDifficultyMatch(testDifficulty: number, userLevel: number) {
+    // Check if the test's difficulty level is within one level of the user's level
+    return Math.abs(testDifficulty - userLevel) <= 1;
+  }
 
   // Apply pagination
   const paginatedTests = sortedTests.slice(skip, skip + pageSize);
