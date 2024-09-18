@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Krungthep';
+  src: url('/landingpage/krungthep.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-krungthep {
+  font-family: 'Krungthep', sans-serif;
+}
+
 html,
 body :root {
   height: 100%;
@@ -357,7 +369,7 @@ body {
 }
 
 body {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Roboto', sans-serif;
     background-color: var(--primaryColor);
     color: var(--secondaryColor);
 }

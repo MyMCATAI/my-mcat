@@ -86,7 +86,7 @@ const Product = () => {
         <Image ref={cloudsRight} className='clouds-right' src="/parallex test/clouds-right.svg" alt="Clouds Right" width={300} height={250} />
         <Image ref={stars} className='stars' src="/parallex test/stars.svg" alt="Stars" width={300} height={300} />
         <div ref={copy} className="copy absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-screen-xl">
-          <h1 className="text-2xl md:text-2xl font-bold mb-8 text-center text-white font-['krungthep']">The Anti-Test Prep Software</h1>
+          <h1 className="text-2xl md:text-2xl font-bold mb-8 text-center text-white font-krungthep">The Anti-Test Prep Software</h1>
           <div ref={video} className="video-container animate-fadeIn" style={{ opacity: 0 }}>
             <div className="video-wrapper border-4 border-white rounded-lg overflow-hidden shadow-1xl mx-auto" style={{ maxWidth: '80vw', width: '100%' }}>
               <video
