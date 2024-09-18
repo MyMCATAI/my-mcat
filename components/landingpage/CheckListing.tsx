@@ -33,8 +33,8 @@ const CheckListing = () => {
         const tl = gsap.timeline({
             scrollTrigger: {
                 trigger: section,
-                start: 'top 90%',
-                end: 'bottom 80%',
+                start: 'top 100%',
+                end: 'bottom 95%',
                 scrub: 1,
             }
         });
@@ -54,7 +54,7 @@ const CheckListing = () => {
         <section className='bg-[#091f33] py-16' id='keypoints' ref={sectionRef}>
             <div className="container mx-auto">
                 <div className="text-center mb-10">
-                    <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 font-['Krungthep']">
+                    <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 font-krungthep">
                         Features On The Way
                     </h1>
                     <p className="text-xl text-blue-300 mb-6">
