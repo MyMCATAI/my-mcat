@@ -6,6 +6,7 @@ import { ModalProvider } from '@/components/modal-provider'
 import { ToasterProvider } from '@/components/toaster-provider'
 import Script from 'next/script'
 import ThemeInitializer from '@/components/home/ThemeInitializer'
+import { Analytics } from '@vercel/analytics/react';
 
 const inter = Inter({ subsets: ['latin'] })
 const robotoSlab = Roboto_Slab({ subsets: ['latin'] })
@@ -21,6 +22,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
+    <>
     <ClerkProvider>
       <html lang="en">
         <head>
@@ -38,5 +40,7 @@ export default function RootLayout({
         </body>
       </html>
     </ClerkProvider>
+        <Analytics />
+    </>
   )
 }

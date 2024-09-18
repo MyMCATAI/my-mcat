@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
-import FileUploadComponent from './fileUpload';
 
 const ChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
 

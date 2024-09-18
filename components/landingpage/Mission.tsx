@@ -5,17 +5,19 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Image from 'next/image';
 import { World, type WorldProps } from '../ui/globe';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay } from 'swiper/modules';
+import { Autoplay, Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 gsap.registerPlugin(ScrollTrigger);
+
 const MethodologyAndTestimonials = () => {
   const sectionRef = useRef(null);
   const titleRef = useRef(null);
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
   const polygonRef = useRef(null);
   const textBoxRef = useRef(null);
-
 
   const universityLogos = [
     '/landingpage/CornellLogo.png',
@@ -24,6 +26,13 @@ const MethodologyAndTestimonials = () => {
     '/landingpage/Tulane.png',
     '/landingpage/URichmond.png',
     '/landingpage/UTDallas.png',
+  ];
+
+  const pricingLogos = [
+    { src: '/landingpage/BlueprintPricing.png', title: 'Blueprint' },
+    { src: '/landingpage/KaplanPricing.png', title: 'Kaplan' },
+    { src: '/landingpage/PrincetonReviewPricing.png', title: 'Princeton Review' },
+    { src: '/landingpage/JackWestinPricing.png', title: 'Jack Westin' },
   ];
 
   const globeConfig: WorldProps['globeConfig'] = {
@@ -63,28 +72,15 @@ const MethodologyAndTestimonials = () => {
 
   useEffect(() => {
     const section = sectionRef.current;
-    const title = titleRef.current;
-    const polygon = polygonRef.current;
     const textBox = textBoxRef.current;
 
-    gsap.set([title, textBox], { opacity: 0, y: 50 });
-    gsap.set(polygon, { opacity: 0, x: -50 });
+    gsap.set(textBox, { opacity: 0, y: 50 });
 
-    // Title animation
-    gsap.to(title, {
+    // TextBox animation
+    gsap.to(textBox, {
       opacity: 1,
       y: 0,
-      duration: 0.7,
-      scrollTrigger: {
-        trigger: section,
-        start: 'top 60%',
-        end: 'bottom 20%',
-        scrub: 1,
-      }
-    });
-
-    // Polygon and textBox animations
-    const tl = gsap.timeline({
+      duration: 0.3,
       scrollTrigger: {
         trigger: section,
         start: 'top 100%',
@@ -93,16 +89,12 @@ const MethodologyAndTestimonials = () => {
       }
     });
 
-    tl.to(polygon, { opacity: 1, x: 0, duration: 0.1 })
-      .to(textBox, { opacity: 1, y: 0, duration: 0.3 }, '-=0.2');
-
-    // Removed GSAP animation for the university logos carousel
   }, []);
 
   return (
     <>
       <section 
-        className="bg-[#000c1e] pt-24 pb-32 relative opacity-90" 
+        className="bg-[#000c1e] pt-24 pb-32 relative opacity-90 overflow-hidden" 
         id="methodology" 
         ref={sectionRef}
         style={{
@@ -112,12 +104,11 @@ const MethodologyAndTestimonials = () => {
           backgroundRepeat: 'no-repeat',
         }}
       >
-        <div className="absolute inset-0 bg-[#011528] opacity-80"></div>
+        <div className="absolute inset-0 bg-[#011528] opacity-100"></div>
         <div 
-          className="polygon absolute top-0 left-0 right-0 h-full bg-blue-200 opacity-20" 
-          ref={polygonRef}
+          className="polygon absolute top-0 left-0 right-0 h-[120%] bg-[#292a58] opacity-100" 
           style={{
-            clipPath: 'polygon(0 0, 100% 0, 100% 80%, 0 100%)',
+            clipPath: 'polygon(0 0, 100% 0, 100% 85%, 0 100%)',
           }}
         ></div>
         <div className="container-fluid relative z-10">
@@ -128,23 +119,29 @@ const MethodologyAndTestimonials = () => {
               </div>
             </div>
             <div className="mx-4 mt-6">
-              <h1 className="text-5xl md:text-5xl font-bold text-green-500 text-left" ref={titleRef}>
+              <h1 className="text-5xl md:text-5xl font-bold text-green-500 text-left">
                 A mission-based social business.
               </h1>
               <div className="mt-12 bg-black p-5 rounded-lg w-full md:w-auto md:mr-[10em]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
-                <p className="text-white text-xl">
-                  Make the world a smarter place. 
+                <p className="text-white text-xl mb-4">
+                  Test prep companies have failed to innovate. Kaplan&apos;s books haven&apos;t changed since 2015. Jack Westin and Blueprint rely on expensive and often inexperienced tutors, promising score increases that they often fail to deliver. They want you to believe you can buy a good score.
                 </p>
-                <p className="text-white text-xl mt-4">
-                 We wrote that in our founding document, and it&apos;s something we believe to our core: that education is important, and that education desperately needs a revolution. For that reason, even over profit, we seek to build an organization that creates innovative solutions to improve education -- starting with medical education.
+                <p className="text-white text-xl mb-2">
                 </p>
-                <p className="text-white text-xl mt-4">
-                That means partnering with universities over investment firms. That means
-                putting professors on our board rather than private equity leaders. It&apos;s not 
-                just lip service either, it&apos;s a part of our policy:
+                <p className="text-white text-xl font-semibold mb-4">
+                  But you can only work for it.
                 </p>
-                <p className="text-white text-xl mt-4">
-                For every five paying customers, we&apos;ll give one lower-income student free access. Email kalypso@mymcat.ai for more information.
+                <p className="text-white text-xl mb-4">
+                  At MyMCAT.ai, we&apos;re dedicated to helping students succeed through innovation and constant feedback. While we charge to stay healthy as an organization, all profits go toward improving our services so students can earn the score they deserve.
+                </p>
+                <p className="text-white text-xl mb-4">
+                  As former premeds, we know firsthand how stressful and costly this process is. As current students, we know the value of a service that makes studying easy, effective, and engaging.
+                </p>
+                <p className="text-white text-xl italic mb-4">
+                  For that reason, this vision guides every decision in our organization:
+                </p>
+                <p className="text-white text-2xl font-bold">
+                  To make the world a smarter place.
                 </p>
               </div>
             </div>
@@ -159,7 +156,7 @@ const MethodologyAndTestimonials = () => {
               slidesPerView={2}
               loop={true}
               autoplay={{
-                delay: 2000,
+                delay: 1000,
                 disableOnInteraction: false,
               }}
               breakpoints={{
@@ -181,6 +178,54 @@ const MethodologyAndTestimonials = () => {
                 </SwiperSlide>
               ))}
             </Swiper>
+          </div>
+        </div>
+      </section>
+
+      {/* New Pricing Section */}
+      <section 
+        className="bg-[#001226] pt-24 pb-32 relative" 
+        id="pricing"
+      >
+        <div className="container-fluid relative z-10">
+          <h2 className="text-4xl font-bold text-white text-center mb-12">
+            The Excessive Pricing of Test Prep Companies
+          </h2>
+          <div className="max-w-4xl mx-auto">
+            <Swiper
+              modules={[Autoplay, Pagination]}
+              spaceBetween={30}
+              slidesPerView={1}
+              autoplay={{
+                delay: 6000,
+                disableOnInteraction: false,
+              }}
+              pagination={{ clickable: true }}
+              className="mb-16"
+            >
+              {pricingLogos.map((logo, index) => (
+                <SwiperSlide key={index}>
+                  <div className="flex flex-col items-center">
+                    <h3 className="text-3xl font-semibold text-red-500 mb-6">{logo.title}</h3>
+                    <Image src={logo.src} alt={`${logo.title} Pricing`} width={800} height={1200} objectFit="contain" />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+          <div className="mt-24 text-center">
+            <h3 className="text-3xl font-semibold text-white mb-8">
+              Our pricing, as the ONLY software solution in MCAT Prep:
+            </h3>
+            <p className="text-green-400 text-6xl font-bold mb-6">
+              $0 <span className="text-white text-4xl">with rate limits</span>
+            </p>
+            <p className="text-green-400 text-6xl font-bold mb-6">
+              $24.99 <span className="text-white text-4xl">a month for unlimited access</span>
+            </p>
+            <p className="text-white text-xl mt-8">
+              We plan on adding more services over time, but remain committed to a better product for a lower cost.
+            </p>
           </div>
         </div>
       </section>

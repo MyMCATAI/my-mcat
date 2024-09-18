@@ -8,10 +8,11 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import BernieSvg from "../public/Bernie.svg";
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Product from './landingpage/Product';
 
 gsap.registerPlugin(ScrollTrigger);
 
-export const LandingHero = () => {
+const LandingHero = () => {
   const quoteRef = useRef(null);
   const videoRef = useRef(null);
   const meowSectionRef = useRef(null);
@@ -118,19 +119,19 @@ export const LandingHero = () => {
           Your browser does not support the video tag.
         </video> 
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div className="relative z-10 container mx-auto px-6 h-full flex items-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-20">
+        <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-10">
             <div className="text-center">
-              <h1 className="text-3xl md:text-[44px] font-bold text-white mb-4">
-                <span className="text-[#f2f64f]"> Increase </span> your CARs score.
+              <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
+                <span className="text-[#f2f64f] ml-0 sm:ml-12"> Increase </span> your CARs score.
               </h1>
-              <p className="text-lg md:text-[20px] text-white my-8">
-                Make strategy easy with your learning companion, Kalypso.
+              <p className="text-xl md:text-3xl text-white my-8 ml-12">
+                Join the revolution in test prep education with Kalypso.
               </p>
               <div className="flex justify-center">
-                <Link href="/intro">
-                  <button className="bg-[#ffffff] text-[#0e2247] py-4 text-lg md:text-[20px] px-10 rounded-[20px]">
-                    Join the waitlist
+                <Link href="/register">
+                  <button className="bg-[#ffffff] text-[#0e2247] py-4 text-lg md:text-xl px-10 rounded-[20px]">
+                    Register
                   </button>
                 </Link>
               </div>
@@ -161,9 +162,9 @@ export const LandingHero = () => {
         </div>
       </section>
 
+      {/* Integrated Bernie Quote into the Next Background Section */}
       <section 
-        ref={meowSectionRef} 
-        className="w-full py-32 bg-[#000c1e] relative"
+        className="w-full py-16 bg-[#000c1e] relative"
       >
         <div 
           className="absolute inset-0 opacity-20"
@@ -175,41 +176,22 @@ export const LandingHero = () => {
             mixBlendMode: 'screen',
           }}
         ></div>
-        <div className="container mx-auto px-6 max-w-4xl relative z-10">
-          <div className="w-full mx-auto mb-20 text-center space-y-12">
-            <h2 ref={titleRef} className="text-[1.6rem] text-center text-white font-bold mb-16 pt-10">The most innovative and effective software for MCAT prep.</h2>
+       <div className="flex flex-col md:flex-row items-center justify-center gap-8 ml-3 mr-3 mb-12" ref={quoteRef}>
+          <div>
+            <BernieSvg width={260} height={260} />
           </div>
-          <div className="w-full mx-auto mb-20">
-            <iframe 
-              width="100%" 
-              height="500" 
-              src="https://www.youtube.com/embed/MAFlQ6fU4GM" 
-              style={{ border: '2px solid #000' }}
-              allow="autoplay; encrypted-media" 
-              allowFullScreen
-            ></iframe>
-          </div>
-          {/* New vertical sections */}
-          <div className="space-y-8 text-white">
-            <div className="text-center p-6 bg-opacity-20 bg-white rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">Fun, engaging passages with AAMC-level questions.</h3>
-              <p>Our MCAT passages are fun and engaging, with AI that tracks timing, accuracy, and drops HINTS when you&apos;re between two options.</p>
-            </div>
-            <div className="text-center p-6 bg-opacity-20 bg-white rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">Cupcake reward system incentivizes daily CARs as a habit.</h3>
-              <p>Stay motivated with our unique reward system that allows you to earn glory for your college.</p>
-            </div>
-            <div className="text-center p-6 bg-opacity-20 bg-white rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">Kalypso helps you review passages intelligently.</h3>
-              <p>Our adaptive technology identifies your strengths and areas for improvement, tailoring the experience to you.</p>
-            </div>
-            <div className="text-center p-6 bg-opacity-20 bg-white rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">CARs prep that will forever be free.</h3>
-              <p>We&apos;re committed to making quality MCAT preparation accessible to all, with our core CARs prep always free.</p>
-            </div>
+          <div className="">
+            <h1 className="text-3xl md:text-3xl text-[#ffffff] font-bold mb-4">
+              &ldquo;Higher education should be a right for all, not a privilege for the few.&rdquo;
+            </h1>
+            <p className="text-xl text-[#ffffff] font-bold">
+              Senator Bernie Sanders of Vermont
+            </p>
           </div>
         </div>
       </section>
     </>
   );
 };
+
+export default LandingHero;

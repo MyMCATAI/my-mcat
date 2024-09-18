@@ -36,6 +36,7 @@ export default function UserTestReviewPage() {
       } else {
         setCurrentPassage(null);
       }
+
       const correctAnswer = JSON.parse(currentResponse.question?.questionOptions || "[]")[0];
       const answernotes = currentResponse.question?.questionAnswerNotes
       const contextText = 
@@ -64,13 +65,13 @@ export default function UserTestReviewPage() {
       setLoading(false);
     }
   };
-
   const updateCurrentPassage = async (passageId: string) => {
     if (passageCacheRef.current[passageId]) {
       setCurrentPassage(passageCacheRef.current[passageId]);
     } else {
       try {
-        const response = await fetch(`/api/passage?id=${passageId}`);
+        const encodedPassageId = encodeURIComponent(passageId);
+        const response = await fetch(`/api/passage?id=${encodedPassageId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch passage');
         }
@@ -160,8 +161,10 @@ export default function UserTestReviewPage() {
               <>
                 <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto">
                   <div className="p-4">
-                    <PassageComponent 
-                      passageData={currentPassage} 
+                  <PassageComponent 
+                    passageData={currentPassage} 
+                    userResponse={currentResponse}
+                    onNote={()=>{console.log("note")}}
                     />
                   </div>
                 </div>

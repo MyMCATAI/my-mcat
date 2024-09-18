@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import dynamic from 'next/dynamic';
-import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
-import FileUploadComponent from './fileUpload';
 import { VocabContext } from '@/contexts/VocabContext';
 import VocabList from '@/components/VocabList';
-import DialogWrapper from './DialogWrapper'; // Import DialogWrapper
+import DialogWrapper from './DialogWrapper';
+import { Question } from "@/types"; // Make sure to import the Question type
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const ChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
 
@@ -16,13 +16,18 @@ interface MyChatBotProps {
   isVoiceEnabled?: boolean;
   width?: string | number;
   backgroundColor?: string;
+  question: Question |null;
+  handleShowHint?: (responseText: string) => void;
+
 }
 
 const MyChatBot: React.FC<MyChatBotProps> = ({ 
   chatbotContext, 
   isVoiceEnabled = false, 
   width = '100%',
-  backgroundColor = 'white'
+  backgroundColor = 'white',
+  question,
+  handleShowHint
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -128,6 +133,12 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
 
   const toggleHint = () => {
     setHintEnabled(!hintEnabled);
+    if(!handleShowHint) return
+    if (!hintEnabled && question?.context) {
+      handleShowHint(question.context);
+    } else {
+      handleShowHint('');
+    }
   };
 
   const toggleVocab = () => {
@@ -157,6 +168,30 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
     }
   };
 
+  const renderHintContent = (context: string) => {
+    return (
+      <div className="markdown-content">
+        {context.split('\n').map((paragraph, index) => {
+          if (paragraph.startsWith('*')) {
+            return (
+              <ul key={index} className="list-disc pl-5 my-2">
+                <li>{index === 0 ? <strong>{paragraph.substring(1).trim()}</strong> : paragraph.substring(1).trim()}</li>
+              </ul>
+            );
+          } else if (/^\d+\./.test(paragraph)) {
+            return (
+              <ol key={index} className="list-decimal pl-5 my-2">
+                <li>{index === 0 ? <strong>{paragraph.substring(paragraph.indexOf('.') + 1).trim()}</strong> : paragraph.substring(paragraph.indexOf('.') + 1).trim()}</li>
+              </ol>
+            );
+          } else {
+            return <p key={index} className="my-2">{index === 0 ? <strong>{paragraph}</strong> : paragraph}</p>;
+          }
+        })}
+      </div>
+    );
+  };
+
   const settings = {
     general: { 
       embedded: true,
@@ -178,12 +213,21 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
             >
               {audioEnabled ? '🔊' : '🔇'}
             </button>
-            <button 
-              onClick={toggleHint}
-              className={`px-2 text-sm ${hintEnabled ? 'bg-blue-500' : 'bg-gray-200'} text-black rounded hover:bg-blue-600 transition-colors`}
-            >
-              💡
-            </button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button 
+                    onClick={toggleHint}
+                    className={`px-2 text-sm ${hintEnabled ? 'bg-blue-500' : 'bg-gray-200'} text-black rounded hover:bg-blue-600 transition-colors`}
+                  >
+                    💡
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" sideOffset={5} className="max-w-[600px] max-h-[800px] overflow-auto">
+                  {question?.context && renderHintContent(question.context)}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <button 
               onClick={toggleCmdI}
               className={`px-2 text-sm ${isCmdIEnabled ? 'bg-blue-500' : 'bg-gray-200'} text-black rounded hover:bg-blue-600 transition-colors`}
@@ -313,13 +357,12 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       <DialogWrapper
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onClose={closeDialog}
-      />
+        onClose={closeDialog} title={''} description={''}      />
     </div>
   );
 };
 
-const App: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled, width, backgroundColor }) => {
+const App: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled, width, backgroundColor, question, handleShowHint }) => {
   return (
     <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
       <MyChatBot 
@@ -327,6 +370,8 @@ const App: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled, width, 
         isVoiceEnabled={isVoiceEnabled} 
         width={width} 
         backgroundColor={backgroundColor}
+        question={question}
+        handleShowHint={handleShowHint}
       />
     </div>
   );

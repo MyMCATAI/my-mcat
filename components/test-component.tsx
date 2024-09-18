@@ -18,6 +18,12 @@ interface TestComponentProps {
   onTestComplete?: (score: number) => void;
 }
 
+interface DictionaryPosition {
+  top: number | null;
+  bottom: number | null;
+  left: number;
+}
+
 const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete }) => {
   const [test, setTest] = useState<Test | null>(null);
   const [userTest, setUserTest] = useState<{ id: string } | null>(null);
@@ -33,7 +39,16 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const [isCreatingTest, setIsCreatingTest] = useState(false);
   const [questionIdToResponseId, setQuestionIdToResponseId] = useState<Record<string, string>>({});
   const [showScorePopup, setShowScorePopup] = useState(false);
+
+  const [testStartTime, setTestStartTime] = useState<Date | null>(null);
+
   const [finalScore, setFinalScore] = useState(0);
+
+  const [numberOfPassageHighlights, setNumberOfPassageHighlights] = useState(0);
+  const [numberOfPassageStrikethroughs, setNumberOfPassageStrikethroughs] = useState(0);
+  const [totalOptionsCrossedOut, setTotalOptionsCrossedOut] = useState(0);
+
+
   const [flashHighlight, setFlashHighlight] = useState(false);
   const [flashStrikethrough, setFlashStrikethrough] = useState(false);
   const [flashFlag, setFlashFlag] = useState(false);
@@ -43,6 +58,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   });
   const [showChatbot, setShowChatbot] = useState(false);
   const [highlightedStrings, setHighlightedStrings] = useState<string[]>([]);
+  const [tempHighlightedStrings, setTempHighlightedStrings] = useState<string[]>([]); // Temporary highlights
   const passageRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
   const questionRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
   const testHeaderRef = useRef<TestHeaderRef>(null);
@@ -55,9 +71,13 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [showDefinition, setShowDefinition] = useState(false);
-  const [dictionaryPosition, setDictionaryPosition] = useState({ top: null, bottom: null, left: 0 });
+  const [dictionaryPosition, setDictionaryPosition] = useState<DictionaryPosition>({ top: null, bottom: null, left: 0 });
 
   const { isCmdIEnabled, toggleCmdI, addVocabWord, removeVocabWord, showVocabList, toggleVocabList, vocabList } = useContext(VocabContext);
+
+  
+  const passageStorageKey = test?.id && currentPassage?.id ? `passage-${test.id}-${currentPassage.id}` : undefined;
+
 
   useEffect(() => {
     fetchTest();
@@ -184,7 +204,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       [questionId]: optimisticResponse.id
     }));
 
-    if (!getCurrentUserResponse(questionId)) {
+    if (!getCurrentUserResponse(questionId)?.userAnswer) {
       setAnsweredQuestions(prev => prev + 1);
     }
 
@@ -251,18 +271,19 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const createUserTest = async (): Promise<{ id: string } | null> => {
     if (!testId || testCreated) return null;
     setIsCreatingTest(true);
-  
+
     try {
       const response = await fetch('/api/user-test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ testId }),
       });
-  
+
       if (!response.ok) throw new Error('Failed to create user test');
       const data = await response.json();
       setUserTest(data);
       setTestCreated(true);
+      setTestStartTime(new Date()); 
       return data;
     } catch (err) {
       console.error('Error creating user test:', err);
@@ -272,47 +293,99 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     }
   };
 
-  const calculateScore = () => {
-    if (!test) return 0;
+  const calculateScore = (totalTimeInSeconds: number) => {
+    if (!test) return { score: 0, correctAnswers: 0, technique: 0 };
+  
     const totalQuestions = test.questions.length;
-    const correctAnswers = Object.values(userResponses).filter(r => r.isCorrect).length;
-    return (correctAnswers / totalQuestions) * 100;
+    const responses = Object.values(userResponses);
+  
+    // Calculate correct answers
+    const correctAnswers = responses.filter(r => r.isCorrect).length;
+    const score = (correctAnswers / totalQuestions) * 100;
+  
+    let technique = 0;
+  
+    // Calculate total passage marks
+    const totalPassageMarks = numberOfPassageHighlights + numberOfPassageStrikethroughs;
+  
+    // Points from passage marks
+    if (totalPassageMarks >= 2) {
+      technique += 2;
+    } else if (totalPassageMarks >= 1) {
+      technique += 1;
+    }
+  
+    // Points from options crossed out
+    if (totalOptionsCrossedOut >= totalQuestions) {
+      technique += 2;
+    } else if (totalOptionsCrossedOut >= totalQuestions / 2) {
+      technique += 1;
+    }
+  
+    return { score, correctAnswers, technique };
   };
+
 
   const handleFinishTest = async () => {
     setIsSubmitting(true);
     if (!userTest) return;
-    
-    const calculatedScore = calculateScore();
-    setScore(calculatedScore);
-    
-    // For this example, we're setting dummy values. 
-    // In a real scenario, you'd calculate these based on user performance
-    setTiming(2);
-    setCorrectAnswer(2);
-    setTechnique(3);
-
+    if(!testStartTime) return;
+  
+    const testFinishTime = new Date();
+    const totalTimeInSeconds = (testFinishTime.getTime() - testStartTime.getTime()) / 1000;
+  
+    const { score, correctAnswers, technique } = calculateScore(totalTimeInSeconds);
+  
+    setScore(score);
+    setCorrectAnswer(correctAnswers);
+    setTiming(totalTimeInSeconds);
+    setTechnique(technique);
+  
     try {
+      // Update the user test record
       const response = await fetch(`/api/user-test/${userTest.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ score: calculatedScore, finishedAt: new Date().toISOString() }),
+        body: JSON.stringify({ score, finishedAt: testFinishTime.toISOString(), totalTime: totalTimeInSeconds }),
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to update test');
       }
-
+  
+      // Determine the number of cupcakes (points) earned
+      let cupcakesEarned = 0;
+      if (score === 100) {
+        cupcakesEarned = 3;
+      } else if (score >= 60) {
+        cupcakesEarned = 2;
+      } else {
+        cupcakesEarned = 1;
+      }
+  
+      // Update the user's score
+      const scoreResponse = await fetch('/api/user-info/', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: cupcakesEarned }),
+      });
+  
+      if (!scoreResponse.ok) {
+        throw new Error('Failed to update user score');
+      }
+  
+      const updatedUserInfo = await scoreResponse.json();
+      console.log('User score updated:', updatedUserInfo.score);
+  
       setShowScorePopup(true);
-      onTestComplete && onTestComplete(calculatedScore);
-
+      onTestComplete && onTestComplete(score);
+  
     } catch (err) {
       console.error('Error finishing test:', err);
     } finally {
       setIsSubmitting(false);
     }
   };
-
   const getCurrentTestQuestion = (): TestQuestion | null => {
     if (!test || !test.questions || test.questions.length === 0) return null;
     return test.questions[currentQuestionIndex];
@@ -363,6 +436,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     setFlashHighlight(true);
     passageRef.current?.applyStyle('HIGHLIGHT');
     questionRef.current?.applyStyle('HIGHLIGHT');
+    setNumberOfPassageHighlights(prev => prev + 1);
     setTimeout(() => setFlashHighlight(false), 300);
   };
 
@@ -370,11 +444,22 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     setFlashStrikethrough(true);
     passageRef.current?.applyStyle('STRIKETHROUGH');
     questionRef.current?.applyStyle('STRIKETHROUGH');
+    setNumberOfPassageStrikethroughs(prev => prev + 1);
     setTimeout(() => setFlashStrikethrough(false), 300);
   };
+
+  const onOptionCrossedOut = (optionText: string) => {
+    // Save a note in the userResponse
+    saveNote(`crossed out option: ${optionText}`);
+  
+    // Increment the total options crossed out counter
+    setTotalOptionsCrossedOut(prev => prev + 1);
+  };
+  
+  
  
   const saveNote = async (text: string) => {
-    console.log("Starting saveNote function");
+    console.log("Starting saveNote function",text);
     let currentUserTest = userTest
     if (!currentUserTest) {
       console.log("No userTest, creating new one");
@@ -455,11 +540,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     }
   };
 
-  const onNote = (text: string) => {
-    console.log('Noted:', text);
-    saveNote(text);
-  };
-
   const handleFlag = async () => {
     setFlashFlag(true);
     
@@ -504,11 +584,10 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       console.log('Question flag status updated successfully');
     } catch (err) {
       console.error('Error updating question flag status:', err);
-    } finally {
-      setTimeout(() => setFlashFlag(false), 300);
-    }
+    } 
   };
 
+  // Function to extract quoted strings from context text
   function extractQuotedStrings(inputText: string): string[] {
     const regex = /"([^"]+)"/g;
     const matches = [];
@@ -519,9 +598,14 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     return matches;
   }
 
-  const handleAssistantResponse = (responseText: string) => {
+  const handleShowHint = (responseText: string) => {
     const quotedStrings = extractQuotedStrings(responseText);
-    setHighlightedStrings(quotedStrings);
+    setTempHighlightedStrings(quotedStrings);
+
+    // Clear the temporary highlights after 5 seconds
+    setTimeout(() => {
+      setTempHighlightedStrings([]);
+    }, 5000);
   };
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -685,7 +769,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           </button>
         </div>
         <div className="flex items-center space-x-2">
-          {/*<button
+          <button
             onClick={toggleVocabList}
             className={`rounded px-2 transition-colors duration-200 flex items-center ${
               showVocabList ? 'bg-blue-500' : 'bg-transparent'
@@ -693,7 +777,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
             aria-label={showVocabList ? "Hide Vocabulary List" : "Show Vocabulary List"}
           >
             📚
-          </button>*/}
+          </button>
           <button
             className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
               flashFlag
@@ -719,12 +803,12 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         {currentPassage && (
           <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto">
             <div className="p-4 h-full">
-              <PassageComponent 
-                ref={passageRef}
-                passageData={currentPassage} 
-                onNote={onNote}
-                highlightedStrings={highlightedStrings}
-              />
+            <PassageComponent
+              ref={passageRef}
+              passageData={currentPassage}
+              onNote={saveNote}
+              tempHighlightedStrings={tempHighlightedStrings}
+            />
             </div>
           </div>
         )}
@@ -762,7 +846,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                   onFinish={handleFinishTest}
                   isSubmitting={isSubmitting}
                   answeredQuestions={answeredQuestions}
-                  onAssistantResponse={handleAssistantResponse}
+                  onOptionCrossedOut={onOptionCrossedOut}
                 />
               </>
             ) : (
@@ -780,6 +864,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                 isVoiceEnabled={false}
                 width="100%"
                 backgroundColor="white"
+                handleShowHint={handleShowHint}
+                question={currentQuestion}
               />
             </div>
           )}
@@ -809,6 +895,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         timing={timing}
         correctAnswer={correctAnswer}
         technique={technique}
+        totalQuestions={test.questions.length}
+        userTestId={userTest?.id}
       />
     </div>
   );
