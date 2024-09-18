@@ -28,7 +28,7 @@ const Faqs = () => {
         <section className='py-16' style={{ background: "#FAFAFA" }}>
             <div className="container mx-auto">
                 <div className="text-center md:text-left mb-10">
-                    <h1 className="text-3xl md:text-3xl font-[600] mb-4" style={{ color: "#0E2247" }}>
+                    <h1 className="text-3xl md:text-3xl font-[600] font-krungthep mb-4" style={{ color: "#0E2247" }}>
                         Frequently Asked Questions
                     </h1>
                 </div>
