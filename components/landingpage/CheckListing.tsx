@@ -12,12 +12,12 @@ const CheckListing = () => {
     const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
     const items = [
-        { heading: "Data-Driven Strategy Insights", text: "Collect data on your lowest performing and highest performing sessions to inform your strategy", icon: icon },
-        { heading: "Content Learning Suite", text: `We're beta-testing this feature at Rice and Princeton, a way to learn content directed at your weaknesses.`, icon: icon },
-        { heading: "Flashcard Integration", text: `Anki is boring and sucks. We plan on integrating flashcards seamlessly with content and prep.`, icon: icon },
+        { heading: "Data-Driven Strategy Insights", text: "We study your performance and provide insights to inform your strategy — such as 'you perform better when you highlight more.'", icon: icon },
+        { heading: "Content Learning Suite", text: `We're beta-testing this feature at Rice and Princeton: learning Chemistry, Physics, Biology, and Psychology content.`, icon: icon },
+        { heading: "Flashcard Integration", text: `Anki is boring. We plan on integrating flashcards seamlessly with content and prep — and making it FUN!`, icon: icon },
         { heading: "Practice Tests & Section Based Practice", text: `Our first practice test is being ruthelessly tested and modified to keep up with the AAMC's changing guidelines`, icon: icon },
-        { heading: "Cupcake Ecosystem Marketplace", text: 'We are serious about making learning fun and plan on cupcakes being a currency to incentivize learning.', icon: icon },
-        { heading: "Friends of Kalypso", text: `Although our software handles tutoring, we plan on integrating human tutors for subjects you just can't seem to crack.`, icon: icon },
+        { heading: "Cupcake Ecosystem", text: 'We are serious about making learning fun and plan on a cupcake ecosystem with competitve learning challenges and rewards.', icon: icon },
+        { heading: "An Interactive Polyverse", text: `This is a secret initiative that we're testing out but it's an entirely new way to interact with learning software. Shhh.`, icon: icon },
     ];
 
     const setItemRef = useCallback((el: HTMLLIElement | null, index: number) => {

@@ -163,7 +163,7 @@ const MethodologyAndTestimonials = () => {
       <section className="bg-[#00101e] py-8 relative" id="how-it-works">
         <div className="container mx-auto px-4">
           <h2 className="text-5xl font-bold text-white text-center mb-16 font-krungthep">
-            How Our Product Works
+            The Daily CARs Suite
           </h2>
           <div className="flex justify-center mb-24">
             <Image src="/softwarehomepage.png" alt="Software Homepage" width={800} height={450} className="rounded-lg shadow-lg" />
@@ -171,23 +171,23 @@ const MethodologyAndTestimonials = () => {
           <ul className="text-white text-xl mb-32 list-none pl-0 max-w-2xl mx-auto font-krungthep space-y-8">
             <li className="mb-4 flex items-start">
               <span className="text-green-500 mr-2">1.</span>
-              <span className="lowercase">metrics on score, time taken, cupcakes earned, and tests reviewed — monitored by your friend, Kalypso </span>
+              <span className="lowercase">stats monitored by your friend Kalypso</span>
             </li>
             <li className="mb-4 flex items-start">
               <span className="text-green-500 mr-2">2.</span>
-              <span className="lowercase">the free daily cars passage, taken in our testing suite, that&apos;s adapted to your weaknesses and difficulty level</span>
+              <span className="lowercase">cars passage in our adaptive testing suite</span>
             </li>
             <li className="mb-4 flex items-start">
               <span className="text-green-500 mr-2">3.</span>
-              <span className="lowercase">a list of previous exams and upcoming exams that you can run through with kalypso</span>
+              <span className="lowercase">previous and upcoming exams</span>
             </li>
             <li className="mb-4 flex items-start">
               <span className="text-green-500 mr-2">4.</span>
-              <span className="lowercase">switch between the content learning suite, schedule, and testing suite (closed to beta testers @ rice.edu and princeton.edu)</span>
+              <span className="lowercase">button to switch to content learning suite (beta testers @ rice and princeton only for now)</span>
             </li>
             <li className="mb-4 flex items-start">
               <span className="text-green-500 mr-2">5.</span>
-              <span className="lowercase">videos curated for your weaknesses on rhetorical analysis/generalized cars strategy &amp; insights from reddit, as well as the ability to see &quot;the league&quot;</span>
+              <span className="lowercase">personalized videos and a lens into the premed forum</span>
             </li>
           </ul>
           {productFeatures.map((feature, index) => (
@@ -306,8 +306,8 @@ const MethodologyAndTestimonials = () => {
             <p className="text-white text-3xl mb-16">
               w/ unlimited access
             </p>
-            <p className="text-white text-2xl mt-16">
-              We plan on adding more services over time, but remain committed to a better product for a lower cost.
+            <p className="text-white font-krungthep text-2xl mt-16">
+              We remain committed to a better product for a lower cost.
             </p>
           </div>
         </div>
