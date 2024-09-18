@@ -183,7 +183,7 @@ const LandingHero = () => {
             <BernieSvg width={260} height={260} />
           </div>
           <div className="">
-            <h1 className="text-3xl md:text-3xl text-[#ffffff] font-bold mb-4 font-['Krungthep']">
+            <h1 className="text-3xl md:text-3xl text-[#ffffff] font-bold mb-4 font-krungthep">
               &ldquo;Higher education should be a right for all, not a privilege for the few.&rdquo;
             </h1>
             <p className="text-xl text-[#ffffff] font-bold">
