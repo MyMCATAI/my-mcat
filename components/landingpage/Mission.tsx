@@ -137,7 +137,7 @@ const MethodologyAndTestimonials = () => {
               </div>
             </div>
             <div className="mx-4">
-              <h1 className="text-5xl md:text-5xl font-bold text-green-500 text-left font-['Krungthep'] mb-12">
+              <h1 className="text-4xl md:text-4xl font-bold text-green-500 text-left font-krungthep mb-12">
                 A mission-oriented social business.
               </h1>
               <div className="mt-16 bg-black p-8 rounded-lg w-full md:w-auto md:mr-[10em]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
@@ -160,15 +160,15 @@ const MethodologyAndTestimonials = () => {
       </section>
 
       {/* New "How Our Product Works" Section */}
-      <section className="bg-[#00162a] py-8 relative" id="how-it-works">
+      <section className="bg-[#00101e] py-8 relative" id="how-it-works">
         <div className="container mx-auto px-4">
-          <h2 className="text-5xl font-bold text-white text-center mb-16 font-['Krungthep']">
+          <h2 className="text-5xl font-bold text-white text-center mb-16 font-krungthep">
             How Our Product Works
           </h2>
           <div className="flex justify-center mb-24">
             <Image src="/softwarehomepage.png" alt="Software Homepage" width={800} height={450} className="rounded-lg shadow-lg" />
           </div>
-          <ul className="text-white text-xl mb-32 list-none pl-0 max-w-2xl mx-auto font-['Krungthep'] space-y-8">
+          <ul className="text-white text-xl mb-32 list-none pl-0 max-w-2xl mx-auto font-krungthep space-y-8">
             <li className="mb-4 flex items-start">
               <span className="text-green-500 mr-2">1.</span>
               <span className="lowercase">metrics on score, time taken, cupcakes earned, and tests reviewed — monitored by your friend, Kalypso </span>
@@ -187,13 +187,13 @@ const MethodologyAndTestimonials = () => {
             </li>
             <li className="mb-4 flex items-start">
               <span className="text-green-500 mr-2">5.</span>
-              <span className="lowercase">videos curated for your weaknesses on rhetorical analysis/generalized cars strategy & insights from reddit, as well as the ability to see &quot;the league&quot;</span>
+              <span className="lowercase">videos curated for your weaknesses on rhetorical analysis/generalized cars strategy &amp; insights from reddit, as well as the ability to see &quot;the league&quot;</span>
             </li>
           </ul>
           {productFeatures.map((feature, index) => (
             <div key={index} className={`flex flex-col md:flex-row items-center mb-40 ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
               <div className={`w-full md:w-1/2 ${index % 2 === 0 ? 'md:pr-8' : 'md:pl-8'}`}>
-                <h3 className="text-3xl font-semibold text-green-500 mb-4 font-['Krungthep']">{feature.title}</h3>
+                <h3 className="text-3xl font-semibold text-green-500 mb-4 font-krungthep">{feature.title}</h3>
                 <p className="text-white text-xl mb-6">
                   {feature.description.map((text, index) => 
                     index % 2 === 0 ? text : <span key={index} className="text-red-500">{text}</span>
@@ -220,9 +220,9 @@ const MethodologyAndTestimonials = () => {
       </section>
 
       {/* Moved University Logo Swiper */}
-      <section className="bg-[#00162a] py-8 relative">
+      <section className="bg-[#00101e] py-8 relative">
         <div className='text-center bg-transparent mb-24 mx-auto p-3 text-lg' style={{ maxWidth: '80%' }}>
-          <p className='text-white mb-16 font-["Krungthep"] text-3xl'>
+          <p className='text-white mb-16 font-krungthep text-3xl'>
             Universities Represented By Our Beta Testers:
           </p>
           <Swiper
@@ -262,7 +262,7 @@ const MethodologyAndTestimonials = () => {
         id="pricing"
       >
         <div className="container-fluid relative z-10">
-          <h2 className="text-4xl font-bold text-white text-center mb-24 font-['Krungthep']">
+          <h2 className="text-4xl font-bold text-white text-center mb-24 font-krungthep">
             The Excessive Pricing of Test Prep Companies
           </h2>
           <div className="max-w-4xl mx-auto mb-32">
@@ -276,32 +276,35 @@ const MethodologyAndTestimonials = () => {
               }}
               pagination={{ clickable: true }}
               className="mb-16"
+              style={{ height: '40rem' }}
             >
               {pricingLogos.map((logo, index) => (
                 <SwiperSlide key={index}>
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-center h-full">
                     <h3 className="text-3xl font-semibold text-red-500 mb-6">{logo.title}</h3>
-                    <Image src={logo.src} alt={`${logo.title} Pricing`} width={800} height={1200} objectFit="contain" />
+                    <div className="flex-grow flex items-center">
+                      <Image src={logo.src} alt={`${logo.title} Pricing`} width={800} height={1200} objectFit="contain" style={{ maxHeight: '100%', width: 'auto' }} />
+                    </div>
                   </div>
                 </SwiperSlide>
               ))}
             </Swiper>
           </div>
           <div className="mt-32 text-center">
-            <h3 className="text-3xl font-semibold text-white mb-24 font-['Krungthep']">
+            <h3 className="text-3xl font-semibold text-white mb-24 font-krungthep">
               Our pricing, as the ONLY software solution in MCAT Prep:
             </h3>
             <p className="text-green-400 text-6xl font-bold mb-4">
-              $0
+              $0/mo
             </p>
             <p className="text-white text-3xl mb-16">
-              with rate limits
+              w/ rate limits
             </p>
             <p className="text-green-400 text-6xl font-bold mb-4">
-              $24.99
+              $24.99/mo
             </p>
             <p className="text-white text-3xl mb-16">
-              a month for unlimited access
+              w/ unlimited access
             </p>
             <p className="text-white text-2xl mt-16">
               We plan on adding more services over time, but remain committed to a better product for a lower cost.
