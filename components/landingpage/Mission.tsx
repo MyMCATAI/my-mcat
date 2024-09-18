@@ -137,20 +137,20 @@ const MethodologyAndTestimonials = () => {
               </div>
             </div>
             <div className="mx-4">
-              <h1 className="text-4xl md:text-4xl font-bold text-green-500 text-left font-krungthep mb-12">
+              <h1 className="text-3xl md:text-4xl font-bold text-green-500 text-left font-krungthep mb-6">
                 A mission-oriented social business.
               </h1>
-              <div className="mt-16 bg-black p-8 rounded-lg w-full md:w-auto md:mr-[10em]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
-                <p className="text-white text-xl mb-2">
+              <div className="mt-8 bg-black p-6 rounded-lg w-full md:w-auto md:mr-[9em]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
+                <p className="text-white text-lg mb-2">
                   Our founder, Prynce, worked at a majority of the test prep companies in the MCAT space. He saw firsthand how these test prep companies have failed students by overpromising and underdelivering. They use slick advertising and faulty promises to convince students to buy, but often abandon students to inexperienced tutors after the first check clears.
                 </p>
-                <p className="text-white text-xl mb-2">
+                <p className="text-white text-lg mb-2">
                   There needs to be a better way.
                 </p>
-                <p className="text-white text-xl mb-2">
+                <p className="text-white text-lg mb-2">
                   Our vision is to democraticize education, starting with MCAT prep, starting with CARs prep, by charging fair prices and reinvesting profits into our offerings so that students have the tools they need to succeed. It&apos;s our belief that you cannot buy a good score, but you can work for it. Let us help you work for it. The world needs better doctors. Our patients need better doctors. 
                 </p>
-                <p className="text-white text-xl font-semibold">
+                <p className="text-white text-lg font-semibold">
                   Let us help you become that very doctor.
                 </p>
               </div>
