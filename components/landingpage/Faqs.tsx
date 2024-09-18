@@ -14,14 +14,14 @@ const Faqs = () => {
     };
 
     const items = [
-        { heading: "How do you accomplish your mission?", text: 'Most nonprofits rely on donors, but we’re a business that uses our proceeds to fund low-income and underrepresented students. Every five paying customers means one approved student gets free access/support.', icon: icon },
-        { heading: "Who are your founders?", text: `Shreyas is a 523 scorer and our architect, designer, and CEO. Josh is a computer science and AI wizard that helped bring Kalypso to life. Both of them work together with the hopes of changing education for the better`, icon: icon },
-        { heading: "How can I get access to MyMCAT?", text: `We’re launching later this year with our full product, but we’re also doing an early, limited release to get feedback at a few major universities.`, icon: icon },
-        { heading: "Can I integrate MyMCAT’s tutoring into my AAMC prep?", text: `We actually have a chrome extension that allows you to open the AAMC in an innovative browser and ask Kalypso questions. Isn’t that swell?`, icon: icon },
+        { heading: "Why did you start this company?", text: 'Because our founder loves his students and wants to see them succeed, and thinks test prep companies are getting it wrong.', icon: icon },
+        { heading: "Who are your founders?", text: `Prynce is a 523 scorer and our product architect, designer, and CEO. Josh is a computer science and AI wizard that helped bring Kalypso to life. Both of them work together with the hopes of changing education for the better`, icon: icon },
+        { heading: "How can I get access to the full MyMCAT", text: `We’re doing limited releases at select universities and cannot accept new students at the moment; however, our software is constantly growing and improving.`, icon: icon },
+        { heading: "Can I integrate MyMCAT’s tutoring into my AAMC and UWorld Prep?", text: `Yes, we're beta-testing an adaptive schedule that will plan your prep around your life. `, icon: icon },
         { heading: "How does Kalypso differ from ChatGPT?", text: 'Kalypso is trained on the MCAT with dozens of textbooks and fine-tuned over hundreds of hours. They’re trained on the latest in ITS research and programmed to be interesting and engaging. Who doesn’t love cats?', icon: icon },
-        { heading: "What if I bought Kaplan, UWorld, AAMC?", text: `Good news. We strive to be the best resource so we integrate with what you have in our adaptive calendar so you can get the most out of the resources you already have.`, icon: icon },
-        { heading: "Does MyMCAT include practice questions and full practice tests?", text: `Yes! We include thousands of novel practic equations, flashcards, AAMC-level passages, and a diagnostic test that’s the best in the industry. `, icon: icon },
-        { heading: "Does StudySmart offer more than MCAT prep?", text: `MCAT Prep is only the first step of our journey, but an important one. We hope to create an outstanding product with users whose data will inform our approach to medical education and beyond. `, icon: icon },
+        { heading: "How can I trust that your content is good?", text: `Because we're one of the few companies that admits that they don't know everything, and are constantly modifying our content based upon YOUR feedback to make it as close to AAMC-level as possible.`, icon: icon },
+        { heading: "Is this really free? No strings attached?", text: `Yes, with caveats. A social business puts mission first over profit, but we still need to make a profit to hire good people and create great services. While we don't pursue profit for profit's sake, we do pursue profit to fund our mission.`, icon: icon },
+        { heading: "Okay, is it MyMCAT or Cupcake?", text: `MyMCAT is a service we offer. Cupcake is our parent company. MCAT Prep is only the first step of our journey, but an important one. We hope to create an outstanding product with users whose data will inform our approach to medical education and beyond. `, icon: icon },
     ];
 
     return (
@@ -48,7 +48,7 @@ const Faqs = () => {
                                     className={`h-6 w-6 transition-transform transform ${expanded === index ? 'rotate-0' : 'rotate-0'}`}
                                     fill="none"
                                     viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                                    stroke="#000000" // Change this to white
                                 >
                                     <path
                                         strokeLinecap="round"
@@ -65,13 +65,6 @@ const Faqs = () => {
                             )}
                         </div>
                     ))}
-                </div>
-                <div className="text-center md:text-left">
-                    
-              
-                <button className=" bg-transparent text-[#0E2247] font-[600] py-3 text-md px-6 rounded-[60px] border-5 border-[#0E2247] mt-10" style={{ border: "2px solid #0E2247" }}>
-                    EXPLORE ALL FAQs
-                </button>
                 </div>
             </div>
         </section>

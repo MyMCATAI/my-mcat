@@ -70,6 +70,24 @@ const MethodologyAndTestimonials = () => {
     // Add more data points as needed
   ];
 
+  const productFeatures = [
+    {
+      title: "Comprehensive Hint System & Vocabulary Builder",
+      description: ["For students who need a tiny nudge, you can press ", "hint", " to reveal questions that you got wrong. For ", "vocabulary", " you can use cmd+i and it defines a word for you and sends it to your vocab bank."],
+      videoSrc: "/landingpage/hintandvocab.mp4",
+    },
+    {
+      title: "Tutoring Assistant Programmed By a 132-Scorer",
+      description: ["Real-time AI that you can talk to that helps you discern between answers and review your tests. It learns from you and ", "adapts your strategy", " to what&apos;s most effective for you! ", "Press play", " on the video!"],
+      videoSrc: "/landingpage/aitutoringreview.mp4",
+    },
+    {
+      title: "Competition & Reward System",
+      description: ["Engage in friendly competition with peers and earn cupcakes that allow you to ", "fight for your school&apos;s ranking", " in The League, a competitive leaderboard for every school that has students enrolled in our program."],
+      videoSrc: "/landingpage/competitionrewards.mp4",
+    },
+  ];
+
   useEffect(() => {
     const section = sectionRef.current;
     const textBox = textBoxRef.current;
@@ -94,7 +112,7 @@ const MethodologyAndTestimonials = () => {
   return (
     <>
       <section 
-        className="bg-[#000c1e] pt-24 pb-32 relative opacity-90 overflow-hidden" 
+        className="bg-[#000c1e] pt-32 pb-40 relative opacity-90 overflow-hidden" 
         id="methodology" 
         ref={sectionRef}
         style={{
@@ -112,86 +130,142 @@ const MethodologyAndTestimonials = () => {
           }}
         ></div>
         <div className="container-fluid relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
             <div className="mt-6 md:mt-0 relative">
               <div className='flex justify-center items-center relative' style={{ width: "100%", height: "600px" }}>
                 <World globeConfig={globeConfig} data={globeData} />
               </div>
             </div>
-            <div className="mx-4 mt-6">
-              <h1 className="text-5xl md:text-5xl font-bold text-green-500 text-left">
-                A mission-based social business.
+            <div className="mx-4">
+              <h1 className="text-5xl md:text-5xl font-bold text-green-500 text-left font-['Krungthep'] mb-12">
+                A mission-oriented social business.
               </h1>
-              <div className="mt-12 bg-black p-5 rounded-lg w-full md:w-auto md:mr-[10em]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
-                <p className="text-white text-xl mb-4">
-                  Test prep companies have failed to innovate. Kaplan&apos;s books haven&apos;t changed since 2015. Jack Westin and Blueprint rely on expensive and often inexperienced tutors, promising score increases that they often fail to deliver. They want you to believe you can buy a good score.
+              <div className="mt-16 bg-black p-8 rounded-lg w-full md:w-auto md:mr-[10em]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
+                <p className="text-white text-xl mb-2">
+                  Our founder, Prynce, worked at a majority of the test prep companies in the MCAT space. He saw firsthand how these test prep companies have failed students by overpromising and underdelivering. They use slick advertising and faulty promises to convince students to buy, but often abandon students to inexperienced tutors after the first check clears.
                 </p>
                 <p className="text-white text-xl mb-2">
+                  There needs to be a better way.
                 </p>
-                <p className="text-white text-xl font-semibold mb-4">
-                  But you can only work for it.
+                <p className="text-white text-xl mb-2">
+                  Our vision is to democraticize education, starting with MCAT prep, starting with CARs prep, by charging fair prices and reinvesting profits into our offerings so that students have the tools they need to succeed. It&apos;s our belief that you cannot buy a good score, but you can work for it. Let us help you work for it. The world needs better doctors. Our patients need better doctors. 
                 </p>
-                <p className="text-white text-xl mb-4">
-                  At MyMCAT.ai, we&apos;re dedicated to helping students succeed through innovation and constant feedback. While we charge to stay healthy as an organization, all profits go toward improving our services so students can earn the score they deserve.
-                </p>
-                <p className="text-white text-xl mb-4">
-                  As former premeds, we know firsthand how stressful and costly this process is. As current students, we know the value of a service that makes studying easy, effective, and engaging.
-                </p>
-                <p className="text-white text-xl italic mb-4">
-                  For that reason, this vision guides every decision in our organization:
-                </p>
-                <p className="text-white text-2xl font-bold">
-                  To make the world a smarter place.
+                <p className="text-white text-xl font-semibold">
+                  Let us help you become that very doctor.
                 </p>
               </div>
             </div>
           </div>
-          <div className='text-center mt-16 bg-transparent mx-auto p-6 text-lg' style={{ maxWidth: '80%' }}>
-            <p className='text-white mb-24'>
-              Universities Represented By Our Beta Testers:
-            </p>
-            <Swiper
-              modules={[Autoplay]}
-              spaceBetween={20}
-              slidesPerView={2}
-              loop={true}
-              autoplay={{
-                delay: 1000,
-                disableOnInteraction: false,
-              }}
-              breakpoints={{
-                640: {
-                  slidesPerView: 2,
-                },
-                768: {
-                  slidesPerView: 3,
-                },
-                1024: {
-                  slidesPerView: 4,
-                },
-              }}
-              className="mt-4"
-            >
-              {universityLogos.map((logo, index) => (
-                <SwiperSlide key={index} className="flex items-center justify-center h-[150px]">
-                  <Image src={logo} alt={`University logo ${index + 1}`} width={200} height={200} objectFit="contain" />
-                </SwiperSlide>
-              ))}
-            </Swiper>
+        </div>
+      </section>
+
+      {/* New "How Our Product Works" Section */}
+      <section className="bg-[#00162a] py-8 relative" id="how-it-works">
+        <div className="container mx-auto px-4">
+          <h2 className="text-5xl font-bold text-white text-center mb-16 font-['Krungthep']">
+            How Our Product Works
+          </h2>
+          <div className="flex justify-center mb-24">
+            <Image src="/softwarehomepage.png" alt="Software Homepage" width={800} height={450} className="rounded-lg shadow-lg" />
           </div>
+          <ul className="text-white text-xl mb-32 list-none pl-0 max-w-2xl mx-auto font-['Krungthep'] space-y-8">
+            <li className="mb-4 flex items-start">
+              <span className="text-green-500 mr-2">1.</span>
+              <span className="lowercase">metrics on score, time taken, cupcakes earned, and tests reviewed — monitored by your friend, Kalypso </span>
+            </li>
+            <li className="mb-4 flex items-start">
+              <span className="text-green-500 mr-2">2.</span>
+              <span className="lowercase">the free daily cars passage, taken in our testing suite, that&apos;s adapted to your weaknesses and difficulty level</span>
+            </li>
+            <li className="mb-4 flex items-start">
+              <span className="text-green-500 mr-2">3.</span>
+              <span className="lowercase">a list of previous exams and upcoming exams that you can run through with kalypso</span>
+            </li>
+            <li className="mb-4 flex items-start">
+              <span className="text-green-500 mr-2">4.</span>
+              <span className="lowercase">switch between the content learning suite, schedule, and testing suite (closed to beta testers @ rice.edu and princeton.edu)</span>
+            </li>
+            <li className="mb-4 flex items-start">
+              <span className="text-green-500 mr-2">5.</span>
+              <span className="lowercase">videos curated for your weaknesses on rhetorical analysis/generalized cars strategy & insights from reddit, as well as the ability to see &quot;the league&quot;</span>
+            </li>
+          </ul>
+          {productFeatures.map((feature, index) => (
+            <div key={index} className={`flex flex-col md:flex-row items-center mb-40 ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
+              <div className={`w-full md:w-1/2 ${index % 2 === 0 ? 'md:pr-8' : 'md:pl-8'}`}>
+                <h3 className="text-3xl font-semibold text-green-500 mb-4 font-['Krungthep']">{feature.title}</h3>
+                <p className="text-white text-xl mb-6">
+                  {feature.description.map((text, index) => 
+                    index % 2 === 0 ? text : <span key={index} className="text-red-500">{text}</span>
+                  )}
+                </p>
+              </div>
+              <div className="w-full md:w-1/2 mt-8 md:mt-0">
+                <video
+                  className="w-full rounded-lg shadow-lg"
+                  autoPlay={index !== 1}
+                  muted={index !== 1}
+                  loop={index !== 1}
+                  playsInline
+                  controls={index === 1}
+                  poster={`/video-thumbnails/${feature.title.toLowerCase().replace(/ /g, '-')}.jpg`}
+                >
+                  <source src={feature.videoSrc} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Moved University Logo Swiper */}
+      <section className="bg-[#00162a] py-8 relative">
+        <div className='text-center bg-transparent mb-24 mx-auto p-3 text-lg' style={{ maxWidth: '80%' }}>
+          <p className='text-white mb-16 font-["Krungthep"] text-3xl'>
+            Universities Represented By Our Beta Testers:
+          </p>
+          <Swiper
+            modules={[Autoplay]}
+            spaceBetween={20}
+            slidesPerView={2}
+            loop={true}
+            autoplay={{
+              delay: 1000,
+              disableOnInteraction: false,
+            }}
+            breakpoints={{
+              640: {
+                slidesPerView: 2,
+              },
+              768: {
+                slidesPerView: 3,
+              },
+              1024: {
+                slidesPerView: 4,
+              },
+            }}
+            className="mt-4"
+          >
+            {universityLogos.map((logo, index) => (
+              <SwiperSlide key={index} className="flex items-center justify-center h-[150px]">
+                <Image src={logo} alt={`University logo ${index + 1}`} width={200} height={200} objectFit="contain" />
+              </SwiperSlide>
+            ))}
+          </Swiper>
         </div>
       </section>
 
       {/* New Pricing Section */}
       <section 
-        className="bg-[#001226] pt-24 pb-32 relative" 
+        className="bg-[#001226] pt-32 pb-40 relative" 
         id="pricing"
       >
         <div className="container-fluid relative z-10">
-          <h2 className="text-4xl font-bold text-white text-center mb-12">
+          <h2 className="text-4xl font-bold text-white text-center mb-24 font-['Krungthep']">
             The Excessive Pricing of Test Prep Companies
           </h2>
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto mb-32">
             <Swiper
               modules={[Autoplay, Pagination]}
               spaceBetween={30}
@@ -213,17 +287,23 @@ const MethodologyAndTestimonials = () => {
               ))}
             </Swiper>
           </div>
-          <div className="mt-24 text-center">
-            <h3 className="text-3xl font-semibold text-white mb-8">
+          <div className="mt-32 text-center">
+            <h3 className="text-3xl font-semibold text-white mb-24 font-['Krungthep']">
               Our pricing, as the ONLY software solution in MCAT Prep:
             </h3>
-            <p className="text-green-400 text-6xl font-bold mb-6">
-              $0 <span className="text-white text-4xl">with rate limits</span>
+            <p className="text-green-400 text-6xl font-bold mb-4">
+              $0
             </p>
-            <p className="text-green-400 text-6xl font-bold mb-6">
-              $24.99 <span className="text-white text-4xl">a month for unlimited access</span>
+            <p className="text-white text-3xl mb-16">
+              with rate limits
             </p>
-            <p className="text-white text-xl mt-8">
+            <p className="text-green-400 text-6xl font-bold mb-4">
+              $24.99
+            </p>
+            <p className="text-white text-3xl mb-16">
+              a month for unlimited access
+            </p>
+            <p className="text-white text-2xl mt-16">
               We plan on adding more services over time, but remain committed to a better product for a lower cost.
             </p>
           </div>

@@ -122,14 +122,16 @@ const LandingHero = () => {
         <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
           <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-10">
             <div className="text-center">
-              <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
-                <span className="text-[#f2f64f] ml-0 sm:ml-12"> Increase </span> your CARs score.
+              <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 text-center">
+                <span>
+                  <span className="text-[#f2f64f]">Increase</span> your CARs score.
+                </span>
               </h1>
-              <p className="text-xl md:text-3xl text-white my-8 ml-12">
+              <p className="text-xl md:text-3xl text-white my-8 text-center">
                 Join the revolution in test prep education with Kalypso.
               </p>
               <div className="flex justify-center">
-                <Link href="/register">
+                <Link href="/intro">
                   <button className="bg-[#ffffff] text-[#0e2247] py-4 text-lg md:text-xl px-10 rounded-[20px]">
                     Register
                   </button>
@@ -181,7 +183,7 @@ const LandingHero = () => {
             <BernieSvg width={260} height={260} />
           </div>
           <div className="">
-            <h1 className="text-3xl md:text-3xl text-[#ffffff] font-bold mb-4">
+            <h1 className="text-3xl md:text-3xl text-[#ffffff] font-bold mb-4 font-['Krungthep']">
               &ldquo;Higher education should be a right for all, not a privilege for the few.&rdquo;
             </h1>
             <p className="text-xl text-[#ffffff] font-bold">
