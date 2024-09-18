@@ -34,7 +34,7 @@ const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(({ title, isCreati
   return (
     <div className="bg-[#006dab] p-2 h-15 flex justify-between items-center border-3 border-sky-500">
       <div className="flex items-center">
-        <h1 className="text-lg font-semibold ml-6 font-override font-['Times_New_Roman',_Times,_serif]">
+        <h1 className="text-lg font-semibold ml-6">
           {title}
           {isCreatingTest && <span className="ml-2 text-sm text-gray-400">Creating test...</span>}
         </h1>

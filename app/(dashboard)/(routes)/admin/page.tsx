@@ -30,6 +30,7 @@ const AdminPage = () => {
   //   passageId: '',
   //   categoryId: '',
   // });
+  
 
   // useEffect(() => {
   //   fetchQuestions();
@@ -87,8 +88,12 @@ const AdminPage = () => {
   //   }
   // };
 
-  return <p>shhhh..</p>;
+  return (
+    <p>shhhh..</p>
+  );
 };
+
+
 
 // interface StatCardProps {
 //   title: string;

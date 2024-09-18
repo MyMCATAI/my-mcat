@@ -1,5 +1,12 @@
 import { LandingNavbar } from "@/components/landing-navbar";
 import Footer from "@/components/landingpage/Footer";
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  other: {
+    'preload': '/landingpage/krungthep.ttf'
+  }
+};
 
 const LandingLayout = ({
     children
