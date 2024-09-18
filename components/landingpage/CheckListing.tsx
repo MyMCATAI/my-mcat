@@ -57,9 +57,6 @@ const CheckListing = () => {
                     <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 font-krungthep">
                         Features On The Way
                     </h1>
-                    <p className="text-xl text-blue-300 mb-6">
-                        We&apos;ve got you.
-                    </p>
                 </div>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {items.map((item, index) => (
@@ -69,7 +66,7 @@ const CheckListing = () => {
                             </div>
                             <div>
                                 <div>
-                                    <h3 className='text-blue-300 text-xl font-semibold'>{item.heading}</h3>
+                                    <h3 className='text-blue-300 text-xl font-semibold font-krungthep'>{item.heading}</h3>
                                 </div>
                                 <div className='text-sm md:text-md text-white'>
                                     {item.text}

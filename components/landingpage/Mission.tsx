@@ -160,15 +160,15 @@ const MethodologyAndTestimonials = () => {
       </section>
 
       {/* New "How Our Product Works" Section */}
-      <section className="bg-[#020e1a] py-8 relative" id="how-it-works">
+      <section className="bg-[#020e1a] py-8 relative font-krungthep" id="how-it-works">
         <div className="container mx-auto px-4">
-          <h2 className="text-5xl font-bold text-white text-center mb-16 font-krungthep">
+          <h2 className="text-5xl font-bold text-white text-center mb-16">
             How Our Product Works
           </h2>
           <div className="flex justify-center mb-24">
             <Image src="/softwarehomepage.png" alt="Software Homepage" width={800} height={450} className="rounded-lg shadow-lg" />
           </div>
-          <ul className="text-white text-xl mb-32 list-none pl-0 max-w-2xl mx-auto font-krungthep space-y-8">
+          <ul className="text-white text-xl mb-32 list-none pl-0 max-w-2xl mx-auto space-y-8">
             <li className="mb-4 flex items-start">
               <span className="text-green-500 mr-2">1.</span>
               <span className="lowercase">metrics on score, time taken, cupcakes earned, and tests reviewed — monitored by your friend, Kalypso </span>
@@ -193,7 +193,7 @@ const MethodologyAndTestimonials = () => {
           {productFeatures.map((feature, index) => (
             <div key={index} className={`flex flex-col md:flex-row items-center mb-40 ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
               <div className={`w-full md:w-1/2 ${index % 2 === 0 ? 'md:pr-8' : 'md:pl-8'}`}>
-                <h3 className="text-3xl font-semibold text-green-500 mb-4 font-krungthep">{feature.title}</h3>
+                <h3 className="text-3xl font-semibold text-green-500 mb-4">{feature.title}</h3>
                 <p className="text-white text-xl mb-6">
                   {feature.description.map((text, index) => 
                     index % 2 === 0 ? text : <span key={index} className="text-red-500">{text}</span>
