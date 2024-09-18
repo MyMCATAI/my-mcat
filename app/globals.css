@@ -107,6 +107,8 @@ body :root {
     --theme-navbutton-color: #001226;
     --svg-invert: 0;
     --theme-reddit-color: #082645;
+    --theme-header-font: 'Krungthep', Arial, sans-serif;
+    --theme-text-font: 'Roboto', sans-serif;
   }
 
   @import "../styles/themes/cyberSpace.css";
@@ -224,6 +226,8 @@ body :root {
   --theme-navbutton-color: #85004b;
   --svg-invert: 1;
   --theme-reddit-color: #fdd7f6;
+  --theme-header-font: 'Roboto', sans-serif;
+  --theme-text-font: 'Roboto', sans-serif;
 }
 
 /* Add theme-specific gradients */
@@ -479,4 +483,33 @@ body {
 .about p {
     margin-top: 20px;
     width: 50%;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+@font-face {
+  font-family: 'Krungthep';
+  src: url('/Krungthep.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Apply theme fonts */
+body {
+  font-family: var(--theme-text-font);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--theme-header-font);
+}
+
+/* Allow overriding of font for headings */
+h1.font-override,
+h2.font-override,
+h3.font-override,
+h4.font-override,
+h5.font-override,
+h6.font-override {
+  font-family: inherit;
 }

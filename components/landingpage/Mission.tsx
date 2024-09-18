@@ -258,7 +258,7 @@ const MethodologyAndTestimonials = () => {
 
       {/* New Pricing Section */}
       <section 
-        className="bg-[#001226] pt-32 pb-40 relative" 
+        className="bg-[#020e1a] pt-32 pb-40 relative" 
         id="pricing"
       >
         <div className="container-fluid relative z-10">

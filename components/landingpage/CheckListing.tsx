@@ -33,8 +33,8 @@ const CheckListing = () => {
         const tl = gsap.timeline({
             scrollTrigger: {
                 trigger: section,
-                start: 'top 90%',
-                end: 'bottom 80%',
+                start: 'top 100%',
+                end: 'bottom 95%',
                 scrub: 1,
             }
         });
