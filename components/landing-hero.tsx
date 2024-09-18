@@ -122,17 +122,17 @@ const LandingHero = () => {
         <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
           <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-10">
             <div className="text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-white font-krungthep mb-4 text-center">
+              <h1 className="text-5xl md:text-6xl font-bold text-white font-krungthep mb-4 text-center">
                 <span>
                   <span className="text-[#f2f64f]">Increase</span> your CARs score.
                 </span>
               </h1>
-              <p className="text-xl md:text-3xl text-white my-8 text-center">
+              <p className="text-2xl md:text-3xl text-white my-8 text-center">
                 Join the revolution in test prep education with Kalypso.
               </p>
               <div className="flex justify-center">
                 <Link href="/intro">
-                  <button className="bg-[#ffffff] text-[#0e2247] py-4 text-lg md:text-xl px-10 rounded-[20px]">
+                  <button className="bg-[#ffffff] text-[#0e2247] py-4 text-xl md:text-2xl px-10 rounded-[20px]">
                     Register
                   </button>
                 </Link>
