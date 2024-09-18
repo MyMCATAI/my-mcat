@@ -12,12 +12,12 @@ const CheckListing = () => {
     const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
     const items = [
-        { heading: "We're experts", text: 'Just relax! Our study methodology is tried and tested by 520+ scorers.', icon: icon },
-        { heading: "We work with your schedule", text: `Even if you're busy, we prioritize content for you to maximize your score by test day.`, icon: icon },
-        { heading: "We know what's on the test", text: `You won't miss a thing. Our content is based on the AAMC's content categories.`, icon: icon },
-        { heading: "We're focused on impact above all else. ", text: `Students are our number one investment. We work for you and put you first above all else.`, icon: icon },
-        { heading: "We know the best resources", text: 'Professionally curated content and resources from trusted sources like Khan Academy, UWorld, AAMC.', icon: icon },
-        { heading: "We're just like you!", text: `Most test prep companies are staffed by people who haven't taken the test-but we're made by premeds for premeds.`, icon: icon },
+        { heading: "Data-Driven Strategy Insights", text: "Collect data on your lowest performing and highest performing sessions to inform your strategy", icon: icon },
+        { heading: "Content Learning Suite", text: `We're beta-testing this feature at Rice and Princeton, a way to learn content directed at your weaknesses.`, icon: icon },
+        { heading: "Flashcard Integration", text: `Anki is boring and sucks. We plan on integrating flashcards seamlessly with content and prep.`, icon: icon },
+        { heading: "Practice Tests & Section Based Practice", text: `Our first practice test is being ruthelessly tested and modified to keep up with the AAMC's changing guidelines`, icon: icon },
+        { heading: "Cupcake Ecosystem Marketplace", text: 'We are serious about making learning fun and plan on cupcakes being a currency to incentivize learning.', icon: icon },
+        { heading: "Friends of Kalypso", text: `Although our software handles tutoring, we plan on integrating human tutors for subjects you just can't seem to crack.`, icon: icon },
     ];
 
     const setItemRef = useCallback((el: HTMLLIElement | null, index: number) => {
@@ -54,8 +54,8 @@ const CheckListing = () => {
         <section className='bg-[#091f33] py-16' id='keypoints' ref={sectionRef}>
             <div className="container mx-auto">
                 <div className="text-center mb-10">
-                    <h1 className="text-2xl md:text-4xl font-bold text-white mb-4">
-                        Don&apos;t worry, darling
+                    <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 font-['Krungthep']">
+                        Features On The Way
                     </h1>
                     <p className="text-xl text-blue-300 mb-6">
                         We&apos;ve got you.
