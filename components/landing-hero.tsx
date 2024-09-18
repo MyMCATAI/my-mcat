@@ -123,15 +123,15 @@ const LandingHero = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-10">
             <div className="text-center">
               <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
-                <span className="text-[#f2f64f] ml-12"> Increase </span> your CARs score.
+                <span className="text-[#f2f64f] ml-0 sm:ml-12"> Increase </span> your CARs score.
               </h1>
-              <p className="text-xl md:text-2xl text-white my-8 ml-12">
-                Make strategy easy with your learning companion, Kalypso.
+              <p className="text-xl md:text-3xl text-white my-8 ml-12">
+                Join the revolution in test prep education with Kalypso.
               </p>
               <div className="flex justify-center">
-                <Link href="/intro">
+                <Link href="/register">
                   <button className="bg-[#ffffff] text-[#0e2247] py-4 text-lg md:text-xl px-10 rounded-[20px]">
-                    Join the waitlist
+                    Register
                   </button>
                 </Link>
               </div>

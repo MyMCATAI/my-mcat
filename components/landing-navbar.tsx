@@ -87,7 +87,7 @@ export const LandingNavbar = () => {
           className={`lg:flex ${
             isOpen ? "hidden" : "hidden"
           } lg:block justify-center lg:justify-center py-2 px-5 rounded-[60px]`}
-          style={{ backgroundColor: "#0c4ea7" }}
+          style={{ backgroundColor: "#000000" }} // Changed from #0c4ea7 to #000000 (black)
         >
           {navLinks.map((link) => (
             <a
@@ -105,9 +105,9 @@ export const LandingNavbar = () => {
         </span>
 
         <div className="flex items-center hidden lg:block">
-          <Link href={"/intro"}>
+          <Link href={"/home"}>
             <button className="bg-white text-black py-2 text-lg md:text-[16px] px-4 rounded-[8px]">
-              Join the waitlist
+              Login
             </button>
           </Link>
         </div>
