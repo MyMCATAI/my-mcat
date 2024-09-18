@@ -137,7 +137,7 @@ const MethodologyAndTestimonials = () => {
               </div>
             </div>
             <div className="mx-4">
-              <h1 className="text-3xl md:text-4xl font-bold text-green-500 text-left font-krungthep mb-6">
+              <h1 className="text-4xl md:text-4xl font-bold text-green-500 text-left font-krungthep mb-6">
                 A mission-oriented social business.
               </h1>
               <div className="mt-8 bg-black p-6 rounded-lg w-full md:w-auto md:mr-[9em]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
