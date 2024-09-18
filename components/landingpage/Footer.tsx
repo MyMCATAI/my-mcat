@@ -129,7 +129,7 @@ const Footer = () => {
           <span className="text-md text-gray-400 sm:text-center">
             © 2024{" "}
             <a href="#" className="hover:underline ">
-              Cupcake Learning Inc
+              Cupcake, The Sweeter Study Company
             </a>
             . All Rights Reserved.
           </span>
