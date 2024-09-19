@@ -7,11 +7,11 @@ interface MVPDialogProps {
 
 const MVPDialog: React.FC<MVPDialogProps> = ({ university }) => {
   return (
-    <DialogContent className="sm:max-w-[425px]">
+    <DialogContent className="sm:max-w-[425px] text-black">
       <DialogHeader>
         <DialogTitle>{`${university}'s MVPs`}</DialogTitle>
       </DialogHeader>
-      <div className="grid gap-4 py-4 text-gray-900">
+      <div className="grid gap-4 py-4 text-black">
         <p>Here are the standout performers from {university}:</p>
         <ul className="list-disc pl-5">
           <li>{"Season's Haul: 5250 Cupcakes"}</li>

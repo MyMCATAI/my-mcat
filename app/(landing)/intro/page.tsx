@@ -7,7 +7,6 @@ import Script from 'next/script';
 const IntroPage = () => {
   const [showGif, setShowGif] = useState(false);
   const [showIntroText, setShowIntroText] = useState(true);
-  const [showFinalText, setShowFinalText] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
@@ -15,18 +14,12 @@ const IntroPage = () => {
     const hideGifTimer = setTimeout(() => {
       setShowGif(false);
       setShowIntroText(false);
+      setShowForm(true); // Show form immediately after intro text
     }, 6400);
-    const showFinalTextTimer = setTimeout(() => setShowFinalText(true), 7100);
-    const formTimer = setTimeout(() => {
-      setShowFinalText(false);
-      setShowForm(true);
-    }, 12500);
 
     return () => {
       clearTimeout(gifTimer);
       clearTimeout(hideGifTimer);
-      clearTimeout(showFinalTextTimer);
-      clearTimeout(formTimer);
     };
   }, []);
 
@@ -49,7 +42,7 @@ const IntroPage = () => {
             <Typewriter
               onInit={(typewriter) => {
                 typewriter
-                  .typeString('Hey! Thanks for tumbling into myMCAT.ai')
+                  .typeString('Hey! Thanks for tumbling into myMCAT.ai.')
                   .start();
               }}
               options={{
@@ -61,42 +54,28 @@ const IntroPage = () => {
         )}
       </div>
 
-      {showFinalText && (
-        <div className="text-center animate-fadeIn">
-          <Typewriter
-            onInit={(typewriter) => {
-              typewriter
-                .typeString("We're launching late September to a select group of students. Please apply!")
-                .start();
-            }}
-            options={{
-              delay: 24,
-              cursor: '',
-            }}
-          />
-        </div>
-      )}
-      
       {showForm && (
         <>
           <Script src="https://tally.so/widgets/embed.js" strategy="lazyOnload" />
-          <iframe
-            src="https://tally.so/embed/31vBY4?transparentBackground=1&hideHeader=0"
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            marginHeight={0}
-            marginWidth={0}
-            title="MyMCAT's Early Access Form"
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              border: 'none',
-            }}
-          ></iframe>
+          <div className="w-full h-full mt-14"> {/* Increased top margin */}
+            <iframe
+              src="https://tally.so/embed/31vBY4?transparentBackground=1&hideHeader=0"
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              marginHeight={0}
+              marginWidth={0}
+              title="MyMCAT's Early Access Form"
+              style={{
+                position: 'fixed',
+                top: '6rem', // Increased top position
+                left: 0,
+                right: 0,
+                bottom: 0,
+                border: 'none',
+              }}
+            ></iframe>
+          </div>
         </>
       )}
 

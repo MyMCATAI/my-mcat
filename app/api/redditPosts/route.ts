@@ -23,10 +23,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const redditResponse = await fetch(
-      `https://www.reddit.com/r/${encodeURIComponent(subreddit)}/search.json?q=${encodeURIComponent(query)}&restrict_sr=1&sort=top&t=${timeRange}`,
+      `https://www.reddit.com/r/${encodeURIComponent(subreddit)}/search.json?q=${encodeURIComponent(query)}&restrict_sr=1&sort=top&t=${timeRange}&limit=100`,
       {
         headers: {
-          'User-Agent': 'YourAppName/1.0', // Replace with your app's name and version
+          'User-Agent': 'MyMCAT/1.0 (by kalypso@mymcat.ai)',
         },
       }
     );
