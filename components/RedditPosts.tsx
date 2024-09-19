@@ -103,7 +103,7 @@ const RedditPosts: React.FC = () => {
   };
 
   return (
-    <div className="bg-transparent rounded-lg h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center space-x-2">
@@ -141,7 +141,7 @@ const RedditPosts: React.FC = () => {
       </div>
 
       {/* Post Content */}
-      <ScrollArea className="flex-grow">
+      <ScrollArea className="flex-grow overflow-y-auto">
         {loading ? (
           <div className="flex justify-center items-center h-full">
             <p className="text-lg font-semibold text-[--theme-text-color]">
@@ -202,7 +202,7 @@ const RedditPosts: React.FC = () => {
                 <div className="mt-4">
                   <div
                     className={`text-xs xl:text-sm text-[--theme-text-color] reddit-content overflow-hidden ${
-                      expandedPost ? '' : 'max-h-[10rem] xl:max-h-[20rem]'
+                      expandedPost ? '' : 'max-h-[5rem] xl:max-h-[20rem]'
                     }`}
                     dangerouslySetInnerHTML={{
                       __html: formatContent(currentPost.selftext),

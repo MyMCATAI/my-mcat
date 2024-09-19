@@ -9,6 +9,8 @@ import RedditPosts from "../../../../components/RedditPosts";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { FaYoutube } from 'react-icons/fa';
+import TutorialContent from "../../../../components/home/TutorialContent"; // Add this import
 
 interface KnowledgeProfileProps {
   activities: FetchedActivity[];
@@ -24,7 +26,8 @@ interface School {
 
 type TabContent = 
   | { type: 'insights'; videos: { id: string; title: string }[] }
-  | { type: 'league'; schools: School[] };
+  | { type: 'league'; schools: School[] }
+  | { type: 'tutorial' }; // Add this new type
 
 type VideoCategory = 'RBT' | 'RWT' | 'CMP';
 
@@ -90,31 +93,33 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
 
   const [videos, setVideos] = useState([firstVideo, ...shuffleVideos(videoCategories[selectedCategory])]);
 
+  // Add this function to randomly select a category
+  const selectRandomCategory = () => {
+    const categories: VideoCategory[] = ['RBT', 'RWT', 'CMP'];
+    const randomIndex = Math.floor(Math.random() * categories.length);
+    setSelectedCategory(categories[randomIndex]);
+  };
+
+  // Use useEffect to call selectRandomCategory on component mount
+  useEffect(() => {
+    selectRandomCategory();
+  }, []);
+
   useEffect(() => {
     setVideos([...shuffleVideos(videoCategories[selectedCategory])]);
     setCurrentVideoIndex(0);
   }, [selectedCategory]);
 
   const renderInsights = () => (
-    <div className="h-full flex flex-col bg-[--theme-mainbox-color] space-y-4">
+    <div className="h-full flex flex-col space-y-4">
       <Card>
         <CardContent className="p-4">
-        <a 
-            href={`https://www.youtube.com/watch?v=${firstVideo.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline mb-4 block font-semibold"
-          >
-            Start Here: {firstVideo.title}
-          </a>
-          <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as VideoCategory)} className="mb-4">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="RBT">RBT</TabsTrigger>
-              <TabsTrigger value="RWT">RWT</TabsTrigger>
-              <TabsTrigger value="CMP">CMP</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <div className="relative aspect-video">
+          <div className="flex items-center mb-4">
+            <FaYoutube className="text-3xl text-red-600 mr-2" />
+            <span className="font-semibold text-lg text-[--theme-text-color]">Videos from YouTube</span>
+          </div>
+          <div className="relative aspect-video group">
+            <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-0 transition-opacity duration-300 z-10"></div>
             <iframe
               width="100%"
               height="100%"
@@ -126,17 +131,17 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
               className="absolute inset-0"
             ></iframe>
             <Button
-              variant="outline"
-              size="icon"
-              className="absolute left-2 top-1/2 transform -translate-y-1/2"
+              variant="secondary"
+              size="sm"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white"
               onClick={() => setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length)}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button
-              variant="outline"
-              size="icon"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2"
+              variant="secondary"
+              size="sm"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white"
               onClick={() => setCurrentVideoIndex((prev) => (prev + 1) % videos.length)}
             >
               <ChevronRight className="h-4 w-4" />
@@ -145,7 +150,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
         </CardContent>
       </Card>
       <Card className="flex-grow">
-        <CardContent className="p-4">
+        <CardContent className="p-4 h-full">
           <RedditPosts />
         </CardContent>
       </Card>
@@ -210,9 +215,9 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
             {school.rank === 1 && (
               <Dialog open={isMVPDialogOpen} onOpenChange={setIsMVPDialogOpen}>
                 <DialogTrigger asChild>
-                  <button className="mt-2 text-sm text-blue-600 hover:underline">
+                  {/* <button className="mt-2 text-sm text-blue-600 hover:underline">
                     Highlighting the MVPs»
-                  </button>
+                  </button> */}
                 </DialogTrigger>
                 <MVPDialog university={school.name} />
               </Dialog>
@@ -229,6 +234,8 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
       return renderInsights();
     } else if (content.type === 'league') {
       return renderSchools(content.schools);
+    } else if (content.type === 'tutorial') {
+      return <TutorialContent />;
     }
     return null;
   };
@@ -239,6 +246,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   const tabs: { id: string; label: string; content: TabContent }[] = [
     { id: "tab1", label: "Insights", content: { type: 'insights', videos: videos } },
     { id: "tab2", label: "League", content: { type: 'league', schools: schools } },
+    { id: "tab3", label: "Bulletin", content: { type: 'tutorial' } }, // Add this new tab
   ];
 
   return (
