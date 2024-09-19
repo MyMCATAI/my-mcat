@@ -146,7 +146,6 @@ async function getOrderedTests(
     }
     allTests.push(...allAvailableTests);
   }
-
   // Fetch user's test history
   const [userTests, userResponses] = await Promise.all([
     prisma.userTest.findMany({
@@ -168,23 +167,24 @@ async function getOrderedTests(
     userTests.map((test: any) => test.passageId)
   );
 
-  //Filter tests that have already been taken and tests that have passages that have already been taken
+  // Filter tests that have not been taken yet
+  const filteredTests = allTests.filter((test: { id: unknown }) => !takenTestIds.has(test.id));
+  console.log(`Number of tests not yet taken: ${filteredTests.length}`);
 
-  const filteredTests = allTests
-    .filter((test: { id: unknown }) => !takenTestIds.has(test.id))
-    .filter(
-      (test: { questions: any[] }) =>
-        !test.questions.some((testQuestion: { questionId: any }) =>
-          prisma.question
-            .findUnique({
-              where: { id: testQuestion.questionId },
-              select: { passage: { select: { id: true } } },
-            })
-            .then((question: { passage: { id: string } | null } | null) =>
-              recentlyTakenPassageIds.has(question?.passage?.id ?? "")
-            )
-        )
-    );
+  // Further filter tests that have passages that have already been taken
+  const finalFilteredTests = filteredTests.filter(
+    (test: { questions: any[] }) =>
+      !test.questions.some((testQuestion: { questionId: any }) =>
+        prisma.question
+          .findUnique({
+            where: { id: testQuestion.questionId },
+            select: { passage: { select: { id: true } } },
+          })
+          .then((question: { passage: { id: string } | null } | null) =>
+            recentlyTakenPassageIds.has(question?.passage?.id ?? "")
+          )
+      )
+  );
 
   console.log(`Filtered ${allTests.length - filteredTests.length} tests`);
 
