@@ -58,6 +58,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
   const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
   const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(null);
   const [welcomeComplete, setWelcomeComplete] = useState(false);
+  const [marketplaceText, setMarketplaceText] = useState("Marketplace ->");
 
   const getPercentageColor = (percentage: number) => {
     if (percentage < 50) return "text-red-500";
@@ -128,6 +129,11 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
     }
     setAssistantMessage(null);
     setDismissMessage(null);
+  };
+
+  const handleMarketplaceClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setMarketplaceText("You need a seven day streak to be invited to the marketplace!");
   };
 
   return (
@@ -216,15 +222,6 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
                           className="theme-svg"
                         />
                       </div>
-                      <div className="w-7 h-7 relative theme-box">
-                        <Image
-                          src="/verticalbar.svg"
-                          layout="fill"
-                          objectFit="contain"
-                          alt="Vertical bar icon"
-                          className="theme-svg"
-                        />
-                      </div>
                     </div>
                     <span 
                       className="animate-pulse"
@@ -240,6 +237,21 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
                   </Link>
                 </div>
               )}
+              <div className="absolute bottom-4 right-4">
+                <Link href="/marketplace" onClick={handleMarketplaceClick}>
+                  <span 
+                    className="animate-pulse text-lg cursor-pointer"
+                    style={{ 
+                      color: 'var(--theme-text-color)',
+                      transition: 'color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--theme-hover-color)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--theme-text-color)'}
+                  >
+                    {marketplaceText}
+                  </span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
