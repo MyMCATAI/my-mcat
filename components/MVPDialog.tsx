@@ -11,7 +11,7 @@ const MVPDialog: React.FC<MVPDialogProps> = ({ university }) => {
       <DialogHeader>
         <DialogTitle>{`${university}'s MVPs`}</DialogTitle>
       </DialogHeader>
-      <div className="grid gap-4 py-4">
+      <div className="grid gap-4 py-4 text-gray-900">
         <p>Here are the standout performers from {university}:</p>
         <ul className="list-disc pl-5">
           <li>{"Season's Haul: 5250 Cupcakes"}</li>
