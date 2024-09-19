@@ -38,7 +38,7 @@ const Chatbox = ({ user }) => {
           onClick={() => handleButtonClick("Let's do it")}
           className="bg-blue-600 px-4 py-2 rounded-md h-10"
         >
-          Let&apos;s do it
+          {"Let's do it"}
         </button>
         <button
           onClick={() => handleButtonClick('Great!')}

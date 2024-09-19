@@ -78,12 +78,18 @@ const MethodologyAndTestimonials = () => {
     },
     {
       title: "Tutoring Assistant Programmed By a 132-Scorer",
-      description: ["Real-time AI that you can talk to that helps you discern between answers and review your tests. It learns from you and ", "adapts your strategy", " to what&apos;s most effective for you! ", "Press play", " on the video!"],
+      description: [
+        `Real-time AI that you can talk to that helps you discern between answers and review your tests. It learns from you and `,
+        `adapts your strategy`,
+        ` to what's most effective for you! `,
+        `Press play`,
+        ` on the video!`,
+      ],
       videoSrc: "/landingpage/aitutoringreview.mp4",
     },
     {
       title: "Competition & Reward System",
-      description: ["Engage in friendly competition with peers and earn cupcakes that allow you to ", "fight for your school&apos;s ranking", " in The League, a competitive leaderboard for every school that has students enrolled in our program."],
+      description: ["Engage in friendly competition with peers and earn cupcakes that allow you to ", "fight for your school's ranking", " in The League, a competitive leaderboard for every school that has students enrolled in our program."],
       videoSrc: "/landingpage/competitionrewards.mp4",
     },
   ];
@@ -148,7 +154,7 @@ const MethodologyAndTestimonials = () => {
                   There needs to be a better way.
                 </p>
                 <p className="text-white text-lg mb-2">
-                  Our vision is to democraticize education, starting with MCAT prep, starting with CARs prep, by charging fair prices and reinvesting profits into our offerings so that students have the tools they need to succeed. It&apos;s our belief that you cannot buy a good score, but you can work for it. Let us help you work for it. The world needs better doctors. Our patients need better doctors. 
+                {"Our vision is to democraticize education, starting with MCAT prep, starting with CARs prep, by charging fair prices and reinvesting profits into our offerings so that students have the tools they need to succeed. It's our belief that you cannot buy a good score, but you can work for it. Let us help you work for it. The world needs better doctors. Our patients need better doctors."}
                 </p>
                 <p className="text-white text-lg font-semibold">
                   Let us help you become that very doctor.

@@ -77,23 +77,31 @@ const DialogWrapper: React.FC<DialogWrapperProps> = ({
             <div className="bg-gray-800 p-4 rounded-lg shadow-md">
               <h3 className="font-semibold text-blue-500 mb-2">Audio Toggle Button</h3>
               <div className="text-4xl mb-2">🔊</div>
-              <p>Turn this on to enable audio. Yes, you can talk to Kalypso, and he&apos;ll talk back. While he won&apos;t give you answers, he will guide you with answering questions or reading a passage.</p>
+              <p>
+                {"Turn this on to enable audio. Yes, you can talk to Kalypso, and he'll talk back. While he won't give you answers, he will guide you with answering questions or reading a passage."}
+                </p>
             </div>
             
             <div className="bg-gray-800 p-4 rounded-lg shadow-md">
               <h3 className="font-semibold text-blue-500 mb-2">Hint Button</h3>
               <div className="text-4xl mb-2">💡</div>
-              <p>If you&apos;re stuck on a question, use this to highlight important parts of the passage. These hints might be near your own highlights or somewhere else entirely.</p>
+              <p>
+                {"If you're stuck on a question, use this to highlight important parts of the passage. These hints might be near your own highlights or somewhere else entirely."}
+                </p>
             </div>
             
             <div className="bg-gray-800 p-4 rounded-lg shadow-md">
               <h3 className="font-semibold text-blue-500 mb-2">Dictionary Button</h3>
               <div className="text-4xl mb-2">📖</div>
-              <p>When this is on (blue), press &quot;Cmd+i&quot; to get definitions for words you don&apos;t know. These words are saved for later review. You can also use &quot;Cmd+i&quot; when it&apos;s off to check words after the test.</p>
+              <p>
+                {"When this is on (blue), press &quot;Cmd+i&quot; to get definitions for words you don't know. These words are saved for later review. You can also use &quot;Cmd+i&quot; when it's off to check words after the test."}
+                </p>
             </div>
           </div>
           
-          <p>After the test, you&apos;ll get a score based on your answers, time, and how well you used tools like highlighting and elimination.</p>
+          <p>
+            {"After the test, you'll get a score based on your answers, time, and how well you used tools like highlighting and elimination."}
+            </p>
           
           <p>Good luck :3</p>
         </div>
