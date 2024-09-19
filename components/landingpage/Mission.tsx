@@ -148,13 +148,10 @@ const MethodologyAndTestimonials = () => {
               </h1>
               <div className="mt-8 bg-black p-6 rounded-lg w-full md:w-auto lg:mr-[8vw] xl:mr-[12vw]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
                 <p className="text-white text-lg mb-2">
-                  Our founder, Prynce, worked at a majority of the test prep companies in the MCAT space. He saw firsthand how these test prep companies have failed students by overpromising and underdelivering. They use slick advertising and faulty promises to convince students to buy, but often abandon students to inexperienced tutors after the first check clears.
+                  {"Our vision is to democraticize education and make learning fun. Test prep is expensive. Test prep is boring. Duolingo is fun! Starting with MCAT prep, we've released a learning suite for the hardest section of the MCAT — CARs,  the reading section — that students can start early on so that they can maximize their potential. Unlike most companies, we don't believe in profit driving us, but purpose and people: we'll keep costs low and use profits to invest in hiring people that make learning more fun."}
                 </p>
                 <p className="text-white text-lg mb-2">
-                  There needs to be a better way.
-                </p>
-                <p className="text-white text-lg mb-2">
-                {"Our vision is to democraticize education, starting with MCAT prep, starting with CARs prep, by charging fair prices and reinvesting profits into our offerings so that students have the tools they need to succeed. It's our belief that you cannot buy a good score, but you can work for it. Let us help you work for it. The world needs better doctors. Our patients need better doctors."}
+                  {"It's our belief that you cannot buy a good score, but you can work for it. Let us help you work for it. The world needs better doctors. Our patients need better doctors."}
                 </p>
                 <p className="text-white text-lg font-semibold">
                   Let us help you become that very doctor.
