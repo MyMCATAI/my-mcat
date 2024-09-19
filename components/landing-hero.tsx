@@ -124,11 +124,11 @@ const LandingHero = () => {
             <div className="text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-white font-krungthep mb-4 text-center">
                 <span>
-                  <span className="text-[#f2f64f]">Increase</span> your CARs score.
+                  <span className="text-[#f2f64f]">Study</span> earlier and <span className="text-[#f2f64f]">score</span> higher.
                 </span>
               </h1>
               <p className="text-2xl md:text-3xl text-white my-8 text-center">
-                Join the revolution in test prep education with Kalypso.
+                Join the revolution in MCAT education with Kalypso.
               </p>
               <div className="flex justify-center">
                 <Link href="/intro">
