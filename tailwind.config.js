@@ -90,6 +90,10 @@ module.exports = {
         '2xl': '2560px', // You might want to keep this the same as xl
         '3xl': '3840px', // You might want to keep this the same as xl
       },
+      fontFamily: {
+        sans: ['Roboto', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Helvetica Neue', 'Arial', 'Noto Sans', 'sans-serif', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'],
+        krungthep: ['Krungthep', 'Arial', 'sans-serif'],
+      },
     },
   },
   variants: {
