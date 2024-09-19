@@ -146,7 +146,7 @@ const MethodologyAndTestimonials = () => {
               <h1 className="text-4xl md:text-4xl font-bold text-green-500 text-left font-krungthep mb-6">
                 A mission-oriented social business.
               </h1>
-              <div className="mt-8 bg-black p-6 rounded-lg w-full md:w-auto md:mr-[9em]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
+              <div className="mt-8 bg-black p-6 rounded-lg w-full md:w-auto lg:mr-[8vw] xl:mr-[12vw]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
                 <p className="text-white text-lg mb-2">
                   Our founder, Prynce, worked at a majority of the test prep companies in the MCAT space. He saw firsthand how these test prep companies have failed students by overpromising and underdelivering. They use slick advertising and faulty promises to convince students to buy, but often abandon students to inexperienced tutors after the first check clears.
                 </p>

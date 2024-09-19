@@ -96,7 +96,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   }, [selectedCategory]);
 
   const renderInsights = () => (
-    <div className="h-full flex flex-col space-y-4">
+    <div className="h-full flex flex-col bg-[--theme-mainbox-color] space-y-4">
       <Card>
         <CardContent className="p-4">
         <a 
@@ -251,7 +251,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
               className={`flex-1 text-[12px] py-1 border border-[#79747E] text-center ${
                 activeTab === tab.id
                   ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                  : "bg-white text-black"
+                  : "bg-[white] text-black"
               }`}
               onClick={() => setActiveTab(tab.id)}
             >
