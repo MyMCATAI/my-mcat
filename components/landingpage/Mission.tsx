@@ -144,7 +144,7 @@ const MethodologyAndTestimonials = () => {
             </div>
             <div className="mx-4">
               <h1 className="text-4xl md:text-4xl font-bold text-green-500 text-left font-krungthep mb-6">
-                Our mission: Duolingo for the hardest tests in the world. 
+                Duolingo for the hardest test in the world. 
               </h1>
               <div className="mt-8 bg-black p-6 rounded-lg w-full md:w-auto lg:mr-[8vw] xl:mr-[12vw]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
                 <p className="text-white text-lg mb-2">a
