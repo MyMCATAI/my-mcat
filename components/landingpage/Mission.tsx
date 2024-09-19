@@ -144,17 +144,20 @@ const MethodologyAndTestimonials = () => {
             </div>
             <div className="mx-4">
               <h1 className="text-4xl md:text-4xl font-bold text-green-500 text-left font-krungthep mb-6">
-                A mission-oriented social business.
+                Our mission: Duolingo for the hardest tests in the world. 
               </h1>
               <div className="mt-8 bg-black p-6 rounded-lg w-full md:w-auto lg:mr-[8vw] xl:mr-[12vw]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
-                <p className="text-white text-lg mb-2">
-                  {"Our vision is to democraticize education and make learning fun. Test prep is expensive. Test prep is boring. Duolingo is fun! Starting with MCAT prep, we've released a learning suite for the hardest section of the MCAT — CARs,  the reading section — that students can start early on so that they can maximize their potential. Unlike most companies, we don't believe in profit driving us, but purpose and people: we'll keep costs low and use profits to invest in hiring people that make learning more fun."}
+                <p className="text-white text-lg mb-2">a
+                  {"Test prep is expensive. Test prep is boring. So we're anti test-prep: affordable and engaging. Starting with MCAT prep, we've developed a learning suite for the most challenging section — CARs, the reading component — enabling students to get a head start and compete with peers nationwide for recognition and rewards."}
                 </p>
                 <p className="text-white text-lg mb-2">
-                  {"It's our belief that you cannot buy a good score, but you can work for it. Let us help you work for it. The world needs better doctors. Our patients need better doctors."}
+                  {"Our first beta results speak volumes: students averaged a 516, with a remarkable 15-point improvement — significantly outperforming traditional methods at a fraction of the cost."}
+                </p>
+                <p className="text-white text-lg mb-2">
+                  {"Most companies want you to believe that you can purchase success. We firmly believe it's earned. Let us empower you to earn it, regardelss of your financial status. The world urgently needs doctors. Patients deserve superior care."}
                 </p>
                 <p className="text-white text-lg font-semibold">
-                  Let us help you become that very doctor.
+                  You can become the doctor people desperate need.
                 </p>
               </div>
             </div>
