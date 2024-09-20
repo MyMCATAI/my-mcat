@@ -180,6 +180,19 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({
               Videos from YouTube
             </span>
           </div>
+          {/* Add the category buttons here */}
+          <div className="flex space-x-2 mb-4">
+            {(['RBT', 'RWT', 'CMP'] as VideoCategory[]).map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(category)}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
           <div className="relative aspect-video group">
             <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-0 transition-opacity duration-300 z-10"></div>
             <iframe
