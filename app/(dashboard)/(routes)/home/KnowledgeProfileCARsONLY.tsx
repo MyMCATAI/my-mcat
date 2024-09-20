@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { FetchedActivity } from '@/types';
+import { FetchedActivity } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import MVPDialog from "@/components/MVPDialog";
 import RedditPosts from "../../../../components/RedditPosts";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FaYoutube } from 'react-icons/fa';
+import { FaYoutube } from "react-icons/fa";
 import TutorialContent from "../../../../components/home/TutorialContent"; // Add this import
 
 interface KnowledgeProfileProps {
   activities: FetchedActivity[];
+  userId: string;
 }
 
 interface School {
@@ -24,34 +25,107 @@ interface School {
   funRanking: string;
 }
 
-type TabContent = 
-  | { type: 'insights'; videos: { id: string; title: string }[] }
-  | { type: 'league'; schools: School[] }
-  | { type: 'tutorial' }; // Add this new type
+type TabContent =
+  | { type: "insights"; videos: { id: string; title: string }[] }
+  | { type: "league"; schools: School[] }
+  | { type: "tutorial" }; // Add this new type
 
-type VideoCategory = 'RBT' | 'RWT' | 'CMP';
+type VideoCategory = "RBT" | "RWT" | "CMP";
 
-const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initialActivities }) => {
+const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({
+  activities: initialActivities,
+  userId, // Add this prop
+}) => {
   const [activeTab, setActiveTab] = useState("tab1");
   const [schools, setSchools] = useState<School[]>([
-    { name: "Pomona College", location: "Claremont, CA", rank: 1, tuition: 500, funRanking: "Cupcake Rankings" },
-    { name: "Princeton University", location: "Princeton, NJ", rank: 2, tuition: 450, funRanking: "Cupcake Rankings" },
-    { name: "Rice University", location: "Houston, TX", rank: 3, tuition: 400, funRanking: "Cupcake Rankings" },
-    { name: "University of Houston", location: "Houston, TX", rank: 4, tuition: 350, funRanking: "Cupcake Rankings" },
-    { name: "University of Richmond", location: "Richmond, VA", rank: 5, tuition: 300, funRanking: "Cupcake Rankings" },
-    { name: "UT Dallas", location: "Richardson, TX", rank: 6, tuition: 250, funRanking: "Cupcake Rankings" },
-    { name: "Tulane University", location: "New Orleans, LA", rank: 7, tuition: 200, funRanking: "Cupcake Rankings" },
-    { name: "Cornell University", location: "Ithaca, NY", rank: 8, tuition: 150, funRanking: "Cupcake Rankings" },
-    { name: "UC San Diego", location: "La Jolla, CA", rank: 9, tuition: 100, funRanking: "Cupcake Rankings" },
-    { name: "Northwestern University", location: "Evanston, IL", rank: 10, tuition: 50, funRanking: "Cupcake Rankings" }
+    {
+      name: "Pomona College",
+      location: "Claremont, CA",
+      rank: 1,
+      tuition: 500,
+      funRanking: "Cupcake Rankings",
+    },
+    {
+      name: "Princeton University",
+      location: "Princeton, NJ",
+      rank: 2,
+      tuition: 450,
+      funRanking: "Cupcake Rankings",
+    },
+    {
+      name: "Rice University",
+      location: "Houston, TX",
+      rank: 3,
+      tuition: 400,
+      funRanking: "Cupcake Rankings",
+    },
+    {
+      name: "University of Houston",
+      location: "Houston, TX",
+      rank: 4,
+      tuition: 350,
+      funRanking: "Cupcake Rankings",
+    },
+    {
+      name: "University of Richmond",
+      location: "Richmond, VA",
+      rank: 5,
+      tuition: 300,
+      funRanking: "Cupcake Rankings",
+    },
+    {
+      name: "UT Dallas",
+      location: "Richardson, TX",
+      rank: 6,
+      tuition: 250,
+      funRanking: "Cupcake Rankings",
+    },
+    {
+      name: "Tulane University",
+      location: "New Orleans, LA",
+      rank: 7,
+      tuition: 200,
+      funRanking: "Cupcake Rankings",
+    },
+    {
+      name: "Cornell University",
+      location: "Ithaca, NY",
+      rank: 8,
+      tuition: 150,
+      funRanking: "Cupcake Rankings",
+    },
+    {
+      name: "UC San Diego",
+      location: "La Jolla, CA",
+      rank: 9,
+      tuition: 100,
+      funRanking: "Cupcake Rankings",
+    },
+    {
+      name: "Northwestern University",
+      location: "Evanston, IL",
+      rank: 10,
+      tuition: 50,
+      funRanking: "Cupcake Rankings",
+    },
   ]);
 
+  const [conceptCategoryScores, setConceptCategoryScores] = useState({
+    RBT: 0,
+    RWT: 0,
+    CMP: 0,
+  });
+
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState<VideoCategory>('RBT');
+  const [selectedCategory, setSelectedCategory] =
+    useState<VideoCategory>("RBT");
 
   const firstVideo = { id: "gn10W2awwqw", title: "Scaffolding Strategy " };
 
-  const videoCategories: Record<VideoCategory, { id: string; title: string }[]> = {
+  const videoCategories: Record<
+    VideoCategory,
+    { id: string; title: string }[]
+  > = {
     RBT: [
       { id: "0KZwYQPggl8", title: "RBT Video 1" },
       { id: "f1k4eXELEIE", title: "RBT Video 2" },
@@ -91,24 +165,10 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
     return videos;
   };
 
-  const [videos, setVideos] = useState([firstVideo, ...shuffleVideos(videoCategories[selectedCategory])]);
-
-  // Add this function to randomly select a category
-  const selectRandomCategory = () => {
-    const categories: VideoCategory[] = ['RBT', 'RWT', 'CMP'];
-    const randomIndex = Math.floor(Math.random() * categories.length);
-    setSelectedCategory(categories[randomIndex]);
-  };
-
-  // Use useEffect to call selectRandomCategory on component mount
-  useEffect(() => {
-    selectRandomCategory();
-  }, []);
-
-  useEffect(() => {
-    setVideos([...shuffleVideos(videoCategories[selectedCategory])]);
-    setCurrentVideoIndex(0);
-  }, [selectedCategory]);
+  const [videos, setVideos] = useState([
+    firstVideo,
+    ...shuffleVideos(videoCategories[selectedCategory]),
+  ]);
 
   const renderInsights = () => (
     <div className="h-full flex flex-col space-y-4">
@@ -116,7 +176,9 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
         <CardContent className="p-4">
           <div className="flex items-center mb-4">
             <FaYoutube className="text-3xl text-red-600 mr-2" />
-            <span className="font-semibold text-lg text-[--theme-text-color]">Videos from YouTube</span>
+            <span className="font-semibold text-lg text-[--theme-text-color]">
+              Videos from YouTube
+            </span>
           </div>
           <div className="relative aspect-video group">
             <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-0 transition-opacity duration-300 z-10"></div>
@@ -134,7 +196,11 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
               variant="secondary"
               size="sm"
               className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white"
-              onClick={() => setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length)}
+              onClick={() =>
+                setCurrentVideoIndex(
+                  (prev) => (prev - 1 + videos.length) % videos.length
+                )
+              }
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -142,7 +208,9 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
               variant="secondary"
               size="sm"
               className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white"
-              onClick={() => setCurrentVideoIndex((prev) => (prev + 1) % videos.length)}
+              onClick={() =>
+                setCurrentVideoIndex((prev) => (prev + 1) % videos.length)
+              }
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -188,11 +256,14 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
     <ScrollArea className="h-full">
       {schools.map((school, index) => {
         return (
-          <div key={index} className="mb-4 p-4 bg-[--theme-leaguecard-color] rounded-lg shadow-md">
+          <div
+            key={index}
+            className="mb-4 p-4 bg-[--theme-leaguecard-color] rounded-lg shadow-md"
+          >
             <div className="flex items-start">
               <div className="mr-4 flex-shrink-0">
                 <Image
-                  src={`/colleges/${school.name.replace(/\s+/g, '')}.png`}
+                  src={`/colleges/${school.name.replace(/\s+/g, "")}.png`}
                   alt={school.name}
                   width={80}
                   height={80}
@@ -200,8 +271,12 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
                 />
               </div>
               <div className="flex-grow">
-                <h3 className="text-sm font-semibold text-[--theme-text-color]">{school.name}</h3>
-                <p className="text-sm text-[--theme-text-color] opacity-80">{school.location}</p>
+                <h3 className="text-sm font-semibold text-[--theme-text-color]">
+                  {school.name}
+                </h3>
+                <p className="text-sm text-[--theme-text-color] opacity-80">
+                  {school.location}
+                </p>
                 <div className="mt-1">
                   <span className="inline-block text-[--theme-hover-color] text-sm">
                     #{school.rank} in {school.funRanking}
@@ -228,13 +303,12 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
     </ScrollArea>
   );
 
- 
   const renderContent = (content: TabContent) => {
-    if (content.type === 'insights') {
+    if (content.type === "insights") {
       return renderInsights();
-    } else if (content.type === 'league') {
+    } else if (content.type === "league") {
       return renderSchools(content.schools);
-    } else if (content.type === 'tutorial') {
+    } else if (content.type === "tutorial") {
       return <TutorialContent />;
     }
     return null;
@@ -243,10 +317,79 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [isMVPDialogOpen, setIsMVPDialogOpen] = useState(false);
 
+  // Function to fetch concept category scores from Prisma database
+  const fetchConceptCategoryScores = async () => {
+    const scores = await prisma?.knowledgeProfile.findMany({
+      where: {
+        userId: userId,
+      },
+      include: {
+        category: {
+          select: {
+            conceptCategory: true,
+            id: true,
+          },
+        },
+      },
+    });
+
+    const scoresMap: { [key: string]: number } = {};
+    scores?.forEach((score) => {
+      scoresMap[score.category.conceptCategory] = score.conceptMastery ?? 0;
+    });
+
+    const conceptCategoryScores: { RBT: number; RWT: number; CMP: number } = {
+      RBT: scoresMap.RBT ?? 0,
+      RWT: scoresMap.RWT ?? 0,
+      CMP: scoresMap.CMP ?? 0,
+    };
+    setConceptCategoryScores(conceptCategoryScores);
+  };
+  useEffect(() => {
+    fetchConceptCategoryScores();
+  }, [userId]);
+
+  // Function to determine the concept category with the lowest score
+  const getLowestScoreCategory = () => {
+    const lowestScore = Math.min(
+      conceptCategoryScores.RBT,
+      conceptCategoryScores.RWT,
+      conceptCategoryScores.CMP
+    );
+    let lowestScoreCategory: "RBT" | "RWT" | "CMP";
+
+    if (conceptCategoryScores.RBT === lowestScore) {
+      lowestScoreCategory = "RBT";
+    } else if (conceptCategoryScores.RWT === lowestScore) {
+      lowestScoreCategory = "RWT";
+    } else {
+      lowestScoreCategory = "CMP";
+    }
+
+    return lowestScoreCategory;
+  };
+  // Add this function to highlight the tab with the lowest score
+  const highlightLowestScoreTab = () => {
+    const lowestScoreCategory = getLowestScoreCategory();
+    setActiveTab(`tab${lowestScoreCategory}`);
+  };
+
+  useEffect(() => {
+    highlightLowestScoreTab();
+  }, [conceptCategoryScores]);
+
   const tabs: { id: string; label: string; content: TabContent }[] = [
-    { id: "tab1", label: "Insights", content: { type: 'insights', videos: videos } },
-    { id: "tab2", label: "League", content: { type: 'league', schools: schools } },
-    { id: "tab3", label: "Bulletin", content: { type: 'tutorial' } }, // Add this new tab
+    {
+      id: "tab1",
+      label: "Insights",
+      content: { type: "insights", videos: videos },
+    },
+    {
+      id: "tab2",
+      label: "League",
+      content: { type: "league", schools: schools },
+    },
+    { id: "tab3", label: "Bulletin", content: { type: "tutorial" } }, // Add this new tab
   ];
 
   return (
@@ -267,8 +410,14 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
             </button>
           ))}
         </div>
-        <div className={`mt-4 ${activeTab === 'tab2' ? 'bg-transparent' : 'bg-[--theme-mainbox-color]'} flex-grow mb-8 overflow-hidden`}>
-          {renderContent(tabs.find(tab => tab.id === activeTab)!.content)}
+        <div
+          className={`mt-4 ${
+            activeTab === "tab2"
+              ? "bg-transparent"
+              : "bg-[--theme-mainbox-color]"
+          } flex-grow mb-8 overflow-hidden`}
+        >
+          {renderContent(tabs.find((tab) => tab.id === activeTab)!.content)}
         </div>
       </div>
     </div>
