@@ -10,10 +10,13 @@ import {
   ContentBlock,
   SelectionState,
   Modifier,
+  convertFromRaw,
+  RawDraftContentState,
 } from "draft-js";
 import "draft-js/dist/Draft.css";
 import styles from "./Passage.module.css";
 import type { Passage, UserResponse } from "@/types";
+import Image from 'next/image';
 
 interface PassageProps {
   passageData: Passage;
@@ -59,10 +62,31 @@ function applyAnnotations(editorState: EditorState, annotations: Annotation[]): 
 const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps>(
   ({ passageData, onNote, tempHighlightedStrings, userResponse }, ref) => {
     const [editorState, setEditorState] = useState(() => {
-      const initialState = EditorState.createWithContent(ContentState.createFromText(passageData?.text || ""));
-      console.log("Initial editor state created");
-      return initialState;
+      const blocks = parseContent(passageData?.text || "");
+      const contentState = convertFromRaw({ entityMap: {}, blocks });
+      return EditorState.createWithContent(contentState);
     });
+
+
+    const generateAwsS3Url = (imageName: string): string => {
+      const baseUrl = process.env.NEXT_PUBLIC_AWS_S3_URL || 'https://my-mcat.s3.us-east-2.amazonaws.com/';
+      return `${baseUrl}content/${encodeURIComponent(imageName)}`;
+    };
+
+
+    const blockRendererFn = (contentBlock: ContentBlock) => {
+      const type = contentBlock.getType();
+      if (type === 'atomic') {
+        return {
+          component: ImageBlock,
+          editable: false,
+          props: {
+            generateAwsS3Url: generateAwsS3Url,
+          },
+        };
+      }
+    };
+
     const notesAppliedRef = useRef(false);
 
     useImperativeHandle(ref, () => ({
@@ -330,6 +354,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
               keyBindingFn={keyBindingFn}
               blockStyleFn={blockStyleFn}
               handleDrop={handleDrop}
+              blockRendererFn={blockRendererFn}
             />
           </div>
           {passageData.citation && (
@@ -339,7 +364,48 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
       </div>
     );
   }
-);
+)
+
+// Custom block component for images
+const ImageBlock = (props: any) => {
+  const { block, generateAwsS3Url } = props;
+  const data = block.getData();
+  const src = generateAwsS3Url(data.get('src'));
+  return <Image src={src} alt="" width={500} height={300} style={{ maxWidth: '100%', height: 'auto' }} />;
+};
+
+// Function to parse content and create blocks
+function parseContent(content: string): RawDraftContentState['blocks'] {
+  const blocks: RawDraftContentState['blocks'] = [];
+  const lines = content.split('\n');
+  
+  lines.forEach(line => {
+    const imgMatch = line.match(/^<img src="(.+)">$/);
+    if (imgMatch) {
+      blocks.push({
+        key: `img-${Math.random().toString(36).substr(2, 9)}`,
+        type: 'atomic',
+        text: ' ',
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: { src: imgMatch[1] },
+      });
+    } else if (line.trim() !== '') {
+      blocks.push({
+        key: `text-${Math.random().toString(36).substr(2, 9)}`,
+        type: 'unstyled',
+        text: line,
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      });
+    }
+  });
+
+  return blocks;
+}
 
 Passage.displayName = "Passage";
 
