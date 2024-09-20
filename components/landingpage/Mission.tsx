@@ -163,15 +163,15 @@ const MethodologyAndTestimonials = () => {
               </div>
             </div>
             <div className="mx-4">
-              <h1 className="text-3xl md:text-3xl font-bold text-green-500 text-left font-krungthep mb-6">
-                A social mission to make MCAT prep affordable and engaging. 
+              <h1 className="text-4xl md:text-4xl font-bold text-green-500 text-left font-krungthep mb-6">
+                A Public Benefit Corporation.
               </h1>
               <div className="mt-8 bg-black p-6 rounded-lg w-full md:w-auto lg:mr-[8vw] xl:mr-[12vw]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
                 <p className="text-white text-lg mb-2">
-                  {"So long as test prep is unaffordable, our healthcare system will continue to be stratified with rich doctors serving mostly rich communities. And, so long as test prep is boring, students will be diiscouraged to try and break this paradigm."}
+                  {"We are a PBC, which means that we are a company that is legally required to benefit society. That is our goal. As test prep is unaffordable, our healthcare system will continue to be stratified with rich doctors serving mostly rich communities. And, so long as test prep is boring, students will be diiscouraged to try and break this paradigm."}
                 </p>
                 <p className="text-white text-lg mb-2">
-                  {"Disatisfied with expensive and boring test prep, we sought to develop 'anti test prep': affodable and engaging software. Like Duolingo for the hardest test in the world. We're releasing our CARs suite first so you can get a head start and compete with peers nationwide for recognition and rewards."}
+                  {"Test prep is expensive. Test prep is boring. Therefore, we proudly proclaim ourselves as 'anti test prep': affordable and engaging. Like Duolingo for the hardest test in the world. We're releasing our CARs suite first so you can get a head start and compete with peers nationwide for recognition and rewards."}
                 </p>
                 <p className="text-white text-lg mb-2">
                   {"Our first beta results speak volumes: students averaged a 516, with a remarkable 15-point improvement — significantly outperforming traditional methods at a fraction of the cost."}
@@ -182,13 +182,21 @@ const MethodologyAndTestimonials = () => {
                 <p className="text-white text-lg mb-6">
                   <strong>{"Let us empower you to earn the score of your dreams."}</strong>
                 </p>
-                <div className="flex justify-center">
+                <div className="flex justify-center space-x-4">
                   <button 
                     onClick={openTallyPopup}
                     className="inline-block bg-[#091f33] text-white border border-green-400 py-2 px-6 rounded-full text-lg font-semibold transition duration-300 hover:bg-white hover:text-black"
                   >
                     Register for Early Access
                   </button>
+                  <a 
+                    href="https://www.law.cornell.edu/wex/public_benefit_corporation"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block bg-[#091f33] text-white border border-green-400 py-2 px-6 rounded-full text-lg font-semibold transition duration-300 hover:bg-white hover:text-black"
+                  >
+                    Learn More About PBCs
+                  </a>
                 </div>
               </div>
             </div>
