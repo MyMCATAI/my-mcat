@@ -12,6 +12,15 @@ import 'swiper/css/pagination';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Add this near the top of your file, after the imports
+declare global {
+  interface Window {
+    Tally: {
+      openPopup: (formId: string, options?: any) => void;
+    };
+  }
+}
+
 const MethodologyAndTestimonials = () => {
   const sectionRef = useRef(null);
   const titleRef = useRef(null);
@@ -94,6 +103,17 @@ const MethodologyAndTestimonials = () => {
     },
   ];
 
+  const openTallyPopup = () => {
+    if (typeof window !== 'undefined' && window.Tally) {
+      window.Tally.openPopup('31vBY4', {
+        layout: 'modal',
+        width: 700,
+        autoClose: 5000,
+        hideTitle: true,
+      });
+    }
+  };
+
   useEffect(() => {
     const section = sectionRef.current;
     const textBox = textBoxRef.current;
@@ -143,22 +163,33 @@ const MethodologyAndTestimonials = () => {
               </div>
             </div>
             <div className="mx-4">
-              <h1 className="text-4xl md:text-4xl font-bold text-green-500 text-left font-krungthep mb-6">
-                Duolingo for the hardest test in the world. 
+              <h1 className="text-3xl md:text-3xl font-bold text-green-500 text-left font-krungthep mb-6">
+                A social mission to make MCAT prep affordable and engaging. 
               </h1>
               <div className="mt-8 bg-black p-6 rounded-lg w-full md:w-auto lg:mr-[8vw] xl:mr-[12vw]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
                 <p className="text-white text-lg mb-2">
-                  {"Test prep is expensive. Test prep is boring. So we're anti test-prep: affordable and engaging. Starting with MCAT prep, we've developed a learning suite for the most challenging section — CARs, the reading component — enabling students to get a head start and compete with peers nationwide for recognition and rewards."}
+                  {"So long as test prep is unaffordable, our healthcare system will continue to be stratified with rich doctors serving mostly rich communities. And, so long as test prep is boring, students will be diiscouraged to try and break this paradigm."}
+                </p>
+                <p className="text-white text-lg mb-2">
+                  {"Disatisfied with expensive and boring test prep, we sought to develop 'anti test prep': affodable and engaging software. Like Duolingo for the hardest test in the world. We're releasing our CARs suite first so you can get a head start and compete with peers nationwide for recognition and rewards."}
                 </p>
                 <p className="text-white text-lg mb-2">
                   {"Our first beta results speak volumes: students averaged a 516, with a remarkable 15-point improvement — significantly outperforming traditional methods at a fraction of the cost."}
                 </p>
                 <p className="text-white text-lg mb-2">
-                  {"Most companies want you to believe that you can purchase success. We firmly believe it's earned. Let us empower you to earn it, regardelss of your financial status. The world urgently needs doctors. Patients deserve superior care."}
+                  {"Most companies want you to believe that you can purchase success. We firmly believe it's earned."}
                 </p>
-                <p className="text-white text-lg font-semibold">
-                  You can become the doctor people desperate need.
+                <p className="text-white text-lg mb-6">
+                  <strong>{"Let us empower you to earn the score of your dreams."}</strong>
                 </p>
+                <div className="flex justify-center">
+                  <button 
+                    onClick={openTallyPopup}
+                    className="inline-block bg-[#091f33] text-white border border-green-400 py-2 px-6 rounded-full text-lg font-semibold transition duration-300 hover:bg-white hover:text-black"
+                  >
+                    Register for Early Access
+                  </button>
+                </div>
               </div>
             </div>
           </div>
