@@ -1,16 +1,9 @@
 'use client';
-import React, { useEffect, useRef, useCallback } from 'react';
+import React from 'react';
 import Image from 'next/image';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import icon from '../../public/checkicon.png';
 
-gsap.registerPlugin(ScrollTrigger);
-
 const CheckListing = () => {
-    const sectionRef = useRef(null);
-    const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
-
     const items = [
         { heading: "Data-Driven Strategy Insights", text: "We study your performance and provide insights to inform your strategy — such as 'you perform better when you highlight more.'", icon: icon },
         { heading: "Content Learning Suite", text: `We're beta-testing this feature at Rice and Princeton: learning Chemistry, Physics, Biology, and Psychology content.`, icon: icon },
@@ -20,38 +13,25 @@ const CheckListing = () => {
         { heading: "An Interactive Polyverse", text: `This is a secret initiative that we're testing out but it's an entirely new way to interact with learning software. Shhh.`, icon: icon },
     ];
 
-    const setItemRef = useCallback((el: HTMLLIElement | null, index: number) => {
-        itemRefs.current[index] = el;
-    }, []);
+    React.useEffect(() => {
+        // Load Tally script
+        const script = document.createElement('script');
+        script.src = "https://tally.so/widgets/embed.js";
+        script.async = true;
+        document.body.appendChild(script);
 
-    useEffect(() => {
-        const section = sectionRef.current;
-        const itemElements = itemRefs.current;
-
-        gsap.set(itemElements, { opacity: 0, y: 50 });
-
-        const tl = gsap.timeline({
-            scrollTrigger: {
-                trigger: section,
-                start: 'top 90%',
-                end: 'bottom 80%',
-                scrub: 1,
-            }
-        });
-
-        itemElements.forEach((item, index) => {
-            if (item) {
-                tl.to(item, { opacity: 1, y: 0, duration: 0.4 }, `+=${index * 0.2}`);
-            }
-        });
+        script.onload = () => {
+            // @ts-ignore
+            Tally.loadEmbeds();
+        };
 
         return () => {
-            tl.kill();
+            document.body.removeChild(script);
         };
     }, []);
 
     return (
-        <section className='bg-[#091f33] py-16' id='keypoints' ref={sectionRef}>
+        <section className='bg-[#091f33] py-16 mb-12' id='keypoints'>
             <div className="container mx-auto">
                 <div className="text-center mb-10">
                     <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 font-krungthep">
@@ -60,7 +40,7 @@ const CheckListing = () => {
                 </div>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {items.map((item, index) => (
-                        <li key={index} className='flex gap-4 my-4' ref={(el) => setItemRef(el, index)}>
+                        <li key={index} className='flex gap-4 my-4'>
                             <div className='mt-2 flex justify-center items-center' style={{ minWidth: '24px', minHeight: '24px' }}>
                                 <Image src={item.icon} alt={item.text} className='w-full invert' />
                             </div>
@@ -75,6 +55,33 @@ const CheckListing = () => {
                         </li>
                     ))}
                 </ul>
+
+                {/* Updated layout for sign-up section */}
+                <div className="mt-20 flex flex-col md:flex-row items-center justify-between">
+                    <div className="w-full md:w-1/2 mb-8 md:mb-0">
+                        <h2 className="text-3xl font-bold text-white mb-4 font-krungthep">
+                            Sign Up
+                        </h2>
+                        <p className="text-blue-300 text-lg">
+                            Join our early access list to stay updated on our latest features and be the first to try them out!
+                        </p>
+                    </div>
+                    <div className="w-full md:w-1/2 bg-[#001226] p-6 rounded-lg" 
+                         style={{
+                             boxShadow: '0 0 6px 2px rgba(0, 123, 255, 0.7), inset 0 2px 8px rgba(49, 49, 244, 0.8)'
+                         }}>
+                        <iframe 
+                            data-tally-src="https://tally.so/embed/31vBY4?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" 
+                            loading="lazy" 
+                            width="100%" 
+                            height="439" 
+                            frameBorder="0" 
+                            marginHeight={0} 
+                            marginWidth={0} 
+                            title="MyMCAT's Early Access Form">
+                        </iframe>
+                    </div>
+                </div>
             </div>
         </section>
     );
