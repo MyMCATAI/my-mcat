@@ -1,8 +1,12 @@
+import dynamic from 'next/dynamic';
 import LandingHero from "@/components/landing-hero";
 import CheckListing from "../../components/landingpage/CheckListing";
 import Faqs from "../../components/landingpage/Faqs";
 import Mission from "../../components/landingpage/Mission";
-import Product from '@/components/landingpage/Product';
+
+const Product = dynamic(() => import('@/components/landingpage/Product'), {
+  ssr: false,
+});
 
 const LandingPage = () => {
   return (

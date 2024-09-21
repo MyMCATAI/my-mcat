@@ -4,12 +4,17 @@ import React, { useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Image from 'next/image';
-import { World, type WorldProps } from '../ui/globe';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Navigation, Pagination } from 'swiper/modules';
+import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import dynamic from 'next/dynamic';
+import { WorldProps } from '../ui/globe';
+
+const World = dynamic(() => import('../ui/globe').then((mod) => mod.World), {
+  ssr: false,
+});
 
 gsap.registerPlugin(ScrollTrigger);
 
