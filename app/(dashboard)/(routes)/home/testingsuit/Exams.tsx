@@ -58,7 +58,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
   const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
   const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(null);
   const [welcomeComplete, setWelcomeComplete] = useState(false);
-  const [marketplaceText, setMarketplaceText] = useState("Doctor's Office ->");
+  const [marketplaceText, setMarketplaceText] = useState("Doctor&apos;s Office ->");
 
   const getPercentageColor = (percentage: number) => {
     if (percentage < 50) return "text-red-500";
@@ -132,7 +132,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
   };
 
   const handleDoctorsOfficeClick = () => {
-    setMarketplaceText("Welcome to the Doctor's Office!");
+    setMarketplaceText("Welcome to the Doctor&apos;s Office!");
   };
 
   return (
@@ -247,7 +247,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
                     onMouseEnter={(e) => e.currentTarget.style.color = 'var(--theme-hover-color)'}
                     onMouseLeave={(e) => e.currentTarget.style.color = 'var(--theme-text-color)'}
                   >
-                    Doctor's Office ->
+                    Doctor&apos;s Office -&gt;
                   </span>
                 </Link>
               </div>

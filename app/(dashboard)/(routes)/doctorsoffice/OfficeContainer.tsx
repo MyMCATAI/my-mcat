@@ -154,9 +154,9 @@ const OfficeContainer: React.FC = () => {
           ctx.strokeStyle = '#000';
           ctx.stroke();
 
-          // Fill tile with white color for specified areas, transparent for others
+          // Fill tile with a slightly more blue color for specified areas, transparent for others
           if (x < 4 || y < 4 || y >= gridHeight - 2) {
-            ctx.fillStyle = '#FFFFFF'; // White color for specified areas
+            ctx.fillStyle = '#D6EBFF'; // Slightly more blue color for specified areas
             ctx.fill();
           }
           // No else block needed, as we want other tiles to be transparent
