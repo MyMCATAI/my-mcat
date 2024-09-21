@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import dynamic from 'next/dynamic';
 import { VocabContext } from '@/contexts/VocabContext';

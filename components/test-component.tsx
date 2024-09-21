@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useEffect, useState, useRef, useCallback, useContext } from "react";
 import axios from 'axios';
 import { useStopwatch } from 'react-timer-hook';
