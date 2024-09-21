@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Check, X, Undo2, Skull, Dumbbell } from 'lucide-react';
 import { useSpring, animated } from '@react-spring/web'

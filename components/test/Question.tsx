@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useMemo, useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import { Question } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";

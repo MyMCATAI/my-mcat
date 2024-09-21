@@ -1,6 +1,7 @@
+'use client'
+
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import ScreenshotButton from "@/components/chatbot/ScreenshotButton";
 
 const ChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
 
