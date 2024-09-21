@@ -259,7 +259,7 @@ const MethodologyAndTestimonials = () => {
                   loop={index !== 1}
                   playsInline
                   controls={index === 1}
-                  poster={`/video-thumbnails/${feature.title.toLowerCase().replace(/ /g, '-')}.jpg`}
+                 //  poster={`/video-thumbnails/${feature.title.toLowerCase().replace(/ /g, '-')}.jpg`}
                 >
                   <source src={feature.videoSrc} type="video/mp4" />
                   Your browser does not support the video tag.
