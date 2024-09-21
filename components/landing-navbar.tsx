@@ -1,12 +1,9 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import logo from "../public/logo2.png";
 
 export const LandingNavbar = () => {
-  const { isSignedIn } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("Home");
 
@@ -160,7 +157,7 @@ export const LandingNavbar = () => {
             </a>
           ))}
           <div className="flex items-center m-2 hidden">
-            <Link href={isSignedIn ? "/intro" : "/intro"}>
+            <Link href={"/intro"}>
               <button className="bg-[#2D4778] text-white py-3 my-4 text-lg md:text-[16px] px-4 rounded-[8px]">
                 Join the waitlist
               </button>
