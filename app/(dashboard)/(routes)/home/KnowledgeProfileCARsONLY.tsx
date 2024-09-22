@@ -149,9 +149,11 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
           </div>
         </CardContent>
       </Card>
-      <Card className="flex-grow">
-        <CardContent className="p-4 h-full">
-          <RedditPosts />
+      <Card className="flex-grow overflow-hidden">
+        <CardContent className="p-4 h-full overflow-hidden">
+          <div className="h-full overflow-auto">
+            <RedditPosts />
+          </div>
         </CardContent>
       </Card>
     </div>

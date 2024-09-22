@@ -1,16 +1,6 @@
-// components/RedditPosts.tsx
 import React, { useEffect, useState } from "react";
 import { fetchRedditPosts } from "@/utils/fetchRedditPosts";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  ExternalLink,
-  Search,
-  ChevronDown,
-  ChevronUp,
-  ChevronRight,
-  Maximize2, // Import the full-screen icon
-  X, // Add this import
-} from 'lucide-react';
+import { ExternalLink, Search, ChevronDown, ChevronUp, Maximize2 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -22,8 +12,8 @@ import useDebounce from "@/hooks/useDebounce";
 import { FaReddit } from 'react-icons/fa';
 import DOMPurify from 'isomorphic-dompurify';
 import { marked } from 'marked';
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Import the Dialog components
 import {
   Dialog,
   DialogTrigger,
@@ -41,20 +31,16 @@ interface RedditPost {
 }
 
 const RedditPosts: React.FC = () => {
-  const [currentPost, setCurrentPost] = useState<RedditPost | null>(null);
+  const [posts, setPosts] = useState<RedditPost[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
   const [searchQuery, setSearchQuery] = useState<string>("CARS tips");
   const [sortOption, setSortOption] = useState<string>("month");
-  const [expandedPost, setExpandedPost] = useState<boolean>(false);
-  const [postIndex, setPostIndex] = useState<number>(0);
-
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false); // Add state for dialog
+  const [selectedPost, setSelectedPost] = useState<RedditPost | null>(null);
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  const fetchPost = async () => {
+  const fetchPosts = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -63,11 +49,7 @@ const RedditPosts: React.FC = () => {
         debouncedSearchQuery,
         sortOption
       );
-      if (fetchedPosts.length > postIndex) {
-        setCurrentPost(fetchedPosts[postIndex]);
-      } else {
-        setError("No more posts available.");
-      }
+      setPosts(fetchedPosts);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -76,8 +58,8 @@ const RedditPosts: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPost();
-  }, [debouncedSearchQuery, sortOption, postIndex]);
+    fetchPosts();
+  }, [debouncedSearchQuery, sortOption]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -88,22 +70,21 @@ const RedditPosts: React.FC = () => {
   };
 
   const formatContent = (content: string) => {
-    const htmlContent: string = marked(content) as string; // Define type
+    const htmlContent: string = marked(content) as string;
     const sanitizedContent = DOMPurify.sanitize(htmlContent);
     return sanitizedContent.replace(/<\/p><p>/g, '</p><br><p>');
   };  
 
-  const handleNextPost = () => {
-    setPostIndex((prevIndex) => prevIndex + 1);
-    setExpandedPost(false);
+  const openDialog = (post: RedditPost) => {
+    setSelectedPost(post);
   };
 
-  const toggleExpand = () => {
-    setExpandedPost(!expandedPost);
+  const closeDialog = () => {
+    setSelectedPost(null);
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center space-x-2">
@@ -141,105 +122,100 @@ const RedditPosts: React.FC = () => {
       </div>
 
       {/* Post Content */}
-      <ScrollArea className="flex-grow overflow-y-auto">
+      <div className="flex-grow overflow-y-auto">
         {loading ? (
-          <div className="flex justify-center items-center h-full">
-            <p className="text-lg font-semibold text-[--theme-text-color]">
-              Kalypso is fetching a post for you... 🐾
-            </p>
+          <div className="space-y-3">
+            {[...Array(5)].map((_, index) => (
+              <div key={index} className="p-4 bg-[--theme-reddit-color] rounded-lg shadow-md">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/4" />
+                </div>
+                <div className="mt-4 space-y-2">
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-4/5" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <p className="text-red-500">Error: {error}</p>
-        ) : currentPost ? (
-          <div className="space-y-3">
-            <div className="p-4 bg-[--theme-reddit-color] rounded-lg shadow-md relative">
-              {/* Post Header */}
-              <div className="flex flex-col space-y-2">
-                <div className="flex justify-between items-start">
-                  <a
-                    href={`https://reddit.com${currentPost.permalink}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-base xl:text-lg font-semibold text-blue-500 hover:underline"
-                  >
-                    {currentPost.title}
-                  </a>
-                  {/* Full Screen Button */}
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                      <button className="text-[--theme-text-color] hover:text-blue-500 ml-2 transition-colors">
-                        <Maximize2 size={14} />
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto">
-                      <DialogClose className="absolute top-4 right-4">
-                        <X className="h-6 w-6 text-gray-600 hover:text-gray-800" />
-                      </DialogClose>
-                      <a
-                        href={`https://reddit.com${currentPost.permalink}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xl font-semibold mb-4 text-blue-500 hover:underline"
-                      >
-                        {currentPost.title}
-                      </a>
-                      <div
-                        className="prose max-w-none text-gray-800 mt-4"
-                        dangerouslySetInnerHTML={{
-                          __html: formatContent(currentPost.selftext),
-                        }}
-                      />
-                    </DialogContent>
-                  </Dialog>
-                </div>
-                <p className="text-xs xl:text-sm text-gray-600">
-                  Posted by u/{currentPost.author} | Upvotes: {currentPost.score}
-                </p>
-              </div>
-
-              {/* Post Body */}
-              {currentPost.selftext && (
-                <div className="mt-4">
-                  <div
-                    className={`text-xs xl:text-sm text-[--theme-text-color] reddit-content overflow-hidden ${
-                      expandedPost ? '' : 'max-h-[5rem] xl:max-h-[20rem]'
-                    }`}
-                    dangerouslySetInnerHTML={{
-                      __html: formatContent(currentPost.selftext),
-                    }}
-                  />
-                  <div className="mt-3 flex justify-between items-center">
-                    <button
-                      onClick={toggleExpand}
-                      className="text-xs xl:text-sm text-blue-500 flex items-center"
+        ) : posts.length > 0 ? (
+          <div>
+            {posts.map((post, index) => (
+              <div key={index} className="p-4 bg-[--theme-reddit-color] rounded-lg shadow-md relative mb-4">
+                {/* Post Header */}
+                <div className="flex flex-col space-y-2">
+                  <div className="flex justify-between items-start">
+                    <a
+                      href={`https://reddit.com${post.permalink}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-base xl:text-lg font-semibold text-blue-500 hover:underline"
                     >
-                      {expandedPost ? (
-                        <>
-                          Collapse <ChevronUp size={12} className="ml-1" />
-                        </>
-                      ) : (
-                        <>
-                          Expand <ChevronDown size={12} className="ml-1" />
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={handleNextPost}
-                      className="text-xs xl:text-sm text-blue-500 hover:text-blue-600 transition-colors"
+                      {post.title}
+                    </a>
+                    {/* Full Screen Button */}
+                    <button 
+                      className="text-[--theme-text-color] hover:text-blue-500 ml-2 transition-colors"
+                      onClick={() => openDialog(post)}
                     >
-                      Next →
+                      <Maximize2 size={14} />
                     </button>
                   </div>
+                  <p className="text-xs xl:text-sm text-gray-600">
+                    Posted by u/{post.author} | Upvotes: {post.score}
+                  </p>
                 </div>
-              )}
-            </div>
+
+                {/* Post Body */}
+                {post.selftext && (
+                  <div className="mt-4">
+                    <div
+                      className={`text-xs xl:text-sm text-[--theme-text-color] reddit-content max-h-[10rem] overflow-hidden`}
+                      dangerouslySetInnerHTML={{
+                        __html: formatContent(post.selftext),
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         ) : (
           <p className="text-center text-gray-500">
             No posts found for &quot;{debouncedSearchQuery}&quot;. Try a different search term.
           </p>
         )}
-      </ScrollArea>
+      </div>
+
+      {/* Dialog */}
+      <Dialog open={!!selectedPost} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent className="bg-[--theme-reddit-color] rounded-lg p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto">
+          <DialogClose className="absolute top-4 right-4"/>
+          {selectedPost && (
+            <>
+              <a
+                href={`https://reddit.com${selectedPost.permalink}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xl font-semibold mb-4 text-blue-500 hover:underline"
+              >
+                {selectedPost.title}
+              </a>
+              <div className="mt-4 max-h-[60vh] overflow-y-auto">
+                <div
+                  className="text-sm xl:text-base text-[--theme-text-color] reddit-content"
+                  dangerouslySetInnerHTML={{
+                    __html: formatContent(selectedPost.selftext),
+                  }}
+                />
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
