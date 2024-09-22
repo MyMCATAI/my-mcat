@@ -57,6 +57,32 @@ body :root {
   }
 }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-hover-color) transparent;
+}
+
+/* For Webkit browsers like Chrome and Safari */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--theme-hover-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--theme-hover-color);
+  border-radius: 3px;
+}
+
+/* Optional: Style for horizontal scrollbars */
+::-webkit-scrollbar-thumb:horizontal {
+  background-color: var(--theme-hover-color);
+  border-radius: 3px;
+}
+
 @layer base {
   :root {
     /* CyberSpace theme variables (default) */
@@ -95,18 +121,21 @@ body :root {
     --theme-mainbox-color: #001226;
     --theme-gradient-start: rgba(0, 0, 0, 0.9);
     --theme-gradient-end: rgba(0, 18, 38, 0.9);
+    --theme-gradient-startstreak: rgba(0, 76, 198, 0.9);
+    --theme-gradient-endstreak: rgba(0, 42, 90, 0.9);
     --theme-text-color: white;
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
     --theme-hover-color: #3b82f6;
     --theme-userchatbox-color: #007afc;
     --theme-botchatbox-color: #001226;
     --theme-hover-text: #ffffff;
-    --theme-border-color: #3b82f6; /* This is the default blue color */
+    --theme-border-color: #0162ff; /* This is the default blue color */
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
-    --theme-leaguecard-color:#001226;
+    --theme-leaguecard-color: rgba(0, 18, 38, 1); /* Changed from #001226 to rgba */
     --theme-navbutton-color: #001226;
     --svg-invert: 0;
     --theme-reddit-color: #082645;
+    --theme-doctorsoffice-accent: #4a80ca;
   }
 
   @import "../styles/themes/cyberSpace.css";
@@ -210,26 +239,29 @@ body :root {
   --theme-box-shadow: 0 0 10px 3px rgba(113, 30, 95, 0.5), inset 0 0 10px rgba(127, 65, 99, 0.659);
   --theme-interface-image: url('/sakura-pattern.png');
   --theme-mainbox-color: rgb(252, 245, 244); /* Light pink color for Sakura theme */
-  --theme-gradient-start: rgba(252, 245, 244, 0.85);
-  --theme-gradient-end: rgba(252, 245, 244, 0.85);
+  --theme-gradient-start: rgba(252, 224, 251, 0.85);
+  --theme-gradient-end: #fee4f4d9;
+  --theme-gradient-startstreak: #b479ab;
+  --theme-gradient-endstreak: #8e097cd9;
   --theme-text-color: black;
   --theme-svg-color: #000000; /* Black for SakuraTrees theme */
-  --theme-hover-color: #b479ab;
+  --theme-hover-color: #b973af;
   --theme-botchatbox-color: #951d83;
   --theme-userchatbox-color: #007afc;
   --theme-hover-text: #ffffff;
   --theme-svg-color: #000000; /* Black for SakuraTrees theme */
-  --theme-border-color: #cf81bf; /* Light pink border color for Sakura theme */
-  --theme-leaguecard-color:#ffffff; /* Light pink color for Sakura theme */
+  --theme-border-color: #a20082; /* Light pink border color for Sakura theme */
+  --theme-leaguecard-color: rgba(255, 255, 255, 1); /* Changed from #ffffff to rgba */
   --theme-navbutton-color: #85004b;
   --svg-invert: 1;
-  --theme-reddit-color: #fdd7f6;
+  --theme-reddit-color: #ffcdf6;
+  --theme-doctorsoffice-accent: #ddb0e4;
 }
 
 /* Add theme-specific gradients */
 .theme-sakuraTrees .gradientbg {
   background: rgba(255, 197, 205, 0.9);
-  background: linear-gradient(0deg, hsla(316, 48%, 77%, 0.8) 0%, #fbdaeae0 100%);
+  background: linear-gradient(0deg, hsla(318, 64%, 86%, 0.8) 0%, #fcc9e3e0 100%);
 }
 
 /* ... rest of your CSS ... */
