@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
+import { ReportData } from "@/types";
 
-const ChatBotWidgetDoctorsOffice: React.FC = () => {
+export interface ChatBotWidgetDoctorsOfficeProps {
+  reportData: ReportData;
+  onResponse: (message: string, dismissFunc: () => void) => void;
+}
+
+const ChatBotWidgetDoctorsOffice: React.FC<ChatBotWidgetDoctorsOfficeProps> = ({ reportData, onResponse }) => {
   const [clickCount, setClickCount] = useState(0);
 
   const handleClick = () => {
     setClickCount((prevCount) => (prevCount + 1) % 3);
+    
+    // Example of using onResponse
+    const message = `You clicked ${clickCount + 1} times. Your average test score is ${reportData.averageTestScore}.`;
+    onResponse(message, () => console.log("Message dismissed"));
   };
 
   const getKalypsoGif = () => {
