@@ -89,7 +89,7 @@ const MethodologyAndTestimonials = () => {
     {
       title: "Comprehensive Hint System & Vocabulary Builder",
       description: ["For students who need a tiny nudge, you can press ", "hint", " to reveal questions that you got wrong. For ", "vocabulary", " you can use cmd+i and it defines a word for you and sends it to your vocab bank."],
-      videoSrc: "/landingpage/hintandvocab.mp4",
+      videoSrc: "https://my-mcat.s3.us-east-2.amazonaws.com/public/hintandvocab.mp4",
     },
     {
       title: "Tutoring Assistant Programmed By a 132-Scorer",
@@ -100,12 +100,12 @@ const MethodologyAndTestimonials = () => {
         `Press play`,
         ` on the video!`,
       ],
-      videoSrc: "/landingpage/aitutoringreview.mp4",
+      videoSrc: "https://my-mcat.s3.us-east-2.amazonaws.com/public/aitutoringreview.mp4",
     },
     {
       title: "Competition & Reward System",
       description: ["Engage in friendly competition with peers and earn cupcakes that allow you to ", "fight for your school's ranking", " in The League, a competitive leaderboard for every school that has students enrolled in our program."],
-      videoSrc: "/landingpage/competitionrewards.mp4",
+      videoSrc: "https://my-mcat.s3.us-east-2.amazonaws.com/public/competitionrewards.mp4",
     },
   ];
 

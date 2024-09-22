@@ -1,4 +1,4 @@
-import {auth} from "@clerk/nextjs"
+import {auth} from "@clerk/nextjs/server"
 
 import prismadb from "@/lib/prismadb"
 import { DEFAULT_BIO } from "@/constants"

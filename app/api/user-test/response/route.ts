@@ -1,7 +1,7 @@
 // File: app/api/user-test/response/route.ts
 
 import { NextResponse } from 'next/server';
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 
 export async function POST(req: Request) {
