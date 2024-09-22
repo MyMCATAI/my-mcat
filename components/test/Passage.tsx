@@ -231,6 +231,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     
       return () => clearTimeout(timer);
       
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userResponse?.userNotes]);
 
     // Reset the ref when userResponse?.userNotes changes
