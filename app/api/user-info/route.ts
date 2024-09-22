@@ -1,7 +1,7 @@
 // File: app/api/user-info/route.ts
 
 import { NextResponse } from 'next/server';
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { updateUserInfo } from "@/lib/user-info";
 import { incrementUserScore } from "@/lib/user-info";
 

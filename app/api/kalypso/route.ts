@@ -1,6 +1,6 @@
 // pages/api/kalypso/route.ts
 import { NextResponse } from 'next/server';
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import OpenAI from 'openai';
 import { PrismaClient } from '@prisma/client';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
