@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from "react";
 import { fetchRedditPosts } from "@/utils/fetchRedditPosts";
 import { ExternalLink, Search, ChevronDown, ChevronUp, Maximize2 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
@@ -20,6 +19,8 @@ import {
   DialogContent,
   DialogClose,
 } from "@/components/ui/dialog";
+import React, { useEffect, useState, useRef } from "react";
+
 
 interface RedditPost {
   title: string;
@@ -38,9 +39,20 @@ const RedditPosts: React.FC = () => {
   const [sortOption, setSortOption] = useState<string>("month");
   const [selectedPost, setSelectedPost] = useState<RedditPost | null>(null);
 
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const cacheRef = useRef<{ [key: string]: RedditPost[] }>({});
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 1000);
 
   const fetchPosts = async () => {
+    const cacheKey = `${debouncedSearchQuery}_${sortOption}`;
+
+    if (cacheRef.current[cacheKey]) {
+      console.log(`Using cached data for key: ${cacheKey}`);
+      setPosts(cacheRef.current[cacheKey]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -50,6 +62,16 @@ const RedditPosts: React.FC = () => {
         sortOption
       );
       setPosts(fetchedPosts);
+
+      // Store fetched data in cache
+      cacheRef.current[cacheKey] = fetchedPosts;
+
+      // Optional: Manage cache size
+      const cacheKeys = Object.keys(cacheRef.current);
+      const MAX_CACHE_SIZE = 50;
+      if (cacheKeys.length > MAX_CACHE_SIZE) {
+        delete cacheRef.current[cacheKeys[0]];
+      }
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -58,7 +80,10 @@ const RedditPosts: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPosts();
+    if (debouncedSearchQuery.trim() !== "") {
+      fetchPosts();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchQuery, sortOption]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
