@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import SearchPage from './search';
-import NewPassagePage from './newpassage';
+import React, { useState } from "react";
+import SearchPage from "./search";
+import NewPassagePage from "./newpassage";
 
 const AdminPage: React.FC = () => {
   const [showNewPassage, setShowNewPassage] = useState(false);
@@ -17,12 +17,12 @@ const AdminPage: React.FC = () => {
         <h1 className="text-2xl text-black font-bold mb-4">Admin Panel</h1>
         {showNewPassage ? (
           <div>
-            <button
+            {/* <button
               onClick={toggleNewPassage}
               className="mb-4 px-4 py-2 bg-gray-200 rounded"
             >
               Back to Search
-            </button>
+            </button> */}
             <NewPassagePage onCancel={toggleNewPassage} />
           </div>
         ) : (

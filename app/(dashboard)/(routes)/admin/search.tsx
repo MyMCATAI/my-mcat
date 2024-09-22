@@ -1,36 +1,78 @@
-import React, { useState } from 'react';
-import { Plus, Book, HelpCircle, Edit2, ChevronDown } from 'lucide-react';
-import Link from 'next/link';
+import React, { useState } from "react";
+import { Plus, Book, HelpCircle, Edit2, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { PrismaClient } from "@prisma/client";
+import { Passage } from "@/types";
 
 interface SearchPageProps {
   onAddNew: () => void;
 }
 
 const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
-  const [query, setQuery] = useState('');
-  const [sortBy, setSortBy] = useState('title');
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState("title");
+  const [passages, setPassages] = useState<Passage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedPassage, setSelectedPassage] = useState<Passage | null>(null);
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
     // Implement search functionality
-    console.log('Searching for:', query);
+    // const query = (
+    //   e.currentTarget.elements.namedItem("query") as HTMLInputElement
+    // ).value;
+
+    // console.log(passages);
+    // Update the state with the search results
+    console.log("Searching for:", query);
     // TODO: Implement search functionality
+    try {
+      const response = await fetch(
+        `/api/search-passages?query=${encodeURIComponent(query)}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch passages");
+      }
+      const results = await response.json();
+      setPassages(results);
+    } catch (err) {
+      setError("An error occurred while searching for passages");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const dummyPassages = [
-    { id: 1, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald' },
-    { id: 2, title: 'To Kill a Mockingbird', author: 'Harper Lee' },
-    { id: 3, title: '1984', author: 'George Orwell' },
-  ];
+  // const dummyPassages = [
+  //   { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald" },
+  //   { id: 2, title: "To Kill a Mockingbird", author: "Harper Lee" },
+  //   { id: 3, title: "1984", author: "George Orwell" },
+  // ];
 
-  const sortedPassages = [...dummyPassages].sort((a, b) => {
-    if (sortBy === 'title') {
-      return a.title.localeCompare(b.title);
-    } else if (sortBy === 'author') {
-      return a.author.localeCompare(b.author);
-    }
-    return 0;
-  });
+  // const sortedPassages = [...dummyPassages].sort((a, b) => {
+  //   if (sortBy === "title") {
+  //     return a.title.localeCompare(b.title);
+  //   } else if (sortBy === "author") {
+  //     return a.author.localeCompare(b.author);
+  //   }
+  //   return 0;
+  // });
+
+  function displaySelectedPassage(passage: Passage) {
+    setSelectedPassage(passage);
+
+    //        return ( <div className="mt-8 border p-4 rounded">
+    //           <h3 className="font-bold">{selectedPassage?.title}</h3>
+    //           <div dangerouslySetInnerHTML={{ __html: selectedPassage?.text ?? "" }} />
+    //           <p className="text-sm text-gray-600 mt-2">
+    //             {selectedPassage?.citation}
+    //           </p>
+    //         </div>
+    // )
+  }
 
   return (
     <div>
@@ -57,7 +99,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
           <Plus className="h-5 w-5" />
         </button>
       </form>
-      
+
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-black">Passages</h2>
@@ -74,11 +116,17 @@ const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
           </div>
         </div>
         <ul className="space-y-4">
-          {sortedPassages.map((passage) => (
-            <li key={passage.id} className="flex items-center justify-between border-b pb-2">
-              <Link href={`/passage/${passage.id}`} className="text-blue-600 hover:underline">
-                {passage.title} by {passage.author}
-              </Link>
+          {passages.map((passage) => (
+            <li
+              key={passage.id}
+              className="flex items-center justify-between border-b pb-2"
+            >
+              <button
+                onClick={() => displaySelectedPassage(passage)}
+                className="text-blue-600 hover:underline text-left"
+              >
+                {passage.title}
+              </button>
               <div className="flex space-x-2">
                 <Link href={`/admin/edit-passage/${passage.id}`}>
                   <button
@@ -107,8 +155,58 @@ const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
           ))}
         </ul>
       </div>
+      {selectedPassage && (
+        <div className="mt-8 border p-4 rounded">
+          <h3 className="font-bold">{selectedPassage.title}</h3>
+          <div dangerouslySetInnerHTML={{ __html: selectedPassage.text }} />
+          <p className="text-sm text-gray-600 mt-2">
+            {selectedPassage.citation}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
 
 export default SearchPage;
+
+// <ul className="space-y-4">
+//           {passages.map((passage) => (
+//             <li
+//               key={passage.id}
+//               className="flex items-center justify-between border-b pb-2"
+//               onClick={() => displaySelectedPassage(passage)}
+//             >
+//               <Link
+//                 href={`/passage/${passage.id}`}
+//                 className="text-blue-600 hover:underline"
+//               >
+//                 {passage.title}
+//               </Link>
+//               <div className="flex space-x-2">
+//                 <Link href={`/admin/edit-passage/${passage.id}`}>
+//                   <button
+//                     className="p-1 hover:bg-gray-100 rounded group flex items-center"
+//                     aria-label="Edit Passage"
+//                   >
+//                     <Edit2 className="h-5 w-5 text-gray-600" />
+//                     <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:ml-2 text-black">
+//                       Edit passage
+//                     </span>
+//                   </button>
+//                 </Link>
+//                 <Link href={`/admin/edit-questions/${passage.id}`}>
+//                   <button
+//                     className="p-1 hover:bg-gray-100 rounded group flex items-center"
+//                     aria-label="Edit Questions"
+//                   >
+//                     <HelpCircle className="h-5 w-5 text-gray-600" />
+//                     <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:ml-2 text-black">
+//                       Edit Questions
+//                     </span>
+//                   </button>
+//                 </Link>
+//               </div>
+//             </li>
+//           ))}
+//         </ul>

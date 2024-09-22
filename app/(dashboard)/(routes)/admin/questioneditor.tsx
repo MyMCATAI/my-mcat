@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import React, { useState, useEffect, useRef } from "react";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import { Editor } from "@ckeditor/ckeditor5-core";
 
 interface Question {
   id: number;
@@ -17,6 +18,7 @@ interface QuestionEditorProps {
   passageCitation: string;
   onSave: (questions: Question[]) => void;
   onCancel: () => void;
+  onPrevious: () => void;
 }
 
 const QuestionEditor: React.FC<QuestionEditorProps> = ({
@@ -24,52 +26,78 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
   passageContent,
   passageCitation,
   onSave,
-  onCancel
+  onCancel,
+  onPrevious,
 }) => {
+  const [editorInstances, setEditorInstances] = useState<Map<number, Editor>>(
+    new Map()
+  );
+
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showPassagePreview, setShowPassagePreview] = useState(false);
 
+  useEffect(() => {
+    if (questions.length === 0) {
+      addQuestion();
+    }
+  }, []);
+
   const addQuestion = () => {
     const newQuestion: Question = {
       id: questions.length + 1,
-      content: '',
-      options: ['', '', '', ''],
-      relevantContext: '',
+      content: "",
+      options: ["", "", "", ""],
+      relevantContext: "",
       correctOption: null,
-      explanations: ['', '', '', '']
+      explanations: ["", "", "", ""],
     };
     setQuestions([...questions, newQuestion]);
     setCurrentQuestionIndex(questions.length);
   };
 
-  const updateQuestion = (updatedQuestion: Partial<Question>) => {
-    const updatedQuestions = questions.map((q, index) =>
-      index === currentQuestionIndex ? { ...q, ...updatedQuestion } : q
-    );
-    setQuestions(updatedQuestions);
+  const updateCurrentQuestion = (updates: Partial<Question>) => {
+    setQuestions((prevQuestions) => {
+      const newQuestions = [...prevQuestions];
+      newQuestions[currentQuestionIndex] = {
+        ...newQuestions[currentQuestionIndex],
+        ...updates,
+      };
+      return newQuestions;
+    });
+  };
+
+  const handleQuestionSwitch = (index: number) => {
+    setCurrentQuestionIndex(index);
   };
 
   const currentQuestion = questions[currentQuestionIndex] || {
-    content: '',
-    options: ['', '', '', ''],
-    relevantContext: '',
+    id: 0,
+    content: "",
+    options: ["", "", "", ""],
+    relevantContext: "",
     correctOption: null,
-    explanations: ['', '', '', '']
+    explanations: ["", "", "", ""],
   };
 
   return (
     <div className="flex text-black">
       <div className="w-3/4 pr-4">
         <h2 className="text-xl font-bold mb-6">Question Editor</h2>
-        
+
         <div className="mb-4">
           <label className="block mb-2">Question Content</label>
           <CKEditor
-            editor={ClassicEditor}
+            editor={ClassicEditor as any}
             data={currentQuestion.content}
-            onChange={(event, editor) => {
-              updateQuestion({ content: editor.getData() });
+            onReady={(editor: Editor) => {
+              setEditorInstances(
+                new Map(editorInstances.set(currentQuestion.id, editor))
+              );
+            }}
+            onChange={(event, editor: Editor) => {
+              const data = editor.getData();
+              updateCurrentQuestion({ content: data });
             }}
           />
         </div>
@@ -84,7 +112,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
               onChange={(e) => {
                 const newOptions = [...currentQuestion.options];
                 newOptions[index] = e.target.value;
-                updateQuestion({ options: newOptions });
+                updateCurrentQuestion({ options: newOptions });
               }}
               className="w-full p-2 border rounded mb-2"
               placeholder={`Option ${index + 1}`}
@@ -96,30 +124,21 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
           <label className="block mb-2">Relevant Context</label>
           <textarea
             value={currentQuestion.relevantContext}
-            onChange={(e) => updateQuestion({ relevantContext: e.target.value })}
+            onChange={(e) =>
+              updateCurrentQuestion({ relevantContext: e.target.value })
+            }
             className="w-full p-2 border rounded"
             rows={4}
           />
-          <button
-            onClick={() => setShowPassagePreview(!showPassagePreview)}
-            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
-          >
-            {showPassagePreview ? 'Hide Passage Preview' : 'Show Passage Preview'}
-          </button>
-          {showPassagePreview && (
-            <div className="mt-2 border p-4 rounded">
-              <h3 className="font-bold">{passageTitle}</h3>
-              <div dangerouslySetInnerHTML={{ __html: passageContent }} />
-              <p className="text-sm text-gray-600 mt-2">{passageCitation}</p>
-            </div>
-          )}
         </div>
 
         <div className="mb-4">
           <label className="block mb-2">Select Correct Option</label>
           <select
-            value={currentQuestion.correctOption || ''}
-            onChange={(e) => updateQuestion({ correctOption: Number(e.target.value) })}
+            value={currentQuestion.correctOption ?? ""}
+            onChange={(e) =>
+              updateCurrentQuestion({ correctOption: Number(e.target.value) })
+            }
             className="w-full p-2 border rounded"
           >
             <option value="">Select correct option</option>
@@ -140,7 +159,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
               onChange={(e) => {
                 const newExplanations = [...currentQuestion.explanations];
                 newExplanations[index] = e.target.value;
-                updateQuestion({ explanations: newExplanations });
+                updateCurrentQuestion({ explanations: newExplanations });
               }}
               className="w-full p-2 border rounded mb-2"
               rows={2}
@@ -149,12 +168,39 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
           ))}
         </div>
 
+        <div className="mb-4">
+          <button
+            onClick={() => setShowPassagePreview(!showPassagePreview)}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            {showPassagePreview
+              ? "Hide Passage Preview"
+              : "Show Passage Preview"}
+          </button>
+          {showPassagePreview && (
+            <div className="mt-2 border p-4 rounded">
+              <h3 className="font-bold">{passageTitle}</h3>
+              <div dangerouslySetInnerHTML={{ __html: passageContent }} />
+              <p className="text-sm text-gray-600 mt-2">{passageCitation}</p>
+            </div>
+          )}
+        </div>
+
         <div className="mt-6 flex justify-between">
+          <button
+            onClick={onPrevious}
+            className="px-4 py-2 bg-gray-200 rounded"
+          >
+            Previous: Edit Passage
+          </button>
           <button onClick={onCancel} className="px-4 py-2 bg-gray-200 rounded">
             Cancel
           </button>
-          <button onClick={() => onSave(questions)} className="px-4 py-2 bg-green-500 text-white rounded">
-            Save Questions
+          <button
+            onClick={() => onSave(questions)}
+            className="px-4 py-2 bg-green-500 text-white rounded"
+          >
+            Save All Questions
           </button>
         </div>
       </div>
@@ -163,11 +209,13 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
         <h3 className="text-lg font-bold mb-4">Questions</h3>
         {questions.map((question, index) => (
           <div
-            key={question.id}
+            key={question.id.toString()}
             className={`cursor-pointer p-2 mb-2 rounded ${
-              index === currentQuestionIndex ? 'bg-blue-100' : 'hover:bg-gray-100'
+              index === currentQuestionIndex
+                ? "bg-blue-100"
+                : "hover:bg-gray-100"
             }`}
-            onClick={() => setCurrentQuestionIndex(index)}
+            onClick={() => handleQuestionSwitch(index)}
           >
             Question {question.id}
           </div>

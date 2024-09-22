@@ -6,7 +6,7 @@ export interface Passage {
   id: string;
   text: string;
   citation: string;
-  title: string
+  title: string;
 }
 
 export interface Category {
@@ -31,16 +31,16 @@ export interface Question {
   id: string;
   questionID: string;
   questionContent: string;
-  questionOptions: string;  
-  questionAnswerNotes?: string | null;  
+  questionOptions: string;
+  questionAnswerNotes?: string | null;
   contentCategory: string;
-  passageId?: string | null;  
-  categoryId: string;  
+  passageId?: string | null;
+  categoryId: string;
   context: string | null;
-  passage?: Passage;  
-  category?: Category;  
-  testQuestions?: TestQuestion[]; 
-  userResponses?: UserResponse[]; 
+  passage?: Passage;
+  category?: Category;
+  testQuestions?: TestQuestion[];
+  userResponses?: UserResponse[];
 }
 
 export interface UserResponse {
@@ -51,8 +51,8 @@ export interface UserResponse {
   userAnswer: string;
   isCorrect: boolean;
   flagged?: boolean;
-  timeSpent?: number | null; 
-  userNotes?: string | null; 
+  timeSpent?: number | null;
+  userNotes?: string | null;
   answeredAt?: Date;
   userTest?: UserTest | null;
   reviewNotes?: string | null;
@@ -82,7 +82,7 @@ export interface Test {
   updatedAt: Date;
   passageId?: string | null;
   questions: TestQuestion[];
-  userTests?: UserTest[]; 
+  userTests?: UserTest[];
 }
 
 export interface StudyPlan {
