@@ -11,16 +11,18 @@ import {
 } from "@/components/ui/dialog";
 import { useRouter } from 'next/navigation'; // Updated import
 import Link from 'next/link';
+import Image from 'next/image'; // Added import
 
 interface ScoreDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   score: number; // Percentage score (0-100)
-  timing: number; // Total time in seconds
+  timing: number; // Average time per question in seconds
   correctAnswer: number; // Number of correct answers
   technique: number; // Technique score out of 4
   totalQuestions: number; // Total number of questions
   userTestId: string | undefined; // User test ID
+  totalTimeTaken: number; // Total time taken in seconds
 }
 
 const ScoreDialog: React.FC<ScoreDialogProps> = ({
@@ -32,6 +34,7 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
   technique,
   totalQuestions,
   userTestId,
+  totalTimeTaken, 
 }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [animatedScore, setAnimatedScore] = useState(0);
@@ -78,7 +81,7 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
 
       // Animate stars for timing
       let currentTimingStars = 0;
-      const targetTimingStars = getTimingStars(timing, totalQuestions);
+      const targetTimingStars = getTimingStars(totalTimeTaken, totalQuestions);
       const timingStarsInterval = setInterval(() => {
         if (currentTimingStars < targetTimingStars) {
           currentTimingStars += 0.1;
@@ -115,8 +118,8 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
     return 1;
   };
 
-  const getTimingStars = (timing: number, totalQuestions: number) => {
-    const averageTimePerQuestion = timing / totalQuestions;
+  const getTimingStars = (totalTimeTaken: number, totalQuestions: number) => {
+    const averageTimePerQuestion = totalTimeTaken / totalQuestions;
     if (averageTimePerQuestion <= 20) {
       return 3;
     } else if (averageTimePerQuestion <= 30) {
@@ -183,6 +186,12 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
     return `${correctAnswer}/${totalQuestions}`;
   };
 
+  const formatTotalTime = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}m ${seconds}s`;
+  };
+
   const getAverageTimingPerQuestion = (timing: number, totalQuestions: number) => {
     const averageSeconds = timing / totalQuestions;
     const minutes = Math.floor(averageSeconds / 60);
@@ -218,9 +227,11 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-center mb-4">
-          <img
+          <Image
             src={getCupcakeImage(score)}
             alt="Cupcakes"
+            width={200}
+            height={200}
             className="h-[20vh] w-auto"
           />
         </div>
@@ -240,11 +251,10 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
           </div>
           {/* Timing Section */}
           <div>
-            <p className="text-xl font-semibold">Timing</p>
+            <p className="text-xl font-semibold">Total Time</p>
             <p className="text-2xl font-bold text-pink-600">
-              {getAverageTimingPerQuestion(timing, totalQuestions)}
+              {formatTotalTime(totalTimeTaken)}
             </p>
-            <p className="text-lg">Per Question</p>
             <div className="flex justify-center mt-2">
               {renderStars(timingStars)}
             </div>

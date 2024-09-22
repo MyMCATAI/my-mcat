@@ -16,13 +16,43 @@ export async function GET(req: NextRequest) {
       select: { score: true },
     });
 
-    // Fetch all user tests and their responses
+    // Fetch all user tests and their responses, ordered by startedAt date
     const userTests = await prisma.userTest.findMany({
-      where: { userId },
+      where: { 
+        userId,
+      },
       include: {
         responses: true,
       },
+      orderBy: {
+        startedAt: 'desc' // Order by most recent first
+      },
     });
+
+    // Calculate the streak
+    let streak = 0;
+    let currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0); // Set to start of day
+
+    for (const test of userTests) {
+      const testDate = new Date(test.startedAt);
+      testDate.setHours(0, 0, 0, 0); // Set to start of day
+
+      if (testDate.getTime() === currentDate.getTime()) {
+        // Same day, continue to next test
+        continue;
+      } else if (testDate.getTime() === currentDate.getTime() - 86400000) { // 86400000 ms = 1 day
+        // Previous day, increment streak
+        streak++;
+        currentDate = testDate;
+      } else {
+        // Gap in streak, stop counting
+        break;
+      }
+    }
+
+    // Add 1 to include the current day in the streak
+    streak++;
 
     // Calculate statistics
     const totalTestsTaken = userTests.length;
@@ -33,8 +63,17 @@ export async function GET(req: NextRequest) {
       sum + test.responses.reduce((testSum, response) => testSum + (response.timeSpent || 0), 0), 0);
     const averageTimePerQuestion = totalQuestionsAnswered > 0 ? totalTimeSpent / totalQuestionsAnswered : 0;
 
+    // Calculate total time spent on tests and average time per test
+    const totalTestTime = userTests.reduce((sum, test) => {
+      if (test.startedAt && test.finishedAt) {
+        return sum + (new Date(test.finishedAt).getTime() - new Date(test.startedAt).getTime());
+      }
+      return sum;
+    }, 0);
+
     // Calculate additional statistics
     const testsCompleted = userTests.filter(test => test.finishedAt !== null).length;
+    const averageTimePerTest = testsCompleted > 0 ? totalTestTime / testsCompleted : 0;
     const completionRate = totalTestsTaken > 0 ? (testsCompleted / totalTestsTaken) * 100 : 0;
 
     // Group questions by category and calculate accuracy
@@ -58,6 +97,8 @@ export async function GET(req: NextRequest) {
       return acc;
     }, {} as Record<string, number>);
 
+
+    // todo update this to calc last 10 tests instead of all tests
     return NextResponse.json({
       userScore: userInfo?.score || 0,
       totalTestsTaken,
@@ -66,7 +107,9 @@ export async function GET(req: NextRequest) {
       totalQuestionsAnswered,
       averageTestScore,
       averageTimePerQuestion,
+      averageTimePerTest,
       categoryAccuracy: categoryAccuracyPercentages,
+      streak,
     });
   } catch (error) {
     console.error('Error generating user report:', error);

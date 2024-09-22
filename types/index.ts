@@ -134,5 +134,7 @@ export interface ReportData {
   totalQuestionsAnswered: number;
   averageTestScore: number;
   averageTimePerQuestion: number;
+  averageTimePerTest: number;
   categoryAccuracy: Record<string, number>;
+  streak: number;
 }
