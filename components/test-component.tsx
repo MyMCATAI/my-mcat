@@ -330,11 +330,10 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   const handleFinishTest = async () => {
     setIsSubmitting(true);
-    if (!userTest) return;
-    if(!testStartTime) return;
+    if (!userTest || !testStartTime) return;
   
     const testFinishTime = new Date();
-    const totalTimeInSeconds = (testFinishTime.getTime() - testStartTime.getTime()) / 1000;
+    const totalTimeInSeconds = Math.round((testFinishTime.getTime() - testStartTime.getTime()) / 1000);
   
     const { score, correctAnswers, technique } = calculateScore(totalTimeInSeconds);
   
@@ -740,6 +739,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         ref={testHeaderRef}
         title={test?.title}
         isCreatingTest={isCreatingTest}
+        currentQuestionIndex={currentQuestionIndex}
       />
 
       {/* Toolbar with highlight, strikethrough, flag, and vocab list toggle */}
@@ -889,7 +889,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       </div>
 
       <div className="bg-[#006dab] h-15 border-t-3 border-sky-500"></div>
-
       <ScoreDialog
         open={showScorePopup}
         onOpenChange={setShowScorePopup}
@@ -899,6 +898,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         technique={technique}
         totalQuestions={test.questions.length}
         userTestId={userTest?.id}
+        totalTimeTaken={testStartTime ? Math.round((new Date().getTime() - testStartTime.getTime()) / 1000) : 0}
       />
     </div>
   );

@@ -1,10 +1,11 @@
-import React, { useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useRef, useImperativeHandle, forwardRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useStopwatch } from 'react-timer-hook';
 
 interface TestHeaderProps {
   title: string | undefined;
   isCreatingTest: boolean;
+  currentQuestionIndex: number;
 }
 
 export interface TestHeaderRef {
@@ -12,7 +13,7 @@ export interface TestHeaderRef {
   reset: () => void;
 }
 
-const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(({ title, isCreatingTest }, ref) => {
+const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(({ title, isCreatingTest, currentQuestionIndex }, ref) => {
   const {
     seconds,
     minutes,
@@ -21,6 +22,8 @@ const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(({ title, isCreati
     pause,
     start
   } = useStopwatch({ autoStart: true });
+  const [timerColor, setTimerColor] = useState('text-sky-300');
+  const [isFlashing, setIsFlashing] = useState(false);
 
   useImperativeHandle(ref, () => ({
     getElapsedTime: () => hours * 3600 + minutes * 60 + seconds,
@@ -28,8 +31,28 @@ const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(({ title, isCreati
       pause();
       resetStopwatch();
       start();
+      setTimerColor('text-sky-300');
+      setIsFlashing(false);
     }
   }));
+
+  useEffect(() => {
+    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+
+    if (totalSeconds >= 120) { // 2 minutes
+      setTimerColor('text-red-500');
+      setIsFlashing(true);
+    } else if (totalSeconds >= 60) { // 1 minute
+      setTimerColor('text-red-500');
+      setIsFlashing(false);
+    } else if (totalSeconds >= 30) { // 30 seconds
+      setTimerColor('text-yellow-500');
+      setIsFlashing(false);
+    } else {
+      setTimerColor('text-sky-300');
+      setIsFlashing(false);
+    }
+  }, [seconds, minutes, hours]);
 
   return (
     <div className="bg-[#006dab] p-2 h-15 flex justify-between items-center border-3 border-sky-500">
@@ -39,7 +62,7 @@ const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(({ title, isCreati
           {isCreatingTest && <span className="ml-2 text-sm text-gray-400">Creating test...</span>}
         </h1>
       </div>
-      <div className="timer text-sky-300">
+      <div className={`timer ${timerColor}`} style={{ animation: isFlashing ? `flash 1s linear infinite` : 'none' }}>
         <span>{hours.toString().padStart(2, '0')}:</span>
         <span>{minutes.toString().padStart(2, '0')}:</span>
         <span>{seconds.toString().padStart(2, '0')}</span>
