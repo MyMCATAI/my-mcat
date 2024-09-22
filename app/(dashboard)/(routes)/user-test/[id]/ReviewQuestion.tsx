@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Question, UserResponse } from '@/types';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, HelpCircle, BookOpen } from "lucide-react";
+import { HelpCircle, BookOpen } from "lucide-react";
 import ChatBotInLineForReview from '@/components/chatbot/ChatBotInLineForReview';
 import { Passage } from '@/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -96,6 +95,7 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
     ) {
       updateUserResponse(null);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasViewedUserExplanation, hasViewedCorrectExplanation, userResponse]);
 
   if (!question) return null;

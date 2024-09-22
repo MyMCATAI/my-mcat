@@ -148,6 +148,24 @@ export default function UserTestReviewPage() {
           <div className="text-right">
             <p className="text-sm">Score: {userTest.score !== null ? `${userTest.score?.toFixed(2)}%` : 'Not scored'}</p>
             <p className="text-sm">Completed: {userTest.finishedAt ? new Date(userTest.finishedAt).toLocaleString() : 'Not finished'}</p>
+            {userTest.startedAt && userTest.finishedAt && (
+              <p className={`text-sm ${
+                (() => {
+                  const timeTaken = new Date(userTest.finishedAt).getTime() - new Date(userTest.startedAt).getTime();
+                  const minutes = Math.floor(timeTaken / 60000);
+                  if (minutes > 10) return 'text-red-500';
+                  if (minutes > 5) return 'text-orange-500';
+                  return 'text-green-500';
+                })()
+              }`}>
+                Time taken: {(() => {
+                  const timeTaken = new Date(userTest.finishedAt).getTime() - new Date(userTest.startedAt).getTime();
+                  const minutes = Math.floor(timeTaken / 60000);
+                  const seconds = Math.floor((timeTaken % 60000) / 1000);
+                  return `${minutes}m ${seconds}s`;
+                })()}
+              </p>
+            )}
           </div>
           <Link href="/home" className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded transition duration-300">
             Return Home
