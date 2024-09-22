@@ -24,7 +24,14 @@ const ResourcesMenu: React.FC = () => {
     testsCompleted: 5,
     totalTestsTaken: 7,
     totalQuestionsAnswered: 100,
-    userScore: 500
+    userScore: 500,
+    completionRate: 0.8, // Added completionRate (80% completion rate)
+    categoryAccuracy: { // Added categoryAccuracy
+      'Biology': 0.75,
+      'Chemistry': 0.80,
+      'Physics': 0.70,
+      'Psychology': 0.85
+    }
   };
 
   // Mock streak data - replace with actual data
@@ -75,6 +82,14 @@ const ResourcesMenu: React.FC = () => {
           <StatBar label="Tests Completed" value={mockReportData.testsCompleted} max={mockReportData.totalTestsTaken} />
           <StatBar label="Questions Answered" value={mockReportData.totalQuestionsAnswered} max={200} />
           <StatBar label="User Score" value={mockReportData.userScore} max={1000} />
+          <StatBar label="Completion Rate" value={mockReportData.completionRate * 100} max={100} />
+        </div>
+
+        <div className="w-full max-w-md space-y-4 mt-6">
+          <h3 className="text-lg font-semibold">Category Accuracy</h3>
+          {Object.entries(mockReportData.categoryAccuracy).map(([category, accuracy]) => (
+            <StatBar key={category} label={category} value={accuracy * 100} max={100} />
+          ))}
         </div>
       </div>
     </div>
@@ -94,7 +109,7 @@ const StatBar: React.FC<StatBarProps> = ({ label, value, max }) => {
     <div className="space-y-2">
       <div className="flex justify-between text-sm">
         <span>{label}</span>
-        <span>{value} / {max}</span>
+        <span>{value.toFixed(1)} / {max}</span>
       </div>
       <Progress value={percentage} className="h-2" />
     </div>

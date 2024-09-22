@@ -2,9 +2,12 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import SpriteWalking from './SpriteWalking';
 import ShoppingDialog from './ShoppingDialog';
 
+// Define the Direction type at the top of the file
+type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
+
 // Define an interface for the image objects
 interface GridImage {
-  id: string;  // Add this line
+  id: string;
   src: string;
   x: number;
   y: number;
@@ -12,6 +15,17 @@ interface GridImage {
   height: number;
   zIndex: number;
   opacity?: number;
+}
+
+// Define an interface for sprite objects
+interface Sprite {
+  id: string;
+  type: 'sprite';
+  x: number;
+  y: number;
+  direction: Direction;
+  character: number;
+  zIndex: number;
 }
 
 // Define constants outside the component
@@ -26,6 +40,12 @@ type Waypoint = {
   y: number;
   direction: Direction;
 };
+
+// Define the ImageGroup interface
+interface ImageGroup {
+  name: string;
+  items: { id: string; src: string }[];
+}
 
 // Modify the spriteWaypoints to include directions
 const spriteWaypoints: Record<string, Waypoint[]> = {
@@ -78,25 +98,19 @@ const OfficeContainer: React.FC = () => {
 
   const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set(images.map(img => img.id)));
   
-  // Adjust initial offset to move the grid up
-  const initialOffset = {
+  // Define offset as a constant instead of state
+  const offset = {
     x: (gridWidth + gridHeight) * (tileWidth / 3.5),
-    y: (gridHeight * tileHeight) / 2 - 160  // Subtract a value to move up
+    y: (gridHeight * tileHeight) / 2 - 160
   };
   
-  const [offset, setOffset] = useState(initialOffset);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startDragPos, setStartDragPos] = useState({ x: 0, y: 0 });
   const [loadedImages, setLoadedImages] = useState<Record<string, HTMLImageElement>>({});
   const [scale, setScale] = useState(1);
 
-  // Add this new type definition
-  type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
-
   // Update the sprite1PositionRef to include direction
-  const sprite1PositionRef = useRef({ x: 9, y: 9, direction: 'S' as Direction });
-  const sprite2PositionRef = useRef({ x: 1, y: 1 });
-  const sprite3PositionRef = useRef({ x: 8, y: 8 });
+  const sprite1PositionRef = useRef<{ x: number; y: number; direction: Direction }>({ x: 9, y: 9, direction: 'S' });
+  const sprite2PositionRef = useRef<{ x: number; y: number; direction: Direction }>({ x: 1, y: 1, direction: 'N' });
+  const sprite3PositionRef = useRef<{ x: number; y: number; direction: Direction }>({ x: 8, y: 8, direction: 'SW' });
 
   const sprite1WaypointIndexRef = useRef(0);
   const sprite2WaypointIndexRef = useRef(0);
@@ -126,7 +140,7 @@ const OfficeContainer: React.FC = () => {
       let scale = Math.min(scaleX, scaleY);
       
       // Apply a maximum scale to prevent the grid from becoming too large on big screens
-      const maxScale = .8;
+      const maxScale = .72;
       scale = Math.min(scale, maxScale);
 
       // Apply a small reduction factor for better fit on laptops
@@ -161,9 +175,10 @@ const OfficeContainer: React.FC = () => {
 
     Promise.all(imagePromises).then(() => {
       // All images are loaded, force a re-render
-      setOffset({...offset});
+      // Remove this line as we no longer need to update offset
+      // setOffset({...offset});
     });
-  }, []);
+  }, [images]);
 
   // Update the moveSprite function to use the specified direction
   const moveSprite = useCallback((
@@ -171,7 +186,7 @@ const OfficeContainer: React.FC = () => {
     waypoints: Waypoint[],
     waypointIndexRef: React.MutableRefObject<number>
   ) => {
-    const speed = 0.05;
+    const speed = 0.1; // Increase this value to make the sprite move faster
     const currentWaypoint = waypoints[waypointIndexRef.current];
     const position = positionRef.current;
     
@@ -181,12 +196,10 @@ const OfficeContainer: React.FC = () => {
 
     if (distance < speed) {
       waypointIndexRef.current = (waypointIndexRef.current + 1) % waypoints.length;
-      // Update direction when reaching a new waypoint
       position.direction = currentWaypoint.direction;
     } else {
       position.x += (dx / distance) * speed;
       position.y += (dy / distance) * speed;
-      // Use the specified direction while moving
       position.direction = currentWaypoint.direction;
     }
   }, []);
@@ -269,18 +282,18 @@ const OfficeContainer: React.FC = () => {
 
     // Sort images and sprites by zIndex
     const allElements = [
-      ...images.map(img => ({ ...img, type: 'image' })),
-      { id: 'sprite1', type: 'sprite', ...sprite1PositionRef.current, character: 1, zIndex: 11 },
-      //{ id: 'sprite2', type: 'sprite', ...sprite2PositionRef.current, character: 2, zIndex: 11 },
-      // { id: 'sprite3', type: 'sprite', ...sprite3PositionRef.current, character: 3, zIndex: 11 },
+      ...images.map(img => ({ ...img, type: 'image' as const })),
+      { id: 'sprite1', type: 'sprite' as const, ...sprite1PositionRef.current, character: 1, zIndex: 11 },
+      //{ id: 'sprite2', type: 'sprite' as const, ...sprite2PositionRef.current, character: 2, zIndex: 11 },
+      //{ id: 'sprite3', type: 'sprite' as const, ...sprite3PositionRef.current, character: 3, zIndex: 11 },
     ].sort((a, b) => a.zIndex - b.zIndex);
 
     // Draw all elements in order
     allElements.forEach((element) => {
       if (element.type === 'image') {
-        // Draw image (existing code)
-        if (visibleImages.has(element.id) && loadedImages[element.src]) {
-          const img = element as GridImage;
+        // Draw image
+        const img = element as GridImage;
+        if (visibleImages.has(img.id) && loadedImages[img.src]) {
           const loadedImg = loadedImages[img.src];
           const posX = screenX(img.x, img.y) - img.width / 4;
           const posY = screenY(img.x, img.y) - img.height / 2;
@@ -295,7 +308,7 @@ const OfficeContainer: React.FC = () => {
         }
       } else if (element.type === 'sprite') {
         // Draw sprite
-        const sprite = element as { x: number, y: number, direction: Direction, character: number };
+        const sprite = element as Sprite;
         const posX = screenX(sprite.x, sprite.y);
         const posY = screenY(sprite.x, sprite.y);
         
@@ -326,34 +339,6 @@ const OfficeContainer: React.FC = () => {
 
     animate();
   }, [drawScene]);
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    setIsDragging(true);
-    setStartDragPos({ x: e.clientX - offset.x, y: e.clientY - offset.y });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging) return;
-    const newOffset = {
-      x: e.clientX - startDragPos.x,
-      y: e.clientY - startDragPos.y
-    };
-    setOffset(newOffset);
-
-    // Update sprite positions relative to the new offset
-    const dx = newOffset.x - offset.x;
-    const dy = newOffset.y - offset.y;
-    sprite1PositionRef.current.x += dx / (tileWidth / 2);
-    sprite1PositionRef.current.y += dy / (tileHeight / 2);
-    sprite2PositionRef.current.x += dx / (tileWidth / 2);
-    sprite2PositionRef.current.y += dy / (tileHeight / 2);
-    sprite3PositionRef.current.x += dx / (tileWidth / 2);
-    sprite3PositionRef.current.y += dy / (tileHeight / 2);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
 
   const imageGroups: ImageGroup[] = [
     {
@@ -436,15 +421,11 @@ const OfficeContainer: React.FC = () => {
           <div className="absolute inset-0 bg-[--theme-leaguecard-color] border-2 border-[--theme-border-color] opacity-40"></div>
           <canvas
             ref={canvasRef}
-            className="relative z-10 cursor-move"
+            className="relative z-10"
             style={{
               width: `${(gridWidth + gridHeight) * (tileWidth / 2) * scale}px`,
               height: `${(gridWidth + gridHeight) * (tileHeight / 2) * scale}px`,
             }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
           />
         </div>
       </div>
