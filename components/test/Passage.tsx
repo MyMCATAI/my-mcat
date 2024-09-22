@@ -30,11 +30,30 @@ interface Annotation {
 
 function applyAnnotations(editorState: EditorState, annotations: Annotation[]): EditorState {
   let contentState: ContentState = editorState.getCurrentContent();
+  
+  if (!contentState) {
+    console.error("ContentState is undefined");
+    return editorState;
+  }
+
+  const plainText = contentState.getPlainText();
+  if (!plainText) {
+    console.error("Plain text is empty or undefined");
+    return editorState;
+  }
 
   // Sort annotations by start index to ensure consistent application
-  annotations.sort((a, b) => contentState.getPlainText().indexOf(a.text) - contentState.getPlainText().indexOf(b.text));
+  annotations.sort((a, b) => {
+    const indexA = plainText.indexOf(a.text);
+    const indexB = plainText.indexOf(b.text);
+    if (indexA === -1 || indexB === -1) {
+      console.warn(`Annotation text not found: ${indexA === -1 ? a.text : b.text}`);
+    }
+    return indexA - indexB;
+  });
 
   annotations.forEach(({ style, text }) => {
+    try {
     const blocks: ContentBlock[] = contentState.getBlocksAsArray();
     blocks.forEach((block) => {
       const blockText: string = block.getText();
@@ -50,16 +69,22 @@ function applyAnnotations(editorState: EditorState, annotations: Annotation[]): 
         start = index + 1; // Move only one character to catch overlapping annotations
       }
     });
+    } catch (error) {
+      console.error(`Error applying annotation: ${style} - ${text}`, error);
+    }
   });
 
   return EditorState.push(editorState, contentState, 'change-inline-style');
 }
 
-
 const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps>(
   ({ passageData, onNote, tempHighlightedStrings, userResponse }, ref) => {
     const [editorState, setEditorState] = useState(() => {
-      const initialState = EditorState.createWithContent(ContentState.createFromText(passageData?.text || ""));
+      if (!passageData || !passageData.text) {
+        console.error("passageData or passageData.text is undefined");
+        return EditorState.createEmpty();
+      }
+      const initialState = EditorState.createWithContent(ContentState.createFromText(passageData.text));
       console.log("Initial editor state created");
       return initialState;
     });
@@ -208,30 +233,39 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
       if (!userResponse?.userNotes || notesAppliedRef.current) return;
     
       const contentState = editorState.getCurrentContent();
-      if (contentState.getPlainText().trim() === '') return; // Ensure content is loaded
+      if (contentState.getPlainText().trim() === '') {
+        console.warn("Content is empty, skipping annotation application");
+        return;
+      }
     
       const timer = setTimeout(() => {
-        let newContentState = contentState;
+        try {
+          let newContentState = contentState;
     
-        // Remove existing 'HIGHLIGHT' and 'STRIKETHROUGH' styles
-        newContentState = removeInlineStyleFromContentState(newContentState, "HIGHLIGHT");
-        newContentState = removeInlineStyleFromContentState(newContentState, "STRIKETHROUGH");
-        console.log("Applying userNotes", userResponse?.userNotes);
+          // Remove existing 'HIGHLIGHT' and 'STRIKETHROUGH' styles
+          newContentState = removeInlineStyleFromContentState(newContentState, "HIGHLIGHT");
+          newContentState = removeInlineStyleFromContentState(newContentState, "STRIKETHROUGH");
+          console.log("Applying userNotes", userResponse?.userNotes);
 
-        const annotations = parseUserNotes(userResponse.userNotes!);
-        console.log("Applying annotations", annotations);
+          const annotations = parseUserNotes(userResponse.userNotes!);
+          console.log("Parsed annotations", annotations);
 
-        if (annotations.length > 0) {
-          const newEditorState = applyAnnotations(EditorState.createWithContent(newContentState), annotations);
-          setEditorState(newEditorState);
-          console.log("Applied annotations to editor state after 3-second delay");
-          notesAppliedRef.current = true;
+          if (annotations.length > 0) {
+            const newEditorState = applyAnnotations(EditorState.createWithContent(newContentState), annotations);
+            setEditorState(newEditorState);
+            console.log("Applied annotations to editor state after 3-second delay");
+            notesAppliedRef.current = true;
+          } else {
+            console.warn("No valid annotations found in userNotes");
+          }
+        } catch (error) {
+          console.error("Error applying annotations:", error);
         }
       }, 3000); 
     
       return () => clearTimeout(timer);
       
-    }, [userResponse?.userNotes]);
+    }, [userResponse?.userNotes, editorState]);
 
     // Reset the ref when userResponse?.userNotes changes
     useEffect(() => {
@@ -317,7 +351,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
         </div>
         <div className="bg-[#ffffff] flex-grow overflow-auto p-4">
           <div className="text-black" style={editorStyle}>
-            <Editor
+           <Editor
               editorState={editorState}
               onChange={(newState) => {
                 setEditorState(newState);
