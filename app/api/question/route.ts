@@ -1,7 +1,7 @@
 // File: app/api/questions/route.ts
 
 import { NextResponse } from 'next/server';
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { getQuestions, createQuestion } from "@/lib/question";
 
 export async function GET(req: Request) {

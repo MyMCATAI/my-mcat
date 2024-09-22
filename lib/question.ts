@@ -1,7 +1,7 @@
 // File: lib/question.ts
 
 import { NextResponse } from 'next/server';
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import prismadb from "@/lib/prismadb";
 
 export const getQuestions = async (params: {

@@ -1,26 +1,24 @@
-import { authMiddleware } from "@clerk/nextjs";
-import { NextResponse } from "next/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// This example protects all routes including api/trpc routes
-// Please edit this to allow other routes to be public as needed.
-// See https://clerk.com/docs/references/nextjs/auth-middleware for more information about configuring your Middleware
-export default authMiddleware({
-      publicRoutes: ["/","/intro","/disclaimer","/cookiepolicy","/acceptableuse","/termsandconditions","/privacypolicy", "/api/webhook"],
-      debug: true,
-      afterAuth(auth, req, evt) {
-            // Handle auth for public routes
-            if (auth.isPublicRoute) {
-              return NextResponse.next();
-            }
-        
-            // Handle other routes as before
-            if (!auth.userId && !auth.isPublicRoute) {
-              const signInUrl = new URL('/sign-in', req.url);
-              signInUrl.searchParams.set('redirect_url', req.url);
-              return NextResponse.redirect(signInUrl);
-            }
-          },
-});
+const isPublicRoute = createRouteMatcher([  "/","/intro",'/sign-in(.*)', '/sign-up(.*)',
+"/disclaimer",
+"/cookiepolicy",
+"/acceptableuse",
+"/termsandconditions",
+"/privacypolicy", 
+"/api/webhook"])
+
+export default clerkMiddleware((auth, request) => {
+  if (!isPublicRoute(request)) {
+    auth().protect()
+  }
+})
+
 export const config = {
-      matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
-};
+  matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
+  ],
+}
