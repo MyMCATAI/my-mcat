@@ -1,5 +1,6 @@
 // app/api/redditPosts/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { getRedditAccessToken } from '@/utils/redditAuth';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -25,21 +26,27 @@ export async function GET(request: NextRequest) {
   }
 
   console.log(`Time range set to: ${timeRange}`);
-
   try {
+    const accessToken = await getRedditAccessToken();
+    console.log(`Access token: ${accessToken}`);
     let redditUrl;
     if (query) {
-      redditUrl = `https://www.reddit.com/r/${encodeURIComponent(subreddit)}/search.json?q=${encodeURIComponent(query)}&restrict_sr=1&sort=top&t=${timeRange}&limit=20`;
+      redditUrl = `https://oauth.reddit.com/r/${encodeURIComponent(subreddit)}/search.json?q=${encodeURIComponent(
+        query
+      )}&restrict_sr=1&sort=top&t=${timeRange}&limit=50`;
     } else {
-      redditUrl = `https://www.reddit.com/r/${encodeURIComponent(subreddit)}/top.json?t=${timeRange}&limit=20`;
+      redditUrl = `https://oauth.reddit.com/r/${encodeURIComponent(
+        subreddit
+      )}/top.json?t=${timeRange}&limit=50`;
     }
+
     console.log(`Fetching from Reddit URL: ${redditUrl}`);
 
     const fetchWithRetry = async (url: string, options: RequestInit, retries = 1): Promise<Response> => {
       const response = await fetch(url, options);
       if (!response.ok && retries > 0) {
         console.log(`Fetch failed with status ${response.status}. Retrying in 2 seconds...`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         return fetchWithRetry(url, options, retries - 1);
       }
       return response;
@@ -50,11 +57,13 @@ export async function GET(request: NextRequest) {
       {
         headers: {
           'User-Agent': 'MyMCAT/1.0 (by kalypso@mymcat.ai)',
+          Authorization: `Bearer ${accessToken}`, // Include the access token here
         },
       },
       3 // Three retry attempts
     );
 
+    
     console.log(`Reddit API response status: ${redditResponse.status}`);
 
     if (!redditResponse.ok) {
