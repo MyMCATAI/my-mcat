@@ -31,7 +31,9 @@ const ResourcesMenu: React.FC = () => {
       'Chemistry': 0.80,
       'Physics': 0.70,
       'Psychology': 0.85
-    }
+    },
+    averageTimePerTest: 900,
+    streak:1
   };
 
   // Mock streak data - replace with actual data

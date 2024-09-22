@@ -37,13 +37,6 @@ const truncateTitle = (title: string, maxLength: number) => {
   return title;
 };
 
-const getTimeOfDay = () => {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'morning';
-  if (hour < 18) return 'afternoon';
-  return 'evening';
-};
-
 const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
   const { user } = useUser();
   const [userTests, setUserTests] = useState<UserTest[]>([]);
@@ -51,20 +44,10 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [welcomeAndTestMessage, setWelcomeAndTestMessage] = useState('');
-  const [chatbotContext, setChatbotContext] = useState({
-    contentTitle: "",
-    context: ""
-  });
   const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
   const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(null);
   const [welcomeComplete, setWelcomeComplete] = useState(false);
   const [marketplaceText, setMarketplaceText] = useState("Doctor&apos;s Office ->");
-
-  const getPercentageColor = (percentage: number) => {
-    if (percentage < 50) return "text-red-500";
-    if (percentage >= 50 && percentage <= 80) return "text-yellow-500";
-    return "text-green-500";
-  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -99,12 +82,12 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
 
   useEffect(() => {
     const userName = user ? user.firstName || 'there' : 'there';
-    const welcomeText = `Welcome ${userName.charAt(0).toUpperCase() + userName.slice(1)}! `;
+    const welcomeText = getWelcomeMessage(userName, reportData ? reportData.streak : 0);
     
     if (tests.length > 0) {
       const fullText = welcomeText + tests[0].description;
       let index = 0;
-
+  
       const typingTimer = setInterval(() => {
         if (index <= fullText.length) {
           setWelcomeAndTestMessage(fullText.slice(0, index));
@@ -114,10 +97,11 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
           setWelcomeComplete(true);
         }
       }, 15);
-
+  
       return () => clearInterval(typingTimer);
     }
-  }, [user, tests]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, tests, reportData]);
 
   const handleAssistantResponse = (message: string, dismissFunc: () => void) => {
     onAssistantResponse(message, dismissFunc);
@@ -133,6 +117,104 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
 
   const handleDoctorsOfficeClick = () => {
     setMarketplaceText("Welcome to the Doctor&apos;s Office!");
+  };
+
+
+  const getTimeOfDay = () => {
+    const hour = new Date().getHours();
+    if (hour < 5) return 'night';
+    if (hour < 12) return 'morning';
+    if (hour < 18) return 'afternoon';
+    if (hour < 22) return 'evening';
+    return 'night';
+  };
+  
+  const getWelcomeMessage = (userName: string, streak: number) => {
+    const now = new Date();
+    const day = now.getDay();
+    const hour = now.getHours();
+    const timeOfDay = getTimeOfDay();
+    
+    let message = `Hey ${userName.charAt(0).toUpperCase() + userName.slice(1)}! \n\n\n`;
+
+    // Time-specific greetings
+    const timeGreetings = {
+      morning: "Rise and shine! ",
+      afternoon: "Hope your day's going well. ",
+      evening: "Good evening! ",
+      night: "Burning the midnight oil, huh? "
+    };
+    message += timeGreetings[timeOfDay];
+
+    // Streak message
+    if (streak > 0) {
+      if (streak === 1) {
+        const oneDayStreakMessages = [
+          "You've started your streak! Great job showing up today!",
+          "Day one of your streak! Let's keep this momentum going!",
+          "First day of your study streak! Every journey begins with a single step.",
+          "You've begun your streak! One day down, many more to go!",
+          "Day 1 of your streak! Remember, consistency is key in MCAT prep."
+        ];
+        message += oneDayStreakMessages[Math.floor(Math.random() * oneDayStreakMessages.length)] + " ";
+      } else {
+        const streakMessages = [
+          `You're on a ${streak}-day streak! Keep it up!`,
+          `Wow, ${streak} days in a row! You're on fire!`,
+          `${streak} days of consistent study - that's impressive!`,
+          `Your ${streak}-day streak shows real commitment. Great job!`,
+          `${streak} days and counting! Your future self thanks you.`
+        ];
+        message += streakMessages[Math.floor(Math.random() * streakMessages.length)] + " ";
+      }
+    }
+
+    // Special time-based messages
+    if (day === 5 && hour >= 20) {
+      message += ["Impressive dedication, studying on a Friday night! ",
+                  "Friday night MCAT prep? Your commitment is admirable! ",
+                  "Choosing MCAT over Friday night fun? That's the spirit! "][Math.floor(Math.random() * 3)];
+    } else if (hour >= 0 && hour < 5) {
+      message += ["Just remember, a well-rested brain retains more info. ",
+                  "Don't forget to catch some Z's between study sessions. ",
+                  "Night owl mode, activated! Just balance it with proper rest. "][Math.floor(Math.random() * 3)];
+    }
+
+    // Day-specific encouragement
+    const dayMessages = [
+      "Fresh start to the week - let's make it count!",
+      "An orange friend of mine hates Mondays, but we'll conquer the MCAT anyway!",
+      "Tuesday's momentum can carry you through the week.",
+      "Midweek already? You're making great progress!",
+      "Weekend's in sight, but stay focused on your goals.",
+      "Last push before the weekend - you've got this!",
+      "Weekend warrior mode: ON. Your dedication is impressive!"
+    ];
+    message += dayMessages[day] + " ";
+
+    // MCAT-specific encouragement
+    const mcatMessages = [
+      "Every study session brings you one step closer to MCAT success.",
+      "Remember, consistent effort is key to mastering the MCAT.",
+      "The MCAT may be tough, but you're tougher!",
+      "Keep pushing - your future patients will thank you for this hard work.",
+      "Tackling the MCAT is a marathon, not a sprint. Pace yourself!",
+      "Each question you practice sharpens your MCAT skills.",
+      "Your dedication to MCAT prep today will pay off in your future medical career."
+    ];
+    message += mcatMessages[Math.floor(Math.random() * mcatMessages.length)] + " ";
+
+    // Closing encouragement
+    const closingMessages = [
+      "Let's gooooooo!",
+      "I'm here to help you ace this test. Ready to rumble?",
+      "Together, we'll rock your MCAT prep one step at a time.",
+      "Remember, every bit of effort brings you closer to your goals.",
+      "You've got this!"
+    ];
+    message += closingMessages[Math.floor(Math.random() * closingMessages.length)];
+
+    return message + "\n\n";
   };
 
   return (
@@ -184,7 +266,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
                     <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
                       <Image src="/game-components/PixelWatch.png" alt="Watch" layout="fill" objectFit="contain" />
                     </div>
-                    <span className="text-[2vw] sm:text-xs mt-1">{reportData ? `${reportData.averageTimePerQuestion.toFixed(2)}s` : 'N/A'}</span>
+                    <span className="text-[2vw] sm:text-xs mt-1">{reportData ? `${reportData.averageTimePerTest.toFixed(2)}s` : 'N/A'}</span>
                     <span className="text-[2vw] sm:text-xs">avg time</span>
                   </div>
                   <div className="flex flex-col items-center w-1/4">
@@ -285,6 +367,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
       </div>
     </div>
   );
+
 };
 
 export default Exams;
