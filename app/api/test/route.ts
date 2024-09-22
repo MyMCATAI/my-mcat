@@ -1,6 +1,6 @@
 // api/test/route.ts
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 import page from "@/app/(landing)/page";
 import { Test } from "@/types";
@@ -79,8 +79,8 @@ async function getOrderedTests(
     }))
     .sort((a, b) => a.averageScore - b.averageScore);
 
-  console.log("Sorted concept categories:", sortedConceptCategories);
-  console.log("User content categories:", Array.from(userContentCategories));
+  // console.log("Sorted concept categories:", sortedConceptCategories);
+  // console.log("User content categories:", Array.from(userContentCategories));
 
   // Fetch all available tests
   let testQuery: any = {};
@@ -98,7 +98,7 @@ async function getOrderedTests(
     };
   }
 
-  console.log("Test query:", JSON.stringify(testQuery, null, 2));
+  // console.log("Test query:", JSON.stringify(testQuery, null, 2));
 
   const allTests = await prisma.test.findMany({
     where: testQuery,
@@ -366,13 +366,13 @@ export async function GET(req: Request) {
     const isDiagnostic = searchParams.get("diagnostic") === "true";
     const CARSonly = searchParams.get("CARSonly") === "true";
 
-    console.log("Request parameters:", {
-      page,
-      pageSize,
-      testId,
-      isDiagnostic,
-      CARSonly,
-    });
+    // console.log("Request parameters:", {
+    //   page,
+    //   pageSize,
+    //   testId,
+    //   isDiagnostic,
+    //   CARSonly,
+    // });
 
     if (isDiagnostic) {
       return new NextResponse(
@@ -422,7 +422,7 @@ export async function GET(req: Request) {
       console.log("Calling getOrderedTests");
       const testsData = await getOrderedTests(userId, page, pageSize, CARSonly);
 
-      console.log("Tests data:", JSON.stringify(testsData, null, 2));
+      // console.log("Tests data:", JSON.stringify(testsData, null, 2));
       return new NextResponse(JSON.stringify(testsData), {
         status: 200,
         headers: { "Content-Type": "application/json" },

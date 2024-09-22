@@ -93,7 +93,7 @@ const Product = () => {
                 controls
                 className="w-full aspect-video"
               >
-                <source src="/mymcat.mp4" type="video/mp4" />
+                <source src="https://my-mcat.s3.us-east-2.amazonaws.com/public/mymcat.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
             </div>

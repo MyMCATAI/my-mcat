@@ -1,7 +1,7 @@
 // File: app/api/subscription/route.ts
 
 import { NextResponse } from 'next/server';
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { checkSubscription } from "@/lib/subscription";
 import { getUserInfo } from "@/lib/user-info";
 
