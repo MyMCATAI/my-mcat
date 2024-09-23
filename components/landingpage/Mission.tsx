@@ -286,7 +286,7 @@ const MethodologyAndTestimonials = () => {
               muted
               loop
               playsInline
-              src="/landingpage/GamificationVideo.mp4"
+              src="/landingpage/gamificationvideo.mp4"
             >
               Your browser does not support the video tag.
             </video>
