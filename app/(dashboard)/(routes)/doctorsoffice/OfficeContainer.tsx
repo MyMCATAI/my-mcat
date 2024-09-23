@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import SpriteWalking from './SpriteWalking';
 import ShoppingDialog from './ShoppingDialog';
+import { Home, ShoppingCart } from 'lucide-react';
 
 // Define the Direction type at the top of the file
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
@@ -51,11 +53,11 @@ interface ImageGroup {
 const spriteWaypoints: Record<string, Waypoint[]> = {
   sprite1: [
     { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
-    { x: 3.5, y: 9, direction: 'NW' },  // Move NW to bottom left
-    { x: 3.5, y: 1.25, direction: 'NE' },  // Move NE to top left
-    { x: 9, y: 1.25, direction: 'SE' },  // Move SE to top right
-    { x: 4, y: 1.25, direction: 'NW' },  // Move NW to top left
-    { x: 4, y: 9, direction: 'SW' },  // Move SW to bottom left
+    { x: 3, y: 9, direction: 'NW' },  // Move NW to bottom left
+    { x: 3, y: 1.5, direction: 'NE' },  // Move NE to top left
+    { x: 9, y: 1.5, direction: 'SE' },  // Move SE to top right
+    { x: 3, y: 1.5, direction: 'NW' },  // Move NW to top left
+    { x: 3, y: 9, direction: 'SW' },  // Move SW to bottom left
     { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
   ],
   sprite2: [
@@ -75,6 +77,7 @@ const spriteWaypoints: Record<string, Waypoint[]> = {
 };
 
 const OfficeContainer: React.FC = () => {
+  const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -242,7 +245,11 @@ const OfficeContainer: React.FC = () => {
     ctx.translate(offset.x, offset.y);
 
     // Get the computed style of the canvas element
-    const themeElement = document.querySelector('.theme-sakuraTrees') || document.documentElement;
+    const themeElement = 
+      document.querySelector('.theme-sunsetCity') || 
+      document.querySelector('.theme-sakuraTrees') || 
+      document.querySelector('.theme-cyberSpace') || 
+      document.documentElement;
     const computedStyle = getComputedStyle(themeElement);
     const accentColor = computedStyle.getPropertyValue('--theme-doctorsoffice-accent').trim();
 
@@ -407,14 +414,31 @@ const OfficeContainer: React.FC = () => {
 
   const spriteSheetUrl = '/game-components/sprite-sheet.png'; // Update with the actual path
 
+  const handleHomeClick = () => {
+    router.push('/home');
+  };
+
   return (
     <div className="flex flex-col w-full h-full relative">
-      <div className="absolute top-2 right-2 z-10">
+      <div className="absolute top-2 right-2 z-10 flex flex-col gap-2">
         <ShoppingDialog
           imageGroups={imageGroups}
           visibleImages={visibleImages}
           toggleGroup={toggleGroup}
+          buttonContent={
+            <div className="flex items-center justify-start gap-2 w-full">
+              <ShoppingCart size={20} />
+              <span>Marketplace</span>
+            </div>
+          }
         />
+        <button
+          onClick={handleHomeClick}
+          className="flex items-center justify-start gap-2 px-4 py-2 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] text-[--theme-text-color] rounded-md hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors w-full"
+        >
+          <Home size={20} />
+          <span>Home</span>
+        </button>
       </div>
       <div ref={containerRef} className="flex-grow flex justify-center items-center">
         <div className="w-full h-full rounded-lg flex justify-center items-center overflow-hidden">

@@ -192,7 +192,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
                       <Image src="/game-components/PixelCupcake.png" alt="Diamond" layout="fill" objectFit="contain" />
                     </div>
                     <span className="text-[2vw] sm:text-xs mt-1">{reportData ? reportData.userScore : 'N/A'}</span>
-                    <span className="text-[2vw] sm:text-xs">cupcakes</span>
+                    <span className="text-[2vw] sm:text-xs">coins</span>
                   </div>
                   <div className="flex flex-col items-center w-1/4">
                     <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">

@@ -803,7 +803,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       {/* Main content area */}
       <div className="flex relative flex-grow overflow-hidden text-base">
         {currentPassage && (
-          <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto">
+          <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto standard-scrollbar">
             <div className="p-4 h-full">
             <PassageComponent
               ref={passageRef}
@@ -816,7 +816,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         )}
 
         <div className={`${currentPassage ? 'w-1/2' : 'w-full'} flex flex-col relative`}>
-          <div className="flex-grow overflow-auto">
+          <div className="flex-grow overflow-auto standard-scrollbar">
             {currentQuestion && currentTestQuestion ? (
               <>
                 {/* AI Chat toggle button with Cat icon */}
