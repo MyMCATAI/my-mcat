@@ -54,7 +54,7 @@
     "boom": "^7.3.0",
     "chart.js": "^4.4.3",
     "class-variance-authority": "^0.7.0",
-    "clerk": "^0.6.1",
+    "clerk": "^0.8.3",
     "clsx": "^2.1.1",
     "cookies-next": "^4.2.1",
     "crisp-sdk-web": "^1.0.21",
