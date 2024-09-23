@@ -13,7 +13,7 @@ const robotoSlab = Roboto_Slab({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'My MCAT',
-  description: 'Your Personal MCAT Success Companion',
+  description: 'MCAT Prep but make it cool.',
 }
 
 export default function RootLayout({
@@ -22,7 +22,6 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <>
     <ClerkProvider>
       <html lang="en">
         <head>
@@ -33,14 +32,15 @@ export default function RootLayout({
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"></meta>
         </head>
         <body className={robotoSlab.className}>
+          <div id="app-root">
             <ThemeInitializer />
             <ModalProvider />
             <ToasterProvider />
             {children}
             <Analytics />
+          </div>
         </body>
       </html>
     </ClerkProvider>
-    </>
   )
 }
