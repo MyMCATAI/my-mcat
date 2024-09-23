@@ -270,7 +270,7 @@ body.theme-sunsetCity * {
 
 .theme-sakuraTrees {
   /* Sakura Trees theme variables */
-  --theme-box-shadow: 0 0 8px 3px rgba(255, 0, 140, 0.7), inset 0 0 8px rgba(255, 174, 212, 0.659);
+  --theme-box-shadow: 0 0 8px 3px rgba(255, 0, 89, 0.7), inset 0 0 8px rgba(255, 129, 188, 0.659);
   --theme-interface-image: url('/sakura-pattern.png');
   --theme-mainbox-color: #ffedf6e6; /* Lighter, more transparent pink */
   --theme-gradient-start: #fce1ffd9;
@@ -294,7 +294,7 @@ body.theme-sunsetCity * {
 /* Add theme-specific gradients */
 .theme-sakuraTrees .gradientbg {
   background: rgba(255, 223, 236, 0.9);
-  background: linear-gradient(0deg, #fe93b7 0%, #f6b4ffd9 100%);
+  background: linear-gradient(0deg, #ffabd4d9 0%, #ddb4ffd9 100%);
 }
 
 /* Sunset City theme */
