@@ -177,7 +177,7 @@ const MethodologyAndTestimonials = () => {
                   {"Unlike every test prep company, we are a PBC. That means that we are legally required to benefit society and do so proudly. As long as test prep is unaffordable, our healthcare system will continue to be stratified with rich doctors serving mostly rich communities. And, so long as test prep is boring, students will be diiscouraged to try and break this paradigm."}
                 </p>
                 <p className="text-white text-lg mb-2">
-                  {"Test prep is expensive. Test prep is boring. Therefore, we proudly proclaim ourselves as 'anti test prep': affordable and engaging. Like Duolingo for the hardest test in the world. We're releasing our CARs suite first so you can get a head start and compete with peers nationwide for recognition and rewards."}
+                  {"Because test prep is expensive and boring, we proudly proclaim ourselves as 'anti test prep': affordable and engaging. We're releasing our CARs suite first so you can get a head start and compete with peers nationwide for recognition and rewards."}
                 </p>
                 <p className="text-white text-lg mb-2">
                   {"Our first beta results speak volumes: students averaged a 516, with a remarkable 15-point improvement — significantly outperforming traditional methods at a fraction of the cost."}
@@ -267,6 +267,30 @@ const MethodologyAndTestimonials = () => {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* New Product Feature Section */}
+      <section className="bg-[#00101e] py-8 relative" id="hardcore-gaming">
+        <div className="container mx-auto px-4">
+          <h2 className="text-5xl font-bold text-green-500 text-center mb-10 font-krungthep">
+            Hardcore Gaming Meets Test Prep
+          </h2>
+          <p className="text-white text-2xl mb-10 text-center max-w-2xl mx-auto">
+            Your performance in the suite directly leads to patient outcomes. Study for the MCAT and win coins to build and upgrade your clinic so you can treat patients, with motivating rewards and risks!
+          </p>
+          <div className="flex justify-center mb-24">
+            <video
+              className="w-full rounded-lg shadow-lg"
+              autoPlay
+              muted
+              loop
+              playsInline
+              src="/landingpage/GamificationVideo.mp4"
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
         </div>
       </section>
 
