@@ -22,7 +22,6 @@ interface PassageProps {
   userResponse?: UserResponse;
 }
 
-
 interface Annotation {
   style: string;
   text: string;
@@ -54,7 +53,6 @@ function applyAnnotations(editorState: EditorState, annotations: Annotation[]): 
 
   return EditorState.push(editorState, contentState, 'change-inline-style');
 }
-
 
 const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps>(
   ({ passageData, onNote, tempHighlightedStrings, userResponse }, ref) => {
@@ -316,7 +314,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
         <div className="sticky top-0 bg-white p-4 z-10">
           <h1 className="text-black font-serif text-1xl font-bold">{passageData.title}</h1>
         </div>
-        <div className="bg-[#ffffff] flex-grow overflow-auto p-4">
+        <div className="bg-[#ffffff] flex-grow overflow-auto p-4 standard-scrollbar">
           <div className="text-black" style={editorStyle}>
             <Editor
               editorState={editorState}

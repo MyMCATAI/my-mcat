@@ -35,6 +35,8 @@ const DashboardLayoutContent = ({
     const updateBackgroundImage = () => {
       if (theme === 'sakuraTrees') {
         setBackgroundImage('url(/sakuratreesbackground.png)');
+      } else if (theme === 'sunsetCity') {
+        setBackgroundImage('url(/sunsetcitybackground.png)');
       } else {
         setBackgroundImage('url(/vaporandnightbackground.png)');
       }

@@ -57,30 +57,65 @@ body :root {
   }
 }
 
-* {
+/* Theme-based scrollbar styles */
+body * {
   scrollbar-width: thin;
   scrollbar-color: var(--theme-hover-color) transparent;
 }
 
-/* For Webkit browsers like Chrome and Safari */
-::-webkit-scrollbar {
+body *::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--theme-hover-color);
+body *::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-::-webkit-scrollbar-thumb {
+body *::-webkit-scrollbar-thumb {
   background-color: var(--theme-hover-color);
   border-radius: 3px;
 }
 
-/* Optional: Style for horizontal scrollbars */
-::-webkit-scrollbar-thumb:horizontal {
+body *::-webkit-scrollbar-thumb:horizontal {
   background-color: var(--theme-hover-color);
   border-radius: 3px;
+}
+
+/* Standard scrollbar for specific components */
+#app-root .standard-scrollbar {
+  scrollbar-width: auto !important;
+  scrollbar-color: #888 #f1f1f1 !important;
+}
+
+#app-root .standard-scrollbar::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+#app-root .standard-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1 !important;
+}
+
+#app-root .standard-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #888 !important;
+  border-radius: 4px !important;
+}
+
+#app-root .standard-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #555 !important;
+}
+
+/* CyberSpace theme scrollbar */
+body.theme-cyberSpace * {
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: #3b82f6;
+}
+
+/* SunsetCity theme scrollbar */
+body.theme-sunsetCity * {
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: #ff6347;
 }
 
 @layer base {
@@ -261,7 +296,35 @@ body :root {
 /* Add theme-specific gradients */
 .theme-sakuraTrees .gradientbg {
   background: rgba(255, 197, 205, 0.9);
-  background: linear-gradient(0deg, hsla(318, 64%, 86%, 0.8) 0%, #fcc9e3e0 100%);
+  background: linear-gradient(0deg, #dca2c1 0%, #fed8f0 100%);
+}
+
+/* Sunset City theme */
+.theme-sunsetCity {
+  --theme-box-shadow: 0 0 10px 3px rgba(255, 99, 71, 0.5), inset 0 0 10px rgba(255, 99, 71, 0.3);
+  --theme-interface-image: url('/sunset-pattern.png');
+  --theme-mainbox-color: #2c1e4a;
+  --theme-gradient-start: rgba(44, 30, 74, 0.85);
+  --theme-gradient-end: rgba(74, 50, 124, 0.85);
+  --theme-gradient-startstreak: rgba(255, 99, 71, 0.5);
+  --theme-gradient-endstreak: rgba(255, 165, 0, 0.5);
+  --theme-text-color: #ffd1dc;
+  --theme-svg-color: #ffffff;
+  --theme-hover-color: #ff6347;
+  --theme-botchatbox-color: #3a2963;
+  --theme-userchatbox-color: #007afc;
+  --theme-hover-text: #2c1e4a;
+  --theme-border-color: #ff6347;
+  --theme-leaguecard-color: rgba(44, 30, 74, 1);
+  --theme-navbutton-color: #49327c;
+  --svg-invert: 0;
+  --theme-reddit-color: #3a2963;
+  --theme-doctorsoffice-accent: #3a2963;
+}
+
+.theme-sunsetCity .gradientbg {
+  background: rgba(44, 30, 74, 0.9);
+  background: linear-gradient(0deg, rgba(84, 58, 140, 0.85) 0%, #48307ad9 100%);
 }
 
 /* ... rest of your CSS ... */
@@ -311,6 +374,19 @@ body :root {
 
 .theme-sakuraTrees .theme-box:hover .theme-svg {
   filter: invert(0);
+}
+
+/* Sunset City theme */
+:root .theme-svg,
+.theme-cyberSpace .theme-svg,
+.theme-sunsetCity .theme-svg {
+  filter: invert(0);
+}
+
+:root .theme-box:hover .theme-svg,
+.theme-cyberSpace .theme-box:hover .theme-svg,
+.theme-sunsetCity .theme-box:hover .theme-svg {
+  filter: invert(1);
 }
 
 .theme-svg {

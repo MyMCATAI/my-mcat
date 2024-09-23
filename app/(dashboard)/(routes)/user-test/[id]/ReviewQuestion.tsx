@@ -160,7 +160,7 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
         </p>
       )}
 
-      <div className="mb-4 flex-grow overflow-auto">
+      <div className="mb-4 flex-grow overflow-auto standard-scrollbar">
         <h3 className="font-medium mb-2">{question.questionContent}</h3>
         <div className="mt-4">
         <TooltipProvider>
