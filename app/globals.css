@@ -268,35 +268,33 @@ body.theme-sunsetCity * {
   animation-delay: 600ms;
 }
 
-/* Sakura Trees theme */
 .theme-sakuraTrees {
   /* Sakura Trees theme variables */
-  --theme-box-shadow: 0 0 10px 3px rgba(113, 30, 95, 0.5), inset 0 0 10px rgba(127, 65, 99, 0.659);
+  --theme-box-shadow: 0 0 8px 3px rgba(255, 0, 140, 0.7), inset 0 0 8px rgba(255, 174, 212, 0.659);
   --theme-interface-image: url('/sakura-pattern.png');
-  --theme-mainbox-color: rgb(252, 245, 244); /* Light pink color for Sakura theme */
-  --theme-gradient-start: rgba(252, 224, 251, 0.85);
-  --theme-gradient-end: #fee4f4d9;
+  --theme-mainbox-color: #ffedf6e6; /* Lighter, more transparent pink */
+  --theme-gradient-start: #fce1ffd9;
+  --theme-gradient-end: #ffd2e1d9;
   --theme-gradient-startstreak: #b479ab;
   --theme-gradient-endstreak: #8e097cd9;
-  --theme-text-color: black;
-  --theme-svg-color: #000000; /* Black for SakuraTrees theme */
-  --theme-hover-color: #b973af;
-  --theme-botchatbox-color: #951d83;
-  --theme-userchatbox-color: #007afc;
+  --theme-text-color: #4a0e37; /* Darker pink for better contrast */
+  --theme-svg-color: #4a0e37; /* Matching text color */
+  --theme-hover-color: #b85475; /* Pale violet red */
+  --theme-botchatbox-color: rgba(219, 112, 147, 0.2); /* Transparent pale violet red */
+  --theme-userchatbox-color: rgba(255, 182, 193, 0.2); /* Transparent light pink */
   --theme-hover-text: #ffffff;
-  --theme-svg-color: #000000; /* Black for SakuraTrees theme */
-  --theme-border-color: #a20082; /* Light pink border color for Sakura theme */
-  --theme-leaguecard-color: rgba(255, 255, 255, 1); /* Changed from #ffffff to rgba */
-  --theme-navbutton-color: #85004b;
-  --svg-invert: 1;
-  --theme-reddit-color: #ffcdf6;
-  --theme-doctorsoffice-accent: #ddb0e4;
+  --theme-border-color: #b85475; /* Pale violet red */
+  --theme-leaguecard-color: #ffd2e1d9; /* Matching mainbox-color */
+  --theme-navbutton-color: #b85475; /* Pale violet red */
+  --svg-invert: 0; /* Changed to 0 to keep original SVG colors */
+  --theme-reddit-color: #ffc9f7da; /* Misty rose */
+  --theme-doctorsoffice-accent: #ffc1d8; /* Light pink */
 }
 
 /* Add theme-specific gradients */
 .theme-sakuraTrees .gradientbg {
-  background: rgba(255, 197, 205, 0.9);
-  background: linear-gradient(0deg, #dca2c1 0%, #fed8f0 100%);
+  background: rgba(255, 223, 236, 0.9);
+  background: linear-gradient(0deg, #fe93b7 0%, #f6b4ffd9 100%);
 }
 
 /* Sunset City theme */
@@ -338,14 +336,14 @@ body.theme-sunsetCity * {
   filter: invert(1);
 }
 
-/* Default state for SakuraTrees (invert) */
+/* Default state for SakuraTrees (no invert) */
 .theme-sakuraTrees .theme-svg {
-  filter: invert(1);
+  filter: invert(100%);
 }
 
-/* Hover state for SakuraTrees (no invert) */
+/* Hover state for SakuraTrees (invert) */
 .theme-sakuraTrees .theme-svg-container:hover .theme-svg {
-  --svg-invert: calc(1 - var(--svg-invert));
+  filter: invert(0%);
 }
 
 .theme-box:hover .theme-svg {
@@ -369,11 +367,16 @@ body.theme-sunsetCity * {
 
 /* SakuraTrees theme */
 .theme-sakuraTrees .theme-svg {
-  filter: invert(1);
+  filter: invert(100%);
 }
 
 .theme-sakuraTrees .theme-box:hover .theme-svg {
-  filter: invert(0);
+  filter: invert(0%) !important;
+}
+
+/* Ensure the default state is black for SakuraTrees */
+.theme-sakuraTrees .theme-svg {
+  filter: invert(100%) !important;
 }
 
 /* Sunset City theme */
