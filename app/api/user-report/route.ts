@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
       select: { score: true },
     });
 
-    // Fetch all user tests and their responses, ordered by startedAt date
+    // Fetch the last 10 user tests and their responses, ordered by startedAt date
     const userTests = await prisma.userTest.findMany({
       where: { 
         userId,
@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
       orderBy: {
         startedAt: 'desc' // Order by most recent first
       },
+      take: 10 // Limit to the last 10 tests
     });
 
     // Calculate the streak
@@ -97,8 +98,6 @@ export async function GET(req: NextRequest) {
       return acc;
     }, {} as Record<string, number>);
 
-
-    // todo update this to calc last 10 tests instead of all tests
     return NextResponse.json({
       userScore: userInfo?.score || 0,
       totalTestsTaken,
@@ -107,7 +106,7 @@ export async function GET(req: NextRequest) {
       totalQuestionsAnswered,
       averageTestScore,
       averageTimePerQuestion,
-      averageTimePerTest,
+      averageTimePerTest: averageTimePerTest, 
       categoryAccuracy: categoryAccuracyPercentages,
       streak,
     });
