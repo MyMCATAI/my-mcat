@@ -16,6 +16,7 @@ model UserInfo {
   apiCount  Int      @default(0)
   createdAt DateTime @default(now())
   score     Int      @default(0)
+  clinicRooms  String   @default("") // array string
 }
 
 model UserSubscription {

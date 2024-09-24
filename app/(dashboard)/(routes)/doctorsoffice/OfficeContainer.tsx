@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import SpriteWalking from './SpriteWalking';
 import ShoppingDialog from './ShoppingDialog';
 import { Home, ShoppingCart } from 'lucide-react';
+import { toast } from "react-hot-toast";
 
 // Define the Direction type at the top of the file
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
@@ -99,7 +100,7 @@ const OfficeContainer: React.FC = () => {
     { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 8},
   ]);
 
-  const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set(images.map(img => img.id)));
+  const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
   
   // Define offset as a constant instead of state
   const offset = {
@@ -323,7 +324,7 @@ const OfficeContainer: React.FC = () => {
         const adjustedPosX = Math.round(posX);
         const adjustedPosY = Math.round(posY - tileHeight / 4);
         
-        console.log(`Drawing sprite ${sprite.character} at (${sprite.x}, ${sprite.y}) facing ${sprite.direction}`);
+        // console.log(`Drawing sprite ${sprite.character} at (${sprite.x}, ${sprite.y}) facing ${sprite.direction}`);
         
         SpriteWalking.drawSprite(ctx, spriteSheetUrl, { x: adjustedPosX, y: adjustedPosY }, sprite.character, sprite.direction, scale);
       }
@@ -394,22 +395,106 @@ const OfficeContainer: React.FC = () => {
     },
   ];
 
-  const toggleGroup = (groupName: string) => {
+  const [userRooms, setUserRooms] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchUserRooms = async () => {
+      try {
+        const response = await fetch('/api/clinic', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user rooms');
+        }
+
+        const rooms = await response.json();
+        setUserRooms(rooms);
+        console.log('User rooms:', rooms);
+
+        // Update visibleImages based on fetched rooms
+        const newVisibleImages = new Set<string>();
+        rooms.forEach(roomName => {
+          const group = imageGroups.find(g => g.name === roomName);
+          if (group) {
+            group.items.forEach(item => newVisibleImages.add(item.id));
+          }
+        });
+        setVisibleImages(newVisibleImages);
+      } catch (error) {
+        console.error('Error fetching user rooms:', error);
+      }
+    };
+
+    fetchUserRooms();
+  }, []);
+
+  const toggleGroup = async (groupName: string) => {
     const group = imageGroups.find(g => g.name === groupName);
     if (!group) return;
 
     const allVisible = group.items.every(item => visibleImages.has(item.id));
-    setVisibleImages(prev => {
-      const newSet = new Set(prev);
-      group.items.forEach(item => {
-        if (allVisible) {
-          newSet.delete(item.id);
-        } else {
-          newSet.add(item.id);
+    
+    if (allVisible) {
+      // Remove room
+      try {
+        const response = await fetch('/api/clinic', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ room: groupName }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to remove clinic room');
         }
-      });
-      return newSet;
-    });
+
+        const updatedRooms = await response.json();
+        setUserRooms(updatedRooms);
+        
+        // Update visibleImages
+        setVisibleImages(prev => {
+          const newSet = new Set(prev);
+          group.items.forEach(item => newSet.delete(item.id));
+          return newSet;
+        });
+
+        toast.success(`Removed ${groupName} from your clinic!`);
+      } catch (error) {
+        console.error('Error removing clinic room:', error);
+        toast.error((error as Error).message || 'Failed to remove clinic room');
+      }
+    } else {
+      // Add room
+      try {
+        const response = await fetch('/api/clinic', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ room: groupName }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to update clinic rooms');
+        }
+
+        const updatedRooms = await response.json();
+        setUserRooms(updatedRooms);
+        
+        // Update visibleImages
+        setVisibleImages(prev => {
+          const newSet = new Set(prev);
+          group.items.forEach(item => newSet.add(item.id));
+          return newSet;
+        });
+
+        toast.success(`Added ${groupName} to your clinic!`);
+      } catch (error) {
+        console.error('Error updating clinic rooms:', error);
+        toast.error((error as Error).message || 'Failed to update clinic rooms');
+      }
+    }
   };
 
   const spriteSheetUrl = '/game-components/sprite-sheet.png'; // Update with the actual path
@@ -439,6 +524,14 @@ const OfficeContainer: React.FC = () => {
           <Home size={20} />
           <span>Home</span>
         </button>
+      </div>
+      <div className="absolute top-2 left-2 z-10 bg-[--theme-doctorsoffice-accent] p-2 rounded-md">
+        <h3 className="text-[--theme-text-color] font-bold mb-2">Your Rooms:</h3>
+        <ul className="text-[--theme-text-color] text-sm">
+          {userRooms.map((room, index) => (
+            <li key={index}>{room}</li>
+          ))}
+        </ul>
       </div>
       <div ref={containerRef} className="flex-grow flex justify-center items-center">
         <div className="w-full h-full rounded-lg flex justify-center items-center overflow-hidden">
