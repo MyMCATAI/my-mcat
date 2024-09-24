@@ -4,19 +4,21 @@ import { Input } from "@/components/ui/input";
 
 interface DailyDialogProps {
   isFirstVisit: boolean;
-  onClose: () => void;
+  onClose: (newClinicName?: string) => void;
+  clinicName: string | null;
 }
 
-const DailyDialog: React.FC<DailyDialogProps> = ({ isFirstVisit, onClose }) => {
+const DailyDialog: React.FC<DailyDialogProps> = ({ isFirstVisit, onClose, clinicName }) => {
   const [typedText, setTypedText] = useState('');
+  const [newClinicName, setNewClinicName] = useState(clinicName || '');
 
   const handleSubmit = () => {
-    onClose();
+    onClose(isFirstVisit ? newClinicName : undefined);
   };
 
-  const welcomeText = isFirstVisit ? "Welcome to Your Doctor's Office!" : "Welcome Back!";
+  const welcomeText = isFirstVisit ? "Welcome to Your Doctor's Office!" : `Welcome Back to ${clinicName}!`;
   const followUpText = isFirstVisit 
-    ? "This is where you'll manage your medical practice and interact with patients." 
+    ? "This is where you'll manage your medical practice and interact with patients. What would you like to name your clinic?" 
     : "Ready to start another day of practice?";
 
   useEffect(() => {
@@ -44,6 +46,15 @@ const DailyDialog: React.FC<DailyDialogProps> = ({ isFirstVisit, onClose }) => {
         <p className="mb-4 text-[--theme-text-color]">
           {typedText}
         </p>
+        {isFirstVisit && (
+          <Input
+            type="text"
+            placeholder="Enter clinic name"
+            value={newClinicName}
+            onChange={(e) => setNewClinicName(e.target.value)}
+            className="mb-4"
+          />
+        )}
         <Button onClick={handleSubmit} className="w-full bg-[--theme-doctorsoffice-accent] border-2 border-[--theme-border-color] text-[--theme-text-color] hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors">
           {isFirstVisit ? "Start My Practice" : "Begin Today's Session"}
         </Button>
