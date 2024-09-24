@@ -14,7 +14,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TestList from "./TestList";
 import { useUser } from "@clerk/nextjs";
 import dynamic from 'next/dynamic';
-import { motion } from "framer-motion";
 
 // Update the dynamic import
 const ChatBotWidgetNoChatBot = dynamic(
@@ -206,7 +205,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
 
     // Closing encouragement
     const closingMessages = [
-      "Let's gooooooo!",
+      "Yippee!",
       "I'm here to help you ace this test. Ready to rumble?",
       "Together, we'll rock your MCAT prep one step at a time.",
       "Remember, every bit of effort brings you closer to your goals.",
@@ -266,8 +265,10 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
                     <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
                       <Image src="/game-components/PixelWatch.png" alt="Watch" layout="fill" objectFit="contain" />
                     </div>
-                    <span className="text-[2vw] sm:text-xs mt-1">{reportData ? `${reportData.averageTimePerTest.toFixed(2)}s` : 'N/A'}</span>
-                    <span className="text-[2vw] sm:text-xs">avg time</span>
+                    <span className="text-[2vw] sm:text-xs mt-1">
+                      {reportData ? `${(reportData.averageTimePerTest / 60000).toFixed(2)} min` : 'N/A'}
+                    </span>
+                    <span className="text-[2vw] sm:text-xs">per passage</span>
                   </div>
                   <div className="flex flex-col items-center w-1/4">
                     <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">

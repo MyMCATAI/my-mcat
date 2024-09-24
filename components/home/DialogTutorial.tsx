@@ -39,7 +39,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-3xl translate-x-[-50%] translate-y-[-50%] gap-4 border-blue-500 p-6 text-center shadow-lg rounded-lg bg-gray-900/70 text-white max-h-[80vh] overflow-y-auto",
+        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-3xl translate-x-[-50%] translate-y-[-50%] gap-4 border-blue-500 p-6 text-center shadow-lg rounded-lg bg-white text-black max-h-[80vh] overflow-y-auto",
         "scrollbar-thin scrollbar-thumb-blue-500/30 scrollbar-track-transparent hover:scrollbar-thumb-blue-500/50",
         className
       )}
@@ -202,7 +202,7 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
         <div className="mt-4 flex justify-end space-x-2">
           <button
             onClick={() => onOpenChange(false)}
-            className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
           >
             Close
           </button>

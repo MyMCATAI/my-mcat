@@ -138,3 +138,4 @@ export interface ReportData {
   categoryAccuracy: Record<string, number>;
   streak: number;
 }
+

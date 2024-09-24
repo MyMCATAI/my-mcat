@@ -79,7 +79,7 @@ export async function POST(req: Request) {
 
     const userInfo = await prisma.userInfo.findUnique({
       where: { userId },
-      select: { clinicRooms: true, score: true }
+      select: { score: true, clinicRooms: true }
     });
 
     if (!userInfo) {
@@ -111,17 +111,21 @@ export async function POST(req: Request) {
     const updatedRooms = [...currentRooms, room];
     const updatedScore = userInfo.score - cost;
 
-    await prisma.userInfo.update({
+    const updatedUserInfo = await prisma.userInfo.update({
       where: { userId },
       data: { 
         clinicRooms: JSON.stringify(updatedRooms),
         score: updatedScore
-      }
+      },
+      select: { clinicRooms: true, score: true }
     });
 
     console.log('[CLINIC_ROOMS_POST] Updated rooms for user:', userId, 'New rooms:', updatedRooms, 'New score:', updatedScore);
 
-    return new NextResponse(JSON.stringify({ rooms: updatedRooms, score: updatedScore }), { 
+    return new NextResponse(JSON.stringify({ 
+      rooms: JSON.parse(updatedUserInfo.clinicRooms), 
+      score: updatedUserInfo.score 
+    }), { 
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
