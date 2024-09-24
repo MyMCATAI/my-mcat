@@ -69,7 +69,7 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({ onClose }) => {
     };
   }, []); // Changed dependency array to empty to run only once on mount
 
-  const renderStars = (score: number, reviewIndex: number) => {
+  const renderStars = (score: number, reviewIndex: number | string) => {
     return (
       <div className="flex">
         {[...Array(5)].map((_, i) => {
