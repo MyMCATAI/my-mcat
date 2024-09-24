@@ -2,9 +2,10 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import SpriteWalking from './SpriteWalking';
 import ShoppingDialog, { ImageGroup } from './ShoppingDialog';
-import { Home, ShoppingCart } from 'lucide-react';
+import { Home, ShoppingCart, Calendar } from 'lucide-react';
 import { toast } from "react-hot-toast";
-
+import DailyDialog from './DailyDialog';
+import ScoreRandomizer from './ScoreRandomizer';
 // Define the Direction type at the top of the file
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 
@@ -379,7 +380,7 @@ const OfficeContainer: React.FC = () => {
       cost: 20
     },
     {
-      name: "Additional MRI",
+      name: "Imaging Suite",
       items: [
         { id: 'MRIMachine1', src: '/game-components/MRIMachine.png' },
       ],
@@ -553,8 +554,53 @@ const OfficeContainer: React.FC = () => {
     router.push('/home');
   };
 
+  const [showDailyDialog, setShowDailyDialog] = useState(false);
+  const [isFirstVisit, setIsFirstVisit] = useState(false);
+  const [clinicName, setClinicName] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check if it's the first visit or if it's a new day
+    const lastVisit = localStorage.getItem('lastVisit');
+    const today = new Date().toDateString();
+
+    if (!lastVisit) {
+      setIsFirstVisit(true);
+      setShowDailyDialog(true);
+    } else if (lastVisit !== today) {
+      setShowDailyDialog(true);
+    }
+
+    // Load clinic name from localStorage
+    const savedClinicName = localStorage.getItem('clinicName');
+    if (savedClinicName) {
+      setClinicName(savedClinicName);
+    }
+  }, []);
+
+  const handleDailyDialogClose = (newClinicName?: string) => {
+    if (newClinicName) {
+      setClinicName(newClinicName);
+      localStorage.setItem('clinicName', newClinicName);
+    }
+    setShowDailyDialog(false);
+    localStorage.setItem('lastVisit', new Date().toDateString());
+  };
+
+  // Add new state to control the ScoreRandomizer dialog visibility
+  const [showScoreRandomizer, setShowScoreRandomizer] = useState(false);
+
   return (
     <div className="flex flex-col w-full h-full relative">
+      {showDailyDialog && (
+        <DailyDialog 
+          isFirstVisit={isFirstVisit} 
+          onClose={handleDailyDialogClose} 
+          clinicName={clinicName}
+        />
+      )}
+      <div className="absolute top-2 left-2 z-10 text-xl font-bold text-[--theme-text-color]">
+        {clinicName && `${clinicName} Medical Center`}
+      </div>
       <div className="absolute top-2 right-2 z-10 flex flex-col gap-2">
         <ShoppingDialog
           imageGroups={imageGroups}
@@ -574,6 +620,21 @@ const OfficeContainer: React.FC = () => {
         >
           <Home size={20} />
           <span>Home</span>
+        </button>
+        {/* Add new button to activate DailyDialog */}
+        <button
+          onClick={() => setShowDailyDialog(true)}
+          className="flex items-center justify-start gap-2 px-4 py-2 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] text-[--theme-text-color] rounded-md hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors w-full"
+        >
+          <Calendar size={20} />
+          <span>Daily Tasks</span>
+        </button>
+        {/* New button to activate ScoreRandomizer */}
+        <button
+          onClick={() => setShowScoreRandomizer(true)}
+          className="flex items-center justify-start gap-2 px-4 py-2 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] text-[--theme-text-color] rounded-md hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors w-full"
+        >
+          <span>Get Reviews</span>
         </button>
       </div>
       <div className="absolute top-2 left-2 z-10 bg-[--theme-doctorsoffice-accent] p-2 rounded-md w-80">
@@ -598,6 +659,10 @@ const OfficeContainer: React.FC = () => {
           />
         </div>
       </div>
+      {/* Render the ScoreRandomizer dialog when showScoreRandomizer is true */}
+      {showScoreRandomizer && (
+        <ScoreRandomizer onClose={() => setShowScoreRandomizer(false)} />
+      )}
     </div>
   );
 };
