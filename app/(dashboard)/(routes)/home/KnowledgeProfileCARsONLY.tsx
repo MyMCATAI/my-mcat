@@ -70,6 +70,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
       { id: "pP8dWURrEF0", title: "RWT Video 5" },
       { id: "8Xjpu-qJK74", title: "RWT Video 6" },
       { id: "dPvWRYPadFg", title: "RWT Video 7" },
+      { id: "XlcrKfaJBRM", title: "RBT Video 9" },
     ],
     CMP: [
       { id: "srInq08DTCw", title: "CMP Video 1" },
