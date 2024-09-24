@@ -2,8 +2,29 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
-import { updateUserInfo } from "@/lib/user-info";
+import { updateUserInfo, getUserInfo } from "@/lib/user-info";
 import { incrementUserScore } from "@/lib/user-info";
+
+export async function GET() {
+  try {
+    const { userId } = auth();
+    
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const userInfo = await getUserInfo();
+
+    if (!userInfo) {
+      return new NextResponse("User info not found", { status: 404 });
+    }
+
+    return NextResponse.json(userInfo);
+  } catch (error) {
+    console.log('[USER_INFO_GET]', error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -24,7 +45,6 @@ export async function POST(req: Request) {
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
-
 
 export async function PUT(req: Request) {
   try {

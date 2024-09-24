@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ShoppingCart } from 'lucide-react'; // Import the ShoppingCart icon
+import { ShoppingCart, Coins } from 'lucide-react'; // Import the ShoppingCart and Coins icons
 import Image from 'next/image';
 
 interface ImageItem {
@@ -9,9 +9,10 @@ interface ImageItem {
   src: string;
 }
 
-interface ImageGroup {
+export interface ImageGroup {
   name: string;
   items: ImageItem[];
+  cost: number;
 }
 
 interface ShoppingDialogProps {
@@ -19,9 +20,10 @@ interface ShoppingDialogProps {
   visibleImages: Set<string>;
   toggleGroup: (groupName: string) => void;
   buttonContent?: React.ReactNode;
+  userScore: number;
 }
 
-const ShoppingDialog: React.FC<ShoppingDialogProps> = ({ imageGroups, visibleImages, toggleGroup, buttonContent }) => {
+const ShoppingDialog: React.FC<ShoppingDialogProps> = ({ imageGroups, visibleImages, toggleGroup, buttonContent, userScore }) => {
   const [hoveredImage, setHoveredImage] = useState<string | null>(null);
 
   return (
@@ -47,7 +49,10 @@ const ShoppingDialog: React.FC<ShoppingDialogProps> = ({ imageGroups, visibleIma
                 <button
                   key={group.name}
                   onClick={() => toggleGroup(group.name)}
-                  onMouseEnter={() => setHoveredImage(group.items[0].src)}
+                  onMouseEnter={() => {
+                    setHoveredImage(group.items[0].src);
+                    console.log('Group Name:', group.name, 'Src:', group.items[0].src);
+                  }}
                   onMouseLeave={() => setHoveredImage(null)}
                   className={`px-4 py-2 rounded-md w-full text-left transition-colors ${
                     group.items.every(item => visibleImages.has(item.id))
@@ -55,7 +60,10 @@ const ShoppingDialog: React.FC<ShoppingDialogProps> = ({ imageGroups, visibleIma
                       : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                   }`}
                 >
-                  {group.name}
+                  <div className="flex justify-between items-center">
+                    <span>{group.name}</span>
+                    <span className="text-sm font-semibold">${group.cost}</span>
+                  </div>
                 </button>
               ))}
             </div>
@@ -73,6 +81,12 @@ const ShoppingDialog: React.FC<ShoppingDialogProps> = ({ imageGroups, visibleIma
             )}
           </div>
         </div>
+        <DialogFooter>
+          <div className="flex items-center justify-end w-full text-black">
+            <Coins size={20} className="mr-2" />
+            <span>Coins: {userScore}</span>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
