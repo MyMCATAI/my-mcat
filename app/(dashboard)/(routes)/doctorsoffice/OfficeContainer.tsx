@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import SpriteWalking from './SpriteWalking';
-import ShoppingDialog from './ShoppingDialog';
+import ShoppingDialog, { ImageGroup } from './ShoppingDialog';
 import { Home, ShoppingCart } from 'lucide-react';
 import { toast } from "react-hot-toast";
 
@@ -43,12 +43,6 @@ type Waypoint = {
   y: number;
   direction: Direction;
 };
-
-// Define the ImageGroup interface
-interface ImageGroup {
-  name: string;
-  items: { id: string; src: string }[];
-}
 
 // Modify the spriteWaypoints to include directions
 const spriteWaypoints: Record<string, Waypoint[]> = {
@@ -355,7 +349,8 @@ const OfficeContainer: React.FC = () => {
         { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png' },
         { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png' },
         { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png' },
-      ]
+      ],
+      cost: 5
     },
     {
       name: "Examination and Bathrooms",
@@ -363,14 +358,16 @@ const OfficeContainer: React.FC = () => {
         { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png' },
         { id: 'Bathroom1', src: '/game-components/Bathroom1.png' },
         { id: 'Bathroom2', src: '/game-components/Bathroom1.png' },
-      ]
+      ],
+      cost: 10
     },
     {
       name: "High Care Rooms",
       items: [
         { id: 'HighCare1', src: '/game-components/HighCare1.png' },
         { id: 'HighCare2', src: '/game-components/HighCare1.png' },
-      ]
+      ],
+      cost: 15
     },
     {
       name: "Operating Suite",
@@ -378,26 +375,51 @@ const OfficeContainer: React.FC = () => {
         { id: 'OperatingRoom1', src: '/game-components/OperatingRoom1.png' },
         { id: 'MedicalCloset1', src: '/game-components/MedicalCloset1.png' },
         { id: 'MRIMachine2', src: '/game-components/MRIMachine.png' },
-      ]
+      ],
+      cost: 20
     },
     {
       name: "Additional MRI",
       items: [
         { id: 'MRIMachine1', src: '/game-components/MRIMachine.png' },
-      ]
+      ],
+      cost: 25
     },
     {
       name: "CAT-Scan Suite",
       items: [
         { id: 'CATScan1', src: '/game-components/CATScan1.png' },
         { id: 'CATScan2', src: '/game-components/CATScan1.png' },
-      ]
+      ],
+      cost: 30
     },
   ];
 
   const [userRooms, setUserRooms] = useState<string[]>([]);
+  const [userScore, setUserScore] = useState(0);
 
   useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch('/api/user-info', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user info');
+        }
+
+        const userInfo = await response.json();
+        setUserScore(userInfo.score || 0);
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+        toast.error('Failed to fetch user info');
+      }
+    };
+
+    fetchUserInfo();
+
     const fetchUserRooms = async () => {
       try {
         const response = await fetch('/api/clinic', {
@@ -415,7 +437,7 @@ const OfficeContainer: React.FC = () => {
 
         // Update visibleImages based on fetched rooms
         const newVisibleImages = new Set<string>();
-        rooms.forEach(roomName => {
+        rooms.forEach((roomName: string) => {
           const group = imageGroups.find(g => g.name === roomName);
           if (group) {
             group.items.forEach(item => newVisibleImages.add(item.id));
@@ -429,7 +451,6 @@ const OfficeContainer: React.FC = () => {
 
     fetchUserRooms();
   }, []);
-
   const toggleGroup = async (groupName: string) => {
     const group = imageGroups.find(g => g.name === groupName);
     if (!group) return;
@@ -439,6 +460,15 @@ const OfficeContainer: React.FC = () => {
     if (allVisible) {
       // Remove room
       try {
+        // Optimistically update the UI
+        const optimisticRooms = userRooms.filter(room => room !== groupName);
+        setUserRooms(optimisticRooms);
+        setVisibleImages(prev => {
+          const newSet = new Set(prev);
+          group.items.forEach(item => newSet.delete(item.id));
+          return newSet;
+        });
+
         const response = await fetch('/api/clinic', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
@@ -450,28 +480,45 @@ const OfficeContainer: React.FC = () => {
           throw new Error(errorData.error || 'Failed to remove clinic room');
         }
 
-        const updatedRooms = await response.json();
+        const { rooms: updatedRooms } = await response.json();
         setUserRooms(updatedRooms);
-        
-        // Update visibleImages
-        setVisibleImages(prev => {
-          const newSet = new Set(prev);
-          group.items.forEach(item => newSet.delete(item.id));
-          return newSet;
-        });
 
         toast.success(`Removed ${groupName} from your clinic!`);
       } catch (error) {
         console.error('Error removing clinic room:', error);
         toast.error((error as Error).message || 'Failed to remove clinic room');
+        
+        // Revert optimistic updates
+        setUserRooms(userRooms);
+        setVisibleImages(prev => {
+          const newSet = new Set(prev);
+          group.items.forEach(item => newSet.add(item.id));
+          return newSet;
+        });
       }
     } else {
       // Add room
+      if (userScore < group.cost) {
+        toast.error(`Insufficient funds. You need ${group.cost} coins to buy ${groupName}.`);
+        return;
+      }
+
+      // Optimistically update the UI
+      const optimisticUserScore = userScore - group.cost;
+      setUserScore(optimisticUserScore);
+      const optimisticRooms = [...userRooms, groupName];
+      setUserRooms(optimisticRooms);
+      setVisibleImages(prev => {
+        const newSet = new Set(prev);
+        group.items.forEach(item => newSet.add(item.id));
+        return newSet;
+      });
+
       try {
         const response = await fetch('/api/clinic', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ room: groupName }),
+          body: JSON.stringify({ room: groupName, cost: group.cost }),
         });
 
         if (!response.ok) {
@@ -479,20 +526,23 @@ const OfficeContainer: React.FC = () => {
           throw new Error(errorData.error || 'Failed to update clinic rooms');
         }
 
-        const updatedRooms = await response.json();
+        const { rooms: updatedRooms, score: updatedScore } = await response.json();
         setUserRooms(updatedRooms);
-        
-        // Update visibleImages
-        setVisibleImages(prev => {
-          const newSet = new Set(prev);
-          group.items.forEach(item => newSet.add(item.id));
-          return newSet;
-        });
+        setUserScore(updatedScore);
 
         toast.success(`Added ${groupName} to your clinic!`);
       } catch (error) {
         console.error('Error updating clinic rooms:', error);
         toast.error((error as Error).message || 'Failed to update clinic rooms');
+        
+        // Revert optimistic updates
+        setUserScore(userScore);
+        setUserRooms(userRooms);
+        setVisibleImages(prev => {
+          const newSet = new Set(prev);
+          group.items.forEach(item => newSet.delete(item.id));
+          return newSet;
+        });
       }
     }
   };
@@ -510,6 +560,7 @@ const OfficeContainer: React.FC = () => {
           imageGroups={imageGroups}
           visibleImages={visibleImages}
           toggleGroup={toggleGroup}
+          userScore={userScore}
           buttonContent={
             <div className="flex items-center justify-start gap-2 w-full">
               <ShoppingCart size={20} />
@@ -525,13 +576,14 @@ const OfficeContainer: React.FC = () => {
           <span>Home</span>
         </button>
       </div>
-      <div className="absolute top-2 left-2 z-10 bg-[--theme-doctorsoffice-accent] p-2 rounded-md">
+      <div className="absolute top-2 left-2 z-10 bg-[--theme-doctorsoffice-accent] p-2 rounded-md w-80">
         <h3 className="text-[--theme-text-color] font-bold mb-2">Your Rooms:</h3>
         <ul className="text-[--theme-text-color] text-sm">
           {userRooms.map((room, index) => (
             <li key={index}>{room}</li>
           ))}
         </ul>
+        <p className="text-[--theme-text-color] mt-2">Coins: {userScore}</p>
       </div>
       <div ref={containerRef} className="flex-grow flex justify-center items-center">
         <div className="w-full h-full rounded-lg flex justify-center items-center overflow-hidden">
