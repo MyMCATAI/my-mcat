@@ -10,6 +10,7 @@ import { FetchedActivity, Test } from "@/types";
 import TestingSuit from "./TestingSuit";
 import { toast } from "@/components/ui/use-toast";
 import ThemeSwitcher from '@/components/home/ThemeSwitcher';
+import { getUserInfo } from "@/lib/user-info";
 
 const FlashcardDeck = dynamic(() => import('./FlashcardDeck'), { ssr: false });
 
@@ -47,14 +48,15 @@ const Page = () => {
   const [showDiagnosticTest, setShowDiagnosticTest] = useState(false);
   const [diagnosticTestId, setDiagnosticTestId] = useState<string | null>(null);
   const [chatbotContext, setChatbotContext] = useState<{ contentTitle: string; context: string } | null>(null);
+  const [userInfo, setUserInfo] = useState<any>(null);
   
   useEffect(() => {
     const initializePage = async () => {
       await fetchActivities();
       fetchTests(true);
       const proStatus = await checkProStatus();
-      setIsPro(proStatus); // if not pro, then dont let user see other features
-      // note, this is semi jank right now and doesn't actually disable these features, just covers them. will want to make this more robust
+      setIsPro(proStatus);
+      await fetchUserInfo();
     };
 
     initializePage();
@@ -210,6 +212,42 @@ const Page = () => {
     } catch (error) {
       console.error('Error in handleShowDiagnosticTest:', error);
       // Handle the error appropriately (e.g., show an error message to the user)
+    }
+  };
+
+  const fetchUserInfo = async () => {
+    try {
+      const response = await fetch("/api/user-info");
+      if (response.status === 404) {
+        // User info not found, create a new one
+        const currentDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+        const createResponse = await fetch("/api/user-info", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ bio: `I love the MCAT and started my learning journey on ${currentDate}` }),
+        });
+        if (createResponse.ok) {
+          const newUserInfo = await createResponse.json();
+          setUserInfo(newUserInfo);
+        } else {
+          throw new Error("Failed to create user info");
+        }
+      } else if (response.ok) {
+        const userInfo = await response.json();
+        setUserInfo(userInfo);
+      } else {
+        throw new Error("Failed to fetch user info");
+      }
+    } catch (error) {
+      console.error("Error fetching/creating user info:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch or create user info. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
   };
 
