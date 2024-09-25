@@ -3,9 +3,12 @@
 import React, { useState, useRef } from "react";
 import clsx from "clsx";
 import Image from "next/image";
+import { useRouter } from 'next/navigation';
 
 interface FloatingButtonProps {
   onTabChange: (tab: string) => void;
+  currentPage: 'home' | 'doctorsoffice';
+  initialTab: string; // Add this new prop
 }
 
 interface ButtonPosition {
@@ -15,10 +18,11 @@ interface ButtonPosition {
   icon: string;
 }
 
-const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange }) => {
+const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPage, initialTab }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("Schedule");
+  const [activeTab, setActiveTab] = useState<string>(initialTab); // Use initialTab here
   const hoverTimeout = useRef<number | null>(null);
+  const router = useRouter();
 
   const handleMouseEnter = () => {
     if (hoverTimeout.current) {
@@ -35,20 +39,31 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange }) => {
 
   const buttonPositions: ButtonPosition[] = [
     { top: 0, left: 0, tab: "Schedule", icon: "/calendar.svg" },
-    { top: 0, left: 0, tab: "flashcards", icon: "/cards.svg" },
+    { top: 0, left: 0, tab: "doctorsoffice", icon: "/gamecontroller.svg" },
     { top: 0, left: 0, tab: "test", icon: "/book.svg" },
     { top: 0, left: 0, tab: "KnowledgeProfile", icon: "/graduationcap.svg" },
   ];
 
   const inactivePositions = [
-    { top: -65, left: 10 },
-    { top: -35, left: 75 },
-    { top: 30, left: 85 },
+    { top: -70, left: 10 },
+    { top: -40, left: 80 },
+    { top: 30, left: 100 },
   ];
 
   const handleButtonClick = (tab: string) => {
-    setActiveTab(tab);
-    onTabChange(tab);
+    if (tab === 'doctorsoffice') {
+      if (currentPage === 'home') {
+        router.push('/doctorsoffice');
+      } else {
+        router.push('/home');
+      }
+    } else {
+      if (currentPage === 'doctorsoffice') {
+        router.push('/home');
+      }
+      setActiveTab(tab);
+      onTabChange(tab);
+    }
   };
 
   return (
@@ -56,7 +71,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange }) => {
       {isHovered && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
       )}
-      <span className="fixed bottom-[150px] left-[10px] z-50">
+      <span className="fixed bottom-[8rem] left-[0.625rem] z-50">
         <div
           className="relative group"
           onMouseEnter={handleMouseEnter}
@@ -86,9 +101,9 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange }) => {
               <button
                 key={index}
                 className={clsx(
-                  "w-14 h-14 bg-[var(--theme-navbutton-color)] border border-white text-white rounded-full shadow-lg focus:outline-none transition-all transform hover:scale-110 absolute flex justify-center items-center",
+                  "w-16 h-16 bg-[var(--theme-navbutton-color)] border-2 border-white text-white rounded-full shadow-lg focus:outline-none transition-all transform hover:scale-110 absolute flex justify-center items-center",
                   {
-                    "w-20 h-20": isActive,
+                    "w-24 h-24": isActive,
                     "opacity-100": isHovered || isActive,
                     "opacity-0 pointer-events-none": !isHovered && !isActive,
                   }
@@ -101,7 +116,12 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange }) => {
                 }}
                 onClick={() => handleButtonClick(pos.tab)}
               >
-                <Image src={pos.icon} alt={pos.tab} width={30} height={30} />
+                <Image 
+                  src={pos.icon} 
+                  alt={pos.tab} 
+                  width={isActive ? 44 : 32} 
+                  height={isActive ? 44 : 32} 
+                />
               </button>
             );
           })}

@@ -10,6 +10,7 @@ import { FetchedActivity, Test } from "@/types";
 import TestingSuit from "./TestingSuit";
 import { toast } from "@/components/ui/use-toast";
 import ThemeSwitcher from '@/components/home/ThemeSwitcher';
+import { useSearchParams } from 'next/navigation';
 import { getUserInfo } from "@/lib/user-info";
 
 const FlashcardDeck = dynamic(() => import('./FlashcardDeck'), { ssr: false });
@@ -31,7 +32,9 @@ interface HandleShowDiagnosticTestParams {
 }
 
 const Page = () => {
-  const [activeTab, setActiveTab] = useState("test");
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'test';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [isPro, setIsPro] = useState(false);
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -365,7 +368,11 @@ const Page = () => {
             <div className="p-3 gradientbg overflow-auto h-[calc(100vh-5rem)] rounded-lg">
               {renderContent()}
             </div>
-            <FloatingButton onTabChange={setActiveTab} />
+            <FloatingButton 
+              onTabChange={setActiveTab} 
+              currentPage="home"
+              initialTab={activeTab}
+            />
           </div>
         </div>
         <div className="w-1/4">

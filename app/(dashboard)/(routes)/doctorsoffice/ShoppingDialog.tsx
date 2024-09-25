@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ShoppingCart, Coins } from 'lucide-react'; // Import the ShoppingCart and Coins icons
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
 
 interface ImageItem {
@@ -13,9 +19,10 @@ export interface ImageGroup {
   name: string;
   items: ImageItem[];
   cost: number;
+  benefits: string[];
 }
 
-interface ShoppingDialogProps {
+interface ShoppingDistrictProps {
   imageGroups: ImageGroup[];
   visibleImages: Set<string>;
   toggleGroup: (groupName: string) => void;
@@ -23,19 +30,55 @@ interface ShoppingDialogProps {
   userScore: number;
 }
 
-const ShoppingDialog: React.FC<ShoppingDialogProps> = ({ imageGroups, visibleImages, toggleGroup, buttonContent, userScore }) => {
-  const [hoveredImage, setHoveredImage] = useState<string | null>(null);
+const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
+  imageGroups,
+  visibleImages,
+  toggleGroup,
+  buttonContent,
+  userScore,
+}) => {
+  const [hoveredLevel, setHoveredLevel] = useState<number | null>(null);
+  const [showMessageForm, setShowMessageForm] = useState(false);
+  const [messageForm, setMessageForm] = useState({ name: '', email: '', message: '' });
 
-  const handleGroupClick = (group: ImageGroup) => {
-    if (!group.items.every(item => visibleImages.has(item.id))) {
+  const levelInfo = [
+    { level: 1, title: "INTERN LEVEL", image: "/game-components/INTERNLEVEL.png", cost: 5 },
+    { level: 2, title: "RESIDENT LEVEL", image: "/game-components/RESIDENTLEVEL.png", cost: 15 },
+    { level: 3, title: "FELLOWSHIP LEVEL", image: "/game-components/FELLOWSHIPLEVEL.png", cost: 25 },
+    { level: 4, title: "ATTENDING LEVEL", image: "/game-components/ATTENDINGLEVEL.png", cost: 35 },
+    { level: 5, title: "PHYSICIAN LEVEL", image: "/game-components/PHYSICIANLEVEL.png", cost: 60 },
+    { level: 6, title: "MEDICAL DIRECTOR LEVEL", image: "/game-components/MEDICALDIRECTORLEVEL.png", cost: 80 },
+  ];
+
+  const additionalItems = [
+    { name: "Team Vacation", cost: 1, benefits: ["Can take a break tomorrow and save your streak."] },
+    { name: "Free Clinic Day", cost: 5, benefits: ["Treat 50 patients", "Double your chances of a 5 star review!"] },
+    { name: "University Sponsorship", cost: 20, benefits: ["2x Boost Your Value for University in a Day"] },
+  ];
+
+  const handleLevelClick = (level: number) => {
+    const group = imageGroups.find(g => g.cost === levelInfo[level - 1].cost);
+    if (group) {
       toggleGroup(group.name);
     }
+  };
+
+  const handleAdditionalItemClick = (itemName: string) => {
+    toggleGroup(itemName);
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle sending the message here
+    console.log('Message sent:', messageForm);
+    setShowMessageForm(false);
+    setMessageForm({ name: '', email: '', message: '' });
   };
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button className="flex items-center justify-start gap-2 px-4 py-2 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] text-white rounded-md hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors w-full">
+        <button className="flex items-center justify-start gap-2 px-4 py-2 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] text-[--theme-text-color] rounded-md hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors w-full">
           {buttonContent || (
             <>
               <ShoppingCart size={20} />
@@ -44,64 +87,153 @@ const ShoppingDialog: React.FC<ShoppingDialogProps> = ({ imageGroups, visibleIma
           )}
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] bg-transparent border border-[--theme-border-color]">
-        <DialogHeader className="mb-6"> {/* Added margin-bottom */}
-          <DialogTitle className="text-[--theme-text-color] text-center items-center justify-center rounded-md">Marketplace</DialogTitle>
-        </DialogHeader>
-        <div className="flex">
-          <ScrollArea className="h-[350px] w-1/2 pr-4"> {/* Reduced height from 400px to 350px */}
-            <div className="flex flex-col gap-2">
-              {imageGroups.map((group) => {
-                const isPurchased = group.items.every(item => visibleImages.has(item.id));
-                return (
-                  <button
-                    key={group.name}
-                    onClick={() => handleGroupClick(group)}
-                    onMouseEnter={() => {
-                      setHoveredImage(group.items[0].src);
-                      console.log('Group Name:', group.name, 'Src:', group.items[0].src);
-                    }}
-                    onMouseLeave={() => setHoveredImage(null)}
-                    className={`px-4 py-2 rounded-md w-full text-left transition-colors ${
-                      isPurchased
-                        ? "bg-[--theme-hover-color] text-[--theme-hover-text] cursor-default"
-                        : "bg-gray-600 text-gray-300 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
-                    }`}
-                    disabled={isPurchased}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span>{group.name}</span>
-                      <span className="text-sm font-semibold">
-                        {isPurchased ? "Purchased" : `$${group.cost}`}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
+      <DialogContent className="max-w-[80vw] h-[80vh] bg-[--theme-doctorsoffice-accent] border text-[--theme-text-color] border-[--theme-border-color] flex flex-col">
+        <DialogHeader className="mb-2">
+          <DialogTitle className="text-[--theme-hover-text] text-center items-center justify-center rounded-md bg-[--theme-hover-color] p-2 flex">
+            <div className="flex items-center mr-4">
+              <Image
+                src="/game-components/PixelCupcake.png"
+                alt="Cupcake Coin"
+                width={24}
+                height={24}
+                className="mr-2"
+              />
+              <span>{userScore}</span>
             </div>
-          </ScrollArea>
-          <div className="w-1/2 pl-4 flex items-center justify-center">
-            {hoveredImage && (
-              <div className="relative w-full h-[250px]"> {/* Reduced height from 300px to 250px */}
-                <Image
-                  src={hoveredImage}
-                  alt="Hovered image"
-                  layout="fill"
-                  objectFit="contain"
-                />
+            <span className="flex-grow">Marketplace</span>
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex-grow flex">
+          <div className="w-2/3 pr-2">
+            <ScrollArea className="h-[calc(80vh-120px)] overflow-visible">
+              <div className="grid grid-cols-2 gap-2 p-1">
+                {levelInfo.map(({ level, title, image, cost }, index) => {
+                  const group = imageGroups.find(g => g.cost === cost);
+                  const isPurchased = group ? group.items.every((item) => visibleImages.has(item.id)) : false;
+
+                  return (
+                    <div
+                      key={title}
+                      onClick={() => handleLevelClick(level)}
+                      onMouseEnter={() => setHoveredLevel(level)}
+                      onMouseLeave={() => setHoveredLevel(null)}
+                      className="relative cursor-pointer transition-all duration-200 aspect-[4/3] group w-full"
+                    >
+                      <div className={`absolute inset-0 transition-all duration-200 
+                        ${isPurchased ? 'opacity-100' : 'opacity-100'}
+                        border border-[--theme-border-color] rounded-md overflow-hidden
+                        ${hoveredLevel === level ? 'bg-[--theme-hover-color]' : 'bg-[--theme-leaguecard-color]'}`}>
+                        <div className="absolute top-0 left-0 right-0 bg-black bg-opacity-50 p-1 text-white flex justify-between items-center z-10">
+                          <div>
+                            <div className="text-xs font-krungthep">LEVEL {level}</div>
+                            <div className="text-sm font-krungthep">{title}</div>
+                          </div>
+                          <div className="text-sm font-krungthep">{cost} Coins</div>
+                        </div>
+                        <div className={`absolute inset-0 transition-opacity duration-200 ${hoveredLevel === level ? 'opacity-10' : 'opacity-100'}`}>
+                          <Image
+                            src={image}
+                            alt={title}
+                            layout="fill"
+                            objectFit="contain"
+                            className="rounded-md"
+                          />
+                        </div>
+                        {hoveredLevel === level && group && (
+                          <div className="absolute inset-0 flex items-center justify-center p-4">
+                            <ul className="list-disc text-[--theme-hover-text]">
+                              {group.benefits.map((benefit, index) => (
+                                <li key={index} className="text-sm">{benefit}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {isPurchased && (
+                          <div className="absolute inset-0 bg-green-500 bg-opacity-50 flex items-center justify-center">
+                            <div className="text-white text-2xl font-bold">Purchased</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
+            </ScrollArea>
+          </div>
+          <div className="w-1/3 flex flex-col">
+            <div className="flex-grow bg-[--theme-leaguecard-color] p-2 rounded-md mb-2 flex flex-col">
+              <h3 className="text-lg font-semibold mb-2">Additional Items</h3>
+              <ScrollArea className="flex-grow mb-2">
+                {additionalItems.map((item, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleAdditionalItemClick(item.name)}
+                    className="mb-2 p-2 bg-[--theme-doctorsoffice-accent] rounded-md cursor-pointer hover:bg-[--theme-hover-color] transition-colors"
+                  >
+                    <h4 className="font-semibold">{item.name}</h4>
+                    <p className="text-sm">Cost: {item.cost} Coins</p>
+                    <ul className="list-disc pl-4 text-sm">
+                      {item.benefits.map((benefit, benefitIndex) => (
+                        <li key={benefitIndex}>{benefit}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </ScrollArea>
+              {!showMessageForm ? (
+                <button 
+                  onClick={() => setShowMessageForm(true)}
+                  className="w-full py-2 px-4 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded-md hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-opacity mt-auto"
+                >
+                  Send a quick message
+                </button>
+              ) : (
+                <form onSubmit={handleSendMessage} className="mt-auto">
+                  <input
+                    type="text"
+                    placeholder="Name (optional)"
+                    value={messageForm.name}
+                    onChange={(e) => setMessageForm({...messageForm, name: e.target.value})}
+                    className="w-full p-2 mb-2 rounded"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email (optional)"
+                    value={messageForm.email}
+                    onChange={(e) => setMessageForm({...messageForm, email: e.target.value})}
+                    className="w-full p-2 mb-2 rounded"
+                  />
+                  <textarea
+                    placeholder="Your message"
+                    value={messageForm.message}
+                    onChange={(e) => setMessageForm({...messageForm, message: e.target.value})}
+                    className="w-full p-2 mb-2 rounded resize-none"
+                    required
+                    rows={6}
+                  />
+                  <div className="flex justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setShowMessageForm(false)}
+                      className="py-2 px-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="py-2 px-4 bg-[--theme-hover-color] text-[--theme-hover-text] rounded-md hover:opacity-80 transition-opacity"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         </div>
-        <DialogFooter>
-          <div className="flex items-center justify-end w-full text-white">
-            <Coins size={20} className="mr-2" />
-            <span>Coins: {userScore}</span>
-          </div>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
 
-export default ShoppingDialog;
+export default ShoppingDistrict;
