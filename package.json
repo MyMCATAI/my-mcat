@@ -22,6 +22,7 @@
     "create-Cars-explanations": "ts-node --project tsconfig.server.json scripts/createCarsExplanations.ts",
     "backfill-passageIds": "ts-node --project tsconfig.server.json scripts/backfillPassageIds.ts",
     "update-descriptions": "ts-node --project tsconfig.server.json scripts/updateTestDescriptions.ts",
+    "test": "jest",
     "upload-reviews": "ts-node --project tsconfig.server.json scripts/uploadReviews.ts"
   },
   "dependencies": {

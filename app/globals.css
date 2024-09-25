@@ -170,7 +170,7 @@ body.theme-sunsetCity * {
     --theme-navbutton-color: #001226;
     --svg-invert: 0;
     --theme-reddit-color: #082645;
-    --theme-doctorsoffice-accent: #4a80ca;
+    --theme-doctorsoffice-accent: #3b68a8;
   }
 
   @import "../styles/themes/cyberSpace.css";
@@ -273,8 +273,8 @@ body.theme-sunsetCity * {
   --theme-box-shadow: 0 0 6px 3px rgba(255, 0, 89, 0.853), inset 0 0 8px rgba(253, 57, 149, 0.659);
   --theme-interface-image: url('/sakura-pattern.png');
   --theme-mainbox-color: #ffedf6e6; /* Lighter, more transparent pink */
-  --theme-gradient-start: #ffe8fecd;
-  --theme-gradient-end: #ffd4e7f5;
+  --theme-gradient-start: #fcd1facd;
+  --theme-gradient-end: #fecfe5f5;
   --theme-gradient-startstreak: #b479ab;
   --theme-gradient-endstreak: #8e097cd9;
   --theme-text-color: #4a0e37; /* Darker pink for better contrast */
@@ -294,7 +294,7 @@ body.theme-sunsetCity * {
 /* Add theme-specific gradients */
 .theme-sakuraTrees .gradientbg {
   background: rgba(255, 223, 236, 0.9);
-  background: linear-gradient(0deg, #f094bdf5 0%, #ffc9fccd 100%);
+  background: linear-gradient(0deg, #f78dbcf5 0%, #ffc9fccd 100%);
 }
 
 /* Sunset City theme */
