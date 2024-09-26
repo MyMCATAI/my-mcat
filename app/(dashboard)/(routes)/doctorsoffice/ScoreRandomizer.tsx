@@ -1,131 +1,118 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import AnimatedStar from "./AnimatedStar";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Star } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 interface ScoreRandomizerProps {
   onClose: () => void;
+  playerLevel: number;
+  streakDays: number;
+  patientsPerDay: number;
+  qualityOfCare: number;
+  averageStarRating: number | null;
+  clinicCostPerDay: number;
 }
 
-const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({ onClose }) => {
+interface Review {
+  id: number;
+  review: string;
+  rating: number;
+}
+
+const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
+  onClose,
+  playerLevel,
+  streakDays,
+  patientsPerDay,
+  qualityOfCare,
+  averageStarRating,
+  clinicCostPerDay,
+}) => {
   const [scores, setScores] = useState<number[]>([0, 0, 0]);
-  const [average, setAverage] = useState<number>(0);
-  const [showAverage, setShowAverage] = useState<boolean>(false);
+  const [isFinal, setIsFinal] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const fetchReviews = useCallback(async () => {
+    try {
+      const tier = Math.min(Math.ceil(playerLevel / 2), 3);
+      const response = await fetch(`/api/reviews?tier=${tier}&count=3`);
+      if (!response.ok) throw new Error('Failed to fetch reviews');
+      const data: Review[] = await response.json();
+      setReviews(data);
+      console.log('Fetched reviews:', data); // Print results
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      toast.error('Failed to fetch reviews');
+    }
+  }, [playerLevel]);
 
   useEffect(() => {
-    let isCancelled = false;
+    fetchReviews();
+  }, [fetchReviews]);
 
-    const randomizeScore = (index: number): Promise<number> => {
-      return new Promise((resolve) => {
-        const targetScore = Math.floor(Math.random() * 5) + 1; // Final score between 1 and 5
-        const duration = 2000 + Math.random() * 1000; // Duration between 2s and 3s
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (!isFinal) {
+      interval = setInterval(() => {
+        setScores(scores.map(() => Math.floor(Math.random() * 5) + 1));
+      }, 100);
+    }
+    return () => clearInterval(interval);
+  }, [isFinal, scores]);
 
-        const start = Date.now();
-
-        const animate = () => {
-          if (isCancelled) return;
-
-          const elapsed = Date.now() - start;
-          const progress = Math.min(elapsed / duration, 1);
-          const currentScore = progress * targetScore;
-
-          setScores((prevScores) => {
-            const newScores = [...prevScores];
-            newScores[index] = currentScore;
-            return newScores;
-          });
-
-          if (progress < 1) {
-            requestAnimationFrame(animate);
-          } else {
-            resolve(targetScore);
-          }
-        };
-
-        animate();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsFinal(true);
+      // Calculate final scores based on player stats
+      const baseScore = Math.min(Math.max(Math.round(qualityOfCare * 5), 1), 5);
+      const streakBonus = Math.min(streakDays / 10, 1); // Max 1 star bonus for 10-day streak
+      const patientFactor = Math.min(patientsPerDay / 10, 1); // Max 1 star bonus for 10 patients per day
+      
+      const finalScores = Array(3).fill(0).map(() => {
+        const score = baseScore + (Math.random() * streakBonus) + (Math.random() * patientFactor);
+        return Math.min(Math.max(Math.round(score), 1), 5);
       });
-    };
+      
+      setScores(finalScores);
+    }, 3000);
 
-    const startAnimations = async () => {
-      const finalScores: number[] = [];
-      for (let i = 0; i < 3; i++) {
-        const score = await randomizeScore(i);
-        finalScores[i] = score;
-      }
+    return () => clearTimeout(timer);
+  }, [qualityOfCare, streakDays, patientsPerDay]);
 
-      // Delay showing the average for effect
-      setTimeout(() => {
-        if (isCancelled) return;
-        const avg = finalScores.reduce((a, b) => a + b, 0) / finalScores.length;
-        setAverage(avg);
-        setShowAverage(true);
-      }, 500);
-    };
-
-    startAnimations();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, []); // Changed dependency array to empty to run only once on mount
-
-  const renderStars = (score: number, reviewIndex: number | string) => {
+  const renderStars = (review: Review, index: number) => {
     return (
-      <div className="flex">
-        {[...Array(5)].map((_, i) => {
-          const starProgress = Math.max(Math.min(score - i, 1), 0);
-          return (
-            <AnimatedStar
-              key={i}
-              progress={starProgress}
-              uniqueId={`review-${reviewIndex}-star-${i}`}
+      <div className="flex flex-col items-center">
+        <div className="flex">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <Star
+              key={star}
+              size={24}
+              fill={star <= review.rating ? 'gold' : 'none'}
+              stroke={star <= review.rating ? 'gold' : 'gray'}
             />
-          );
-        })}
+          ))}
+        </div>
+        <p className="text-center text-[--theme-text-color] mt-2">
+          {review.review.slice(0, 300)}
+          {review.review.length > 300 ? '...' : ''}
+        </p>
       </div>
     );
   };
 
-  const reviewTexts = [
-    "Excellent care and service!",
-    "Friendly staff and clean facilities.",
-    "Quick appointment scheduling."
-  ];
-
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="bg-[--theme-leaguecard-color] border-2 border-[--theme-border-color] text-[--theme-text-color] max-w-md">
-        <h2 className="text-2xl font-bold mb-4 text-center">Patient Reviews</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-[--theme-leaguecard-color] p-6 rounded-lg shadow-lg w-96">
+        <h2 className="text-2xl font-bold mb-4 text-[--theme-text-color]">{"Today's Reviews"}</h2>
         <div className="space-y-4">
-          {scores.map((score, index) => (
-            <div key={index} className="flex flex-col items-center space-y-2">
-              <div className="flex items-center space-x-2">
-                <span className="font-semibold">Review {index + 1}:</span>
-                {renderStars(score, index)}
-              </div>
-              <p className="text-center text-[--theme-text-color]">{reviewTexts[index]}</p>
-            </div>
-          ))}
-          {showAverage && (
-            <div className="mt-6 p-4 bg-[--theme-hover-color] border border-[--theme-border-color] rounded-lg text-center text-[--theme-text-color] animate-pulse">
-              <h3 className="text-xl font-bold">Average Rating</h3>
-              <div className="flex justify-center mt-2">
-                {renderStars(average, 'average')}
-              </div>
-              <p className="mt-2 text-lg font-semibold">
-                {average.toFixed(1)} out of 5 stars
-              </p>
-            </div>
-          )}
+          {reviews.map((review, index) => renderStars(review, index))}
         </div>
-        <Button 
-          onClick={onClose} 
+        <button
+          onClick={onClose}
           className="mt-6 w-full bg-[--theme-doctorsoffice-accent] border-2 border-[--theme-border-color] text-[--theme-text-color] hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors"
         >
           Close
-        </Button>
-      </DialogContent>
-    </Dialog>
+        </button>
+      </div>
+    </div>
   );
 };
 
