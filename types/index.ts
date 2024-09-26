@@ -31,8 +31,8 @@ export interface Question {
   id: string;
   questionID: string;
   questionContent: string;
-  questionOptions: string;
-  questionAnswerNotes?: string | null;
+  questionOptions: string[];
+  questionAnswerNotes?: string;
   contentCategory: string;
   passageId?: string | null;
   categoryId: string;
@@ -41,6 +41,7 @@ export interface Question {
   category?: Category;
   testQuestions?: TestQuestion[];
   userResponses?: UserResponse[];
+  difficulty: string;
 }
 
 export interface UserResponse {

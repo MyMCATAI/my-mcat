@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs";
 import { getQuestions, createQuestion } from "@/lib/question";
+import { PrismaPromise } from "@prisma/client/runtime/library";
 
 export async function GET(req: Request) {
   try {
@@ -82,6 +83,73 @@ export async function POST(req: Request) {
     return NextResponse.json(newQuestion);
   } catch (error) {
     console.log("[QUESTIONS_POST]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
+
+export async function PUT(req: Request) {
+  try {
+    const { userId } = auth();
+
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const body = await req.json();
+    const { passageId, questions } = body;
+
+    if (!passageId || !questions || !Array.isArray(questions)) {
+      return new NextResponse("Invalid request body", { status: 400 });
+    }
+
+    // Update existing questions and add new ones
+    const upsertPromises = questions.map((q: any) =>
+      prisma?.question.upsert({
+        where: {
+          id: q.id || "new-id", // Use a placeholder ID for new questions
+        },
+        update: {
+          questionContent: q.questionContent,
+          questionOptions: JSON.stringify(q.questionOptions),
+          questionAnswerNotes: q.questionAnswerNotes,
+          contentCategory: q.contentCategory,
+          categoryId: q.categoryId,
+          context: q.context,
+          difficulty: q.difficulty,
+          questionID: q.questionID,
+        },
+        create: {
+          passageId: passageId,
+          questionContent: q.questionContent,
+          questionOptions: JSON.stringify(q.questionOptions),
+          questionAnswerNotes: q.questionAnswerNotes,
+          contentCategory: q.contentCategory,
+          categoryId: q.categoryId,
+          context: q.context,
+          difficulty: q.difficulty,
+          questionID: q.questionID,
+        },
+      })
+    );
+    // Filter out any undefined values
+    const validUpsertPromises = upsertPromises.filter(
+      (promise): promise is PrismaPromise<any> => promise !== undefined
+    );
+
+    // Use the filtered array in the transaction
+    await prisma?.$transaction(validUpsertPromises);
+
+    // Fetch the updated questions to return
+    const updatedQuestions = await prisma?.question.findMany({
+      where: { passageId: passageId },
+    });
+
+    return new NextResponse(JSON.stringify(updatedQuestions), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("[QUESTIONS_PUT]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

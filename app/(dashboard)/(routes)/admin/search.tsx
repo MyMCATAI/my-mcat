@@ -3,6 +3,7 @@ import { Plus, Book, HelpCircle, Edit2, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { PrismaClient } from "@prisma/client";
 import { Passage } from "@/types";
+import { useRouter } from "next/router";
 
 interface SearchPageProps {
   onAddNew: () => void;
@@ -20,13 +21,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    // Implement search functionality
-    // const query = (
-    //   e.currentTarget.elements.namedItem("query") as HTMLInputElement
-    // ).value;
 
-    // console.log(passages);
-    // Update the state with the search results
     console.log("Searching for:", query);
     // TODO: Implement search functionality
     try {
@@ -63,15 +58,6 @@ const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
 
   function displaySelectedPassage(passage: Passage) {
     setSelectedPassage(passage);
-
-    //        return ( <div className="mt-8 border p-4 rounded">
-    //           <h3 className="font-bold">{selectedPassage?.title}</h3>
-    //           <div dangerouslySetInnerHTML={{ __html: selectedPassage?.text ?? "" }} />
-    //           <p className="text-sm text-gray-600 mt-2">
-    //             {selectedPassage?.citation}
-    //           </p>
-    //         </div>
-    // )
   }
 
   return (
@@ -128,7 +114,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
                 {passage.title}
               </button>
               <div className="flex space-x-2">
-                <Link href={`/admin/edit-passage/${passage.id}`}>
+                <Link href={`/admin/editpassage/${passage.id}`}>
                   <button
                     className="p-1 hover:bg-gray-100 rounded group flex items-center"
                     aria-label="Edit Passage"
@@ -139,7 +125,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
                     </span>
                   </button>
                 </Link>
-                <Link href={`/admin/edit-questions/${passage.id}`}>
+                <Link href={`/admin/editquestions/${passage.id}`}>
                   <button
                     className="p-1 hover:bg-gray-100 rounded group flex items-center"
                     aria-label="Edit Questions"
@@ -155,7 +141,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
           ))}
         </ul>
       </div>
-      {selectedPassage && (
+      {/* {selectedPassage && (
         <div className="mt-8 border p-4 rounded">
           <h3 className="font-bold">{selectedPassage.title}</h3>
           <div dangerouslySetInnerHTML={{ __html: selectedPassage.text }} />
@@ -163,50 +149,47 @@ const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
             {selectedPassage.citation}
           </p>
         </div>
-      )}
+      )} */}
+
+      {/* <ul className="space-y-4">
+        {passages.map((passage) => (
+          <li
+            key={passage.id}
+            className="flex items-center justify-between border-b pb-2"
+          >
+            <button
+              onClick={() => displaySelectedPassage(passage)}
+              className="text-blue-600 hover:underline text-left"
+            >
+              {passage.title}
+            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => handleEditPassage(passage.id)}
+                className="p-1 hover:bg-gray-100 rounded group flex items-center"
+                aria-label="Edit Passage"
+              >
+                <Edit2 className="h-5 w-5 text-gray-600" />
+                <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:ml-2 text-black">
+                  Edit passage
+                </span>
+              </button>
+              <button
+                onClick={() => handleEditQuestions(passage.id)}
+                className="p-1 hover:bg-gray-100 rounded group flex items-center"
+                aria-label="Edit Questions"
+              >
+                <HelpCircle className="h-5 w-5 text-gray-600" />
+                <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:ml-2 text-black">
+                  Edit Questions
+                </span>
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul> */}
     </div>
   );
 };
 
 export default SearchPage;
-
-// <ul className="space-y-4">
-//           {passages.map((passage) => (
-//             <li
-//               key={passage.id}
-//               className="flex items-center justify-between border-b pb-2"
-//               onClick={() => displaySelectedPassage(passage)}
-//             >
-//               <Link
-//                 href={`/passage/${passage.id}`}
-//                 className="text-blue-600 hover:underline"
-//               >
-//                 {passage.title}
-//               </Link>
-//               <div className="flex space-x-2">
-//                 <Link href={`/admin/edit-passage/${passage.id}`}>
-//                   <button
-//                     className="p-1 hover:bg-gray-100 rounded group flex items-center"
-//                     aria-label="Edit Passage"
-//                   >
-//                     <Edit2 className="h-5 w-5 text-gray-600" />
-//                     <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:ml-2 text-black">
-//                       Edit passage
-//                     </span>
-//                   </button>
-//                 </Link>
-//                 <Link href={`/admin/edit-questions/${passage.id}`}>
-//                   <button
-//                     className="p-1 hover:bg-gray-100 rounded group flex items-center"
-//                     aria-label="Edit Questions"
-//                   >
-//                     <HelpCircle className="h-5 w-5 text-gray-600" />
-//                     <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:ml-2 text-black">
-//                       Edit Questions
-//                     </span>
-//                   </button>
-//                 </Link>
-//               </div>
-//             </li>
-//           ))}
-//         </ul>
