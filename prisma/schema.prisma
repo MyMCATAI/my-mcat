@@ -218,3 +218,11 @@ model KnowledgeProfile {
   @@index([userId])
   @@index([categoryId])
 }
+
+model Review {
+  id      String @id @default(cuid())
+  tier    Int
+  rating  Int
+  review  String @db.Text
+  profilePicture String
+}
