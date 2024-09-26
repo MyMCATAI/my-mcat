@@ -58,22 +58,42 @@ export async function GET(req: Request) {
       });
     } catch (dbError) {
       console.error("Database error:", dbError);
+      if (dbError instanceof Error) {
+        return new NextResponse(
+          JSON.stringify({ error: "Database Error", details: dbError.message, stack: dbError.stack }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      } else {
+        return new NextResponse(
+          JSON.stringify({ error: "Database Error", details: "Unknown error occurred" }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+  } catch (error) {
+    console.error("[REVIEWS_GET]", error);
+    if (error instanceof Error) {
       return new NextResponse(
-        JSON.stringify({ error: "Database Error", details: dbError.message, stack: dbError.stack }),
+        JSON.stringify({ error: "Internal Server Error", details: error.message, stack: error.stack }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    } else {
+      return new NextResponse(
+        JSON.stringify({ error: "Internal Server Error", details: "Unknown error occurred" }),
         {
           status: 500,
           headers: { "Content-Type": "application/json" },
         }
       );
     }
-  } catch (error) {
-    console.error("[REVIEWS_GET]", error);
-    return new NextResponse(
-      JSON.stringify({ error: "Internal Server Error", details: error.message, stack: error.stack }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
       }
-    );
-  }
 }
