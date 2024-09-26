@@ -1,12 +1,7 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import SpriteWalking from './SpriteWalking';
-import ShoppingDialog, { ImageGroup } from './ShoppingDialog';
-import { ShoppingCart, Calendar, Star } from 'lucide-react';
-import { toast } from "react-hot-toast";
-import DailyDialog from './DailyDialog';
-import ScoreRandomizer from './ScoreRandomizer';
-import { ReportData, DoctorOfficeStats } from '@/types';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { Stage, Container, Graphics, Sprite } from '@pixi/react';
+import { Texture, Graphics as PIXIGraphics, utils as PIXIUtils, BaseTexture, Rectangle } from 'pixi.js';
+
 
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 
@@ -19,17 +14,6 @@ interface GridImage {
   height: number;
   zIndex: number;
   opacity?: number;
-}
-
-// Define an interface for sprite objects
-interface Sprite {
-  id: string;
-  type: 'sprite';
-  x: number;
-  y: number;
-  direction: Direction;
-  character: number;
-  zIndex: number;
 }
 
 // Define constants outside the component
@@ -49,35 +33,102 @@ type Waypoint = {
 const spriteWaypoints: Record<string, Waypoint[]> = {
   sprite1: [
     { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
-    { x: 3, y: 9, direction: 'NW' },  // Move NW to bottom left
+    { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
     { x: 3, y: 1.5, direction: 'NE' },  // Move NE to top left
     { x: 9, y: 1.5, direction: 'SE' },  // Move SE to top right
-    { x: 3, y: 1.5, direction: 'NW' },  // Move NW to top left
-    { x: 3, y: 9, direction: 'SW' },  // Move SW to bottom left
+    { x: 4, y: 1.5, direction: 'NW' },  // Move NW to top left
+    { x: 4, y: 9, direction: 'SW' },  // Move SW to bottom left
     { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
   ],
-  sprite2: [
-    { x: 1, y: 1, direction: 'N' },  // Start near top left
-    { x: 1, y: 8, direction: 'S' },  // Move down
-    { x: 8, y: 8, direction: 'SW' },  // Move to bottom right
-    { x: 8, y: 1, direction: 'N' },  // Move up
-    { x: 1, y: 1, direction: 'NE' }   // Return to start
-  ],
-  sprite3: [
-    { x: 8, y: 8, direction: 'SW' },  // Start near bottom right
-    { x: 0, y: 8, direction: 'W' },  // Move to bottom left
-    { x: 0, y: 0, direction: 'NW' },  // Move to top left
-    { x: 8, y: 0, direction: 'E' },  // Move to top right
-    { x: 8, y: 8, direction: 'SE' },  // Return to start
-  ]
 };
 
-const OfficeContainer: React.FC = () => {
-  const router = useRouter();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Move the images state declaration up
+// Helper functions for isometric calculations
+function screenX(worldX: number, worldY: number): number {
+  return (worldX - worldY) * (tileWidth / 2);
+}
+
+function screenY(worldX: number, worldY: number): number {
+  return (worldX + worldY) * (tileHeight / 2);
+}
+
+// AnimatedSpriteWalking component
+const AnimatedSpriteWalking: React.FC<{
+  position: { x: number; y: number };
+  direction: Direction;
+  scale: number;
+}> = ({ position, direction, scale }) => {
+  const [frame, setFrame] = useState(0);
+  const [baseTexture, setBaseTexture] = useState<BaseTexture | null>(null);
+
+  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const columns = 8;
+  const rows = 3;
+
+  useEffect(() => {
+    const texture = BaseTexture.from('/game-components/Kalypso-Sprite.png');
+    setBaseTexture(texture);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame(prevFrame => (prevFrame + 1) % rows);
+    }, 230);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!baseTexture) return null;
+
+  const spriteWidth = baseTexture.width / columns;
+  const spriteHeight = baseTexture.height / rows;
+
+  const directionIndex = directions.indexOf(direction);
+  const sourceX = directionIndex * spriteWidth;
+  const sourceY = frame * spriteHeight;
+
+  const texture = new Texture(
+    baseTexture,
+    new Rectangle(sourceX, sourceY, spriteWidth, spriteHeight)
+  );
+
+  // Adjust size as needed
+  const drawWidth = Math.round(spriteWidth * scale * 0.5);  // Adjust the multiplier as needed
+  const drawHeight = Math.round(spriteHeight * scale * 0.5);  // Adjust the multiplier as needed
+
+  const posX = screenX(position.x, position.y) - drawWidth / 2;
+  const posY = screenY(position.x, position.y) - drawHeight / 2 - tileHeight / 4;
+
+  return (
+    <Sprite
+      texture={texture}
+      x={posX}
+      y={posY}
+      width={drawWidth}
+      height={drawHeight}
+      zIndex={10}
+    />
+  );
+};
+
+interface OfficeContainerProps {
+  visibleImages: Set<string>;
+  clinicName: string | null;
+  userScore: number;
+  userRooms: string[];
+  imageGroups: ImageGroup[];
+  toggleGroup: (groupName: string) => void;
+  onUpdateUserScore: (newScore: number) => void;
+}
+
+const OfficeContainer: React.FC<OfficeContainerProps> = ({
+  visibleImages,
+  clinicName,
+  userScore,
+  userRooms,
+  imageGroups,
+  toggleGroup,
+  onUpdateUserScore,
+}) => {
   const [images] = useState<GridImage[]>([
     { id: 'OperatingRoom1', src: '/game-components/OperatingRoom1.png', x: 0.04, y: 2, width: 268, height: 256, zIndex: 2 },
     { id: 'CATScan1', src: '/game-components/CATScan1.png', x: 8.1, y: 0.15, width: 270, height: 240, zIndex: 7 },
@@ -95,25 +146,20 @@ const OfficeContainer: React.FC = () => {
     { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 8},
   ]);
 
-  const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
-  
   // Define offset as a constant instead of state
   const offset = {
-    x: (gridWidth + gridHeight) * (tileWidth / 3.5),
-    y: (gridHeight * tileHeight) / 2 - 160
+    x: (gridWidth + gridHeight) * (tileWidth / 3),
+    y: (gridHeight * tileHeight) / 4
   };
-  
-  const [loadedImages, setLoadedImages] = useState<Record<string, HTMLImageElement>>({});
+
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [scale, setScale] = useState(1);
 
-  // Update the sprite1PositionRef to include direction
-  const sprite1PositionRef = useRef<{ x: number; y: number; direction: Direction }>({ x: 9, y: 9, direction: 'S' });
-  const sprite2PositionRef = useRef<{ x: number; y: number; direction: Direction }>({ x: 1, y: 1, direction: 'N' });
-  const sprite3PositionRef = useRef<{ x: number; y: number; direction: Direction }>({ x: 8, y: 8, direction: 'SW' });
+  const [spritePositions, setSpritePositions] = useState({
+    sprite1: { id: 'sprite1', x: 9, y: 9, direction: 'S' as const, character: 1 },
+  });
 
   const sprite1WaypointIndexRef = useRef(0);
-  const sprite2WaypointIndexRef = useRef(0);
-  const sprite3WaypointIndexRef = useRef(0);
 
   // Function to calculate positions
   function screenX(worldX: number, worldY: number): number {
@@ -125,28 +171,26 @@ const OfficeContainer: React.FC = () => {
   }
 
   // Modify the calculateScale function
-  const calculateScale = () => {
-    if (containerRef.current) {
-      const containerWidth = containerRef.current.clientWidth;
-      const containerHeight = containerRef.current.clientHeight;
-      const baseWidth = (gridWidth + gridHeight) * (tileWidth / 2);
-      const baseHeight = (gridWidth + gridHeight) * (tileHeight / 2);
-      
-      const scaleX = containerWidth / baseWidth;
-      const scaleY = containerHeight / baseHeight;
+  const calculateScale = useCallback(() => {
+    const containerWidth = window.innerWidth;
+    const containerHeight = window.innerHeight;
+    const baseWidth = (gridWidth + gridHeight) * (tileWidth / 2);
+    const baseHeight = (gridWidth + gridHeight) * (tileHeight / 2);
 
-      // Use the smaller scale to ensure the canvas fits in both dimensions
-      let scale = Math.min(scaleX, scaleY);
-      
-      // Apply a maximum scale to prevent the grid from becoming too large on big screens
-      const maxScale = .72;
-      scale = Math.min(scale, maxScale);
+    const scaleX = containerWidth / baseWidth;
+    const scaleY = containerHeight / baseHeight;
 
-      // Apply a small reduction factor for better fit on laptops
-      return scale * 1.1;
-    }
-    return 1;
-  };
+    let scale = Math.min(scaleX, scaleY);
+    const maxScale = 1.2;
+    scale = Math.min(scale, maxScale);
+
+    setStageSize({
+      width: baseWidth * scale,
+      height: baseHeight * scale,
+    });
+
+    return scale * 0.7;
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -157,619 +201,164 @@ const OfficeContainer: React.FC = () => {
     handleResize();
 
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [calculateScale]);
 
-  useEffect(() => {
-    // Preload images
-    const imagePromises = images.map(img => {
-      return new Promise<void>((resolve) => {
-        const imgObj = new Image();
-        imgObj.onload = () => {
-          setLoadedImages(prev => ({ ...prev, [img.src]: imgObj }));
-          resolve();
-        };
-        imgObj.src = img.src;
-      });
-    });
-
-    Promise.all(imagePromises).then(() => {
-      // All images are loaded, force a re-render
-      // Remove this line as we no longer need to update offset
-      // setOffset({...offset});
-    });
-  }, [images]);
-
-  // Update the moveSprite function to use the specified direction
+  // Move sprite function
   const moveSprite = useCallback((
-    positionRef: React.MutableRefObject<{ x: number; y: number; direction: Direction }>,
-    waypoints: Waypoint[],
+    spriteId: string,
     waypointIndexRef: React.MutableRefObject<number>
   ) => {
-    const speed = 0.1; // Increase this value to make the sprite move faster
-    const currentWaypoint = waypoints[waypointIndexRef.current];
-    const position = positionRef.current;
-    
-    const dx = currentWaypoint.x - position.x;
-    const dy = currentWaypoint.y - position.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    setSpritePositions(prevPositions => {
+      const newPositions = { ...prevPositions };
+      const sprite = newPositions[spriteId];
+      const waypoints = spriteWaypoints[spriteId];
+      const currentWaypoint = waypoints[waypointIndexRef.current];
 
-    if (distance < speed) {
-      waypointIndexRef.current = (waypointIndexRef.current + 1) % waypoints.length;
-      position.direction = currentWaypoint.direction;
-    } else {
-      position.x += (dx / distance) * speed;
-      position.y += (dy / distance) * speed;
-      position.direction = currentWaypoint.direction;
-    }
+      const speed = 0.1;
+      const dx = currentWaypoint.x - sprite.x;
+      const dy = currentWaypoint.y - sprite.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < speed) {
+        waypointIndexRef.current = (waypointIndexRef.current + 1) % waypoints.length;
+        sprite.direction = currentWaypoint.direction;
+      } else {
+        sprite.x += (dx / distance) * speed;
+        sprite.y += (dy / distance) * speed;
+        sprite.direction = currentWaypoint.direction;
+      }
+
+      return newPositions;
+    });
   }, []);
 
   // Use useEffect to set up the animation loop for all sprites
   useEffect(() => {
     const animationInterval = setInterval(() => {
-      moveSprite(sprite1PositionRef, spriteWaypoints.sprite1, sprite1WaypointIndexRef);
-      moveSprite(sprite2PositionRef, spriteWaypoints.sprite2, sprite2WaypointIndexRef);
-      moveSprite(sprite3PositionRef, spriteWaypoints.sprite3, sprite3WaypointIndexRef);
-    }, 50);
+      moveSprite('sprite1', sprite1WaypointIndexRef);
+    }, 70);
 
     return () => clearInterval(animationInterval);
   }, [moveSprite]);
 
-  // Update the drawScene function
-  const drawScene = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Disable image smoothing for the entire canvas
-    ctx.imageSmoothingEnabled = true;
-
-    // Adjust canvas size calculation
-    const canvasWidth = (gridWidth + gridHeight) * (tileWidth / 2);
-    const canvasHeight = (gridWidth + gridHeight) * (tileHeight / 2);
-
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
-
-    // Clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Apply the offset and scale
-    ctx.save();
-    ctx.scale(scale, scale);
-    ctx.translate(offset.x, offset.y);
-
-    // Get the computed style of the canvas element
-    const themeElement = 
-      document.querySelector('.theme-sunsetCity') || 
-      document.querySelector('.theme-sakuraTrees') || 
-      document.querySelector('.theme-cyberSpace') || 
+  // New function to get accent color
+  const getAccentColor = useCallback(() => {
+    const themeElement =
+      document.querySelector('.theme-sunsetCity') ||
+      document.querySelector('.theme-sakuraTrees') ||
+      document.querySelector('.theme-cyberSpace') ||
       document.documentElement;
-    const computedStyle = getComputedStyle(themeElement);
+    const computedStyle = getComputedStyle(themeElement!);
     const accentColor = computedStyle.getPropertyValue('--theme-doctorsoffice-accent').trim();
-
-    // Draw isometric grid
-    for (let y = 0; y < gridHeight; y++) {
-      for (let x = 0; x < gridWidth; x++) {
-        const posX = screenX(x, y);
-        const posY = screenY(x, y);
-
-        // Draw tile outline
-        ctx.beginPath();
-        ctx.moveTo(posX, posY + tileHeight / 2);
-        ctx.lineTo(posX + tileWidth / 2, posY);
-        ctx.lineTo(posX + tileWidth, posY + tileHeight / 2);
-        ctx.lineTo(posX + tileWidth / 2, posY + tileHeight);
-        ctx.closePath();
-        ctx.strokeStyle = '#000';
-        ctx.stroke();
-
-        // Fill tile with the theme accent color for specified areas
-        if (x < 4 || y < 4 || y >= gridHeight - 2) {
-          ctx.fillStyle = accentColor || '#001226'; // Fallback color if CSS variable is not set
-          
-          // Set opacity to 10% for the two rows on the far left and the two rows on top
-          if (x < 2 || y < 2) {
-            ctx.globalAlpha = 0.1;
-          } else {
-            ctx.globalAlpha = 1;
-          }
-          
-          ctx.fill();
-        }
-        // Reset globalAlpha to 1 after each tile
-        ctx.globalAlpha = 1;
-      }
-    }
-
-    // Sort images and sprites by zIndex
-    const allElements = [
-      ...images.map(img => ({ ...img, type: 'image' as const })),
-      { id: 'sprite1', type: 'sprite' as const, ...sprite1PositionRef.current, character: 1, zIndex: 11 },
-      //{ id: 'sprite2', type: 'sprite' as const, ...sprite2PositionRef.current, character: 2, zIndex: 11 },
-      //{ id: 'sprite3', type: 'sprite' as const, ...sprite3PositionRef.current, character: 3, zIndex: 11 },
-    ].sort((a, b) => a.zIndex - b.zIndex);
-
-    // Draw all elements in order
-    allElements.forEach((element) => {
-      if (element.type === 'image') {
-        // Draw image
-        const img = element as GridImage;
-        if (visibleImages.has(img.id) && loadedImages[img.src]) {
-          const loadedImg = loadedImages[img.src];
-          const posX = screenX(img.x, img.y) - img.width / 4;
-          const posY = screenY(img.x, img.y) - img.height / 2;
-          
-          if (img.opacity !== undefined) {
-            ctx.globalAlpha = img.opacity;
-          }
-          
-          ctx.drawImage(loadedImg, posX, posY, img.width, img.height);
-          
-          ctx.globalAlpha = 1;
-        }
-      } else if (element.type === 'sprite') {
-        // Draw sprite
-        const sprite = element as Sprite;
-        const posX = screenX(sprite.x, sprite.y);
-        const posY = screenY(sprite.x, sprite.y);
-        
-        // Adjust the drawing position to align with the grid
-        const adjustedPosX = Math.round(posX);
-        const adjustedPosY = Math.round(posY - tileHeight / 4);
-        
-        // console.log(`Drawing sprite ${sprite.character} at (${sprite.x}, ${sprite.y}) facing ${sprite.direction}`);
-        
-        SpriteWalking.drawSprite(ctx, spriteSheetUrl, { x: adjustedPosX, y: adjustedPosY }, sprite.character, sprite.direction, scale);
-      }
-    });
-
-    ctx.restore();
-  }, [images, offset, loadedImages, scale, visibleImages]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const animate = () => {
-      drawScene();
-      requestAnimationFrame(animate);
-    };
-
-    animate();
-  }, [drawScene]);
-
-  const imageGroups: ImageGroup[] = [
-    {
-      name: "INTERN LEVEL",
-      items: [
-        { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png' },
-        { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png' },
-        { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png' },
-      ],
-      cost: 5,
-      benefits: [
-        '4 patients a day',
-        '1 cupcake coin a day',
-        'Quality of Care (QC) = 1x',
-        'You are an intern learning the ropes.',
-      ]
-    },
-    {
-      name: "RESIDENT LEVEL",
-      items: [
-        { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png' },
-        { id: 'Bathroom1', src: '/game-components/Bathroom1.png' },
-        { id: 'Bathroom2', src: '/game-components/Bathroom1.png' },
-      ],
-      cost: 10,
-      benefits: [
-        '8 patients a day',
-        '1 cupcake coin a day',
-        'Quality of Care (QC) = 1.25x',
-        'You are a doctor in training with Kalypso.',
-      ]
-    },
-    {
-      name: "FELLOWSHIP LEVEL",
-      items: [
-        { id: 'HighCare1', src: '/game-components/HighCare1.png' },
-        { id: 'HighCare2', src: '/game-components/HighCare1.png' },
-      ],
-      cost: 15,
-      benefits: [
-        '10 patients a day',
-        '2 cupcake coins a day',
-        'Quality of Care (QC) = 1.5x',
-        'You are a physician.',
-      ]
-    },
-    {
-      name: "ATTENDING LEVEL",
-      items: [
-        { id: 'OperatingRoom1', src: '/game-components/OperatingRoom1.png' },
-        { id: 'MedicalCloset1', src: '/game-components/MedicalCloset1.png' },
-        { id: 'MRIMachine2', src: '/game-components/MRIMachine.png' },
-      ],
-      cost: 20,
-      benefits: [
-        'Quality of Care (QC) = 1.5x',
-        '2 cupcake coins a day',
-        'You can do surgeries.',
-      ]
-    },
-    {
-      name: "PHYSICIAN LEVEL",
-      items: [
-        { id: 'MRIMachine1', src: '/game-components/MRIMachine.png' },
-      ],
-      cost: 25,
-      benefits: [
-        'Quality of Care (QC) = 1.75x',
-        '3 cupcake coins a day',
-        'You can lead teams.',
-        'UWorld Raffle Entry ($400 value)',
-      ]
-    },
-    {
-      name: "MEDICAL DIRECTOR LEVEL",
-      items: [
-        { id: 'CATScan1', src: '/game-components/CATScan1.png' },
-        { id: 'CATScan2', src: '/game-components/CATScan1.png' },
-      ],
-      cost: 30,
-      benefits: [
-        'Quality of Care (QC) = 2x',
-        '3 cupcake coins a day',
-        'You are now renowned.',
-        '30 min tutoring session.',
-      ]
-    },
-    {
-      name: "Team Vacation",
-      items: [],
-      cost: 1,
-      benefits: [
-        'Can take a break tomorrow and save your streak.',
-      ]
-    },
-    {
-      name: "Free Clinic Day",
-      items: [],
-      cost: 2,
-      benefits: [
-        'Treat 50 patients',
-        'No zero star or 1 star reviews',
-      ]
-    },
-    {
-      name: "University Sponsorship",
-      items: [],
-      cost: 3,
-      benefits: [
-        '2x Boost Your Value for University in a Day',
-      ]
-    },
-  ];
-
-  const [userRooms, setUserRooms] = useState<string[]>([]);
-  const [userScore, setUserScore] = useState(0);
-
-  const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
-
-  // Define a mapping from room names to levels
-  const levelRoomsMap: { [level: number]: string[] } = {
-    1: ["INTERN LEVEL"],
-    2: ["RESIDENT LEVEL"],
-    3: ["FELLOWSHIP LEVEL"],
-    4: ["ATTENDING LEVEL"],
-    5: ["PHYSICIAN LEVEL"],
-    6: ["MEDICAL DIRECTOR LEVEL"],
-  };
-
-  // Function to determine playerLevel based on userRooms
-  const getPlayerLevel = (userRooms: string[]): number => {
-    let highestLevel = 1;
-    for (let level = 1; level <= 6; level++) {
-      if (userRooms.includes(levelRoomsMap[level][0])) {
-        highestLevel = level;
-      }
-    }
-    return highestLevel;
-  };
-
-  // Fetch reportData including streakDays
-  useEffect(() => {
-    const fetchReportData = async () => {
-      try {
-        const response = await fetch('/api/user-report');
-        if (!response.ok) throw new Error('Failed to fetch user report');
-        const data: DoctorOfficeStats = await response.json();
-        setReportData(data);
-      } catch (error) {
-        console.error('Error fetching report data:', error);
-      }
-    };
-    fetchReportData();
+    return accentColor || '#001226';
   }, []);
 
-  // Determine streakDays and playerLevel
-  const streakDays = reportData?.streak || 0;
-  const playerLevel = getPlayerLevel(userRooms);
+  // Updated IsometricGrid component
+  const IsometricGrid = useCallback(() => {
+    const accentColor = getAccentColor();
 
-  // Move fetchUserInfo to component level
-  const fetchUserInfo = useCallback(async () => {
-    try {
-      const response = await fetch('/api/user-info', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const drawGrid = useCallback((g: PIXIGraphics) => {
+      g.clear();
+      g.lineStyle(1, 0x000000, 1);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch user info');
-      }
+      for (let y = 0; y < gridHeight; y++) {
+        for (let x = 0; x < gridWidth; x++) {
+          const posX = screenX(x, y);
+          const posY = screenY(x, y);
 
-      const userInfo = await response.json();
-      setUserScore(userInfo.score || 0);
-    } catch (error) {
-      console.error('Error fetching user info:', error);
-      toast.error('Failed to fetch user info');
-    }
-  }, []); // Empty dependency array as it doesn't depend on any props or state
+          // Draw tile outline
+          g.moveTo(posX, posY + tileHeight / 2);
+          g.lineTo(posX + tileWidth / 2, posY);
+          g.lineTo(posX + tileWidth, posY + tileHeight / 2);
+          g.lineTo(posX + tileWidth / 2, posY + tileHeight);
+          g.lineTo(posX, posY + tileHeight / 2);
 
-  // Use fetchUserInfo in useEffect
-  useEffect(() => {
-    fetchUserInfo();
-
-    const fetchUserRooms = async () => {
-      try {
-        const response = await fetch('/api/clinic', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch user rooms');
-        }
-
-        const rooms = await response.json();
-        setUserRooms(rooms);
-        console.log('User rooms:', rooms);
-
-        // Update visibleImages based on fetched rooms
-        const newVisibleImages = new Set<string>();
-        rooms.forEach((roomName: string) => {
-          const group = imageGroups.find(g => g.name === roomName);
-          if (group) {
-            group.items.forEach(item => newVisibleImages.add(item.id));
+          // Fill tile with the theme accent color for specified areas
+          if (x < 4 || y < 4 || y >= gridHeight - 2) {
+            let fillAlpha = 1;
+            if (x < 2 || y < 2) {
+              fillAlpha = 0.1;
+            }
+            g.beginFill(PIXIUtils.string2hex(accentColor), fillAlpha);
+            g.moveTo(posX, posY + tileHeight / 2);
+            g.lineTo(posX + tileWidth / 2, posY);
+            g.lineTo(posX + tileWidth, posY + tileHeight / 2);
+            g.lineTo(posX + tileWidth / 2, posY + tileHeight);
+            g.lineTo(posX, posY + tileHeight / 2);
+            g.endFill();
           }
-        });
-        setVisibleImages(newVisibleImages);
-      } catch (error) {
-        console.error('Error fetching user rooms:', error);
-      }
-    };
-
-    fetchUserRooms();
-  }, [fetchUserInfo]);
-
-  const toggleGroup = async (groupName: string) => {
-    const group = imageGroups.find(g => g.name === groupName);
-    if (!group) return;
-
-    const allVisible = group.items.every(item => visibleImages.has(item.id));
-    
-    if (allVisible) {
-      // Remove room
-      try {
-        // Optimistically update the UI
-        const optimisticRooms = userRooms.filter(room => room !== groupName);
-        setUserRooms(optimisticRooms);
-        setVisibleImages(prev => {
-          const newSet = new Set(prev);
-          group.items.forEach(item => newSet.delete(item.id));
-          return newSet;
-        });
-
-        const response = await fetch('/api/clinic', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ room: groupName }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to remove clinic room');
         }
-
-        const { rooms: updatedRooms } = await response.json();
-        setUserRooms(updatedRooms);
-
-        toast.success(`Removed ${groupName} from your clinic!`);
-      } catch (error) {
-        console.error('Error removing clinic room:', error);
-        toast.error((error as Error).message || 'Failed to remove clinic room');
-        
-        // Revert optimistic updates
-        setUserRooms(userRooms);
-        setVisibleImages(prev => {
-          const newSet = new Set(prev);
-          group.items.forEach(item => newSet.add(item.id));
-          return newSet;
-        });
       }
-    } else {
-      // Add room
-      if (userScore < group.cost) {
-        toast.error(`Insufficient funds. You need ${group.cost} coins to buy ${groupName}.`);
-        return;
-      }
+    }, [accentColor]);
 
-      // Optimistically update the UI
-      const optimisticUserScore = userScore - group.cost;
-      setUserScore(optimisticUserScore);
-      const optimisticRooms = [...userRooms, groupName];
-      setUserRooms(optimisticRooms);
-      setVisibleImages(prev => {
-        const newSet = new Set(prev);
-        group.items.forEach(item => newSet.add(item.id));
-        return newSet;
-      });
+    return <Graphics draw={drawGrid} />;
+  }, [getAccentColor]);
 
-      try {
-        const response = await fetch('/api/clinic', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ room: groupName, cost: group.cost }),
-        });
+  // Modify the RoomSprite component
+  const RoomSprite = useCallback(({ img }: { img: GridImage }) => {
+    const texture = Texture.from(img.src);
+    const posX = screenX(img.x, img.y) - img.width / 4;
+    const posY = screenY(img.x, img.y) - img.height / 2;
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to update clinic rooms');
-        }
-
-        const { rooms: updatedRooms, score: updatedScore } = await response.json();
-        setUserRooms(updatedRooms);
-        setUserScore(updatedScore);
-
-        toast.success(`Added ${groupName} to your clinic!`);
-      } catch (error) {
-        console.error('Error updating clinic rooms:', error);
-        toast.error((error as Error).message || 'Failed to update clinic rooms');
-        
-        // Revert optimistic updates
-        setUserScore(userScore);
-        setUserRooms(userRooms);
-        setVisibleImages(prev => {
-          const newSet = new Set(prev);
-          group.items.forEach(item => newSet.delete(item.id));
-          return newSet;
-        });
-      }
-    }
-  };
-
-  const spriteSheetUrl = '/game-components/sprite-sheet.png'; // Update with the actual path
-
-  const [showDailyDialog, setShowDailyDialog] = useState(false);
-  const [isFirstVisit, setIsFirstVisit] = useState(false);
-  const [clinicName, setClinicName] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Check if it's the first visit or if it's a new day
-    const lastVisit = localStorage.getItem('lastVisit');
-    const today = new Date().toDateString();
-
-    if (!lastVisit) {
-      setIsFirstVisit(true);
-      setShowDailyDialog(true);
-    } else if (lastVisit !== today) {
-      setShowDailyDialog(true);
-    }
-
-    // Load clinic name from localStorage
-    const savedClinicName = localStorage.getItem('clinicName');
-    if (savedClinicName) {
-      setClinicName(savedClinicName);
-    }
+    return (
+      <Sprite
+        texture={texture}
+        x={posX}
+        y={posY}
+        width={img.width}
+        height={img.height}
+        alpha={img.opacity !== undefined ? img.opacity : 1}
+        zIndex={img.zIndex}
+      />
+    );
   }, []);
-
-  const handleDailyDialogClose = (newClinicName?: string) => {
-    if (newClinicName) {
-      setClinicName(newClinicName);
-      localStorage.setItem('clinicName', newClinicName);
-    }
-    setShowDailyDialog(false);
-    localStorage.setItem('lastVisit', new Date().toDateString());
-  };
-
-  // Add new state to control the ScoreRandomizer dialog visibility
-  const [showScoreRandomizer, setShowScoreRandomizer] = useState(false);
-
-  // ScoreRandomizer close handler
-  const handleScoreRandomizerClose = useCallback(() => {
-    setShowScoreRandomizer(false);
-    fetchUserInfo(); // Fetch updated user score when dialog is closed
-  }, [fetchUserInfo]);
 
   return (
-    <div className="flex flex-col w-full h-full relative">
-      {showDailyDialog && (
-        <DailyDialog 
-          isFirstVisit={isFirstVisit} 
-          onClose={handleDailyDialogClose} 
-          clinicName={clinicName}
-        />
-      )}
-      <div className="absolute top-2 left-2 z-10 text-xl font-bold text-[--theme-text-color]">
-        {clinicName && `${clinicName} Medical Center`}
-      </div>
-      <div className="absolute top-2 right-2 z-10 flex flex-col gap-2">
-        <ShoppingDialog
-          imageGroups={imageGroups}
-          visibleImages={visibleImages}
-          toggleGroup={toggleGroup}
-          userScore={userScore}
-          buttonContent={
-            <div className="flex items-center justify-start gap-2 w-full">
-              <ShoppingCart size={20} />
-              <span>Marketplace</span>
-            </div>
-          }
-        />
-        <button
-          onClick={() => setShowDailyDialog(true)}
-          className="flex items-center justify-start gap-2 px-4 py-2 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] text-[--theme-text-color] rounded-md hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors w-full"
+    <div className="flex flex-col w-full h-full relative overflow-hidden">
+      {/* Pixi.js stage container */}
+      <div className="absolute inset-0 z-20 flex justify-center items-center">
+        <Stage
+          width={stageSize.width}
+          height={stageSize.height}
+          options={{ backgroundAlpha: 0 }}
+          style={{
+            width: `${stageSize.width}px`,
+            height: `${stageSize.height}px`,
+          }}
         >
-          <Calendar size={20} />
-          <span>Daily Tasks</span>
-        </button>
-        <button
-          onClick={() => setShowScoreRandomizer(true)}
-          className="flex items-center justify-start gap-2 px-4 py-2 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] text-[--theme-text-color] rounded-md hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors w-full"
-        >
-          <Star size={20} />
-          <span>Get Reviews</span>
-        </button>
+          <Container position={[offset.x * scale, offset.y * scale]} scale={scale} sortableChildren>
+            <IsometricGrid />
+            {images.map(
+              (img) =>
+                visibleImages.has(img.id) && (
+                  <RoomSprite 
+                    key={img.id} 
+                    img={{
+                      ...img,
+                      zIndex: ['ExaminationRoom1', 'WaitingRoom1', 'DoctorsOffice1', 'ExaminationRoom2', 'Bathroom1', 'Bathroom2'].includes(img.id) ? 12 : 
+                              img.id === 'DoctorsOffice1' ? 9 : img.zIndex
+                    }} 
+                  />
+                ),
+            )}
+            {Object.values(spritePositions).map(sprite => (
+              <AnimatedSpriteWalking
+                key={sprite.id}
+                position={{ x: sprite.x, y: sprite.y }}
+                direction={sprite.direction}
+                scale={scale * .8}
+              />
+            ))}
+          </Container>
+        </Stage>
       </div>
-      <div className="absolute top-2 left-2 z-10 ml-3 mt-3 flex flex-col items-start">
-      <div className="flex items-center">
-          <img src="/game-components/patient.png" alt="Patient" className="w-10 h-10 mr-2" />
-          <span className="text-[--theme-text-color] font-bold">4</span>
-        </div>
-        <div className="flex items-center mt-5">
-          <img src="/game-components/PixelCupcake.png" alt="Coin" className="w-10 h-10 mr-2" />
-          <span className="text-[--theme-text-color] font-bold">{userScore}</span>
+      
+      {/* UI Elements */}
+      <div className="absolute inset-0 z-30 pointer-events-none">
+        <div className="pointer-events-auto absolute top-2 left-2 text-xl font-bold text-[--theme-text-color]">
+          {clinicName && `${clinicName} Medical Center`}
         </div>
       </div>
-      <div ref={containerRef} className="flex-grow flex justify-center items-center">
-        <div className="w-full h-full rounded-lg flex justify-center items-center overflow-hidden">
-          <div className="absolute inset-0 bg-[--theme-leaguecard-color] border-2 border-[--theme-border-color] opacity-40"></div>
-          <canvas
-            ref={canvasRef}
-            className="relative z-10"
-            style={{
-              width: `${(gridWidth + gridHeight) * (tileWidth / 2) * scale}px`,
-              height: `${(gridWidth + gridHeight) * (tileHeight / 2) * scale}px`,
-            }}
-          />
-        </div>
-      </div>
-      {showScoreRandomizer && (
-        <ScoreRandomizer 
-          onClose={handleScoreRandomizerClose}
-          playerLevel={playerLevel}
-          streakDays={streakDays}
-          patientsPerDay={reportData?.patientsPerDay || 0}
-          qualityOfCare={reportData?.qualityOfCare || 0}
-          averageStarRating={reportData?.averageStarRating || null}
-          clinicCostPerDay={reportData?.clinicCostPerDay || 0}
-        />
-      )}
     </div>
   );
 };

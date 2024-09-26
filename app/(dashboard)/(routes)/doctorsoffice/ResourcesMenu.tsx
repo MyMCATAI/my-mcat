@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { DoctorOfficeStats, ReportData } from '@/types';
 import { Progress } from '@/components/ui/progress';
 import { FaFire } from 'react-icons/fa';
+import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay } from '@/utils/calculateResourceTotals';
 
 // Dynamic import for ChatBotWidgetNoChatBot
 const ChatBotWidgetNoChatBot = dynamic(
@@ -16,15 +17,15 @@ const ChatBotWidgetNoChatBot = dynamic(
 // Mapping function to convert DoctorOfficeStats to ReportData
 const mapDoctorOfficeStatsToReportData = (stats: DoctorOfficeStats): ReportData => {
   return {
-    userScore: stats.qualityOfCare * 50, // Assuming qualityOfCare is on a scale of 0-2
+    userScore: stats.qualityOfCare * 50,
     totalTestsTaken: stats.patientsPerDay,
     testsCompleted: stats.patientsPerDay,
-    completionRate: 100, // Assuming all patients are seen
-    totalQuestionsAnswered: stats.patientsPerDay * 10, // Assuming 10 questions per patient
+    completionRate: 100,
+    totalQuestionsAnswered: stats.patientsPerDay * 10,
     averageTestScore: stats.qualityOfCare * 50,
-    averageTimePerQuestion: 5, // Placeholder value
-    averageTimePerTest: 50, // Placeholder value
-    categoryAccuracy: {}, // Placeholder empty object
+    averageTimePerQuestion: 5,
+    averageTimePerTest: 50,
+    categoryAccuracy: {},
     streak: stats.streak
   };
 };
@@ -32,21 +33,31 @@ const mapDoctorOfficeStatsToReportData = (stats: DoctorOfficeStats): ReportData 
 const ResourcesMenu: React.FC = () => {
   const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
   const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(null);
+  const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
+  const [userRooms, setUserRooms] = useState<string[]>([]);
 
-  // Mock report data - replace this with actual data fetching logic
-  const mockReportData: DoctorOfficeStats = {
-    patientsPerDay: 8,
-    qualityOfCare: 1.25,
-    averageStarRating: null, // Not integrated right now
-    clinicCostPerDay: 500,
-    streak: 1,
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [reportResponse, roomsResponse] = await Promise.all([
+          fetch('/api/user-report'),
+          fetch('/api/clinic')
+        ]);
 
-  // Convert DoctorOfficeStats to ReportData
-  const reportData = mapDoctorOfficeStatsToReportData(mockReportData);
+        if (!reportResponse.ok) throw new Error('Failed to fetch user report');
+        if (!roomsResponse.ok) throw new Error('Failed to fetch user rooms');
 
-  // Mock streak data - replace with actual data
-  const streakDays = 7;
+        const reportData: DoctorOfficeStats = await reportResponse.json();
+        const rooms: string[] = await roomsResponse.json();
+
+        setReportData(reportData);
+        setUserRooms(rooms);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleAssistantResponse = (message: string, dismissFunc: () => void) => {
     setAssistantMessage(message);
@@ -61,13 +72,25 @@ const ResourcesMenu: React.FC = () => {
     setDismissMessage(null);
   };
 
+  if (!reportData || userRooms.length === 0) {
+    return <div>Loading...</div>;
+  }
+
+  const playerLevel = calculatePlayerLevel(userRooms);
+  const patientsPerDay = getPatientsPerDay(playerLevel);
+  const totalQC = calculateTotalQC(playerLevel, reportData.streak);
+  const displayQC = Math.min(totalQC, 5); // Cap at 5
+  const clinicCostPerDay = getClinicCostPerDay(playerLevel);
+
+  const mappedReportData = mapDoctorOfficeStatsToReportData(reportData);
+
   return (
     <div className="h-full">
-      <div className="flex flex-col bg-gradient-to-b from-[--theme-gradient-start] to-[--theme-gradient-end] border-2 border-[--theme-border-color] text-[--theme-text-color] items-center h-full rounded-lg p-4 overflow-auto">
+      <div className="flex flex-col bg-[--theme-leaguecard-color] text-[--theme-text-color] items-center h-full rounded-lg p-4 overflow-auto">
         <div className="flex flex-col items-center mb-1 w-full">
           <div className="w-48 h-48 bg-[--theme-doctorsoffice-accent] border-2 border-[--theme-border-color] rounded-lg mb-4 overflow-hidden relative">
             <ChatBotWidgetNoChatBot
-              reportData={reportData}
+              reportData={mappedReportData}
               onResponse={handleAssistantResponse}
             />
           </div>
@@ -86,29 +109,34 @@ const ResourcesMenu: React.FC = () => {
           )}
         </div>
 
-        <DaysStreak days={streakDays} />
+        <DaysStreak days={reportData.streak} />
 
         <div className="w-full max-w-md space-y-4 mt-6">
           <StatBar
             label="Patients Per Day"
-            value={mockReportData.patientsPerDay}
-            max={40} // Assuming 50 is the maximum patients per day
+            value={patientsPerDay}
+            max={30}
           />
           <StatBar
             label="Quality of Care (QC)"
-            value={mockReportData.qualityOfCare}
-            max={2} // Assuming 2 is the maximum QC value
+            value={displayQC}
+            max={5}
+            showDecimals={true}
           />
           <StatBar
             label="Clinic Cost Per Day"
-            value={mockReportData.clinicCostPerDay}
-            max={1000} // Assuming 1000 is the maximum clinic cost per day
+            value={clinicCostPerDay}
+            max={3}
           />
         </div>
 
         <div className="w-full max-w-md space-y-4 mt-6">
           <h3 className="text-lg font-semibold">Average Star Rating</h3>
-          <p className="text-sm opacity-80">Not integrated right now</p>
+          {reportData.averageStarRating ? (
+            <p>{reportData.averageStarRating.toFixed(1)} / 5.0</p>
+          ) : (
+            <p className="text-sm opacity-80">Not available</p>
+          )}
         </div>
       </div>
     </div>
@@ -119,9 +147,10 @@ interface StatBarProps {
   label: string;
   value: number;
   max: number;
+  showDecimals?: boolean;
 }
 
-const StatBar: React.FC<StatBarProps> = ({ label, value, max }) => {
+const StatBar: React.FC<StatBarProps> = ({ label, value, max, showDecimals = false }) => {
   const percentage = (value / max) * 100;
 
   return (
@@ -129,7 +158,7 @@ const StatBar: React.FC<StatBarProps> = ({ label, value, max }) => {
       <div className="flex justify-between text-sm">
         <span>{label}</span>
         <span>
-          {value} / {max}
+          {showDecimals ? value.toFixed(2) : value} / {max}
         </span>
       </div>
       <Progress value={percentage} className="h-2" />
