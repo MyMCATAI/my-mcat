@@ -194,20 +194,20 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
                     placeholder="Name (optional)"
                     value={messageForm.name}
                     onChange={(e) => setMessageForm({...messageForm, name: e.target.value})}
-                    className="w-full p-2 mb-2 rounded"
+                    className="w-full p-2 mb-2 rounded text-gray-800"
                   />
                   <input
                     type="email"
                     placeholder="Email (optional)"
                     value={messageForm.email}
                     onChange={(e) => setMessageForm({...messageForm, email: e.target.value})}
-                    className="w-full p-2 mb-2 rounded"
+                    className="w-full p-2 mb-2 rounded text-gray-800"
                   />
                   <textarea
                     placeholder="Your message"
                     value={messageForm.message}
                     onChange={(e) => setMessageForm({...messageForm, message: e.target.value})}
-                    className="w-full p-2 mb-2 rounded resize-none"
+                    className="w-full p-2 mb-2 rounded resize-none text-gray-800"
                     required
                     rows={6}
                   />

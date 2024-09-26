@@ -2,16 +2,14 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import SpriteWalking from './SpriteWalking';
 import ShoppingDialog, { ImageGroup } from './ShoppingDialog';
-import { ShoppingCart, Calendar } from 'lucide-react';
+import { ShoppingCart, Calendar, Star } from 'lucide-react';
 import { toast } from "react-hot-toast";
 import DailyDialog from './DailyDialog';
 import ScoreRandomizer from './ScoreRandomizer';
-import { ReportData, DoctorOfficeStats } from '@/types'; // Update the import path as needed
+import { ReportData, DoctorOfficeStats } from '@/types';
 
-// Define the Direction type at the top of the file
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 
-// Define an interface for the image objects
 interface GridImage {
   id: string;
   src: string;
@@ -734,6 +732,7 @@ const OfficeContainer: React.FC = () => {
           onClick={() => setShowScoreRandomizer(true)}
           className="flex items-center justify-start gap-2 px-4 py-2 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] text-[--theme-text-color] rounded-md hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors w-full"
         >
+          <Star size={20} />
           <span>Get Reviews</span>
         </button>
       </div>
