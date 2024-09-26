@@ -2,14 +2,14 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import SpriteWalking from './SpriteWalking';
 import ShoppingDialog, { ImageGroup } from './ShoppingDialog';
-import { Home, ShoppingCart, Calendar } from 'lucide-react';
+import { ShoppingCart, Calendar, Star } from 'lucide-react';
 import { toast } from "react-hot-toast";
 import DailyDialog from './DailyDialog';
 import ScoreRandomizer from './ScoreRandomizer';
-// Define the Direction type at the top of the file
+import { ReportData, DoctorOfficeStats } from '@/types';
+
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 
-// Define an interface for the image objects
 interface GridImage {
   id: string;
   src: string;
@@ -345,80 +345,184 @@ const OfficeContainer: React.FC = () => {
 
   const imageGroups: ImageGroup[] = [
     {
-      name: "Basic Rooms",
+      name: "INTERN LEVEL",
       items: [
         { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png' },
         { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png' },
         { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png' },
       ],
-      cost: 5
+      cost: 5,
+      benefits: [
+        '4 patients a day',
+        '1 cupcake coin a day',
+        'Quality of Care (QC) = 1x',
+        'You are an intern learning the ropes.',
+      ]
     },
     {
-      name: "Examination and Bathrooms",
+      name: "RESIDENT LEVEL",
       items: [
         { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png' },
         { id: 'Bathroom1', src: '/game-components/Bathroom1.png' },
         { id: 'Bathroom2', src: '/game-components/Bathroom1.png' },
       ],
-      cost: 10
+      cost: 10,
+      benefits: [
+        '8 patients a day',
+        '1 cupcake coin a day',
+        'Quality of Care (QC) = 1.25x',
+        'You are a doctor in training with Kalypso.',
+      ]
     },
     {
-      name: "High Care Rooms",
+      name: "FELLOWSHIP LEVEL",
       items: [
         { id: 'HighCare1', src: '/game-components/HighCare1.png' },
         { id: 'HighCare2', src: '/game-components/HighCare1.png' },
       ],
-      cost: 15
+      cost: 15,
+      benefits: [
+        '10 patients a day',
+        '2 cupcake coins a day',
+        'Quality of Care (QC) = 1.5x',
+        'You are a physician.',
+      ]
     },
     {
-      name: "Operating Suite",
+      name: "ATTENDING LEVEL",
       items: [
         { id: 'OperatingRoom1', src: '/game-components/OperatingRoom1.png' },
         { id: 'MedicalCloset1', src: '/game-components/MedicalCloset1.png' },
         { id: 'MRIMachine2', src: '/game-components/MRIMachine.png' },
       ],
-      cost: 20
+      cost: 20,
+      benefits: [
+        'Quality of Care (QC) = 1.5x',
+        '2 cupcake coins a day',
+        'You can do surgeries.',
+      ]
     },
     {
-      name: "Imaging Suite",
+      name: "PHYSICIAN LEVEL",
       items: [
         { id: 'MRIMachine1', src: '/game-components/MRIMachine.png' },
       ],
-      cost: 25
+      cost: 25,
+      benefits: [
+        'Quality of Care (QC) = 1.75x',
+        '3 cupcake coins a day',
+        'You can lead teams.',
+        'UWorld Raffle Entry ($400 value)',
+      ]
     },
     {
-      name: "CAT-Scan Suite",
+      name: "MEDICAL DIRECTOR LEVEL",
       items: [
         { id: 'CATScan1', src: '/game-components/CATScan1.png' },
         { id: 'CATScan2', src: '/game-components/CATScan1.png' },
       ],
-      cost: 30
+      cost: 30,
+      benefits: [
+        'Quality of Care (QC) = 2x',
+        '3 cupcake coins a day',
+        'You are now renowned.',
+        '30 min tutoring session.',
+      ]
+    },
+    {
+      name: "Team Vacation",
+      items: [],
+      cost: 1,
+      benefits: [
+        'Can take a break tomorrow and save your streak.',
+      ]
+    },
+    {
+      name: "Free Clinic Day",
+      items: [],
+      cost: 2,
+      benefits: [
+        'Treat 50 patients',
+        'No zero star or 1 star reviews',
+      ]
+    },
+    {
+      name: "University Sponsorship",
+      items: [],
+      cost: 3,
+      benefits: [
+        '2x Boost Your Value for University in a Day',
+      ]
     },
   ];
 
   const [userRooms, setUserRooms] = useState<string[]>([]);
   const [userScore, setUserScore] = useState(0);
 
+  const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
+
+  // Define a mapping from room names to levels
+  const levelRoomsMap: { [level: number]: string[] } = {
+    1: ["INTERN LEVEL"],
+    2: ["RESIDENT LEVEL"],
+    3: ["FELLOWSHIP LEVEL"],
+    4: ["ATTENDING LEVEL"],
+    5: ["PHYSICIAN LEVEL"],
+    6: ["MEDICAL DIRECTOR LEVEL"],
+  };
+
+  // Function to determine playerLevel based on userRooms
+  const getPlayerLevel = (userRooms: string[]): number => {
+    let highestLevel = 1;
+    for (let level = 1; level <= 6; level++) {
+      if (userRooms.includes(levelRoomsMap[level][0])) {
+        highestLevel = level;
+      }
+    }
+    return highestLevel;
+  };
+
+  // Fetch reportData including streakDays
   useEffect(() => {
-    const fetchUserInfo = async () => {
+    const fetchReportData = async () => {
       try {
-        const response = await fetch('/api/user-info', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch user info');
-        }
-
-        const userInfo = await response.json();
-        setUserScore(userInfo.score || 0);
+        const response = await fetch('/api/user-report');
+        if (!response.ok) throw new Error('Failed to fetch user report');
+        const data: DoctorOfficeStats = await response.json();
+        setReportData(data);
       } catch (error) {
-        console.error('Error fetching user info:', error);
-        toast.error('Failed to fetch user info');
+        console.error('Error fetching report data:', error);
       }
     };
+    fetchReportData();
+  }, []);
 
+  // Determine streakDays and playerLevel
+  const streakDays = reportData?.streak || 0;
+  const playerLevel = getPlayerLevel(userRooms);
+
+  // Move fetchUserInfo to component level
+  const fetchUserInfo = useCallback(async () => {
+    try {
+      const response = await fetch('/api/user-info', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user info');
+      }
+
+      const userInfo = await response.json();
+      setUserScore(userInfo.score || 0);
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+      toast.error('Failed to fetch user info');
+    }
+  }, []); // Empty dependency array as it doesn't depend on any props or state
+
+  // Use fetchUserInfo in useEffect
+  useEffect(() => {
     fetchUserInfo();
 
     const fetchUserRooms = async () => {
@@ -451,7 +555,8 @@ const OfficeContainer: React.FC = () => {
     };
 
     fetchUserRooms();
-  }, []);
+  }, [fetchUserInfo]);
+
   const toggleGroup = async (groupName: string) => {
     const group = imageGroups.find(g => g.name === groupName);
     if (!group) return;
@@ -550,10 +655,6 @@ const OfficeContainer: React.FC = () => {
 
   const spriteSheetUrl = '/game-components/sprite-sheet.png'; // Update with the actual path
 
-  const handleHomeClick = () => {
-    router.push('/home');
-  };
-
   const [showDailyDialog, setShowDailyDialog] = useState(false);
   const [isFirstVisit, setIsFirstVisit] = useState(false);
   const [clinicName, setClinicName] = useState<string | null>(null);
@@ -589,6 +690,12 @@ const OfficeContainer: React.FC = () => {
   // Add new state to control the ScoreRandomizer dialog visibility
   const [showScoreRandomizer, setShowScoreRandomizer] = useState(false);
 
+  // ScoreRandomizer close handler
+  const handleScoreRandomizerClose = useCallback(() => {
+    setShowScoreRandomizer(false);
+    fetchUserInfo(); // Fetch updated user score when dialog is closed
+  }, [fetchUserInfo]);
+
   return (
     <div className="flex flex-col w-full h-full relative">
       {showDailyDialog && (
@@ -615,36 +722,29 @@ const OfficeContainer: React.FC = () => {
           }
         />
         <button
-          onClick={handleHomeClick}
-          className="flex items-center justify-start gap-2 px-4 py-2 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] text-[--theme-text-color] rounded-md hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors w-full"
-        >
-          <Home size={20} />
-          <span>Home</span>
-        </button>
-        {/* Add new button to activate DailyDialog */}
-        <button
           onClick={() => setShowDailyDialog(true)}
           className="flex items-center justify-start gap-2 px-4 py-2 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] text-[--theme-text-color] rounded-md hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors w-full"
         >
           <Calendar size={20} />
           <span>Daily Tasks</span>
         </button>
-        {/* New button to activate ScoreRandomizer */}
         <button
           onClick={() => setShowScoreRandomizer(true)}
           className="flex items-center justify-start gap-2 px-4 py-2 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] text-[--theme-text-color] rounded-md hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors w-full"
         >
+          <Star size={20} />
           <span>Get Reviews</span>
         </button>
       </div>
-      <div className="absolute top-2 left-2 z-10 bg-[--theme-doctorsoffice-accent] p-2 rounded-md w-80">
-        <h3 className="text-[--theme-text-color] font-bold mb-2">Your Rooms:</h3>
-        <ul className="text-[--theme-text-color] text-sm">
-          {userRooms.map((room, index) => (
-            <li key={index}>{room}</li>
-          ))}
-        </ul>
-        <p className="text-[--theme-text-color] mt-2">Coins: {userScore}</p>
+      <div className="absolute top-2 left-2 z-10 ml-3 mt-3 flex flex-col items-start">
+      <div className="flex items-center">
+          <img src="/game-components/patient.png" alt="Patient" className="w-10 h-10 mr-2" />
+          <span className="text-[--theme-text-color] font-bold">4</span>
+        </div>
+        <div className="flex items-center mt-5">
+          <img src="/game-components/PixelCupcake.png" alt="Coin" className="w-10 h-10 mr-2" />
+          <span className="text-[--theme-text-color] font-bold">{userScore}</span>
+        </div>
       </div>
       <div ref={containerRef} className="flex-grow flex justify-center items-center">
         <div className="w-full h-full rounded-lg flex justify-center items-center overflow-hidden">
@@ -659,9 +759,16 @@ const OfficeContainer: React.FC = () => {
           />
         </div>
       </div>
-      {/* Render the ScoreRandomizer dialog when showScoreRandomizer is true */}
       {showScoreRandomizer && (
-        <ScoreRandomizer onClose={() => setShowScoreRandomizer(false)} />
+        <ScoreRandomizer 
+          onClose={handleScoreRandomizerClose}
+          playerLevel={playerLevel}
+          streakDays={streakDays}
+          patientsPerDay={reportData?.patientsPerDay || 0}
+          qualityOfCare={reportData?.qualityOfCare || 0}
+          averageStarRating={reportData?.averageStarRating || null}
+          clinicCostPerDay={reportData?.clinicCostPerDay || 0}
+        />
       )}
     </div>
   );

@@ -30,8 +30,9 @@ export async function GET(req: NextRequest) {
       take: 10 // Limit to the last 10 tests
     });
 
-    // Calculate the streak
-    let streak = 0;
+    // Initialize variables for streak calculation
+    let streaks: number[] = [];
+    let currentStreak = 0;
     let currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0); // Set to start of day
 
@@ -39,21 +40,36 @@ export async function GET(req: NextRequest) {
       const testDate = new Date(test.startedAt);
       testDate.setHours(0, 0, 0, 0); // Set to start of day
 
-      if (testDate.getTime() === currentDate.getTime()) {
+      const dayDifference = (currentDate.getTime() - testDate.getTime()) / 86400000;
+
+      if (dayDifference === 0) {
         // Same day, continue to next test
         continue;
-      } else if (testDate.getTime() === currentDate.getTime() - 86400000) { // 86400000 ms = 1 day
+      } else if (dayDifference === 1) {
         // Previous day, increment streak
-        streak++;
+        currentStreak++;
         currentDate = testDate;
       } else {
-        // Gap in streak, stop counting
-        break;
+        // Gap in streak, save current streak and start a new one
+        if (currentStreak > 0) {
+          streaks.push(currentStreak);
+        }
+        currentStreak = 1; // Start a new streak
+        currentDate = testDate;
       }
     }
 
-    // Add 1 to include the current day in the streak
-    streak++;
+    // Add the final streak
+    if (currentStreak > 0) {
+      streaks.push(currentStreak);
+    }
+
+    // Calculate the current streak (the first element in the streaks array)
+    const currentStreakLength = streaks.length > 0 ? streaks[0] : 0;
+    // Previous streak (if any)
+    const previousStreakLength = streaks.length > 1 ? streaks[1] : 0;
+    // Determine if the streak was recently broken
+    const streakBrokenRecently = previousStreakLength > 0 && currentStreakLength < previousStreakLength;
 
     // Calculate statistics
     const totalTestsTaken = userTests.length;
@@ -108,7 +124,9 @@ export async function GET(req: NextRequest) {
       averageTimePerQuestion,
       averageTimePerTest: averageTimePerTest, 
       categoryAccuracy: categoryAccuracyPercentages,
-      streak,
+      streak: currentStreakLength,
+      previousStreak: previousStreakLength,
+      streakBrokenRecently,
     });
   } catch (error) {
     console.error('Error generating user report:', error);

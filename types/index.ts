@@ -139,3 +139,10 @@ export interface ReportData {
   streak: number;
 }
 
+export interface DoctorOfficeStats {
+  streak: number;
+  patientsPerDay: number;
+  qualityOfCare: number;
+  averageStarRating: number | null;
+  clinicCostPerDay: number;
+}

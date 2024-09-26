@@ -61,12 +61,15 @@ export async function POST(req: Request) {
     }
 
     const validRooms = [
-      "Basic Rooms",
-      "Examination and Bathrooms",
-      "High Care Rooms",
-      "Operating Suite",
-      "Additional MRI",
-      "CAT-Scan Suite"
+      "INTERN LEVEL",
+      "RESIDENT LEVEL",
+      "FELLOWSHIP LEVEL",
+      "ATTENDING LEVEL",
+      "PHYSICIAN LEVEL",
+      "MEDICAL DIRECTOR LEVEL",
+      "Team Vacation",
+      "Free Clinic Day",
+      "University Sponsorship"
     ];
 
     if (!validRooms.includes(room)) {
