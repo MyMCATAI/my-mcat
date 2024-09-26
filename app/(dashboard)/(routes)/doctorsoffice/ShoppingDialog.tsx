@@ -7,8 +7,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
+import { toast } from 'react-hot-toast';
 
 interface ImageItem {
   id: string;
@@ -45,7 +45,7 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
     { level: 1, title: "INTERN LEVEL", image: "/game-components/INTERNLEVEL.png", cost: 5 },
     { level: 2, title: "RESIDENT LEVEL", image: "/game-components/RESIDENTLEVEL.png", cost: 15 },
     { level: 3, title: "FELLOWSHIP LEVEL", image: "/game-components/FELLOWSHIPLEVEL.png", cost: 25 },
-    { level: 4, title: "ATTENDING LEVEL", image: "/game-components/ATTENDINGLEVEL.png", cost: 35 },
+    { level: 4, title: "ATTENDING LEVEL", image: "/game-components/ATTENDINGLEVEL.png", cost: 2 },
     { level: 5, title: "PHYSICIAN LEVEL", image: "/game-components/PHYSICIANLEVEL.png", cost: 60 },
     { level: 6, title: "MEDICAL DIRECTOR LEVEL", image: "/game-components/MEDICALDIRECTORLEVEL.png", cost: 80 },
   ];
@@ -59,7 +59,15 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
   const handleLevelClick = (level: number) => {
     const group = imageGroups.find(g => g.cost === levelInfo[level - 1].cost);
     if (group) {
-      toggleGroup(group.name);
+      const previousLevelPurchased = level === 1 || imageGroups
+        .find(g => g.cost === levelInfo[level - 2].cost)?.items
+        .every(item => visibleImages.has(item.id));
+
+      if (previousLevelPurchased) {
+        toggleGroup(group.name);
+      } else {
+        toast.error(`You need to purchase level ${level - 1} first.`);
+      }
     }
   };
 
@@ -78,14 +86,7 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button className="flex items-center justify-start gap-2 px-4 py-2 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] text-[--theme-text-color] rounded-md hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors w-full">
-          {buttonContent || (
-            <>
-              <ShoppingCart size={20} />
-              <span>Marketplace</span>
-            </>
-          )}
-        </button>
+        {buttonContent}
       </DialogTrigger>
       <DialogContent className="max-w-[80vw] h-[80vh] bg-[--theme-doctorsoffice-accent] border text-[--theme-text-color] border-[--theme-border-color] flex flex-col">
         <DialogHeader className="mb-2">
@@ -110,14 +111,18 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
                 {levelInfo.map(({ level, title, image, cost }, index) => {
                   const group = imageGroups.find(g => g.cost === cost);
                   const isPurchased = group ? group.items.every((item) => visibleImages.has(item.id)) : false;
+                  const previousLevelPurchased = level === 1 || imageGroups
+                    .find(g => g.cost === levelInfo[level - 2].cost)?.items
+                    .every(item => visibleImages.has(item.id));
+                  const isAvailable = isPurchased || previousLevelPurchased;
 
                   return (
                     <div
                       key={title}
-                      onClick={() => handleLevelClick(level)}
+                      onClick={() => isAvailable && handleLevelClick(level)}
                       onMouseEnter={() => setHoveredLevel(level)}
                       onMouseLeave={() => setHoveredLevel(null)}
-                      className="relative cursor-pointer transition-all duration-200 aspect-[4/3] group w-full"
+                      className={`relative cursor-pointer transition-all duration-200 aspect-[4/3] group w-full ${!isAvailable && 'opacity-50 cursor-not-allowed'}`}
                     >
                       <div className={`absolute inset-0 transition-all duration-200 
                         ${isPurchased ? 'opacity-100' : 'opacity-100'}
@@ -151,6 +156,13 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
                         {isPurchased && (
                           <div className="absolute inset-0 bg-green-500 bg-opacity-50 flex items-center justify-center">
                             <div className="text-white text-2xl font-bold">Purchased</div>
+                          </div>
+                        )}
+                        {!isPurchased && !isAvailable && (
+                          <div className="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center">
+                            <div className="text-white text-lg font-bold text-center">
+                              Purchase previous level first
+                            </div>
                           </div>
                         )}
                       </div>
