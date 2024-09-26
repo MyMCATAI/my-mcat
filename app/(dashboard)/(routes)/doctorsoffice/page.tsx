@@ -15,6 +15,10 @@ const DoctorsOfficePage: React.FC = () => {
   const [userScore, setUserScore] = useState(0);
   const [patientsPerDay, setPatientsPerDay] = useState(4); // Default value
   const router = useRouter();
+  const [userRooms, setUserRooms] = useState<string[]>([]);
+
+  // Add this state for clinic name
+  const [clinicName, setClinicName] = useState<string | null>(null);
 
   // Marketplace State
   const [imageGroups, setImageGroups] = useState<ImageGroup[]>([
@@ -228,6 +232,7 @@ const DoctorsOfficePage: React.FC = () => {
           const data = await response.json();
           setUserScore(data.score || 0);
           setPatientsPerDay(data.patientsPerDay || 4);
+          setClinicName(data.clinicName || null);
         }
       } catch (error) {
         console.error('Failed to fetch user info:', error);
@@ -271,6 +276,11 @@ const DoctorsOfficePage: React.FC = () => {
     setActiveTab(tab);
   };
 
+  // Add this function to update user score
+  const handleUpdateUserScore = (newScore: number) => {
+    setUserScore(newScore);
+  };
+
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
       <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
@@ -278,7 +288,15 @@ const DoctorsOfficePage: React.FC = () => {
           <ResourcesMenu />
         </div>
         <div className="w-3/4 font-krungthep relative rounded-r-lg">
-          <OfficeContainer visibleImages={visibleImages} />
+          <OfficeContainer 
+            visibleImages={visibleImages}
+            clinicName={clinicName}
+            userScore={userScore}
+            userRooms={userRooms}
+            imageGroups={imageGroups}
+            toggleGroup={toggleGroup}
+            onUpdateUserScore={handleUpdateUserScore}
+          />
           {/* Fellowship Level button with coins and patients */}
           <div className="absolute top-4 right-4 z-50 flex items-center">
             {/* Coins display */}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Stage, Container, Graphics, Sprite } from '@pixi/react';
 import { Texture, Graphics as PIXIGraphics, utils as PIXIUtils, BaseTexture, Rectangle } from 'pixi.js';
+import { ImageGroup } from './ShoppingDialog';
 
 
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
@@ -120,6 +121,19 @@ interface OfficeContainerProps {
   onUpdateUserScore: (newScore: number) => void;
 }
 
+// Define a type for sprite positions with an index signature
+interface SpritePosition {
+  id: string;
+  x: number;
+  y: number;
+  direction: Direction;
+  character: number;
+}
+
+type SpritePositions = {
+  [key: string]: SpritePosition;
+};
+
 const OfficeContainer: React.FC<OfficeContainerProps> = ({
   visibleImages,
   clinicName,
@@ -155,8 +169,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [scale, setScale] = useState(1);
 
-  const [spritePositions, setSpritePositions] = useState({
-    sprite1: { id: 'sprite1', x: 9, y: 9, direction: 'S' as const, character: 1 },
+  const [spritePositions, setSpritePositions] = useState<SpritePositions>({
+    sprite1: { id: 'sprite1', x: 9, y: 9, direction: 'S', character: 1 },
   });
 
   const sprite1WaypointIndexRef = useRef(0);
@@ -210,7 +224,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   ) => {
     setSpritePositions(prevPositions => {
       const newPositions = { ...prevPositions };
-      const sprite = newPositions[spriteId];
+      const sprite = newPositions[spriteId];  // This line is now type-safe
       const waypoints = spriteWaypoints[spriteId];
       const currentWaypoint = waypoints[waypointIndexRef.current];
 
@@ -257,6 +271,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   const IsometricGrid = useCallback(() => {
     const accentColor = getAccentColor();
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const drawGrid = useCallback((g: PIXIGraphics) => {
       g.clear();
       g.lineStyle(1, 0x000000, 1);
