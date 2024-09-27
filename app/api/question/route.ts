@@ -2,7 +2,8 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
-import { getQuestions, createQuestion } from "@/lib/question";
+import { getQuestions, createQuestion, updateQuestion, getQuestionById } from "@/lib/question";
+import prisma from "@/lib/prismadb";
 
 export async function GET(req: Request) {
   try {
@@ -69,6 +70,73 @@ export async function POST(req: Request) {
     return NextResponse.json(newQuestion);
   } catch (error) {
     console.log('[QUESTIONS_POST]', error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
+
+export async function PUT(req: Request) {
+  try {
+    const { userId } = auth();
+    
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const body = await req.json();
+    console.log(body)
+    // Validate required fields
+    if (!body.id) {
+      return new NextResponse("Missing id", { status: 400 });
+    }
+
+    // Log body details
+    console.log('PUT request body:', {
+      id: body.id,
+      questionContent: body.questionContent,
+      questionOptions: body.questionOptions,
+      questionAnswerNotes: body.questionAnswerNotes,
+      contentCategory: body.contentCategory,
+      passageId: body.passageId,
+      categoryId: body.categoryId,
+      context: body.context,
+      difficulty: body.difficulty 
+    });
+
+    // Create an object with only the fields that are present in the request body
+    const updateData: Partial<{
+      questionContent: string;
+      questionOptions: string;
+      questionAnswerNotes: string;
+      contentCategory: string;
+      passageId: string;
+      categoryId: string;
+      context: string;
+      difficulty: number;
+    }> = {};
+
+    if (body.questionContent) updateData.questionContent = body.questionContent;
+    if (body.questionOptions) updateData.questionOptions = JSON.stringify(body.questionOptions);
+    if (body.questionAnswerNotes) updateData.questionAnswerNotes = body.questionAnswerNotes;
+    if (body.contentCategory) updateData.contentCategory = body.contentCategory;
+    if (body.passageId) updateData.passageId = body.passageId;
+    if (body.categoryId) updateData.categoryId = body.categoryId;
+    if (body.context) updateData.context = body.context;
+    if (body.difficulty) updateData.difficulty = body.difficulty;
+
+    // Check if the question exists before updating
+    const existingQuestion = await prisma.question.findUnique({
+      where: { id: body.id }
+    });
+
+    if (!existingQuestion) {
+      return new NextResponse("Question not found", { status: 404 });
+    }
+
+    const updatedQuestion = await updateQuestion(body.id, updateData);
+
+    return NextResponse.json(updatedQuestion);
+  } catch (error) {
+    console.log('[QUESTIONS_PUT]', error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
