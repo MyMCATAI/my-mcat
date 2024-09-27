@@ -3,14 +3,15 @@ import Image from "next/image";
 import { FetchedActivity } from '@/types';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
 import MVPDialog from "@/components/MVPDialog";
 import RedditPosts from "../../../../components/RedditPosts";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FaYoutube } from 'react-icons/fa';
-import TutorialContent from "../../../../components/home/TutorialContent"; // Add this import
+import TutorialContent from "../../../../components/home/TutorialContent";
+import TutorialVidDialog from '../../../../components/ui/TutorialVidDialog';
 
 interface KnowledgeProfileProps {
   activities: FetchedActivity[];
@@ -27,7 +28,7 @@ interface School {
 type TabContent = 
   | { type: 'insights'; videos: { id: string; title: string }[] }
   | { type: 'league'; schools: School[] }
-  | { type: 'tutorial' }; // Add this new type
+  | { type: 'tutorial' };
 
 type VideoCategory = 'RBT' | 'RWT' | 'CMP';
 
@@ -94,14 +95,12 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
 
   const [videos, setVideos] = useState([firstVideo, ...shuffleVideos(videoCategories[selectedCategory])]);
 
-  // Add this function to randomly select a category
   const selectRandomCategory = () => {
     const categories: VideoCategory[] = ['RBT', 'RWT', 'CMP'];
     const randomIndex = Math.floor(Math.random() * categories.length);
     setSelectedCategory(categories[randomIndex]);
   };
 
-  // Use useEffect to call selectRandomCategory on component mount
   useEffect(() => {
     selectRandomCategory();
   }, []);
@@ -111,16 +110,28 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
     setCurrentVideoIndex(0);
   }, [selectedCategory]);
 
+  const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
+  const [tutorialVideoUrl, setTutorialVideoUrl] = useState('');
+
+  const openTutorialDialog = (videoUrl: string) => {
+    setTutorialVideoUrl(videoUrl);
+    setIsTutorialDialogOpen(true);
+  };
+
   const renderInsights = () => (
     <div className="h-full flex flex-col space-y-4">
       <Card>
-        <CardContent className="p-4">
+        <CardContent className="p-4 relative">
           <div className="flex items-center mb-4">
             <FaYoutube className="text-3xl text-red-600 mr-2" />
             <span className="font-semibold text-lg text-[--theme-text-color]">Videos from YouTube</span>
           </div>
+          <HelpCircle 
+            className="absolute top-2 right-2 text-[--theme-border-color] hover:text-gray-200 transition-colors duration-200 cursor-pointer" 
+            size={20}
+            onClick={() => openTutorialDialog('https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/KnowledgeProfileInformation.mp4')}
+          />
           <div className="relative aspect-video group">
-            <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-0 transition-opacity duration-300 z-10"></div>
             <iframe
               width="100%"
               height="100%"
@@ -134,7 +145,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
             <Button
               variant="secondary"
               size="sm"
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white z-10"
               onClick={() => setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length)}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -142,7 +153,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
             <Button
               variant="secondary"
               size="sm"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white z-10"
               onClick={() => setCurrentVideoIndex((prev) => (prev + 1) % videos.length)}
             >
               <ChevronRight className="h-4 w-4" />
@@ -188,7 +199,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   };
 
   const renderSchools = (schools: School[]) => (
-    <ScrollArea className="h-full">
+    <ScrollArea className="h-full relative">
       {schools.map((school, index) => {
         return (
           <div key={index} className="mb-4 p-4 bg-[--theme-leaguecard-color] rounded-lg shadow-md">
@@ -249,7 +260,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   const tabs: { id: string; label: string; content: TabContent }[] = [
     { id: "tab1", label: "Insights", content: { type: 'insights', videos: videos } },
     { id: "tab2", label: "League", content: { type: 'league', schools: schools } },
-    { id: "tab3", label: "Bulletin", content: { type: 'tutorial' } }, // Add this new tab
+    { id: "tab3", label: "Bulletin", content: { type: 'tutorial' } },
   ];
 
   return (
@@ -270,10 +281,15 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
             </button>
           ))}
         </div>
-        <div className={`mt-4 ${activeTab === 'tab2' ? 'bg-transparent' : 'bg-[--theme-mainbox-color]'} flex-grow mb-8 overflow-hidden`}>
+        <div className={`mt-4 ${activeTab === 'tab2' ? 'bg-transparent' : 'bg-[--theme-mainbox-color]'} flex-grow mb-8 overflow-hidden relative`}>
           {renderContent(tabs.find(tab => tab.id === activeTab)!.content)}
         </div>
       </div>
+      <TutorialVidDialog
+        isOpen={isTutorialDialogOpen}
+        onClose={() => setIsTutorialDialogOpen(false)}
+        videoUrl={tutorialVideoUrl}
+      />
     </div>
   );
 };

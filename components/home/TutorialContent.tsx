@@ -35,13 +35,13 @@ const TutorialContent: React.FC = () => {
               onClick={() => openTutorial('premium')}
               className="block w-full text-left px-4 py-2 bg-transparent rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
             >
-              3. The Clinic
+              3. Doctor&apos;s Office
             </button>
             <button
               onClick={() => openTutorial('beta')}
               className="block w-full text-left px-4 py-2 bg-transparent rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
             >
-              4. Meow Distinction
+              4. MD Premium
             </button>
             <button
               onClick={() => openTutorial('beta')}

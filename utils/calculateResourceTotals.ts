@@ -8,12 +8,22 @@ export const calculatePlayerLevel = (userRooms: string[]): number => {
     "MEDICAL DIRECTOR LEVEL"
   ];
   
+  console.log("User Rooms:", userRooms);
+  
+  let highestLevel = -1;
   for (let i = tierRooms.length - 1; i >= 0; i--) {
     if (userRooms.includes(tierRooms[i])) {
-      return i + 1;
+      highestLevel = i;
+      break;
     }
   }
-  return 1; // Default to level 1 if no rooms are purchased
+  
+  console.log("Highest Level Index:", highestLevel);
+  
+  const calculatedLevel = highestLevel === -1 ? 1 : highestLevel + 1;
+  console.log("Calculated Level:", calculatedLevel);
+  
+  return calculatedLevel;
 };
 
 export const getPatientsPerDay = (playerLevel: number): number => {

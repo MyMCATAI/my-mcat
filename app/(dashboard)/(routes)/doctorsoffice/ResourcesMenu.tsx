@@ -4,6 +4,8 @@ import { DoctorOfficeStats, ReportData } from '@/types';
 import { Progress } from '@/components/ui/progress';
 import { FaFire } from 'react-icons/fa';
 import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay } from '@/utils/calculateResourceTotals';
+import axios from 'axios';
+import { HelpCircle } from 'lucide-react'; // Add this import
 
 // Dynamic import for ChatBotWidgetNoChatBot
 const ChatBotWidgetNoChatBot = dynamic(
@@ -35,23 +37,38 @@ const ResourcesMenu: React.FC = () => {
   const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(null);
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
   const [userRooms, setUserRooms] = useState<string[]>([]);
+  const [totalCoins, setTotalCoins] = useState<number>(0);
+  const [totalPatients, setTotalPatients] = useState<number>(0);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [reportResponse, roomsResponse] = await Promise.all([
+        const [reportResponse, roomsResponse, userInfoResponse] = await Promise.all([
           fetch('/api/user-report'),
-          fetch('/api/clinic')
+          fetch('/api/clinic'),
+          fetch('/api/user-info')
         ]);
 
         if (!reportResponse.ok) throw new Error('Failed to fetch user report');
         if (!roomsResponse.ok) throw new Error('Failed to fetch user rooms');
+        if (!userInfoResponse.ok) throw new Error('Failed to fetch user info');
 
         const reportData: DoctorOfficeStats = await reportResponse.json();
         const rooms: string[] = await roomsResponse.json();
+        const userInfo = await userInfoResponse.json();
+
+        console.log('Fetched rooms:', rooms);
 
         setReportData(reportData);
         setUserRooms(rooms);
+        setTotalCoins(userInfo.score);
+
+        // Load total patients from local storage
+        const storedPatients = localStorage.getItem('totalPatients');
+        setTotalPatients(storedPatients ? parseInt(storedPatients, 10) : 0);
+
+        // Perform daily calculations
+        await performDailyCalculations();
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -72,11 +89,35 @@ const ResourcesMenu: React.FC = () => {
     setDismissMessage(null);
   };
 
+  const performDailyCalculations = async () => {
+    const playerLevel = calculatePlayerLevel(userRooms);
+    const patientsPerDay = getPatientsPerDay(playerLevel);
+    const clinicCostPerDay = getClinicCostPerDay(playerLevel);
+
+    try {
+      const response = await axios.post('/api/daily-calculations', {
+        patientsPerDay,
+        clinicCostPerDay
+      });
+
+      if (response.data) {
+        setTotalCoins(response.data.updatedCoins);
+        const newTotalPatients = totalPatients + patientsPerDay;
+        setTotalPatients(newTotalPatients);
+        localStorage.setItem('totalPatients', newTotalPatients.toString());
+      }
+    } catch (error) {
+      console.error('Error performing daily calculations:', error);
+    }
+  };
+
   if (!reportData || userRooms.length === 0) {
     return <div>Loading...</div>;
   }
 
   const playerLevel = calculatePlayerLevel(userRooms);
+  console.log('User rooms in ResourcesMenu:', userRooms);
+  console.log('Calculated player level in ResourcesMenu:', playerLevel);
   const patientsPerDay = getPatientsPerDay(playerLevel);
   const totalQC = calculateTotalQC(playerLevel, reportData.streak);
   const displayQC = Math.min(totalQC, 5); // Cap at 5
@@ -86,7 +127,11 @@ const ResourcesMenu: React.FC = () => {
 
   return (
     <div className="h-full">
-      <div className="flex flex-col bg-[--theme-leaguecard-color] text-[--theme-text-color] items-center h-full rounded-lg p-4 overflow-auto">
+      <div className="flex flex-col bg-[--theme-leaguecard-color] text-[--theme-text-color] items-center h-full rounded-lg p-4 overflow-auto relative">
+        <HelpCircle 
+          className="absolute top-2 right-2 text-[--theme-border-color] hover:text-gray-200 transition-colors duration-200 cursor-pointer z-10" 
+          size={20}
+        />
         <div className="flex flex-col items-center mb-1 w-full">
           <div className="w-48 h-48 bg-[--theme-doctorsoffice-accent] border-2 border-[--theme-border-color] rounded-lg mb-4 overflow-hidden relative">
             <ChatBotWidgetNoChatBot
@@ -137,6 +182,13 @@ const ResourcesMenu: React.FC = () => {
           ) : (
             <p className="text-sm opacity-80">Not available</p>
           )}
+        </div>
+
+        <div className="w-full max-w-md space-y-4 mt-6">
+          <h3 className="text-lg font-semibold">Total Coins</h3>
+          <p>{totalCoins}</p>
+          <h3 className="text-lg font-semibold">Total Patients Treated</h3>
+          <p>{totalPatients}</p>
         </div>
       </div>
     </div>
