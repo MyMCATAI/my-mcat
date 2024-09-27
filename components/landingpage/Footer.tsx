@@ -15,7 +15,7 @@ const Footer = () => {
     {
       title: "Join Now",
       links: [
-        { href:  "/dashboard", text: "Portal" }
+        { href:  "/sign-up", text: "Portal" }
       ],
     },
     {
