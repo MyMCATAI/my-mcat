@@ -9,6 +9,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
+import { useUser } from "@clerk/nextjs";
 
 interface ImageItem {
   id: string;
@@ -37,15 +38,16 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
   buttonContent,
   userScore,
 }) => {
+  const { user } = useUser();
   const [hoveredLevel, setHoveredLevel] = useState<number | null>(null);
   const [showMessageForm, setShowMessageForm] = useState(false);
-  const [messageForm, setMessageForm] = useState({ name: '', email: '', message: '' });
+  const [messageForm, setMessageForm] = useState({ message: '' });
 
   const levelInfo = [
     { level: 1, title: "INTERN LEVEL", image: "/game-components/INTERNLEVEL.png", cost: 5 },
     { level: 2, title: "RESIDENT LEVEL", image: "/game-components/RESIDENTLEVEL.png", cost: 15 },
     { level: 3, title: "FELLOWSHIP LEVEL", image: "/game-components/FELLOWSHIPLEVEL.png", cost: 25 },
-    { level: 4, title: "ATTENDING LEVEL", image: "/game-components/ATTENDINGLEVEL.png", cost: 2 },
+    { level: 4, title: "ATTENDING LEVEL", image: "/game-components/ATTENDINGLEVEL.png", cost: 35 },
     { level: 5, title: "PHYSICIAN LEVEL", image: "/game-components/PHYSICIANLEVEL.png", cost: 60 },
     { level: 6, title: "MEDICAL DIRECTOR LEVEL", image: "/game-components/MEDICALDIRECTORLEVEL.png", cost: 80 },
   ];
@@ -64,7 +66,11 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
         .every(item => visibleImages.has(item.id));
 
       if (previousLevelPurchased) {
-        toggleGroup(group.name);
+        if (group.items.every(item => visibleImages.has(item.id))) {
+          toast.error("This level is already purchased.");
+        } else {
+          toggleGroup(group.name);
+        }
       } else {
         toast.error(`You need to purchase level ${level - 1} first.`);
       }
@@ -75,12 +81,34 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
     toggleGroup(itemName);
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle sending the message here
-    console.log('Message sent:', messageForm);
-    setShowMessageForm(false);
-    setMessageForm({ name: '', email: '', message: '' });
+    if (!user) {
+      toast.error('You must be logged in to send a message.');
+      return;
+    }
+    try {
+      const response = await fetch('/api/send-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: messageForm.message,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success('Message sent successfully!');
+        setShowMessageForm(false);
+        setMessageForm({ message: '' });
+      } else {
+        throw new Error('Failed to send message');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message. Please try again.');
+    }
   };
 
   return (
@@ -201,24 +229,10 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
                 </button>
               ) : (
                 <form onSubmit={handleSendMessage} className="mt-auto">
-                  <input
-                    type="text"
-                    placeholder="Name (optional)"
-                    value={messageForm.name}
-                    onChange={(e) => setMessageForm({...messageForm, name: e.target.value})}
-                    className="w-full p-2 mb-2 rounded text-gray-800"
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email (optional)"
-                    value={messageForm.email}
-                    onChange={(e) => setMessageForm({...messageForm, email: e.target.value})}
-                    className="w-full p-2 mb-2 rounded text-gray-800"
-                  />
                   <textarea
                     placeholder="Your message"
                     value={messageForm.message}
-                    onChange={(e) => setMessageForm({...messageForm, message: e.target.value})}
+                    onChange={(e) => setMessageForm({ message: e.target.value })}
                     className="w-full p-2 mb-2 rounded resize-none text-gray-800"
                     required
                     rows={6}

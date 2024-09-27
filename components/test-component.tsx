@@ -641,6 +641,12 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         }
       }
     }
+
+    // Updated Command+A logic to toggle chatbot
+    if ((event.metaKey || event.ctrlKey) && event.key === 'a') {
+      event.preventDefault(); // Prevent default browser behavior
+      setShowChatbot(prev => !prev);
+    }
   }, [isCmdIEnabled]);
 
   // New function to fetch definition and add to vocab list
@@ -832,6 +838,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                   aria-label="Toggle Chatbot"
                 >
                   <Cat className="w-6 h-6" />
+                  <span className="sr-only">Toggle Chatbot (Cmd+A)</span>
                 </button>
 
                 <QuestionComponent
