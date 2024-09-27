@@ -4,6 +4,27 @@ import { Metadata } from 'next';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
+  title: 'My MCAT - Landing Page',
+  description: 'Discover how My MCAT can revolutionize your MCAT preparation experience.',
+  keywords: 'MCAT prep, landing page, interactive learning, study platform, medical school admission',
+  openGraph: {
+    title: 'My MCAT - Transform Your MCAT Prep',
+    description: 'Experience a new way of MCAT preparation with My MCAT. Engaging, effective, and tailored for your success.',
+    images: [
+      {
+        url: '/landing-preview.png',
+        width: 1200,
+        height: 630,
+        alt: 'My MCAT Landing Page Preview',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'My MCAT - Innovative MCAT Preparation',
+    description: 'Join My MCAT and transform your study experience. Boost your scores with our gamified learning platform.',
+    images: ['/landing-preview.png'],
+  },
   other: {
     'preload': '/landingpage/krungthep.ttf'
   }
