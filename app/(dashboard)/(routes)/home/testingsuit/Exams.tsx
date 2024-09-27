@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+
 import Image from "next/image";
 import { ReportData, Test, UserTest } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TestList from "./TestList";
 import { useUser } from "@clerk/nextjs";
 import dynamic from 'next/dynamic';
+import { HelpCircle } from 'lucide-react';
+import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 
 // Update the dynamic import
 const ChatBotWidgetNoChatBot = dynamic(
@@ -47,6 +42,14 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
   const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(null);
   const [welcomeComplete, setWelcomeComplete] = useState(false);
   const [marketplaceText, setMarketplaceText] = useState("Doctor&apos;s Office ->");
+
+  const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
+  const [tutorialVideoUrl, setTutorialVideoUrl] = useState('');
+
+  const openTutorialDialog = (videoUrl: string) => {
+    setTutorialVideoUrl(videoUrl);
+    setIsTutorialDialogOpen(true);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -252,7 +255,12 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
                   </button>
                 </div>
               )}
-              <div className="flex-grow p-2 bg-transparent border-2 rounded-lg" style={{ color: 'var(--theme-text-color)', borderColor: 'var(--theme-border-color)' }}>
+              <div className="flex-grow p-2 bg-transparent border-2 rounded-lg relative" style={{ color: 'var(--theme-text-color)', borderColor: 'var(--theme-border-color)' }}>
+                <HelpCircle 
+                  className="absolute top-2 right-2 text-[--theme-border-color] hover:text-gray-200 transition-colors duration-200 cursor-pointer" 
+                  size={20}
+                  onClick={() => openTutorialDialog('https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/examstsxvideo.mp4')}
+                />
                 <div className="flex justify-between items-center h-full px-2 sm:px-4 md:px-6 lg:px-8 xl:px-16">
                   <div className="flex flex-col items-center w-1/4">
                     <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
@@ -339,7 +347,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
         </div>
         <div className="md:col-span-2">
           <div 
-            className="h-[calc(100vh-8.3rem)] overflow-y-auto rounded-lg p-4 bg-[#001226]"
+            className="h-[calc(100vh-8.3rem)] overflow-y-auto rounded-lg p-4 bg-[#001226] relative"
             style={{
               backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
               backgroundSize: 'cover',
@@ -350,6 +358,11 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
               color: 'var(--theme-text-color)'
             }}
           >
+            <HelpCircle 
+              className="absolute top-2 right-2 text-[--theme-border-color] hover:text-gray-200 transition-colors duration-200 cursor-pointer" 
+              size={20}
+              onClick={() => openTutorialDialog('https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/CARsTests.mp4')}
+            />
             <h3 className="text-m font-semibold mt-3 mb-3 text-center font-mono" style={{ color: 'var(--theme-text-color)' }}>CARs Tests</h3>
             <Tabs defaultValue="past" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6 bg-transparent">
@@ -366,6 +379,11 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
           </div>
         </div>
       </div>
+      <TutorialVidDialog
+        isOpen={isTutorialDialogOpen}
+        onClose={() => setIsTutorialDialogOpen(false)}
+        videoUrl={tutorialVideoUrl}
+      />
     </div>
   );
 

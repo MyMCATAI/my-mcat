@@ -165,9 +165,9 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       defaultToggledOn: audioEnabled,
       language: "en-US",
       autoSendDisabled: true,
-      autoSendPeriod: 2000,
+      autoSendPeriod: 1500,
       sendAsAudio: false,
-      timeoutPeriod: 5000
+      timeoutPeriod: 10000
     },
     botBubble: { simStream: true },
   };
