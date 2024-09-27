@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
-  title: 'My MCAT - Landing Page',
+  title: 'My MCAT',
   description: 'Discover how My MCAT can revolutionize your MCAT preparation experience.',
   keywords: 'MCAT prep, landing page, interactive learning, study platform, medical school admission',
   openGraph: {
