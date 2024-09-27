@@ -102,7 +102,7 @@ export const LandingNavbar = () => {
         </span>
 
         <div className="flex items-center hidden lg:block">
-          <Link href={"/home"}>
+          <Link href={"/sign-in"}>
             <button className="bg-white text-black py-2 text-lg md:text-[16px] px-4 rounded-[8px]">
               Login
             </button>
