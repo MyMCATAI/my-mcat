@@ -76,7 +76,7 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
                 <strong className="text-red-500">Stat Breakdown: </strong>Here, you can see your progress and performance. We keep a log of your total score and your time taken on your last ten tests. The cupcakes represent a currency that you can use in the marketplace to buy various goods. And we log tests reviewed over done. You can click Kalypso&apos;s icon in the top left and he provides an assessment of your progress so far as well as data on your performance so far.
               </li>
               <li>
-                <strong className="text-red-500">Main Box: </strong> You can click here to access the CARs passage of the day. We automatically select one by your weakest content category and difficulty level. Just click to access it! In the bottom right, we have a link to the marketplace.
+                <strong className="text-red-500">Main Box: </strong> You can click here to access the CARs passage of the day. We automatically select one by your weakest content category and difficulty level. Just click to access it! In the bottom right, we have a link to the Doctor&apos;s Office.
               </li>
               <li>
                 <strong className="text-red-500">Navbutton: </strong> Navbars are outdated! We created a nav button that&apos;s more intuitive and easy to use. Click it to access the Content Learning Suite and the Practice Tests, which are only accessible to a few beta testers at Rice &amp; Princeton right now.
@@ -98,12 +98,12 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
       case 'cars':
         return (
           <>
-            <h2 className="text-4xl font-bold mb-4">Scaffolding CARs Strategies</h2>
+            <h2 className="text-4xl font-bold mb-4">Scaffolding CARs Strategy</h2>
             <div className="space-y-8">
               <div className="space-y-2">
                 <h3 className="text-xl font-semibold text-red-500 text-center">How To Read A Passage</h3>
                 <video className="w-full" controls>
-                  <source src="/videos/how_to_read_a_passage.mp4" type="video/mp4" />
+                  <source src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/HowToReadCARs.mp4" type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
                 <ol className="list-decimal list-inside text-left mt-2 space-y-2">
@@ -118,7 +118,7 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
               <div className="space-y-2">
                 <h3 className="text-xl font-semibold text-red-500 text-center">How To Answer Questions</h3>
                 <video className="w-full" controls>
-                  <source src="/videos/how_to_answer_questions.mp4" type="video/mp4" />
+                  <source src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/HowToAnswerQuestionsRWTRBT.mp4" type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
                 <div className="space-y-4">

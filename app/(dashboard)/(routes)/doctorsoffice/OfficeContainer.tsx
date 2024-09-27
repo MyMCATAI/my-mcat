@@ -30,9 +30,50 @@ type Waypoint = {
   direction: Direction;
 };
 
-// Modify the spriteWaypoints to include directions
-const spriteWaypoints: Record<string, Waypoint[]> = {
-  sprite1: [
+// Update the spriteWaypoints to include paths for different levels
+const spriteWaypoints: Record<number, Waypoint[]> = {
+  1: [
+    { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
+    { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
+    { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
+  ],
+  2: [
+    { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
+    { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
+    { x: 4, y: 3, direction: 'NE' },  // Move NE to top left
+    { x: 9, y: 3, direction: 'SE' },  // Move SE to top right
+    { x: 4, y: 3, direction: 'NW' },  // Move NW to top left
+    { x: 4, y: 9, direction: 'SW' },  // Move SW to bottom left
+    { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
+  ],
+  3: [
+    { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
+    { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
+    { x: 4, y: 4, direction: 'NE' },  // Move NE to middle left
+    { x: 2.5, y: 4, direction: 'NW' },  // Move SE back to waiting room
+    { x: 2.5, y: 6.5, direction: 'SW' },  // Move NE to middle left
+    { x: 5, y: 9, direction: 'S' },  // Move SE back to waiting room
+    { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
+  ],
+  4: [
+    { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
+    { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
+    { x: 4, y: 3, direction: 'NE' },  // Move NE to middle left
+    { x: 2.5, y: 1.3, direction: 'NW' },  // Move SE back to waiting room
+    { x: 2.5, y: 6, direction: 'SW' },  // Move NE to middle left
+    { x: 5, y: 9, direction: 'S' },  // Move SE back to waiting room
+    { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
+  ],
+  5: [
+    { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
+    { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
+    { x: 3, y: 1.5, direction: 'NE' },  // Move NE to top left
+    { x: 9, y: 1.5, direction: 'SE' },  // Move SE to top right
+    { x: 4, y: 1.5, direction: 'NW' },  // Move NW to top left
+    { x: 4, y: 9, direction: 'SW' },  // Move SW to bottom left
+    { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
+  ],
+  6: [
     { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
     { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
     { x: 3, y: 1.5, direction: 'NE' },  // Move NE to top left
@@ -217,16 +258,65 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, [calculateScale]);
 
-  // Move sprite function
+  const [currentWaypoints, setCurrentWaypoints] = useState(spriteWaypoints[1]);
+
+  // New function to fetch rooms from the API
+  const fetchRooms = useCallback(async () => {
+    try {
+      const response = await fetch('/api/clinic');
+      if (response.ok) {
+        const rooms = await response.json();
+        const level = determineLevel(rooms);
+        setCurrentWaypoints(spriteWaypoints[level]);
+      } else {
+        console.error('Failed to fetch rooms');
+      }
+    } catch (error) {
+      console.error('Error fetching rooms:', error);
+    }
+  }, []);
+
+  // Function to determine level based on rooms
+  const determineLevel = (rooms: string[]) => {
+    const levelRooms = [
+      'INTERN LEVEL',
+      'RESIDENT LEVEL',
+      'FELLOWSHIP LEVEL',
+      'ATTENDING LEVEL',
+      'PHYSICIAN LEVEL',
+      'MEDICAL DIRECTOR LEVEL'
+    ];
+    
+    let highestLevel = 1;
+    rooms.forEach(room => {
+      const index = levelRooms.indexOf(room);
+      if (index !== -1 && index + 1 > highestLevel) {
+        highestLevel = index + 1;
+      }
+    });
+    
+    return highestLevel;
+  };
+
+  // Use useEffect to fetch rooms when the component mounts
+  useEffect(() => {
+    fetchRooms();
+  }, [fetchRooms]);
+
+  // Use another useEffect to refetch rooms when userRooms changes
+  useEffect(() => {
+    fetchRooms();
+  }, [userRooms, fetchRooms]);
+
+  // Modify the moveSprite function to use currentWaypoints
   const moveSprite = useCallback((
     spriteId: string,
     waypointIndexRef: React.MutableRefObject<number>
   ) => {
     setSpritePositions(prevPositions => {
       const newPositions = { ...prevPositions };
-      const sprite = newPositions[spriteId];  // This line is now type-safe
-      const waypoints = spriteWaypoints[spriteId];
-      const currentWaypoint = waypoints[waypointIndexRef.current];
+      const sprite = newPositions[spriteId];
+      const currentWaypoint = currentWaypoints[waypointIndexRef.current];
 
       const speed = 0.1;
       const dx = currentWaypoint.x - sprite.x;
@@ -234,7 +324,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < speed) {
-        waypointIndexRef.current = (waypointIndexRef.current + 1) % waypoints.length;
+        waypointIndexRef.current = (waypointIndexRef.current + 1) % currentWaypoints.length;
         sprite.direction = currentWaypoint.direction;
       } else {
         sprite.x += (dx / distance) * speed;
@@ -244,7 +334,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
 
       return newPositions;
     });
-  }, []);
+  }, [currentWaypoints]);
 
   // Use useEffect to set up the animation loop for all sprites
   useEffect(() => {

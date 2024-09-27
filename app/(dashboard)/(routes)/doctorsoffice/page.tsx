@@ -136,33 +136,9 @@ const DoctorsOfficePage: React.FC = () => {
     const allVisible = group.items.every(item => visibleImages.has(item.id));
 
     if (allVisible) {
-      // Selling logic
-      try {
-        const response = await fetch('/api/clinic', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ room: groupName }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to remove clinic room');
-        }
-
-        const { rooms: updatedRooms, score: updatedScore } = await response.json();
-        setUserRooms(updatedRooms);
-        setUserScore(updatedScore);
-        setVisibleImages(prev => {
-          const newSet = new Set(prev);
-          group.items.forEach(item => newSet.delete(item.id));
-          return newSet;
-        });
-
-        toast.success(`Removed ${groupName} from your clinic!`);
-      } catch (error) {
-        console.error('Error removing clinic room:', error);
-        toast.error((error as Error).message || 'Failed to remove clinic room');
-      }
+      // Remove selling logic
+      toast.error("Items cannot be removed once purchased.");
+      return;
     } else {
       // Buying logic
       if (userScore < group.cost) {
@@ -299,33 +275,41 @@ const DoctorsOfficePage: React.FC = () => {
           />
           {/* Fellowship Level button with coins and patients */}
           <div className="absolute top-4 right-4 z-50 flex items-center">
+            <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
+              <img src="/game-components/patient.png" alt="Patient" className="w-8 h-8 mr-2" />
+              <span className="text-white font-bold">{patientsPerDay}</span>
+            </div>
             {/* Coins display */}
             <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
               <img src="/game-components/PixelCupcake.png" alt="Coin" className="w-8 h-8 mr-2" />
-              <span className="text-[--theme-text-color] font-bold">{userScore}</span>
-            </div>
-            {/* Patients display */}
-            <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
-              <img src="/game-components/patient.png" alt="Patient" className="w-8 h-8 mr-2" />
-              <span className="text-[--theme-text-color] font-bold">{patientsPerDay}</span>
+              <span className="text-white font-bold">{userScore}</span>
             </div>
             {/* Fellowship Level button with dropdown */}
             <div className="relative group">
-              <button className="flex items-center justify-center px-6 py-3 bg-[--theme-doctorsoffice-accent] border-2 border-[--theme-border-color] text-[--theme-text-color] rounded-md hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors text-3xl font-bold uppercase group-hover:text-[--theme-hover-text] group-hover:bg-[--theme-hover-color]">
-                <span>{userLevel || 'FELLOWSHIP LEVEL'}</span>
+              <button className="flex items-center justify-center px-6 py-3 bg-[--theme-doctorsoffice-accent] border-[--theme-border-color] text-[--theme-text-color] hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors text-3xl font-bold uppercase group-hover:text-[--theme-hover-text] group-hover:bg-[--theme-hover-color]">
+                <span>{userLevel || 'PATIENT LEVEL'}</span>
               </button>
-              <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
-                <div className="py-1">
-                  <ShoppingDialog
-                    imageGroups={imageGroups}
-                    visibleImages={visibleImages}
-                    toggleGroup={toggleGroup}
-                    userScore={userScore}
-                    buttonContent={
-                      <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Marketplace</a>
-                    }
-                  />
-                </div>
+              <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
+                <ShoppingDialog
+                  imageGroups={imageGroups}
+                  visibleImages={visibleImages}
+                  toggleGroup={toggleGroup}
+                  userScore={userScore}
+                  buttonContent={
+                    <a href="#" className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      Marketplace
+                    </a>
+                  }
+                />
+                <a href="#" className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  Tutorial
+                </a>
               </div>
             </div>
           </div>
