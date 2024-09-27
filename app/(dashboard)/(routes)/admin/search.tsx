@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Plus, Book, HelpCircle, Edit2, ChevronDown } from "lucide-react";
+import {
+  Plus,
+  Book,
+  HelpCircle,
+  Edit2,
+  ChevronDown,
+  Trash2,
+  Router,
+} from "lucide-react";
 import Link from "next/link";
 import { PrismaClient } from "@prisma/client";
 import { Passage } from "@/types";
@@ -31,6 +39,9 @@ const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
       if (!response.ok) {
         throw new Error("Failed to fetch passages");
       }
+      if (response === null) {
+        throw new Error("No passage by that name");
+      }
       const results = await response.json();
       setPassages(results);
     } catch (err) {
@@ -59,6 +70,41 @@ const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
   function displaySelectedPassage(passage: Passage) {
     setSelectedPassage(passage);
   }
+
+  const handleDeletePassage = async (passageId: string) => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this passage and its questions? This action cannot be undone."
+      )
+    ) {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(`/api/passage?id=${passageId}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to delete passage");
+        }
+
+        // Remove the deleted passage from the state
+        setPassages(passages.filter((p) => p.id !== passageId));
+
+        if (selectedPassage && selectedPassage.id === passageId) {
+          setSelectedPassage(null);
+        }
+
+        alert("Passage and its questions have been deleted successfully.");
+      } catch (err) {
+        setError("An error occurred while deleting the passage");
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
 
   return (
     <div>
@@ -136,6 +182,16 @@ const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
                     </span>
                   </button>
                 </Link>
+                <button
+                  onClick={() => handleDeletePassage(passage.id)}
+                  className="p-1 hover:bg-gray-100 rounded group flex items-center"
+                  aria-label="Delete Passage"
+                >
+                  <Trash2 className="h-5 w-5 text-red-600" />
+                  <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:ml-2 text-black">
+                    Delete
+                  </span>
+                </button>
               </div>
             </li>
           ))}

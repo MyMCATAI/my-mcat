@@ -76,8 +76,18 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
   const router = useRouter();
 
   useEffect(() => {
+    console.log("Questions state updated:", questions);
+  }, [questions]);
+
+  useEffect(() => {
     fetchPassageWithQuestions();
   }, [passageId]);
+
+  useEffect(() => {
+    if (questions.length === 0) {
+      addQuestion();
+    }
+  }, []);
 
   // const fetchQuestions = async () => {
   //   try {
@@ -96,6 +106,44 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
   //   }
   // };
 
+  // const fetchPassageWithQuestions = async () => {
+  //   try {
+  //     setIsLoading(true);
+  //     setError(null);
+  //     const response = await fetch(
+  //       `/api/passage?id=${encodeURIComponent(passageId)}`
+  //     );
+  //     if (!response.ok) {
+  //       throw new Error(`Failed to fetch passage: ${response.statusText}`);
+  //     }
+  //     const data: Passage = await response.json();
+  //     setPassage(data);
+  //     // setQuestions(
+  //     //   data.questions.map((q) => ({
+  //     //     ...q,
+  //     //     questionOptions: Array.isArray(q.questionOptions)
+  //     //       ? q.questionOptions
+  //     //       : JSON.parse(q.questionOptions as string),
+  //     //   }))
+  //     // );
+  //     setQuestions(
+  //       data.questions.map((q) => ({
+  //         ...q,
+  //         questionOptions: Array.isArray(q.questionOptions)
+  //           ? q.questionOptions
+  //           : typeof q.questionOptions === "string"
+  //           ? JSON.parse(q.questionOptions)
+  //           : [],
+  //       }))
+  //     );
+  //   } catch (error) {
+  //     console.error("Error fetching passage:", error);
+  //     setError("Failed to load passage and questions. Please try again.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const fetchPassageWithQuestions = async () => {
     try {
       setIsLoading(true);
@@ -107,8 +155,26 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
         throw new Error(`Failed to fetch passage: ${response.statusText}`);
       }
       const data: Passage = await response.json();
+      console.log("Raw passage data:", data); // Log raw data
+
       setPassage(data);
-      setQuestions(data.questions);
+      const processedQuestions = data.questions.map((q) => {
+        console.log("Processing question:", q); // Log each question
+        let processedOptions;
+        try {
+          processedOptions = Array.isArray(q.questionOptions)
+            ? q.questionOptions
+            : typeof q.questionOptions === "string"
+            ? JSON.parse(q.questionOptions)
+            : [];
+        } catch (error) {
+          console.error("Error processing question options:", error);
+          processedOptions = [];
+        }
+        return { ...q, questionOptions: processedOptions };
+      });
+      console.log("Processed questions:", processedQuestions); // Log processed questions
+      setQuestions(processedQuestions);
     } catch (error) {
       console.error("Error fetching passage:", error);
       setError("Failed to load passage and questions. Please try again.");
@@ -117,10 +183,100 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
     }
   };
 
+  // const onSave = async () => {
+  //   try {
+  //     setIsLoading(true);
+  //     setError(null);
+  //     updateCurrentQuestion(currentQuestion);
+
+  //     console.log("Saving questions:", questions); // Debug log
+
+  //     // const response = await fetch(`/api/question`, {
+  //     //   method: "PUT",
+  //     //   headers: {
+  //     //     "Content-Type": "application/json",
+  //     //   },
+  //     //   body: JSON.stringify({
+  //     //     passageId,
+  //     //     questions: questions.map((q) => ({
+  //     //       ...q,
+  //     //       questionOptions: Array.isArray(q.questionOptions)
+  //     //         ? q.questionOptions
+  //     //         : JSON.parse(q.questionOptions),
+  //     //     })),
+  //     //   }),
+  //     // });
+  //     const questionsToSave = questions.map((q) => {
+  //       let processedOptions;
+  //       try {
+  //         processedOptions = JSON.stringify(
+  //           Array.isArray(q.questionOptions)
+  //             ? q.questionOptions
+  //             : typeof q.questionOptions === "string"
+  //             ? JSON.parse(q.questionOptions)
+  //             : []
+  //         );
+  //       } catch (error) {
+  //         console.error("Error processing question options for saving:", error);
+  //         processedOptions = "[]";
+  //       }
+  //       return { ...q, questionOptions: processedOptions };
+  //     });
+
+  //     const response = await fetch(`/api/question`, {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         passageId,
+  //         questions: questionsToSave,
+  //         // questions.map((q) => ({
+  //         //   ...q,
+  //         //   questionOptions: JSON.stringify(
+  //         //     Array.isArray(q.questionOptions)
+  //         //       ? q.questionOptions
+  //         //       : typeof q.questionOptions === "string"
+  //         //       ? JSON.parse(q.questionOptions)
+  //         //       : []
+  //         //   ),
+  //         // })),
+  //       }),
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error(`Failed to save questions: ${response.statusText}`);
+  //     }
+
+  //     const updatedQuestions = await response.json();
+  //     setQuestions(updatedQuestions);
+  //     console.log("Questions saved successfully:", updatedQuestions); // Debug log
+  //     alert("Questions saved successfully!");
+  //     onCancel();
+  //   } catch (error) {
+  //     console.error("Error saving questions:", error);
+  //     setError("Failed to save questions. Please try again.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
   const onSave = async () => {
     try {
       setIsLoading(true);
       setError(null);
+      console.log("Attempting to save questions:", questions);
+
+      const questionsToSave = questions.map((q) => ({
+        ...q,
+        questionOptions: Array.isArray(q.questionOptions)
+          ? q.questionOptions
+          : typeof q.questionOptions === "string"
+          ? JSON.parse(q.questionOptions)
+          : [],
+      }));
+
+      console.log("Prepared questions for saving:", questionsToSave);
+
       const response = await fetch(`/api/question`, {
         method: "PUT",
         headers: {
@@ -128,25 +284,27 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
         },
         body: JSON.stringify({
           passageId,
-          questions: questions.map((q) => ({
-            ...q,
-            questionOptions: Array.isArray(q.questionOptions)
-              ? q.questionOptions
-              : JSON.parse(q.questionOptions),
-          })),
+          questions: questionsToSave,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to save questions: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          `Failed to save questions: ${response.statusText}. ${JSON.stringify(
+            errorData
+          )}`
+        );
       }
 
       const updatedQuestions = await response.json();
+      console.log("Questions saved successfully:", updatedQuestions);
       setQuestions(updatedQuestions);
       alert("Questions saved successfully!");
+      router.push("/admin");
     } catch (error) {
       console.error("Error saving questions:", error);
-      setError("Failed to save questions. Please try again.");
+      setError(`Failed to save questions. ${error}`);
     } finally {
       setIsLoading(false);
     }
@@ -174,7 +332,86 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
   //   }
   // };
 
-  const updateCurrentQuestion = (updates: Partial<Question>) => {
+  const addQuestion = () => {
+    updateCurrentQuestionContent(currentQuestion);
+    const newQuestionId = questions.length + 1;
+    const newQuestion: Partial<Question> = {
+      id: newQuestionId.toString(),
+      questionID: `Q${newQuestionId}`,
+      questionContent: "",
+      questionOptions: ["", "", "", ""], // Initialize with four empty options
+      questionAnswerNotes: "",
+      contentCategory: "",
+      categoryId: "",
+      context: "",
+      difficulty: "1",
+    };
+    setQuestions([...questions, newQuestion as Question]);
+    setCurrentQuestionIndex(questions.length);
+  };
+
+  // const deleteQuestion = (index: number) => {
+  //   if (questions.length > 1) {
+  //     const newQuestions = questions.filter((_, i) => i !== index);
+
+  //     // Reassign IDs and questionIDs to maintain sequential order
+  //     const updatedQuestions = questions
+  //       .filter((_, i) => i !== index)
+  //       .map((q, i) => ({
+  //         ...q,
+  //         id: q.id.toString(), // Convert id to string
+  //         questionID: `Q${i + 1}`,
+  //       }));
+
+  //     setQuestions(updatedQuestions);
+
+  //     if (currentQuestionIndex >= index && currentQuestionIndex > 0) {
+  //       setCurrentQuestionIndex(currentQuestionIndex - 1);
+  //     } else if (currentQuestionIndex >= updatedQuestions.length) {
+  //       setCurrentQuestionIndex(updatedQuestions.length - 1);
+  //     }
+  //   } else {
+  //     alert("You cannot delete the last question.");
+  //   }
+  // };
+  // const deleteQuestion = (index: number) => {
+  //   if (questions.length > 1) {
+  //     setQuestions((prevQuestions) => {
+  //       const newQuestions = prevQuestions.filter((_, i) => i !== index);
+  //       // Reassign questionIDs
+  //       return newQuestions.map((q, i) => ({
+  //         ...q,
+  //         questionID: `Q${i + 1}`,
+  //       }));
+  //     });
+
+  //     if (currentQuestionIndex >= index && currentQuestionIndex > 0) {
+  //       setCurrentQuestionIndex((prev) => prev - 1);
+  //     } else if (currentQuestionIndex >= questions.length - 1) {
+  //       setCurrentQuestionIndex(questions.length - 2);
+  //     }
+  //   } else {
+  //     alert("You cannot delete the last question.");
+  //   }
+  // };
+
+  const deleteQuestion = (index: number) => {
+    if (questions.length > 1) {
+      setQuestions((prevQuestions) => {
+        const newQuestions = prevQuestions.filter((_, i) => i !== index);
+        return newQuestions.map((q, i) => ({ ...q, questionID: `Q${i + 1}` }));
+      });
+      if (currentQuestionIndex >= index && currentQuestionIndex > 0) {
+        setCurrentQuestionIndex((prev) => prev - 1);
+      } else if (currentQuestionIndex >= questions.length - 1) {
+        setCurrentQuestionIndex(questions.length - 2);
+      }
+    } else {
+      alert("You cannot delete the last question.");
+    }
+  };
+
+  const updateCurrentQuestionContent = (updates: Partial<Question>) => {
     setQuestions((prevQuestions) => {
       const newQuestions = [...prevQuestions];
       newQuestions[currentQuestionIndex] = {
@@ -184,8 +421,36 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
       return newQuestions;
     });
   };
-
+  // const updateCurrentQuestion = (updates: Partial<Question>) => {
+  //   setQuestions((prevQuestions) => {
+  //     const newQuestions = [...prevQuestions];
+  //     newQuestions[currentQuestionIndex] = {
+  //       ...newQuestions[currentQuestionIndex],
+  //       ...updates,
+  //     };
+  //     console.log("Updated questions:", newQuestions); // Debug log
+  //     return newQuestions;
+  //   });
+  // };
+  const updateCurrentQuestion = (updates: Partial<Question>) => {
+    setQuestions((prevQuestions) => {
+      const newQuestions = [...prevQuestions];
+      newQuestions[currentQuestionIndex] = {
+        ...newQuestions[currentQuestionIndex],
+        ...updates,
+        questionOptions: updates.questionOptions
+          ? Array.isArray(updates.questionOptions)
+            ? updates.questionOptions
+            : JSON.parse(updates.questionOptions as string)
+          : newQuestions[currentQuestionIndex].questionOptions,
+      };
+      console.log("Updated questions:", newQuestions); // Debug log
+      return newQuestions;
+    });
+  };
   const handleQuestionSwitch = (index: number) => {
+    // Save current question changes before switching
+    updateCurrentQuestion(currentQuestion);
     setCurrentQuestionIndex(index);
   };
 
@@ -222,6 +487,7 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
   if (!passage) {
     return <div>No passage found.</div>;
   }
+
   return (
     <div className="flex text-black bg-white">
       <div className="w-3/4 pr-4">
@@ -242,7 +508,7 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
           />
         </div>
 
-        <div className="mb-4">
+        {/* <div className="mb-4">
           <label className="block mb-2">Options</label>
           {[0, 1, 2, 3].map((index) => (
             <input
@@ -258,6 +524,64 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
               placeholder={`Option ${index + 1}`}
             />
           ))}
+        </div> */}
+
+        {/* <div className="mb-4">
+          <label className="block mb-2">Options</label>
+          {(Array.isArray(currentQuestion.questionOptions)
+            ? currentQuestion.questionOptions
+            : []
+          ).map((option, index) => (
+            <input
+              key={index}
+              type="text"
+              value={option || ""}
+              onChange={(e) => {
+                const newOptions = [...currentQuestion.questionOptions];
+                newOptions[index] = e.target.value;
+                updateCurrentQuestion({ questionOptions: newOptions });
+              }}
+              className="w-full p-2 border rounded mb-2"
+              placeholder={`Option ${index + 1}`}
+            />
+          ))}
+        </div> */}
+
+        <div className="mb-4">
+          <label className="block mb-2">Options</label>
+          {(() => {
+            console.log("Current question:", currentQuestion); // Log current question
+            let options = [];
+            try {
+              options = Array.isArray(currentQuestion.questionOptions)
+                ? currentQuestion.questionOptions
+                : typeof currentQuestion.questionOptions === "string"
+                ? JSON.parse(currentQuestion.questionOptions)
+                : [];
+            } catch (error) {
+              console.error("Error parsing question options:", error);
+            }
+            console.log("Parsed options:", options); // Log parsed options
+            return options.map(
+              (
+                option: string | number | readonly string[] | undefined,
+                index: React.Key | null | undefined
+              ) => (
+                <input
+                  key={index}
+                  type="text"
+                  value={option}
+                  onChange={(e) => {
+                    const newOptions = [...options];
+                    newOptions[Number(index)] = e.target.value;
+                    updateCurrentQuestion({ questionOptions: newOptions });
+                  }}
+                  className="w-full p-2 border rounded mb-2"
+                  placeholder={`Option ${Number(index) + 1}`}
+                />
+              )
+            );
+          })()}
         </div>
 
         <div className="mb-4">
@@ -354,14 +678,14 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
             Cancel
           </button>
           <button
-            onClick={() => onSave}
+            onClick={onSave}
             className="px-4 py-2 bg-green-500 text-white rounded"
           >
             Save All Questions
           </button>
         </div>
       </div>
-
+      {/* 
       <div className="w-1/4 pl-4 border-l">
         <h3 className="text-lg font-bold mb-4">Questions</h3>
         {questions.map((question, index) => (
@@ -377,6 +701,39 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
             Question {index + 1}
           </div>
         ))}
+      </div>
+       */}
+      <div className="w-1/4 pl-4 border-l">
+        <h3 className="text-lg font-bold mb-4">Questions</h3>
+        {questions.map((question, index) => (
+          <div
+            key={question.id.toString()}
+            className={`cursor-pointer p-2 mb-2 rounded ${
+              index === currentQuestionIndex
+                ? "bg-blue-100"
+                : "hover:bg-gray-100"
+            }`}
+            onClick={() => handleQuestionSwitch(index)}
+          >
+            Question {index + 1}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteQuestion(index);
+              }}
+              className="ml-2 px-2 py-1 bg-red-500 text-white rounded"
+            >
+              Delete
+            </button>
+          </div>
+        ))}
+
+        <button
+          onClick={addQuestion}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded w-full"
+        >
+          Add Question
+        </button>
       </div>
     </div>
   );

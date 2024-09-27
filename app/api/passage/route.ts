@@ -29,10 +29,22 @@ export async function GET(req: Request) {
               questionOptions: true,
               questionAnswerNotes: true,
               contentCategory: true,
+              categoryId: true,
+              context: true,
+              difficulty: true,
+              passageId: true,
             },
           },
         },
       });
+
+      // After fetching the passage, parse the questionOptions
+      if (passage) {
+        passage.questions = passage.questions.map((question) => ({
+          ...question,
+          questionOptions: JSON.parse(question.questionOptions as string),
+        }));
+      }
 
       if (!passage) {
         return new NextResponse(
@@ -178,6 +190,55 @@ export async function PUT(req: NextRequest) {
     console.error("Error updating passage:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { userId } = auth();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const passageId = searchParams.get("id");
+
+    if (!passageId) {
+      return NextResponse.json(
+        { error: "Passage ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // First, delete all questions associated with the passage
+    await prisma.question.deleteMany({
+      where: { passageId: passageId },
+    });
+
+    // Then, delete the passage itself
+    const deletedPassage = await prisma.passage.delete({
+      where: { id: passageId },
+    });
+
+    if (!deletedPassage) {
+      return NextResponse.json({ error: "Passage not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(
+      { message: "Passage and associated questions deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting passage:", error);
+    return NextResponse.json(
+      {
+        error: "Internal Server Error",
+        details:
+          error instanceof Error ? error.message : "An unknown error occurred",
+      },
       { status: 500 }
     );
   }

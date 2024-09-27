@@ -97,6 +97,7 @@ const NewQuestions: React.FC<NewQuestionsProps> = ({
     setQuestions([...questions, newQuestion as Question]);
     setCurrentQuestionIndex(questions.length);
   };
+
   const deleteQuestion = (index: number) => {
     if (questions.length > 1) {
       const newQuestions = questions.filter((_, i) => i !== index);
