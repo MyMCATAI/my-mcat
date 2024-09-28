@@ -64,6 +64,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const passageRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
   const questionRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
   const testHeaderRef = useRef<TestHeaderRef>(null);
+  const wasQuestionTimerRunningRef = useRef(false);
+  const wasTotalTimerRunningRef = useRef(false);
 
   const [score, setScore] = useState(0);
   const [timing, setTiming] = useState(0);
@@ -80,6 +82,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   
   const passageStorageKey = test?.id && currentPassage?.id ? `passage-${test.id}-${currentPassage.id}` : undefined;
 
+  const [shouldShowChatbot, setShouldShowChatbot] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     fetchTest();
@@ -104,9 +111,68 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         setCurrentPassage(null);
       }
     }
-    testHeaderRef.current?.reset();
+    testHeaderRef.current?.resetQuestionTimer(); // Reset question timer when question changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, test]);
+
+  useEffect(() => {
+    if (testHeaderRef.current) {
+      if (showChatbot) {
+        wasQuestionTimerRunningRef.current = testHeaderRef.current.isQuestionTimerRunning;
+        wasTotalTimerRunningRef.current = testHeaderRef.current.isTotalTimerRunning;
+        testHeaderRef.current.pauseTimers();
+      } else {
+        testHeaderRef.current.resumeTimers(
+          wasQuestionTimerRunningRef.current,
+          wasTotalTimerRunningRef.current
+        );
+      }
+    }
+  }, [showChatbot]);
+
+  useEffect(() => {
+    const checkTimers = () => {
+      if (testHeaderRef.current) {
+        const questionElapsedTime = testHeaderRef.current.getQuestionElapsedTime();
+        const totalElapsedTime = testHeaderRef.current.getTotalElapsedTime();
+        const isQuestionTimerRunning = testHeaderRef.current.isQuestionTimerRunning;
+
+        if (questionElapsedTime >= 120 && !shouldShowChatbot) {
+          setShouldShowChatbot(true);
+        } else if (totalElapsedTime >= 420 && !isQuestionTimerRunning && !shouldShowChatbot) {
+          // 420 seconds = 7 minutes
+          setShouldShowChatbot(true);
+        }
+      }
+    };
+
+    const intervalId = setInterval(checkTimers, 1000); // Check every second
+
+    return () => clearInterval(intervalId);
+  }, [shouldShowChatbot]);
+
+  useEffect(() => {
+    if (shouldShowChatbot) {
+      setShowChatbot(true);
+    }
+  }, [shouldShowChatbot]);
+
+  // Reset shouldShowChatbot when moving to a new question
+  useEffect(() => {
+    setShouldShowChatbot(false);
+  }, [currentQuestionIndex]);
+
+  useEffect(() => {
+    if (showChatbot && videoRef.current) {
+      videoRef.current.play();
+    }
+  }, [showChatbot]);
+
+  useEffect(() => {
+    if (showChatbot) {
+      audioRef.current?.play();
+    }
+  }, [showChatbot]);
 
   const fetchTest = async () => {
     if (!testId) {
@@ -333,7 +399,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     if (!userTest || !testStartTime) return;
   
     const testFinishTime = new Date();
-    const totalTimeInSeconds = Math.round((testFinishTime.getTime() - testStartTime.getTime()) / 1000);
+    const totalTimeInSeconds = testHeaderRef.current?.getTotalElapsedTime() || 0;
   
     const { score, correctAnswers, technique } = calculateScore(totalTimeInSeconds);
   
@@ -406,14 +472,14 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const handleNextQuestion = () => {
     if (test && currentQuestionIndex < test.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-      testHeaderRef.current?.reset();
+      testHeaderRef.current?.resetQuestionTimer();
     }
   };
 
   const handlePreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
-      testHeaderRef.current?.reset();
+      testHeaderRef.current?.resetQuestionTimer();
     }
   };
 
@@ -430,6 +496,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm considering is: ${currentQuestion?.questionContent}\n\nOnly refer to this if I ask about what I'm currently studying.`
       });
     }
+    testHeaderRef.current?.resetQuestionTimer(); // Reset question timer when question changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPassage, currentQuestionIndex]);
 
@@ -610,42 +677,47 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   };
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (event.metaKey && event.key === 'i') {
-      const selection = window.getSelection();
-      if (selection && selection.toString().trim() !== '') {
-        const word = selection.toString().trim();
+    if (event.metaKey) {
+      if (event.key === 'i') {
+        const selection = window.getSelection();
+        if (selection && selection.toString().trim() !== '') {
+          const word = selection.toString().trim();
 
-        // Always fetch the definition and add to vocabList
-        fetchDefinitionAndAddToVocab(word);
+          // Always fetch the definition and add to vocabList
+          fetchDefinitionAndAddToVocab(word);
 
-        // If Command-I is enabled, perform dictionary lookup
-        if (isCmdIEnabled) {
-          const range = selection.getRangeAt(0);
-          const rect = range.getBoundingClientRect();
+          // If Command-I is enabled, perform dictionary lookup
+          if (isCmdIEnabled) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
 
-          const viewportHeight = window.innerHeight;
-          const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
 
-          const isBottomThird = rect.bottom > (viewportHeight * 2 / 3);
+            const isBottomThird = rect.bottom > (viewportHeight * 2 / 3);
 
-          const leftPosition = Math.min(rect.left + rect.width, viewportWidth - 300);
+            const leftPosition = Math.min(rect.left + rect.width, viewportWidth - 300);
 
-          setDictionaryPosition({
-            top: isBottomThird ? null : rect.bottom + 10,
-            bottom: isBottomThird ? viewportHeight - rect.top + 10 : null,
-            left: leftPosition
-          });
+            setDictionaryPosition({
+              top: isBottomThird ? null : rect.bottom + 10,
+              bottom: isBottomThird ? viewportHeight - rect.top + 10 : null,
+              left: leftPosition
+            });
 
-          setSelectedWord(word);
-          setShowDefinition(true);
+            setSelectedWord(word);
+            setShowDefinition(true);
+          }
         }
+      } else if (event.key === 'a') {
+        event.preventDefault();
+        setShowChatbot(prev => !prev);
+      } else if (event.key === 's') {
+        event.preventDefault();
+        handleStrikethrough();
+      } else if (event.key === 'h') {
+        event.preventDefault();
+        handleHighlight();
       }
-    }
-
-    // Updated Command+A logic to toggle chatbot
-    if ((event.metaKey || event.ctrlKey) && event.key === 'a') {
-      event.preventDefault(); // Prevent default browser behavior
-      setShowChatbot(prev => !prev);
     }
   }, [isCmdIEnabled]);
 
@@ -747,7 +819,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         isCreatingTest={isCreatingTest}
         currentQuestionIndex={currentQuestionIndex}
       />
-
       {/* Toolbar with highlight, strikethrough, flag, and vocab list toggle */}
       <div className="h-9 border-t-2 border-b-2 border-white bg-[#84aedd] flex items-center justify-between px-4">
         <div className="flex items-center space-x-2">
@@ -758,10 +829,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                 : 'bg-transparent text-white hover:bg-white/10'
             }`}
             onClick={handleHighlight}
-            aria-label="Highlight"
+            aria-label="Highlight (Cmd+H)"
+            title="Highlight (Cmd+H)"
           >
             <Highlighter className="w-4 h-4 mr-2" />
-            Highlight
+            Highlight <span className="ml-1 text-lg">(⌘H)</span>
           </button>
           <button
             className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
@@ -770,10 +842,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                 : 'bg-transparent text-white hover:bg-white/10'
             }`}
             onClick={handleStrikethrough}
-            aria-label="Strikethrough"
+            aria-label="Strikethrough (Cmd+S)"
+            title="Strikethrough (Cmd+S)"
           >
             <Pencil className="w-4 h-4 mr-2" />
-            Strikethrough
+            Strikethrough <span className="ml-1 text-lg">(⌘S)</span>
           </button>
         </div>
         <div className="flex items-center space-x-2">
@@ -856,6 +929,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                   isSubmitting={isSubmitting}
                   answeredQuestions={answeredQuestions}
                   onOptionCrossedOut={onOptionCrossedOut}
+                  onStartQuestionTimer={() => testHeaderRef.current?.startQuestionTimer()}
                 />
               </>
             ) : (
@@ -907,6 +981,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         userTestId={userTest?.id}
         totalTimeTaken={testStartTime ? Math.round((new Date().getTime() - testStartTime.getTime()) / 1000) : 0}
       />
+      <audio ref={audioRef} src="/chatbot-open.mp3" />
     </div>
   );
 };

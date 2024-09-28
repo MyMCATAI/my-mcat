@@ -197,8 +197,8 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
                 </video>
                 <ol className="list-decimal list-inside text-left mt-2 space-y-2">
                   <li>Use cmd+a to activate chatbot, or click the cat in the top right; alternatively, he activates if you spend more than 7 minutes reading a passage or more than 3 minutes on a question.</li>
-                  <li>If you're struggling with a passage, then you can ask him to summarize the passage or go paragraph by paragraph or copy and paste a sentence/paragraph that you need help understanding.</li>
-                  <li>If you're struggling with a question, he can help you comprehend the question, know where to look, or reason between two answer choices.</li>
+                  <li>If you&apos;re struggling with a passage, then you can ask him to summarize the passage or go paragraph by paragraph or copy and paste a sentence/paragraph that you need help understanding.</li>
+                  <li>If you&apos;re struggling with a question, he can help you comprehend the question, know where to look, or reason between two answer choices.</li>
                   <li>Cmd + A to trigger Kalypso. Cmd + I to get definitions of words.</li>
                 </ol>
               </div>

@@ -3,11 +3,10 @@
 
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
+import { X, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { Mail } from 'lucide-react'; // Add this import
 
 interface DialogWrapperProps {
   isOpen: boolean;
@@ -20,6 +19,12 @@ interface DialogWrapperProps {
 interface MessageFormProps {
   onClose: () => void;
   onSubmit: (message: string) => void;
+}
+
+interface DialogContentProps {
+  videoSrc: string;
+  title: string;
+  content: React.ReactNode;
 }
 
 const DialogOverlay = React.forwardRef<
@@ -46,8 +51,9 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border-blue-500 p-6 text-center shadow-lg rounded-lg bg-gray-900 text-white max-h-[80vh] overflow-y-auto",
-        "scrollbar-thin scrollbar-thumb-blue-500/30 scrollbar-track-transparent hover:scrollbar-thumb-blue-500/50",
+        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border-gray-600 p-6 text-center shadow-lg rounded-lg bg-gray-100 text-gray-900 max-h-[80vh] overflow-y-auto",
+        "scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent hover:scrollbar-thumb-gray-500",
+        "dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700",
         className
       )}
       {...props}
@@ -69,9 +75,9 @@ const MessageForm: React.FC<MessageFormProps> = ({ onClose, onSubmit }) => {
   const [message, setMessage] = useState('');
 
   return (
-    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-96 max-w-[90%]">
-        <h3 className="text-lg font-semibold mb-4 text-white">Send us a message</h3>
+    <div className="absolute inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[60]">
+      <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg shadow-lg w-96 max-w-[90%]">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Send us a message</h3>
         <form onSubmit={(e) => {
           e.preventDefault();
           onSubmit(message);
@@ -80,7 +86,7 @@ const MessageForm: React.FC<MessageFormProps> = ({ onClose, onSubmit }) => {
             placeholder="Your message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="w-full p-2 rounded resize-none text-gray-800"
+            className="w-full p-2 rounded resize-none text-gray-800 bg-white dark:bg-gray-700 dark:text-gray-200"
             required
             rows={4}
           />
@@ -88,13 +94,13 @@ const MessageForm: React.FC<MessageFormProps> = ({ onClose, onSubmit }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              className="px-4 py-2 bg-gray-300 text-gray-800 dark:bg-gray-600 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-500"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
             >
               Send
             </button>
@@ -105,12 +111,18 @@ const MessageForm: React.FC<MessageFormProps> = ({ onClose, onSubmit }) => {
   );
 };
 
+interface DialogWrapperProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onClose?: () => void;
+  videoSrc: string;
+}
+
 const DialogWrapper: React.FC<DialogWrapperProps> = ({
   isOpen,
   onOpenChange,
-  title,
-  description,
   onClose,
+  videoSrc,
 }) => {
   const [showMessageForm, setShowMessageForm] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -155,44 +167,59 @@ const DialogWrapper: React.FC<DialogWrapperProps> = ({
       <DialogContent onClose={onClose} className="max-w-3xl w-full">
         <div className="relative">
           <div ref={dialogRef}>
-            <h2 className="text-xl font-semibold mb-4 text-blue-500 text-center">Welcome to CARs!</h2>
-            <div className="text-lg space-y-6">
-              <p>{"You can trigger the chatbot by pressing Cmd+A while you're reading."}</p>
-              <p>{"Refer to the bulletin for more information on best practices."}</p>
-              <div className="space-y-6">
-                <div className="bg-gray-800 p-4 rounded-lg shadow-md">
-                  <h3 className="font-semibold text-blue-500 mb-2">{"Audio Toggle Button"}</h3>
-                  <div className="text-4xl mb-2">{"🔊"}</div>
-                  <p>
-                    {"Turn this on to enable audio. Yes, you can talk to Kalypso, and he'll talk back. While he won't give you answers, he will guide you with answering questions or reading a passage."}
-                  </p>
-                </div>
-                
-                <div className="bg-gray-800 p-4 rounded-lg shadow-md">
-                  <h3 className="font-semibold text-blue-500 mb-2">{"Hint Button"}</h3>
-                  <div className="text-4xl mb-2">{"💡"}</div>
-                  <p>
-                    {"If you're stuck on a question, use this to highlight important parts of the passage. These hints might be near your own highlights or somewhere else entirely."}
-                  </p>
-                </div>
-                
-                <div className="bg-gray-800 p-4 rounded-lg shadow-md">
-                  <h3 className="font-semibold text-blue-500 mb-2">{"Dictionary Button"}</h3>
-                  <div className="text-4xl mb-2">{"📖"}</div>
-                  <p>
-                    {"When this is on (blue), press Cmd+i (or Ctrl+i on Windows) to get definitions for words you don't know. These words are saved for later review. You can also use this shortcut when it's off to check words after the test."}
-                  </p>
-                </div>
+            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200 text-center">Welcome to CARs!</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 text-center">
+              {"We recommend going home -> bulletin -> CARs strategies if it's your first time here."}
+            </p>
+            <div className="mb-6">
+              <video
+                className="w-full rounded-lg shadow-md"
+                controls
+                preload="metadata"
+              >
+                <source src={videoSrc} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            <div className="space-y-6 text-sm">
+              <div className="bg-gray-200 dark:bg-gray-700 p-4 rounded-lg shadow-md">
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">{"Audio Toggle Button"}</h3>
+                <div className="text-4xl mb-2">{"🔊"}</div>
+                <p className="text-gray-700 dark:text-gray-300">
+                  {"Turn this on to enable audio. Yes, you can talk to Kalypso, and he talks back."}
+                </p>
               </div>
               
-              <p>
-                {"After the test, you'll get a score based on your answers, time, and how well you used tools like highlighting and elimination. Soon we will have insights on your personalized CARs strategy once we collect enough data."}
-              </p>
+              <div className="bg-gray-200 dark:bg-gray-700 p-4 rounded-lg shadow-md">
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">{"Hint Button"}</h3>
+                <div className="text-4xl mb-2">{"💡"}</div>
+                <p className="text-gray-700 dark:text-gray-300">
+                  {"Highlight relevant context to know where to look for the correct answer."}
+                </p>
+              </div>
+              
+              <div className="bg-gray-200 dark:bg-gray-700 p-4 rounded-lg shadow-md">
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">{"Dictionary Button"}</h3>
+                <div className="text-4xl mb-2">{"📖"}</div>
+                <p className="text-gray-700 dark:text-gray-300">
+                  {"When this is on, press Cmd+i to get definitions for words you don't know."}
+                </p>
+              </div>
+              
+              <div className="bg-gray-200 dark:bg-gray-700 p-4 rounded-lg shadow-md">
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">{"Hotlinks"}</h3>
+                <div className="text-4xl mb-2">{"🔗"}</div>
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                  {"Cmd+H = Highlight\nCmd+S = Strikethrough\nCmd+I = Lookup\nCmd+A = Kalypso"}
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 text-gray-700 dark:text-gray-300 space-y-4">
             </div>
             <div className="mt-4 flex justify-between items-center">
               <button
                 onClick={() => setShowMessageForm(true)}
-                className="p-2 bg-gray-700 text-white rounded-full hover:bg-blue-600"
+                className="p-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-full hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
                 aria-label="Send Message"
               >
                 <Mail className="h-5 w-5" />
@@ -202,7 +229,7 @@ const DialogWrapper: React.FC<DialogWrapperProps> = ({
                   onOpenChange(false);
                   if (onClose) onClose();
                 }}
-                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
               >
                 Close
               </button>

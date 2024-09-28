@@ -158,7 +158,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   const helpOptions = ["Hint", "Vocab"];
   const flow = {
     start: {
-      message: `Meow there! You can press the question mark above to learn more about the interface, or just type something. I'm here to help (but not give you answers)!`,
+      message: `Meow there! Need help?`,
      path: "loop"
     },
     loop: {
@@ -270,13 +270,13 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       margin: '2rem .5rem',
     },
     botBubbleStyle: {
-      fontSize: "0.875rem", // Slightly increased font size
+      fontSize: "0.875rem",
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
       color: 'black',
       backgroundColor: '#e8e8ea'
     },
     userBubbleStyle: {
-      fontSize: "0.875rem", // Slightly increased font size
+      fontSize: "0.875rem",
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
       color: 'white',
       backgroundColor: '#0e85ff'
@@ -289,6 +289,9 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       border: '1px solid #ccc',
       borderRadius: '8px',
       backgroundColor: 'transparent',
+    },
+    chatHistoryButtonStyle: {
+      fontSize: '0.5rem !important', // Even smaller font size with !important
     },
   };
 
@@ -305,7 +308,10 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       display: 'flex', 
       flexDirection: 'column', 
       height: '100%', 
-      position: 'relative' 
+      position: 'relative',
+      border: '1px solid #ccc', // Add this line for a light gray border
+      borderRadius: '8px', // Optional: add rounded corners
+      padding: '10px', // Optional: add some padding
     }}>
       <style jsx global>{`
         .rcb-chat-input::before {
@@ -359,7 +365,9 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       <DialogWrapper
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onClose={closeDialog} title={''} description={''}      />
+        onClose={closeDialog} title={''} description={''}
+        videoSrc='https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TestComponent.mp4'
+        />
     </div>
   );
 };

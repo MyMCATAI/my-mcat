@@ -117,11 +117,6 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
     }
   };
 
-  const handleScreenshot = (blob: Blob) => {
-    console.log('Screenshot taken:', blob);
-    // Add logic here to handle the screenshot
-  };
-
   const toggleAudio = () => {
     setAudioEnabled(!audioEnabled);
   };
@@ -142,23 +137,17 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
     setIsDialogOpen(false);
   };
 
-  const helpOptions = ["Hint", "Vocab"];
   const flow = {
     start: {
-      message: "Hey, I'd love to help you with this question! Before we begin, which category do you think this question falls under? (Hint: Press the question mark above to learn what each one means!)",
-      options: ["RBT", "RWT", "CMP"],
-      path: "category_selected"
+      message: "Meow there! Welcome to review. Click the red question mark for more info — or just talk to me :)",
+      path: "loop"
     },
-    category_selected: {
-      message: "Great! For your answer above, what is the quote from the passage you selected to support it?",
-      path: "quote_provided"
-    },
-    quote_provided: {
+    loop: {
       message: async (params: { userInput: string }) => {
         const response = await sendMessage(params.userInput);
         return response || "I'm sorry, I couldn't process your request. Please try again.";
       },
-      path: "quote_provided"
+      path: "loop"
     }
   };
 
@@ -171,7 +160,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
     chatWindow: {
       showScrollbar: true,
     },
-    chatHistory: { storageKey: "mcat_review_chat_history" },
+    chatHistory: { storageKey: "mcat_review_chat_history", disabled: true},
     header: {
       showAvatar: false,
       title: (
@@ -220,7 +209,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       streamSpeed: audioEnabled ? 80 : 40,
     },
     options: {
-      disabled: false,
+      disabled: true, // Disable options to allow free-form conversation
     },
   };
 
@@ -228,18 +217,18 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
     chatWindowStyle: {
       backgroundColor: backgroundColor,
       inlineSize: width,
-      height: 'calc(100vh - 30rem)',
-      maxHeight: '500px',
+      height: 'calc(100vh - 25rem)',
+      maxHeight: '400px',
       margin: '2rem .5rem',
     },
     botBubbleStyle: {
-      fontSize: "0.875rem", // Slightly increased font size
+      fontSize: "0.8rem", // Slightly increased font size
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
       color: 'black',
       backgroundColor: '#e8e8ea'
     },
     userBubbleStyle: {
-      fontSize: "0.875rem", // Slightly increased font size
+      fontSize: "0.8rem", // Slightly increased font size
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
       color: 'white',
       backgroundColor: '#0e85ff'
@@ -322,7 +311,9 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       <DialogWrapper
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onClose={closeDialog} title={''} description={''}      />
+        onClose={closeDialog} title={''} description={''}
+        videoSrc='https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TestComponent.mp4'
+        />
     </div>
   );
 };
