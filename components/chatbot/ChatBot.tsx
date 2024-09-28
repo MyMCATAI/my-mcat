@@ -138,7 +138,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       showHeader: true,
       showFooter: false,
     },
-    chatHistory: { storageKey: "mcat_assistant_chat_history" },
+    chatHistory: { storageKey: "mcat_assistant_chat_history", disabled: true},
     header: {
       showAvatar: false,
       title: (

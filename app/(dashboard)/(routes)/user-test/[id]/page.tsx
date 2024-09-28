@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { UserTest, UserResponse, Passage, Question } from '@/types';
 import PassageComponent from "@/components/test/Passage";
 import ReviewQuestionComponent from "./ReviewQuestion";
-import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
 
 export default function UserTestReviewPage() {
   const [userTest, setUserTest] = useState<UserTest | null>(null);
@@ -141,7 +140,7 @@ export default function UserTestReviewPage() {
   const currentResponse = userTest.responses[currentResponseIndex];
 
   return (
-    <div className="relative bg-white h-full flex flex-col text-white">
+    <div className="relative bg-white h-screen flex flex-col text-white">
       <div className="bg-[#002355] p-3 flex justify-between items-center border-b-3 border-sky-500">
         <h1 className="text-lg font-semibold">{userTest.test.title} - Review</h1>
         <div className="flex items-center space-x-4">
@@ -177,12 +176,12 @@ export default function UserTestReviewPage() {
           <>
             {currentPassage ? (
               <>
-                <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto">
-                  <div className="p-4">
-                  <PassageComponent 
-                    passageData={currentPassage} 
-                    userResponse={currentResponse}
-                    onNote={()=>{console.log("note")}}
+                <div className="w-1/2 border-r-4 border-[#006dab] overflow-hidden flex flex-col">
+                  <div className="flex-grow overflow-auto">
+                    <PassageComponent 
+                      passageData={currentPassage} 
+                      userResponse={currentResponse}
+                      onNote={()=>{console.log("note")}}
                     />
                   </div>
                 </div>
