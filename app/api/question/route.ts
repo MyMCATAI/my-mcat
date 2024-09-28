@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import { getQuestions, createQuestion, updateQuestion, getQuestionById } from "@/lib/question";
 import prisma from "@/lib/prismadb";
+import { allowedAdminUserIds } from '@/lib/utils';
 
 export async function GET(req: Request) {
   try {
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
   try {
     const { userId } = auth();
     
-    if (!userId) {
+    if (!userId || !allowedAdminUserIds.includes(userId)) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -78,7 +79,7 @@ export async function PUT(req: Request) {
   try {
     const { userId } = auth();
     
-    if (!userId) {
+    if (!userId || !allowedAdminUserIds.includes(userId)) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
