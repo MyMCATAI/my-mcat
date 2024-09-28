@@ -39,6 +39,7 @@ export interface Question {
   context: string | null;
   passage?: Passage;  
   category?: Category;  
+  difficulty: number;
   testQuestions?: TestQuestion[]; 
   userResponses?: UserResponse[]; 
 }

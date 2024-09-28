@@ -51,7 +51,8 @@ export const getQuestions = async (params: {
           ...category,
           questions: category?.questions.map(q => ({
             ...q,
-            questionOptions: q.questionOptions.split('|')
+            questionOptions: q.questionOptions.split('|'),
+            context: q.context // Ensure context is included
           })) || [],
         },
         totalPages: Math.ceil(total / pageSize),
@@ -73,7 +74,8 @@ export const getQuestions = async (params: {
       return {
         questions: questions.map(q => ({
           ...q,
-          questionOptions: q.questionOptions.split('|')
+          questionOptions: q.questionOptions.split('|'),
+          context: q.context // Ensure context is included
         })),
         totalPages: Math.ceil(total / pageSize),
         currentPage: page,
