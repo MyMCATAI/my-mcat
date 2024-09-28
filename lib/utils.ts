@@ -23,3 +23,8 @@ export async function checkProStatus(): Promise<boolean> {
     return false;
   }
 }
+
+export const allowedAdminUserIds = [
+  "user_2jCZfJZbTtFdqyqwcjaMNTOz1Lm",
+  "user_2krxKeoPq12i3Nm8AD77AkIwC3H"
+];
