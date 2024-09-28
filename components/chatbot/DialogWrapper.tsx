@@ -7,7 +7,7 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { createPortal } from "react-dom";
+import { Mail } from 'lucide-react'; // Add this import
 
 interface DialogWrapperProps {
   isOpen: boolean;
@@ -189,12 +189,13 @@ const DialogWrapper: React.FC<DialogWrapperProps> = ({
                 {"After the test, you'll get a score based on your answers, time, and how well you used tools like highlighting and elimination. Soon we will have insights on your personalized CARs strategy once we collect enough data."}
               </p>
             </div>
-            <div className="mt-4 flex justify-between space-x-2">
+            <div className="mt-4 flex justify-between items-center">
               <button
                 onClick={() => setShowMessageForm(true)}
-                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-blue-600"
+                className="p-2 bg-gray-700 text-white rounded-full hover:bg-blue-600"
+                aria-label="Send Message"
               >
-                Send Message
+                <Mail className="h-5 w-5" />
               </button>
               <button
                 onClick={() => {

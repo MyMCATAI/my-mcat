@@ -7,6 +7,9 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TutorialContent from './TutorialContent';
 import Image from 'next/image';
+import { Mail } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { toast } from 'react-hot-toast';
 
 interface DialogTutorialProps {
   isOpen: boolean;
@@ -39,7 +42,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-3xl translate-x-[-50%] translate-y-[-50%] gap-4 border-blue-500 p-6 text-center shadow-lg rounded-lg bg-white text-black max-h-[80vh] overflow-y-auto",
+        "fixed left-[50%] top-[50%] z-50 grid w-[80vw] max-w-[1200px] translate-x-[-50%] translate-y-[-50%] gap-4 border-blue-500 p-6 text-center shadow-lg rounded-lg bg-white text-black max-h-[80vh] overflow-y-auto",
         "scrollbar-thin scrollbar-thumb-blue-500/30 scrollbar-track-transparent hover:scrollbar-thumb-blue-500/50",
         className
       )}
@@ -64,6 +67,42 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
   topic,
   onClose,
 }) => {
+  const [showMessageForm, setShowMessageForm] = useState(false);
+  const [message, setMessage] = useState('');
+  const messageFormRef = useRef<HTMLDivElement>(null);
+
+  const handleSendMessage = async () => {
+    try {
+      const response = await fetch('/api/send-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+
+      if (response.ok) {
+        toast.success('Message sent successfully!');
+        setShowMessageForm(false);
+        setMessage('');
+      } else {
+        throw new Error('Failed to send message');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message. Please try again.');
+    }
+  };
+
+  const toggleMessageForm = () => {
+    setShowMessageForm(!showMessageForm);
+    if (!showMessageForm) {
+      setTimeout(() => {
+        messageFormRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  };
+
   const renderContent = () => {
     switch (topic) {
       case 'navigation':
@@ -114,7 +153,6 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
                   <li>Read your highlights like a sparknotes and select sentence in the passage as a main idea.</li>
                 </ol>
               </div>
-              
               <div className="space-y-2">
                 <h3 className="text-xl font-semibold text-red-500 text-center">How To Answer Questions</h3>
                 <video className="w-full" controls>
@@ -151,8 +189,21 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
                   </div>
                 </div>
               </div>
-              
-              {['How To Use Kalypso To Test', 'How to Use Kalypso To Review'].map((title) => (
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold text-red-500 text-center">How To Use Kalypso To Test</h3>
+                <video className="w-full" controls>
+                  <source src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/HowToUseKalypsoTest.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+                <ol className="list-decimal list-inside text-left mt-2 space-y-2">
+                  <li>Use cmd+a to activate chatbot, or click the cat in the top right; alternatively, he activates if you spend more than 7 minutes reading a passage or more than 3 minutes on a question.</li>
+                  <li>If you're struggling with a passage, then you can ask him to summarize the passage or go paragraph by paragraph or copy and paste a sentence/paragraph that you need help understanding.</li>
+                  <li>If you're struggling with a question, he can help you comprehend the question, know where to look, or reason between two answer choices.</li>
+                  <li>Cmd + A to trigger Kalypso. Cmd + I to get definitions of words.</li>
+                </ol>
+              </div>
+
+              {['How To Use Kalypso To Review'].map((title) => (
                 <div key={title} className="space-y-2 text-red-500">
                   <h3 className="text-xl font-semibold text-center">{title}</h3>
                   <video className="w-full" controls>
@@ -199,7 +250,14 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
     <DialogPrimitive.Root open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent onClose={onClose}>
         {renderContent()}
-        <div className="mt-4 flex justify-end space-x-2">
+        <div className="mt-4 flex justify-between items-center">
+          <button
+            onClick={toggleMessageForm}
+            className="p-2 bg-gray-500 text-white rounded-full hover:bg-blue-600"
+            aria-label="Send Message"
+          >
+            <Mail className="h-5 w-5" />
+          </button>
           <button
             onClick={() => onOpenChange(false)}
             className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
@@ -207,6 +265,34 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
             Close
           </button>
         </div>
+        {showMessageForm && (
+          <div ref={messageFormRef} className="mt-4 space-y-2 border border-gray-300 p-4 rounded-lg bg-gray-100">
+            <textarea
+              placeholder="Your message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="w-full p-2 rounded resize-none text-gray-800 border border-gray-300"
+              rows={4}
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => {
+                  setShowMessageForm(false);
+                  setMessage('');
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendMessage}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </DialogPrimitive.Root>
   );
