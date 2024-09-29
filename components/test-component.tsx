@@ -8,7 +8,6 @@ import QuestionComponent from "@/components/test/Question";
 import { Test, TestQuestion, Passage, Question, UserResponse } from "@/types";
 import { Pencil, Highlighter, Flag, Cat } from 'lucide-react';
 import ChatBotInLine from '@/components/chatbot/ChatBotInLine';
-import Link from 'next/link';
 import ScoreDialog from '@/components/ScoreDialog';
 import TestHeader, { TestHeaderRef } from '@/components/test/TestHeader';
 import DictionaryLookup from './DictionaryLookup';
@@ -491,10 +490,12 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   useEffect(() => {
     if (currentPassage) {
       const currentQuestion = getCurrentQuestion();
-      setChatbotContext({
-        contentTitle: "writing a practice test on " + currentPassage.id,
-        context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm considering is: ${currentQuestion?.questionContent}\n\nOnly refer to this if I ask about what I'm currently studying.`
-      });
+      setChatbotContext(prevContext => ({
+        ...prevContext,
+        contentTitle: currentPassage.title || "Untitled Passage",
+        context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm looking at is: ${currentQuestion?.questionContent}\n\nThe question options are: ${currentQuestion?.questionOptions}`
+      }));
+      console.log("chatbotContext", chatbotContext)
     }
     testHeaderRef.current?.resetQuestionTimer(); // Reset question timer when question changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
