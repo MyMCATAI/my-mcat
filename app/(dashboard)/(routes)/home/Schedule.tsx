@@ -31,10 +31,10 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showThankYouDialog, setShowThankYouDialog] = useState(false);
-  const [showInterlude, setShowInterlude] = useState(true);
+  const [showInterlude, setShowInterlude] = useState(false);
   const [typedText, setTypedText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(true);
 
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
@@ -223,61 +223,61 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
         )}
 
        {/* Interlude or Calendar */}
-       <div className="flex-grow flex flex-col h-[550px]">
-        {showInterlude && (
-          <div className="flex-grow flex items-center justify-center">
-            <div className="relative w-full h-full flex items-center pl-8 pr-8 pb-6 justify-center">
-              <div className="absolute bottom-2 left-3 w-1/4">
-                <Image 
-                  src="/kalypsotyping.gif" 
-                  alt="Typing animation" 
-                  width={300}
-                  height={300}
-                  objectFit="contain" 
-                  unoptimized
-                />
-              </div>
-              <div className="bg-black rounded-lg p-4 w-full h-full flex flex-col justify-between overflow-hidden" style={{
-                boxShadow: '0 0 15px 5px rgba(0, 123, 255, 0.5)'
-              }}>
-                <pre className="pl-5 pt-5 text-blue-200 font-mono text-m whitespace-pre-wrap">
-                  {typedText}
-                </pre>
-                {isTypingComplete && (
-                  <InterludeAction 
-                    activities={activities}
-                    onActionClick={handleActionClick}
-                    onSkip={() => setShowInterlude(false)}
+       <div className="flex-grow flex flex-col h-[calc(100vh-10rem)]">
+          {showCalendar && (
+            <div className="h-[calc(100vh-200px)]">
+              <InteractiveCalendar />
+            </div>
+          )}
+          {showInterlude && (
+            <div className="flex-grow flex items-center justify-center">
+              <div className="relative w-full h-full flex items-center pl-8 pr-8 pb-6 justify-center">
+                <div className="absolute bottom-2 left-3 w-1/4">
+                  <Image 
+                    src="/kalypsotyping.gif" 
+                    alt="Typing animation" 
+                    width={300}
+                    height={300}
+                    objectFit="contain" 
+                    unoptimized
                   />
-                )}
-                <div 
-                  onClick={handleActionClick}
-                  className="self-end text-blue-200 font-mono text-lg hover:text-blue-600 transition-colors animate-pulse cursor-pointer"
-                  style={{
-                    animation: 'pulse 2s cubic-bezier(0.6, 0, 0.6, 1) infinite',
-                    background: 'transparent',
-                    borderRadius: '5px',
-                    padding: '5px 10px',
-                  }}
-                >
+                </div>
+                <div className="bg-black rounded-lg p-4 w-full h-full flex flex-col justify-between overflow-hidden" style={{
+                  boxShadow: '0 0 15px 5px rgba(0, 123, 255, 0.5)'
+                }}>
+                  <pre className="pl-5 pt-5 text-blue-200 font-mono text-m whitespace-pre-wrap">
+                    {typedText}
+                  </pre>
+                  {isTypingComplete && (
+                    <InterludeAction 
+                      activities={activities}
+                      onActionClick={handleActionClick}
+                      onSkip={() => setShowInterlude(false)}
+                    />
+                  )}
+                  <div 
+                    onClick={handleActionClick}
+                    className="self-end text-blue-200 font-mono text-lg hover:text-blue-600 transition-colors animate-pulse cursor-pointer"
+                    style={{
+                      animation: 'pulse 2s cubic-bezier(0.6, 0, 0.6, 1) infinite',
+                      background: 'transparent',
+                      borderRadius: '5px',
+                      padding: '5px 10px',
+                    }}
+                  >
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-        {showCalendar && (
-          <div className="flex-grow">
-            <InteractiveCalendar />
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
         {/* Calendar toggle button */}
         <div 
-          className={`absolute bottom-7 ${showInterlude ? 'right-6' : 'left-6'} cursor-pointer`}
+          className={`absolute bottom-7 ${showCalendar ? 'left-6' : 'right-6'} cursor-pointer`}
           onClick={toggleCalendarView}
         >
-          {showInterlude ? (
+          {showCalendar ? (
             <ChevronRight 
               size={60} 
               className="text-white-600 transition-transform duration-300 ease-in-out hover:text-blue-600"

@@ -132,6 +132,7 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
               <li>
                 <strong className="text-red-500">Bulletin: </strong> Here, you can access the tutorial to learn more about the platform, as well as the latest news from the world of MyMCAT!</li>
             </ol>
+            <p className="text-lg text-gray-400 mt-2">NOTE: Nearly every page/popup has a message function, like the one below, so you can quickly report bugs or ask for assistance.</p>
           </>
         );
       case 'cars':
@@ -218,14 +219,48 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
       case 'premium':
         return (
           <>
-            <h2 className="text-2xl font-bold mb-4">Premium Meow Distinction</h2>
-            <p>Discover the benefits of our Premium Meow features:</p>
+            <h2 className="text-2xl font-bold mb-4">The Meow Distinction</h2>
+            <p>Every dollar you give a test prep company is a dollar wasted. Every dollar you give to MyMCAT reinvests into the platform to make it better.</p>
             <ul className="list-disc list-inside mt-2">
-              <li>Access to exclusive study materials and practice tests</li>
+              <li>Schedule to adapt and give suggestions on what to do.</li>
               <li>One-on-one tutoring sessions with expert instructors</li>
               <li>Advanced analytics to track your progress</li>
               <li>Priority support for all your MCAT-related questions</li>
             </ul>
+          </>
+        );
+      case 'doctorsoffice':
+        return (
+          <>
+            <h2 className="text-2xl font-bold mb-4">Welcome to The Clinic!</h2>
+            <p className="mb-2">This is an optional game in MyMCAT that rewards you for your consistency in using the platform with prizes and rewards. You acquire a max of four cupcake coins per passage: for score, timing, technique, and review.</p>
+            <div className="flex justify-center space-x-2">
+              <Image src="/game-components/PixelCupcake.png" alt="Cupcake Coin" width={50} height={50} />
+              <Image src="/game-components/PixelCupcake.png" alt="Cupcake Coin" width={50} height={50} />
+              <Image src="/game-components/PixelCupcake.png" alt="Cupcake Coin" width={50} height={50} />
+              <Image src="/game-components/PixelCupcake.png" alt="Cupcake Coin" width={50} height={50} />
+            </div>
+            <p className="mb-4 mt-2 text-center">Those can be traded for various purchases in the marketplace such as upgrading your clinic.</p>
+            <div className="flex justify-center">
+              <video
+                src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/DoctorsOffice.mp4"
+                width={800}
+                height={534}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="rounded-lg"
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            <p className="mb-4">With upgrades, you increase the number of patients treated per day. This allows you to compete with other students in an MCAT season to bring glory to your school in The League, which ranks universities on who treated the most patients. More consistent usage of the website builds a streak, which allows you to get higher ratings from your patients — earning you more coins!</p>
+            <div className="flex justify-center mb-4">
+              <Image src="/Reviews.png" alt="Patient Reviews" width={400} height={267} className="rounded-lg" />
+            </div>
+            <p className="mb-4">We plan on adding more features to make The Clinic. Right now, it functions as a place to purchase items and treat patients but in the future we plan on adding functionality like being able to treat patients by answering flashcard questions such as the ones in MilesDown and Aiden.</p>
+            <p className="mb-4">It will be a far more fun and rewarding experience than beating yourself to a pulp with flashcards.</p>
           </>
         );
       case 'beta':
@@ -253,14 +288,14 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
         <div className="mt-4 flex justify-between items-center">
           <button
             onClick={toggleMessageForm}
-            className="p-2 bg-gray-500 text-white rounded-full hover:bg-blue-600"
+            className="p-3 bg-gray-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-200"
             aria-label="Send Message"
           >
-            <Mail className="h-5 w-5" />
+            <Mail className="h-6 w-6" />
           </button>
           <button
             onClick={() => onOpenChange(false)}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+            className="px-6 py-3 bg-gray-500 text-white rounded text-lg font-semibold hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors duration-200"
           >
             Close
           </button>

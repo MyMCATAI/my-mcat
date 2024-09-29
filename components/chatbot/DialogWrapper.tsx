@@ -219,17 +219,17 @@ const DialogWrapper: React.FC<DialogWrapperProps> = ({
             <div className="mt-4 flex justify-between items-center">
               <button
                 onClick={() => setShowMessageForm(true)}
-                className="p-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-full hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+                className="p-3 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-full hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
                 aria-label="Send Message"
               >
-                <Mail className="h-5 w-5" />
+                <Mail className="h-6 w-6" />
               </button>
               <button
                 onClick={() => {
                   onOpenChange(false);
                   if (onClose) onClose();
                 }}
-                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+                className="px-6 py-3 text-lg bg-gray-300 text-gray-800 rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
               >
                 Close
               </button>
