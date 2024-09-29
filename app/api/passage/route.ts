@@ -19,10 +19,7 @@ export async function GET(req: Request) {
     const passageId = searchParams.get('id');
     const decodedPassageId = passageId ? decodeURIComponent(passageId) : null;
 
-    console.log("Query parameters:", { page, pageSize, passageId, decodedPassageId });
-
     if (decodedPassageId) {
-      console.log("Fetching single passage with ID:", decodedPassageId);
       // Fetch a single passage by ID with its questions
       const passage = await prisma.passage.findUnique({
         where: { id: decodedPassageId },
@@ -44,8 +41,6 @@ export async function GET(req: Request) {
           }
         }
       });
-
-      console.log("Passage fetched:", passage ? "Found" : "Not found");
 
       if (!passage) {
         console.log("Passage not found, returning 404");

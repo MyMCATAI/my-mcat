@@ -1,78 +1,172 @@
+// TestHeader.tsx
 import React, { useRef, useImperativeHandle, forwardRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useStopwatch } from 'react-timer-hook';
+import { FaHome } from 'react-icons/fa'; // Import the home icon
 
 interface TestHeaderProps {
   title: string | undefined;
   isCreatingTest: boolean;
-  currentQuestionIndex: number;
+  currentQuestionIndex: number; // Add this line
 }
 
 export interface TestHeaderRef {
   getElapsedTime: () => number;
-  reset: () => void;
+  resetQuestionTimer: () => void;
+  startQuestionTimer: () => void;
+  getTotalElapsedTime: () => number;
+  pauseTimers: () => void;
+  resumeTimers: (resumeQuestionTimer: boolean, resumeTotalTimer: boolean) => void;
+  isQuestionTimerRunning: boolean;
+  isTotalTimerRunning: boolean;
+  getQuestionElapsedTime: () => number;
 }
 
-const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(({ title, isCreatingTest, currentQuestionIndex }, ref) => {
-  const {
-    seconds,
-    minutes,
-    hours,
-    reset: resetStopwatch,
-    pause,
-    start
-  } = useStopwatch({ autoStart: true });
-  const [timerColor, setTimerColor] = useState('text-sky-300');
-  const [isFlashing, setIsFlashing] = useState(false);
+const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(
+  ({ title, isCreatingTest, currentQuestionIndex }, ref) => {
+    const {
+      seconds: questionSeconds,
+      minutes: questionMinutes,
+      hours: questionHours,
+      reset: resetQuestionStopwatch,
+      pause: pauseQuestionStopwatch,
+      start: startQuestionStopwatch,
+      isRunning: isQuestionTimerRunning,
+    } = useStopwatch({ autoStart: false }); // Changed to autoStart: false
 
-  useImperativeHandle(ref, () => ({
-    getElapsedTime: () => hours * 3600 + minutes * 60 + seconds,
-    reset: () => {
-      pause();
-      resetStopwatch();
-      start();
-      setTimerColor('text-sky-300');
-      setIsFlashing(false);
-    }
-  }));
+    const {
+      seconds: totalSeconds,
+      minutes: totalMinutes,
+      hours: totalHours,
+      pause: pauseTotalStopwatch,
+      start: startTotalStopwatch,
+      isRunning: isTotalTimerRunning,
+    } = useStopwatch({ autoStart: true });
 
-  useEffect(() => {
-    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    const [timerColor, setTimerColor] = useState('text-sky-300');
+    const [isFlashing, setIsFlashing] = useState(false);
 
-    if (totalSeconds >= 120) { // 2 minutes
-      setTimerColor('text-red-500');
-      setIsFlashing(true);
-    } else if (totalSeconds >= 60) { // 1 minute
-      setTimerColor('text-red-500');
-      setIsFlashing(false);
-    } else if (totalSeconds >= 30) { // 30 seconds
-      setTimerColor('text-yellow-500');
-      setIsFlashing(false);
-    } else {
-      setTimerColor('text-sky-300');
-      setIsFlashing(false);
-    }
-  }, [seconds, minutes, hours]);
+    const [hasPlayedBeep, setHasPlayedBeep] = useState(false);
+    const [hasPlayedTotalBeep, setHasPlayedTotalBeep] = useState(false);
 
-  return (
-    <div className="bg-[#006dab] p-2 h-15 flex justify-between items-center border-3 border-sky-500">
-      <div className="flex items-center">
-        <h1 className="text-lg font-semibold ml-6">
-          {title}
-          {isCreatingTest && <span className="ml-2 text-sm text-gray-400">Creating test...</span>}
-        </h1>
+    const [hasPlayedQuestionBeep, setHasPlayedQuestionBeep] = useState(false);
+
+    useImperativeHandle(ref, () => ({
+      getElapsedTime: () => questionHours * 3600 + questionMinutes * 60 + questionSeconds,
+      resetQuestionTimer: () => {
+        pauseQuestionStopwatch();
+        resetQuestionStopwatch();
+        setTimerColor('text-sky-300');
+        setIsFlashing(false);
+        setHasPlayedQuestionBeep(false);
+      },
+      startQuestionTimer: () => {
+        startQuestionStopwatch();
+      },
+      getTotalElapsedTime: () => totalHours * 3600 + totalMinutes * 60 + totalSeconds,
+      pauseTimers: () => {
+        pauseQuestionStopwatch();
+        pauseTotalStopwatch();
+      },
+      resumeTimers: (resumeQuestionTimer: boolean, resumeTotalTimer: boolean) => {
+        if (resumeQuestionTimer) {
+          startQuestionStopwatch();
+        }
+        if (resumeTotalTimer) {
+          startTotalStopwatch();
+        }
+      },
+      isQuestionTimerRunning,
+      isTotalTimerRunning,
+      getQuestionElapsedTime: () => questionHours * 3600 + questionMinutes * 60 + questionSeconds,
+    }));
+
+    // Question Timer Logic
+    useEffect(() => {
+      if (!isQuestionTimerRunning) {
+        // Do not update timer color or play beep if the question timer is not running
+        return;
+      }
+
+      const totalQuestionSeconds = questionHours * 3600 + questionMinutes * 60 + questionSeconds;
+
+      if (totalQuestionSeconds >= 60) {
+        // 1 minute
+        setTimerColor('text-red-500');
+        setIsFlashing(true);
+
+        if (!hasPlayedQuestionBeep) {
+          // Play beep sound
+          const audio = new Audio('/beep-tone.mp3');
+          audio.play();
+          setHasPlayedQuestionBeep(true);
+        }
+      } else if (totalQuestionSeconds >= 30) {
+        // 30 seconds
+        setTimerColor('text-yellow-500');
+        setIsFlashing(false);
+      } else {
+        setTimerColor('text-sky-300');
+        setIsFlashing(false);
+      }
+    }, [questionSeconds, questionMinutes, questionHours, hasPlayedQuestionBeep, isQuestionTimerRunning]);
+
+    // Total Timer Beep at 5 Minutes, Only if Question Timer Hasn't Started
+    useEffect(() => {
+      const totalElapsedSeconds = totalHours * 3600 + totalMinutes * 60 + totalSeconds;
+
+      if (totalElapsedSeconds >= 300 && !hasPlayedTotalBeep && !isQuestionTimerRunning) {
+        // Play beep sound at 5 minutes
+        const audio = new Audio('/beep-tone.mp3');
+        audio.play();
+        setHasPlayedTotalBeep(true);
+      }
+    }, [totalSeconds, totalMinutes, totalHours, hasPlayedTotalBeep, isQuestionTimerRunning]);
+
+    return (
+      <div className="bg-[#006dab] p-2 h-15 flex justify-between items-center border-3 border-sky-500">
+        <div className="flex items-center">
+          <h1 className="text-lg font-semibold ml-6">
+            {title}
+            {isCreatingTest && (
+              <span className="ml-2 text-sm text-gray-400">Creating test...</span>
+            )}
+          </h1>
+        </div>
+        <div className="flex items-center space-x-4">
+          <div className="flex flex-col items-center">
+            <div
+              className={`timer ${timerColor}`}
+              style={{ animation: isFlashing ? `flash 1s linear infinite` : 'none' }}
+            >
+              <span>{String(questionHours).padStart(2, '0')}:</span>
+              <span>{String(questionMinutes).padStart(2, '0')}:</span>
+              <span>{String(questionSeconds).padStart(2, '0')}</span>
+            </div>
+            <div className="text-sm text-gray-300">Question Time</div>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="timer">
+              <span>{String(totalHours).padStart(2, '0')}:</span>
+              <span>{String(totalMinutes).padStart(2, '0')}:</span>
+              <span>{String(totalSeconds).padStart(2, '0')}</span>
+            </div>
+            <div className="text-sm text-gray-300">Total Test Time</div>
+          </div>
+          <div className="text-sm text-gray-300">
+            Question {currentQuestionIndex + 1}
+          </div>
+          <Link
+            href="/home"
+            className="ml-4 p-2 bg-sky-500 hover:bg-sky-600 text-white rounded transition duration-300"
+          >
+            <FaHome size={24} />
+          </Link>
+        </div>
       </div>
-      <div className={`timer ${timerColor}`} style={{ animation: isFlashing ? `flash 1s linear infinite` : 'none' }}>
-        <span>{hours.toString().padStart(2, '0')}:</span>
-        <span>{minutes.toString().padStart(2, '0')}:</span>
-        <span>{seconds.toString().padStart(2, '0')}</span>
-      </div>
-      <Link href="/home" className="ml-4 px-3 py-1 bg-sky-500 hover:bg-sky-600 text-white rounded transition duration-300">
-        Return Home
-      </Link>
-    </div>
-  );
-});
+    );
+  }
+);
 
 TestHeader.displayName = 'TestHeader';
 

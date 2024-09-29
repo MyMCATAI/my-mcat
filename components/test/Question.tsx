@@ -23,6 +23,7 @@ interface QuestionsProps {
   isSubmitting: boolean;
   answeredQuestions: number;
   onOptionCrossedOut: (optionText: string) => void;
+  onStartQuestionTimer: () => void; // New prop
 }
 
 // Seeded random number generator
@@ -94,7 +95,8 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
   onFinish,
   isSubmitting,
   answeredQuestions,
-  onOptionCrossedOut
+  onOptionCrossedOut,
+  onStartQuestionTimer // Destructure new prop
 }, ref) => {
   const options = JSON.parse(question.questionOptions);
   const correctAnswer = options[0];
@@ -104,6 +106,8 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
     const processedContent = preprocessContent(question.questionContent);
     return EditorState.createWithContent(ContentState.createFromText(processedContent));
   });
+
+  const [hasStartedTimer, setHasStartedTimer] = useState(false); // New state
 
   const testHeaderRef = useRef(null);
   
@@ -117,7 +121,15 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
       const processedContent = preprocessContent(question.questionContent);
       setEditorState(EditorState.createWithContent(ContentState.createFromText(processedContent)));
     }
+    setHasStartedTimer(false); // Reset when question changes
   }, [question]);
+
+  useEffect(() => {
+    if (!hasStartedTimer) {
+      onStartQuestionTimer();
+      setHasStartedTimer(true);
+    }
+  }, [hasStartedTimer, onStartQuestionTimer]);
 
   useEffect(() => {
     const content = convertToRaw(editorState.getCurrentContent());
@@ -168,7 +180,9 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
   };
 
   return (
-    <div className="flex flex-col items-center px-6 font-serif text-black text-sm">
+    <div
+      className="flex flex-col items-center px-6 font-serif text-black text-sm"
+    >
       <div className="w-full max-w-3xl flex flex-col">
         <div className="flex justify-between items-center mt-2 mb-4 pt-6 mx-4">
           <div className="flex items-center space-x-4">
