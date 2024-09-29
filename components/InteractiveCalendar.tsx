@@ -183,7 +183,7 @@ const InteractiveCalendar: React.FC = () => {
   };
 
   return (
-    <div className="h-[600px]">
+    <div style={{ height: '100%' }}> {/* Changed from h-[600px] to 100% */}
       <DnDCalendar
         defaultDate={moment().toDate()}
         view={view}
