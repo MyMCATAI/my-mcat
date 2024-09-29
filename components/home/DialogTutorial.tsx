@@ -204,15 +204,18 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
                 </ol>
               </div>
 
-              {['How To Use Kalypso To Review'].map((title) => (
-                <div key={title} className="space-y-2 text-red-500">
-                  <h3 className="text-xl font-semibold text-center">{title}</h3>
-                  <video className="w-full" controls>
-                    <source src={`/videos/${title.toLowerCase().replace(/ /g, '_')}.mp4`} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                </div>
-              ))}
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold text-red-500 text-center">How To Use Kalypso To Review</h3>
+                <video className="w-full" controls>
+                  <source src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/HowToReviewQuestionsKalypso.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+                <ol className="list-decimal list-inside text-left mt-2 space-y-2">
+                  <li>Turn tooltip/explanations off and then reason with him on the answer, asking for explanations on why the answer is right or your answer is wrong. Try to come up with an explanation yourself rather than reading first and going to the questions.</li>
+                  <li>You can even turn on hint/relevant context to do so.</li>
+                  <li>Then turn on tooltips and look at explanations and paste explanations to Kal if it confuses you.</li>
+                </ol>
+              </div>
             </div>
           </>
         );
