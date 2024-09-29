@@ -32,16 +32,16 @@ const TutorialContent: React.FC = () => {
               2. CARs Strategies
             </button>
             <button
-              onClick={() => openTutorial('premium')}
+              onClick={() => openTutorial('doctorsoffice')}
               className="block w-full text-left px-4 py-2 bg-transparent rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
             >
               3. Doctor&apos;s Office
             </button>
             <button
-              onClick={() => openTutorial('beta')}
+              onClick={() => openTutorial('premium')}
               className="block w-full text-left px-4 py-2 bg-transparent rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
             >
-              4. MD Premium
+              4. MD Features
             </button>
             <button
               onClick={() => openTutorial('beta')}
