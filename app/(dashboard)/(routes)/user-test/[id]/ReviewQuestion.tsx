@@ -30,10 +30,6 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   totalQuestions
 }) => {
   const [explanations, setExplanations] = useState<string[]>([]);
-  const [selectedExplanationIndex, setSelectedExplanationIndex] = useState<number | null>(null);
-  const [isExplanationsOpen, setIsExplanationsOpen] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
-  const [showDictionary, setShowDictionary] = useState(false);
   const [showExplanations, setShowExplanations] = useState(false);
   const [showMessageForm, setShowMessageForm] = useState(false);
 
@@ -46,8 +42,6 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       const options = JSON.parse(question.questionOptions);
       const answerNotes = JSON.parse(question.questionAnswerNotes || '[]');
       setExplanations(answerNotes);
-      const userAnswerIndex = options.indexOf(userResponse.userAnswer);
-      setSelectedExplanationIndex(userAnswerIndex);
 
       // Reset the viewed explanations when question changes
       setHasViewedUserExplanation(false);
@@ -150,31 +144,76 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
     setHasViewedCorrectExplanation(true);
   };
 
+  const generateChatbotContext = () => {
+    if (!question || !passageData) return { contentTitle: '', context: '' };
+
+    const options = JSON.parse(question.questionOptions);
+    const answerNotes = JSON.parse(question.questionAnswerNotes || '[]');
+    const userAnswerIndex = options.indexOf(userResponse.userAnswer);
+    const correctAnswerIndex = 0; // Assuming the correct answer is always the first option
+
+    const context = `I'm currently reviewing a question on this passage: ${passageData.text}
+
+The question was: ${question.questionContent}
+
+I chose the option: "${userResponse.userAnswer}" which was ${userResponse.isCorrect ? 'correct' : 'incorrect'}.
+
+Here is the correct answer: "${options[correctAnswerIndex]}"
+
+Explanation for the correct answer: ${answerNotes[correctAnswerIndex]}
+
+${!userResponse.isCorrect ? `Explanation for my answer: ${answerNotes[userAnswerIndex]}` : ''}
+
+Help me understand this question so I can learn.`;
+
+    return {
+      contentTitle: passageData.title,
+      context: context
+    };
+  };
+
   return (
     <div className="p-6 bg-white text-black h-full flex flex-col text-sm relative">
       <h2 className="text-md font-semibold mb-4">Question {currentQuestionIndex + 1} of {totalQuestions}</h2>
       
       <div className="absolute top-4 right-4 flex space-x-2">
-        <button
-          className={`
-            p-2 rounded-full shadow-lg
-            transition-colors duration-200
-            ${showExplanations 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white'}
-          `}
-          onClick={toggleExplanations}
-          aria-label="Toggle Explanations"
-        >
-          <HelpCircle className="w-6 h-6" />
-        </button>
-        <button
-          className="p-2 rounded-full shadow-lg transition-colors duration-200 bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white"
-          onClick={() => setShowMessageForm(true)}
-          aria-label="Send Message"
-        >
-          <Mail className="w-6 h-6" />
-        </button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className={`
+                  p-2 rounded-full shadow-lg
+                  transition-colors duration-200
+                  ${showExplanations 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white'}
+                `}
+                onClick={toggleExplanations}
+                aria-label="Toggle Explanations"
+              >
+                <HelpCircle className="w-6 h-6" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+            {"Toggle Explanations On Hover"}
+            </TooltipContent>
+          </Tooltip>
+        
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className="p-2 rounded-full shadow-lg transition-colors duration-200 bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white"
+              onClick={() => setShowMessageForm(true)}
+              aria-label="Send Message"
+            >
+              <Mail className="w-6 h-6" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            Send us a message
+          </TooltipContent>
+        </Tooltip>
+        </TooltipProvider>
       </div>
       
       {userResponse.flagged && (
@@ -238,7 +277,7 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
 
         <div className="mb-4" >
           <ChatBotInLineForReview 
-            chatbotContext={{ contentTitle: '', context: '' }}
+            chatbotContext={generateChatbotContext()}
             key={question.id}
           />
         </div>
@@ -246,8 +285,11 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
 
       {showMessageForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96 max-w-[90%]">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">Send us a message</h3>
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[480px] max-w-[90%]">
+            <h3 className="text-lg font-semibold mb-2 text-gray-800">Send Us a Message</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              We value your input! Please share any feedback about MyMCAT, this specific question, or any other concerns/ideas you may have.
+            </p>
             <form onSubmit={(e) => {
               e.preventDefault();
               const messageInput = e.currentTarget.elements.namedItem('message') as HTMLTextAreaElement;
@@ -255,10 +297,10 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
             }} className="space-y-4">
               <textarea
                 name="message"
-                placeholder="Your message"
+                placeholder="Your feedback (e.g., platform suggestions, question clarity, technical issues)"
                 className="w-full p-2 rounded resize-none border text-gray-800"
                 required
-                rows={4}
+                rows={6}
               />
               <div className="flex justify-end space-x-2">
                 <button
@@ -272,7 +314,7 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
                   type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
-                  Send
+                  Send Feedback
                 </button>
               </div>
             </form>

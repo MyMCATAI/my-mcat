@@ -155,7 +155,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     };
 
     const handleKeyCommand = (command: string): DraftHandleValue => {
-      if (command === "delete" || command === "backspace") {
+      if (command === "delete" || command === "backspace" || command === "split-block") {
         return "handled";
       }
       if (command === "toggle-highlight") {
