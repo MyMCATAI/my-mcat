@@ -43,7 +43,6 @@ const ChatBotWidgetNoChatBot: React.FC<ChatBotWidgetNoChatBotProps> = ({ reportD
     }
 
     try {
-      console.log('[ChatBotWidgetNoChatBot] Sending request to /api/kalypso');
       const kalypsoData: KalypsoData = {
         averageTestScore: reportData.averageTestScore,
         averageTimePerQuestion: reportData.averageTimePerQuestion,
@@ -55,7 +54,6 @@ const ChatBotWidgetNoChatBot: React.FC<ChatBotWidgetNoChatBotProps> = ({ reportD
       const response = await axios.post('/api/kalypso', {
         data: kalypsoData,
       });
-      console.log('[ChatBotWidgetNoChatBot] Received response:', response.data);
       handleResponse(response.data.message);
     } catch (error: any) {
       console.error('[ChatBotWidgetNoChatBot] Error:', error);

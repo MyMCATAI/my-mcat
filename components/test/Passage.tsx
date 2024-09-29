@@ -58,7 +58,6 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
   ({ passageData, onNote, tempHighlightedStrings, userResponse }, ref) => {
     const [editorState, setEditorState] = useState(() => {
       const initialState = EditorState.createWithContent(ContentState.createFromText(passageData?.text || ""));
-      console.log("Initial editor state created");
       return initialState;
     });
     const notesAppliedRef = useRef(false);
@@ -146,12 +145,9 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
       const newState = RichUtils.toggleInlineStyle(editorState, style);
       const selectionInfo = getSelectedText(newState);
 
-      console.log("selectionInfo")
-      console.log(selectionInfo)
       onNote(style + " : " + selectionInfo);
 
       setEditorState(newState);
-      console.log(`Style ${style} applied to editor state`);
     };
 
     const handleKeyCommand = (command: string): DraftHandleValue => {
@@ -214,15 +210,12 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
         // Remove existing 'HIGHLIGHT' and 'STRIKETHROUGH' styles
         newContentState = removeInlineStyleFromContentState(newContentState, "HIGHLIGHT");
         newContentState = removeInlineStyleFromContentState(newContentState, "STRIKETHROUGH");
-        console.log("Applying userNotes", userResponse?.userNotes);
 
         const annotations = parseUserNotes(userResponse.userNotes!);
-        console.log("Applying annotations", annotations);
 
         if (annotations.length > 0) {
           const newEditorState = applyAnnotations(EditorState.createWithContent(newContentState), annotations);
           setEditorState(newEditorState);
-          console.log("Applied annotations to editor state after 3-second delay");
           notesAppliedRef.current = true;
         }
       }, 3000); 
@@ -284,7 +277,6 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
 
       const newEditorState = EditorState.push(editorState, contentState, "change-inline-style");
       setEditorState(newEditorState);
-      console.log("Applied temporary highlights to editor state");
 
       // Only set up the timeout to remove 'TEMP_HIGHLIGHT' if there are no userNotes
       if (!userResponse?.userNotes) {
@@ -297,7 +289,6 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
             "change-inline-style"
           );
           setEditorState(clearedEditorState);
-          console.log("Removed temporary highlights from editor state");
         }, 5000); // 5000 milliseconds = 5 seconds
 
         // Cleanup function to clear the timeout if the component unmounts
@@ -320,7 +311,6 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
               editorState={editorState}
               onChange={(newState) => {
                 setEditorState(newState);
-                console.log("Editor state changed");
               }}
               customStyleMap={styleMap}
               handleBeforeInput={handleBeforeInput}
