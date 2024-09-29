@@ -1,5 +1,5 @@
 // app/api/user-test/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 
@@ -10,55 +10,72 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '10');
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "10");
   const skip = (page - 1) * limit;
 
   try {
     const userTests = await prisma.userTest.findMany({
-      where: { 
+      where: {
         userId,
         responses: {
-          some: {}  // This ensures that only userTests with attached responses are returned
-        }
+          some: {}, // This ensures that only userTests with attached responses are returned
+        },
       },
       include: {
         test: {
           select: {
             title: true,
             description: true,
+            questions: true,
           },
         },
-        responses: true,  // Include responses to check if they exist
+        responses: true, // Include responses to check if they exist
       },
-      orderBy: { startedAt: 'desc' },
+      orderBy: { startedAt: "desc" },
       skip,
       take: limit,
     });
 
-    const totalCount = await prisma.userTest.count({ 
-      where: { 
+    const totalCount = await prisma.userTest.count({
+      where: {
         userId,
         responses: {
-          some: {}
-        }
-      } 
+          some: {},
+        },
+      },
     });
 
-    const userTestsWithCounts = await Promise.all(userTests.map(async (test) => {
-      const totalResponses = test.responses.length;
-      const reviewedResponses = test.responses.filter(response => response.isReviewed).length;
+    const userTestsWithCounts = await Promise.all(
+      userTests.map(async (test) => {
+        const totalResponses = test.responses.length;
+        const totalQuestions = test.test?.questions.length || 0; // Count the number of questions
 
-      const { responses, ...testWithoutResponses } = test;
-      return {
-        ...testWithoutResponses,
-        totalResponses,
-        reviewedResponses
-      };
-    }));
+        const isCompleted = totalResponses === totalQuestions; // Check if completed
+
+        const { responses, ...testWithoutResponses } = test;
+        console.log(
+          `Test ID: ${test.id}, Total Responses: ${totalResponses}, Total Questions: ${totalQuestions}, Is Completed: ${isCompleted}`
+        );
+
+        return {
+          ...testWithoutResponses,
+          isCompleted, // Add isCompleted property
+          totalResponses,
+          reviewedResponses: test.responses.filter(
+            (response) => response.isReviewed
+          ).length,
+          totalQuestions, // Add totalQuestions property
+        };
+      })
+    );
+
+    const completedTests = userTestsWithCounts.filter(
+      (test) => test.isCompleted
+    );
 
     return NextResponse.json({
-      userTests: userTestsWithCounts,
+      userTests: completedTests,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(totalCount / limit),
@@ -66,8 +83,11 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching user tests:', error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("Error fetching user tests:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -81,7 +101,10 @@ export async function POST(req: NextRequest) {
     const { testId } = await req.json();
 
     if (!testId) {
-      return NextResponse.json({ error: "Test ID is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Test ID is required" },
+        { status: 400 }
+      );
     }
 
     // Fetch the test to get the passageId
@@ -104,7 +127,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(userTest, { status: 201 });
   } catch (error) {
-    console.error('Error creating user test:', error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("Error creating user test:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
