@@ -14,7 +14,6 @@ import { useSearchParams } from 'next/navigation';
 import { getUserInfo } from "@/lib/user-info";
 import { Mail } from 'lucide-react';
 import MDOnlyFeaturesDialog from '@/components/home/MDOnlyFeaturesDialog';
-import ChatbotWidget from "@/components/chatbot/ChatbotWidget";
 
 const FlashcardDeck = dynamic(() => import('./FlashcardDeck'), { ssr: false });
 
@@ -53,10 +52,7 @@ const Page = () => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showDiagnosticTest, setShowDiagnosticTest] = useState(false);
   const [diagnosticTestId, setDiagnosticTestId] = useState<string | null>(null);
-  const [chatbotContext, setChatbotContext] = useState<{ contentTitle: string; context: string }>({
-    contentTitle: '',
-    context: ''
-  });
+  const [chatbotContext, setChatbotContext] = useState<{ contentTitle: string; context: string } | null>(null);
   const [userInfo, setUserInfo] = useState<any>(null);
   const [showMessageForm, setShowMessageForm] = useState(false);
   const [message, setMessage] = useState('');
@@ -338,7 +334,12 @@ const Page = () => {
         content = null;
     }
 
-    // Removed the isPro check
+    if (!isPro && activeTab !== "test") {
+      return (
+        <MDOnlyFeaturesDialog content={content} />
+      );
+    }
+
     return content;
   };
 
@@ -444,16 +445,6 @@ const Page = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Add the ChatbotWidget at the end of the component */}
-      <ChatbotWidget
-        chatbotContext={chatbotContext}
-        chatbotWidth={500}
-        chatbotHeight={600}
-        buttonSize={350}
-        backgroundColor="#001226"
-        isVoiceEnabled={false}
-      />
     </div>
   );
 };
