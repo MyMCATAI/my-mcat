@@ -8,7 +8,6 @@ import QuestionComponent from "@/components/test/Question";
 import { Test, TestQuestion, Passage, Question, UserResponse } from "@/types";
 import { Pencil, Highlighter, Flag, Cat } from 'lucide-react';
 import ChatBotInLine from '@/components/chatbot/ChatBotInLine';
-import Link from 'next/link';
 import ScoreDialog from '@/components/ScoreDialog';
 import TestHeader, { TestHeaderRef } from '@/components/test/TestHeader';
 import DictionaryLookup from './DictionaryLookup';
@@ -64,6 +63,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const passageRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
   const questionRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
   const testHeaderRef = useRef<TestHeaderRef>(null);
+  const wasQuestionTimerRunningRef = useRef(false);
+  const wasTotalTimerRunningRef = useRef(false);
 
   const [score, setScore] = useState(0);
   const [timing, setTiming] = useState(0);
@@ -80,10 +81,14 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   
   const passageStorageKey = test?.id && currentPassage?.id ? `passage-${test.id}-${currentPassage.id}` : undefined;
 
+  const [shouldShowChatbot, setShouldShowChatbot] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     fetchTest();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testId]);
 
   useEffect(() => {
@@ -104,9 +109,68 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         setCurrentPassage(null);
       }
     }
-    testHeaderRef.current?.reset();
+    testHeaderRef.current?.resetQuestionTimer(); // Reset question timer when question changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, test]);
+
+  useEffect(() => {
+    if (testHeaderRef.current) {
+      if (showChatbot) {
+        wasQuestionTimerRunningRef.current = testHeaderRef.current.isQuestionTimerRunning;
+        wasTotalTimerRunningRef.current = testHeaderRef.current.isTotalTimerRunning;
+        testHeaderRef.current.pauseTimers();
+      } else {
+        testHeaderRef.current.resumeTimers(
+          wasQuestionTimerRunningRef.current,
+          wasTotalTimerRunningRef.current
+        );
+      }
+    }
+  }, [showChatbot]);
+
+  useEffect(() => {
+    const checkTimers = () => {
+      if (testHeaderRef.current) {
+        const questionElapsedTime = testHeaderRef.current.getQuestionElapsedTime();
+        const totalElapsedTime = testHeaderRef.current.getTotalElapsedTime();
+        const isQuestionTimerRunning = testHeaderRef.current.isQuestionTimerRunning;
+
+        if (questionElapsedTime >= 120 && !shouldShowChatbot) {
+          setShouldShowChatbot(true);
+        } else if (totalElapsedTime >= 420 && !isQuestionTimerRunning && !shouldShowChatbot) {
+          // 420 seconds = 7 minutes
+          setShouldShowChatbot(true);
+        }
+      }
+    };
+
+    const intervalId = setInterval(checkTimers, 1000); // Check every second
+
+    return () => clearInterval(intervalId);
+  }, [shouldShowChatbot]);
+
+  useEffect(() => {
+    if (shouldShowChatbot) {
+      setShowChatbot(true);
+    }
+  }, [shouldShowChatbot]);
+
+  // Reset shouldShowChatbot when moving to a new question
+  useEffect(() => {
+    setShouldShowChatbot(false);
+  }, [currentQuestionIndex]);
+
+  useEffect(() => {
+    if (showChatbot && videoRef.current) {
+      videoRef.current.play();
+    }
+  }, [showChatbot]);
+
+  useEffect(() => {
+    if (showChatbot) {
+      audioRef.current?.play();
+    }
+  }, [showChatbot]);
 
   const fetchTest = async () => {
     if (!testId) {
@@ -122,6 +186,14 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       }
       const data: Test = await response.json();
       setTest(data);
+      
+      // Create user test immediately after fetching the test data
+      const createdUserTest = await createUserTest(data.id);
+      if (createdUserTest) {
+        setUserTest(createdUserTest);
+        setTestCreated(true);
+        setTestStartTime(new Date());
+      }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -154,17 +226,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   };
 
   const handleUserResponse = async (questionId: string, userAnswer: string, isCorrect: boolean) => {
-    let currentUserTest = userTest;
-    if (!testCreated) {
-      currentUserTest = await createUserTest();
-      if (!currentUserTest) {
-        console.error('Failed to create user test');
-        return;
-      }
-      await new Promise(resolve => setTimeout(resolve, 0));
-    }
-
-    if (!currentUserTest) {
+    if (!userTest) {
       console.error('No valid user test available');
       return;
     }
@@ -187,7 +249,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
     const optimisticResponse: UserResponse = {
       id: `temp-${questionId}`,
-      userTestId: currentUserTest.id,
+      userTestId: userTest.id,
       questionId,
       userAnswer,
       isCorrect,
@@ -217,7 +279,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userTestId: currentUserTest.id,
+          userTestId: userTest.id,
           questionId,
           userAnswer,
           isCorrect,
@@ -270,7 +332,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     }
   };
 
-  const createUserTest = async (): Promise<{ id: string } | null> => {
+  const createUserTest = async (testId: string): Promise<{ id: string } | null> => {
     if (!testId || testCreated) return null;
     setIsCreatingTest(true);
 
@@ -283,9 +345,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
       if (!response.ok) throw new Error('Failed to create user test');
       const data = await response.json();
-      setUserTest(data);
-      setTestCreated(true);
-      setTestStartTime(new Date()); 
       return data;
     } catch (err) {
       console.error('Error creating user test:', err);
@@ -333,7 +392,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     if (!userTest || !testStartTime) return;
   
     const testFinishTime = new Date();
-    const totalTimeInSeconds = Math.round((testFinishTime.getTime() - testStartTime.getTime()) / 1000);
+    const totalTimeInSeconds = testHeaderRef.current?.getTotalElapsedTime() || 0;
   
     const { score, correctAnswers, technique } = calculateScore(totalTimeInSeconds);
   
@@ -406,14 +465,14 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const handleNextQuestion = () => {
     if (test && currentQuestionIndex < test.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-      testHeaderRef.current?.reset();
+      testHeaderRef.current?.resetQuestionTimer();
     }
   };
 
   const handlePreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
-      testHeaderRef.current?.reset();
+      testHeaderRef.current?.resetQuestionTimer();
     }
   };
 
@@ -425,11 +484,14 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   useEffect(() => {
     if (currentPassage) {
       const currentQuestion = getCurrentQuestion();
-      setChatbotContext({
-        contentTitle: "writing a practice test on " + currentPassage.id,
-        context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm considering is: ${currentQuestion?.questionContent}\n\nOnly refer to this if I ask about what I'm currently studying.`
-      });
+      setChatbotContext(prevContext => ({
+        ...prevContext,
+        contentTitle: currentPassage.title || "Untitled Passage",
+        context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm looking at is: ${currentQuestion?.questionContent}\n\nThe question options are: ${currentQuestion?.questionOptions}`
+      }));
+      console.log("chatbotContext", chatbotContext)
     }
+    testHeaderRef.current?.resetQuestionTimer(); // Reset question timer when question changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPassage, currentQuestionIndex]);
 
@@ -460,11 +522,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   
  
   const saveNote = async (text: string) => {
-    console.log("Starting saveNote function",text);
+    console.log("Starting saveNote function", text);
     let currentUserTest = userTest
     if (!currentUserTest) {
       console.log("No userTest, creating new one");
-      currentUserTest = await createUserTest();
+      currentUserTest = await createUserTest(test?.id || '');
       if (!currentUserTest) {
         console.error('Failed to create user test');
         return;
@@ -484,30 +546,30 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       return;
     }
 
-    const existingResponse = getCurrentUserResponse(currentQuestion.id);
     const timeSpent = testHeaderRef.current?.getElapsedTime() || 0;
-
-    const timestamp = new Date().toISOString();
-    const formattedAction = `[${timestamp}] - ${text}`;
-
-    let updatedUserNotes = formattedAction;
-    if (existingResponse?.userNotes) {
-      updatedUserNotes = `${existingResponse.userNotes}\n${formattedAction}`;
-    }
 
     const responseData = {
       userTestId: currentUserTest.id,
       questionId: currentQuestion.id,
-      userAnswer: existingResponse?.userAnswer || '',
-      isCorrect: existingResponse?.isCorrect || false,
       timeSpent,
-      userNotes: updatedUserNotes,
-      answeredAt: new Date().toISOString(),
+      userNotes: text,
     };
 
     try {
+      // First, try to fetch the existing response
+      const checkResponse = await fetch(`/api/user-test/response?userTestId=${currentUserTest.id}&questionId=${currentQuestion.id}`, {
+        method: 'GET',
+      });
+
+      let method = 'PUT';
+      if (checkResponse.status === 404) {
+        method = 'POST';
+      } else if (!checkResponse.ok) {
+        throw new Error(`Failed to check existing response: ${checkResponse.status} ${checkResponse.statusText}`);
+      }
+
       const response = await fetch('/api/user-test/response', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(responseData),
       });
@@ -610,42 +672,47 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   };
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (event.metaKey && event.key === 'i') {
-      const selection = window.getSelection();
-      if (selection && selection.toString().trim() !== '') {
-        const word = selection.toString().trim();
+    if (event.metaKey) {
+      if (event.key === 'i') {
+        const selection = window.getSelection();
+        if (selection && selection.toString().trim() !== '') {
+          const word = selection.toString().trim();
 
-        // Always fetch the definition and add to vocabList
-        fetchDefinitionAndAddToVocab(word);
+          // Always fetch the definition and add to vocabList
+          fetchDefinitionAndAddToVocab(word);
 
-        // If Command-I is enabled, perform dictionary lookup
-        if (isCmdIEnabled) {
-          const range = selection.getRangeAt(0);
-          const rect = range.getBoundingClientRect();
+          // If Command-I is enabled, perform dictionary lookup
+          if (isCmdIEnabled) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
 
-          const viewportHeight = window.innerHeight;
-          const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
 
-          const isBottomThird = rect.bottom > (viewportHeight * 2 / 3);
+            const isBottomThird = rect.bottom > (viewportHeight * 2 / 3);
 
-          const leftPosition = Math.min(rect.left + rect.width, viewportWidth - 300);
+            const leftPosition = Math.min(rect.left + rect.width, viewportWidth - 300);
 
-          setDictionaryPosition({
-            top: isBottomThird ? null : rect.bottom + 10,
-            bottom: isBottomThird ? viewportHeight - rect.top + 10 : null,
-            left: leftPosition
-          });
+            setDictionaryPosition({
+              top: isBottomThird ? null : rect.bottom + 10,
+              bottom: isBottomThird ? viewportHeight - rect.top + 10 : null,
+              left: leftPosition
+            });
 
-          setSelectedWord(word);
-          setShowDefinition(true);
+            setSelectedWord(word);
+            setShowDefinition(true);
+          }
         }
+      } else if (event.key === 'a') {
+        event.preventDefault();
+        setShowChatbot(prev => !prev);
+      } else if (event.key === 's') {
+        event.preventDefault();
+        handleStrikethrough();
+      } else if (event.key === 'h') {
+        event.preventDefault();
+        handleHighlight();
       }
-    }
-
-    // Updated Command+A logic to toggle chatbot
-    if ((event.metaKey || event.ctrlKey) && event.key === 'a') {
-      event.preventDefault(); // Prevent default browser behavior
-      setShowChatbot(prev => !prev);
     }
   }, [isCmdIEnabled]);
 
@@ -747,7 +814,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         isCreatingTest={isCreatingTest}
         currentQuestionIndex={currentQuestionIndex}
       />
-
       {/* Toolbar with highlight, strikethrough, flag, and vocab list toggle */}
       <div className="h-9 border-t-2 border-b-2 border-white bg-[#84aedd] flex items-center justify-between px-4">
         <div className="flex items-center space-x-2">
@@ -758,10 +824,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                 : 'bg-transparent text-white hover:bg-white/10'
             }`}
             onClick={handleHighlight}
-            aria-label="Highlight"
+            aria-label="Highlight (Cmd+H)"
+            title="Highlight (Cmd+H)"
           >
             <Highlighter className="w-4 h-4 mr-2" />
-            Highlight
+            Highlight <span className="ml-1 text-lg">(⌘H)</span>
           </button>
           <button
             className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
@@ -770,10 +837,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                 : 'bg-transparent text-white hover:bg-white/10'
             }`}
             onClick={handleStrikethrough}
-            aria-label="Strikethrough"
+            aria-label="Strikethrough (Cmd+S)"
+            title="Strikethrough (Cmd+S)"
           >
             <Pencil className="w-4 h-4 mr-2" />
-            Strikethrough
+            Strikethrough <span className="ml-1 text-lg">(⌘S)</span>
           </button>
         </div>
         <div className="flex items-center space-x-2">
@@ -811,12 +879,12 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         {currentPassage && (
           <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto standard-scrollbar">
             <div className="p-4 h-full">
-            <PassageComponent
-              ref={passageRef}
-              passageData={currentPassage}
-              onNote={saveNote}
-              tempHighlightedStrings={tempHighlightedStrings}
-            />
+              <PassageComponent
+                ref={passageRef}
+                passageData={currentPassage}
+                onNote={saveNote}
+                tempHighlightedStrings={tempHighlightedStrings}
+              />
             </div>
           </div>
         )}
@@ -856,6 +924,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                   isSubmitting={isSubmitting}
                   answeredQuestions={answeredQuestions}
                   onOptionCrossedOut={onOptionCrossedOut}
+                  onStartQuestionTimer={() => testHeaderRef.current?.startQuestionTimer()}
                 />
               </>
             ) : (
@@ -907,6 +976,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         userTestId={userTest?.id}
         totalTimeTaken={testStartTime ? Math.round((new Date().getTime() - testStartTime.getTime()) / 1000) : 0}
       />
+      <audio ref={audioRef} src="/chatbot-open.mp3" />
     </div>
   );
 };
