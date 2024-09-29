@@ -89,7 +89,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   useEffect(() => {
     fetchTest();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testId]);
 
   useEffect(() => {
@@ -187,6 +186,14 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       }
       const data: Test = await response.json();
       setTest(data);
+      
+      // Create user test immediately after fetching the test data
+      const createdUserTest = await createUserTest(data.id);
+      if (createdUserTest) {
+        setUserTest(createdUserTest);
+        setTestCreated(true);
+        setTestStartTime(new Date());
+      }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -219,17 +226,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   };
 
   const handleUserResponse = async (questionId: string, userAnswer: string, isCorrect: boolean) => {
-    let currentUserTest = userTest;
-    if (!testCreated) {
-      currentUserTest = await createUserTest();
-      if (!currentUserTest) {
-        console.error('Failed to create user test');
-        return;
-      }
-      await new Promise(resolve => setTimeout(resolve, 0));
-    }
-
-    if (!currentUserTest) {
+    if (!userTest) {
       console.error('No valid user test available');
       return;
     }
@@ -252,7 +249,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
     const optimisticResponse: UserResponse = {
       id: `temp-${questionId}`,
-      userTestId: currentUserTest.id,
+      userTestId: userTest.id,
       questionId,
       userAnswer,
       isCorrect,
@@ -282,7 +279,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userTestId: currentUserTest.id,
+          userTestId: userTest.id,
           questionId,
           userAnswer,
           isCorrect,
@@ -335,7 +332,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     }
   };
 
-  const createUserTest = async (): Promise<{ id: string } | null> => {
+  const createUserTest = async (testId: string): Promise<{ id: string } | null> => {
     if (!testId || testCreated) return null;
     setIsCreatingTest(true);
 
@@ -348,9 +345,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
       if (!response.ok) throw new Error('Failed to create user test');
       const data = await response.json();
-      setUserTest(data);
-      setTestCreated(true);
-      setTestStartTime(new Date()); 
       return data;
     } catch (err) {
       console.error('Error creating user test:', err);
@@ -528,11 +522,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   
  
   const saveNote = async (text: string) => {
-    console.log("Starting saveNote function",text);
+    console.log("Starting saveNote function", text);
     let currentUserTest = userTest
     if (!currentUserTest) {
       console.log("No userTest, creating new one");
-      currentUserTest = await createUserTest();
+      currentUserTest = await createUserTest(test?.id || '');
       if (!currentUserTest) {
         console.error('Failed to create user test');
         return;
@@ -552,30 +546,30 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       return;
     }
 
-    const existingResponse = getCurrentUserResponse(currentQuestion.id);
     const timeSpent = testHeaderRef.current?.getElapsedTime() || 0;
-
-    const timestamp = new Date().toISOString();
-    const formattedAction = `[${timestamp}] - ${text}`;
-
-    let updatedUserNotes = formattedAction;
-    if (existingResponse?.userNotes) {
-      updatedUserNotes = `${existingResponse.userNotes}\n${formattedAction}`;
-    }
 
     const responseData = {
       userTestId: currentUserTest.id,
       questionId: currentQuestion.id,
-      userAnswer: existingResponse?.userAnswer || '',
-      isCorrect: existingResponse?.isCorrect || false,
       timeSpent,
-      userNotes: updatedUserNotes,
-      answeredAt: new Date().toISOString(),
+      userNotes: text,
     };
 
     try {
+      // First, try to fetch the existing response
+      const checkResponse = await fetch(`/api/user-test/response?userTestId=${currentUserTest.id}&questionId=${currentQuestion.id}`, {
+        method: 'GET',
+      });
+
+      let method = 'PUT';
+      if (checkResponse.status === 404) {
+        method = 'POST';
+      } else if (!checkResponse.ok) {
+        throw new Error(`Failed to check existing response: ${checkResponse.status} ${checkResponse.statusText}`);
+      }
+
       const response = await fetch('/api/user-test/response', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(responseData),
       });
@@ -885,12 +879,12 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         {currentPassage && (
           <div className="w-1/2 border-r-4 border-[#006dab] overflow-auto standard-scrollbar">
             <div className="p-4 h-full">
-            <PassageComponent
-              ref={passageRef}
-              passageData={currentPassage}
-              onNote={saveNote}
-              tempHighlightedStrings={tempHighlightedStrings}
-            />
+              <PassageComponent
+                ref={passageRef}
+                passageData={currentPassage}
+                onNote={saveNote}
+                tempHighlightedStrings={tempHighlightedStrings}
+              />
             </div>
           </div>
         )}

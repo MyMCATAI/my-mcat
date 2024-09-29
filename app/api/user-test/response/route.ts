@@ -4,6 +4,42 @@ import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 
+export async function GET(req: Request) {
+  const { userId } = auth();
+  if (!userId) {
+    console.log("Unauthorized request: No userId");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const userTestId = searchParams.get('userTestId');
+  const questionId = searchParams.get('questionId');
+
+  if (!userTestId || !questionId) {
+    return NextResponse.json({ error: "Missing required query parameters" }, { status: 400 });
+  }
+
+  try {
+    const existingResponse = await prisma.userResponse.findFirst({
+      where: {
+        userTestId,
+        questionId,
+        userId,
+      },
+    });
+
+    if (!existingResponse) {
+      return NextResponse.json({ error: "Response not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(existingResponse);
+  } catch (error) {
+    console.error('Error fetching user response:', error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+// Modify the existing POST route
 export async function POST(req: Request) {
   const { userId } = auth();
   if (!userId) {
@@ -13,7 +49,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes, weighting, reviewNotes, isReviewed } = body;
+    const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes } = body;
 
     // Validate required fields
     const missingFields = [];
@@ -25,108 +61,69 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `Missing required fields: ${missingFields.join(', ')}` }, { status: 400 });
     }
 
-    // Fetch the question with its category
-    const question = await prisma.question.findUnique({
-      where: { id: questionId },
-      include: { category: true }
-    });
-
-    if (!question) {
-      console.log(`Question not found: ${questionId}`);
-      return NextResponse.json({ error: "Question not found" }, { status: 404 });
-    }
-
     // Check if a response for this question already exists
     const existingResponse = await prisma.userResponse.findFirst({
       where: {
         userTestId,
         questionId,
+        userId, // Add this to ensure we only find the current user's response
       },
     });
 
-    let responseData: any = {
-      userId,
-      userTestId,
-      questionId,
-      categoryId: question.categoryId,
-      weighting: weighting || 1,
-      timeSpent: timeSpent !== undefined ? timeSpent : existingResponse?.timeSpent,
-      userNotes: userNotes !== undefined ? userNotes : existingResponse?.userNotes,
-      reviewNotes: reviewNotes !== undefined ? reviewNotes : existingResponse?.reviewNotes,
-      isReviewed: isReviewed !== undefined ? isReviewed : existingResponse?.isReviewed,
-      answeredAt: new Date(),
-    };
-
-    // Only update userAnswer and isCorrect if they are provided
-    if (userAnswer !== undefined) responseData.userAnswer = userAnswer;
-    if (isCorrect !== undefined) responseData.isCorrect = isCorrect;
-
-    let savedResponse;
     if (existingResponse) {
-      console.log(`Updating existing response: ${existingResponse.id}`);
-      savedResponse = await prisma.userResponse.update({
+      // If response exists, update it (similar to PUT logic)
+      const timestamp = new Date().toISOString();
+      const formattedNote = `[${timestamp}] - ${userNotes}`;
+      const updatedUserNotes = existingResponse.userNotes
+        ? `${existingResponse.userNotes}\n${formattedNote}`
+        : formattedNote;
+
+      const updatedResponse = await prisma.userResponse.update({
         where: { id: existingResponse.id },
-        data: responseData,
+        data: {
+          userAnswer: userAnswer || existingResponse.userAnswer,
+          isCorrect: isCorrect !== undefined ? isCorrect : existingResponse.isCorrect,
+          timeSpent: timeSpent || existingResponse.timeSpent,
+          userNotes: updatedUserNotes,
+        },
         include: {
           question: true,
           userTest: true,
           Category: true,
         },
       });
+
+      return NextResponse.json(updatedResponse);
     } else {
-      console.log("Creating new response");
-      // Ensure userAnswer and isCorrect are set for new responses
-      if (userAnswer === undefined) responseData.userAnswer = '';
-      if (isCorrect === undefined) responseData.isCorrect = false;
-      savedResponse = await prisma.userResponse.create({
-        data: responseData,
+      // If response doesn't exist, create a new one
+      const newResponse = await prisma.userResponse.create({
+        data: {
+          userId, // Ensure we're setting the userId
+          userTestId,
+          questionId,
+          userAnswer: userAnswer || '',
+          isCorrect: isCorrect || false,
+          timeSpent: timeSpent || 0,
+          userNotes: userNotes ? `[${new Date().toISOString()}] - ${userNotes}` : '',
+        },
         include: {
           question: true,
           userTest: true,
           Category: true,
         },
       });
-    }
 
-    // Update or create KnowledgeProfile
-    if (isCorrect !== undefined) {
-      await prisma.knowledgeProfile.upsert({
-        where: {
-          userId_categoryId: {
-            userId,
-            categoryId: question.categoryId,
-          },
-        },
-        update: {
-          correctAnswers: {
-            increment: isCorrect ? 1 : 0,
-          },
-          totalAttempts: {
-            increment: 1,
-          },
-          lastAttemptAt: new Date(),
-        },
-        create: {
-          userId,
-          categoryId: question.categoryId,
-          correctAnswers: isCorrect ? 1 : 0,
-          totalAttempts: 1,
-          lastAttemptAt: new Date(),
-        },
-      });
+      return NextResponse.json(newResponse);
     }
-
-    return NextResponse.json(savedResponse, { status: 201 });
   } catch (error) {
     console.error('Error handling user response:', error);
-    return NextResponse.json({ error: "Internal server error", details: error }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
+// Keep the existing PUT route as is
 export async function PUT(req: Request) {
   const { userId } = auth();
-  console.log("PUT request:");
-
   if (!userId) {
     console.log("Unauthorized request: No userId");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -134,10 +131,8 @@ export async function PUT(req: Request) {
 
   try {
     const body = await req.json();
+    const { userTestId, questionId, userNotes, timeSpent } = body;
 
-    const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes, weighting, reviewNotes, isReviewed, flagged } = body;
-
-    console.log("Input body flag:", flagged);
     // Validate required fields
     if (!userTestId || !questionId) {
       console.log("Missing required fields: userTestId or questionId");
@@ -149,36 +144,28 @@ export async function PUT(req: Request) {
       where: {
         userTestId,
         questionId,
-        userId, // Ensure the response belongs to the authenticated user
+        userId, // Add this to ensure we only find the current user's response
       },
     });
 
     if (!existingResponse) {
-      console.log(`Response not found for userTestId: ${userTestId}, questionId: ${questionId}`);
-      return NextResponse.json({ error: "Response not found" }, { status: 404 });
+      console.log(`Response not found for userTestId: ${userTestId}, questionId: ${questionId}, userId: ${userId}`);
+      return NextResponse.json({ error: "Response not found or you don't have permission to modify it" }, { status: 404 });
     }
 
     // Prepare the update data
+    const timestamp = new Date().toISOString();
+    const formattedNote = `[${timestamp}] - ${userNotes}`;
+    const updatedUserNotes = existingResponse.userNotes
+      ? `${existingResponse.userNotes}\n${formattedNote}`
+      : formattedNote;
+
     const updateData: any = {
+      userNotes: updatedUserNotes,
       timeSpent: timeSpent !== undefined ? timeSpent : existingResponse.timeSpent,
-      userNotes: userNotes !== undefined ? userNotes : existingResponse.userNotes,
-      weighting: weighting !== undefined ? weighting : existingResponse.weighting,
-      isReviewed: isReviewed !== undefined ? isReviewed : existingResponse.isReviewed,
-      flagged: flagged !== undefined ? flagged : existingResponse.flagged,
     };
 
-    // Only update userAnswer and isCorrect if they are provided
-    if (userAnswer !== undefined) updateData.userAnswer = userAnswer;
-    if (isCorrect !== undefined) updateData.isCorrect = isCorrect;
-
-    // Append review notes if provided
-    if (reviewNotes !== undefined) {
-      updateData.reviewNotes = existingResponse.reviewNotes
-        ? `${existingResponse.reviewNotes}\n\n${reviewNotes}`
-        : reviewNotes;
-    }
-
-    // Update the response with all fields
+    // Update the response
     const updatedResponse = await prisma.userResponse.update({
       where: { id: existingResponse.id },
       data: updateData,
@@ -189,18 +176,9 @@ export async function PUT(req: Request) {
       },
     });
 
-    console.log("Updated response:", updatedResponse.flagged);
-    console.log("Output response:", {
-      status: 200,
-    });
-
     return NextResponse.json(updatedResponse, { status: 200 });
   } catch (error) {
     console.error('Error updating user response:', error);
-    console.log("Output response:", {
-      status: 500,
-      json: { error: "Internal server error", details: error }
-    });
     return NextResponse.json({ error: "Internal server error", details: error }, { status: 500 });
   }
 }
