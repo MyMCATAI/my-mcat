@@ -312,7 +312,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         onClose={closeDialog} title={''} description={''}
-        videoSrc='https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TestComponent.mp4'
+        videoSrc='https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/ReviewComponent.mp4'
         />
     </div>
   );
