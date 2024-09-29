@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { useUser } from "@clerk/nextjs";
+import { Mail } from 'lucide-react';
 
 interface ImageItem {
   id: string;
@@ -223,9 +224,10 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
               {!showMessageForm ? (
                 <button 
                   onClick={() => setShowMessageForm(true)}
-                  className="w-full py-2 px-4 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded-md hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-opacity mt-auto"
+                  className="w-full py-2 px-4 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded-md hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-opacity mt-auto flex items-center justify-center"
                 >
-                  Send a quick message
+                  <Mail className="mr-2" size={20} />
+                  Send a message
                 </button>
               ) : (
                 <form onSubmit={handleSendMessage} className="mt-auto">

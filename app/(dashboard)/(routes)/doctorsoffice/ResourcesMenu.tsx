@@ -6,6 +6,7 @@ import { FaFire } from 'react-icons/fa';
 import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay } from '@/utils/calculateResourceTotals';
 import axios from 'axios';
 import { HelpCircle } from 'lucide-react'; // Add this import
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Dynamic import for ChatBotWidgetNoChatBot
 const ChatBotWidgetNoChatBot = dynamic(
@@ -157,22 +158,53 @@ const ResourcesMenu: React.FC = () => {
         <DaysStreak days={reportData.streak} />
 
         <div className="w-full max-w-md space-y-4 mt-6">
-          <StatBar
-            label="Patients Per Day"
-            value={patientsPerDay}
-            max={30}
-          />
-          <StatBar
-            label="Quality of Care (QC)"
-            value={displayQC}
-            max={5}
-            showDecimals={true}
-          />
-          <StatBar
-            label="Clinic Cost Per Day"
-            value={clinicCostPerDay}
-            max={3}
-          />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <StatBar
+                    label="Patients Per Day"
+                    value={patientsPerDay}
+                    max={30}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                <p>The number of patients your clinic can treat each day. This increases as you upgrade your clinic and functions as a score for your clinic and affects your school&apos;s placement in The League.</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <StatBar
+                    label="Quality of Care (QC)"
+                    value={displayQC}
+                    max={5}
+                    showDecimals={true}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                <p>Represents the overall quality of care provided by your clinic. Higher QC leads to better patient satisfation. You get higher QC from leveling up your clinic and having a streak!</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <StatBar
+                    label="Clinic Cost Per Day"
+                    value={clinicCostPerDay}
+                    max={3}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                <p>The daily operating cost of your clinic. This increases as your clinic grows but you&apos;re more likely to get rewards from reviews.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         <div className="w-full max-w-md space-y-4 mt-6">

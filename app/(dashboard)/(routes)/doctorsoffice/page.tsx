@@ -8,6 +8,7 @@ import ShoppingDialog, { ImageGroup } from './ShoppingDialog';
 import { useRouter } from 'next/navigation';
 import { DoctorOfficeStats } from '@/types';
 import { toast } from 'react-hot-toast';
+import ScoreRandomizer from './ScoreRandomizer';
 
 const DoctorsOfficePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('doctorsoffice');
@@ -128,6 +129,9 @@ const DoctorsOfficePage: React.FC = () => {
   ]);
 
   const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
+
+  // Add new state for ScoreRandomizer
+  const [showScoreRandomizer, setShowScoreRandomizer] = useState(false);
 
   const toggleGroup = async (groupName: string) => {
     const group = imageGroups.find(g => g.name === groupName);
@@ -257,6 +261,16 @@ const DoctorsOfficePage: React.FC = () => {
     setUserScore(newScore);
   };
 
+  // Add this function to handle opening the ScoreRandomizer
+  const handleOpenScoreRandomizer = () => {
+    setShowScoreRandomizer(true);
+  };
+
+  // Add this function to handle closing the ScoreRandomizer
+  const handleCloseScoreRandomizer = () => {
+    setShowScoreRandomizer(false);
+  };
+
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
       <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
@@ -275,6 +289,7 @@ const DoctorsOfficePage: React.FC = () => {
           />
           {/* Fellowship Level button with coins and patients */}
           <div className="absolute top-4 right-4 z-50 flex items-center">
+            {/* Patient count */}
             <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
               <img src="/game-components/patient.png" alt="Patient" className="w-8 h-8 mr-2" />
               <span className="text-white font-bold">{patientsPerDay}</span>
@@ -284,6 +299,13 @@ const DoctorsOfficePage: React.FC = () => {
               <img src="/game-components/PixelCupcake.png" alt="Coin" className="w-8 h-8 mr-2" />
               <span className="text-white font-bold">{userScore}</span>
             </div>
+            {/* New Score Randomizer button */}
+            <button
+              onClick={handleOpenScoreRandomizer}
+              className="flex items-center justify-center px-4 py-2 bg-[--theme-doctorsoffice-accent] border-2 border-[--theme-border-color] text-[--theme-text-color] hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors rounded-lg mr-2"
+            >
+              <span>Get Reviews</span>
+            </button>
             {/* Fellowship Level button with dropdown */}
             <div className="relative group">
               <button className="flex items-center justify-center px-6 py-3 bg-[--theme-doctorsoffice-accent] border-[--theme-border-color] text-[--theme-text-color] hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors text-3xl font-bold uppercase group-hover:text-[--theme-hover-text] group-hover:bg-[--theme-hover-color]">
@@ -322,6 +344,18 @@ const DoctorsOfficePage: React.FC = () => {
           initialTab={activeTab}
         />
       </div>
+      {showScoreRandomizer && (
+        <ScoreRandomizer
+          onClose={handleCloseScoreRandomizer}
+          playerLevel={userLevel === 'INTERN LEVEL' ? 1 : userLevel === 'RESIDENT LEVEL' ? 2 : userLevel === 'FELLOWSHIP LEVEL' ? 3 : userLevel === 'ATTENDING LEVEL' ? 4 : userLevel === 'PHYSICIAN LEVEL' ? 5 : 6}
+          streakDays={7} // You'll need to fetch this from your user data
+          patientsPerDay={patientsPerDay}
+          qualityOfCare={1.0} // You'll need to calculate this based on your game logic
+          averageStarRating={null} // You can update this if you have a previous average rating
+          clinicCostPerDay={10} // You'll need to calculate this based on your game logic
+          purchasedRooms={userRooms}
+        />
+      )}
     </div>
   );
 };

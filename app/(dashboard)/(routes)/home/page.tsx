@@ -12,6 +12,9 @@ import { toast } from "@/components/ui/use-toast";
 import ThemeSwitcher from '@/components/home/ThemeSwitcher';
 import { useSearchParams } from 'next/navigation';
 import { getUserInfo } from "@/lib/user-info";
+import { Mail } from 'lucide-react';
+import MDOnlyFeaturesDialog from '@/components/home/MDOnlyFeaturesDialog';
+import ChatbotWidget from "@/components/chatbot/ChatbotWidget";
 
 const FlashcardDeck = dynamic(() => import('./FlashcardDeck'), { ssr: false });
 
@@ -50,8 +53,13 @@ const Page = () => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showDiagnosticTest, setShowDiagnosticTest] = useState(false);
   const [diagnosticTestId, setDiagnosticTestId] = useState<string | null>(null);
-  const [chatbotContext, setChatbotContext] = useState<{ contentTitle: string; context: string } | null>(null);
+  const [chatbotContext, setChatbotContext] = useState<{ contentTitle: string; context: string }>({
+    contentTitle: '',
+    context: ''
+  });
   const [userInfo, setUserInfo] = useState<any>(null);
+  const [showMessageForm, setShowMessageForm] = useState(false);
+  const [message, setMessage] = useState('');
   
   useEffect(() => {
     const initializePage = async () => {
@@ -254,7 +262,38 @@ const Page = () => {
     }
   };
 
-  
+  const handleSendMessage = async () => {
+    try {
+      const response = await fetch('/api/send-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Message sent successfully!",
+          duration: 3000,
+        });
+        setShowMessageForm(false);
+        setMessage('');
+      } else {
+        throw new Error('Failed to send message');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
   const renderContent = () => {
     if (isUpdatingProfile || isGeneratingActivities) {
       return (
@@ -299,24 +338,9 @@ const Page = () => {
         content = null;
     }
 
-    if (!isPro && activeTab !== "test") {
-      return (
-        <div className="relative">
-          {content}
-          <div className="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center z-10">
-            <div className="text-white text-center p-8 bg-[#001226] border border-sky-500 rounded-lg">
-              <h3 className="text-2xl mb-4">Pro Feature</h3>
-              <p>This feature is available for Pro users only. Upgrade to access all features!</p>
-              <Button className="mt-4 bg-sky-500 hover:bg-sky-600">Upgrade to Pro</Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
+    // Removed the isPro check
     return content;
   };
-
 
   useEffect(() => {
     window.scrollTo({ top: scrollPosition, behavior: "smooth" });
@@ -351,7 +375,7 @@ const Page = () => {
             <div className="flex items-center gap-4">
               <h2 className="text-white text-2xl ml-3 font-thin leading-normal shadow-text">
                 {activeTab === "Schedule"
-                  ? "Home."
+                  ? "Schedule Builder."
                   : activeTab === "KnowledgeProfile"
                   ? "Adaptive Tutoring Suite."
                   : activeTab === "flashcards"
@@ -420,6 +444,16 @@ const Page = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add the ChatbotWidget at the end of the component */}
+      <ChatbotWidget
+        chatbotContext={chatbotContext}
+        chatbotWidth={500}
+        chatbotHeight={600}
+        buttonSize={350}
+        backgroundColor="#001226"
+        isVoiceEnabled={false}
+      />
     </div>
   );
 };
