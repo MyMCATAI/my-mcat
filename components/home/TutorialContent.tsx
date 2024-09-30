@@ -35,7 +35,7 @@ const TutorialContent: React.FC = () => {
               onClick={() => openTutorial('doctorsoffice')}
               className="block w-full text-left px-4 py-2 bg-transparent rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
             >
-              3. Doctor&apos;s Office
+              3. The Clinic
             </button>
             <button
               onClick={() => openTutorial('premium')}
@@ -47,7 +47,7 @@ const TutorialContent: React.FC = () => {
               onClick={() => openTutorial('beta')}
               className="block w-full text-left px-4 py-2 bg-transparent rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
             >
-              5. Beta Tester Information
+              5. Early Access Information
             </button>
           </div>
         </CardContent>

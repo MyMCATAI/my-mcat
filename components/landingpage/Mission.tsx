@@ -376,13 +376,13 @@ const MethodologyAndTestimonials = () => {
               w/ rate limits
             </p>
             <p className="text-green-400 text-6xl font-bold mb-4">
-              $24.99/mo
+              ???/mo
             </p>
             <p className="text-white text-3xl mb-16">
               w/ unlimited access
             </p>
             <p className="text-white font-krungthep text-2xl mt-16">
-              We remain committed to a better product for a lower cost.
+              The community will decide the fair price of unlimited software access.
             </p>
           </div>
         </div>
