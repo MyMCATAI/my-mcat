@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Question, UserResponse } from '@/types';
-import { HelpCircle, Mail } from "lucide-react"; // Replace BookOpen with Mail
+import { HelpCircle, Mail } from "lucide-react";
 import ChatBotInLineForReview from '@/components/chatbot/ChatBotInLineForReview';
 import { Passage } from '@/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { toast } from 'react-hot-toast'; // Import toast for notifications
+import { toast } from 'react-hot-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ReviewQuestionComponentProps {
   question?: Question;
@@ -32,25 +33,22 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   const [explanations, setExplanations] = useState<string[]>([]);
   const [showExplanations, setShowExplanations] = useState(false);
   const [showMessageForm, setShowMessageForm] = useState(false);
-
-  // State variables to track if explanations have been viewed
   const [hasViewedUserExplanation, setHasViewedUserExplanation] = useState(false);
   const [hasViewedCorrectExplanation, setHasViewedCorrectExplanation] = useState(false);
+  const [showRewardDialog, setShowRewardDialog] = useState(false);
+  const [isReviewFinished, setIsReviewFinished] = useState(false);
 
   useEffect(() => {
     if (question) {
       const options = JSON.parse(question.questionOptions);
       const answerNotes = JSON.parse(question.questionAnswerNotes || '[]');
       setExplanations(answerNotes);
-
-      // Reset the viewed explanations when question changes
       setHasViewedUserExplanation(false);
       setHasViewedCorrectExplanation(false);
     }
   }, [question, userResponse]);
 
-  // Function to update the user response
-  const updateUserResponse = async (newReviewNote: string | null) => {
+  const updateUserResponse = useCallback(async (newReviewNote: string | null) => {
     if (!userResponse.id) return;
 
     const updatedResponse = {
@@ -79,9 +77,8 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
     } catch (error) {
       console.error('Error updating user response:', error);
     }
-  };
+  }, [userResponse]);
 
-  // Function to check if conditions are met to call updateUserResponse
   useEffect(() => {
     const userGotItRight = userResponse.isCorrect;
     const needsToViewUserExplanation = !userGotItRight;
@@ -92,8 +89,7 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
     ) {
       updateUserResponse(null);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasViewedUserExplanation, hasViewedCorrectExplanation, userResponse]);
+  }, [hasViewedUserExplanation, hasViewedCorrectExplanation, userResponse, updateUserResponse]);
 
   const toggleExplanations = () => {
     setShowExplanations(!showExplanations);
@@ -121,9 +117,38 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
     }
   };
 
+  const handleFinishReview = async () => {
+    if (isReviewFinished) return;
+
+    setIsReviewFinished(true);
+
+    try {
+      const response = await fetch('/api/user-info', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: 1 }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add cupcake coin');
+      }
+
+      const data = await response.json();
+      console.log('Cupcake coin added, new score:', data.score);
+
+      setShowRewardDialog(true);
+      const audio = new Audio('/levelup.mp3');
+      audio.play();
+    } catch (error) {
+      console.error('Error adding cupcake coin:', error);
+      toast.error('Failed to add cupcake coin. Please try again.');
+      setIsReviewFinished(false);
+    }
+  };
+
   if (!question) return null;
   const options = JSON.parse(question.questionOptions);
-  const correctAnswerIndex = 0; // Assuming the correct answer is always the first option
+  const correctAnswerIndex = 0;
 
   const getOptionClass = (index: number) => {
     if (index === correctAnswerIndex) {
@@ -135,7 +160,6 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
     return 'bg-gray-200 text-black hover:bg-gray-300 cursor-pointer';
   };
 
-  // Handlers for viewing explanations
   const handleViewUserExplanation = () => {
     setHasViewedUserExplanation(true);
   };
@@ -150,7 +174,7 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
     const options = JSON.parse(question.questionOptions);
     const answerNotes = JSON.parse(question.questionAnswerNotes || '[]');
     const userAnswerIndex = options.indexOf(userResponse.userAnswer);
-    const correctAnswerIndex = 0; // Assuming the correct answer is always the first option
+    const correctAnswerIndex = 0;
 
     const context = `I'm currently reviewing a question on this passage: ${passageData.text}
 
@@ -257,7 +281,6 @@ Help me understand this question so I can learn.`;
           </TooltipProvider>
         </div>
 
-        {/* Move the Next/Previous buttons here */}
         <div className="flex justify-between mt-4 mb-4">
           <button
             onClick={onPrevious}
@@ -266,13 +289,24 @@ Help me understand this question so I can learn.`;
           >
             Previous
           </button>
-          <button
-            onClick={onNext}
-            disabled={isLast}
-            className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-          >
-            Next
-          </button>
+          {isLast ? (
+            <button
+              onClick={handleFinishReview}
+              disabled={isReviewFinished}
+              className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded ${
+                isReviewFinished ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {isReviewFinished ? 'Review Finished' : 'Finish Review'}
+            </button>
+          ) : (
+            <button
+              onClick={onNext}
+              className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded"
+            >
+              Next
+            </button>
+          )}
         </div>
 
         <div className="mb-4" >
@@ -322,6 +356,19 @@ Help me understand this question so I can learn.`;
         </div>
       )}
 
+      <Dialog open={showRewardDialog} onOpenChange={setShowRewardDialog}>
+        <DialogContent className="sm:max-w-md" closeButtonClassName="text-black hover:text-gray-700">
+          <DialogHeader className="text-center">
+            <DialogTitle className="text-center text-black">Congratulations!</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-6">
+            <img src="/game-components/PixelCupcake.png" alt="Coin" className="w-24 h-24 mb-4" />
+            <p className="text-center text-lg text-black">
+              You&apos;ve earned <span className="font-bold">1 cupcake coin</span> for reviewing today!
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

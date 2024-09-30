@@ -43,7 +43,7 @@ interface SharePopupProps {
 
 const SharePopup: React.FC<SharePopupProps> = ({ onClose }) => {
   const shareUrl = 'https://mymcat.ai';
-  const shareTitle = 'MyMCAT.ai is a freemium MCAT platform seeking to create the best learning experience for premeds. Right now, they have a free CARs suite & an in-developmentMCAT game! Not gonna lie, they offered me incentives to share this, but it\'s still really cool!';
+  const shareTitle = 'MyMCAT.ai is a freemium MCAT platform seeking to create the best learning experience for premeds. They\'re doing a limited release that needs a student\'s invite.';
   const hashtag = '#MyMCAT';
 
   const handleCopyLink = () => {
@@ -66,12 +66,12 @@ const SharePopup: React.FC<SharePopupProps> = ({ onClose }) => {
         >
           <X className="h-6 w-6" />
         </button>
-        <h2 className="text-xl mb-4"><strong>MD Premium will release at a later date.</strong></h2>
+        <h2 className="text-xl mb-4"><strong>MD Premium is earned by signing on students to the platform.</strong></h2>
         <p className="mb-4 text-xs">
-          Every month, we purchase six months access to UWorld for anyone who drops a link to www.mymcat.ai in their class GroupMe and/or writes three reddit comments about us on r/MCAT. 
+          We are closed to the public for the month of October, but as an early access member you can share it with trusted classmates. The passcode for registration is <strong>Cupcake528</strong> and students can only sign up if they know the password and have a recommender. 
         </p>
         <p className="mb-4 text-xs">
-          Alternatively, you can share it to two of the following socials below:
+          Three students signed will get you MD Premium and a raffle ticket for free 6-months of UWorld.
         </p>
         <div className="flex flex-col space-y-3">
           <FacebookShareButton url={shareUrl} hashtag={hashtag}>
