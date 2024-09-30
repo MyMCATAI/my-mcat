@@ -316,10 +316,10 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
               <li>You cannot share the internal details of our service to the public.</li>
               <li>No screenshots, screen-recordings, or manipulations of any kind. </li>
               <li>Email prynce@mymcat.ai atleast <strong>once a week</strong> with concerns, praise, feature requests, bugs, etc.</li>
-              <li>You can sign up a <strong>maximum of three individuals</strong> but they have to know the current password.</li>
+              <li>You can sign up a <strong>maximum of three individuals</strong> but they have to have an @rice.edu or @princeton.edu and know the current password.</li>
               <li>Prolonged inactivity will <strong>result in removal of access</strong> with no reinstatement.</li>
             </ul>
-            <p className="mb-4 text-left indent-4">Successful completion of our early access program will entitle you to free access to the full site when we launch. The current password is:</p>
+            <p className="mb-4 text-left indent-4">Successful completion of our early access program will entitle you to free access to MD premium when we launch even beyond early access. The current password is:</p>
             <p className="mb-4 text-center text-red-500 indent-4"><strong>Cupcake528</strong></p>
           </>
         );
