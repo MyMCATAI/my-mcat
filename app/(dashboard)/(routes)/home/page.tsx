@@ -11,23 +11,22 @@ import TestingSuit from "./TestingSuit";
 import { toast } from "@/components/ui/use-toast";
 import ThemeSwitcher from '@/components/home/ThemeSwitcher';
 import { useSearchParams } from 'next/navigation';
-import { getUserInfo } from "@/lib/user-info";
-import { Mail } from 'lucide-react';
 import MDOnlyFeaturesDialog from '@/components/home/MDOnlyFeaturesDialog';
-
-const FlashcardDeck = dynamic(() => import('./FlashcardDeck'), { ssr: false });
-
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import TestComponent from "@/components/test-component";
 import { DialogOverlay } from "@radix-ui/react-dialog";
 import { checkProStatus } from "@/lib/utils";
+import WelcomePopUp from '@/components/home/WelcomePopUp';
+
+const FlashcardDeck = dynamic(() => import('./FlashcardDeck'), { ssr: false });
 
 interface HandleShowDiagnosticTestParams {
   reset?: boolean;
@@ -56,6 +55,7 @@ const Page = () => {
   const [userInfo, setUserInfo] = useState<any>(null);
   const [showMessageForm, setShowMessageForm] = useState(false);
   const [message, setMessage] = useState('');
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   
   useEffect(() => {
     const initializePage = async () => {
@@ -64,6 +64,9 @@ const Page = () => {
       const proStatus = await checkProStatus();
       setIsPro(proStatus);
       await fetchUserInfo();
+      
+      // Show welcome popup
+      setShowWelcomePopup(true);
     };
 
     initializePage();
@@ -445,6 +448,9 @@ const Page = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Welcome Popup */}
+      <WelcomePopUp open={showWelcomePopup} onOpenChange={setShowWelcomePopup} />
     </div>
   );
 };
