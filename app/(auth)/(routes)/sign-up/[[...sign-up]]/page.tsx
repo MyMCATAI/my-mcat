@@ -16,10 +16,6 @@ export default function Page() {
               backgroundColor: 'white',
             },
           },
-          card: {
-            border: '5px solid #f05c90',
-            borderRadius: '12px',
-          },
           logoBox: {
             display: 'flex',
             justifyContent: 'center',
