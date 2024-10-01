@@ -179,7 +179,7 @@ const Product = () => {
         </div>
       </div>
       {/* Add a spacer div to ensure scrolling works correctly */}
-      <div style={{ height: "2500px" }}></div>
+      <div style={{ height: "200px" }}></div>
     </div>
   );
 };
