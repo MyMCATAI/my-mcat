@@ -83,6 +83,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onOpenChange }) => {
             <section className="text-[--theme-text-color]">
               <p className="text-lg mb-4">Click the blue question marks on the corners of the components for short, descriptive videos on our software.</p>
               <p className="text-lg">We recommend checking out the bulletin in the far right component to get started!</p>
+              <p className="text-sm mt-4 italic">(Note: There are some bugs in our software: send us messages when you come across them, please.)</p>
             </section>
           </div>
           <DialogFooter className="mt-6">
