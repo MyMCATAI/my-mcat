@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useRef, useCallback, useContext } from "react";
 import axios from 'axios';
-import { useStopwatch } from 'react-timer-hook';
 import PassageComponent from "@/components/test/Passage";
 import QuestionComponent from "@/components/test/Question";
 import { Test, TestQuestion, Passage, Question, UserResponse } from "@/types";
@@ -87,11 +86,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-<<<<<<< HEAD
   const [showMessageForm, setShowMessageForm] = useState(false);
-=======
   const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] = useState(false);
->>>>>>> 51044f36b53e9b7784366454b1e6cb3fbdd85761
 
   useEffect(() => {
     fetchTest();
