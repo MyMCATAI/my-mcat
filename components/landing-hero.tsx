@@ -1,5 +1,4 @@
 "use client";
-import { useAuth } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import cat from "../public/hero.gif";
@@ -8,13 +7,12 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import BernieSvg from "../public/Bernie.svg";
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Product from './landingpage/Product';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const LandingHero = () => {
   const quoteRef = useRef(null);
-  const videoRef = useRef(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const meowSectionRef = useRef(null);
   const titleRef = useRef(null);
   const laptopRef = useRef(null);
@@ -22,48 +20,23 @@ const LandingHero = () => {
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [laptopLoaded, setLaptopLoaded] = useState(false);
   const [catGifLoaded, setCatGifLoaded] = useState(false);
-  const videoRef2 = useRef(null);
+  const videoRef2 = useRef<HTMLVideoElement>(null);
   const [video2Loaded, setVideo2Loaded] = useState(false);
 
   useLayoutEffect(() => {
-    let ctx = gsap.context(() => {
-      const quoteElement = quoteRef.current;
-      gsap.set(quoteElement, { opacity: 0, y: 50 });
-      gsap.to(quoteElement, {
-        opacity: 1,
-        y: 0,
-        duration: 1,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: quoteElement,
-          start: "top 50%",
-          end: "top 10%",
-          toggleActions: "play none none reverse"
-        }
-      });
-
-      const section = meowSectionRef.current;
-      const title = titleRef.current;
-
-      gsap.set(title, { opacity: 0, y: 50 });
-
-      const timeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: section,
-          start: "top 40%",
-          end: "bottom 10%",
-          toggleActions: "play none none reverse",
-        }
-      });
-
-      timeline.to(title, { opacity: 1, y: 0, duration: 0.3 });
-    });
-
-    return () => ctx.revert();
+    const video = videoRef.current;
+    if (video) {
+      video.load();
+      const handleLoadedData = () => setVideoLoaded(true);
+      video.addEventListener('loadeddata', handleLoadedData);
+      return () => {
+        video.removeEventListener('loadeddata', handleLoadedData);
+      };
+    }
   }, []);
 
   useLayoutEffect(() => {
-    if (videoLoaded) {
+    if (videoLoaded && videoRef.current) {
       gsap.to(videoRef.current, {
         opacity: 1,
         duration: 1,
@@ -94,7 +67,7 @@ const LandingHero = () => {
   }, [laptopLoaded, catGifLoaded]);
 
   useLayoutEffect(() => {
-    if (video2Loaded) {
+    if (video2Loaded && videoRef2.current) {
       gsap.to(videoRef2.current, {
         opacity: 1,
         duration: 1,
@@ -108,12 +81,11 @@ const LandingHero = () => {
       <section className="relative h-screen overflow-hidden bg-[#050010]" id="home">
         <video 
           ref={videoRef}
-          className="absolute top-0 left-0 w-full h-full object-cover opacity-0"
+          className={`absolute top-0 left-0 w-full h-full object-cover ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
           autoPlay
           loop
           muted
           playsInline
-          onLoadedData={() => setVideoLoaded(true)}
         >
           <source src={"https://my-mcat.s3.us-east-2.amazonaws.com/public/brush3.mp4"} type="video/mp4" />
           Your browser does not support the video tag.
@@ -124,11 +96,11 @@ const LandingHero = () => {
             <div className="text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-white font-krungthep mb-4 text-center">
                 <span>
-                  <span className="text-[#f2f64f]">Study</span> earlier and <span className="text-[#f2f64f]">score</span> higher.
+                  <span className="text-[#f2f64f]">Score</span> beyond <span className="text-[#f2f64f]">a 520</span>
                 </span>
               </h1>
               <p className="text-2xl md:text-3xl text-white my-8 text-center">
-                Join the revolution in MCAT education with Kalypso.
+                The next big thing in MCAT education, with Kalypso.
               </p>
               <div className="flex justify-center">
                 <Link href="/intro">

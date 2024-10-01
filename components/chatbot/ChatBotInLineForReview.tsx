@@ -206,7 +206,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
     },
     botBubble: { 
       simStream: true, 
-      streamSpeed: audioEnabled ? 80 : 40,
+      streamSpeed: audioEnabled ? 100 : 50,
     },
     options: {
       disabled: true, // Disable options to allow free-form conversation

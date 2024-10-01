@@ -157,10 +157,10 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
 
     // Time-specific greetings
     const timeGreetings = {
-      morning: "Rise and shine! ",
-      afternoon: "Hope your day's going well. ",
+      morning: "Rise and shine!",
+      afternoon: "Hope your day's going well.",
       evening: "Good evening! ",
-      night: "Burning the midnight oil, huh? ",
+      night: "Night, darling!",
     };
     message += timeGreetings[timeOfDay];
 
@@ -169,7 +169,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
       if (streak === 1) {
         const oneDayStreakMessages = [
           "You've started your streak! Great job showing up today!",
-          "Day one of your streak! Let's keep this momentum going!",
+          "Day one of your streak! Come back tomorrow too.",
           "First day of your study streak! Every journey begins with a single step.",
           "You've begun your streak! One day down, many more to go!",
           "Day 1 of your streak! Remember, consistency is key in MCAT prep.",
@@ -196,13 +196,13 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
     if (day === 5 && hour >= 20) {
       message += [
         "Impressive dedication, studying on a Friday night! ",
-        "Friday night MCAT prep? Your commitment is admirable! ",
-        "Choosing MCAT over Friday night fun? That's the spirit! ",
+        "Friday night MCAT prep? Personally I'd be on catnip right now but you're a better cat than I am.",
+        "Choosing MCAT over Friday night fun? No friends, huh? (Just kidding :3)",
       ][Math.floor(Math.random() * 3)];
     } else if (hour >= 0 && hour < 5) {
       message += [
-        "Just remember, a well-rested brain retains more info. ",
-        "Don't forget to catch some Z's between study sessions. ",
+        "Just remember, a well-rested brain retains more info.",
+        "Do you, uh, sleep? Even I take naps.",
         "Night owl mode, activated! Just balance it with proper rest. ",
       ][Math.floor(Math.random() * 3)];
     }
@@ -210,12 +210,12 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
     // Day-specific encouragement
     const dayMessages = [
       "Fresh start to the week - let's make it count!",
-      "An orange friend of mine hates Mondays, but we'll conquer the MCAT anyway!",
+      "I'm not the type of cat to hate Mondays, and you shouldn't be either!",
       "Tuesday's momentum can carry you through the week.",
-      "Midweek already? You're making great progress!",
+      "Wednesday is hump day, which is why I stay away from most dogs.",
       "Weekend's in sight, but stay focused on your goals.",
       "Last push before the weekend - you've got this!",
-      "Weekend warrior mode: ON. Your dedication is impressive!",
+      "Weekend warrior mode: ON. Love your dedication!",
     ];
     message += dayMessages[day] + " ";
 
@@ -232,16 +232,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
     message +=
       mcatMessages[Math.floor(Math.random() * mcatMessages.length)] + " ";
 
-    // Closing encouragement
-    const closingMessages = [
-      "Yippee!",
-      "I'm here to help you ace this test. Ready to rumble?",
-      "Together, we'll rock your MCAT prep one step at a time.",
-      "Remember, every bit of effort brings you closer to your goals.",
-      "You've got this!",
-    ];
-    message +=
-      closingMessages[Math.floor(Math.random() * closingMessages.length)];
+    // Removed closing messages
 
     return message + "\n\n";
   };
