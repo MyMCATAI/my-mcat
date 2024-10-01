@@ -7,7 +7,8 @@ import { FaHome } from 'react-icons/fa'; // Import the home icon
 interface TestHeaderProps {
   title: string | undefined;
   isCreatingTest: boolean;
-  currentQuestionIndex: number; // Add this line
+  currentQuestionIndex: number;
+  hasAnsweredFirstQuestion: boolean;
 }
 
 export interface TestHeaderRef {
@@ -23,7 +24,7 @@ export interface TestHeaderRef {
 }
 
 const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(
-  ({ title, isCreatingTest, currentQuestionIndex }, ref) => {
+  ({ title, isCreatingTest, currentQuestionIndex, hasAnsweredFirstQuestion }, ref) => {
     const {
       seconds: questionSeconds,
       minutes: questionMinutes,
@@ -32,7 +33,7 @@ const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(
       pause: pauseQuestionStopwatch,
       start: startQuestionStopwatch,
       isRunning: isQuestionTimerRunning,
-    } = useStopwatch({ autoStart: false }); // Changed to autoStart: false
+    } = useStopwatch({ autoStart: false });
 
     const {
       seconds: totalSeconds,
@@ -55,13 +56,15 @@ const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(
       getElapsedTime: () => questionHours * 3600 + questionMinutes * 60 + questionSeconds,
       resetQuestionTimer: () => {
         pauseQuestionStopwatch();
-        resetQuestionStopwatch();
+        resetQuestionStopwatch(new Date(), false)
         setTimerColor('text-sky-300');
         setIsFlashing(false);
         setHasPlayedQuestionBeep(false);
       },
       startQuestionTimer: () => {
-        startQuestionStopwatch();
+        if (hasAnsweredFirstQuestion) {
+          startQuestionStopwatch();
+        }
       },
       getTotalElapsedTime: () => totalHours * 3600 + totalMinutes * 60 + totalSeconds,
       pauseTimers: () => {
@@ -83,8 +86,7 @@ const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(
 
     // Question Timer Logic
     useEffect(() => {
-      if (!isQuestionTimerRunning) {
-        // Do not update timer color or play beep if the question timer is not running
+      if (!isQuestionTimerRunning || !hasAnsweredFirstQuestion) {
         return;
       }
 
@@ -109,7 +111,7 @@ const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(
         setTimerColor('text-sky-300');
         setIsFlashing(false);
       }
-    }, [questionSeconds, questionMinutes, questionHours, hasPlayedQuestionBeep, isQuestionTimerRunning]);
+    }, [questionSeconds, questionMinutes, questionHours, hasPlayedQuestionBeep, isQuestionTimerRunning, hasAnsweredFirstQuestion]);
 
     // Total Timer Beep at 5 Minutes, Only if Question Timer Hasn't Started
     useEffect(() => {
