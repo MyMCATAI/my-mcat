@@ -1,12 +1,17 @@
 import { SignIn } from "@clerk/nextjs";
-import { dark, neobrutalism } from "@clerk/themes";
+import {neobrutalism } from "@clerk/themes";
 
 export default function Page() {
   return (
     <SignIn
       appearance={{
         baseTheme: neobrutalism,
-        variables: { colorPrimary: '#ef4781', colorTextSecondary: 'white', colorBackground: 'white' },
+        variables: { 
+          colorPrimary: '#ef4781', 
+          colorTextSecondary: 'white', 
+          colorBackground: 'white', 
+          colorNeutral: '#ef4781',
+        },
         elements: {
           formButtonPrimary: {
             fontSize: 14,
@@ -16,10 +21,6 @@ export default function Page() {
               backgroundColor: 'black',
             },
           },
-          card: {
-            border: '3px solid #f05c90',
-            borderRadius: '12px', // Add this line to round the edges
-          },
           logoBox: {
             display: 'flex',
             justifyContent: 'center',
@@ -27,7 +28,7 @@ export default function Page() {
             '& img': {
               maxWidth: '100%',
               height: 'auto',
-              maxHeight: '50px', // Adjust this value as needed
+              maxHeight: '60px', // Adjust this value as needed
             },
 
           }

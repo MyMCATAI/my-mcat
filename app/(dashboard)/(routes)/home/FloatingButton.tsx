@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
@@ -18,9 +18,45 @@ interface ButtonPosition {
   icon: string;
 }
 
+// Updated Typewriter component
+const Typewriter: React.FC<{ text: string; delay?: number }> = ({ text, delay = 0 }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const indexRef = useRef(0);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const typeNextChar = () => {
+      if (indexRef.current < text.length) {
+        setDisplayedText((prev) => text.slice(0, indexRef.current + 1));
+        indexRef.current += 1;
+        timeoutRef.current = setTimeout(typeNextChar, 50);
+      }
+    };
+
+    // Add initial delay before starting to type
+    const initialDelay = setTimeout(() => {
+      typeNextChar();
+    }, delay);
+
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      clearTimeout(initialDelay);
+    };
+  }, [text, delay]);
+
+  // Reset when text changes
+  useEffect(() => {
+    setDisplayedText('');
+    indexRef.current = 0;
+  }, [text]);
+
+  return <span>{displayedText}</span>;
+};
+
 const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPage, initialTab }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(initialTab); // Use initialTab here
+  const [hoveredButton, setHoveredButton] = useState<string | null>(null); // New state for hovered button
   const hoverTimeout = useRef<number | null>(null);
   const router = useRouter();
 
@@ -34,6 +70,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
   const handleMouseLeave = () => {
     hoverTimeout.current = window.setTimeout(() => {
       setIsHovered(false);
+      setHoveredButton(null); // Reset hovered button when leaving
     }, 200);
   };
 
@@ -66,10 +103,32 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
     }
   };
 
+  // Mapping of tab names to descriptive texts
+  const labelTexts: Record<string, string> = {
+    "Schedule": "Adaptive Schedule",
+    "doctorsoffice": "MCAT Game: Clinic",
+    "test": "Daily CARs Suite",
+    "KnowledgeProfile": "Adaptive Tutoring Suite",
+  };
+
+  // Updated Helper function to determine label position
+  const getLabelPosition = (index: number) => {
+    switch (index) {
+      case 0: // Schedule
+        return { top: '-4.5rem', left: '9rem' };
+      case 1: // doctorsoffice
+        return { top: '-1.5rem', left: '14rem' };
+      case 2: // test
+        return { top: '3.5rem', left: '15.5rem' };
+      default: // KnowledgeProfile or any other
+        return { top: '2rem', left: '11.5rem' };
+    }
+  };
+
   return (
     <>
       {isHovered && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+        <div className="fixed inset-0 bg-black bg-opacity-35 z-40"></div>
       )}
       <span className="fixed bottom-[8rem] left-[0.625rem] z-50">
         <div
@@ -89,40 +148,72 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
             const top = isActive
               ? 0
               : isHovered
-              ? inactivePositions[inactiveIndex].top
+              ? inactivePositions[inactiveIndex]?.top
               : inactivePositions[activeIndex]?.top;
+
             const left = isActive
               ? 0
               : isHovered
-              ? inactivePositions[inactiveIndex].left
+              ? inactivePositions[inactiveIndex]?.left
               : inactivePositions[activeIndex]?.left;
 
+            const labelPosition = getLabelPosition(inactiveIndex);
+            const labelText = labelTexts[pos.tab] || pos.tab;
+
             return (
-              <button
-                key={index}
-                className={clsx(
-                  "w-16 h-16 bg-[var(--theme-navbutton-color)] border-2 border-white text-white rounded-full shadow-lg focus:outline-none transition-all transform hover:scale-110 absolute flex justify-center items-center",
-                  {
-                    "w-24 h-24": isActive,
-                    "opacity-100": isHovered || isActive,
-                    "opacity-0 pointer-events-none": !isHovered && !isActive,
-                  }
-                )}
-                style={{
-                  top,
-                  left,
-                  transitionDelay: `${index * 50}ms`,
-                  color: 'var(--theme-navbutton-color)',
-                }}
-                onClick={() => handleButtonClick(pos.tab)}
-              >
-                <Image 
-                  src={pos.icon} 
-                  alt={pos.tab} 
-                  width={isActive ? 44 : 32} 
-                  height={isActive ? 44 : 32} 
-                />
-              </button>
+              <div key={index} className="relative">
+                <button
+                  className={clsx(
+                    "w-16 h-16 bg-[var(--theme-navbutton-color)] border-2 border-white text-white rounded-full shadow-lg focus:outline-none transition-all transform hover:scale-110 absolute flex justify-center items-center",
+                    {
+                      "w-24 h-24": isActive,
+                      "opacity-100": isHovered || isActive,
+                      "opacity-0 pointer-events-none": !isHovered && !isActive,
+                    }
+                  )}
+                  style={{
+                    top,
+                    left,
+                    transitionDelay: `${index * 50}ms`,
+                    color: 'var(--theme-navbutton-color)',
+                  }}
+                  onClick={() => handleButtonClick(pos.tab)}
+                  onMouseEnter={() => setHoveredButton(pos.tab)}
+                  onMouseLeave={() => setHoveredButton(null)}
+                >
+                  <Image 
+                    src={pos.icon} 
+                    alt={pos.tab} 
+                    width={isActive ? 44 : 32} 
+                    height={isActive ? 44 : 32} 
+                  />
+                </button>
+                {/* Label */}
+                <span
+                  className="absolute"
+                  style={{
+                    top: labelPosition.top,
+                    left: labelPosition.left,
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 60, // Ensure labels appear above other elements
+                  }}
+                >
+                  {hoveredButton === pos.tab && !isActive && (
+                    <span
+                      className="bg-transparent text-white text-2xl px-2 py-1 rounded overflow-hidden"
+                      style={{
+                        display: 'inline-block',
+                        width: '150px', // Fixed width
+                        textAlign: 'left', // Align text to the left
+                        whiteSpace: 'nowrap',
+                        overflow: 'visible',
+                      }}
+                    >
+                      <Typewriter text={labelText} delay={1200} />
+                    </span>
+                  )}
+                </span>
+              </div>
             );
           })}
         </div>
