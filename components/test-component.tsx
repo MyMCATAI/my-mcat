@@ -87,7 +87,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+<<<<<<< HEAD
   const [showMessageForm, setShowMessageForm] = useState(false);
+=======
+  const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] = useState(false);
+>>>>>>> 51044f36b53e9b7784366454b1e6cb3fbdd85761
 
   useEffect(() => {
     fetchTest();
@@ -111,9 +115,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         setCurrentPassage(null);
       }
     }
-    testHeaderRef.current?.resetQuestionTimer(); // Reset question timer when question changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQuestionIndex, test]);
+    if (hasAnsweredFirstQuestion) {
+      testHeaderRef.current?.resetQuestionTimer();
+      testHeaderRef.current?.startQuestionTimer();
+    }
+  }, [currentQuestionIndex, test, hasAnsweredFirstQuestion]);
 
   useEffect(() => {
     if (testHeaderRef.current) {
@@ -228,6 +234,10 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   };
 
   const handleUserResponse = async (questionId: string, userAnswer: string, isCorrect: boolean) => {
+    if (!hasAnsweredFirstQuestion) {
+      setHasAnsweredFirstQuestion(true);
+      testHeaderRef.current?.startQuestionTimer();
+    }
     if (!userTest) {
       console.error('No valid user test available');
       return;
@@ -837,6 +847,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         title={test?.title}
         isCreatingTest={isCreatingTest}
         currentQuestionIndex={currentQuestionIndex}
+        hasAnsweredFirstQuestion={hasAnsweredFirstQuestion}
       />
       {/* Toolbar with highlight, strikethrough, flag, and vocab list toggle */}
       <div className="h-9 border-t-2 border-b-2 border-white bg-[#84aedd] flex items-center justify-between px-4">
