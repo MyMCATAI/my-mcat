@@ -258,7 +258,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
     },
     botBubble: { 
       simStream: true, 
-      streamSpeed: audioEnabled ? 80 : 40,
+      streamSpeed: audioEnabled ? 100 : 50,
     },
   };
 
