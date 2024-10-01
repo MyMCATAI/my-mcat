@@ -3,11 +3,13 @@ import React, { useState, useEffect } from 'react';
 import Typewriter from "typewriter-effect";
 import Image from 'next/image';
 import Script from 'next/script';
+import { useRouter } from 'next/navigation';
 
 const IntroPage = () => {
   const [showGif, setShowGif] = useState(false);
   const [showIntroText, setShowIntroText] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const gifTimer = setTimeout(() => setShowGif(true), 2400);
@@ -17,11 +19,21 @@ const IntroPage = () => {
       setShowForm(true); // Show form immediately after intro text
     }, 6400);
 
+    // Add event listener for form submission
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'form_submit') {
+        router.push('/sign-up');
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
     return () => {
       clearTimeout(gifTimer);
       clearTimeout(hideGifTimer);
+      window.removeEventListener('message', handleMessage);
     };
-  }, []);
+  }, [router]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#001226] p-4 overflow-hidden">
@@ -57,24 +69,29 @@ const IntroPage = () => {
       {showForm && (
         <>
           <Script src="https://tally.so/widgets/embed.js" strategy="lazyOnload" />
-          <div className="w-full h-full mt-14"> {/* Increased top margin */}
-            <iframe
-              src="https://tally.so/embed/31vBY4?transparentBackground=1&hideHeader=0"
-              width="100%"
-              height="100%"
-              frameBorder="0"
-              marginHeight={0}
-              marginWidth={0}
-              title="MyMCAT's Early Access Form"
-              style={{
-                position: 'fixed',
-                top: '6rem', // Increased top position
-                left: 0,
-                right: 0,
-                bottom: 0,
-                border: 'none',
-              }}
-            ></iframe>
+          <div className="w-full h-full flex justify-center items-center">
+            <div className="w-full max-w-full relative h-[90vh]"> {/* Added relative positioning and height */}
+              <iframe
+                src="https://tally.so/embed/31vBY4?transparentBackground=1&hideHeader=0"
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                marginHeight={0}
+                marginWidth={0}
+                title="MyMCAT's Early Access Form"
+                style={{
+                  position: 'absolute', // Changed to absolute positioning within the relative container
+                  top: '70%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                }}
+              ></iframe>
+            </div>
           </div>
         </>
       )}
