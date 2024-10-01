@@ -174,13 +174,13 @@ const MethodologyAndTestimonials = () => {
               </h1>
               <div className="mt-8 bg-black p-6 rounded-lg w-full md:w-auto lg:mr-[8vw] xl:mr-[12vw]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
                 <p className="text-white text-lg mb-2">
-                  {"Unlike every test prep company, we are a PBC. That means that we are legally required to benefit society and do so proudly. As long as test prep is unaffordable, our healthcare system will continue to be stratified with rich doctors serving mostly rich communities. And, so long as test prep is boring, students will be diiscouraged to try and break this paradigm."}
+                  {"We are a PBC, that means that we are legally required to benefit society. As long as test prep is unaffordable, our healthcare system will continue to be stratified with rich doctors serving mostly rich communities. And as long as test prep is boring, students will be diiscouraged to try and break this paradigm."}
                 </p>
                 <p className="text-white text-lg mb-2">
                   {"Because test prep is expensive and boring, we proudly proclaim ourselves as 'anti test prep': affordable and engaging. We're releasing our CARs suite first so you can get a head start and compete with peers nationwide for recognition and rewards."}
                 </p>
                 <p className="text-white text-lg mb-2">
-                  {"Our first beta results speak volumes: students averaged a 516, with a remarkable 15-point improvement — significantly outperforming traditional methods at a fraction of the cost."}
+                  {"Our first beta results speak volumes: students averaged a 516, with a remarkable 15-point improvement — significantly outperforming traditional methods at a fraction of the cost. But we're not satisfied until every one of our students can earn a 520+."}
                 </p>
                 <p className="text-white text-lg mb-2">
                   {"Most companies want you to believe that you can purchase success. We firmly believe it's earned."}
@@ -234,7 +234,7 @@ const MethodologyAndTestimonials = () => {
             </li>
             <li className="mb-4 flex items-start">
               <span className="text-green-500 mr-2">4.</span>
-              <span className="lowercase">button to switch to content learning suite (beta testers @ rice and princeton only for now)</span>
+              <span className="lowercase">button to switch to content learning suite (selected testers @ rice and princeton only for now)</span>
             </li>
             <li className="mb-4 flex items-start">
               <span className="text-green-500 mr-2">5.</span>
