@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 import Schedule from "./Schedule";
 import KnowledgeProfileCARsONLY from "./KnowledgeProfileCARsONLY";
 import AdaptiveTutoring from "./AdaptiveTutoring";
@@ -9,9 +9,9 @@ import FloatingButton from "./FloatingButton";
 import { FetchedActivity, Test } from "@/types";
 import TestingSuit from "./TestingSuit";
 import { toast } from "@/components/ui/use-toast";
-import ThemeSwitcher from '@/components/home/ThemeSwitcher';
-import { useSearchParams } from 'next/navigation';
-import MDOnlyFeaturesDialog from '@/components/home/MDOnlyFeaturesDialog';
+import ThemeSwitcher from "@/components/home/ThemeSwitcher";
+import { useSearchParams } from "next/navigation";
+import MDOnlyFeaturesDialog from "@/components/home/MDOnlyFeaturesDialog";
 import {
   Dialog,
   DialogContent,
@@ -23,9 +23,9 @@ import { Button } from "@/components/ui/button";
 import TestComponent from "@/components/test-component";
 import { DialogOverlay } from "@radix-ui/react-dialog";
 import { checkProStatus } from "@/lib/utils";
-import WelcomePopUp from '@/components/home/WelcomePopUp';
+import WelcomePopUp from "@/components/home/WelcomePopUp";
 
-const FlashcardDeck = dynamic(() => import('./FlashcardDeck'), { ssr: false });
+const FlashcardDeck = dynamic(() => import("./FlashcardDeck"), { ssr: false });
 
 interface HandleShowDiagnosticTestParams {
   reset?: boolean;
@@ -33,7 +33,7 @@ interface HandleShowDiagnosticTestParams {
 
 const Page = () => {
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get('tab') || 'test';
+  const initialTab = searchParams.get("tab") || "test";
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isPro, setIsPro] = useState(false);
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
@@ -45,17 +45,22 @@ const Page = () => {
   const [testScore, setTestScore] = useState(0);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isGeneratingActivities, setIsGeneratingActivities] = useState(false);
-  const [kalypsoState, setKalypsoState] = useState<'wait' | 'talk' | 'end' | 'start'>('wait');
+  const [kalypsoState, setKalypsoState] = useState<
+    "wait" | "talk" | "end" | "start"
+  >("wait");
   const kalypsoRef = useRef<HTMLImageElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showDiagnosticTest, setShowDiagnosticTest] = useState(false);
   const [diagnosticTestId, setDiagnosticTestId] = useState<string | null>(null);
-  const [chatbotContext, setChatbotContext] = useState<{ contentTitle: string; context: string } | null>(null);
+  const [chatbotContext, setChatbotContext] = useState<{
+    contentTitle: string;
+    context: string;
+  } | null>(null);
   const [userInfo, setUserInfo] = useState<any>(null);
   const [showMessageForm, setShowMessageForm] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
-  
+
   useEffect(() => {
     const initializePage = async () => {
       await fetchActivities();
@@ -63,13 +68,25 @@ const Page = () => {
       const proStatus = await checkProStatus();
       setIsPro(proStatus);
       await fetchUserInfo();
-      
+
       // Show welcome popup
-      setShowWelcomePopup(true);
+      // setShowWelcomePopup(true);
     };
 
     initializePage();
   }, []);
+
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem("hasSeenWelcome");
+    if (!hasSeenWelcome) {
+      setShowWelcomePopup(true);
+      localStorage.setItem("hasSeenWelcome", "true");
+    }
+  }, []);
+
+  const handleCloseWelcomePopup = () => {
+    setShowWelcomePopup(false);
+  };
 
   const handleTestComplete = async (score: number) => {
     setTestScore(score);
@@ -99,7 +116,6 @@ const Page = () => {
 
       // Generate and fetch new activities
       await generateAndFetchActivities();
-
     } catch (error) {
       console.error("Error updating knowledge profile:", error);
       toast({
@@ -133,7 +149,6 @@ const Page = () => {
 
       // Fetch the newly generated activities
       await fetchActivities();
-      
     } catch (error) {
       console.error("Error generating or fetching activities:", error);
       toast({
@@ -167,23 +182,27 @@ const Page = () => {
     }
   };
 
-  const fetchTests = async (ordered: boolean = false, page: number = 1, pageSize: number = 10) => {
+  const fetchTests = async (
+    ordered: boolean = false,
+    page: number = 1,
+    pageSize: number = 10
+  ) => {
     try {
       setIsLoading(true);
-      
+
       const queryParams = new URLSearchParams({
         ordered: ordered.toString(),
         page: page.toString(),
         pageSize: pageSize.toString(),
-        CARSonly: "true"
+        CARSonly: "true",
       });
-  
+
       const response = await fetch(`/api/test?${queryParams}`);
-      
+
       if (!response.ok) throw new Error("Failed to fetch tests");
-      
+
       const data = await response.json();
-      setTests(data.tests)
+      setTests(data.tests);
     } catch (error) {
       console.error("Error fetching tests:", error);
       setError(
@@ -194,32 +213,34 @@ const Page = () => {
     }
   };
 
-  const handleShowDiagnosticTest = async ({ reset = true }: HandleShowDiagnosticTestParams = {}) => {
+  const handleShowDiagnosticTest = async ({
+    reset = true,
+  }: HandleShowDiagnosticTestParams = {}) => {
     try {
       if (reset) {
         // Call the delete API to reset everything - BE CAREFUL about this
-        const resetResponse = await fetch('/api/knowledge-profile/reset', {
-          method: 'DELETE',
+        const resetResponse = await fetch("/api/knowledge-profile/reset", {
+          method: "DELETE",
         });
-        
+
         if (!resetResponse.ok) {
-          throw new Error('Failed to reset user data');
+          throw new Error("Failed to reset user data");
         }
-        
-        console.log('User data reset successfully');
+
+        console.log("User data reset successfully");
       }
 
       // Fetch the diagnostic test
-      const response = await fetch('/api/test?diagnostic=true');
+      const response = await fetch("/api/test?diagnostic=true");
       if (response.ok) {
         const { testId } = await response.json();
         setDiagnosticTestId(testId);
         setShowDiagnosticTest(true);
       } else {
-        throw new Error('Failed to fetch diagnostic test');
+        throw new Error("Failed to fetch diagnostic test");
       }
     } catch (error) {
-      console.error('Error in handleShowDiagnosticTest:', error);
+      console.error("Error in handleShowDiagnosticTest:", error);
       // Handle the error appropriately (e.g., show an error message to the user)
     }
   };
@@ -229,13 +250,15 @@ const Page = () => {
       const response = await fetch("/api/user-info");
       if (response.status === 404) {
         // User info not found, create a new one
-        const currentDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+        const currentDate = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
         const createResponse = await fetch("/api/user-info", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ bio: `I love the MCAT and started my learning journey on ${currentDate}` }),
+          body: JSON.stringify({
+            bio: `I love the MCAT and started my learning journey on ${currentDate}`,
+          }),
         });
         if (createResponse.ok) {
           const newUserInfo = await createResponse.json();
@@ -262,10 +285,10 @@ const Page = () => {
 
   const handleSendMessage = async () => {
     try {
-      const response = await fetch('/api/send-message', {
-        method: 'POST',
+      const response = await fetch("/api/send-message", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ message }),
       });
@@ -277,12 +300,12 @@ const Page = () => {
           duration: 3000,
         });
         setShowMessageForm(false);
-        setMessage('');
+        setMessage("");
       } else {
-        throw new Error('Failed to send message');
+        throw new Error("Failed to send message");
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
@@ -299,7 +322,9 @@ const Page = () => {
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4"></div>
             <p className="text-sky-300 text-xl">
-              {isUpdatingProfile ? "Updating knowledge profile..." : "Generating new study plan..."}
+              {isUpdatingProfile
+                ? "Updating knowledge profile..."
+                : "Generating new study plan..."}
             </p>
           </div>
         </div>
@@ -309,11 +334,13 @@ const Page = () => {
     let content;
     switch (activeTab) {
       case "Schedule":
-        content = <Schedule 
-          activities={activities} 
-          onShowDiagnosticTest={handleShowDiagnosticTest}
-          handleSetTab={setActiveTab}
-        />;
+        content = (
+          <Schedule
+            activities={activities}
+            onShowDiagnosticTest={handleShowDiagnosticTest}
+            handleSetTab={setActiveTab}
+          />
+        );
         break;
       case "KnowledgeProfile":
         content = (
@@ -337,9 +364,7 @@ const Page = () => {
     }
 
     if (!isPro && activeTab !== "test") {
-      return (
-        <MDOnlyFeaturesDialog content={content} />
-      );
+      return <MDOnlyFeaturesDialog content={content} />;
     }
 
     return content;
@@ -349,7 +374,7 @@ const Page = () => {
     window.scrollTo({ top: scrollPosition, behavior: "smooth" });
   }, []);
 
-  const switchKalypsoState = (newState: 'wait' | 'talk' | 'end' | 'start') => {
+  const switchKalypsoState = (newState: "wait" | "talk" | "end" | "start") => {
     setKalypsoState(newState);
     if (kalypsoRef.current) {
       kalypsoRef.current.src = `/kalypso${newState}.gif`;
@@ -357,11 +382,11 @@ const Page = () => {
   };
 
   const toggleChatBot = () => {
-   console.log("todo, set this up to widget")
+    console.log("todo, set this up to widget");
   };
 
   useEffect(() => {
-    switchKalypsoState('wait'); // Start with waiting animation
+    switchKalypsoState("wait"); // Start with waiting animation
     return () => {
       if (timeoutRef.current) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -395,8 +420,8 @@ const Page = () => {
             <div className="p-3 gradientbg overflow-auto h-[calc(100vh-5rem)] rounded-lg">
               {renderContent()}
             </div>
-            <FloatingButton 
-              onTabChange={setActiveTab} 
+            <FloatingButton
+              onTabChange={setActiveTab}
               currentPage="home"
               initialTab={activeTab}
             />
@@ -411,15 +436,23 @@ const Page = () => {
           </div>
         </div>
       </div>
-       {/* Diagnostic Test Dialog */}
+      {/* Diagnostic Test Dialog */}
       <Dialog open={showDiagnosticTest} onOpenChange={setShowDiagnosticTest}>
-      <DialogOverlay className="fixed inset-0 bg-black bg-opacity-80 z-50" />
+        <DialogOverlay className="fixed inset-0 bg-black bg-opacity-80 z-50" />
         <DialogContent className="max-w-4xl w-full max-h-[95vh] flex flex-col bg-[#001226] text-white border border-sky-500 rounded-lg">
           <DialogHeader className="border-b border-sky-500 pb-4">
-            <DialogTitle className="text-2xl font-semibold text-gray-300">Complete this test to help us understand your current knowledge level.</DialogTitle>
+            <DialogTitle className="text-2xl font-semibold text-gray-300">
+              Complete this test to help us understand your current knowledge
+              level.
+            </DialogTitle>
           </DialogHeader>
           <div className="flex-grow py-3">
-            {diagnosticTestId && <TestComponent testId={diagnosticTestId} onTestComplete={handleTestComplete} />}
+            {diagnosticTestId && (
+              <TestComponent
+                testId={diagnosticTestId}
+                onTestComplete={handleTestComplete}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -428,28 +461,40 @@ const Page = () => {
       <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
         <DialogContent className="bg-[#001226] text-white border border-sky-500 rounded-lg">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold text-sky-300">Test Completed!</DialogTitle>
+            <DialogTitle className="text-2xl font-semibold text-sky-300">
+              Test Completed!
+            </DialogTitle>
             <DialogDescription className="text-gray-300">
               Great job on completing the diagnostic test.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-xl">Your Score: <span className="font-bold text-sky-300">{testScore.toFixed(2)}%</span></p>
+            <p className="text-xl">
+              Your Score:{" "}
+              <span className="font-bold text-sky-300">
+                {testScore.toFixed(2)}%
+              </span>
+            </p>
           </div>
           <div className="flex justify-end">
-            <Button 
+            <Button
               onClick={() => setShowScorePopup(false)}
               className="bg-sky-500 hover:bg-sky-600 text-white"
               disabled={isUpdatingProfile || isGeneratingActivities}
             >
-              {isUpdatingProfile || isGeneratingActivities ? "Processing..." : "Close"}
+              {isUpdatingProfile || isGeneratingActivities
+                ? "Processing..."
+                : "Close"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Welcome Popup */}
-      <WelcomePopUp open={showWelcomePopup} onOpenChange={setShowWelcomePopup} />
+      <WelcomePopUp
+        open={showWelcomePopup}
+        onOpenChange={handleCloseWelcomePopup}
+      />
     </div>
   );
 };
