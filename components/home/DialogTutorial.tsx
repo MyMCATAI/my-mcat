@@ -223,6 +223,9 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
         return (
           <>
             <h2 className="text-4xl font-bold mb-4">MD (Meow Distinction — Premium)</h2>
+            <div className="flex justify-center mb-4">
+              <Image src="/MDCadaceus.png" alt="MD Cadaceus" width={200} height={200} />
+            </div>
             <h3 className="text-2xl font-bold mb-2 text-green-600">WHEN TO STUDY</h3>
             <p className="italic mb-2">Adaptive Scheduling Suite</p>
             <video src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/SCHEDULE.mp4" title="Schedule" className="mb-4" muted autoPlay loop playsInline />
