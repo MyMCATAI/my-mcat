@@ -115,13 +115,13 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
   const getLabelPosition = (index: number) => {
     switch (index) {
       case 0: // Schedule
-        return { top: '-4.5rem', left: '9rem' };
+        return { top: '-4.5rem', left: '10.5rem' };
       case 1: // doctorsoffice
-        return { top: '-1.5rem', left: '14rem' };
+        return { top: '-1.5rem', left: '15.5rem' };
       case 2: // test
-        return { top: '3.5rem', left: '15.5rem' };
+        return { top: '3.5rem', left: '16.5rem' };
       default: // KnowledgeProfile or any other
-        return { top: '2rem', left: '11.5rem' };
+        return { top: '2rem', left: '12.5rem' };
     }
   };
 
