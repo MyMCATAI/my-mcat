@@ -251,17 +251,17 @@ const DialogTutorial: React.FC<DialogTutorialProps> = ({
 
             <h3 className="text-2xl font-bold mb-2 text-green-600">HOW TO STUDY</h3>
             <p className="italic mb-2">Machine Learning Insights</p>
-            <img src="/TestComponent.png" alt="Test Component" className="mb-4" />
+            <Image src="/TestComponent.png" alt="Test Component" width={800} height={600} className="mb-4" />
             <ol className="list-decimal list-inside mb-4 text-center">
               <li><strong>We watch you take</strong> exams, noticing your highlights, strikethroughs, where your cursor is, etc.</li>
               <li>Then we use machine learning to <strong>analyze your strategies and compare them to that of top scorers</strong> and your best performances.</li>
-              <li>We provide data-driven insights into what works and what doesn&apos;t.</li>
+              <li>We provide data-driven insights into what works and what doesn&apos;t for you, such as &apos;you perform better when you highlight less&apos;.</li>
             </ol>
 
             <h3 className="text-2xl font-bold mb-4 text-green-600">MORE INFO</h3>
 
             <p className="mb-4 text-left text-xl indent-4">
-              The goal is to become a comprehensive study tool that <strong>replaces the need for a test prep company</strong>, providing way more value for way cheaper. For us to accomplish our mission, especially when facing rich test prep companies who would be threatened by us, <strong>we need the financial strength to hire data scientists, software engineers, content writers, and lawyers</strong>. Although we&apos;re committed to keep The Clinic (Flashcard Game) free and our CARs suite, we need your help in deciding how much to charge for a monthly subscription as well as what to focus on.
+              The goal is to become a comprehensive study tool that <strong>replaces the need for a test prep company</strong>, providing way more value for way cheaper. For us to accomplish our mission, especially when facing rich test prep companies who would be threatened by us, <strong>we need the financial strength to hire data scientists, software engineers, content writers, and lawyers</strong>. Although we&apos;re committed to keep The Clinic (Flashcard Game) free and our CARs suite, we need your help in deciding how much to charge for a monthly subscription as well as what to focus on. Early Access Members get all of the above free, so long as they prove to be dedicated to the platform, provide us with feedback, and seek to score high.
             </p>
             <div id="tally-embed-container">
               <iframe

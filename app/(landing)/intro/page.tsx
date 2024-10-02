@@ -81,7 +81,7 @@ const IntroPage = () => {
                 title="MyMCAT's Early Access Form"
                 style={{
                   position: 'absolute', // Changed to absolute positioning within the relative container
-                  top: '70%',
+                  top: '50%',
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
                   maxWidth: '100%',

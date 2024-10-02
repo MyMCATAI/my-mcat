@@ -68,7 +68,7 @@ const SharePopup: React.FC<SharePopupProps> = ({ onClose }) => {
         </button>
         <h2 className="text-xl mb-4"><strong>MD Premium is earned by signing on students to the platform.</strong></h2>
         <p className="mb-4 text-xs">
-          We are closed to the public for the month of October, but as an early access member you can share it with trusted classmates. The passcode for registration is <strong>Cupcake528</strong> and students can only sign up if they know the password and have an @rice.edu or @princeton.edu email. 
+          We are closed to the public for the month of October and likely November, but as an early access member you can share it with trusted classmates. The passcode for registration is <strong>Cupcake528</strong> and students can only sign up if they know the password and have an @rice.edu or @princeton.edu email. 
         </p>
         <p className="mb-4 text-xs">
           Three students signed will get you MD Premium and a raffle ticket for free 6-months of UWorld.
