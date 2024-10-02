@@ -23,24 +23,24 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
     return null;
   }
 
-  const handleBadgeClick = async () => {
-    const isPro = subscription !== "free";
+  // const handleBadgeClick = async () => {
+  //   const isPro = subscription !== "free";
     
-    if (isPro) {
-      setIsLoading(true);
-      try {
-        const response = await axios.get("/api/stripe"); // todo right now all customers are test customers, need to test with real
+  //   if (isPro) {
+  //     setIsLoading(true);
+  //     try {
+  //       const response = await axios.get("/api/stripe"); // todo right now all customers are test customers, need to test with real
         
-        window.location.href = response.data.url;
-      } catch (error) {
-        console.error("Error creating Stripe session:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      proModal.onOpen();
-    }
-  };
+  //       window.location.href = response.data.url;
+  //     } catch (error) {
+  //       console.error("Error creating Stripe session:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   } else {
+  //     proModal.onOpen();
+  //   }
+  // };
   
   const isPro = subscription !== "free";
 
@@ -54,22 +54,7 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
         </Link>
         <div className="flex items-center h-full">
           <div className="flex items-center space-x-4 mr-4">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Badge 
-                variant={isPro ? "default" : "secondary"} 
-                className={cn(
-                  "cursor-pointer px-4 py-2 text-sm font-medium",
-                  isPro ? "bg-gradient-to-r from-purple-400 to-pink-500 text-white" : "hover:bg-secondary-hover",
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                )}
-                onClick={handleBadgeClick}
-              >
-                {isLoading ? "Loading..." : (isPro ? "Pro Plan" : "Upgrade to Pro")}
-              </Badge>
-            </motion.div>
+            {/* Upgrade to Pro badge has been removed */}
             <UserButton afterSignOutUrl="/" />
           </div>
           <span
