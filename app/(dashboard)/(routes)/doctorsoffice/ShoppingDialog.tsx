@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useCallback, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { useUser } from "@clerk/nextjs";
 import { Mail } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface ImageItem {
   id: string;
@@ -30,19 +31,26 @@ interface ShoppingDistrictProps {
   toggleGroup: (groupName: string) => void;
   buttonContent?: React.ReactNode;
   userScore: number;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
+const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>(({
   imageGroups,
   visibleImages,
   toggleGroup,
   buttonContent,
   userScore,
-}) => {
+  isOpen,
+  onOpenChange
+}, ref) => {
   const { user } = useUser();
+  const router = useRouter();
+
   const [hoveredLevel, setHoveredLevel] = useState<number | null>(null);
   const [showMessageForm, setShowMessageForm] = useState(false);
   const [messageForm, setMessageForm] = useState({ message: '' });
+  const [isMounted, setIsMounted] = useState(false);
 
   const levelInfo = [
     { level: 1, title: "INTERN LEVEL", image: "/game-components/INTERNLEVEL.png", cost: 5 },
@@ -111,9 +119,24 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
       toast.error('Failed to send message. Please try again.');
     }
   };
+  const handleOpenChange = (open: boolean) => {
+    onOpenChange(open);
+  };
+  const handleHomeClick = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      router.push('/home');
+    }
+  }, [router]);
+  useImperativeHandle(ref, () => ({
+    open: () => onOpenChange(true)
+  }));
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {buttonContent}
       </DialogTrigger>
@@ -131,6 +154,14 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
               <span>{userScore}</span>
             </div>
             <span className="flex-grow">Marketplace</span>
+            {isMounted && (
+              <button
+                onClick={handleHomeClick}
+                className="ml-4 px-3 py-1 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
+              >
+                Home
+              </button>
+            )}
           </DialogTitle>
         </DialogHeader>
         <div className="flex-grow flex">
@@ -262,6 +293,8 @@ const ShoppingDistrict: React.FC<ShoppingDistrictProps> = ({
       </DialogContent>
     </Dialog>
   );
-};
+});
+
+ShoppingDistrict.displayName = 'ShoppingDistrict';
 
 export default ShoppingDistrict;

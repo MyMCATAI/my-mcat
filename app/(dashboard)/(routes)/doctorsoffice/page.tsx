@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ResourcesMenu from './ResourcesMenu';
 import OfficeContainer from './OfficeContainer';
 import FloatingButton from '../home/FloatingButton';
@@ -8,6 +8,12 @@ import ShoppingDialog, { ImageGroup } from './ShoppingDialog';
 import { useRouter } from 'next/navigation';
 import { DoctorOfficeStats } from '@/types';
 import { toast } from 'react-hot-toast';
+import Image from 'next/image';
+import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay } from '@/utils/calculateResourceTotals';
+import axios from 'axios';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import WelcomeDialog from './WelcomeDialog';
 
 const DoctorsOfficePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('doctorsoffice');
@@ -16,7 +22,12 @@ const DoctorsOfficePage: React.FC = () => {
   const [patientsPerDay, setPatientsPerDay] = useState(4); // Default value
   const router = useRouter();
   const [userRooms, setUserRooms] = useState<string[]>([]);
-
+  const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
+  const [totalPatients, setTotalPatients] = useState<number>(0);
+  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
+  const marketplaceDialogRef = useRef<{ open: () => void } | null>(null);
+  const [isWelcomeDialogOpen, setIsWelcomeDialogOpen] = useState(false);
+  const [hasOpenedMarketplace, setHasOpenedMarketplace] = useState(false);
   // Add this state for clinic name
   const [clinicName, setClinicName] = useState<string | null>(null);
 
@@ -174,7 +185,56 @@ const DoctorsOfficePage: React.FC = () => {
       }
     }
   };
-
+  useEffect(() => {
+    console.log("reportData")
+    const fetchData = async () => {
+      try {
+        const [reportResponse, roomsResponse, userInfoResponse] = await Promise.all([
+          fetch('/api/user-report'),
+          fetch('/api/clinic'),
+          fetch('/api/user-info')
+        ]);
+        if (!reportResponse.ok) throw new Error('Failed to fetch user report');
+        if (!roomsResponse.ok) throw new Error('Failed to fetch user rooms');
+        if (!userInfoResponse.ok) throw new Error('Failed to fetch user info');
+        const reportData: DoctorOfficeStats = await reportResponse.json();
+        const rooms: string[] = await roomsResponse.json();
+        const userInfo = await userInfoResponse.json();
+        setReportData(reportData);
+        setUserRooms(rooms);
+        setUserScore(userInfo.score);
+        setPatientsPerDay(userInfo.patientsPerDay || 4);
+        setClinicName(userInfo.clinicName || null);
+        // Load total patients from local storage
+        const storedPatients = localStorage.getItem('totalPatients');
+        setTotalPatients(storedPatients ? parseInt(storedPatients, 10) : 0);
+        // Perform daily calculations
+        await performDailyCalculations(rooms);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    fetchData();
+  }, []);
+  const performDailyCalculations = async (rooms: string[]) => {
+    const playerLevel = calculatePlayerLevel(rooms);
+    const patientsPerDay = getPatientsPerDay(playerLevel);
+    const clinicCostPerDay = getClinicCostPerDay(playerLevel);
+    try {
+      const response = await axios.post('/api/daily-calculations', {
+        patientsPerDay,
+        clinicCostPerDay
+      });
+      if (response.data) {
+        setUserScore(response.data.updatedCoins);
+        const newTotalPatients = totalPatients + patientsPerDay;
+        setTotalPatients(newTotalPatients);
+        localStorage.setItem('totalPatients', newTotalPatients.toString());
+      }
+    } catch (error) {
+      console.error('Error performing daily calculations:', error);
+    }
+  };
   useEffect(() => {
     const fetchUserLevel = async () => {
       try {
@@ -201,19 +261,6 @@ const DoctorsOfficePage: React.FC = () => {
       }
     };
 
-    const fetchUserInfo = async () => {
-      try {
-        const response = await fetch('/api/user-info');
-        if (response.ok) {
-          const data = await response.json();
-          setUserScore(data.score || 0);
-          setPatientsPerDay(data.patientsPerDay || 4);
-          setClinicName(data.clinicName || null);
-        }
-      } catch (error) {
-        console.error('Failed to fetch user info:', error);
-      }
-    };
 
     const fetchUserRooms = async () => {
       try {
@@ -241,7 +288,6 @@ const DoctorsOfficePage: React.FC = () => {
     };
 
     fetchUserLevel();
-    fetchUserInfo();
     fetchUserRooms();
   }, [imageGroups]);
 
@@ -256,13 +302,36 @@ const DoctorsOfficePage: React.FC = () => {
   const handleUpdateUserScore = (newScore: number) => {
     setUserScore(newScore);
   };
+  const handleOpenMarketplace = () => {
+    setIsWelcomeDialogOpen(false);
+    setIsMarketplaceOpen(true);
+    setHasOpenedMarketplace(true);
+    marketplaceDialogRef.current?.open();
+  };
+  const handleWelcomeDialogOpenChange = (open: boolean) => {
+    if (!open && !hasOpenedMarketplace) {
+      toast.error("You must purchase a room before you can use the doctor's office.");
+      return;
+    }
+    setIsWelcomeDialogOpen(open);
+  };
+
+  useEffect(() => {
+    if (userLevel) return
+        setIsWelcomeDialogOpen(true);
+  }, [userLevel]);
 
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
       <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
         <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak]">
-          <ResourcesMenu />
-        </div>
+        <ResourcesMenu 
+            reportData={reportData}
+            userRooms={userRooms}
+            totalCoins={userScore}
+            totalPatients={totalPatients}
+          />
+                  </div>
         <div className="w-3/4 font-krungthep relative rounded-r-lg">
           <OfficeContainer 
             visibleImages={visibleImages}
@@ -277,12 +346,12 @@ const DoctorsOfficePage: React.FC = () => {
           <div className="absolute top-4 right-4 z-50 flex items-center">
             {/* Patient count */}
             <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
-              <img src="/game-components/patient.png" alt="Patient" className="w-8 h-8 mr-2" />
+            <Image src="/game-components/patient.png" alt="Patient" width={32} height={32} className="mr-2" />
               <span className="text-white font-bold">{patientsPerDay}</span>
             </div>
             {/* Coins display */}
             <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
-              <img src="/game-components/PixelCupcake.png" alt="Coin" className="w-8 h-8 mr-2" />
+            <Image src="/game-components/PixelCupcake.png" alt="Coin" width={32} height={32} className="mr-2" />
               <span className="text-white font-bold">{userScore}</span>
             </div>
             {/* New Score Randomizer button */}
@@ -293,10 +362,13 @@ const DoctorsOfficePage: React.FC = () => {
               </button>
               <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
                 <ShoppingDialog
+                                  ref={marketplaceDialogRef}
                   imageGroups={imageGroups}
                   visibleImages={visibleImages}
                   toggleGroup={toggleGroup}
                   userScore={userScore}
+                  isOpen={isMarketplaceOpen}
+                  onOpenChange={setIsMarketplaceOpen}
                   buttonContent={
                     <a href="#" className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -324,6 +396,11 @@ const DoctorsOfficePage: React.FC = () => {
           initialTab={activeTab}
         />
       </div>
+      <WelcomeDialog 
+          isOpen={isWelcomeDialogOpen} 
+          onOpenChange={handleWelcomeDialogOpenChange}
+          onOpenMarketplace={handleOpenMarketplace}
+        />
     </div>
   );
 };
