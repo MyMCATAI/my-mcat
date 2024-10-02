@@ -34,51 +34,17 @@ const mapDoctorOfficeStatsToReportData = (stats: DoctorOfficeStats): ReportData 
   };
 };
 
-const ResourcesMenu: React.FC = () => {
+interface ResourcesMenuProps {
+  reportData: DoctorOfficeStats | null;
+  userRooms: string[];
+  totalCoins: number;
+  totalPatients: number;
+}
+const ResourcesMenu: React.FC<ResourcesMenuProps> = ({ reportData, userRooms, totalCoins, totalPatients }) => {
   const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
   const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(null);
-  const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
-  const [userRooms, setUserRooms] = useState<string[]>([]);
-  const [totalCoins, setTotalCoins] = useState<number>(0);
-  const [totalPatients, setTotalPatients] = useState<number>(0);
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
   const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [reportResponse, roomsResponse, userInfoResponse] = await Promise.all([
-          fetch('/api/user-report'),
-          fetch('/api/clinic'),
-          fetch('/api/user-info')
-        ]);
-
-        if (!reportResponse.ok) throw new Error('Failed to fetch user report');
-        if (!roomsResponse.ok) throw new Error('Failed to fetch user rooms');
-        if (!userInfoResponse.ok) throw new Error('Failed to fetch user info');
-
-        const reportData: DoctorOfficeStats = await reportResponse.json();
-        const rooms: string[] = await roomsResponse.json();
-        const userInfo = await userInfoResponse.json();
-
-        console.log('Fetched rooms:', rooms);
-
-        setReportData(reportData);
-        setUserRooms(rooms);
-        setTotalCoins(userInfo.score);
-
-        // Load total patients from local storage
-        const storedPatients = localStorage.getItem('totalPatients');
-        setTotalPatients(storedPatients ? parseInt(storedPatients, 10) : 0);
-
-        // Perform daily calculations
-        await performDailyCalculations();
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-    fetchData();
-  }, []);
 
   const handleAssistantResponse = (message: string, dismissFunc: () => void) => {
     setAssistantMessage(message);
@@ -98,35 +64,11 @@ const ResourcesMenu: React.FC = () => {
     setIsTutorialDialogOpen(true);
   };
 
-  const performDailyCalculations = async () => {
-    const playerLevel = calculatePlayerLevel(userRooms);
-    const patientsPerDay = getPatientsPerDay(playerLevel);
-    const clinicCostPerDay = getClinicCostPerDay(playerLevel);
-
-    try {
-      const response = await axios.post('/api/daily-calculations', {
-        patientsPerDay,
-        clinicCostPerDay
-      });
-
-      if (response.data) {
-        setTotalCoins(response.data.updatedCoins);
-        const newTotalPatients = totalPatients + patientsPerDay;
-        setTotalPatients(newTotalPatients);
-        localStorage.setItem('totalPatients', newTotalPatients.toString());
-      }
-    } catch (error) {
-      console.error('Error performing daily calculations:', error);
-    }
-  };
-
-  if (!reportData || userRooms.length === 0) {
+  if (!reportData) {
     return <div>Loading...</div>;
   }
 
   const playerLevel = calculatePlayerLevel(userRooms);
-  console.log('User rooms in ResourcesMenu:', userRooms);
-  console.log('Calculated player level in ResourcesMenu:', playerLevel);
   const patientsPerDay = getPatientsPerDay(playerLevel);
   const totalQC = calculateTotalQC(playerLevel, reportData.streak);
   const displayQC = Math.min(totalQC, 5); // Cap at 5
