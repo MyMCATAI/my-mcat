@@ -99,7 +99,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
     );
 
     if (tests.length > 0) {
-      const fullText = welcomeText + tests[0].description;
+      const fullText = welcomeText + (tests[0].description || "");
       let index = 0;
 
       const typingTimer = setInterval(() => {
@@ -146,93 +146,17 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
   };
 
   const getWelcomeMessage = (userName: string, streak: number) => {
-    const now = new Date();
-    const day = now.getDay();
-    const hour = now.getHours();
-    const timeOfDay = getTimeOfDay();
-
     let message = `Hey ${
       userName.charAt(0).toUpperCase() + userName.slice(1)
-    }! \n\n\n`;
+    }! \n\n`;
 
-    // Time-specific greetings
-    const timeGreetings = {
-      morning: "Rise and shine!",
-      afternoon: "Hope your day's going well.",
-      evening: "Good evening! ",
-      night: "Night, darling!",
-    };
-    message += timeGreetings[timeOfDay];
-
-    // Streak message
     if (streak > 0) {
       if (streak === 1) {
-        const oneDayStreakMessages = [
-          "You've started your streak! Great job showing up today!",
-          "Day one of your streak! Come back tomorrow too.",
-          "First day of your study streak! Every journey begins with a single step.",
-          "You've begun your streak! One day down, many more to go!",
-          "Day 1 of your streak! Remember, consistency is key in MCAT prep.",
-        ];
-        message +=
-          oneDayStreakMessages[
-            Math.floor(Math.random() * oneDayStreakMessages.length)
-          ] + " ";
+        message += "You've started your streak! Great job showing up today! ";
       } else {
-        const streakMessages = [
-          `You're on a ${streak}-day streak! Keep it up!`,
-          `Wow, ${streak} days in a row! You're on fire!`,
-          `${streak} days of consistent study - that's impressive!`,
-          `Your ${streak}-day streak shows real commitment. Great job!`,
-          `${streak} days and counting! Your future self thanks you.`,
-        ];
-        message +=
-          streakMessages[Math.floor(Math.random() * streakMessages.length)] +
-          " ";
+        message += `You're on a ${streak}-day streak! Keep it up! `;
       }
     }
-
-    // Special time-based messages
-    if (day === 5 && hour >= 20) {
-      message += [
-        "Impressive dedication, studying on a Friday night! ",
-        "Friday night MCAT prep? Personally I'd be on catnip right now but you're a better cat than I am.",
-        "Choosing MCAT over Friday night fun? No friends, huh? (Just kidding :3)",
-      ][Math.floor(Math.random() * 3)];
-    } else if (hour >= 0 && hour < 5) {
-      message += [
-        "Just remember, a well-rested brain retains more info.",
-        "Do you, uh, sleep? Even I take naps.",
-        "Night owl mode, activated! Just balance it with proper rest. ",
-      ][Math.floor(Math.random() * 3)];
-    }
-
-    // Day-specific encouragement
-    const dayMessages = [
-      "Fresh start to the week - let's make it count!",
-      "I'm not the type of cat to hate Mondays, and you shouldn't be either!",
-      "Tuesday's momentum can carry you through the week.",
-      "Wednesday is hump day, which is why I stay away from most dogs.",
-      "Weekend's in sight, but stay focused on your goals.",
-      "Last push before the weekend - you've got this!",
-      "Weekend warrior mode: ON. Love your dedication!",
-    ];
-    message += dayMessages[day] + " ";
-
-    // MCAT-specific encouragement
-    const mcatMessages = [
-      "Every study session brings you one step closer to MCAT success.",
-      "Remember, consistent effort is key to mastering the MCAT.",
-      "The MCAT may be tough, but you're tougher!",
-      "Keep pushing - your future patients will thank you for this hard work.",
-      "Tackling the MCAT is a marathon, not a sprint. Pace yourself!",
-      "Each question you practice sharpens your MCAT skills.",
-      "Your dedication to MCAT prep today will pay off in your future medical career.",
-    ];
-    message +=
-      mcatMessages[Math.floor(Math.random() * mcatMessages.length)] + " ";
-
-    // Removed closing messages
 
     return message + "\n\n";
   };
