@@ -9,14 +9,15 @@ datasource db {
 }
 
 model UserInfo {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  bio       String
-  updatedAt DateTime @updatedAt
-  apiCount  Int      @default(0)
-  createdAt DateTime @default(now())
-  score     Int      @default(0)
-  clinicRooms  String   @default("") // array string
+  id            String         @id @default(cuid())
+  userId        String         @unique
+  bio           String
+  updatedAt     DateTime       @updatedAt
+  apiCount      Int            @default(0)
+  createdAt     DateTime       @default(now())
+  score         Int            @default(0)
+  clinicRooms   String         @default("") // array string
+  patientRecord PatientRecord?
 }
 
 model UserSubscription {
@@ -225,4 +226,12 @@ model Review {
   rating  Int
   review  String @db.Text
   profilePicture String
+}
+
+model PatientRecord {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  patientsTreated Int      @default(0)
+  lastUpdated     DateTime @updatedAt
+  userInfo        UserInfo @relation(fields: [userId], references: [userId])
 }
