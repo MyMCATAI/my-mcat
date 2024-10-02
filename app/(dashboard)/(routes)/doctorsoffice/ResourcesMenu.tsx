@@ -7,6 +7,7 @@ import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCos
 import axios from 'axios';
 import { HelpCircle } from 'lucide-react'; // Add this import
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
 
 // Dynamic import for ChatBotWidgetNoChatBot
 const ChatBotWidgetNoChatBot = dynamic(
@@ -40,6 +41,8 @@ const ResourcesMenu: React.FC = () => {
   const [userRooms, setUserRooms] = useState<string[]>([]);
   const [totalCoins, setTotalCoins] = useState<number>(0);
   const [totalPatients, setTotalPatients] = useState<number>(0);
+  const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
+  const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -90,6 +93,11 @@ const ResourcesMenu: React.FC = () => {
     setDismissMessage(null);
   };
 
+  const openTutorialDialog = (videoUrl: string) => {
+    setTutorialVideoUrl(videoUrl);
+    setIsTutorialDialogOpen(true);
+  };
+
   const performDailyCalculations = async () => {
     const playerLevel = calculatePlayerLevel(userRooms);
     const patientsPerDay = getPatientsPerDay(playerLevel);
@@ -132,6 +140,7 @@ const ResourcesMenu: React.FC = () => {
         <HelpCircle 
           className="absolute top-2 right-2 text-[--theme-border-color] hover:text-gray-200 transition-colors duration-200 cursor-pointer z-10" 
           size={20}
+          onClick={() => openTutorialDialog("https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TutorialVid.mp4")}
         />
         <div className="flex flex-col items-center mb-1 w-full">
           <div className="w-48 h-48 bg-[--theme-doctorsoffice-accent] border-2 border-[--theme-border-color] rounded-lg mb-4 overflow-hidden relative">
@@ -223,6 +232,11 @@ const ResourcesMenu: React.FC = () => {
           <p>{totalPatients}</p>
         </div>
       </div>
+      <TutorialVidDialog
+        isOpen={isTutorialDialogOpen}
+        onClose={() => setIsTutorialDialogOpen(false)}
+        videoUrl={tutorialVideoUrl}
+      />
     </div>
   );
 };
