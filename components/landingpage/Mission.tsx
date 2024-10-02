@@ -180,7 +180,7 @@ const MethodologyAndTestimonials = () => {
                   {"Because test prep is expensive and boring, we proudly proclaim ourselves as 'anti test prep': affordable and engaging. We're releasing our CARs suite first so you can get a head start and compete with peers nationwide for recognition and rewards."}
                 </p>
                 <p className="text-white text-lg mb-2">
-                  {"Our first beta results speak volumes: students averaged a 516, with a remarkable 15-point improvement — significantly outperforming traditional methods at a fraction of the cost."}
+                  {"Our first beta results speak volumes: students averaged a 516, with a remarkable 15-point improvement — significantly outperforming traditional methods at a fraction of the cost. But we're not satisfied until every one of our students can earn a 520+."}
                 </p>
                 <p className="text-white text-lg mb-2">
                   {"Most companies want you to believe that you can purchase success. We firmly believe it's earned."}
@@ -234,7 +234,7 @@ const MethodologyAndTestimonials = () => {
             </li>
             <li className="mb-4 flex items-start">
               <span className="text-green-500 mr-2">4.</span>
-              <span className="lowercase">button to switch to content learning suite (beta testers @ rice and princeton only for now)</span>
+              <span className="lowercase">button to switch to content learning suite (selected testers @ rice and princeton only for now)</span>
             </li>
             <li className="mb-4 flex items-start">
               <span className="text-green-500 mr-2">5.</span>

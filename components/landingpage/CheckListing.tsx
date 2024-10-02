@@ -10,7 +10,7 @@ const CheckListing = () => {
         { heading: "Flashcard Integration", text: `Anki is boring. We plan on integrating flashcards seamlessly with content and prep — and making it FUN!`, icon: icon },
         { heading: "Practice Tests & Section Based Practice", text: `Our first practice test is being ruthelessly tested and modified to keep up with the AAMC's changing guidelines`, icon: icon },
         { heading: "Cupcake Ecosystem", text: 'We are serious about making learning fun and plan on a cupcake ecosystem with competitve learning challenges and rewards.', icon: icon },
-        { heading: "An Interactive Polyverse", text: `This is a secret initiative that we're testing out but it's an entirely new way to interact with learning software. Shhh.`, icon: icon },
+        { heading: "An Competitive Polyverse", text: `We'd like to create a competitive polyverse where you can go head-to-head with your friends and classmates.`, icon: icon },
     ];
 
     React.useEffect(() => {
