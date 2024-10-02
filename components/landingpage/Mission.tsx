@@ -174,7 +174,7 @@ const MethodologyAndTestimonials = () => {
               </h1>
               <div className="mt-8 bg-black p-6 rounded-lg w-full md:w-auto lg:mr-[8vw] xl:mr-[12vw]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
                 <p className="text-white text-lg mb-2">
-                  {"We are a PBC, that means that we are legally required to benefit society. As long as test prep is unaffordable, our healthcare system will continue to be stratified with rich doctors serving mostly rich communities. And as long as test prep is boring, students will be diiscouraged to try and break this paradigm."}
+                  {"We are a PBC, which means we're legally required to benefit society — and we do so proudly. As long as test prep is unaffordable, our healthcare system will continue to be stratified with rich doctors serving mostly rich communities. And as long as test prep is boring, students will be diiscouraged to try and break this paradigm."}
                 </p>
                 <p className="text-white text-lg mb-2">
                   {"Because test prep is expensive and boring, we proudly proclaim ourselves as 'anti test prep': affordable and engaging. We're releasing our CARs suite first so you can get a head start and compete with peers nationwide for recognition and rewards."}

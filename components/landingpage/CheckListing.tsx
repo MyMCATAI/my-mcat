@@ -63,7 +63,7 @@ const CheckListing = () => {
                             Sign Up
                         </h2>
                         <p className="text-blue-300 text-lg">
-                            Join our early access list to stay updated on our latest features and be the first to try them out!
+                            We are closed for the moment for only invited users.
                         </p>
                     </div>
                     <div className="w-full md:w-1/2 bg-[#001226] p-6 rounded-lg" 
