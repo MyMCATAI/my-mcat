@@ -17,7 +17,6 @@ model UserInfo {
   createdAt     DateTime       @default(now())
   score         Int            @default(0)
   clinicRooms   String         @default("") // array string
-  patientRecord PatientRecord?
 }
 
 model UserSubscription {
@@ -233,5 +232,6 @@ model PatientRecord {
   userId          String   @unique
   patientsTreated Int      @default(0)
   lastUpdated     DateTime @updatedAt
-  userInfo        UserInfo @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
 }
