@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic';
 import { DoctorOfficeStats, ReportData } from '@/types';
 import { Progress } from '@/components/ui/progress';
 import { FaFire } from 'react-icons/fa';
-import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay } from '@/utils/calculateResourceTotals';
+import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay, getLevelNumber } from '@/utils/calculateResourceTotals';
 import axios from 'axios';
 import { HelpCircle } from 'lucide-react'; // Add this import
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -39,8 +39,9 @@ interface ResourcesMenuProps {
   userRooms: string[];
   totalCoins: number;
   totalPatients: number;
+  patientsPerDay:number;
 }
-const ResourcesMenu: React.FC<ResourcesMenuProps> = ({ reportData, userRooms, totalCoins, totalPatients }) => {
+const ResourcesMenu: React.FC<ResourcesMenuProps> = ({ reportData, userRooms, totalCoins, totalPatients,patientsPerDay }) => {
   const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
   const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(null);
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
@@ -69,10 +70,11 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({ reportData, userRooms, to
   }
 
   const playerLevel = calculatePlayerLevel(userRooms);
-  const patientsPerDay = getPatientsPerDay(playerLevel);
-  const totalQC = calculateTotalQC(playerLevel, reportData.streak);
+  const levelNumber = getLevelNumber(playerLevel);
+
+  const totalQC = calculateTotalQC(levelNumber, reportData.streak);
   const displayQC = Math.min(totalQC, 5); // Cap at 5
-  const clinicCostPerDay = getClinicCostPerDay(playerLevel);
+  const clinicCostPerDay = getClinicCostPerDay(levelNumber);
 
   const mappedReportData = mapDoctorOfficeStatsToReportData(reportData);
 
