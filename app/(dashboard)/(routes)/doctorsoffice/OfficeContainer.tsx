@@ -260,24 +260,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
 
   const [currentWaypoints, setCurrentWaypoints] = useState(spriteWaypoints[1]);
 
-  // New function to fetch rooms from the API
-  const fetchRooms = useCallback(async () => {
-    try {
-      const response = await fetch('/api/clinic');
-      if (response.ok) {
-        const rooms = await response.json();
-        const level = determineLevel(rooms);
-        setCurrentWaypoints(spriteWaypoints[level]);
-      } else {
-        console.error('Failed to fetch rooms');
-      }
-    } catch (error) {
-      console.error('Error fetching rooms:', error);
-    }
-  }, []);
-
   // Function to determine level based on rooms
-  const determineLevel = (rooms: string[]) => {
+  const determineLevel = useCallback((rooms: string[]) => {
     const levelRooms = [
       'INTERN LEVEL',
       'RESIDENT LEVEL',
@@ -296,17 +280,13 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     });
     
     return highestLevel;
-  };
+  }, []);
 
-  // Use useEffect to fetch rooms when the component mounts
+  // Use useEffect to update currentWaypoints when userRooms changes
   useEffect(() => {
-    fetchRooms();
-  }, [fetchRooms]);
-
-  // Use another useEffect to refetch rooms when userRooms changes
-  useEffect(() => {
-    fetchRooms();
-  }, [userRooms, fetchRooms]);
+    const level = determineLevel(userRooms);
+    setCurrentWaypoints(spriteWaypoints[level]);
+  }, [userRooms, determineLevel]);
 
   // Modify the moveSprite function to use currentWaypoints
   const moveSprite = useCallback((
