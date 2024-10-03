@@ -91,15 +91,15 @@ const LandingHero = () => {
           Your browser does not support the video tag.
         </video> 
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-10">
+        <div className="relative z-10 container mx-auto px-4 h-full flex items-center justify-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-10 max-w-6xl w-full">
             <div className="text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-white font-krungthep mb-4 text-center">
+              <h1 className="text-4xl md:text-5xl font-bold text-white font-krungthep mb-4">
                 <span>
                   <span className="text-[#f2f64f]">Score</span> beyond <span className="text-[#f2f64f]">a 520</span>
                 </span>
               </h1>
-              <p className="text-2xl md:text-3xl text-white my-8 text-center">
+              <p className="text-2xl md:text-3xl text-white my-8">
                 The next big thing in MCAT education, with Kalypso.
               </p>
               <div className="flex justify-center">
@@ -110,7 +110,7 @@ const LandingHero = () => {
                 </Link>
               </div>
             </div>
-            <div className="relative flex justify-center mt-6 md:mt-0">
+            <div className="relative flex justify-center mt-6 lg:mt-0">
               <div ref={laptopRef} className="w-full opacity-0">
                 <Image 
                   src={laptop} 

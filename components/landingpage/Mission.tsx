@@ -47,7 +47,7 @@ const MethodologyAndTestimonials = () => {
     { src: '/landingpage/BlueprintPricing.png', title: 'Blueprint' },
     { src: '/landingpage/KaplanPricing.png', title: 'Kaplan' },
     { src: '/landingpage/PrincetonReviewPricing.png', title: 'Princeton Review' },
-    { src: '/landingpage/JackWestinPricing.png', title: 'Jack Westin' },
+    { src: '/landingpage/JackWestinPricing.png', title: 'Wack Westin' },
   ];
 
   const globeConfig: WorldProps['globeConfig'] = {
@@ -356,7 +356,11 @@ const MethodologyAndTestimonials = () => {
               {pricingLogos.map((logo, index) => (
                 <SwiperSlide key={index}>
                   <div className="flex flex-col items-center h-full">
-                    <h3 className="text-3xl font-semibold text-red-500 mb-6">{logo.title}</h3>
+                    <h3 className="text-5xl font-bold text-red-500 mb-8 animate-pulse" style={{
+                      textShadow: '0 0 8px rgba(255, 0, 0, 0.7), 0 0 5px rgba(255, 0, 0, 0.5)',
+                    }}>
+                      {logo.title}
+                    </h3>
                     <div className="flex-grow flex items-center">
                       <Image src={logo.src} alt={`${logo.title} Pricing`} width={800} height={1200} objectFit="contain" style={{ maxHeight: '100%', width: 'auto' }} />
                     </div>
