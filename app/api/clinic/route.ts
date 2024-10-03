@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
+import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay, getLevelNumber } from "@/utils/calculateResourceTotals";
 
 export async function GET(req: Request) {
   try {
@@ -10,9 +11,14 @@ export async function GET(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const userInfo = await prisma.userInfo.findUnique({
-      where: { userId },
-    });
+    const [userInfo, patientRecord] = await Promise.all([
+      prisma.userInfo.findUnique({
+        where: { userId },
+      }),
+      prisma.patientRecord.findUnique({
+        where: { userId },
+      })
+    ]);
 
     if (!userInfo) {
       console.log('[CLINIC_ROOMS_GET] User not found:', userId);
@@ -23,9 +29,24 @@ export async function GET(req: Request) {
     }
 
     const rooms = userInfo.clinicRooms ? JSON.parse(userInfo.clinicRooms) : [];
-    console.log('[CLINIC_ROOMS_GET] Rooms retrieved for user:', userId, 'Rooms:', rooms);
 
-    return new NextResponse(JSON.stringify(rooms), { 
+    const playerLevel = calculatePlayerLevel(rooms);
+    const levelNumber = getLevelNumber(playerLevel);
+    console.log("levelNumber", levelNumber);
+    const patientsPerDay = getPatientsPerDay(levelNumber);
+    console.log("patientsPerDay", patientsPerDay);
+    const clinicCostPerDay = getClinicCostPerDay(levelNumber);
+    // Get total patients treated
+    const totalPatientsTreated = patientRecord?.patientsTreated || 0;
+
+    return new NextResponse(JSON.stringify({
+      rooms,
+      score: userInfo.score,
+      playerLevel,
+      patientsPerDay,
+      clinicCostPerDay,
+      totalPatientsTreated
+    }), { 
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });

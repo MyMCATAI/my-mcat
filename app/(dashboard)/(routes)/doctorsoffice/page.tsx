@@ -9,30 +9,34 @@ import { useRouter } from 'next/navigation';
 import { DoctorOfficeStats } from '@/types';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
-import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay } from '@/utils/calculateResourceTotals';
+import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay, getLevelNumber } from '@/utils/calculateResourceTotals';
 import axios from 'axios';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import WelcomeDialog from './WelcomeDialog';
 
 const DoctorsOfficePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('doctorsoffice');
-  const [userLevel, setUserLevel] = useState('');
+  const [userLevel, setUserLevel] = useState('PATIENT LEVEL');
   const [userScore, setUserScore] = useState(0);
-  const [patientsPerDay, setPatientsPerDay] = useState(4); // Default value
+  const [patientsPerDay, setPatientsPerDay] = useState(4);
   const router = useRouter();
   const [userRooms, setUserRooms] = useState<string[]>([]);
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
-  const [totalPatients, setTotalPatients] = useState<number>(0);
+  const [totalPatients, setTotalPatients] = useState(0);
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const marketplaceDialogRef = useRef<{ open: () => void } | null>(null);
   const [isWelcomeDialogOpen, setIsWelcomeDialogOpen] = useState(false);
   const [hasOpenedMarketplace, setHasOpenedMarketplace] = useState(false);
   // Add this state for clinic name
   const [clinicName, setClinicName] = useState<string | null>(null);
+  
+  const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
+  const [clinicCostPerDay, setClinicCostPerDay] = useState(0);
+
+  const [isCalculating, setIsCalculating] = useState(false);
+  const hasCalculatedRef = useRef(false);
 
   // Marketplace State
-  const [imageGroups, setImageGroups] = useState<ImageGroup[]>([
+  const imageGroups= [
     {
       name: 'INTERN LEVEL',
       items: [
@@ -136,24 +140,164 @@ const DoctorsOfficePage: React.FC = () => {
       cost: 20,
       benefits: ['2x boost your value for university in a day'],
     },
-  ]);
+  ]
 
-  const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
+const fetchData = async () => {
+      try {
+        const [reportResponse, clinicResponse] = await Promise.all([
+          fetch('/api/user-report'),
+          fetch('/api/clinic')
+        ]);
+        
+        if (!reportResponse.ok || !clinicResponse.ok) throw new Error('Failed to fetch user report');
+        if (!clinicResponse.ok) throw new Error('Failed to fetch clinic data');
+        
+        const reportData: DoctorOfficeStats = await reportResponse.json();
+        const clinicData = await clinicResponse.json();
+        
+        setReportData(reportData);
+        setUserRooms(clinicData.rooms);
+        setUserScore(clinicData.score);
+        
+        // Calculate and set player level, patients per day, and clinic cost
+        const playerLevel = calculatePlayerLevel(clinicData.rooms);
+        const levelNumber = getLevelNumber(playerLevel);
+        const patientsPerDay = getPatientsPerDay(levelNumber);
+        const clinicCostPerDay = getClinicCostPerDay(levelNumber);
+        
+        setUserLevel(playerLevel);
+        setPatientsPerDay(patientsPerDay);
+        setClinicCostPerDay(clinicCostPerDay);
+        setTotalPatients(clinicData.totalPatientsTreated || 0);
 
-  const toggleGroup = async (groupName: string) => {
+        // Update this part
+        const newVisibleImages = new Set<string>();
+        clinicData.rooms.forEach((roomName: string) => {
+          const group = imageGroups.find(g => g.name === roomName);
+          if (group) {
+            group.items.forEach(item => newVisibleImages.add(item.id));
+          }
+        });
+        setVisibleImages(newVisibleImages);
+
+        // Show welcome dialog if user has no clinic rooms
+        setIsWelcomeDialogOpen(clinicData.rooms.length === 0);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+  // fetch user info
+  useEffect(() => {
+    fetchData();
+    if (!hasCalculatedRef.current) {
+      const timer = setTimeout(() => {
+        performDailyCalculations();
+        hasCalculatedRef.current = true;
+      }, 3000);
+
+      // Clean up the timer if the component unmounts
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const performDailyCalculations = async () => {
+    if (isCalculating) return;
+    setIsCalculating(true);
+
+    try {
+      const response = await axios.post('/api/daily-calculations');
+      const { updatedScore, newPatientsTreated, totalPatientsTreated, patientsPerDay, clinicCostPerDay, error, alreadyUpdatedToday } = response.data;
+
+      if (error) {
+        // Handle insufficient funds case
+        toast.error(
+          <div>
+            <p>{error}</p>
+            <p>Your current balance is {userScore} coins.</p>
+            <p>Daily clinic cost: {clinicCostPerDay} coins</p>
+          </div>,
+          { duration: 5000 }
+        );
+        return;
+      }
+
+      if (alreadyUpdatedToday) {
+        toast(
+          <div>
+            <p>{patientsPerDay} patients were already treated earlier today.</p>
+            <p>Total patients: {totalPatientsTreated}</p>
+          </div>,
+          { duration: 5000 }
+        );
+        return;
+      }
+
+      setUserScore(updatedScore);
+      setTotalPatients(totalPatientsTreated);
+
+      if (newPatientsTreated > 0) {
+        toast.success(
+          <div>
+            <p>Daily clinic update:</p>
+            <ul>
+              <li>New patients treated: {newPatientsTreated}</li>
+              <li>Total patients treated: {totalPatientsTreated}</li>
+              <li>New balance: {updatedScore} coins</li>
+            </ul>
+          </div>,
+          { duration: 5000 }
+        );
+      } else {
+        toast(
+          <div>
+            <p>No new patients treated today.</p>
+            <p>Daily clinic cost: {clinicCostPerDay} coins</p>
+            <p>Current balance: {updatedScore} coins</p>
+          </div>,
+          { duration: 5000 }
+        );
+      }
+    } catch (error) {
+      console.error('Error performing daily calculations:', error);
+      toast.error("Failed to perform daily calculations. Please try again later.");
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
+  const handleTabChange = (tab: string) => {
+    if (tab !== 'doctorsoffice') {
+      router.push(`/home?tab=${tab}`);
+    }
+    setActiveTab(tab);
+  };
+
+  // Add this function to update user score
+  const handleUpdateUserScore = (newScore: number) => {
+    setUserScore(newScore);
+  };
+  const handleOpenMarketplace = () => {
+    setIsWelcomeDialogOpen(false);
+    setIsMarketplaceOpen(true);
+    setHasOpenedMarketplace(true);
+    marketplaceDialogRef.current?.open();
+  };
+  const handleWelcomeDialogOpenChange = (open: boolean) => {
+    setIsWelcomeDialogOpen(open);
+  };
+
+const toggleGroup = async (groupName: string) => {
     const group = imageGroups.find(g => g.name === groupName);
     if (!group) return;
 
     const allVisible = group.items.every(item => visibleImages.has(item.id));
 
     if (allVisible) {
-      // Remove selling logic
-      toast.error("Items cannot be removed once purchased.");
       return;
     } else {
       // Buying logic
       if (userScore < group.cost) {
-        toast.error(`Insufficient funds. You need ${group.cost} coins to buy ${groupName}.`);
+        toast.error(`You need ${group.cost} coins to buy ${groupName}.`);
         return;
       }
 
@@ -177,6 +321,9 @@ const DoctorsOfficePage: React.FC = () => {
           group.items.forEach(item => newSet.add(item.id));
           return newSet;
         });
+        // Refetch user data after successful purchase
+        await fetchData();
+        setIsMarketplaceOpen(false);
 
         toast.success(`Added ${groupName} to your clinic!`);
       } catch (error) {
@@ -185,142 +332,6 @@ const DoctorsOfficePage: React.FC = () => {
       }
     }
   };
-  useEffect(() => {
-    console.log("reportData")
-    const fetchData = async () => {
-      try {
-        const [reportResponse, roomsResponse, userInfoResponse] = await Promise.all([
-          fetch('/api/user-report'),
-          fetch('/api/clinic'),
-          fetch('/api/user-info')
-        ]);
-        if (!reportResponse.ok) throw new Error('Failed to fetch user report');
-        if (!roomsResponse.ok) throw new Error('Failed to fetch user rooms');
-        if (!userInfoResponse.ok) throw new Error('Failed to fetch user info');
-        const reportData: DoctorOfficeStats = await reportResponse.json();
-        const rooms: string[] = await roomsResponse.json();
-        const userInfo = await userInfoResponse.json();
-        setReportData(reportData);
-        setUserRooms(rooms);
-        setUserScore(userInfo.score);
-        setPatientsPerDay(userInfo.patientsPerDay || 4);
-        setClinicName(userInfo.clinicName || null);
-        // Load total patients from local storage
-        const storedPatients = localStorage.getItem('totalPatients');
-        setTotalPatients(storedPatients ? parseInt(storedPatients, 10) : 0);
-        // Perform daily calculations
-        await performDailyCalculations(rooms);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-    fetchData();
-  }, []);
-  const performDailyCalculations = async (rooms: string[]) => {
-    const playerLevel = calculatePlayerLevel(rooms);
-    const patientsPerDay = getPatientsPerDay(playerLevel);
-    const clinicCostPerDay = getClinicCostPerDay(playerLevel);
-    try {
-      const response = await axios.post('/api/daily-calculations', {
-        patientsPerDay,
-        clinicCostPerDay
-      });
-      if (response.data) {
-        setUserScore(response.data.updatedCoins);
-        const newTotalPatients = totalPatients + patientsPerDay;
-        setTotalPatients(newTotalPatients);
-        localStorage.setItem('totalPatients', newTotalPatients.toString());
-      }
-    } catch (error) {
-      console.error('Error performing daily calculations:', error);
-    }
-  };
-  useEffect(() => {
-    const fetchUserLevel = async () => {
-      try {
-        const response = await fetch('/api/clinic');
-        if (response.ok) {
-          const rooms = await response.json();
-          const highestLevel = rooms.reduce((highest: string, room: string) => {
-            const levels = [
-              'INTERN LEVEL',
-              'RESIDENT LEVEL',
-              'FELLOWSHIP LEVEL',
-              'ATTENDING LEVEL',
-              'PHYSICIAN LEVEL',
-              'MEDICAL DIRECTOR LEVEL',
-            ];
-            const currentIndex = levels.indexOf(room);
-            const highestIndex = levels.indexOf(highest);
-            return currentIndex > highestIndex ? room : highest;
-          }, '');
-          setUserLevel(highestLevel || 'INTERN LEVEL');
-        }
-      } catch (error) {
-        console.error('Failed to fetch user level:', error);
-      }
-    };
-
-
-    const fetchUserRooms = async () => {
-      try {
-        const response = await fetch('/api/clinic', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch user rooms');
-        }
-
-        const rooms = await response.json();
-        const newVisibleImages = new Set<string>();
-        rooms.forEach((roomName: string) => {
-          const group = imageGroups.find((g) => g.name === roomName);
-          if (group) {
-            group.items.forEach((item) => newVisibleImages.add(item.id));
-          }
-        });
-        setVisibleImages(newVisibleImages);
-      } catch (error) {
-        console.error('Error fetching user rooms:', error);
-      }
-    };
-
-    fetchUserLevel();
-    fetchUserRooms();
-  }, [imageGroups]);
-
-  const handleTabChange = (tab: string) => {
-    if (tab !== 'doctorsoffice') {
-      router.push(`/home?tab=${tab}`);
-    }
-    setActiveTab(tab);
-  };
-
-  // Add this function to update user score
-  const handleUpdateUserScore = (newScore: number) => {
-    setUserScore(newScore);
-  };
-  const handleOpenMarketplace = () => {
-    setIsWelcomeDialogOpen(false);
-    setIsMarketplaceOpen(true);
-    setHasOpenedMarketplace(true);
-    marketplaceDialogRef.current?.open();
-  };
-  const handleWelcomeDialogOpenChange = (open: boolean) => {
-    if (!open && !hasOpenedMarketplace) {
-      toast.error("You must purchase a room before you can use the doctor's office.");
-      return;
-    }
-    setIsWelcomeDialogOpen(open);
-  };
-
-  useEffect(() => {
-    if (userLevel) return
-        setIsWelcomeDialogOpen(true);
-  }, [userLevel]);
-
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
       <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
@@ -330,6 +341,7 @@ const DoctorsOfficePage: React.FC = () => {
             userRooms={userRooms}
             totalCoins={userScore}
             totalPatients={totalPatients}
+            patientsPerDay={patientsPerDay}
           />
                   </div>
         <div className="w-3/4 font-krungthep relative rounded-r-lg">
@@ -362,7 +374,7 @@ const DoctorsOfficePage: React.FC = () => {
               </button>
               <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
                 <ShoppingDialog
-                                  ref={marketplaceDialogRef}
+                  ref={marketplaceDialogRef}
                   imageGroups={imageGroups}
                   visibleImages={visibleImages}
                   toggleGroup={toggleGroup}

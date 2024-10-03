@@ -1,29 +1,21 @@
-export const calculatePlayerLevel = (userRooms: string[]): number => {
-  const tierRooms = [
-    "INTERN LEVEL",
-    "RESIDENT LEVEL",
-    "FELLOWSHIP LEVEL",
-    "ATTENDING LEVEL",
-    "PHYSICIAN LEVEL",
-    "MEDICAL DIRECTOR LEVEL"
-  ];
+export const tierRooms = [
+  "INTERN LEVEL",
+  "RESIDENT LEVEL",
+  "FELLOWSHIP LEVEL",
+  "ATTENDING LEVEL",
+  "PHYSICIAN LEVEL",
+  "MEDICAL DIRECTOR LEVEL"
+];
+
+export const calculatePlayerLevel = (userRooms: string[]): string => {
   
-  console.log("User Rooms:", userRooms);
-  
-  let highestLevel = -1;
   for (let i = tierRooms.length - 1; i >= 0; i--) {
     if (userRooms.includes(tierRooms[i])) {
-      highestLevel = i;
-      break;
+      return tierRooms[i];
     }
   }
   
-  console.log("Highest Level Index:", highestLevel);
-  
-  const calculatedLevel = highestLevel === -1 ? 1 : highestLevel + 1;
-  console.log("Calculated Level:", calculatedLevel);
-  
-  return calculatedLevel;
+  return "PATIENT LEVEL";
 };
 
 export const getPatientsPerDay = (playerLevel: number): number => {
@@ -79,4 +71,9 @@ export const getClinicCostPerDay = (playerLevel: number): number => {
   if (playerLevel <= 2) return 1;  // INTERN and RESIDENT LEVEL
   if (playerLevel <= 4) return 2;  // FELLOWSHIP and ATTENDING LEVEL
   return 3;  // PHYSICIAN and MEDICAL DIRECTOR LEVEL
+};
+
+export const getLevelNumber = (levelString: string): number => {
+  const index = tierRooms.indexOf(levelString);
+  return index === -1 ? 1 : index + 1;
 };
