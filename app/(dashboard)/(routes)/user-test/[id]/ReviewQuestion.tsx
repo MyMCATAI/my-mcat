@@ -198,23 +198,6 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
     fetchPart2Test();
   }, [isLast, testTitle]);
 
-  const Part2Popup = () => {
-    if (!part2Test) return null;
-
-    return (
-      <div className="fixed bottom-8 right-8 bg-white p-6 rounded-xl shadow-2xl z-50 max-w-sm">
-        <h3 className="text-xl font-bold mb-3 text-gray-800">Continue to Part 2</h3>
-        <p className="mb-4 text-gray-600">{"You've completed Part 1. Ready for the next challenge?"}</p>
-        <Link
-          href={`/test/testquestions?id=${part2Test.id}`}
-          className="inline-block bg-gradient-to-r from-blue-500 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-blue-800 transition-all duration-300"
-        >
-          Start {part2Test.title}
-        </Link>
-      </div>
-    );
-  };
-
   if (!question) return null;
   const options = JSON.parse(question.questionOptions);
   const correctAnswerIndex = 0;
@@ -258,108 +241,114 @@ Help me understand this question so I can learn.`;
   };
 
   return (
-    <div className="p-6 bg-white text-black h-full flex flex-col text-sm relative">
-      <h2 className="text-md font-semibold mb-4">Question {currentQuestionIndex + 1} of {totalQuestions}</h2>
-      
-      <div className="absolute top-4 right-4 flex space-x-2">
-        <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              className="p-2 rounded-full shadow-lg transition-colors duration-200 bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white"
-              onClick={() => setShowMessageForm(true)}
-              aria-label="Send Message"
-            >
-              <Mail className="w-6 h-6" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>
-            Send us a message
-          </TooltipContent>
-        </Tooltip>
-        </TooltipProvider>
-      </div>
-      {isReviewed && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center text-green-600">
-          <CheckCircle className="w-4 h-4 mr-1" />
-          <span className="text-sm">Reviewed</span>
-        </div>
-      )}
-
-      {userResponse.flagged && (
-        <p className="text-red-500 text-sm mb-2">
-          This question was flagged for review
-        </p>
-      )}
-
-      <div className="overflow-auto standard-scrollbar">
-        <h3 className="font-sm mb-2">{question.questionContent}</h3>
-        <div className="mt-4">
+    <div className="flex flex-col h-full bg-white text-black text-sm relative">
+      <div className="p-6 border-b sticky top-0 bg-white z-10">
+        <h2 className="text-md font-semibold mb-4">Question {currentQuestionIndex + 1} of {totalQuestions}</h2>
+        
+        <div className="absolute top-4 right-4 flex space-x-2">
           <TooltipProvider>
-            {options.map((option: string, index: number) => (
-              <Tooltip key={index}>
-                <TooltipTrigger asChild>
-                  <div 
-                    className={`p-3 mb-2 rounded ${getOptionClass(index)} text-sm cursor-pointer`}
-                    onMouseEnter={() => handleOptionHover(index)}
-                  >
-                    {option}
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent 
-                  side="right" 
-                  className="max-w-[30vw] min-w-[300px] bg-gray-50 text-gray-800 border border-gray-200"
-                >
-                  <p>
-                    {explanations[index]
-                      ? explanations[index]
-                      : index === correctAnswerIndex
-                        ? 'This is the correct answer.'
-                        : 'This is an incorrect answer.'}
-                  </p>
-                  <p className="mt-2 font-semibold">
-                    {index === correctAnswerIndex ? '✅ Correct' : '❌ Incorrect'}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="p-2 rounded-full shadow-lg transition-colors duration-200 bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white"
+                onClick={() => setShowMessageForm(true)}
+                aria-label="Send Message"
+              >
+                <Mail className="w-6 h-6" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Send us a message
+            </TooltipContent>
+          </Tooltip>
           </TooltipProvider>
         </div>
-      </div>
-
-      <div className="mb-4" >
-        <ChatBotInLineForReview 
-          chatbotContext={generateChatbotContext()}
-          key={question.id}
-        />
-      </div>
-
-      <div className="flex justify-between mt-4 mb-4">
-        <button
-          onClick={onPrevious}
-          disabled={isFirst}
-          className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-        >
-          Previous
-        </button>
-        {isLast ? (
-          <button
-            onClick={handleFinishReview}
-            disabled={isReviewFinished}
-            className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded ${
-              isReviewFinished ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
-            {isReviewFinished ? 'Review Finished' : 'Finish Review'}
-          </button>
-        ) : (
-          <button
-            onClick={onNext}
-            className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded"
-          >
-            Next
-          </button>
+        {isReviewed && (
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center text-green-600">
+            <CheckCircle className="w-4 h-4 mr-1" />
+            <span className="text-sm">Reviewed</span>
+          </div>
         )}
+
+        {userResponse.flagged && (
+          <p className="text-red-500 text-sm mb-2">
+            This question was flagged for review
+          </p>
+        )}
+      </div>
+
+      <div className="flex-grow overflow-y-auto">
+        <div className="p-6">
+          <div className="mb-4">
+            <h3 className="font-sm mb-5">{question.questionContent}</h3>
+            <div className="mt-5">
+              <TooltipProvider>
+                {options.map((option: string, index: number) => (
+                  <Tooltip key={index}>
+                    <TooltipTrigger asChild>
+                      <div 
+                        className={`p-3 mb-2 rounded ${getOptionClass(index)} text-sm cursor-pointer`}
+                        onMouseEnter={() => handleOptionHover(index)}
+                      >
+                        {option}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent 
+                      side="right" 
+                      className="max-w-[30vw] min-w-[300px] bg-gray-50 text-gray-800 border border-gray-600"
+                    >
+                      <p>
+                        {explanations[index]
+                          ? explanations[index]
+                          : index === correctAnswerIndex
+                            ? 'This is the correct answer.'
+                            : 'This is an incorrect answer.'}
+                      </p>
+                      <p className="mt-2 font-semibold">
+                        {index === correctAnswerIndex ? '✅ Correct' : '❌ Incorrect'}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
+            </div>
+          </div>
+
+          <ChatBotInLineForReview 
+            chatbotContext={generateChatbotContext()}
+            key={question.id}
+          />
+        </div>
+      </div>
+
+      <div className="p-6 bg-white border-t">
+        <div className="flex justify-between">
+          <button
+            onClick={onPrevious}
+            disabled={isFirst}
+            className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          {isLast ? (
+            <button
+              onClick={handleFinishReview}
+              disabled={isReviewFinished}
+              className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded ${
+                isReviewFinished ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {isReviewFinished ? 'Review Finished' : 'Finish Review'}
+            </button>
+          ) : (
+            <button
+              onClick={onNext}
+              className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded"
+            >
+              Next
+            </button>
+          )}
+        </div>
       </div>
 
       {showMessageForm && (
@@ -406,22 +395,31 @@ Help me understand this question so I can learn.`;
           <DialogHeader className="text-center">
             <DialogTitle className="text-center text-black">Congratulations!</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col items-center justify-center p-6">
+          <div className="flex flex-col items-center justify-center p-6 space-y-4">
             <Image
               src="/game-components/PixelCupcake.png"
               alt="Coin"
               width={96}
               height={96}
-              className="mb-4"
             />
             <p className="text-center text-lg text-black">
               You&apos;ve earned <span className="font-bold">1 cupcake coin</span> for reviewing today!
             </p>
+            {isLast && part2Test && (
+              <>
+                <p className="text-center text-md ml-2 text-black">Want to run it back with new questions?</p>
+                <Link
+                  href={`/test/testquestions?id=${part2Test.id}`}
+                  className="inline-block bg-[--theme-hover-color] text-white px-6 ml-2 py-3 rounded-lg hover:opacity-80 transition-all duration-300"
+                  onClick={() => setShowRewardDialog(false)}
+                >
+                  Start {part2Test.title}
+                </Link>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
-
-      {isLast && part2Test && <Part2Popup />}
     </div>
   );
 };
