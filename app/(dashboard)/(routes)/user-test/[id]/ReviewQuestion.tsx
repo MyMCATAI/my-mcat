@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Question, UserResponse } from '@/types';
-import { HelpCircle, Mail } from "lucide-react";
+import { Mail, CheckCircle } from "lucide-react";
 import ChatBotInLineForReview from '@/components/chatbot/ChatBotInLineForReview';
 import { Passage } from '@/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from 'react-hot-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Image from 'next/image';
+import Link from 'next/link';
 
 interface ReviewQuestionComponentProps {
   question?: Question;
@@ -17,6 +19,7 @@ interface ReviewQuestionComponentProps {
   isLast: boolean;
   currentQuestionIndex: number;
   totalQuestions: number;
+  testTitle: string;
 }
 
 const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
@@ -28,30 +31,55 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   isFirst,
   isLast,
   currentQuestionIndex,
-  totalQuestions
+  totalQuestions,
+  testTitle
 }) => {
   const [explanations, setExplanations] = useState<string[]>([]);
-  const [showExplanations, setShowExplanations] = useState(false);
   const [showMessageForm, setShowMessageForm] = useState(false);
   const [hasViewedUserExplanation, setHasViewedUserExplanation] = useState(false);
   const [hasViewedCorrectExplanation, setHasViewedCorrectExplanation] = useState(false);
   const [showRewardDialog, setShowRewardDialog] = useState(false);
   const [isReviewFinished, setIsReviewFinished] = useState(false);
+  const [hasViewedCorrectAnswer, setHasViewedCorrectAnswer] = useState(false);
+  const [isReviewed, setIsReviewed] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [part2Test, setPart2Test] = useState<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
     if (question) {
-      const options = JSON.parse(question.questionOptions);
       const answerNotes = JSON.parse(question.questionAnswerNotes || '[]');
       setExplanations(answerNotes);
       setHasViewedUserExplanation(false);
       setHasViewedCorrectExplanation(false);
+      setIsReviewed(!!userResponse.isReviewed || false);
     }
+
+    // Reset states when question changes
+    setHasViewedCorrectAnswer(false);
+    
+    // Clear existing timer
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    // Set new timer
+    timerRef.current = setTimeout(() => {
+      updateUserResponse(null);
+    }, 10000);
+
+    // Cleanup function
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
   }, [question, userResponse]);
 
   const updateUserResponse = useCallback(async (newReviewNote: string | null) => {
     if (!userResponse.id) return;
 
     const updatedResponse = {
+      id: userResponse.id,
       isReviewed: true,
       reviewNotes: newReviewNote 
         ? (userResponse.reviewNotes 
@@ -74,6 +102,7 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       }
 
       console.log('User response updated successfully');
+      setIsReviewed(true);
     } catch (error) {
       console.error('Error updating user response:', error);
     }
@@ -90,10 +119,6 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       updateUserResponse(null);
     }
   }, [hasViewedUserExplanation, hasViewedCorrectExplanation, userResponse, updateUserResponse]);
-
-  const toggleExplanations = () => {
-    setShowExplanations(!showExplanations);
-  };
 
   const handleSendMessage = async (message: string) => {
     try {
@@ -146,6 +171,50 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
     }
   };
 
+  const handleOptionHover = (index: number) => {
+    if (index === correctAnswerIndex && !hasViewedCorrectAnswer) {
+      setHasViewedCorrectAnswer(true);
+      updateUserResponse(null);
+    }
+  };
+
+  useEffect(() => {
+    const fetchPart2Test = async () => {
+      if (isLast && testTitle.toLowerCase().includes('part 1')) {
+        try {
+          const response = await fetch(`/api/test/find-next?title=${encodeURIComponent(testTitle)}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data) {
+              setPart2Test({ id: data.id, title: data.title });
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching Part 2 test:', error);
+        }
+      }
+    };
+
+    fetchPart2Test();
+  }, [isLast, testTitle]);
+
+  const Part2Popup = () => {
+    if (!part2Test) return null;
+
+    return (
+      <div className="fixed bottom-8 right-8 bg-white p-6 rounded-xl shadow-2xl z-50 max-w-sm">
+        <h3 className="text-xl font-bold mb-3 text-gray-800">Continue to Part 2</h3>
+        <p className="mb-4 text-gray-600">{"You've completed Part 1. Ready for the next challenge?"}</p>
+        <Link
+          href={`/test/testquestions?id=${part2Test.id}`}
+          className="inline-block bg-gradient-to-r from-blue-500 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-blue-800 transition-all duration-300"
+        >
+          Start {part2Test.title}
+        </Link>
+      </div>
+    );
+  };
+
   if (!question) return null;
   const options = JSON.parse(question.questionOptions);
   const correctAnswerIndex = 0;
@@ -158,14 +227,6 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
       return 'bg-red-500 text-white';
     }
     return 'bg-gray-200 text-black hover:bg-gray-300 cursor-pointer';
-  };
-
-  const handleViewUserExplanation = () => {
-    setHasViewedUserExplanation(true);
-  };
-
-  const handleViewCorrectExplanation = () => {
-    setHasViewedCorrectExplanation(true);
   };
 
   const generateChatbotContext = () => {
@@ -202,27 +263,6 @@ Help me understand this question so I can learn.`;
       
       <div className="absolute top-4 right-4 flex space-x-2">
         <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className={`
-                  p-2 rounded-full shadow-lg
-                  transition-colors duration-200
-                  ${showExplanations 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white'}
-                `}
-                onClick={toggleExplanations}
-                aria-label="Toggle Explanations"
-              >
-                <HelpCircle className="w-6 h-6" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-            {"Toggle Explanations On Hover"}
-            </TooltipContent>
-          </Tooltip>
-        
         <Tooltip>
           <TooltipTrigger asChild>
             <button
@@ -239,82 +279,87 @@ Help me understand this question so I can learn.`;
         </Tooltip>
         </TooltipProvider>
       </div>
-      
+      {isReviewed && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center text-green-600">
+          <CheckCircle className="w-4 h-4 mr-1" />
+          <span className="text-sm">Reviewed</span>
+        </div>
+      )}
+
       {userResponse.flagged && (
         <p className="text-red-500 text-sm mb-2">
           This question was flagged for review
         </p>
       )}
 
-      <div className="mb-4 flex-grow overflow-auto standard-scrollbar">
+      <div className="overflow-auto standard-scrollbar">
         <h3 className="font-sm mb-2">{question.questionContent}</h3>
         <div className="mt-4">
           <TooltipProvider>
             {options.map((option: string, index: number) => (
-              <Tooltip key={index} open={showExplanations ? undefined : false}>
+              <Tooltip key={index}>
                 <TooltipTrigger asChild>
                   <div 
-                    className={`p-3 mb-2 rounded ${getOptionClass(index)} text-sm`}
-                    onMouseEnter={() => {
-                      if (showExplanations) {
-                        if (index === correctAnswerIndex) {
-                          handleViewCorrectExplanation();
-                        }
-                        if (index === options.indexOf(userResponse.userAnswer) && !userResponse.isCorrect) {
-                          handleViewUserExplanation();
-                        }
-                      }
-                    }}
+                    className={`p-3 mb-2 rounded ${getOptionClass(index)} text-sm cursor-pointer`}
+                    onMouseEnter={() => handleOptionHover(index)}
                   >
                     {option}
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" style={{ maxWidth: '30vw', minWidth: '800px' }}>
-                  {explanations[index]
-                    ? explanations[index]
-                    : index === correctAnswerIndex
-                      ? 'This is the correct answer.'
-                      : 'This is an incorrect answer.'}
+                <TooltipContent 
+                  side="right" 
+                  className="max-w-[30vw] min-w-[300px] bg-gray-50 text-gray-800 border border-gray-200"
+                >
+                  <p>
+                    {explanations[index]
+                      ? explanations[index]
+                      : index === correctAnswerIndex
+                        ? 'This is the correct answer.'
+                        : 'This is an incorrect answer.'}
+                  </p>
+                  <p className="mt-2 font-semibold">
+                    {index === correctAnswerIndex ? '✅ Correct' : '❌ Incorrect'}
+                  </p>
                 </TooltipContent>
               </Tooltip>
             ))}
           </TooltipProvider>
         </div>
+      </div>
 
-        <div className="flex justify-between mt-4 mb-4">
+      <div className="mb-4" >
+        <ChatBotInLineForReview 
+          chatbotContext={generateChatbotContext()}
+          key={question.id}
+        />
+      </div>
+
+      <div className="flex justify-between mt-4 mb-4">
+        <button
+          onClick={onPrevious}
+          disabled={isFirst}
+          className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        {isLast ? (
           <button
-            onClick={onPrevious}
-            disabled={isFirst}
-            className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+            onClick={handleFinishReview}
+            disabled={isReviewFinished}
+            className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded ${
+              isReviewFinished ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            Previous
+            {isReviewFinished ? 'Review Finished' : 'Finish Review'}
           </button>
-          {isLast ? (
-            <button
-              onClick={handleFinishReview}
-              disabled={isReviewFinished}
-              className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded ${
-                isReviewFinished ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {isReviewFinished ? 'Review Finished' : 'Finish Review'}
-            </button>
-          ) : (
-            <button
-              onClick={onNext}
-              className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded"
-            >
-              Next
-            </button>
-          )}
-        </div>
-
-        <div className="mb-4" >
-          <ChatBotInLineForReview 
-            chatbotContext={generateChatbotContext()}
-            key={question.id}
-          />
-        </div>
+        ) : (
+          <button
+            onClick={onNext}
+            className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded"
+          >
+            Next
+          </button>
+        )}
       </div>
 
       {showMessageForm && (
@@ -362,13 +407,21 @@ Help me understand this question so I can learn.`;
             <DialogTitle className="text-center text-black">Congratulations!</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center justify-center p-6">
-            <img src="/game-components/PixelCupcake.png" alt="Coin" className="w-24 h-24 mb-4" />
+            <Image
+              src="/game-components/PixelCupcake.png"
+              alt="Coin"
+              width={96}
+              height={96}
+              className="mb-4"
+            />
             <p className="text-center text-lg text-black">
               You&apos;ve earned <span className="font-bold">1 cupcake coin</span> for reviewing today!
             </p>
           </div>
         </DialogContent>
       </Dialog>
+
+      {isLast && part2Test && <Part2Popup />}
     </div>
   );
 };

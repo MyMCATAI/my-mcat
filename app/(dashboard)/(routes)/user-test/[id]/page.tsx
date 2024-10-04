@@ -189,7 +189,7 @@ export default function UserTestReviewPage() {
                   <div className="flex-grow overflow-auto">
                     <ReviewQuestionComponent
                       question={currentResponse.question}
-                      passageData={currentPassage} 
+                      passageData={currentPassage}
                       userResponse={currentResponse}
                       onNext={handleNextQuestion}
                       onPrevious={handlePreviousQuestion}
@@ -197,7 +197,8 @@ export default function UserTestReviewPage() {
                       isLast={currentResponseIndex === userTest.responses.length - 1}
                       currentQuestionIndex={currentResponseIndex}
                       totalQuestions={userTest.responses.length}
-                    />
+                      testTitle={userTest.test.title}
+                      />
                   </div>
                 </div>
               </>
@@ -205,15 +206,16 @@ export default function UserTestReviewPage() {
               <div className="w-full flex flex-col">
                 <div className="flex-grow overflow-auto">
                   <ReviewQuestionComponent
-                    question={currentResponse.question}
-                    userResponse={currentResponse}
-                    onNext={handleNextQuestion}
-                    onPrevious={handlePreviousQuestion}
-                    isFirst={currentResponseIndex === 0}
-                    isLast={currentResponseIndex === userTest.responses.length - 1}
-                    currentQuestionIndex={currentResponseIndex}
-                    totalQuestions={userTest.responses.length}
-                  />
+                      question={currentResponse.question}
+                      userResponse={currentResponse}
+                      onNext={handleNextQuestion}
+                      onPrevious={handlePreviousQuestion}
+                      isFirst={currentResponseIndex === 0}
+                      isLast={currentResponseIndex === userTest.responses.length - 1}
+                      currentQuestionIndex={currentResponseIndex}
+                      totalQuestions={userTest.responses.length}
+                      testTitle={userTest.test.title} 
+                      />
                 </div>
               </div>
             )}
