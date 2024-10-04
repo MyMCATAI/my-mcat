@@ -121,54 +121,35 @@ export async function POST(req: Request) {
   }
 }
 
-// Keep the existing PUT route as is
 export async function PUT(req: Request) {
   const { userId } = auth();
   if (!userId) {
-    console.log("Unauthorized request: No userId");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const body = await req.json();
-    const { userTestId, questionId, userNotes, timeSpent } = body;
+    const { id, userTestId, questionId, ...updateData } = body;
 
-    // Validate required fields
-    if (!userTestId || !questionId) {
-      console.log("Missing required fields: userTestId or questionId");
-      return NextResponse.json({ error: "Missing required fields: userTestId and questionId are required" }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: "Missing required field: id" }, { status: 400 });
     }
 
-    // Find the existing response
-    const existingResponse = await prisma.userResponse.findFirst({
-      where: {
-        userTestId,
-        questionId,
-        userId, // Add this to ensure we only find the current user's response
-      },
-    });
-
-    if (!existingResponse) {
-      console.log(`Response not found for userTestId: ${userTestId}, questionId: ${questionId}, userId: ${userId}`);
-      return NextResponse.json({ error: "Response not found or you don't have permission to modify it" }, { status: 404 });
+    // Handle notes separately to append timestamps
+    if (updateData.userNotes) {
+      updateData.userNotes = `${new Date().toISOString()} - ${updateData.userNotes}`;
     }
-
-    // Prepare the update data
-    const timestamp = new Date().toISOString();
-    const formattedNote = `[${timestamp}] - ${userNotes}`;
-    const updatedUserNotes = existingResponse.userNotes
-      ? `${existingResponse.userNotes}\n${formattedNote}`
-      : formattedNote;
-
-    const updateData: any = {
-      userNotes: updatedUserNotes,
-      timeSpent: timeSpent !== undefined ? timeSpent : existingResponse.timeSpent,
-    };
+    if (updateData.reviewNotes) {
+      updateData.reviewNotes = `${new Date().toISOString()} - ${updateData.reviewNotes}`;
+    }
 
     // Update the response
     const updatedResponse = await prisma.userResponse.update({
-      where: { id: existingResponse.id },
-      data: updateData,
+      where: { id, userId },
+      data: {
+        ...updateData,
+        answeredAt: new Date(),
+      },
       include: {
         question: true,
         userTest: true,
@@ -176,9 +157,9 @@ export async function PUT(req: Request) {
       },
     });
 
-    return NextResponse.json(updatedResponse, { status: 200 });
+    return NextResponse.json(updatedResponse);
   } catch (error) {
     console.error('Error updating user response:', error);
-    return NextResponse.json({ error: "Internal server error", details: error }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
