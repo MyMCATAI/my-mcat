@@ -203,6 +203,7 @@ const Page = () => {
       if (!response.ok) throw new Error("Failed to fetch tests");
 
       const data = await response.json();
+
       setTests(data.tests);
       setTestsCompletedToday(data.testsCompletedToday);
     } catch (error) {
