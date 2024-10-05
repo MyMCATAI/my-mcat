@@ -47,7 +47,6 @@ const RedditPosts: React.FC = () => {
     const cacheKey = `${debouncedSearchQuery}_${sortOption}`;
 
     if (cacheRef.current[cacheKey]) {
-      console.log(`Using cached data for key: ${cacheKey}`);
       setPosts(cacheRef.current[cacheKey]);
       setLoading(false);
       return;

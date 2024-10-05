@@ -51,8 +51,6 @@ const DashboardLayoutContent = ({
 
   const subscription = isPro ? "pro" : "free";
 
-  console.log('Current theme:', theme);
-  console.log('Background image:', backgroundImage);
 
   return ( 
     <div 

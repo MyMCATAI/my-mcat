@@ -282,7 +282,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     }
 
     console.log("User Response:", userAnswer);
-    console.log("Is Correct:", isCorrect);
+    // console.log("Is Correct:", isCorrect);
     try {
       const response = await fetch('/api/user-test/response', {
         method: 'POST',
@@ -327,7 +327,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         context: `${prevContext.context}\n\nI just answered this question: "${currentQuestion.questionContent}"\nMy answer was: "${userAnswer}" (${isCorrect ? 'Correct' : 'Incorrect'})`
       }));
 
-      console.log('Answer log appended and context updated successfully');
     } catch (err) {
       console.error('Error saving user response:', err);
       setPendingResponses(prev => {
@@ -444,7 +443,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       }
   
       const updatedUserInfo = await scoreResponse.json();
-      console.log('User score updated:', updatedUserInfo.score);
   
       setShowScorePopup(true);
       onTestComplete && onTestComplete(score);
@@ -498,7 +496,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         contentTitle: currentPassage.title || "Untitled Passage",
         context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm looking at is: ${currentQuestion?.questionContent}\n\nThe question options are: ${currentQuestion?.questionOptions}`
       }));
-      console.log("chatbotContext", chatbotContext)
     }
     testHeaderRef.current?.resetQuestionTimer(); // Reset question timer when question changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -531,10 +528,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   
  
   const saveNote = async (text: string) => {
-    console.log("Starting saveNote function", text);
     let currentUserTest = userTest
     if (!currentUserTest) {
-      console.log("No userTest, creating new one");
       currentUserTest = await createUserTest(test?.id || '');
       if (!currentUserTest) {
         console.error('Failed to create user test');
@@ -653,7 +648,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         [responseId]: savedResponse
       }));
 
-      console.log('Question flag status updated successfully');
     } catch (err) {
       console.error('Error updating question flag status:', err);
     } 
@@ -745,11 +739,9 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       ).join('; ');
 
       addVocabWord(word, allDefinitions);
-      console.log(`Added "${word}" to vocabList with definition`);
     } catch (err) {
       console.error('Error fetching definition:', err);
       addVocabWord(word, ''); // Add word with empty definition if fetch fails
-      console.log(`Added "${word}" to vocabList without definition`);
     }
   };
 
