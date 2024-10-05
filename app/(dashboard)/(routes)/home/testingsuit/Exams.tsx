@@ -22,6 +22,12 @@ const ChatBotWidgetNoChatBot = dynamic(
 // Add this constant at the top of the file, after the imports
 const MAX_TESTS_PER_DAY = 2;
 
+const getDifficultyColor = (difficulty: number) => {
+  if (difficulty < 3) return "text-green-500";
+  if (difficulty >= 3 && difficulty < 4) return "text-yellow-500";
+  return "text-red-500";
+};
+
 interface TestListingProps {
   tests: Test[];
   testsCompletedToday: number;
@@ -321,9 +327,16 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                       }
                     >
                       {tests && tests.length > 0
-                        ? tests[0].title
-                        : "Loading first test..."}
+                        ? `${tests[0].title} `
+                        : "Loading first test... "}
                     </span>
+                    {tests && tests.length > 0 && (
+                      <span
+                        className={`ml-2 text-sm font-medium ${getDifficultyColor(tests[0].difficulty as number)}`}
+                      >
+                        Lvl {tests[0].difficulty}
+                      </span>
+                    )}
                   </Link>
                 </div>
               )}
@@ -383,10 +396,22 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                 <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
               </TabsList>
               <TabsContent value="past">
-                <TestList items={userTests} type="past" loading={loading} />
+                <TestList 
+                  items={userTests} 
+                  type="past" 
+                  loading={loading} 
+                  testsAvailableToday={MAX_TESTS_PER_DAY}
+                  testsCompletedToday={testsCompletedToday}
+                />
               </TabsContent>
               <TabsContent value="upcoming">
-                <TestList items={tests} type="upcoming" loading={loading} testsCompletedToday={testsCompletedToday} />
+                <TestList 
+                  items={tests} 
+                  type="upcoming" 
+                  loading={loading} 
+                  testsAvailableToday={MAX_TESTS_PER_DAY}
+                  testsCompletedToday={testsCompletedToday}
+                />
               </TabsContent>
             </Tabs>
           </div>
