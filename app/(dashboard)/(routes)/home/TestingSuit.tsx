@@ -4,9 +4,10 @@ import Exams from "./testingsuit/Exams";
 
 interface TestListingProps {
   tests: Test[];
+  testsCompletedToday: number;
 }
 
-const TestingSuit: React.FC<TestListingProps> = ({ tests }) => {
+const TestingSuit: React.FC<TestListingProps> = ({ tests, testsCompletedToday }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
   const [isOverlayVisible, setIsOverlayVisible] = useState<boolean>(false);
@@ -44,7 +45,7 @@ const TestingSuit: React.FC<TestListingProps> = ({ tests }) => {
   }, [isOverlayVisible]);
 
   const tabs = [
-    { label: "Exams", content: <Exams tests={tests} onAssistantResponse={handleAssistantResponse} /> },
+    { label: "Exams", content: <Exams tests={tests} onAssistantResponse={handleAssistantResponse} testsCompletedToday={testsCompletedToday}/> },
   ];
 
   return (
