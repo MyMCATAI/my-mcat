@@ -949,11 +949,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                   onNext={handleNextQuestion}
                   onPrevious={handlePreviousQuestion}
                   isFirst={currentQuestionIndex === 0}
-                  isLast={currentQuestionIndex === test?.questions.length - 1}
+                  isLast={currentQuestionIndex === test?.questions?.length - 1}
                   onAnswer={handleUserResponse}
                   userAnswer={userAnswer} 
                   currentQuestionIndex={currentQuestionIndex}
-                  totalQuestions={test?.questions.length || 0}
+                  totalQuestions={test?.questions?.length ?? 0}
                   onFinish={handleFinishTest}
                   isSubmitting={isSubmitting}
                   answeredQuestions={answeredQuestions}
@@ -1006,7 +1006,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         timing={timing}
         correctAnswer={correctAnswer}
         technique={technique}
-        totalQuestions={test.questions.length}
+        totalQuestions={test?.questions?.length ?? 0}
         userTestId={userTest?.id}
         totalTimeTaken={testStartTime ? Math.round((new Date().getTime() - testStartTime.getTime()) / 1000) : 0}
       />
