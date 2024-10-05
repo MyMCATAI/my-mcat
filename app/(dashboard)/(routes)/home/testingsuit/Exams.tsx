@@ -19,19 +19,16 @@ const ChatBotWidgetNoChatBot = dynamic(
   }
 );
 
+// Add this constant at the top of the file, after the imports
+const MAX_TESTS_PER_DAY = 2;
+
 interface TestListingProps {
   tests: Test[];
+  testsCompletedToday: number;
   onAssistantResponse: (message: string, dismissFunc: () => void) => void;
 }
 
-const truncateTitle = (title: string, maxLength: number) => {
-  if (title.length > maxLength) {
-    return `${title.substring(0, maxLength)}...`;
-  }
-  return title;
-};
-
-const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
+const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCompletedToday }) => {
   const { user } = useUser();
   const [userTests, setUserTests] = useState<UserTest[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -43,10 +40,6 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
     null
   );
   const [welcomeComplete, setWelcomeComplete] = useState(false);
-  const [marketplaceText, setMarketplaceText] = useState(
-    "Doctor&apos;s Office ->"
-  );
-
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
   const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
 
@@ -78,8 +71,6 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
         // setUserTests(testsData.userTests);
         // setReportData(reportData);
 
-        console.log("User Tests:", testsData.userTests);
-        console.log("Report Data:", reportData);
       } catch (err) {
         setError("Error fetching data");
         console.error(err);
@@ -95,10 +86,11 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
     const userName = user ? user.firstName || "there" : "there";
     const welcomeText = getWelcomeMessage(
       userName,
-      reportData ? reportData.streak : 0
+      reportData ? reportData.streak : 0,
+      testsCompletedToday
     );
 
-    if (tests.length > 0) {
+    if (tests.length > 0 && testsCompletedToday < MAX_TESTS_PER_DAY) {
       const fullText = welcomeText + (tests[0].description || "");
       let index = 0;
 
@@ -108,14 +100,16 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
           index++;
         } else {
           clearInterval(typingTimer);
-          setWelcomeComplete(true);
+          setWelcomeComplete(true); // Move this line here
         }
       }, 15);
 
       return () => clearInterval(typingTimer);
+    } else {
+      setWelcomeAndTestMessage(welcomeText);
+      setWelcomeComplete(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, tests, reportData]);
+  }, [user, tests, reportData, testsCompletedToday]);
 
   const handleAssistantResponse = (
     message: string,
@@ -132,9 +126,6 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
     setDismissMessage(null);
   };
 
-  const handleDoctorsOfficeClick = () => {
-    setMarketplaceText("Welcome to the Doctor&apos;s Office!");
-  };
 
   const getTimeOfDay = () => {
     const hour = new Date().getHours();
@@ -145,7 +136,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
     return "night";
   };
 
-  const getWelcomeMessage = (userName: string, streak: number) => {
+  const getWelcomeMessage = (userName: string, streak: number, testsCompletedToday: number) => {
     let message = `Hey ${
       userName.charAt(0).toUpperCase() + userName.slice(1)
     }! \n\n`;
@@ -158,7 +149,13 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
       }
     }
 
-    return message + "\n\n";
+    if (testsCompletedToday >= MAX_TESTS_PER_DAY) {
+      message += `\n\nCongratulations on completing ${testsCompletedToday} tests today! Make sure to review your tests to improve your learning and come back tomorrow for the next 2 tests.`;
+    } else {
+      message += "\n\n";
+    }
+
+    return message;
   };
 
   return (
@@ -291,7 +288,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
               >
                 {welcomeAndTestMessage}
               </pre>
-              {welcomeComplete && tests.length > 0 && (
+              {welcomeComplete && testsCompletedToday < MAX_TESTS_PER_DAY && tests.length > 0 && (
                 <div className="flex items-center mt-6 ml-2">
                   <Link
                     href={`/test/testquestions?id=${tests[0].id}`}
@@ -389,7 +386,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse }) => {
                 <TestList items={userTests} type="past" loading={loading} />
               </TabsContent>
               <TabsContent value="upcoming">
-                <TestList items={tests} type="upcoming" loading={loading} />
+                <TestList items={tests} type="upcoming" loading={loading} testsCompletedToday={testsCompletedToday} />
               </TabsContent>
             </Tabs>
           </div>

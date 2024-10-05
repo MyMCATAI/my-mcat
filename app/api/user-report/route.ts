@@ -27,8 +27,11 @@ export async function GET(req: NextRequest) {
       orderBy: {
         startedAt: 'desc' // Order by most recent first
       },
-      take: 10 // Limit to the last 10 tests
+      take: 5 // Limit to the last 5 tests
     });
+
+    // Filter completed tests
+    const completedTests = userTests.filter(test => test.finishedAt !== null);
 
     // Initialize variables for streak calculation
     let streaks: number[] = [];
@@ -71,30 +74,28 @@ export async function GET(req: NextRequest) {
     // Determine if the streak was recently broken
     const streakBrokenRecently = previousStreakLength > 0 && currentStreakLength < previousStreakLength;
 
-    // Calculate statistics
-    const totalTestsTaken = userTests.length;
-    const totalQuestionsAnswered = userTests.reduce((sum, test) => sum + test.responses.length, 0);
-    const totalScore = userTests.reduce((sum, test) => sum + (test.score || 0), 0);
+    // Update calculations
+    const totalTestsTaken = completedTests.length;
+    const totalQuestionsAnswered = completedTests.reduce((sum, test) => sum + test.responses.length, 0);
+    const totalScore = completedTests.reduce((sum, test) => sum + (test.score || 0), 0);
     const averageTestScore = totalTestsTaken > 0 ? totalScore / totalTestsTaken : 0;
-    const totalTimeSpent = userTests.reduce((sum, test) => 
+
+    // Update time calculations
+    const totalTimeSpent = completedTests.reduce((sum, test) => 
       sum + test.responses.reduce((testSum, response) => testSum + (response.timeSpent || 0), 0), 0);
     const averageTimePerQuestion = totalQuestionsAnswered > 0 ? totalTimeSpent / totalQuestionsAnswered : 0;
 
-    // Calculate total time spent on tests and average time per test
-    const totalTestTime = userTests.reduce((sum, test) => {
+    const totalTestTime = completedTests.reduce((sum, test) => {
       if (test.startedAt && test.finishedAt) {
         return sum + (new Date(test.finishedAt).getTime() - new Date(test.startedAt).getTime());
       }
       return sum;
     }, 0);
 
-    // Calculate additional statistics
-    const testsCompleted = userTests.filter(test => test.finishedAt !== null).length;
-    const averageTimePerTest = testsCompleted > 0 ? totalTestTime / testsCompleted : 0;
-    const completionRate = totalTestsTaken > 0 ? (testsCompleted / totalTestsTaken) * 100 : 0;
+    const averageTimePerTest = totalTestsTaken > 0 ? totalTestTime / totalTestsTaken : 0;
 
     // Group questions by category and calculate accuracy
-    const categoryAccuracy = userTests.reduce((acc, test) => {
+    const categoryAccuracy = completedTests.reduce((acc, test) => {
       test.responses.forEach(response => {
         if (response.categoryId) {
           if (!acc[response.categoryId]) {
@@ -117,8 +118,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       userScore: userInfo?.score || 0,
       totalTestsTaken,
-      testsCompleted,
-      completionRate,
+      testsCompleted: completedTests.length,
+      completionRate: totalTestsTaken > 0 ? (completedTests.length / totalTestsTaken) * 100 : 0,
       totalQuestionsAnswered,
       averageTestScore,
       averageTimePerQuestion,
