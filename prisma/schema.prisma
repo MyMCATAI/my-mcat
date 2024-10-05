@@ -111,6 +111,7 @@ model UserTest {
   passageId  String?
   startedAt  DateTime       @default(now())
   finishedAt DateTime?
+  reviewedAt DateTime?      
   score      Float?
   test       Test?          @relation(fields: [testId], references: [id])
   passage    Passage?       @relation(fields: [passageId], references: [id])

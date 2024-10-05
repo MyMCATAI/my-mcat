@@ -68,6 +68,7 @@ export interface UserTest {
   test: Test;
   startedAt: Date;
   finishedAt?: Date;
+  reviewedAt?: Date;
   score?: number;
   responses: UserResponse[];
   totalResponses: number;
