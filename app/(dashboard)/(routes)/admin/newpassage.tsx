@@ -1,29 +1,37 @@
 import React, { useEffect, useState } from "react";
-import { Editor, EditorState, ContentState, convertToRaw, convertFromRaw } from 'draft-js';
-import 'draft-js/dist/Draft.css';
+import {
+  Editor,
+  EditorState,
+  ContentState,
+  convertToRaw,
+  convertFromRaw,
+} from "draft-js";
+import "draft-js/dist/Draft.css";
 import { Question } from "@prisma/client";
 import NewQuestions from "./newquestions";
 
 interface NewPassagePageProps {
   onCancel: () => void;
-  
 }
 
-const NewPassagePage: React.FC<NewPassagePageProps> = ({
-  onCancel,
-}) => {
+const NewPassagePage: React.FC<NewPassagePageProps> = ({ onCancel }) => {
   const [title, setTitle] = useState("");
   const [citation, setCitation] = useState("");
   const [content, setContent] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [showQuestionEditor, setShowQuestionEditor] = useState(false);
-  const [editorState, setEditorState] = useState(
-    () => EditorState.createEmpty()
+  const [editorState, setEditorState] = useState(() =>
+    EditorState.createEmpty()
   );
 
   const handleNext = () => {
-    if (!title || !citation || !difficulty || !editorState.getCurrentContent().hasText()) {
+    if (
+      !title ||
+      !citation ||
+      !difficulty ||
+      !editorState.getCurrentContent().hasText()
+    ) {
       alert("Please fill in all passage details before proceeding.");
       return;
     }
@@ -120,7 +128,6 @@ const NewPassagePage: React.FC<NewPassagePageProps> = ({
     );
   }
 
-
   return (
     <div className="text-black">
       <h2 className="text-xl font-bold mb-6">New Passage</h2>
@@ -139,10 +146,7 @@ const NewPassagePage: React.FC<NewPassagePageProps> = ({
         <div>
           <label className="block mb-2">Passage Content</label>
           <div className="border rounded p-2">
-            <Editor
-              editorState={editorState}
-              onChange={setEditorState}
-            />
+            <Editor editorState={editorState} onChange={setEditorState} />
           </div>
         </div>
 

@@ -10,16 +10,13 @@ interface Passage {
   text: string;
   citation: string;
   title: string;
-  questions: Question[]; 
+  questions: Question[];
 }
 interface EditQuestionsProps {
   passageId: string;
 }
 
-const EditQuestions: React.FC<EditQuestionsProps> = ({
-  passageId,
-}) => {
-
+const EditQuestions: React.FC<EditQuestionsProps> = ({ passageId }) => {
   const [passage, setPassage] = useState<Passage | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -41,7 +38,6 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
       addQuestion();
     }
   }, []);
-
 
   const fetchPassageWithQuestions = async () => {
     try {
@@ -70,14 +66,14 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
           console.error("Error processing question options:", error);
           processedOptions = [];
         }
-        return { 
-          ...q, 
+        return {
+          ...q,
           questionOptions: processedOptions,
         };
       });
       console.log("Processed questions:", processedQuestions); // Log processed questions
       setQuestions(processedQuestions);
-      
+
       // New: Log the fetched questions
       console.log("Fetched questions:", processedQuestions);
     } catch (error) {
@@ -97,29 +93,51 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
 
       const questionToSave = {
         ...currentQuestion,
-        questionOptions: Array.isArray(currentQuestion.questionOptions)
-          ? currentQuestion.questionOptions
-          : typeof currentQuestion.questionOptions === "string"
-          ? JSON.parse(currentQuestion.questionOptions)
-          : [],
+        questionOptions: currentQuestion.questionOptions, // Ensure this is an array
+        questionContent: JSON.stringify(currentQuestion.questionContent), // Ensure it's a string
       };
 
-      console.log("Prepared question for saving:", questionToSave);
+      const requestBody = {
+        id: questionToSave.id,
+        questionContent: questionToSave.questionContent,
+        questionOptions: questionToSave.questionOptions, // Ensure this is an array
+        contentCategory: questionToSave.contentCategory,
+        categoryId: questionToSave.categoryId,
+        questionAnswerNotes: questionToSave.questionAnswerNotes,
+        context: questionToSave.context,
+        difficulty: questionToSave.difficulty,
+      };
 
-      const response = await fetch(`/api/question`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(questionToSave),
-      });
+      // if (!response.ok) {
+      //   const errorData = await response.json().catch(() => ({}));
+      //   throw new Error(
+      //     `Failed to save question: ${response.statusText}. ${JSON.stringify(
+      //       errorData
+      //     )}`
+      //   );
+      // }
+
+      // Check if this is a new question or an update
+      const response = currentQuestion.id
+        ? await fetch(`/api/question`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+          })
+        : await fetch(`/api/question`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+          });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorText = await response.text();
         throw new Error(
-          `Failed to save question: ${response.statusText}. ${JSON.stringify(
-            errorData
-          )}`
+          `Failed to save question: ${response.statusText} - ${errorText}`
         );
       }
 
@@ -127,13 +145,19 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
       console.log("Question saved successfully:", updatedQuestion);
 
       // Update the questions array with the saved question
-      setQuestions(prevQuestions => {
+      setQuestions((prevQuestions) => {
         const newQuestions = [...prevQuestions];
         newQuestions[currentQuestionIndex] = updatedQuestion;
         return newQuestions;
       });
 
+      console.log(
+        "Type of questionOptions:",
+        typeof currentQuestion.questionOptions
+      );
+
       alert("Question saved successfully!");
+      onCancel();
     } catch (error) {
       console.error("Error saving question:", error);
       setError(`Failed to save question. ${error}`);
@@ -163,7 +187,6 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
     setQuestions([...questions, newQuestion as Question]);
     setCurrentQuestionIndex(questions.length);
   };
-
 
   const deleteQuestion = (index: number) => {
     if (questions.length > 1) {
@@ -198,16 +221,18 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
       newQuestions[currentQuestionIndex] = {
         ...newQuestions[currentQuestionIndex],
         ...updates,
-        questionOptions: typeof updates.questionOptions === 'string'
-          ? updates.questionOptions
-          : Array.isArray(updates.questionOptions)
-            ? JSON.stringify(updates.questionOptions)
+        questionOptions:
+          typeof updates.questionOptions === "string"
+            ? JSON.parse(updates.questionOptions) // Convert string to array
+            : Array.isArray(updates.questionOptions)
+            ? updates.questionOptions // Already an array
             : newQuestions[currentQuestionIndex].questionOptions,
       };
       console.log("Updated questions:", newQuestions);
       return newQuestions;
     });
   };
+
   const handleQuestionSwitch = (index: number) => {
     // Save current question changes before switching
     updateCurrentQuestion(currentQuestion);
@@ -252,12 +277,13 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
     <div className="flex text-black bg-white">
       <div className="w-3/4 pr-4">
         <h2 className="text-xl font-bold mb-6">Edit Questions</h2>
-
         <div className="mb-4">
           <label className="block mb-2">Question Content</label>
           <Input
             value={currentQuestion.questionContent || ""}
-            onChange={(e) => updateCurrentQuestion({ questionContent: e.target.value })}
+            onChange={(e) =>
+              updateCurrentQuestion({ questionContent: e.target.value })
+            }
             className="w-full"
             placeholder="Enter question content"
           />
@@ -267,25 +293,39 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
           <label className="block mb-2">Options</label>
           {(() => {
             console.log("Current question:", currentQuestion);
-            let options: string[] = [];
-            
-            if (typeof currentQuestion.questionOptions === 'string') {
-              try {
-                options = JSON.parse(currentQuestion.questionOptions);
-              } catch (error) {
-                console.error("Error parsing options:", error);
-              }
-            } else if (Array.isArray(currentQuestion.questionOptions)) {
-              options = currentQuestion.questionOptions;
-            }
-            
+            console.log(
+              "Type of questionOptions:",
+              typeof currentQuestion.questionOptions
+            );
+
+            let options: string[] = Array.isArray(
+              currentQuestion.questionOptions
+            )
+              ? currentQuestion.questionOptions
+              : typeof currentQuestion.questionOptions === "string"
+              ? JSON.parse(currentQuestion.questionOptions)
+              : []; // Default to an empty array if neither condition is met
+
+            // // Check if questionOptions is an array or a string
+            // if (Array.isArray(currentQuestion.questionOptions)) {
+            //   options = currentQuestion.questionOptions;
+            // } else if (typeof currentQuestion.questionOptions === "string") {
+            //   try {
+            //     options = JSON.parse(currentQuestion.questionOptions);
+            //   } catch (error) {
+            //     console.error("Error parsing questionOptions:", error);
+            //     options = []; // Reset to an empty array if parsing fails
+            //   }
+            // }
+
+            // Final check to ensure options is an array
             if (!Array.isArray(options)) {
               console.error("Options is not an array:", options);
-              options = [];
+              options = []; // Reset to an empty array if the check fails
             }
-            
+
             console.log("Processed options:", options);
-            
+
             return options.map((option, index) => (
               <input
                 key={index}
@@ -294,7 +334,9 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
                 onChange={(e) => {
                   const newOptions = [...options];
                   newOptions[index] = e.target.value;
-                  updateCurrentQuestion({ questionOptions: JSON.stringify(newOptions) });
+                  updateCurrentQuestion({
+                    questionOptions: JSON.stringify(newOptions),
+                  });
                 }}
                 className="w-full p-2 border rounded mb-2"
                 placeholder={`Option ${index + 1}`}
@@ -302,7 +344,6 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
             ));
           })()}
         </div>
-
         <div className="mb-4">
           <label className="block mb-2">Answer Notes</label>
           <textarea
@@ -314,7 +355,6 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
             rows={4}
           />
         </div>
-
         <div className="mb-4">
           <label className="block mb-2">Context</label>
           <textarea
@@ -323,7 +363,6 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
             className="w-full p-2 border rounded"
           />
         </div>
-
         <div className="mb-4">
           <label className="block mb-2">Category ID</label>
           <input
@@ -335,7 +374,6 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
             className="w-full p-2 border rounded"
           />
         </div>
-
         <div className="mb-4">
           <label className="block mb-2">Content Category</label>
           <input
@@ -347,7 +385,6 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
             className="w-full p-2 border rounded"
           />
         </div>
-
         <div className="mb-4">
           <label className="block mb-2">Question ID</label>
           <input
@@ -359,21 +396,21 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
             className="w-full p-2 border rounded"
           />
         </div>
-
         <div className="mb-4">
           <label className="block mb-2">Difficulty</label>
           <input
             type="number"
             value={currentQuestion.difficulty}
             onChange={(e) =>
-              updateCurrentQuestion({ difficulty: parseInt(e.target.value, 10) || 1 })
+              updateCurrentQuestion({
+                difficulty: parseInt(e.target.value, 10) || 1,
+              })
             }
             className="w-full p-2 border rounded"
             min={1}
             max={3}
           />
         </div>
-
         <div className="mb-4">
           <button
             onClick={() => setShowPassagePreview(!showPassagePreview)}
@@ -391,7 +428,6 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({
             </div>
           )}
         </div>
-
         <div className="mt-6 flex justify-between">
           <button onClick={onCancel} className="px-4 py-2 bg-gray-200 rounded">
             Cancel
