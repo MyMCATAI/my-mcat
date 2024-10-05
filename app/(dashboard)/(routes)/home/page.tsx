@@ -41,6 +41,7 @@ const Page = () => {
   const [error, setError] = useState<string | null>(null);
   const scrollPosition = 130;
   const [tests, setTests] = useState<Test[]>([]);
+  const [testsCompletedToday, setTestsCompletedToday] = useState(0);
   const [showScorePopup, setShowScorePopup] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
@@ -202,7 +203,9 @@ const Page = () => {
       if (!response.ok) throw new Error("Failed to fetch tests");
 
       const data = await response.json();
+
       setTests(data.tests);
+      setTestsCompletedToday(data.testsCompletedToday);
     } catch (error) {
       console.error("Error fetching tests:", error);
       setError(
@@ -354,7 +357,9 @@ const Page = () => {
         content = "";
         break;
       case "test":
-        content = <TestingSuit tests={tests} />;
+        content = (
+          <TestingSuit tests={tests} testsCompletedToday={testsCompletedToday} />
+        );
         break;
       case "flashcards":
         content = <FlashcardDeck />;

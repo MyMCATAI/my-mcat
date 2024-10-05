@@ -2,8 +2,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
-import page from "@/app/(landing)/page";
 import { Test } from "@/types";
+import { startOfDay, endOfDay } from 'date-fns';
 
 type ConceptCategory = {
   name: string;
@@ -150,7 +150,7 @@ async function getOrderedTests(
   const [userTests, userResponses] = await Promise.all([
     prisma.userTest.findMany({
       where: { userId },
-      select: { testId: true, passageId: true },
+      select: { testId: true, passageId: true, finishedAt: true },
     }),
     //Fetch user responses
     prisma.userResponse.findMany({
@@ -160,7 +160,9 @@ async function getOrderedTests(
       take: 25,
     }),
   ]);
-  const takenTestIds = new Set(userTests.map((test: any) => test.testId));
+  const takenTestIds = new Set(userTests
+    .filter((test: any) => test.finishedAt !== null)
+    .map((test: any) => test.testId));
   console.log(`User has taken ${takenTestIds.size} tests`);
 
   const recentlyTakenPassageIds = new Set(
@@ -366,17 +368,24 @@ export async function GET(req: Request) {
     const isDiagnostic = searchParams.get("diagnostic") === "true";
     const CARSonly = searchParams.get("CARSonly") === "true";
 
-    // console.log("Request parameters:", {
-    //   page,
-    //   pageSize,
-    //   testId,
-    //   isDiagnostic,
-    //   CARSonly,
-    // });
+    // Get the number of tests completed today
+    const today = new Date();
+    const testsCompletedToday = await prisma.userTest.count({
+      where: {
+        userId: userId,
+        finishedAt: {
+          gte: startOfDay(today),
+          lte: endOfDay(today),
+        },
+      },
+    });
 
     if (isDiagnostic) {
       return new NextResponse(
-        JSON.stringify({ testId: "clzikfkwt0000b3k9qtcfz7ko" }),
+        JSON.stringify({ 
+          testId: "clzikfkwt0000b3k9qtcfz7ko",
+          testsCompletedToday 
+        }),
         {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -414,7 +423,7 @@ export async function GET(req: Request) {
       }
 
       console.log(`Returning test with id: ${testId}`);
-      return new NextResponse(JSON.stringify(test), {
+      return new NextResponse(JSON.stringify({ test, testsCompletedToday }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
@@ -422,8 +431,7 @@ export async function GET(req: Request) {
       console.log("Calling getOrderedTests");
       const testsData = await getOrderedTests(userId, page, pageSize, CARSonly);
 
-      // console.log("Tests data:", JSON.stringify(testsData, null, 2));
-      return new NextResponse(JSON.stringify(testsData), {
+      return new NextResponse(JSON.stringify({ ...testsData, testsCompletedToday }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });

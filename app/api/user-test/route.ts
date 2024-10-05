@@ -18,19 +18,21 @@ export async function GET(req: NextRequest) {
     const userTests = await prisma.userTest.findMany({
       where: {
         userId,
-        responses: {
-          some: {}, // This ensures that only userTests with attached responses are returned
-        },
+        finishedAt: { not: null }, // This ensures only completed tests are returned
       },
       include: {
         test: {
           select: {
             title: true,
             description: true,
-            questions: true,
           },
         },
-        responses: true, // Include responses to check if they exist
+        responses: {
+          select: {
+            id: true,
+            isReviewed: true,
+          },
+        },
       },
       orderBy: { startedAt: "desc" },
       skip,
@@ -40,42 +42,26 @@ export async function GET(req: NextRequest) {
     const totalCount = await prisma.userTest.count({
       where: {
         userId,
-        responses: {
-          some: {},
-        },
+        finishedAt: { not: null },
       },
     });
 
-    const userTestsWithCounts = await Promise.all(
-      userTests.map(async (test) => {
-        const totalResponses = test.responses.length;
-        const totalQuestions = test.test?.questions.length || 0; // Count the number of questions
-
-        const isCompleted = totalResponses === totalQuestions; // Check if completed
-
-        const { responses, ...testWithoutResponses } = test;
-        console.log(
-          `Test ID: ${test.id}, Total Responses: ${totalResponses}, Total Questions: ${totalQuestions}, Is Completed: ${isCompleted}`
-        );
-
-        return {
-          ...testWithoutResponses,
-          isCompleted, // Add isCompleted property
-          totalResponses,
-          reviewedResponses: test.responses.filter(
-            (response) => response.isReviewed
-          ).length,
-          totalQuestions, // Add totalQuestions property
-        };
-      })
-    );
-
-    const completedTests = userTestsWithCounts.filter(
-      (test) => test.isCompleted
-    );
+    const userTestsWithCounts = userTests.map((test) => ({
+      id: test.id,
+      userId: test.userId,
+      testId: test.testId,
+      passageId: test.passageId,
+      startedAt: test.startedAt,
+      finishedAt: test.finishedAt,
+      score: test.score,
+      test: test.test,
+      totalResponses: test.responses.length,
+      reviewedResponses: test.responses.filter(r => r.isReviewed).length,
+      isCompleted: true, // All tests returned are completed
+    }));
 
     return NextResponse.json({
-      userTests: completedTests,
+      userTests: userTestsWithCounts,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(totalCount / limit),

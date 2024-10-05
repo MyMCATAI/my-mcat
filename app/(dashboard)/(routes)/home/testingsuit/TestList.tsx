@@ -3,7 +3,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { Test, UserTest } from "@/types";
 import { useTheme } from "next-themes";
-import { Button } from "@/components/ui/button";
 import { handleUpdateKnowledgeProfile } from "@/components/util/apiHandlers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCw, CheckCircle } from "lucide-react";
@@ -18,25 +17,9 @@ interface TestListProps {
   items: (Test | UserTest)[];
   type: "upcoming" | "past";
   loading?: boolean;
+  testsAvailableToday?: number; // Changed to number
+  testsCompletedToday?: number;
 }
-
-const truncateTitle = (title: string | undefined, maxLength: number) => {
-  if (!title) return "";
-  if (title.length > maxLength) {
-    return `${title.substring(0, maxLength)}...`;
-  }
-  return title;
-};
-
-const getReviewProgressColor = (
-  reviewedResponses: number,
-  totalResponses: number
-) => {
-  const percentage = (reviewedResponses / totalResponses) * 100;
-  if (percentage < 50) return "text-red-500";
-  if (percentage >= 50 && percentage <= 80) return "text-yellow-500";
-  return "text-green-500";
-};
 
 const getDifficultyColor = (difficulty: number) => {
   if (difficulty < 3) return "text-green-500";
@@ -55,9 +38,11 @@ const TestList: React.FC<TestListProps> = ({
   items,
   type,
   loading = false,
+  testsAvailableToday = 2,
+  testsCompletedToday = 0,
 }) => {
   const { theme } = useTheme();
-
+  const noTestsAvailable = testsCompletedToday >= testsAvailableToday
   if (loading) {
     return (
       <div className="w-full space-y-3">
@@ -74,6 +59,11 @@ const TestList: React.FC<TestListProps> = ({
 
   return (
     <div className="w-full space-y-3">
+      {type === "upcoming" && noTestsAvailable && (
+        <div className="text-center text-sm text-gray-500 mb-4">
+          {`You've completed ${testsCompletedToday} out of ${testsAvailableToday} tests today. Check back tomorrow for more tests!`}
+        </div>
+      )}
       {items.map((item) => (
         <div key={item.id} className="w-full">
           <TooltipProvider>
@@ -85,9 +75,12 @@ const TestList: React.FC<TestListProps> = ({
                       ? `/user-test/${item.id}`
                       : `/test/testquestions?id=${item.id}`
                   }
+                  className={type === "upcoming" && noTestsAvailable ? "pointer-events-none" : ""}
                 >
                   <div
-                    className={`flex justify-between items-center bg-transparent border-2 opacity-100 rounded-[0.9375rem] px-3 py-2.5 hover:opacity-100 transition-all duration-300 group w-full h-[4rem] hover:[background-color:var(--theme-hover-color)] theme-box ${theme}`}
+                    className={`flex justify-between items-center bg-transparent border-2 opacity-100 rounded-[0.9375rem] px-3 py-2.5 hover:opacity-100 transition-all duration-300 group w-full h-[4rem] hover:[background-color:var(--theme-hover-color)] theme-box ${theme} ${
+                      type === "upcoming" && noTestsAvailable ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                     style={{
                       borderColor: "var(--theme-border-color)",
                       color: "var(--theme-text-color)",
@@ -146,21 +139,23 @@ const TestList: React.FC<TestListProps> = ({
                     <p>Score: {item.score !== null && item.score !== undefined ? `${Math.round(item.score)}%` : "N/A"}</p>
                     <p>Questions Reviewed: {item.reviewedResponses || 0}/{item.totalResponses || 0}</p>
                   </div>
+                ) : type === "upcoming" && noTestsAvailable ? (
+                  <p>{`You've reached the daily test limit of {testsAvailableToday}. Check back tomorrow!`}</p>
                 ) : (
-                  <p>Upcoming test</p>
+                  <p>Upcoming test ({testsCompletedToday + 1}/{testsAvailableToday} for today)</p>
                 )}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
       ))}
-      {type === "upcoming" && (
+      {type === "upcoming" && !noTestsAvailable && (
         <div
           className="flex items-center justify-center mt-3 text-sm cursor-pointer text-muted-foreground hover:text-primary transition-colors"
           onClick={handleUpdateKnowledgeProfile}
         >
           <RefreshCw className="w-4 h-4 mr-2" />
-          <span>Regenerate</span>
+          {/* <span>Regenerate</span> */}
         </div>
       )}
     </div>
