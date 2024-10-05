@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from "next/navigation";
 
 interface ReviewQuestionComponentProps {
   question?: Question;
@@ -44,6 +45,7 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   const [isReviewed, setIsReviewed] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [part2Test, setPart2Test] = useState<{ id: string; title: string } | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (question) {
@@ -148,26 +150,35 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
     setIsReviewFinished(true);
 
     try {
-      const response = await fetch('/api/user-info', {
-        method: 'PUT',
+      const response = await fetch('/api/user-test/review', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: 1 }),
+        body: JSON.stringify({ userTestId: userResponse.userTestId }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to add cupcake coin');
+        throw new Error('Failed to complete review');
       }
 
       const data = await response.json();
-      console.log('Cupcake coin added, new score:', data.score);
 
-      setShowRewardDialog(true);
-      const audio = new Audio('/levelup.mp3');
-      audio.play();
+      console.log('data', data);
+      console.log('Review completed, new score:', data.newScore);
+
+      if (data.alreadyReviewed) {
+        // If already reviewed, redirect to home page
+        router.push('/home');
+      } else {
+        // If not already reviewed, show reward dialog and play sound
+        setShowRewardDialog(true);
+        const audio = new Audio('/levelup.mp3');
+        audio.play();
+      }
     } catch (error) {
-      console.error('Error adding cupcake coin:', error);
-      toast.error('Failed to add cupcake coin. Please try again.');
+      console.error('Error completing review:', error);
       setIsReviewFinished(false);
+      // Redirect to home page in case of an error
+      router.push('/home');
     }
   };
 
