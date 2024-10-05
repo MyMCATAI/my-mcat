@@ -420,7 +420,7 @@ export async function GET(req: Request) {
       }
 
       console.log(`Returning test with id: ${testId}`);
-      return new NextResponse(JSON.stringify({ test }), {
+      return new NextResponse(JSON.stringify(test), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });

@@ -78,9 +78,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   const { isCmdIEnabled, toggleCmdI, addVocabWord, removeVocabWord, showVocabList, toggleVocabList, vocabList } = useContext(VocabContext);
 
-  
-  const passageStorageKey = test?.id && currentPassage?.id ? `passage-${test.id}-${currentPassage.id}` : undefined;
-
   const [shouldShowChatbot, setShouldShowChatbot] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -189,6 +186,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       if (!response.ok) {
         throw new Error('Failed to fetch test');
       }
+
       const data: Test = await response.json();
       setTest(data);
       
