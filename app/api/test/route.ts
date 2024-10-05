@@ -382,10 +382,7 @@ export async function GET(req: Request) {
 
     if (isDiagnostic) {
       return new NextResponse(
-        JSON.stringify({ 
-          testId: "clzikfkwt0000b3k9qtcfz7ko",
-          testsCompletedToday 
-        }),
+        JSON.stringify({ testId: "clzikfkwt0000b3k9qtcfz7ko" }),
         {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -423,7 +420,7 @@ export async function GET(req: Request) {
       }
 
       console.log(`Returning test with id: ${testId}`);
-      return new NextResponse(JSON.stringify({ test, testsCompletedToday }), {
+      return new NextResponse(JSON.stringify({ test }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
