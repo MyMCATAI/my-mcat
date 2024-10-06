@@ -82,6 +82,7 @@ export interface Test {
   setName?: string;
   createdAt: Date;
   updatedAt: Date;
+  difficulty: number;
   passageId?: string | null;
   questions: TestQuestion[];
   userTests?: UserTest[]; 

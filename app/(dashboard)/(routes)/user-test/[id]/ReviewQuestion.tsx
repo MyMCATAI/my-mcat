@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Question, UserResponse } from '@/types';
-import { Mail, CheckCircle } from "lucide-react";
+import { Mail, CheckCircle, ThumbsUp, ThumbsDown } from "lucide-react";
 import ChatBotInLineForReview from '@/components/chatbot/ChatBotInLineForReview';
 import { Passage } from '@/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface ReviewQuestionComponentProps {
   question?: Question;
@@ -46,6 +48,9 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [part2Test, setPart2Test] = useState<{ id: string; title: string } | null>(null);
   const router = useRouter();
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [feedbackType, setFeedbackType] = useState<'upvote' | 'downvote' | null>(null);
+  const [complaintCategory, setComplaintCategory] = useState<string | null>(null);
 
   useEffect(() => {
     if (question) {
@@ -122,25 +127,38 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
     }
   }, [hasViewedUserExplanation, hasViewedCorrectExplanation, userResponse, updateUserResponse]);
 
-  const handleSendMessage = async (message: string) => {
+  const handleSendMessage = async (userMessage: string) => {
     try {
+      const feedbackInfo = feedbackType === 'upvote'
+        ? `User upvoted question`
+        : `User downvoted question. Complaint category: ${complaintCategory}`;
+
+      const fullMessage = `
+Feedback Type: ${feedbackInfo}
+Question ID: ${question?.id}
+User Test ID: ${userResponse.userTestId}
+
+User Feedback:
+${userMessage}
+      `.trim();
+
       const response = await fetch('/api/send-message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message: fullMessage }),
       });
 
       if (response.ok) {
-        toast.success('Message sent successfully!');
-        setShowMessageForm(false);
+        toast.success('Feedback sent successfully!');
+        setShowFeedbackForm(false);
       } else {
-        throw new Error('Failed to send message');
+        throw new Error('Failed to send feedback');
       }
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message. Please try again.');
+      console.error('Error sending feedback:', error);
+      toast.error('Failed to send feedback. Please try again.');
     }
   };
 
@@ -258,20 +276,42 @@ Help me understand this question so I can learn.`;
         
         <div className="absolute top-4 right-4 flex space-x-2">
           <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className="p-2 rounded-full shadow-lg transition-colors duration-200 bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white"
-                onClick={() => setShowMessageForm(true)}
-                aria-label="Send Message"
-              >
-                <Mail className="w-6 h-6" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              Send us a message
-            </TooltipContent>
-          </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="p-2 rounded-full shadow-lg transition-colors duration-200 bg-gray-300 text-gray-600 hover:bg-green-500 hover:text-white"
+                  onClick={() => {
+                    setFeedbackType('upvote');
+                    setShowFeedbackForm(true);
+                  }}
+                  aria-label="Upvote Question"
+                >
+                  <ThumbsUp className="w-6 h-6" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Upvote Question
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="p-2 rounded-full shadow-lg transition-colors duration-200 bg-gray-300 text-gray-600 hover:bg-red-500 hover:text-white"
+                  onClick={() => {
+                    setFeedbackType('downvote');
+                    setShowFeedbackForm(true);
+                  }}
+                  aria-label="Downvote Question"
+                >
+                  <ThumbsDown className="w-6 h-6" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Downvote Question
+              </TooltipContent>
+            </Tooltip>
           </TooltipProvider>
         </div>
         {isReviewed && (
@@ -362,44 +402,63 @@ Help me understand this question so I can learn.`;
         </div>
       </div>
 
-      {showMessageForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-[480px] max-w-[90%]">
-            <h3 className="text-lg font-semibold mb-2 text-gray-800">Send Us a Message</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              We value your input! Please share any feedback about MyMCAT, this specific question, or any other concerns/ideas you may have.
-            </p>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const messageInput = e.currentTarget.elements.namedItem('message') as HTMLTextAreaElement;
-              handleSendMessage(messageInput.value);
-            }} className="space-y-4">
-              <textarea
-                name="message"
-                placeholder="Your feedback (e.g., platform suggestions, question clarity, technical issues)"
-                className="w-full p-2 rounded resize-none border text-gray-800"
-                required
-                rows={6}
-              />
-              <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setShowMessageForm(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Send Feedback
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <Dialog open={showFeedbackForm} onOpenChange={setShowFeedbackForm}>
+        <DialogContent className="sm:max-w-md" closeButtonClassName="text-black hover:text-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-center text-black">
+              {feedbackType === 'upvote' ? 'What did you like?' : 'What can we improve?'}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const messageInput = e.currentTarget.elements.namedItem('message') as HTMLTextAreaElement;
+            handleSendMessage(messageInput.value);
+          }} className="space-y-4">
+            {feedbackType === 'downvote' && (
+              <RadioGroup onValueChange={setComplaintCategory} className="flex flex-col space-y-2">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="answer_wrong" id="answer_wrong" />
+                  <Label htmlFor="answer_wrong" className="text-gray-800">Answer wrong</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="question_unfair" id="question_unfair" />
+                  <Label htmlFor="question_unfair" className="text-gray-800">Question unfair</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="hint_not_working" id="hint_not_working" />
+                  <Label htmlFor="hint_not_working" className="text-gray-800">Hint not working</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="other" id="other" />
+                  <Label htmlFor="other" className="text-gray-800">Other</Label>
+                </div>
+              </RadioGroup>
+            )}
+            <textarea
+              name="message"
+              placeholder="Your feedback"
+              className="w-full p-2 rounded resize-none border text-gray-800"
+              required
+              rows={6}
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                onClick={() => setShowFeedbackForm(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Send Feedback
+              </button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showRewardDialog} onOpenChange={setShowRewardDialog}>
         <DialogContent className="sm:max-w-md" closeButtonClassName="text-black hover:text-gray-700">
