@@ -321,7 +321,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                       }
                     >
                       {tests && tests.length > 0
-                        ? tests[0].title
+                        ? tests[0].title + " - Lvl " + tests[0].difficulty
                         : "Loading first test..."}
                     </span>
                   </Link>
