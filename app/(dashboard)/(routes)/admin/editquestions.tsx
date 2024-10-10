@@ -67,19 +67,8 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({ passageId }) => {
           console.error("Error processing question options:", error);
           processedOptions = [];
         }
-
-        let questionContent;
-        try {
-          questionContent = JSON.parse(q.questionContent)
-            .blocks.map((block: any) => block.text)
-            .join("\n");
-        } catch (error) {
-          console.error("Error parsing question content:", error);
-          questionContent = q.questionContent; // Fallback to raw content if parsing fails
-        }
-
-        return {
-          ...q,
+        return { 
+          ...q, 
           questionOptions: processedOptions,
           questionContent,
         };
@@ -273,60 +262,45 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({ passageId }) => {
             ? question.questionContent
             : JSON.stringify(question.questionContent); // Convert to JSON string if it's an object
 
-        const questionToSave = {
-          ...question,
-          questionContent: questionContent, // Ensure it's a string
-        };
+      const questionToSave = {
+        ...currentQuestion,
+        questionOptions: Array.isArray(currentQuestion.questionOptions)
+          ? currentQuestion.questionOptions
+          : typeof currentQuestion.questionOptions === "string"
+          ? JSON.parse(currentQuestion.questionOptions)
+          : [],
+      };
 
-        const requestBody = {
-          id: questionToSave.id || undefined, // Generate a new ID if not present
-          questionID: questionToSave.questionID || `Q${questions.length + 1}`, // Generate a new ID if not present
-          questionContent: questionToSave.questionContent,
-          questionOptions: questionToSave.questionOptions, // Ensure this is an array
-          contentCategory: questionToSave.contentCategory,
-          categoryId: questionToSave.categoryId,
-          questionAnswerNotes: questionToSave.questionAnswerNotes,
-          context: questionToSave.context,
-          difficulty: questionToSave.difficulty,
-        };
+      console.log("Prepared question for saving:", questionToSave);
 
-        // Check if this is a new question or an update
-        const response = questionToSave.id
-          ? await fetch(`/api/question`, {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(requestBody),
-            })
-          : await fetch(`/api/question`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(requestBody),
-            });
-
-        if (!response.ok) {
-          const errorData = await response.json(); // Get the error response
-          console.error("Error response:", errorData); // Log the error response
-          throw new Error(
-            `Failed to save question: ${errorData.error || response.statusText}`
-          );
-        }
-
-        return await response.json(); // Return the updated question
+      const response = await fetch(`/api/question`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(questionToSave),
       });
 
-      // Wait for all save operations to complete
-      const updatedQuestions = await Promise.all(savePromises);
-      console.log("All questions saved successfully:", updatedQuestions);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          `Failed to save question: ${response.statusText}. ${JSON.stringify(
+            errorData
+          )}`
+        );
+      }
 
-      // Update the questions state with the saved questions
-      setQuestions(updatedQuestions);
+      const updatedQuestion = await response.json();
+      console.log("Question saved successfully:", updatedQuestion);
 
-      alert("All questions saved successfully!");
-      onCancel();
+      // Update the questions array with the saved question
+      setQuestions(prevQuestions => {
+        const newQuestions = [...prevQuestions];
+        newQuestions[currentQuestionIndex] = updatedQuestion;
+        return newQuestions;
+      });
+
+      alert("Question saved successfully!");
     } catch (error) {
       console.error("Error saving question:", error);
       setError(`Failed to save question. ${error}`);
