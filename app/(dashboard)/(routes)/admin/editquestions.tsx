@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Question } from "@/types";
 import { useRouter } from "next/navigation";
+import { v4 as uuidv4 } from "uuid";
 
 interface Passage {
   id: string;
@@ -66,9 +67,21 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({ passageId }) => {
           console.error("Error processing question options:", error);
           processedOptions = [];
         }
+
+        let questionContent;
+        try {
+          questionContent = JSON.parse(q.questionContent)
+            .blocks.map((block: any) => block.text)
+            .join("\n");
+        } catch (error) {
+          console.error("Error parsing question content:", error);
+          questionContent = q.questionContent; // Fallback to raw content if parsing fails
+        }
+
         return {
           ...q,
           questionOptions: processedOptions,
+          questionContent,
         };
       });
       console.log("Processed questions:", processedQuestions); // Log processed questions
@@ -84,79 +97,235 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({ passageId }) => {
     }
   };
 
+  // try {
+  //   setIsLoading(true);
+  //   setError(null);
+  //   // const currentQuestion = questions[currentQuestionIndex];
+  //   // Ensure the current question is updated before saving
+  //   updateCurrentQuestion(currentQuestion); // Ensure current question is updated
+
+  //   // Get the latest current question after update
+  //   const currentQuestionToSave = questions[currentQuestionIndex];
+  //   console.log(
+  //     "Attempting to save current question:",
+  //     currentQuestionToSave
+  //   );
+  //   console.log("Sending ID:", currentQuestionToSave.id);
+
+  //   // console.log("Attempting to save current question:", currentQuestion);
+  //   // console.log("Sending ID:", currentQuestion.id);
+
+  //   // // Ensure questionContent is a valid JSON string
+  //   // const questionContent =
+  //   //   typeof currentQuestion.questionContent === "string"
+  //   //     ? currentQuestion.questionContent
+  //   //     : JSON.stringify(currentQuestion.questionContent); // Convert to JSON string if it's an object
+
+  //   // const questionToSave = {
+  //   //   ...currentQuestion,
+  //   //   questionOptions: currentQuestion.questionOptions, // Ensure this is an array
+  //   //   questionContent: questionContent, // Ensure it's a string
+  //   // };
+
+  //   // Ensure questionContent is a valid JSON string
+  //   const questionContent =
+  //     typeof currentQuestionToSave.questionContent === "string"
+  //       ? currentQuestionToSave.questionContent
+  //       : JSON.stringify(currentQuestionToSave.questionContent); // Convert to JSON string if it's an object
+
+  //   const questionToSave = {
+  //     ...currentQuestionToSave,
+  //     questionOptions: currentQuestionToSave.questionOptions, // Ensure this is an array
+  //     questionContent: questionContent, // Ensure it's a string
+  //   };
+
+  //   // const requestBody = {
+  //   //   // id: questionToSave.id,
+  //   //   id: currentQuestion.id, // Ensure this is included
+  //   //   questionID: currentQuestion.questionID || `Q${questions.length + 1}`, // Generate a new ID if not present
+  //   //   questionContent: questionToSave.questionContent,
+  //   //   questionOptions: questionToSave.questionOptions, // Ensure this is an array
+  //   //   contentCategory: questionToSave.contentCategory,
+  //   //   categoryId: questionToSave.categoryId,
+  //   //   questionAnswerNotes: questionToSave.questionAnswerNotes,
+  //   //   context: questionToSave.context,
+  //   //   difficulty: questionToSave.difficulty,
+  //   // };
+
+  //   const requestBody = {
+  //     id: questionToSave.id, // Ensure this is included
+  //     questionID: questionToSave.questionID || `Q${questions.length + 1}`, // Generate a new ID if not present
+  //     questionContent: questionToSave.questionContent,
+  //     questionOptions: questionToSave.questionOptions, // Ensure this is an array
+  //     contentCategory: questionToSave.contentCategory,
+  //     categoryId: questionToSave.categoryId,
+  //     questionAnswerNotes: questionToSave.questionAnswerNotes,
+  //     context: questionToSave.context,
+  //     difficulty: questionToSave.difficulty,
+  //   };
+
+  //   // console.log(
+  //   //   "Sending request body:",
+  //   //   JSON.stringify(requestBody, null, 2)
+  //   // ); // Log the request body
+
+  //   // if (!response.ok) {
+  //   //   const errorData = await response.json().catch(() => ({}));
+  //   //   throw new Error(
+  //   //     `Failed to save question: ${response.statusText}. ${JSON.stringify(
+  //   //       errorData
+  //   //     )}`
+  //   //   );
+  //   // }
+
+  //   // Check if this is a new question or an update
+  //   // const response = currentQuestion.id
+  //   //   ? await fetch(`/api/question`, {
+  //   //       method: "PUT",
+  //   //       headers: {
+  //   //         "Content-Type": "application/json",
+  //   //       },
+  //   //       body: JSON.stringify(requestBody),
+  //   //     })
+  //   //   : await fetch(`/api/question`, {
+  //   //       method: "POST",
+  //   //       headers: {
+  //   //         "Content-Type": "application/json",
+  //   //       },
+  //   //       body: JSON.stringify(requestBody),
+  //   //     });
+
+  //   // Check if this is a new question or an update
+  //   const response = questionToSave.id
+  //     ? await fetch(`/api/question`, {
+  //         method: "PUT",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(requestBody),
+  //       })
+  //     : await fetch(`/api/question`, {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(requestBody),
+  //       });
+
+  //   // const response = await fetch(`/api/question`, {
+  //   //   method: "PUT",
+  //   //   headers: {
+  //   //     "Content-Type": "application/json",
+  //   //   },
+  //   //   body: JSON.stringify(requestBody),
+  //   // });
+
+  //   if (!response.ok) {
+  //     const errorData = await response.json(); // Get the error response
+  //     console.error("Error response:", errorData); // Log the error response
+  //     throw new Error(
+  //       `Failed to save question: ${errorData.error || response.statusText}`
+  //     );
+  //   }
+
+  //   const updatedQuestion = await response.json();
+  //   console.log("Question saved successfully:", updatedQuestion);
+
+  //   // Update the questions array with the saved question
+  //   // setQuestions((prevQuestions) => {
+  //   //   const newQuestions = [...prevQuestions];
+  //   //   if (currentQuestion.id) {
+  //   //     newQuestions[currentQuestionIndex] = updatedQuestion; // Update existing question
+  //   //   } else {
+  //   //     newQuestions.push(updatedQuestion); // Add new question
+  //   //   }
+  //   //   return newQuestions;
+  //   // });
+
+  //   setQuestions((prevQuestions) => {
+  //     const newQuestions = [...prevQuestions];
+  //     if (currentQuestionToSave.id) {
+  //       newQuestions[currentQuestionIndex] = updatedQuestion; // Update existing question
+  //     } else {
+  //       newQuestions.push(updatedQuestion); // Add new question
+  //     }
+  //     return newQuestions;
+  //   });
+
+  //   // console.log(
+  //   //   "Type of questionOptions:",
+  //   //   typeof currentQuestion.questionOptions
+  //   // );
+
+  //   alert("Question saved successfully!");
+  //   onCancel();
+
   const onSave = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const currentQuestion = questions[currentQuestionIndex];
-      console.log("Attempting to save current question:", currentQuestion);
 
-      const questionToSave = {
-        ...currentQuestion,
-        questionOptions: currentQuestion.questionOptions, // Ensure this is an array
-        questionContent: JSON.stringify(currentQuestion.questionContent), // Ensure it's a string
-      };
+      // Create an array to hold promises for saving each question
+      const savePromises = questions.map(async (question, index) => {
+        // Ensure questionContent is a valid JSON string
+        const questionContent =
+          typeof question.questionContent === "string"
+            ? question.questionContent
+            : JSON.stringify(question.questionContent); // Convert to JSON string if it's an object
 
-      const requestBody = {
-        id: questionToSave.id,
-        questionContent: questionToSave.questionContent,
-        questionOptions: questionToSave.questionOptions, // Ensure this is an array
-        contentCategory: questionToSave.contentCategory,
-        categoryId: questionToSave.categoryId,
-        questionAnswerNotes: questionToSave.questionAnswerNotes,
-        context: questionToSave.context,
-        difficulty: questionToSave.difficulty,
-      };
+        const questionToSave = {
+          ...question,
+          questionContent: questionContent, // Ensure it's a string
+        };
 
-      // if (!response.ok) {
-      //   const errorData = await response.json().catch(() => ({}));
-      //   throw new Error(
-      //     `Failed to save question: ${response.statusText}. ${JSON.stringify(
-      //       errorData
-      //     )}`
-      //   );
-      // }
+        const requestBody = {
+          id: questionToSave.id || undefined, // Generate a new ID if not present
+          questionID: questionToSave.questionID || `Q${questions.length + 1}`, // Generate a new ID if not present
+          questionContent: questionToSave.questionContent,
+          questionOptions: questionToSave.questionOptions, // Ensure this is an array
+          contentCategory: questionToSave.contentCategory,
+          categoryId: questionToSave.categoryId,
+          questionAnswerNotes: questionToSave.questionAnswerNotes,
+          context: questionToSave.context,
+          difficulty: questionToSave.difficulty,
+        };
 
-      // Check if this is a new question or an update
-      const response = currentQuestion.id
-        ? await fetch(`/api/question`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(requestBody),
-          })
-        : await fetch(`/api/question`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(requestBody),
-          });
+        // Check if this is a new question or an update
+        const response = questionToSave.id
+          ? await fetch(`/api/question`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(requestBody),
+            })
+          : await fetch(`/api/question`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(requestBody),
+            });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to save question: ${response.statusText} - ${errorText}`
-        );
-      }
+        if (!response.ok) {
+          const errorData = await response.json(); // Get the error response
+          console.error("Error response:", errorData); // Log the error response
+          throw new Error(
+            `Failed to save question: ${errorData.error || response.statusText}`
+          );
+        }
 
-      const updatedQuestion = await response.json();
-      console.log("Question saved successfully:", updatedQuestion);
-
-      // Update the questions array with the saved question
-      setQuestions((prevQuestions) => {
-        const newQuestions = [...prevQuestions];
-        newQuestions[currentQuestionIndex] = updatedQuestion;
-        return newQuestions;
+        return await response.json(); // Return the updated question
       });
 
-      console.log(
-        "Type of questionOptions:",
-        typeof currentQuestion.questionOptions
-      );
+      // Wait for all save operations to complete
+      const updatedQuestions = await Promise.all(savePromises);
+      console.log("All questions saved successfully:", updatedQuestions);
 
-      alert("Question saved successfully!");
+      // Update the questions state with the saved questions
+      setQuestions(updatedQuestions);
+
+      alert("All questions saved successfully!");
       onCancel();
     } catch (error) {
       console.error("Error saving question:", error);
@@ -235,7 +404,7 @@ const EditQuestions: React.FC<EditQuestionsProps> = ({ passageId }) => {
 
   const handleQuestionSwitch = (index: number) => {
     // Save current question changes before switching
-    updateCurrentQuestion(currentQuestion);
+    updateCurrentQuestion(currentQuestion); // Ensure current question is updated
     setCurrentQuestionIndex(index);
   };
 

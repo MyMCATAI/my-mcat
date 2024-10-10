@@ -91,6 +91,63 @@ const NewPassagePage: React.FC<NewPassagePageProps> = ({ onCancel }) => {
 
       const result = await response.json();
       console.log("Passage and questions saved:", result);
+
+      // Create tests for the passage
+      const passageId = result.id; // Assuming the response contains the passage ID
+      const firstFiveQuestions = savedQuestions.slice(0, 5);
+      const secondFiveQuestions = savedQuestions.slice(5, 10);
+
+      // Create the first test
+      const test1Response = await fetch("/api/test", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: "Test 1",
+          passageId,
+          questions: firstFiveQuestions.map((q: any) => ({
+            questionId: q.questionID,
+            sequence: 1, // Adjust as needed
+          })),
+        }),
+      });
+
+      if (!test1Response.ok) {
+        const errorData = await test1Response.json();
+        throw new Error(
+          `Failed to create Test 1: ${
+            errorData.error || test1Response.statusText
+          }`
+        );
+      }
+
+      // Create the second test
+      const test2Response = await fetch("/api/test", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: "Test 2",
+          passageId,
+          questions: secondFiveQuestions.map((q: any) => ({
+            questionId: q.questionID,
+            sequence: 1, // Adjust as needed
+          })),
+        }),
+      });
+
+      if (!test2Response.ok) {
+        const errorData = await test2Response.json();
+        throw new Error(
+          `Failed to create Test 2: ${
+            errorData.error || test2Response.statusText
+          }`
+        );
+      }
+
+      console.log("Tests created successfully.");
       onCancel();
     } catch (error) {
       console.error("Error saving passage:", error);

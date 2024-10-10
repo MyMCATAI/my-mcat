@@ -36,7 +36,18 @@ const EditPassage: React.FC<EditPassagePageProps> = ({ id }) => {
       const data = await response.json();
       setTitle(data.title);
       setCitation(data.citation);
-      setContent(data.text);
+
+      // Parse the content from JSON string to object
+      try {
+        const parsedContent = JSON.parse(data.text);
+        setContent(
+          parsedContent.blocks.map((block: any) => block.text).join("\n")
+        ); // Join all text blocks
+      } catch (error) {
+        console.error("Error parsing passage text:", error);
+        setContent(data.text); // Fallback to raw text if parsing fails
+      }
+
       setDifficulty(data.difficulty.toString());
       setQuestions(data.questions || []);
       setIsLoading(false);
