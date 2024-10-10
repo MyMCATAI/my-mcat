@@ -28,7 +28,7 @@ export default function MobileRedirect() {
 
   useEffect(() => {
     if (isMobileButNotIpad() && pathname !== '/' && pathname !== '/intro') {
-      router.replace('/')  // Redirect to the landing page
+      router.replace('/redirect')  // Redirect to the /redirect page
     }
   }, [pathname, router])
 
