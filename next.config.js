@@ -31,6 +31,9 @@ const nextConfig = {
       },
     ];
   },
+  env: {
+    EUTILS_API_KEY: process.env.EUTILS_API_KEY,
+  },
 };
 
 module.exports = nextConfig;
