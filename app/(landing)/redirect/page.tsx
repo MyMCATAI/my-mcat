@@ -70,13 +70,13 @@ const RedirectPage = () => {
 
       <style jsx global>{`
         .Typewriter__wrapper {
-          font-size: 1.0rem;
+          font-size: 1.5rem;
           font-weight: bold;
           color: white;
         }
         @media (min-width: 768px) {
           .Typewriter__wrapper {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
           }
         }
         @keyframes fadeIn {
