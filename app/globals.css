@@ -294,7 +294,7 @@ body.theme-sunsetCity * {
 /* Add theme-specific gradients */
 .theme-sakuraTrees .gradientbg {
   background: rgba(255, 223, 236, 0.9);
-  background: linear-gradient(0deg, #f78dbcf5 0%, #ffc9fccd 100%);
+  background: linear-gradient(0deg, #fed6ee 0%, #fed6ee 100%);
 }
 
 /* Sunset City theme */
