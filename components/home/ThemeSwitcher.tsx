@@ -8,7 +8,7 @@ const ThemeSwitcher = () => {
   };
 
   return (
-    <div className='flex justify-center items-center space-x-4 bg-transparent z-50 relative h-6'>
+    <div className='flex space-x-2'>
       <button 
         className={`w-6 h-6 rounded-full text-white flex items-center justify-center
           ${theme === 'cyberSpace' ? 'ring-1 ring-blue-400' : 'opacity-75 hover:opacity-100'}`}
