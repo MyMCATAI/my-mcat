@@ -325,12 +325,13 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     return () => clearInterval(animationInterval);
   }, [moveSprite]);
 
-  // New function to get accent color
+  // Updated getAccentColor function
   const getAccentColor = useCallback(() => {
     const themeElement =
       document.querySelector('.theme-sunsetCity') ||
       document.querySelector('.theme-sakuraTrees') ||
       document.querySelector('.theme-cyberSpace') ||
+      document.querySelector('.theme-mykonosBlue') ||
       document.documentElement;
     const computedStyle = getComputedStyle(themeElement!);
     const accentColor = computedStyle.getPropertyValue('--theme-doctorsoffice-accent').trim();

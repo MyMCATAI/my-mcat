@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
-type Theme = 'cyberSpace' | 'sakuraTrees' | 'sunsetCity';
+type Theme = 'cyberSpace' | 'sakuraTrees' | 'sunsetCity' | 'mykonosBlue';
 
 interface ThemeContextType {
   theme: Theme;
@@ -19,7 +19,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as Theme | null;
-    if (savedTheme && ['cyberSpace', 'sakuraTrees', 'sunsetCity'].includes(savedTheme)) {
+    if (savedTheme && ['cyberSpace', 'sakuraTrees', 'sunsetCity', 'mykonosBlue'].includes(savedTheme)) {
       setTheme(savedTheme);
     }
   }, []);
