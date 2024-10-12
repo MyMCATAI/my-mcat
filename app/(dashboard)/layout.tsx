@@ -34,12 +34,18 @@ const DashboardLayoutContent = ({
     checkProStatus();
 
     const updateBackgroundImage = () => {
-      if (theme === 'sakuraTrees') {
-        setBackgroundImage('url(/sakuratreesbackground.png)');
-      } else if (theme === 'sunsetCity') {
-        setBackgroundImage('url(/sunsetcitybackground.png)');
-      } else {
-        setBackgroundImage('url(/vaporandnightbackground.png)');
+      switch (theme) {
+        case 'sakuraTrees':
+          setBackgroundImage('url(/sakuratreesbackground.png)');
+          break;
+        case 'sunsetCity':
+          setBackgroundImage('url(/sunsetcitybackground.png)');
+          break;
+        case 'mykonosBlue':
+          setBackgroundImage('url(/mykonosbluebackground.png)');
+          break;
+        default:
+          setBackgroundImage('url(/vaporandnightbackground.png)');
       }
     };
 
@@ -50,7 +56,6 @@ const DashboardLayoutContent = ({
   }, [theme]);
 
   const subscription = isPro ? "pro" : "free";
-
 
   return ( 
     <div 
