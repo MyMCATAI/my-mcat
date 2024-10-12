@@ -195,7 +195,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
                     top: labelPosition.top,
                     left: labelPosition.left,
                     transform: 'translate(-50%, -50%)',
-                    zIndex: 60, // Ensure labels appear above other elements
+                    zIndex: 60,
                   }}
                 >
                   {hoveredButton === pos.tab && !isActive && (
@@ -203,13 +203,13 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
                       className="bg-transparent text-white text-2xl px-2 py-1 rounded overflow-hidden"
                       style={{
                         display: 'inline-block',
-                        width: '150px', // Fixed width
-                        textAlign: 'left', // Align text to the left
+                        width: '150px',
+                        textAlign: 'left',
                         whiteSpace: 'nowrap',
                         overflow: 'visible',
                       }}
                     >
-                      <Typewriter text={labelText} delay={1200} />
+                      <Typewriter text={labelText} delay={200} /> {/* Changed delay to 200ms */}
                     </span>
                   )}
                 </span>
