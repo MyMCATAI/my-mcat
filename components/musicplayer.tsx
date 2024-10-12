@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FaPlay, FaPause, FaForward, FaVolumeUp } from 'react-icons/fa';
 
 interface Song {
@@ -12,18 +12,32 @@ const playlists: Record<string, Song[]> = {
     { title: "CS1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace2.mp3" },
     { title: "CS2", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace1.mp3" },
     { title: "CS3", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace3.mp3" },
+    { title: "CS5", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace_5.mp3" },
+    { title: "CS6", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/CyberSpace+6.mp3" },
+
   ],
   sakuraTrees: [
     { title: "ST1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees1.mp3" },
     { title: "ST2", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees2.mp3" },
     { title: "ST3", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees3.mp3" },
     { title: "ST4", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees4.mp3" },
+    { title: "ST5", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SakuraTrees5.mp3" },
+    { title: "ST7", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SakuraTrees7.mp3" },
   ],
   sunsetCity: [
     { title: "SC1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity1.mp3" },
     { title: "SC2", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity2.mp3" },
     { title: "SC4", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity4.mp3" },
     { title: "SC3", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity3.mp3" },
+    { title: "SC5", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SunsetCity5.mp3" },
+    { title: "SC6", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SunsetCity6.mp3" },
+  ],
+  mykonosBlue: [
+    { title: "MB1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue1.mp3" },
+    { title: "MB2", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue2.mp3" },
+    { title: "MB3", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue3.mp3" },
+    { title: "MB4", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue4.mp3" },
+    { title: "MB5", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue5.mp3" },
   ],
 };
 
@@ -33,8 +47,20 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
   const [volume, setVolume] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [shuffledPlaylist, setShuffledPlaylist] = useState<Song[]>([]);
 
   const playlist = playlists[theme] || [];
+
+  const shufflePlaylist = useCallback(() => {
+    const shuffled = [...playlist].sort(() => Math.random() - 0.5);
+    setShuffledPlaylist(shuffled);
+    setCurrentSongIndex(0);
+  }, [playlist]);
+
+  useEffect(() => {
+    shufflePlaylist();
+    setIsPlaying(false); // Stop playback when theme changes
+  }, [theme, shufflePlaylist]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -48,24 +74,34 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
       audioRef.current.pause();
       audioRef.current.load();
       if (isPlaying) {
-        audioRef.current.play().catch(handlePlayError);
+        audioRef.current.play().catch((error) => {
+          console.error("Error playing audio:", error);
+          setIsPlaying(false);
+          setError("Unable to play audio. Please try again.");
+        });
       }
     }
-  }, [currentSongIndex, theme]);
+  }, [currentSongIndex, shuffledPlaylist, isPlaying]);
 
   const togglePlayPause = () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play().catch(handlePlayError);
+        if (shuffledPlaylist.length === 0) {
+          shufflePlaylist();
+        }
+        audioRef.current.play().catch(() => {
+          // Silently handle the error without setting an error message
+          setIsPlaying(false);
+        });
       }
       setIsPlaying(!isPlaying);
     }
   };
 
   const playNextSong = () => {
-    setCurrentSongIndex((prevIndex) => (prevIndex + 1) % playlist.length);
+    setCurrentSongIndex((prevIndex) => (prevIndex + 1) % shuffledPlaylist.length);
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,14 +119,14 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
     <div className="flex items-center space-x-2">
       <audio
         ref={audioRef}
-        src={playlist[currentSongIndex]?.url}
+        src={shuffledPlaylist[currentSongIndex]?.url}
         onEnded={playNextSong}
         onError={() => {
           setError("Error loading audio. Please try another song.");
           setIsPlaying(false);
         }}
       />
-      <button onClick={togglePlayPause} disabled={!!error}>
+      <button onClick={togglePlayPause}>
         {isPlaying ? <FaPause /> : <FaPlay />}
       </button>
       <button onClick={playNextSong}><FaForward /></button>
