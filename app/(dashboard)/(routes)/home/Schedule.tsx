@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { isSameDay, isToday, isTomorrow } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import SettingContent from "./SettingContent";
@@ -14,10 +14,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { InterludeAction } from "@/components/home/InterludeAction";
 import { Bar, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Legend } from 'chart.js';
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from 'next/navigation';
+import { CheckCircle } from 'lucide-react'; // Add this import
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -39,6 +40,12 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
   const [expandedGraph, setExpandedGraph] = useState<string | null>(null);
   const [showGraphs, setShowGraphs] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(true);
+  const [showRewardDialog, setShowRewardDialog] = useState(false);
+  const [rewardSection, setRewardSection] = useState('');
+  const [userCoinCount, setUserCoinCount] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const fanfareRef = useRef<HTMLAudioElement>(null);
+  const [completedSections, setCompletedSections] = useState<string[]>([]);
 
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
@@ -72,6 +79,81 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
         tension: 0.1,
       },
     ],
+  };
+
+  const [checklists, setChecklists] = useState({
+    AdaptiveTutoringSuite: [
+      { id: 1, text: "Complete daily adaptive quiz", checked: false },
+      { id: 2, text: "Review personalized study plan", checked: false },
+      { id: 3, text: "Schedule tutoring session", checked: false },
+    ],
+    MCATGameAnkiClinic: [
+      { id: 1, text: "Play MCAT Game for 30 minutes", checked: false },
+      { id: 2, text: "Review Anki flashcards", checked: false },
+      { id: 3, text: "Create new Anki cards", checked: false },
+    ],
+    DailyCARsSuite: [
+      { id: 1, text: "Complete daily CARS passage", checked: false },
+      { id: 2, text: "Review CARS strategies", checked: false },
+      { id: 3, text: "Practice timing for CARS", checked: false },
+    ],
+  });
+
+  const buttonLabels = {
+    AdaptiveTutoringSuite: "Tutoring Suite",
+    MCATGameAnkiClinic: "The Anki Clinic",
+    DailyCARsSuite: "Daily CARs Suite",
+  };
+
+  const handleCheckboxChange = async (section: string, id: number) => {
+    setChecklists(prevChecklists => {
+      const updatedSection = prevChecklists[section].map(item =>
+        item.id === id ? { ...item, checked: !item.checked } : item
+      );
+      
+      const allChecked = updatedSection.every(item => item.checked);
+      if (allChecked && !prevChecklists[section].every(item => item.checked)) {
+        setShowRewardDialog(true);
+        setRewardSection(section);
+        
+        const newCompletedSections = [...completedSections, section];
+        setCompletedSections(newCompletedSections);
+        
+        // Play the appropriate sound
+        if (newCompletedSections.length === 3) {
+          if (fanfareRef.current) {
+            fanfareRef.current.play();
+          }
+        } else if (audioRef.current) {
+          audioRef.current.play();
+        }
+
+        // Update user's coin count
+        updateUserCoinCount();
+      }
+      
+      return {
+        ...prevChecklists,
+        [section]: updatedSection
+      };
+    });
+  };
+
+  const updateUserCoinCount = async () => {
+    try {
+      const response = await fetch('/api/user-info', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: 1 }),
+      });
+
+      if (response.ok) {
+        const updatedUserInfo = await response.json();
+        setUserCoinCount(updatedUserInfo.coinCount);
+      }
+    } catch (error) {
+      console.error('Error updating user coin count:', error);
+    }
   };
 
   const getActivitiesText = useMemo(() => {
@@ -191,10 +273,46 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
     setShowAnalytics(!showAnalytics);
   };
 
+  const router = useRouter();
+
+  const handleButtonClick = (section: string) => {
+    switch (section) {
+      case "DailyCARsSuite":
+        handleSetTab("test");
+        break;
+      case "MCATGameAnkiClinic":
+        router.push('/doctorsoffice');
+        break;
+      case "AdaptiveTutoringSuite":
+        handleSetTab("KnowledgeProfile");
+        break;
+      // Add more cases if needed
+      default:
+        break;
+    }
+  };
+
+  useEffect(() => {
+    // Fetch initial user coin count when component mounts
+    fetchUserCoinCount();
+  }, []);
+
+  const fetchUserCoinCount = async () => {
+    try {
+      const response = await fetch('/api/user-info');
+      if (response.ok) {
+        const data = await response.json();
+        setUserCoinCount(data.coinCount);
+      }
+    } catch (error) {
+      console.error('Error fetching user coin count:', error);
+    }
+  };
+
   return (
     <div className="flex h-full">
       {/* Left Sidebar */}
-      <div className="w-1/4 p-6 flex flex-col ml-3 mt-5 mb-5 space-y-4 rounded-[10px]"
+      <div className="w-1/4 p-6 flex flex-col ml-3 mt-5 mb-5 space-y-4 rounded-[10px] overflow-hidden"
         style={{
           backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
           backgroundSize: "cover",
@@ -205,30 +323,51 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
           boxShadow: "var(--theme-box-shadow)",
         }}
       >
-        <button
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition"
-          onClick={() => handleSetTab("AdaptiveTutoringSuite")}
-        >
-          Adaptive Tutoring Suite
-        </button>
-        <button
-          className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition"
-          onClick={() => handleSetTab("MCATGameAnkiClinic")}
-        >
-          MCAT Game: Anki Clinic
-        </button>
-        <button
-          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded transition"
-          onClick={() => handleSetTab("DailyCARsSuite")}
-        >
-          Daily CARs Suite
-        </button>
-        <button
-          onClick={handleToggleView}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition"
-        >
-          {showAnalytics ? "Go to Calendar" : "Back to Overview"}
-        </button>
+        {/* Add the large "TODAY" title */}
+        <h1 className="text-3xl font-bold text-center">TODAY</h1>
+
+        {/* Make the buttons container scrollable but hide the scrollbar */}
+        <div className="flex-grow overflow-y-auto space-y-4 pr-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <style jsx>{`
+            div::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+          {Object.entries(checklists).map(([section, items]) => (
+            <div key={section} className="mb-4 relative">
+              <button
+                className="w-full h-10 bg-[--theme-hover-color] text-[--theme-hover-text] hover:opacity-80 font-semibold shadow-md px-2 rounded transition text-sm relative"
+                onClick={() => handleButtonClick(section)}
+              >
+                {buttonLabels[section]}
+                {completedSections.includes(section) && (
+                  <div className="absolute top-1/2 right-0 transform -translate-y-1/2 -mr-2">
+                    <CheckCircle className="w-6 h-6 text-green-500 bg-white rounded-full" />
+                  </div>
+                )}
+              </button>
+              <div className="bg-[--theme-leaguecard-color] shadow-md p-3 mt-2 space-y-2">
+                {items.map(item => (
+                  <div key={item.id} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`checkbox-${section}-${item.id}`}
+                      checked={item.checked}
+                      onChange={() => handleCheckboxChange(section, item.id)}
+                      className="mr-2 h-4 w-4"
+                    />
+                    <label 
+                      htmlFor={`checkbox-${section}-${item.id}`} 
+                      className="text-sm leading-tight"
+                    >
+                      {item.text}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Right Content */}
@@ -297,13 +436,13 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
                   <div className="flex space-x-4 mb-4">
                     <button
                       onClick={() => setShowGraphs(!showGraphs)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition"
+                      className="bg-[--theme-leaguecard-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
                     >
                       &gt; progress
                     </button>
                     <button
                       onClick={handleToggleView}
-                      className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded transition"
+                      className="bg-[--theme-leaguecard-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
                     >
                       &gt; calendar
                     </button>
@@ -366,13 +505,19 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
               )}
             </>
           ) : (
-            <div className="h-full w-full">
+            <div className="h-full w-full relative">
               <InteractiveCalendar
                 currentDate={currentDate}
                 activities={activities}
                 onDateChange={setCurrentDate}
                 getActivitiesForDate={getActivitiesForDate}
               />
+              <button
+                onClick={handleToggleView}
+                className="absolute bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+              >
+                Back to Overview
+              </button>
             </div>
           )}
         </div>
@@ -471,6 +616,34 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
           </div>
         )}
       </div>
+
+      <Dialog open={showRewardDialog} onOpenChange={setShowRewardDialog}>
+        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
+          <DialogHeader className="text-center">
+            <DialogTitle className="text-center text-black">Congratulations!</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-4 space-y-2">
+            <div className="relative w-64 h-64">
+              <Image
+                src="/game-components/CupcakeCoin.gif"
+                alt="Reward"
+                layout="fill"
+                objectFit="contain"
+              />
+            </div>
+            <p className="text-center text-lg text-black">
+              You&apos;ve completed all tasks in the {buttonLabels[rewardSection]}!
+            </p>
+            <p className="text-center text-lg text-black">
+              You&apos;ve earned <span className="font-bold">1 cupcake coin</span> for your hard work!
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <audio ref={audioRef} src="/levelup.mp3" />
+      <audio ref={fanfareRef} src="/fanfare.mp3" />
     </div>
   );
 };
