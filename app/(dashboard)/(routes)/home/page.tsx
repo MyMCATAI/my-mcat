@@ -373,7 +373,8 @@ const Page = () => {
         content = null;
     }
 
-    if (!isPro && activeTab !== "test") {
+    // Only wrap non-Schedule content with MDOnlyFeaturesDialog
+    if (!isPro && activeTab !== "Schedule" && activeTab !== "test") {
       return <MDOnlyFeaturesDialog content={content} />;
     }
 
@@ -446,7 +447,7 @@ const Page = () => {
             &nbsp;
           </h2>
           <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg">
-            <KnowledgeProfileCARsONLY activities={activities} />
+            <KnowledgeProfileCARsONLY activities={activities} currentPage={activeTab} />
           </div>
         </div>
       </div>

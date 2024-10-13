@@ -15,6 +15,7 @@ import TutorialVidDialog from '../../../../components/ui/TutorialVidDialog';
 
 interface KnowledgeProfileProps {
   activities: FetchedActivity[];
+  currentPage: string;
 }
 
 interface School {
@@ -32,7 +33,7 @@ type TabContent =
 
 type VideoCategory = 'RBT' | 'RWT' | 'CMP';
 
-const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initialActivities }) => {
+const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initialActivities, currentPage }) => {
   const [activeTab, setActiveTab] = useState("tab1");
   const [schools, setSchools] = useState<School[]>([
     { name: "Pomona College", location: "Claremont, CA", rank: 1, tuition: 500, funRanking: "Cupcake Rankings" },
@@ -118,58 +119,68 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
     setIsTutorialDialogOpen(true);
   };
 
-  const renderInsights = () => (
-    <div className="h-full flex flex-col space-y-4">
-      <Card>
-        <CardContent className="p-4 relative">
-          <div className="flex items-center mb-4">
-            <FaYoutube className="text-3xl text-red-600 mr-2" />
-            <span className="font-semibold text-lg text-[--theme-text-color]">Videos from YouTube</span>
-          </div>
-          <HelpCircle 
-            className="absolute top-2 right-2 text-[--theme-border-color] hover:text-gray-200 transition-colors duration-200 cursor-pointer" 
-            size={20}
-            onClick={() => openTutorialDialog('https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/KnowledgeProfileInformation.mp4')}
-          />
-          <div className="relative aspect-video group">
-            <iframe
-              width="100%"
-              height="100%"
-              src={`https://www.youtube.com/embed/${videos[currentVideoIndex].id}`}
-              title={videos[currentVideoIndex].title}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="absolute inset-0"
-            ></iframe>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white z-10"
-              onClick={() => setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white z-10"
-              onClick={() => setCurrentVideoIndex((prev) => (prev + 1) % videos.length)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-      <Card className="flex-grow overflow-hidden">
-        <CardContent className="p-4 h-full overflow-hidden">
-          <div className="h-full overflow-auto">
-            <RedditPosts />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  const renderInsights = () => {
+    if (currentPage !== "test") {
+      return (
+        <div className="h-full flex items-center justify-center">
+          <p className="text-xl font-semibold text-[--theme-text-color]">Insert Kalypso Chat Here</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="h-full flex flex-col space-y-4">
+        <Card>
+          <CardContent className="p-4 relative">
+            <div className="flex items-center mb-4">
+              <FaYoutube className="text-3xl text-red-600 mr-2" />
+              <span className="font-semibold text-lg text-[--theme-text-color]">Videos from YouTube</span>
+            </div>
+            <HelpCircle 
+              className="absolute top-2 right-2 text-[--theme-border-color] hover:text-gray-200 transition-colors duration-200 cursor-pointer" 
+              size={20}
+              onClick={() => openTutorialDialog('https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/KnowledgeProfileInformation.mp4')}
+            />
+            <div className="relative aspect-video group">
+              <iframe
+                width="100%"
+                height="100%"
+                src={`https://www.youtube.com/embed/${videos[currentVideoIndex].id}`}
+                title={videos[currentVideoIndex].title}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0"
+              ></iframe>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white z-10"
+                onClick={() => setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white z-10"
+                onClick={() => setCurrentVideoIndex((prev) => (prev + 1) % videos.length)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="flex-grow overflow-hidden">
+          <CardContent className="p-4 h-full overflow-hidden">
+            <div className="h-full overflow-auto">
+              <RedditPosts />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   const getMascotDescription = (schoolName: string): string => {
     switch (schoolName) {
@@ -242,7 +253,6 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
     </ScrollArea>
   );
 
- 
   const renderContent = (content: TabContent) => {
     if (content.type === 'insights') {
       return renderInsights();
