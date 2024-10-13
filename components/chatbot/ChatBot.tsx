@@ -2,34 +2,78 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { useMessages } from "react-chatbotify";
 
-const ChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
+const DynamicChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
 
-interface MyChatBotProps {
+interface ChatBotProps {
   chatbotContext?: {
     contentTitle: string;
     context: string;
   };
-  isVoiceEnabled?: boolean;
   width?: string | number;
+  height?: string | number;
   backgroundColor?: string;
 }
 
-const MyChatBot: React.FC<MyChatBotProps> = ({ 
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
+
+const ChatBot: React.FC<ChatBotProps> = ({ 
   chatbotContext, 
-  isVoiceEnabled = false, 
   width = '100%',
-  backgroundColor = 'white'
+  height = '100%',
+  backgroundColor = 'transparent'
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(isVoiceEnabled);
+  const [audioEnabled, setAudioEnabled] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const context = chatbotContext?.context;
   const contentTitle = chatbotContext?.contentTitle;
+  // false: mouse down; true: mouse up
+  const [mouseState, setMouseState] = useState(true);
+  const [isPressed, setIsPressed] = useState(true);
+
+  useEffect(() => {
+    window.addEventListener('mouseup', toggleAudioMouseUp);
+
+    return () => {
+      window.removeEventListener('mouseup', toggleAudioMouseUp);
+    };
+  }, [isPressed]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'h') {
+        toggleAudioMouseDown();
+      }
+    };
+  
+    const handleKeyUp = (event) => {
+      if (event.key === 'h') {
+        toggleAudioMouseUp();
+      }
+    };
+  
+    window.addEventListener('mouseup', toggleAudioMouseUp);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+  
+    return () => {
+      window.removeEventListener('mouseup', toggleAudioMouseUp);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [isPressed]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -59,7 +103,6 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       }
 
       const data = await response.json();
-      console.log('Received response:', data);
 
       if (data.threadId) {
         setThreadId(data.threadId);
@@ -109,19 +152,25 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
     }
   };
 
-  const handleScreenshot = (blob: Blob) => {
-    console.log('Screenshot taken:', blob);
-    // Add logic here to handle the screenshot
+  const toggleAudioMouseDown = () => {
+    setIsPressed(true);
+
+    setAudioEnabled(true);
+    setMouseState(false);
   };
 
-  const toggleAudio = () => {
-    setAudioEnabled(!audioEnabled);
-  };
-	const helpOptions = ["Hint", "Vocab"];
+  const toggleAudioMouseUp = () => {
+    if (isPressed) {
+      setIsPressed(false);
+      setAudioEnabled(false);
+      setMouseState(true);
+    }
+  }
+
   const flow = {
     start: {
-      message: `Hi! I'm Kalypso the cat, your MCAT assistant. ${contentTitle ? `Looks like you're working on ${contentTitle}.` : ""} How can I help you today?`,
-     path: "loop"
+      message: `Meow there! I'm Kalypso the cat, your MCAT assistant. ${contentTitle ? `Cool ${contentTitle}.` : ""} How can I help you today?`,
+      path: "loop"
     },
     loop: {
       message: async (params: { userInput: string }) => {
@@ -138,6 +187,13 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       showHeader: true,
       showFooter: false,
     },
+    chatWindow: {
+      autoJumpToBottom: true,
+    },
+    chatInput: {
+      enabledPlaceholderText: "Chat with Kalypso",
+      color: 'var(--theme-text-color)',
+    },
     chatHistory: { storageKey: "mcat_assistant_chat_history", disabled: true},
     header: {
       showAvatar: false,
@@ -148,12 +204,18 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
             onClick={() => window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")}
           >
           </div>
-          <button 
-            onClick={toggleAudio}
-            className="px-2 py-1 text-sm bg-blue-500 text-black rounded hover:bg-blue-600 transition-colors"
-          >
-            {audioEnabled ? '🔊' : '🔇'}
-          </button>
+          <div className="flex text-[--theme-text-color] items-center">
+            <button 
+              onMouseDown={toggleAudioMouseDown}
+              className="px-2 py-1 text-xs bg-transparent hover:bg-[--theme-hover-color] transition-colors"
+              style={{ color: audioEnabled ? 'var(--theme-hover-color)' : 'var(--gray-600)' }}
+            >
+              {audioEnabled ? '🔊' : '🔇'}
+            </button>
+            <span className="text-[9px] ml-1" style={{ color: 'var(--gray-600)' }}>
+              {audioEnabled ? 'Release to stop talking' : 'Hold to talk (or press \'H\')'}
+            </span>
+          </div>
         </div>
       )
     },
@@ -161,25 +223,61 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       disabled: true,
     },
     voice: {
-      disabled: !audioEnabled,
-      defaultToggledOn: audioEnabled,
+      disabled: mouseState,
+      defaultToggledOn: true,
       language: "en-US",
       autoSendDisabled: true,
       autoSendPeriod: 1500,
       sendAsAudio: false,
       timeoutPeriod: 10000
     },
-    botBubble: { simStream: true },
+    botBubble: { 
+      simStream: true,
+      streamSpeed: audioEnabled ? 100 : 25,
+    },
   };
 
   const styles = {
     chatWindowStyle: {
+      display: 'flex',
+      flexDirection: 'column',
+      height: 'calc(100vh - 12.2rem)', // or whatever relative height you prefer
+      width: '100%',
       backgroundColor: backgroundColor,
-      inlineSize: width,
     },
-    botBubbleStyle: {fontSize: "14px", fontFamily: "Consolas, monospace", color: 'white', backgroundColor: 'var(--theme-botchatbox-color)'},
-    userBubbleStyle: {fontSize: "14px", fontFamily: "Consolas, monospace", color: 'white', backgroundColor: 'var(--theme-userchatbox-color)'},
-    headerStyle: {background: 'var(--theme-hover-color)'},
+    bodyStyle: {
+      flexGrow: 1,
+      overflowY: 'auto',
+    },
+    chatInputContainerStyle: {
+      padding: '1rem',
+      backgroundColor: 'transparent',
+      border: 'transparent',
+    },
+    chatInputAreaStyle: {
+      border: '1px solid var(--theme-border-color)',
+      borderRadius: '8px',
+      backgroundColor: 'transparent',
+      color: 'var(--theme-text-color)',
+      width: '100%',
+    },
+    botBubbleStyle: {
+      fontSize: ".9rem",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
+      color: 'var(--theme-text-color)',
+      backgroundColor: 'var(--theme-botchatbox-color)',
+    },
+    userBubbleStyle: {
+      fontSize: ".9rem",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
+      color: 'white',
+      backgroundColor: '#0d85ff',
+      textAlign: 'left'
+    },
+    headerStyle: {background: 'transparent', height: '0rem', border: 'transparent'},
+    chatHistoryButtonStyle: {
+      fontSize: '0.5rem !important', // Even smaller font size with !important
+    },
   };
 
   const themes = [{ id: "simple_blue", version: "0.1.0" }];
@@ -189,35 +287,23 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   }
 
   return (
-    <div style={{ inlineSize: width, backgroundColor: backgroundColor }}>
-      <style jsx global>{`
-        .rcb-chat-input::before {
-          content: none !important;
-        }
-      `}</style>
-      <ChatBot
+    <div className="w-full rounded-lg shadow-lg overflow-hidden flex flex-col" style={{
+      boxShadow: 'var(--theme-box-shadow)',
+      border: '1px solid var(--theme-border-color)',
+      width: width,
+      height: height,
+      backgroundColor: backgroundColor,
+    }}>
+      <DynamicChatBot
         settings={settings}
         styles={styles}
         themes={themes}
         flow={flow}
       />
       {error && <p style={{color: 'red'}}>{error}</p>}
-      {isPlaying && isVoiceEnabled && <button onClick={stopAudio}>Stop Audio</button>}
+      {isPlaying && audioEnabled && <button onClick={stopAudio}>Stop Audio</button>}
     </div>
   );
 };
 
-const App: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled, width, backgroundColor }) => {
-  return (
-    <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
-      <MyChatBot 
-        chatbotContext={chatbotContext} 
-        isVoiceEnabled={isVoiceEnabled} 
-        width={width} 
-        backgroundColor={backgroundColor}
-      />
-    </div>
-  );
-};
-
-export default App;
+export default ChatBot;

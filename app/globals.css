@@ -185,7 +185,7 @@ body.theme-sunsetCity * {
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
     --theme-hover-color: #3b82f6;
     --theme-userchatbox-color: #007afc;
-    --theme-botchatbox-color: #001226;
+    --theme-botchatbox-color: #262729;
     --theme-hover-text: #ffffff;
     --theme-border-color: #0162ff; /* This is the default blue color */
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
@@ -194,6 +194,8 @@ body.theme-sunsetCity * {
     --svg-invert: 0;
     --theme-reddit-color: #082645;
     --theme-doctorsoffice-accent: #2e5387;
+    --theme-flashcard-color: #001a3a; /* Darker shade for CyberSpace theme */
+    --theme-flashcard-text-color: #ffffff; /* White text for CyberSpace theme */
   }
 
 }
@@ -291,7 +293,7 @@ body.theme-sunsetCity * {
 
 .theme-sakuraTrees {
   /* Sakura Trees theme variables */
-  --theme-box-shadow: 0 0 6px 3px rgba(255, 0, 89, 0.853), inset 0 0 8px rgba(253, 57, 149, 0.659);
+  --theme-box-shadow: 0 0 8px 2px rgba(255, 0, 89, 0.7), inset 0 2px 13px rgba(253, 57, 149, 0.8);
   --theme-interface-image: url('/sakura-pattern.png');
   --theme-mainbox-color: #faeef4e6; /* Lighter, more transparent pink */
   --theme-gradient-start: #fff9ffcd;
@@ -301,8 +303,7 @@ body.theme-sunsetCity * {
   --theme-text-color: #4a0e37; /* Darker pink for better contrast */
   --theme-svg-color: #4a0e37; /* Matching text color */
   --theme-hover-color: #b85475; /* Pale violet red */
-  --theme-botchatbox-color: rgba(219, 112, 147, 0.2); /* Transparent pale violet red */
-  --theme-userchatbox-color: rgba(255, 182, 193, 0.2); /* Transparent light pink */
+  --theme-botchatbox-color: #dcdcdc; /* Transparent pale violet red */
   --theme-hover-text: #ffffff;
   --theme-border-color: #ff0080; /* Pale violet red */
   --theme-leaguecard-color: #ffedf6e6; /* Matching mainbox-color */
@@ -310,6 +311,8 @@ body.theme-sunsetCity * {
   --svg-invert: 0; /* Changed to 0 to keep original SVG colors */
   --theme-reddit-color: #ffc9fccd; /* Misty rose */
   --theme-doctorsoffice-accent: #ffc1d8; /* Light pink */
+  --theme-flashcard-color: #ffffff; /* White for light SakuraTrees theme */
+  --theme-flashcard-text-color: #4a0e37; /* Dark pink text for SakuraTrees theme */
 }
 
 /* Add theme-specific gradients */
@@ -321,8 +324,8 @@ body.theme-sunsetCity * {
 /* Sunset City theme */
 .theme-sunsetCity {
   --theme-box-shadow: 0 0 10px 3px rgba(255, 99, 71, 0.5), inset 0 0 10px rgba(255, 99, 71, 0.3);
-  --theme-interface-image: url('/sunset-pattern.png');
   --theme-mainbox-color: #2c1e4a;
+  --theme-interface-image: none;
   --theme-gradient-start: rgba(44, 30, 74, 0.85);
   --theme-gradient-end: rgba(74, 50, 124, 0.85);
   --theme-gradient-startstreak: rgba(255, 99, 71, 0.5);
@@ -330,7 +333,7 @@ body.theme-sunsetCity * {
   --theme-text-color: #ffd1dc;
   --theme-svg-color: #ffffff;
   --theme-hover-color: #ff6347;
-  --theme-botchatbox-color: #3a2963;
+  --theme-botchatbox-color: #323232;
   --theme-userchatbox-color: #007afc;
   --theme-hover-text: #2c1e4a;
   --theme-border-color: #ff6347;
@@ -339,6 +342,8 @@ body.theme-sunsetCity * {
   --svg-invert: 0;
   --theme-reddit-color: #3a2963;
   --theme-doctorsoffice-accent: #3a2963;
+  --theme-flashcard-color: #f4f0ff; /* Darker shade for SunsetCity theme */
+  --theme-flashcard-text-color: #2c1e4a; /* Dark purple text for SunsetCity theme */
 }
 
 .theme-sunsetCity .gradientbg {
@@ -613,17 +618,17 @@ body {
     width: 50%;
 }
 .theme-mykonosBlue {
-  --theme-box-shadow: 0 0 8px 2px rgba(30, 129, 176, 0.3), inset 0 0 15px #1e81b04d;
+  --theme-box-shadow: 0 0 8px 6px rgba(30, 129, 176, 0.3), inset 0 0 15px #1e81b04d;
   --theme-mainbox-color: #ffffff;
   --theme-gradient-start: #f0f8ff;
   --theme-gradient-end: #ffffff;
   --theme-gradient-startstreak: #7d9eba;
   --theme-gradient-endstreak: #5286b3;
-  --theme-text-color: #1e81b0;
+  --theme-text-color: #0a3b52;
   --theme-svg-color: #1e81b0;
   --theme-hover-color: #4cb5e6;
-  --theme-userchatbox-color: #f0f8ff;
-  --theme-botchatbox-color: #ffffff;
+  --theme-userchatbox-color: #0c85ff;
+  --theme-botchatbox-color: #e8e9ea;
   --theme-hover-text: #ffffff;
   --theme-border-color: #4cb5e6;
   --theme-leaguecard-color: rgba(255, 255, 255, 0.9);
@@ -631,6 +636,8 @@ body {
   --svg-invert: 0;
   --theme-reddit-color: #f0f8ff;
   --theme-doctorsoffice-accent: #d7ecff;
+  --theme-flashcard-color: #ffffff; /* White for light MykonosBlue theme */
+  --theme-flashcard-text-color: #1e81b0; /* Blue text for MykonosBlue theme */
 }
 
 .theme-mykonosBlue .gradientbg {

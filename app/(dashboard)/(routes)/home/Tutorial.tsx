@@ -1,0 +1,329 @@
+import React, { useEffect, useRef } from 'react';
+import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
+import { motion } from 'framer-motion';
+
+interface TutorialProps {
+  runPart1: boolean;
+  setRunPart1: (run: boolean) => void;
+  runPart2: boolean;
+  setRunPart2: (run: boolean) => void;
+  runPart3: boolean;
+  setRunPart3: (run: boolean) => void;
+  runPart4: boolean;
+  setRunPart4: (run: boolean) => void;
+}
+
+const Tutorial: React.FC<TutorialProps> = ({ 
+  runPart1, setRunPart1, 
+  runPart2, setRunPart2,
+  runPart3, setRunPart3,
+  runPart4, setRunPart4
+}) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const playNotification = () => {
+    if (audioRef.current) {
+      audioRef.current.play().catch(error => console.error("Audio playback failed:", error));
+    }
+  };
+
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status, type } = data;
+    if (type === 'tour:start') {
+      playNotification();
+    }
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status) || type === 'tour:close') {
+      endAllTutorials();
+    }
+  };
+
+  useEffect(() => {
+    if (runPart1 || runPart2 || runPart3 || runPart4) {
+      playNotification();
+    }
+  }, [runPart1, runPart2, runPart3, runPart4]);
+
+  const endAllTutorials = () => {
+    setRunPart1(false);
+    setRunPart2(false);
+    setRunPart3(false);
+    setRunPart4(false);
+  };
+
+  useEffect(() => {
+    const scheduleContent = document.querySelector('.schedule-content');
+    if (scheduleContent) {
+      const handleScheduleClick = (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+        if (runPart1 && target.closest('.settings-button')) {
+          endAllTutorials();
+        }
+      };
+
+      scheduleContent.addEventListener('click', handleScheduleClick);
+
+      return () => {
+        scheduleContent.removeEventListener('click', handleScheduleClick);
+      };
+    }
+  }, [runPart1]);
+
+  const createShakeAnimation = (delay: number) => ({
+    animate: { x: [0, -2, 2, -2, 2, 0] },
+    transition: {
+      duration: 0.4,
+      repeat: Infinity,
+      repeatType: "reverse" as const,
+      repeatDelay: 1.2,
+      delay: delay
+    }
+  });
+
+  const welcomeContent = (
+    <div className="space-y-6 text-black">
+      <h1 className="text-3xl font-bold text-center mb-4">Welcome to MyMCAT.ai!</h1>
+      
+      <section className="bg-white p-4 rounded-lg shadow-lg">
+        <p className="mb-4">The MCAT is a seven hour and thirty minute exam that covers eight subjects.</p>
+      
+        <p className="mb-4">Although there is a lot of resources out there to take the test, there is a distinct lack of guidance. You can use all of the right resources and still score below your potential.</p>
+        
+        <p className="mb-4">We offer a BETTER way to approach MCAT prep with an all-in-one platform that integrates essential resources with our own amazing content to solve these three questions for you:</p>
+        <ul className="list-none space-y-2">
+          {['When should I study?', 'What should I study?', 'How should I study?'].map((goal, index) => (
+            <li key={index}>
+              <motion.span
+                animate={createShakeAnimation(index * 0.1).animate}
+                transition={createShakeAnimation(index * 0.1).transition}
+                className="inline-block mr-2"
+              >
+                🎯
+              </motion.span>
+              <motion.span
+                animate={createShakeAnimation(index * 0.1 + 0.1).animate}
+                transition={createShakeAnimation(index * 0.1 + 0.1).transition}
+                className="inline-block"
+              >
+                {goal}
+              </motion.span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <p className="text-lg font-semibold">
+        Let's begin solving your first problem of <span style={{ color: 'blue'}}>when should I study?</span></p>
+    </div>
+  );
+
+  const tutorialPart2Content = (
+    <div className="space-y-6 text-black">
+      <h1 className="text-3xl font-bold text-center mb-4">Customize Your Schedule</h1>
+      
+      <div className="bg-white p-4 rounded-lg shadow-lg">
+        
+        <p className="text-lg mb-6">
+          We calculate the best time to take FLs, do AAMC, and use 3rd party resources. 
+        </p>
+        <div className="mb-4">
+          [INSERT GIF HERE]
+        </div>
+        <p className="text-lg mt-6">You can modify the calendar as well.</p>
+      </div>
+    </div>
+  );
+
+  const tutorialPart3Content = (
+    <div className="space-y-6 text-black">
+      <h1 className="text-3xl font-bold text-center mb-4">Ask Kalypso</h1>
+      
+      <div className="bg-white p-4 rounded-lg shadow-lg">
+        <p className="text-lg">
+          Great job! Now, let's wake up Kalypso and ask him a question about your schedule.</p>
+        <p className="text-lg mt-5">
+        </p>
+      </div>
+    </div>
+  );
+
+  const tutorialPart4Content = (
+    <div className="space-y-6 text-black">
+      <h1 className="text-3xl font-bold text-center mb-4">Complete Your First Task</h1>
+      
+      <div className="bg-white p-4 rounded-lg shadow-lg">
+        <p className="text-lg">
+          Yay! You've mastered the dashboard! Go ahead and checkmark it off in your Daily To-Do List!
+        </p>
+      </div>
+    </div>
+  );
+
+  const part1Steps: Step[] = [
+    {
+      target: 'body',
+      content: welcomeContent,
+      placement: 'center',
+      disableBeacon: true,
+      styles: {
+        options: {
+          width: 600,
+        },
+      },
+    },
+    {
+      target: '.schedule-content',
+      content: "Click the settings button on the top right.",
+      placement: 'right',
+      styles: {
+        options: {
+          width: 200,
+        },
+      },
+    },
+  ];
+
+  const part2Steps: Step[] = [
+    {
+      target: 'body',
+      content: tutorialPart2Content,
+      placement: 'center',
+      disableBeacon: true,
+    },
+    {
+      target: '.schedule-content',
+      content: "Just drag activities or enter new ones.",
+      placement: 'right',
+      styles: {
+        options: {
+          width: 200,
+        },
+      },
+    },
+  ];
+
+  const part3Steps: Step[] = [
+    {
+      target: 'body',
+      content: tutorialPart3Content,
+      placement: 'center',
+      disableBeacon: true,
+    },
+    {
+      target: '.knowledge-profile-component',
+      content: "Ask Kalypso your question here (you can also enable voice up top!)",
+      placement: 'left',
+      styles: {
+        options: {
+          width: 300,
+        },
+      },
+    },
+  ];
+
+  const part4Steps: Step[] = [
+    {
+      target: 'body',
+      content: tutorialPart4Content,
+      placement: 'center',
+      disableBeacon: true,
+    },
+    {
+      target: '.daily-todo-list',
+      content: "Check off tutorial tasks here!",
+      placement: 'right',
+      styles: {
+        options: {
+          width: 300,
+        },
+      },
+    },
+  ];
+
+  return (
+    <>
+      <audio ref={audioRef} src="/notification.mp3" />
+      <Joyride
+        callback={handleJoyrideCallback}
+        continuous
+        hideCloseButton
+        run={runPart1}
+        scrollToFirstStep
+        showProgress
+        showSkipButton
+        steps={part1Steps}
+        spotlightClicks={true}
+        styles={{
+          options: {
+            backgroundColor: '#DBEAFE',
+            textColor: 'black',
+            primaryColor: 'var(--theme-border-color)',
+            overlayColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 1000,
+          },
+        }}
+      />
+      <Joyride
+        callback={handleJoyrideCallback}
+        continuous
+        hideCloseButton
+        run={runPart2}
+        scrollToFirstStep
+        showProgress
+        showSkipButton
+        steps={part2Steps}
+        spotlightClicks={true}
+        styles={{
+          options: {
+            backgroundColor: '#DBEAFE',
+            textColor: 'black',
+            primaryColor: 'var(--theme-border-color)',
+            overlayColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 1000,
+          },
+        }}
+      />
+      <Joyride
+        callback={handleJoyrideCallback}
+        continuous
+        hideCloseButton
+        run={runPart3}
+        scrollToFirstStep
+        showProgress
+        showSkipButton
+        steps={part3Steps}
+        spotlightClicks={true}
+        styles={{
+          options: {
+            backgroundColor: '#DBEAFE',
+            textColor: 'black',
+            primaryColor: 'var(--theme-border-color)',
+            overlayColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 1000,
+          },
+        }}
+      />
+      <Joyride
+        callback={handleJoyrideCallback}
+        continuous
+        hideCloseButton
+        run={runPart4}
+        scrollToFirstStep
+        showProgress
+        showSkipButton
+        steps={part4Steps}
+        spotlightClicks={true}
+        styles={{
+          options: {
+            backgroundColor: '#DBEAFE',
+            textColor: 'black',
+            primaryColor: 'var(--theme-border-color)',
+            overlayColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 1000,
+          },
+        }}
+      />
+    </>
+  );
+};
+
+export default Tutorial;
