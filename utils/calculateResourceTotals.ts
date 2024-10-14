@@ -77,3 +77,17 @@ export const getLevelNumber = (levelString: string): number => {
   const index = tierRooms.indexOf(levelString);
   return index === -1 ? 1 : index + 1;
 };
+
+export const calculateQualityOfCare = (userRooms: string[]): number => {
+  const playerLevel = getLevelNumber(calculatePlayerLevel(userRooms));
+  const levelQCValues: { [level: number]: number } = {
+    1: 1.0,
+    2: 1.25,
+    3: 1.5,
+    4: 1.5,
+    5: 1.75,
+    6: 2.0,
+  };
+
+  return levelQCValues[playerLevel] || 1.0;
+};

@@ -57,7 +57,30 @@ body :root {
   }
 }
 
-/* Theme-based scrollbar styles */
+/* Update the global scrollbar styles */
+body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+body::-webkit-scrollbar {
+  width: 8px;
+}
+
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Keep the theme-specific scrollbar styles */
 body * {
   scrollbar-width: thin;
   scrollbar-color: var(--theme-hover-color) transparent;
@@ -173,8 +196,6 @@ body.theme-sunsetCity * {
     --theme-doctorsoffice-accent: #2e5387;
   }
 
-  @import "../styles/themes/cyberSpace.css";
-  @import "../styles/themes/sakuraTrees.css";
 }
 
 @layer base {
@@ -272,9 +293,9 @@ body.theme-sunsetCity * {
   /* Sakura Trees theme variables */
   --theme-box-shadow: 0 0 6px 3px rgba(255, 0, 89, 0.853), inset 0 0 8px rgba(253, 57, 149, 0.659);
   --theme-interface-image: url('/sakura-pattern.png');
-  --theme-mainbox-color: #ffedf6e6; /* Lighter, more transparent pink */
-  --theme-gradient-start: #fff0ffcd;
-  --theme-gradient-end: #ffe2f0f5;
+  --theme-mainbox-color: #faeef4e6; /* Lighter, more transparent pink */
+  --theme-gradient-start: #fff9ffcd;
+  --theme-gradient-end: #fef6faf5;
   --theme-gradient-startstreak: #8e097cd9;
   --theme-gradient-endstreak: #b479ab;
   --theme-text-color: #4a0e37; /* Darker pink for better contrast */
@@ -294,7 +315,7 @@ body.theme-sunsetCity * {
 /* Add theme-specific gradients */
 .theme-sakuraTrees .gradientbg {
   background: rgba(255, 223, 236, 0.9);
-  background: linear-gradient(0deg, #f78dbcf5 0%, #ffc9fccd 100%);
+  background: linear-gradient(0deg, rgba(239, 158, 218, 0.8) 0%, rgba(254, 214, 238, 0.8) 100%);
 }
 
 /* Sunset City theme */
@@ -475,7 +496,7 @@ body {
 }
 
 :root {
-    --primaryColor: #282a57;
+    --primaryColor: #8e81ff;
     --secondaryColor: #e4e4e4;
 }
 
@@ -590,4 +611,91 @@ body {
 .about p {
     margin-top: 20px;
     width: 50%;
+}
+.theme-mykonosBlue {
+  --theme-box-shadow: 0 0 8px 2px rgba(30, 129, 176, 0.3), inset 0 0 15px #1e81b04d;
+  --theme-mainbox-color: #ffffff;
+  --theme-gradient-start: #f0f8ff;
+  --theme-gradient-end: #ffffff;
+  --theme-gradient-startstreak: #7d9eba;
+  --theme-gradient-endstreak: #5286b3;
+  --theme-text-color: #1e81b0;
+  --theme-svg-color: #1e81b0;
+  --theme-hover-color: #4cb5e6;
+  --theme-userchatbox-color: #f0f8ff;
+  --theme-botchatbox-color: #ffffff;
+  --theme-hover-text: #ffffff;
+  --theme-border-color: #4cb5e6;
+  --theme-leaguecard-color: rgba(255, 255, 255, 0.9);
+  --theme-navbutton-color: #1e81b0;
+  --svg-invert: 0;
+  --theme-reddit-color: #f0f8ff;
+  --theme-doctorsoffice-accent: #d7ecff;
+}
+
+.theme-mykonosBlue .gradientbg {
+  background: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(0deg, rgba(240, 248, 255, 0.85) 0%, rgba(255, 255, 255, 0.85) 100%);
+}
+
+/* Updated Mykonos Blue theme SVG styles */
+.theme-mykonosBlue .theme-svg {
+  filter: invert(100%);
+}
+
+.theme-mykonosBlue .theme-box:hover .theme-svg {
+  filter: invert(0%) !important;
+}
+
+/* Ensure the default state is blue for Mykonos Blue */
+.theme-mykonosBlue .theme-svg {
+  filter: invert(100%) !important;
+}
+
+/* Hide scrollbar for the entire website */
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+/* Show themed scrollbar for specific elements */
+.themed-scrollbar {
+  scrollbar-width: thin;
+  -ms-overflow-style: auto;
+}
+
+.themed-scrollbar::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+  height: 6px;
+}
+
+.themed-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.themed-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--theme-hover-color);
+  border-radius: 3px;
+}
+
+/* Theme-specific scrollbar styles */
+.theme-cyberSpace .themed-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #3b82f6;
+}
+
+.theme-sunsetCity .themed-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #ff6347;
+}
+
+.theme-sakuraTrees .themed-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #b85475;
+}
+
+.theme-mykonosBlue .themed-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #4cb5e6;
 }

@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { DoctorOfficeStats } from '@/types';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
-import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay, getLevelNumber } from '@/utils/calculateResourceTotals';
+import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay, getLevelNumber, calculateQualityOfCare } from '@/utils/calculateResourceTotals';
 import axios from 'axios';
 import WelcomeDialog from './WelcomeDialog';
 
@@ -34,6 +34,9 @@ const DoctorsOfficePage: React.FC = () => {
 
   const [isCalculating, setIsCalculating] = useState(false);
   const hasCalculatedRef = useRef(false);
+
+  // Add this new state for streak days
+  const [streakDays, setStreakDays] = useState(0);
 
   // Marketplace State
   const imageGroups= [
@@ -200,6 +203,19 @@ const fetchData = async () => {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchStreakDays = async () => {
+      try {
+        const response = await axios.get('/api/streak');
+        setStreakDays(response.data.streakDays);
+      } catch (error) {
+        console.error('Error fetching streak days:', error);
+      }
+    };
+
+    fetchStreakDays();
+  }, []);
+
   const performDailyCalculations = async () => {
     if (isCalculating) return;
     setIsCalculating(true);
@@ -332,6 +348,7 @@ const toggleGroup = async (groupName: string) => {
       }
     }
   };
+
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
       <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
@@ -366,7 +383,6 @@ const toggleGroup = async (groupName: string) => {
             <Image src="/game-components/PixelCupcake.png" alt="Coin" width={32} height={32} className="mr-2" />
               <span className="text-white font-bold">{userScore}</span>
             </div>
-            {/* New Score Randomizer button */}
             {/* Fellowship Level button with dropdown */}
             <div className="relative group">
               <button className="flex items-center justify-center px-6 py-3 bg-[--theme-doctorsoffice-accent] border-[--theme-border-color] text-[--theme-text-color] hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors text-3xl font-bold uppercase group-hover:text-[--theme-hover-text] group-hover:bg-[--theme-hover-color]">

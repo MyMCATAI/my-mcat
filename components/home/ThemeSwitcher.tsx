@@ -3,12 +3,12 @@ import { useTheme } from '@/contexts/ThemeContext';
 const ThemeSwitcher = () => {
   const { theme, setTheme } = useTheme();
 
-  const handleThemeChange = (newTheme: 'cyberSpace' | 'sakuraTrees' | 'sunsetCity') => {
+  const handleThemeChange = (newTheme: 'cyberSpace' | 'sakuraTrees' | 'sunsetCity' | 'mykonosBlue') => {
     setTheme(newTheme);
   };
 
   return (
-    <div className='flex justify-center items-center space-x-4 bg-transparent z-50 relative h-6'>
+    <div className='flex space-x-2'>
       <button 
         className={`w-6 h-6 rounded-full text-white flex items-center justify-center
           ${theme === 'cyberSpace' ? 'ring-1 ring-blue-400' : 'opacity-75 hover:opacity-100'}`}
@@ -38,6 +38,16 @@ const ThemeSwitcher = () => {
       >
         <span className="sr-only">Sunset City</span>
         🌇
+      </button>
+      <button 
+        className={`w-6 h-6 rounded-full text-white flex items-center justify-center
+          ${theme === 'mykonosBlue' ? 'ring-1 ring-blue-300' : 'opacity-75 hover:opacity-100'}`}
+        onClick={() => handleThemeChange("mykonosBlue")}
+        aria-label="mykonosBlue"
+        title="mykonosBlue"
+      >
+        <span className="sr-only">Mykonos Blue</span>
+        🌊
       </button>
     </div>
   );
