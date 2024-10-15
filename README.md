@@ -1,7 +1,7 @@
 
 # MYMCAT MVP
 
-Created by Joshua Wade
+Created by Joshua Wade & friends
 
 WIP deployed at
 https://my-mcatmy-mcat.vercel.app/
@@ -12,10 +12,6 @@ First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
@@ -36,7 +32,6 @@ This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-opti
 ## Current Services
 Services
 - AI LLM - https://openai.com/
-- Customer service - app.crisp.chat
 - sql db - app.planetscale.com
 - auth - dashboard.clerk.com
 
@@ -53,11 +48,6 @@ Stripe
 run 
 `stripe listen --forward-to localhost:3000/api/webhook`
 
-
-
-
-Customer Support
-- Crisp Chat -> methodAI email setup app.crisp.chat
 
 
 # Prisma DB
@@ -79,14 +69,22 @@ See data
 
 ```npx prisma studio```
 
+
+### Important: Database Migrations
+
+⚠️ Always message Josh before making any database migrations or schema changes. Safety first!
+- We do this to avoid breaking any of our sql tables.
+- in order to make a change, we need to update out schema.prisma file, then generate a new migration file with `npx prisma migrate dev --name <name>`
+
+
+
 ### Running scripts
 
 ```
 npm run "script-name"
 ```
 
-
 ### Todo
-- Set up AWS for image storage
-- Implement detailed weakness and calendar algos
-
+- Implement calendar FE algos
+- Implement calendar BE algos
+- etc.
