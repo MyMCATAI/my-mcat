@@ -321,7 +321,6 @@ body.theme-sunsetCity * {
 /* Sunset City theme */
 .theme-sunsetCity {
   --theme-box-shadow: 0 0 10px 3px rgba(255, 99, 71, 0.5), inset 0 0 10px rgba(255, 99, 71, 0.3);
-  --theme-interface-image: url('/sunset-pattern.png');
   --theme-mainbox-color: #2c1e4a;
   --theme-gradient-start: rgba(44, 30, 74, 0.85);
   --theme-gradient-end: rgba(74, 50, 124, 0.85);

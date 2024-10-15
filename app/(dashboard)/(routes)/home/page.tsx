@@ -374,9 +374,9 @@ const Page = () => {
     }
 
     // Only wrap non-Schedule content with MDOnlyFeaturesDialog
-    if (!isPro && activeTab !== "Schedule" && activeTab !== "test") {
-      return <MDOnlyFeaturesDialog content={content} />;
-    }
+    // if (!isPro && activeTab !== "Schedule" && activeTab !== "test") {
+    //   return <MDOnlyFeaturesDialog content={content} />;
+    // }
 
     return content;
   };
