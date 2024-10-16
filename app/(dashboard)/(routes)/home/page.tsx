@@ -418,9 +418,9 @@ const Page = () => {
             <div className="flex items-center gap-4">
               <h2 className="text-white text-2xl ml-3 font-thin leading-normal shadow-text">
                 {activeTab === "Schedule"
-                  ? "Schedule Builder."
+                  ? "Dashboard"
                   : activeTab === "KnowledgeProfile"
-                  ? "Adaptive Tutoring Suite."
+                  ? "Adaptive Tutoring Suite"
                   : activeTab === "flashcards"
                   ? "Flashcards"
                   : activeTab === "test"
@@ -446,7 +446,7 @@ const Page = () => {
           <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
             &nbsp;
           </h2>
-          <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg">
+          <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
             <KnowledgeProfileCARsONLY activities={activities} currentPage={activeTab} />
           </div>
         </div>

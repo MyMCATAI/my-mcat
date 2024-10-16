@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { isSameDay, isToday, isTomorrow } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import SettingContent from "./SettingContent";
@@ -19,6 +19,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement,
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from 'next/navigation';
 import { CheckCircle } from 'lucide-react'; // Add this import
+import Tutorial from './Tutorial';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -46,6 +47,15 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
   const audioRef = useRef<HTMLAudioElement>(null);
   const fanfareRef = useRef<HTMLAudioElement>(null);
   const [completedSections, setCompletedSections] = useState<string[]>([]);
+  const [runTutorialPart1, setRunTutorialPart1] = useState(false);
+  const [runTutorialPart2, setRunTutorialPart2] = useState(false);
+  const [runTutorialPart3, setRunTutorialPart3] = useState(false);
+  const [runTutorialPart4, setRunTutorialPart4] = useState(false);
+  const [tutorialText, setTutorialText] = useState('');
+  const [isTutorialTypingComplete, setIsTutorialTypingComplete] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(1);
+  const [hasUpdatedStudyPlan, setHasUpdatedStudyPlan] = useState(false);
+  const [showCalendarTutorial, setShowCalendarTutorial] = useState(false);
 
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
@@ -179,26 +189,51 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
     setCurrentDate(new Date());
     setTypedText('');
     setIsTypingComplete(false);
+    setTutorialText('');
+    setIsTutorialTypingComplete(false);
+
+    let text = getActivitiesText;
+    if (runTutorialPart1) {
+      if (tutorialStep === 1) {
+        text = "Hi! Hello!\n\nThis is the dashboard. This is your home. Here, you'll look at statistics on progress, look at your calendar, daily tasks, and ask Kalypso any questions related to the logistics of taking the test. Let's start answering the 'When should I study?' question.";
+      } else {
+        text = '';
+      }
+    }
 
     let index = 0;
     const typingTimer = setInterval(() => {
-      setTypedText(prev => getActivitiesText.slice(0, prev.length + 1));
+      if (runTutorialPart1) {
+        setTutorialText(prev => text.slice(0, prev.length + 1));
+      } else {
+        setTypedText(prev => text.slice(0, prev.length + 1));
+      }
       index++;
-      if (index > getActivitiesText.length) {
+      if (index > text.length) {
         clearInterval(typingTimer);
-        setIsTypingComplete(true);
+        if (runTutorialPart1) {
+          setIsTutorialTypingComplete(true);
+        } else {
+          setIsTypingComplete(true);
+        }
       }
     }, 15);
 
     return () => {
       clearInterval(typingTimer);
     };
-  }, [getActivitiesText]);
+  }, [getActivitiesText, runTutorialPart1, tutorialStep]);
 
-  const handleStudyPlanSaved = () => {
-    setShowSettings(false);
-    setShowThankYouDialog(true);
+  const handleTutorialStepChange = (step: number) => {
+    setTutorialStep(step);
   };
+
+  const handleStudyPlanSaved = useCallback(() => {
+    setShowSettings(false);
+    setShowAnalytics(false); // Switch to calendar mode
+    setHasUpdatedStudyPlan(true);
+    setShowCalendarTutorial(true);
+  }, []);
 
   const handleTakeDiagnosticTest = () => {
     setShowThankYouDialog(false);
@@ -309,10 +344,15 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
     }
   };
 
+  const handleActivateTutorial = (step: number) => {
+    setTutorialStep(step);
+    setRunTutorialPart1(true);
+  };
+
   return (
-    <div className="flex h-full">
+    <div className="flex h-full relative">
       {/* Left Sidebar */}
-      <div className="w-1/4 p-6 flex flex-col ml-3 mt-5 mb-5 space-y-4 rounded-[10px] overflow-hidden"
+      <div className="w-1/4 p-6 flex flex-col ml-3 mt-5 mb-5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
         style={{
           backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
           backgroundSize: "cover",
@@ -377,7 +417,10 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
-                <button onClick={toggleSettings} className="bg-white p-2 rounded-full shadow-md">
+                <button 
+                  onClick={toggleSettings} 
+                  className="settings-button bg-white p-2 rounded-full shadow-md"
+                >
                   <svg
                     width="16"
                     height="16"
@@ -411,7 +454,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
 
         {/* Schedule Display */}
         <div
-          className="flex-grow h-[calc(100vh-8.3rem)] rounded-[10px] p-4 flex flex-col relative overflow-hidden"
+          className="flex-grow h-[calc(100vh-8.3rem)] rounded-[10px] p-4 flex flex-col relative overflow-hidden schedule-content"
           style={{
             backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
             backgroundSize: "cover",
@@ -428,10 +471,10 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
                 className="pt-5 font-mono text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap mt-4 ml-2"
                 style={{ color: "var(--theme-text-color)" }}
               >
-                {typedText}
+                {runTutorialPart1 ? tutorialText : typedText}
               </pre>
 
-              {isTypingComplete && (
+              {(isTypingComplete || isTutorialTypingComplete) && (
                 <div className="flex-grow overflow-auto mt-6">
                   <div className="flex space-x-4 mb-4">
                     <button
@@ -520,9 +563,39 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
               </button>
             </div>
           )}
+
+          {/* Tutorial Buttons */}
+          <div className="absolute bottom-4 right-4 flex space-x-2">
+            <Button
+              onClick={() => setRunTutorialPart4(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+            >
+              Activate Tutorial Part 4
+            </Button>
+            <Button
+              onClick={() => setRunTutorialPart3(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+            >
+              Activate Tutorial Part 3
+            </Button>
+            <Button
+              onClick={() => setRunTutorialPart2(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+            >
+              Activate Tutorial Part 2
+            </Button>
+            <Button
+              onClick={() => setRunTutorialPart1(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+            >
+              Activate Tutorial
+            </Button>
+          </div>
         </div>
 
         {/* Dialogs */}
+        {/* Comment out or remove the Thank You Dialog */}
+        {/*
         <Dialog open={showThankYouDialog} onOpenChange={setShowThankYouDialog}>
           <DialogOverlay className="fixed inset-0 bg-black bg-opacity-50 z-50" />
           <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
@@ -542,6 +615,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        */}
 
         {/* New Activity Form */}
         {showNewActivityForm && (
@@ -644,6 +718,17 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
 
       <audio ref={audioRef} src="/levelup.mp3" />
       <audio ref={fanfareRef} src="/fanfare.mp3" />
+
+      <Tutorial
+        runPart1={runTutorialPart1}
+        setRunPart1={setRunTutorialPart1}
+        runPart2={runTutorialPart2}
+        setRunPart2={setRunTutorialPart2}
+        runPart3={runTutorialPart3}
+        setRunPart3={setRunTutorialPart3}
+        runPart4={runTutorialPart4}
+        setRunPart4={setRunTutorialPart4}
+      />
     </div>
   );
 };

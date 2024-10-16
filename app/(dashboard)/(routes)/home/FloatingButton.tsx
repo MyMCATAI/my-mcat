@@ -21,44 +21,34 @@ interface ButtonPosition {
 // Updated Typewriter component
 const Typewriter: React.FC<{ text: string; delay?: number }> = ({ text, delay = 0 }) => {
   const [displayedText, setDisplayedText] = useState('');
-  const indexRef = useRef(0);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const typeNextChar = () => {
-      if (indexRef.current < text.length) {
-        setDisplayedText((prev) => text.slice(0, indexRef.current + 1));
-        indexRef.current += 1;
-        timeoutRef.current = setTimeout(typeNextChar, 50);
-      }
-    };
+    const timeout = setTimeout(() => {
+      let currentIndex = 0;
+      const interval = setInterval(() => {
+        if (currentIndex <= text.length) {
+          setDisplayedText(text.slice(0, currentIndex));
+          currentIndex++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 10); // Adjust this value to control typing speed (lower = faster)
 
-    // Add initial delay before starting to type
-    const initialDelay = setTimeout(() => {
-      typeNextChar();
+      return () => clearInterval(interval);
     }, delay);
 
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      clearTimeout(initialDelay);
-    };
+    return () => clearTimeout(timeout);
   }, [text, delay]);
-
-  // Reset when text changes
-  useEffect(() => {
-    setDisplayedText('');
-    indexRef.current = 0;
-  }, [text]);
 
   return <span>{displayedText}</span>;
 };
 
 const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPage, initialTab }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>(initialTab); // Use initialTab here
-  const [hoveredButton, setHoveredButton] = useState<string | null>(null); // New state for hovered button
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
   const hoverTimeout = useRef<number | null>(null);
   const router = useRouter();
+  const [showTutoringMessage, setShowTutoringMessage] = useState(false);
 
   const handleMouseEnter = () => {
     if (hoverTimeout.current) {
@@ -70,7 +60,6 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
   const handleMouseLeave = () => {
     hoverTimeout.current = window.setTimeout(() => {
       setIsHovered(false);
-      setHoveredButton(null); // Reset hovered button when leaving
     }, 200);
   };
 
@@ -88,7 +77,10 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
   ];
 
   const handleButtonClick = (tab: string) => {
-    if (tab === 'doctorsoffice') {
+    if (tab === 'KnowledgeProfile') {
+      setShowTutoringMessage(true);
+      setTimeout(() => setShowTutoringMessage(false), 3000); // Hide message after 3 seconds
+    } else if (tab === 'doctorsoffice') {
       if (currentPage === 'home') {
         router.push('/doctorsoffice');
       } else {
@@ -105,21 +97,21 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
 
   // Mapping of tab names to descriptive texts
   const labelTexts: Record<string, string> = {
-    "Schedule": "Adaptive Schedule",
-    "doctorsoffice": "MCAT Game: Clinic",
+    "Schedule": "Dashboard",
+    "doctorsoffice": "The Anki Clinic",
     "test": "Daily CARs Suite",
-    "KnowledgeProfile": "Adaptive Tutoring Suite",
+    "KnowledgeProfile": "Tutoring Suite",
   };
 
   // Updated Helper function to determine label position
   const getLabelPosition = (index: number) => {
     switch (index) {
       case 0: // Schedule
-        return { top: '-4.5rem', left: '10.5rem' };
+        return { top: '-5.5rem', left: '10rem' };
       case 1: // doctorsoffice
-        return { top: '-1.5rem', left: '15.5rem' };
+        return { top: '-1.2rem', left: '15.5rem' };
       case 2: // test
-        return { top: '3.5rem', left: '16.5rem' };
+        return { top: '4rem', left: '16.5rem' };
       default: // KnowledgeProfile or any other
         return { top: '2rem', left: '12.5rem' };
     }
@@ -128,7 +120,12 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
   return (
     <>
       {isHovered && (
-        <div className="fixed inset-0 bg-black bg-opacity-35 z-40"></div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+      )}
+      {showTutoringMessage && (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black p-4 rounded-lg shadow-lg z-50">
+          You don't have enough coins to unlock the tutoring suite! Head to Anki Clinic to earn it.
+        </div>
       )}
       <span className="fixed bottom-[8rem] left-[0.625rem] z-50">
         <div
@@ -178,8 +175,6 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
                     color: 'var(--theme-navbutton-color)',
                   }}
                   onClick={() => handleButtonClick(pos.tab)}
-                  onMouseEnter={() => setHoveredButton(pos.tab)}
-                  onMouseLeave={() => setHoveredButton(null)}
                 >
                   <Image 
                     src={pos.icon} 
@@ -198,7 +193,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
                     zIndex: 60,
                   }}
                 >
-                  {hoveredButton === pos.tab && !isActive && (
+                  {isHovered && !isActive && (
                     <span
                       className="bg-transparent text-white text-2xl px-2 py-1 rounded overflow-hidden"
                       style={{
@@ -209,7 +204,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
                         overflow: 'visible',
                       }}
                     >
-                      <Typewriter text={labelText} delay={200} /> {/* Changed delay to 200ms */}
+                      <Typewriter text={labelText} delay={0} />
                     </span>
                   )}
                 </span>

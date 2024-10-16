@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ResourcesMenu from './ResourcesMenu';
 import OfficeContainer from './OfficeContainer';
 import FloatingButton from '../home/FloatingButton';
@@ -349,6 +349,10 @@ const toggleGroup = async (groupName: string) => {
     }
   };
 
+  const updateVisibleImages = useCallback((newVisibleImages: Set<string>) => {
+    setVisibleImages(newVisibleImages);
+  }, []);
+
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
       <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
@@ -370,6 +374,8 @@ const toggleGroup = async (groupName: string) => {
             imageGroups={imageGroups}
             toggleGroup={toggleGroup}
             onUpdateUserScore={handleUpdateUserScore}
+            setUserRooms={setUserRooms}
+            updateVisibleImages={updateVisibleImages}  // Add this line
           />
           {/* Fellowship Level button with coins and patients */}
           <div className="absolute top-4 right-4 z-50 flex items-center">
