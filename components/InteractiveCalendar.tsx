@@ -30,7 +30,21 @@ const localizer = momentLocalizer(moment);
 
 const DnDCalendar = withDragAndDrop<CalendarEvent>(Calendar);
 
-const InteractiveCalendar: React.FC = () => {
+interface InteractiveCalendarProps {
+  currentDate: Date;
+  activities: FetchedActivity[];
+  onDateChange: (date: Date) => void;
+  getActivitiesForDate: (date: Date) => FetchedActivity[];
+  onInteraction: () => void;
+}
+
+const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
+  currentDate,
+  activities,
+  onDateChange,
+  getActivitiesForDate,
+  onInteraction,
+}) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [view, setView] = useState<View>('month');
   const { user } = useUser();
@@ -83,6 +97,7 @@ const InteractiveCalendar: React.FC = () => {
           currentEvents.map(ev => ev.id === updatedEvent.id ? updatedEvent : ev)
         );
         await updateEventInBackend(updatedEvent);
+        onInteraction();
       } catch (error) {
         console.error("Error updating event:", error);
         // You might want to add some user feedback here
@@ -102,6 +117,7 @@ const InteractiveCalendar: React.FC = () => {
           currentEvents.map(ev => ev.id === updatedEvent.id ? updatedEvent : ev)
         );
         await updateEventInBackend(updatedEvent);
+        onInteraction();
       } catch (error) {
         console.error("Error updating event:", error);
         // You might want to add some user feedback here
@@ -158,6 +174,7 @@ const InteractiveCalendar: React.FC = () => {
 
         const createdActivity: { id: string } = await response.json();
         setEvents(prevEvents => [...prevEvents, { ...newEvent, id: createdActivity.id }]);
+        onInteraction();
       } catch (error) {
         console.error("Error creating activity:", error);
         // You might want to add some user feedback here
