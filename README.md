@@ -1,7 +1,7 @@
 
 # MYMCAT MVP
 
-Created by Joshua Wade & friends
+Created by Joshua Karki and Prynce Wade
 
 WIP deployed at
 https://my-mcatmy-mcat.vercel.app/
