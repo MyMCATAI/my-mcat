@@ -123,6 +123,11 @@ const Tutorial: React.FC<TutorialProps> = ({
       content: welcomeContent,
       placement: 'center',
       disableBeacon: true,
+      styles: {
+        options: {
+          width: 600, // Increase this value to make the box wider
+        },
+      },
     },
     {
       target: '.schedule-content',
