@@ -280,7 +280,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              className={`flex-1 text-[12px] py-1 border border-[#79747E] text-center ${
+              className={`flex-1 text-m py-2 border border-[#79747E] text-center ${
                 activeTab === tab.id
                   ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
                   : "bg-[white] text-black"

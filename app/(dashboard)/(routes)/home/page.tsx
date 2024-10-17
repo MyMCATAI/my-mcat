@@ -34,7 +34,8 @@ interface HandleShowDiagnosticTestParams {
 
 const Page = () => {
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get("tab") || "test";
+  // Change this line to set "Schedule" as the default tab
+  const initialTab = searchParams.get("tab") || "Schedule";
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isPro, setIsPro] = useState(false);
   const [activities, setActivities] = useState<FetchedActivity[]>([]);

@@ -1,31 +1,18 @@
 import React, { useState, useEffect } from "react";
-
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { StudyPlan } from '@/types';
-import { DialogHeader, DialogFooter } from "@/components/ui/dialog";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
-
+import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
-
-interface Tab {
-  id: string;
-  label: string;
-}
 
 interface Option {
   id: string;
   label: string;
 }
-
-const tabs: Tab[] = [
-  { id: "tab1", label: "Calendar" },
-  { id: "tab2", label: "Tutoring" },
-  { id: "tab3", label: "Flashcards" },
-];
 
 const options: Option[] = [
   { id: "option1", label: "When is your test?" },
@@ -36,16 +23,14 @@ const options: Option[] = [
 
 const days: string[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-const resources: string[] = ["UWorld", "AAMC", "Kaplan Books"];
+const resources: string[] = ["UWorld", "AAMC", "Kaplan Books", "3rd Party FLs"];
 
 interface SettingContentProps {
   onShowDiagnosticTest?: () => void;
   onStudyPlanSaved?: () => void;
 }
 
-
 const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, onStudyPlanSaved }) => {
-  const [activeTab, setActiveTab] = useState<string>("tab1");
   const [activeOption, setActiveOption] = useState<string | null>(null);
   const [calendarValue, setCalendarValue] = useState<Value>(new Date());
   const [hoursPerDay, setHoursPerDay] = useState<Record<string, string>>({});
@@ -60,73 +45,16 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
     Friday: false,
     Saturday: false,
     Sunday: false,
-  });  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [setName, setSetName] = useState('');
-  const [section, setSection] = useState('');
-  const [subjectCategory, setSubjectCategory] = useState('');
-  const [contentCategory, setContentCategory] = useState('');
-  const [conceptCategory, setConceptCategory] = useState('');
-  const [numberOfQuestions, setNumberOfQuestions] = useState('');
+  });
+  const [thirdPartyFLCount, setThirdPartyFLCount] = useState<number>(0);
+  const [reviewPracticeBalance, setReviewPracticeBalance] = useState<number>(50);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState(0);
+  const [isNotSureDate, setIsNotSureDate] = useState<boolean>(false);
 
   useEffect(() => {
     fetchExistingStudyPlan();
   }, []);
-
-  // use later for admin things
-  const generateNewTest = async () => {
-    try {
-      const testData: {
-        title: string;
-        description: string;
-        setName: string;
-        section?: string;
-        subjectCategory?: string;
-        contentCategory?: string;
-        conceptCategory?: string;
-        numberOfQuestions?: number;
-      } = {
-        title,
-        description,
-        setName,
-      };
-
-      if (section) testData.section = section;
-      if (subjectCategory) testData.subjectCategory = subjectCategory;
-      if (contentCategory) testData.contentCategory = contentCategory;
-      if (conceptCategory) testData.conceptCategory = conceptCategory;
-      if (numberOfQuestions) testData.numberOfQuestions = parseInt(numberOfQuestions);
-
-      const response = await fetch('/api/test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(testData),
-      });
-
-      if (response.ok) {
-        const newTest = await response.json();
-        console.log('New test generated:', newTest);
-        // You can add state update logic here if needed
-        // For example: setLatestTest(newTest);
-        
-        // Clear the input fields after successful generation
-        setTitle('');
-        setDescription('');
-        setSetName('');
-        setSection('');
-        setSubjectCategory('');
-        setContentCategory('');
-        setConceptCategory('');
-        setNumberOfQuestions('');
-      } else {
-        console.error('Failed to generate new test');
-      }
-    } catch (error) {
-      console.error('Error generating new test:', error);
-    }
-  };
 
   const fetchExistingStudyPlan = async () => {
     try {
@@ -140,6 +68,8 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
           setSelectedResources(plan.resources.reduce((acc: any, resource: any) => ({ ...acc, [resource]: true }), {}));
           setHoursPerDay(plan.hoursPerDay);
           setFullLengthDays(plan.fullLengthDays);
+          setThirdPartyFLCount(plan.thirdPartyFLCount || 0);
+          setReviewPracticeBalance(plan.reviewPracticeBalance || 50);
         }
       }
     } catch (error) {
@@ -164,6 +94,8 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
       resources: Object.keys(selectedResources).filter(key => selectedResources[key]),
       hoursPerDay,
       fullLengthDays,
+      thirdPartyFLCount,
+      reviewPracticeBalance,
     };
 
     try {
@@ -201,24 +133,55 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
     }
   };
 
+  const handleSliderMouseEnter = () => {
+    setShowTooltip(true);
+  };
+
+  const handleSliderMouseLeave = () => {
+    setShowTooltip(false);
+  };
+
+  const handleSliderMouseMove = (e: React.MouseEvent<HTMLInputElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const position = ((e.clientX - rect.left) / rect.width) * 100;
+    setTooltipPosition(position);
+  };
+
   const renderOptionContent = () => {
     switch (activeOption) {
       case "option1":
         return (
-          <div className="flex justify-center items-center bg-transparent p-4 rounded-lg shadow-md">
-            <Calendar 
-              onChange={setCalendarValue} 
-              value={calendarValue} 
-              className="text-black"
-            />
+          <div className="flex flex-col items-center p-2 rounded-lg shadow-md">
+            {!isNotSureDate && (
+              <Calendar 
+                onChange={setCalendarValue} 
+                value={calendarValue} 
+                className="text-black bg-white mb-2"
+              />
+            )}
+            <div className="flex items-center">
+              <Checkbox
+                id="notSureDate"
+                checked={isNotSureDate}
+                onCheckedChange={(checked) => {
+                  setIsNotSureDate(checked as boolean);
+                  if (checked) {
+                    setCalendarValue(null);
+                  }
+                }}
+              />
+              <label htmlFor="notSureDate" className="ml-2 text-[--theme-text-color]">
+                Not sure
+              </label>
+            </div>
           </div>
         );
       case "option2":
         return (
-          <div className="bg-black p-4 rounded-lg shadow-md">
+          <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-md">
             {days.map((day) => (
               <div key={day} className="flex items-center justify-between mb-2">
-                <span className="text-white">{day}</span>
+                <span className="text-[--theme-text-color]">{day}</span>
                 <input
                   type="checkbox"
                   checked={fullLengthDays[day] || false}
@@ -230,15 +193,15 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
         );
       case "option3":
         return (
-          <div className="bg-black p-4 rounded-lg shadow-md">
+          <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-md">
             {days.map((day) => (
               <div key={day} className="flex items-center justify-between mb-2">
-                <span className="text-white">{day}</span>
+                <span className="text-[--theme-text-color]">{day}</span>
                 <input
                   type="number"
                   value={hoursPerDay[day] || ""}
                   onChange={(e) => setHoursPerDay({ ...hoursPerDay, [day]: e.target.value })}
-                  className="w-16 p-1 border rounded text-black"
+                  className="w-16 p-1 border rounded text-[--theme-text-color] bg-[--theme-leaguecard-color]"
                 />
               </div>
             ))}
@@ -246,7 +209,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
         );
       case "option4":
         return (
-          <div className="bg-black p-4 rounded-lg shadow-md">
+          <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-md">
             {resources.map((resource) => (
               <div key={resource} className="flex items-center mb-2">
                 <input
@@ -254,7 +217,24 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
                   checked={selectedResources[resource] || false}
                   onChange={(e) => setSelectedResources({ ...selectedResources, [resource]: e.target.checked })}
                 />
-                <span className="ml-2 text-white">{resource}</span>
+                <span className="ml-2 text-[--theme-text-color]">{resource}</span>
+                {resource === "3rd Party FLs" && selectedResources[resource] && (
+                  <div className="ml-4 flex items-center">
+                    <button
+                      className="px-2 py-1 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded"
+                      onClick={() => setThirdPartyFLCount(Math.max(0, thirdPartyFLCount - 1))}
+                    >
+                      -
+                    </button>
+                    <span className="mx-2 text-[--theme-text-color]">{thirdPartyFLCount}</span>
+                    <button
+                      className="px-2 py-1 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded"
+                      onClick={() => setThirdPartyFLCount(thirdPartyFLCount + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -264,105 +244,77 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
     }
   };
 
-  const handleUpdateKnowledgeProfile = async () => {
-    //todo, make this look nicer
-    try {
-      const response = await fetch("/api/knowledge-profile/update", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update knowledge profile");
-      }
-      console.log(response)
-    } catch (error) {
-      console.error("Error updating knowledge profile:", error);
-    } 
-  };
   return (
-    <div className="bg-transparent rounded-lg border-gray-500 border shadow-lg relative">
-      <div className="bg-transparent rounded-lg overflow-hidden">
-        <div className="flex">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={`flex-1 py-2 px-4 text-sm font-medium [box-shadow:inset_0_0_10px_rgba(0,0,246,0.9)] ${
-                activeTab === tab.id
-                  ? "text-blue-600 relative"
-                  : "text-white hover:text-blue-600"
-              }`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="relative z-10 ">
-          {activeTab === "tab1" && (
-            <div 
-              className="bg-transparent p-4 space-y-4"
-              style={{
-                backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 18, 38, 0.6)), url('/circuitpattern2.png')",
-                backgroundSize: 'cover',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center',
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                boxShadow: 'inset 0 0 20px rgba(0, 0, 246, 0.7)'
-              }}
-            >
-              {options.map((option) => (
-                <div key={option.id} className="relative">
-                  <button
-                    className={`w-full text-left p-3 rounded-lg ${
-                      activeOption === option.id
-                        ? "bg-transparent text-sm text-blue-600 font-mono"
-                        : "bg-transparent text-blue-200 font-mono text-sm hover:text-blue-600"
-                    }`}
-                    onClick={() => handleOptionClick(option.id)}
-                  >
-                   <div className="flex justify-between items-center">
-                    <span>{option.label}</span>
-                    {option.id === "option1" && calendarValue instanceof Date && (
-                      <span className="text-sm font-medium">
-                        {formatDate(calendarValue)}
-                      </span>
-                    )}
-                  </div>
-                  </button>
-                  {activeOption === option.id && (
-                    <div className="mt-2">
-                      {renderOptionContent()}
-                    </div>
-                  )}
+    <div className="bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg relative w-full max-w-md mx-auto h-[34rem]">
+      <div className="bg-[--theme-leaguecard-color] rounded-lg overflow-hidden h-full flex flex-col">
+        <div className="p-4 space-y-4 flex-grow overflow-y-auto">
+          {options.map((option) => (
+            <div key={option.id} className="relative">
+              <button
+                className={`w-full text-left p-3 rounded-lg transition-colors duration-200 ${
+                  activeOption === option.id
+                    ? "bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] font-mono"
+                    : "bg-transparent text-[--theme-text-color] font-mono hover:bg-[--theme-doctorsoffice-accent]"
+                }`}
+                onClick={() => handleOptionClick(option.id)}
+              >
+               <div className="flex justify-between items-center">
+                <span>{option.label}</span>
+                {option.id === "option1" && (
+                  <span className="text-sm font-medium">
+                    {isNotSureDate ? "Not sure" : (calendarValue instanceof Date ? formatDate(calendarValue) : "")}
+                  </span>
+                )}
+              </div>
+              </button>
+              {activeOption === option.id && (
+                <div className="mt-2 bg-[--theme-leaguecard-color] p-3 rounded-lg shadow-md">
+                  {renderOptionContent()}
                 </div>
-              ))}
-              
-              <button
-                className="w-full text-blue-500 font-mono py-2 px-4 rounded-lg hover:text-blue-600 transition duration-200"
-                onClick={handleSave}
-                disabled={isSaving}
-              >
-                {isSaving ? 'Saving...' : (existingStudyPlan ? 'Update Study Plan' : 'Save Study Plan')}
-              </button>
+              )}
             </div>
-          )}
-          {activeTab === "tab2" && (
-            <div className="bg-white p-4 space-y-4">
-              <h1 className="text-lg text-blue-600">Regenerate Study Plan</h1>
-              
-                
-              <button
-                onClick={handleUpdateKnowledgeProfile}
-                className="bg-blue-500 hover:bg-blue-700 text-black font-bold py-2 px-4 rounded"
-              >
-                Regenerate
-              </button>
+          ))}
+          
+          {/* Updated slider section */}
+          <TooltipProvider>
+            <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-md relative">
+              <div className="relative">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={reviewPracticeBalance}
+                      onChange={(e) => setReviewPracticeBalance(Number(e.target.value))}
+                      className="w-full"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    align="center"
+                    className="bg-gray-800 text-white p-2 rounded"
+                  >
+                    <p>We recommend doing more practice than review closer to your test date.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <div className="flex justify-between mt-2">
+                <span className="text-[--theme-text-color] text-sm">Review: {reviewPracticeBalance}%</span>
+                <span className="text-[--theme-text-color] text-sm">Practice: {100 - reviewPracticeBalance}%</span>
+              </div>
             </div>
-          )}
+          </TooltipProvider>
+        </div>
+        
+        <div className="p-4">
+          <Button
+            className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200"
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? 'Saving...' : (existingStudyPlan ? 'Update Study Plan' : 'Save Study Plan')}
+          </Button>
         </div>
       </div>
     </div>
