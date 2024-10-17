@@ -24,6 +24,7 @@ import TestComponent from "@/components/test-component";
 import { DialogOverlay } from "@radix-ui/react-dialog";
 import { checkProStatus } from "@/lib/utils";
 import WelcomePopUp from "@/components/home/WelcomePopUp";
+import UpdateNotificationPopup from "@/components/home/UpdateNotificationPopup";
 
 const FlashcardDeck = dynamic(() => import("./FlashcardDeck"), { ssr: false });
 
@@ -61,6 +62,7 @@ const Page = () => {
   const [showMessageForm, setShowMessageForm] = useState(false);
   const [message, setMessage] = useState("");
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+  const [showUpdateNotification, setShowUpdateNotification] = useState(false);
 
   useEffect(() => {
     const initializePage = async () => {
@@ -72,6 +74,9 @@ const Page = () => {
 
       // Show welcome popup
       // setShowWelcomePopup(true);
+
+      // Show update notification
+      setShowUpdateNotification(true);
     };
 
     initializePage();
@@ -400,6 +405,10 @@ const Page = () => {
     };
   }, []);
 
+  const handleCloseUpdateNotification = () => {
+    setShowUpdateNotification(false);
+  };
+
   return (
     <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem]">
       <div className="text-white flex gap-[1.5rem]">
@@ -499,6 +508,12 @@ const Page = () => {
       <WelcomePopUp
         open={showWelcomePopup}
         onOpenChange={handleCloseWelcomePopup}
+      />
+
+      {/* Update Notification Popup */}
+      <UpdateNotificationPopup
+        open={showUpdateNotification}
+        onOpenChange={handleCloseUpdateNotification}
       />
     </div>
   );
