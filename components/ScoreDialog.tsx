@@ -114,17 +114,22 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
 
   const getStarCount = (score: number) => {
     if (score === 100) return 3;
-    if (score >= 60) return 2;
-    return 1;
+    if (score >= 80) return 2;
+    if (score >= 60) return 1;
+    return 0;
   };
 
   const getTimingStars = (totalTimeTaken: number, totalQuestions: number) => {
+    // Assume five questions
+    // Less than 9 minutes: 3 points
+    // Less than 10 minutes: 2 points
+    // Less than 12 minutes: 1 point
     const averageTimePerQuestion = totalTimeTaken / totalQuestions;
-    if (averageTimePerQuestion <= 20) {
+    if (averageTimePerQuestion < 9 * 60 / 5) {
       return 3;
-    } else if (averageTimePerQuestion <= 30) {
+    } else if (averageTimePerQuestion < 10 * 60 / 5) {
       return 2;
-    } else if (averageTimePerQuestion <= 60) {
+    } else if (averageTimePerQuestion < 12 * 60 / 5) {
       return 1;
     } else {
       return 0;
@@ -132,15 +137,7 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
   };
 
   const getTechniqueStars = (technique: number) => {
-    if (technique >= 4) {
-      return 3;
-    } else if (technique >= 2) {
-      return 2;
-    } else if (technique >= 1) {
-      return 1;
-    } else {
-      return 0;
-    }
+    return technique;
   };
 
   const renderStars = (count: number) => {
@@ -157,19 +154,19 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
     );
   };
 
-  const getCupcakeImage = (score: number) => {
-    if (score === 100) return "/threecupcakes.png";
-    if (score >= 60) return "/twocupcakes.png";
+  const getCupcakeImage = (point: number) => {
+    if (point === 3) return "/threecupcakes.png";
+    if (point === 2) return "/twocupcakes.png";
     return "/onecupcake.png";
   };
 
-  const getDialogContent = (score: number) => {
-    if (score === 100) {
+  const getDialogContent = (point: number) => {
+    if (point === 3) {
       return {
         title: "AMAZING!",
         description: "You won three cupcakes!",
       };
-    } else if (score >= 60) {
+    } else if (point === 2) {
       return {
         title: "GOOD!",
         description: "You got two cupcakes!",
@@ -200,12 +197,12 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
   };
 
   const getTechniqueDescription = (technique: number) => {
-    if (technique >= 4) return "Excellent";
-    else if (technique >= 2) return "Good";
+    if (technique === 3) return "Excellent";
+    else if (technique === 2) return "Good";
     else return "Needs Improvement";
   };
 
-  const dialogContent = getDialogContent(score);
+  const dialogContent = getDialogContent(Math.max(Math.round((scoreStars + timingStars + techniqueStars) / 3), 1));
 
   const handleReviewClick = () => {
     onOpenChange(false);
@@ -228,7 +225,7 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
         </DialogHeader>
         <div className="flex justify-center mb-4">
           <Image
-            src={getCupcakeImage(score)}
+            src={getCupcakeImage(Math.max(Math.round((scoreStars + timingStars + techniqueStars) / 3), 1))}
             alt="Cupcakes"
             width={200}
             height={200}
@@ -262,7 +259,7 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
           {/* Technique Section */}
           <div>
             <p className="text-xl font-semibold">Technique</p>
-            <p className="text-2xl font-bold text-pink-600">{technique}/4</p>
+            <p className="text-2xl font-bold text-pink-600">{technique}/3</p>
             <p className="text-lg">{getTechniqueDescription(technique)}</p>
             <div className="flex justify-center mt-2">
               {renderStars(techniqueStars)}
