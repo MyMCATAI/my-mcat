@@ -106,7 +106,7 @@ const Tutorial: React.FC<TutorialProps> = ({
       <div className="bg-white p-4 rounded-lg shadow-lg">
         
         <p className="text-lg mb-6">
-          We use math to calculate the best time to take FLs, do AAMC, and use 3rd party resources. 
+          We calculate the best time to take FLs, do AAMC, and use 3rd party resources. 
         </p>
         <div className="mb-4">
           [INSERT GIF HERE]
