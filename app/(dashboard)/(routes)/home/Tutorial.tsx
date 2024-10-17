@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
 import { motion } from 'framer-motion';
 
@@ -20,14 +20,36 @@ const Tutorial: React.FC<TutorialProps> = ({
   runPart4, setRunPart4
 }) => {
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status } = data;
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
-      setRunPart1(false);
-      setRunPart2(false);
-      setRunPart3(false);
-      setRunPart4(false);
+    const { status, type } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status) || type === 'tour:close') {
+      endAllTutorials();
     }
   };
+
+  const endAllTutorials = () => {
+    setRunPart1(false);
+    setRunPart2(false);
+    setRunPart3(false);
+    setRunPart4(false);
+  };
+
+  useEffect(() => {
+    const scheduleContent = document.querySelector('.schedule-content');
+    if (scheduleContent) {
+      const handleScheduleClick = (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+        if (runPart1 && target.closest('.settings-button')) {
+          endAllTutorials();
+        }
+      };
+
+      scheduleContent.addEventListener('click', handleScheduleClick);
+
+      return () => {
+        scheduleContent.removeEventListener('click', handleScheduleClick);
+      };
+    }
+  }, [runPart1]);
 
   const createShakeAnimation = (delay: number) => ({
     animate: { x: [0, -2, 2, -2, 2, 0] },
@@ -41,15 +63,15 @@ const Tutorial: React.FC<TutorialProps> = ({
   });
 
   const welcomeContent = (
-    <div className="space-y-6 text-[--theme-text-color]">
+    <div className="space-y-6 text-black">
       <h1 className="text-3xl font-bold text-center mb-4">Welcome to MyMCAT.ai!</h1>
       
-      <section className="bg-[--theme-gradient-end] p-4 rounded-lg shadow-lg">
+      <section className="bg-white p-4 rounded-lg shadow-lg">
         <p className="mb-4">The MCAT is a seven hour and thirty minute exam that covers eight subjects.</p>
+      
+        <p className="mb-4">Although there is a lot of resources out there to take the test, there is a distinct lack of guidance. You can use all of the right resources and still score below your potential.</p>
         
-        <p className="mb-4">Traditionally, students use Kaplan books for content, Anki for flashcards, and UWorld and AAMC for practice questions. However, this approach is often inefficient for a lot of students who need better guidance.</p>
-        
-        <p className="mb-4">We offer a BETTER way to approach MCAT prep with an all-in-one software that integrates Anki cards, trusted content, and an adaptable schedule. We want to solve these three questions for you:</p>
+        <p className="mb-4">We offer a BETTER way to approach MCAT prep with an all-in-one platform that integrates essential resources with our own amazing content to solve these three questions for you:</p>
         <ul className="list-none space-y-2">
           {['When should I study?', 'What should I study?', 'How should I study?'].map((goal, index) => (
             <li key={index}>
@@ -73,43 +95,45 @@ const Tutorial: React.FC<TutorialProps> = ({
       </section>
 
       <p className="text-lg font-semibold">
-        Let's begin solving your first problem — to the Dashboard!</p>
+        Let's begin solving your first problem of <span style={{ color: 'blue'}}>when should I study?</span></p>
     </div>
   );
 
   const tutorialPart2Content = (
-    <div className="space-y-6 text-[--theme-text-color]">
+    <div className="space-y-6 text-black">
       <h1 className="text-3xl font-bold text-center mb-4">Customize Your Schedule</h1>
       
-      <div className="bg-[--theme-gradient-end] p-4 rounded-lg shadow-lg">
+      <div className="bg-white p-4 rounded-lg shadow-lg">
+        
+        <p className="text-lg mb-6">
+          We use math to calculate the best time to take FLs, do AAMC, and use 3rd party resources. 
+        </p>
         <div className="mb-4">
           [INSERT GIF HERE]
         </div>
-        
-        <p className="text-lg">
-          Modify your calendar now. Maybe you need to enter a break, reduce the amount of review you do, change your hours. Change something!
-        </p>
+        <p className="text-lg mt-6">You can modify the calendar as well.</p>
       </div>
     </div>
   );
 
   const tutorialPart3Content = (
-    <div className="space-y-6 text-[--theme-text-color]">
+    <div className="space-y-6 text-black">
       <h1 className="text-3xl font-bold text-center mb-4">Ask Kalypso</h1>
       
-      <div className="bg-[--theme-gradient-end] p-4 rounded-lg shadow-lg">
+      <div className="bg-white p-4 rounded-lg shadow-lg">
         <p className="text-lg">
-          Great job! Now, let's wake up Kalypso and ask him a question about your schedule. Let's start with a simple one: Do I have enough time until my test?
+          Great job! Now, let's wake up Kalypso and ask him a question about your schedule.</p>
+        <p className="text-lg mt-5">Wouldn't it be nice if you could know when to take the exam?
         </p>
       </div>
     </div>
   );
 
   const tutorialPart4Content = (
-    <div className="space-y-6 text-[--theme-text-color]">
+    <div className="space-y-6 text-black">
       <h1 className="text-3xl font-bold text-center mb-4">Complete Your First Task</h1>
       
-      <div className="bg-[--theme-gradient-end] p-4 rounded-lg shadow-lg">
+      <div className="bg-white p-4 rounded-lg shadow-lg">
         <p className="text-lg">
           Yay! You've mastered the dashboard! Go ahead and checkmark it off in your Daily To-Do List!
         </p>
@@ -125,17 +149,17 @@ const Tutorial: React.FC<TutorialProps> = ({
       disableBeacon: true,
       styles: {
         options: {
-          width: 600, // Increase this value to make the box wider
+          width: 600,
         },
       },
     },
     {
       target: '.schedule-content',
-      content: "Click the settings icon on the top right.",
+      content: "Click the settings button on the top right.",
       placement: 'right',
       styles: {
         options: {
-          width: 300,
+          width: 200,
         },
       },
     },
@@ -149,12 +173,12 @@ const Tutorial: React.FC<TutorialProps> = ({
       disableBeacon: true,
     },
     {
-      target: '.calendar-component',
-      content: "Use the calendar to make changes to your schedule.",
-      placement: 'bottom',
+      target: '.schedule-content',
+      content: "Just drag activities or enter new ones.",
+      placement: 'right',
       styles: {
         options: {
-          width: 300,
+          width: 200,
         },
       },
     },
@@ -188,7 +212,7 @@ const Tutorial: React.FC<TutorialProps> = ({
     },
     {
       target: '.daily-todo-list',
-      content: "Check off your completed task here!",
+      content: "Check off tutorial tasks here!",
       placement: 'right',
       styles: {
         options: {
@@ -209,20 +233,14 @@ const Tutorial: React.FC<TutorialProps> = ({
         showProgress
         showSkipButton
         steps={part1Steps}
-        disableOverlayClose
-        disableCloseOnEsc
-        spotlightClicks={false}
+        spotlightClicks={true}
         styles={{
           options: {
-            arrowColor: 'var(--theme-leaguecard-color)',
-            backgroundColor: 'var(--theme-leaguecard-color)',
-            overlayColor: 'rgba(0, 0, 0, 0.8)',
+            backgroundColor: '#DBEAFE', // Change this to light blue (Tailwind's bg-blue-100)
+            textColor: 'black',
             primaryColor: 'var(--theme-border-color)',
-            textColor: 'var(--theme-text-color)',
+            overlayColor: 'rgba(0, 0, 0, 0.5)',
             zIndex: 1000,
-          },
-          overlay: {
-            cursor: 'not-allowed',
           },
         }}
       />
@@ -235,20 +253,14 @@ const Tutorial: React.FC<TutorialProps> = ({
         showProgress
         showSkipButton
         steps={part2Steps}
-        disableOverlayClose
-        disableCloseOnEsc
-        spotlightClicks={false}
+        spotlightClicks={true}
         styles={{
           options: {
-            arrowColor: 'var(--theme-leaguecard-color)',
-            backgroundColor: 'var(--theme-leaguecard-color)',
-            overlayColor: 'rgba(0, 0, 0, 0.8)',
+            backgroundColor: '#DBEAFE', // Change this to light blue (Tailwind's bg-blue-100)
+            textColor: 'black',
             primaryColor: 'var(--theme-border-color)',
-            textColor: 'var(--theme-text-color)',
+            overlayColor: 'rgba(0, 0, 0, 0.5)',
             zIndex: 1000,
-          },
-          overlay: {
-            cursor: 'not-allowed',
           },
         }}
       />
@@ -261,20 +273,14 @@ const Tutorial: React.FC<TutorialProps> = ({
         showProgress
         showSkipButton
         steps={part3Steps}
-        disableOverlayClose
-        disableCloseOnEsc
-        spotlightClicks={false}
+        spotlightClicks={true}
         styles={{
           options: {
-            arrowColor: 'var(--theme-leaguecard-color)',
-            backgroundColor: 'var(--theme-leaguecard-color)',
-            overlayColor: 'rgba(0, 0, 0, 0.8)',
+            backgroundColor: '#DBEAFE', // Change this to light blue (Tailwind's bg-blue-100)
+            textColor: 'black',
             primaryColor: 'var(--theme-border-color)',
-            textColor: 'var(--theme-text-color)',
+            overlayColor: 'rgba(0, 0, 0, 0.5)',
             zIndex: 1000,
-          },
-          overlay: {
-            cursor: 'not-allowed',
           },
         }}
       />
@@ -287,20 +293,14 @@ const Tutorial: React.FC<TutorialProps> = ({
         showProgress
         showSkipButton
         steps={part4Steps}
-        disableOverlayClose
-        disableCloseOnEsc
-        spotlightClicks={false}
+        spotlightClicks={true}
         styles={{
           options: {
-            arrowColor: 'var(--theme-leaguecard-color)',
-            backgroundColor: 'var(--theme-leaguecard-color)',
-            overlayColor: 'rgba(0, 0, 0, 0.8)',
+            backgroundColor: '#DBEAFE', // Changed to a darker blue
+            textColor: 'black',
             primaryColor: 'var(--theme-border-color)',
-            textColor: 'var(--theme-text-color)',
+            overlayColor: 'rgba(0, 0, 0, 0.5)',
             zIndex: 1000,
-          },
-          overlay: {
-            cursor: 'not-allowed',
           },
         }}
       />

@@ -195,7 +195,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
     let text = getActivitiesText;
     if (runTutorialPart1) {
       if (tutorialStep === 1) {
-        text = "Hi! Hello!\n\nThis is the dashboard. This is your home. Here, you'll look at statistics on progress, look at your calendar, daily tasks, and ask Kalypso any questions related to the logistics of taking the test. Let's start answering the 'When should I study?' question.";
+        text = "Hi! Hello!\n\nThis is the dashboard. Here, you'll look at statistics on progress, look at your calendar, daily tasks, and ask Kalypso any questions related to the logistics of taking the test.";
       } else {
         text = '';
       }
@@ -233,6 +233,19 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
     setShowAnalytics(false); // Switch to calendar mode
     setHasUpdatedStudyPlan(true);
     setShowCalendarTutorial(true);
+
+    // Delay before starting Tutorial Part 2
+    setTimeout(() => {
+      // Start Tutorial Part 2
+      setTutorialStep(1);
+      setRunTutorialPart2(true);
+    }, 5000);
+  }, []);
+
+  const handleCalendarModified = useCallback(() => {
+    // Start Tutorial Part 3
+    setTutorialStep(1);
+    setRunTutorialPart3(true);
   }, []);
 
   const handleTakeDiagnosticTest = () => {
@@ -240,7 +253,20 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
     onShowDiagnosticTest();
   };
 
-  const toggleSettings = () => setShowSettings(!showSettings);
+  const toggleSettings = () => {
+    setShowSettings(!showSettings);
+    if (runTutorialPart1) {
+      endAllTutorials();
+    }
+  };
+
+  const endAllTutorials = () => {
+    setRunTutorialPart1(false);
+    setRunTutorialPart2(false);
+    setRunTutorialPart3(false);
+    setRunTutorialPart4(false);
+  };
+
   const toggleNewActivityForm = () => setShowNewActivityForm(!showNewActivityForm);
 
   const handleInputChange = (
@@ -376,13 +402,17 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
           {Object.entries(checklists).map(([section, items]) => (
             <div key={section} className="mb-4 relative">
               <button
-                className="w-full h-10 bg-[--theme-hover-color] text-[--theme-hover-text] hover:opacity-80 font-semibold shadow-md px-2 rounded transition text-sm relative"
+                className={`w-full h-10 ${
+                  completedSections.includes(section)
+                    ? 'bg-green-500 text-white'
+                    : 'bg-[--theme-hover-color] text-[--theme-hover-text]'
+                } hover:opacity-80 font-semibold shadow-md rounded transition text-m relative`}
                 onClick={() => handleButtonClick(section)}
               >
                 {buttonLabels[section]}
                 {completedSections.includes(section) && (
                   <div className="absolute top-1/2 right-0 transform -translate-y-1/2 -mr-2">
-                    <CheckCircle className="w-6 h-6 text-green-500 bg-white rounded-full" />
+                    <CheckCircle className="w-6 h-6 text-white bg-green-500 rounded-full" />
                   </div>
                 )}
               </button>
@@ -419,18 +449,20 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
               <TooltipTrigger>
                 <button 
                   onClick={toggleSettings} 
-                  className="settings-button bg-white p-2 rounded-full shadow-md"
+                  className={`settings-button p-2 rounded-full shadow-md ${
+                    showSettings ? 'bg-[--theme-hover-color]' : 'bg-white'
+                  }`}
                 >
                   <svg
                     width="16"
                     height="16"
                     viewBox="0 0 24 24"
-                    fill="#333"
+                    fill={showSettings ? 'white' : '#333'}
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
                       d="M9.25,22l-.4-3.2c-.216-.084-.42-.184-.612-.3c-.192-.117-.38-.242-.563-.375L4.7,19.375L1.95,14.625L4.525,12.675c-.016-.117-.024-.23-.024-.338V11.662c0-.108.008-.221.025-.337L1.95,9.375L4.7,4.625L7.675,5.875c.183-.134.375-.259.575-.375c.2-.117.4-.217.6-.3l.4-3.2H14.75l.4,3.2c.216.084.42.184.612.3c.192.117.38.242.563.375l2.975-.75l2.75,4.75l-2.575,1.95c.016.117.024.23.024.338v.675c0,.108-.008.221-.025.337l2.575,1.95l-2.75,4.75l-2.95-.75c-.183.133-.375.258-.575.375c-.2.117-.4.217-.6.3l-.4,3.2H9.25zM12.05,15.5c.966,0,1.791-.342,2.475-1.025c.683-.683,1.025-1.508,1.025-2.475c0-.966-.342-1.791-1.025-2.475c-.683-.683-1.508-1.025-2.475-1.025c-0.984,0-1.813,.342-2.488,1.025c-0.675,.683-1.012,1.508-1.012,2.475c0,.966,.337,1.791,1.012,2.475c.675,.683,1.504,1.025,2.488,1.025z"
-                      fill="#333"
+                      fill={showSettings ? 'white' : '#333'}
                     />
                   </svg>
                 </button>
@@ -442,15 +474,35 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
           </TooltipProvider>
         </div>
 
-        {/* Settings Modal */}
-        {showSettings && (
-          <div className="absolute top-16 right-6 w-80 bg-white rounded-lg shadow-lg z-50">
-            <SettingContent 
-              onShowDiagnosticTest={onShowDiagnosticTest} 
-              onStudyPlanSaved={handleStudyPlanSaved}
+        {/* Opaque Overlay */}
+        <AnimatePresence>
+          {showSettings && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-70 z-40"
+              onClick={toggleSettings}
             />
-          </div>
-        )}
+          )}
+        </AnimatePresence>
+
+        {/* Settings Modal */}
+        <AnimatePresence>
+          {showSettings && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-16 right-6 w-80 bg-white rounded-lg shadow-lg z-50"
+            >
+              <SettingContent 
+                onShowDiagnosticTest={onShowDiagnosticTest} 
+                onStudyPlanSaved={handleStudyPlanSaved}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Schedule Display */}
         <div
@@ -468,7 +520,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
           {showAnalytics ? (
             <>
               <pre
-                className="pt-5 font-mono text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap mt-4 ml-2"
+                className="pt-5 font-mono text-xl leading-[20px] tracking-[0.4px] whitespace-pre-wrap mt-4 ml-2"
                 style={{ color: "var(--theme-text-color)" }}
               >
                 {runTutorialPart1 ? tutorialText : typedText}
@@ -479,13 +531,13 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
                   <div className="flex space-x-4 mb-4">
                     <button
                       onClick={() => setShowGraphs(!showGraphs)}
-                      className="bg-[--theme-leaguecard-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
+                      className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
                     >
                       &gt; progress
                     </button>
                     <button
                       onClick={handleToggleView}
-                      className="bg-[--theme-leaguecard-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
+                      className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
                     >
                       &gt; calendar
                     </button>
@@ -554,6 +606,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
                 activities={activities}
                 onDateChange={setCurrentDate}
                 getActivitiesForDate={getActivitiesForDate}
+                onInteraction={handleCalendarModified}
               />
               <button
                 onClick={handleToggleView}
