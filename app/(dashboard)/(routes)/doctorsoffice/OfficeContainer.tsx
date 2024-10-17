@@ -5,6 +5,15 @@ import { ImageGroup } from './ShoppingDialog';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import AfterTestFeed from './AfterTestFeed';
 
 
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
@@ -46,7 +55,6 @@ const spriteWaypoints: Record<number, Waypoint[]> = {
     { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
     { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
     { x: 4, y: 3, direction: 'NE' },  // Move NE to top left
-    { x: 9, y: 3, direction: 'SE' },  // Move SE to top right
     { x: 4, y: 3, direction: 'NW' },  // Move NW to top left
     { x: 4, y: 9, direction: 'SW' },  // Move SW to bottom left
     { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
@@ -64,28 +72,26 @@ const spriteWaypoints: Record<number, Waypoint[]> = {
     { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
     { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
     { x: 4, y: 3, direction: 'NE' },  // Move NE to middle left
-    { x: 2.5, y: 1.3, direction: 'NW' },  // Move SE back to waiting room
-    { x: 2.5, y: 6, direction: 'SW' },  // Move NE to middle left
-    { x: 5, y: 9, direction: 'S' },  // Move SE back to waiting room
+    { x: 2.5, y: 1.3, direction: 'N' },  // Move SE back to waiting room
+    { x: 2.5, y: 7, direction: 'SW' },  // Move NE to middle left
+    { x: 4.5, y: 9, direction: 'S' },  // Move SE back to waiting room
     { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
   ],
   5: [
     { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
     { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
     { x: 3, y: 1.5, direction: 'NE' },  // Move NE to top left
-    { x: 9, y: 1.5, direction: 'SE' },  // Move SE to top right
-    { x: 4, y: 1.5, direction: 'NW' },  // Move NW to top left
-    { x: 4, y: 9, direction: 'SW' },  // Move SW to bottom left
+    { x: 8, y: 1.5, direction: 'SE' },  // Move SE to top right
+    { x: 3, y: 1.5, direction: 'NW' },  // Move NE to top left
+    { x: 4, y: 9, direction: 'SW' },  // Move SE back to waiting room
     { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
   ],
   6: [
     { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
     { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
-    { x: 3, y: 1.5, direction: 'NE' },  // Move NE to top left
-    { x: 9, y: 1.5, direction: 'SE' },  // Move SE to top right
-    { x: 4, y: 1.5, direction: 'NW' },  // Move NW to top left
-    { x: 4, y: 9, direction: 'SW' },  // Move SW to bottom left
-    { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
+    { x: 3, y: 2, direction: 'NE' },  // Move NE to top left
+    { x: 10, y: 2, direction: 'SE' },  // Move SE to top right
+    { x: 10, y: 9, direction: 'SW' },  // Move SE back to waiting room
   ],
 };
 
@@ -216,10 +222,10 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   const zoomLevels: Record<number, { scale: number, offsetX: number, offsetY: number }> = {
     1: { scale: 1.5, offsetX: 150, offsetY: -50 },
     2: { scale: 1.3, offsetX: 150, offsetY: 0 },
-    3: { scale: 1.1, offsetX: 100, offsetY: 20 },
-    4: { scale: 0.9, offsetX: 100, offsetY: 100 },
-    5: { scale: 0.8, offsetX: 50, offsetY: 50 },
-    6: { scale: 0.7, offsetX: 0, offsetY: 0 },
+    3: { scale: 1.3, offsetX: 150, offsetY: 0 }, // Changed to match level 2
+    4: { scale: 1.1, offsetX: 150, offsetY: 50 },
+    5: { scale: 1.0, offsetX: 50, offsetY: 50 },
+    6: { scale: 1.0, offsetX: 0, offsetY: 0 },
   };
 
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -363,51 +369,36 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const drawGrid = useCallback((g: PIXIGraphics) => {
       g.clear();
-      g.lineStyle(1, 0x000000, 1);
 
       for (let y = 0; y < gridHeight; y++) {
         for (let x = 0; x < gridWidth; x++) {
           const posX = screenX(x, y);
           const posY = screenY(x, y);
 
-          // Draw tile outline
-          g.moveTo(posX, posY + tileHeight / 2);
-          g.lineTo(posX + tileWidth / 2, posY);
-          g.lineTo(posX + tileWidth, posY + tileHeight / 2);
-          g.lineTo(posX + tileWidth / 2, posY + tileHeight);
-          g.lineTo(posX, posY + tileHeight / 2);
-
           // Determine if the tile should be filled based on the current level
           let shouldFill = false;
-          let fillAlpha = 1;
 
           switch (currentTestLevel) {
             case 1:
-              shouldFill = y >= gridHeight - 2;
+              shouldFill = y >= gridHeight - 2 && x >= 2; // Only fill the bottom two rows, starting from the third column
               break;
             case 2:
-              shouldFill = y >= gridHeight - 2 || x < 2 || (x >= 2 && x <= 3 && y >= gridHeight - 6);
-              break;
             case 3:
-              shouldFill = y >= gridHeight - 4 || x < 3 || y < 3;
+              shouldFill = y >= gridHeight - 2 || x < 2 || (x >= 2 && x <= 3 && y >= gridHeight - 6);
+              shouldFill = shouldFill && y >= 3.3; // Exclude the top three and a half rows
               break;
             case 4:
-              shouldFill = y >= gridHeight - 5 || x < 4 || y < 4;
-              break;
             case 5:
+              shouldFill = (y >= gridHeight - 5 || x < 4 || y < 4) && x < gridWidth - 2;
+              break;
             case 6:
               shouldFill = true;
               break;
           }
 
-          // Adjust alpha for edges
-          if (shouldFill && (x < 2 || y < 2)) {
-            fillAlpha = 0.1;
-          }
-
           // Fill tile with the theme accent color if it should be filled
           if (shouldFill) {
-            g.beginFill(PIXIUtils.string2hex(accentColor), fillAlpha);
+            g.beginFill(PIXIUtils.string2hex(accentColor));
             g.moveTo(posX, posY + tileHeight / 2);
             g.lineTo(posX + tileWidth / 2, posY);
             g.lineTo(posX + tileWidth, posY + tileHeight / 2);
@@ -448,10 +439,10 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     1: {
       canvasSize: { width: 10, height: 10 },
       rooms: [
-        { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 280, height: 268, zIndex: 9, opacity: 1.0},
-        { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 5.9, width: 300, height: 275, zIndex: 8},
-        { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 5.82, width: 300, height: 275, zIndex: 8, opacity: 1.0},        
-        { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 1.95, y: 8, width: 296, height: 290, zIndex: 7},
+        { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.04, width: 280, height: 268, zIndex: 10, opacity: 1.0},
+        { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 5.94, width: 300, height: 278, zIndex: 6},
+        { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 5.88, width: 300, height: 278, zIndex: 7, opacity: 1.0},        
+        { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 2.06, y: 7.99, width: 296, height: 290, zIndex: 5},
       ]
     },
     2: {
@@ -460,8 +451,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
         { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 274, height: 268, zIndex: 12, opacity: 1.0},
         { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 11},
         { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 11, opacity: 1.0},
-        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.3, width: 306, height: 275, zIndex: 9},
-        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.92, y: 4.25, width: 306, height: 274, zIndex: 10},
+        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.3, width: 300, height: 275, zIndex: 9},
+        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.92, y: 4.25, width: 320, height: 262, zIndex: 10},
         { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
         { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
         { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 12},
@@ -473,8 +464,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
         { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 274, height: 268, zIndex: 12, opacity: 1.0},
       { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 11},
       { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 11, opacity: 1.0},
-      { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.3, width: 306, height: 275, zIndex: 9},
-      { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.92, y: 4.25, width: 306, height: 274, zIndex: 10},
+      { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.3, width: 300, height: 275, zIndex: 9},
+      { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.92, y: 4.25, width: 320, height: 262, zIndex: 10},
       { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
       { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
       { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 12},
@@ -483,42 +474,44 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     4: {
       canvasSize: { width: 10, height: 10 },
       rooms: [
-        { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 274, height: 268, zIndex: 12, opacity: 1.0},
-        { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 12},
-        { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 12, opacity: 1.0},
-        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.3, width: 306, height: 275, zIndex: 12},
-        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.92, y: 4.25, width: 306, height: 274, zIndex: 12},
+        { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.0, width: 284, height: 272, zIndex: 12, opacity: 1.0},
+        { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 10},
+        { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 10, opacity: 1.0},
+        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.27, width: 288, height: 268, zIndex: 9},
+        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.9, y: 4.2, width: 294, height: 262, zIndex: 9},
         { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 8},
         { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
         { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
-        { id: 'MRIMachine1', src: '/game-components/MRIMachine.png', x: 4.06, y: 0.11, width: 275, height: 256, zIndex: 5 },
+        { id: 'MRIMachine2', src: '/game-components/MRIMachine.png', x: 2.11, y: 0.11, width: 270, height: 256, zIndex: 4 },
+        { id: 'MedicalCloset1', src: '/game-components/MedicalCloset1.png', x: 0, y: 0.1, width: 302, height: 255, zIndex: 1 },
+        { id: 'OperatingRoom1', src: '/game-components/OperatingRoom1.png', x: 0.04, y: 2, width: 268, height: 256, zIndex: 2 },
       ]
     },
     5: {
       canvasSize: { width: 10, height: 10 },
       rooms: [
         { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 274, height: 268, zIndex: 12, opacity: 1.0},
-        { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 12},
-        { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 12, opacity: 1.0},
-        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.3, width: 306, height: 275, zIndex: 12},
-        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.92, y: 4.25, width: 306, height: 274, zIndex: 12},
+        { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 11},
+        { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 11, opacity: 1.0},
+        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.27, width: 288, height: 268, zIndex: 10},
+        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.9, y: 4.2, width: 294, height: 262, zIndex: 10},
         { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 8},
         { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
         { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
         { id: 'MRIMachine1', src: '/game-components/MRIMachine.png', x: 4.06, y: 0.11, width: 275, height: 256, zIndex: 5 },
         { id: 'MRIMachine2', src: '/game-components/MRIMachine.png', x: 2.11, y: 0.11, width: 270, height: 256, zIndex: 4 },
         { id: 'OperatingRoom1', src: '/game-components/OperatingRoom1.png', x: 0.04, y: 2, width: 268, height: 256, zIndex: 2 },
+        { id: 'MedicalCloset1', src: '/game-components/MedicalCloset1.png', x: 0, y: 0.1, width: 302, height: 255, zIndex: 1 },
       ]
     },
     6: {
       canvasSize: { width: 10, height: 10 },
       rooms: [
-        { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 274, height: 268, zIndex: 12, opacity: 1.0},
-        { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 12},
-        { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 12, opacity: 1.0},
-        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.3, width: 306, height: 275, zIndex: 12},
-        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.92, y: 4.25, width: 306, height: 274, zIndex: 12},
-        { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 8},
+        { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 260, zIndex: 11},
+        { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 262, zIndex: 11, opacity: 1.0},
+        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.27, width: 288, height: 268, zIndex: 10},
+        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 6.0, y: 4.2, width: 294, height: 257, zIndex: 10},
+        { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 290, zIndex: 8},
         { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
         { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
         { id: 'MRIMachine1', src: '/game-components/MRIMachine.png', x: 4.06, y: 0.11, width: 275, height: 256, zIndex: 5 },
@@ -588,6 +581,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     }
   };
 
+  const [isLargeDialogOpen, setIsLargeDialogOpen] = useState(false);
+
   return (
     <div className="flex flex-col w-full h-full relative overflow-hidden">
       {/* Pixi.js stage container */}
@@ -635,6 +630,31 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
       >
         Test Level: {currentTestLevel}
       </Button>
+
+      {/* New Dialog Button */}
+      <Button
+        className="absolute bottom-4 right-40 z-50"
+        onClick={() => setIsLargeDialogOpen(true)}
+      >
+        Open Large Dialog
+      </Button>
+
+      <AfterTestFeed
+        open={isLargeDialogOpen}
+        onOpenChange={setIsLargeDialogOpen}
+      >
+        <div className="bg-[--theme-gradient-end] p-4 rounded-lg shadow-lg mb-6">
+          <h2 className="text-xl font-semibold text-[--theme-text-color] mb-2">Section Title:</h2>
+          <p className="text-[--theme-text-color]">
+            This is a large dialog box with custom content. You can add any components or information you want here.
+          </p>
+        </div>
+        <div className="text-[--theme-text-color]">
+          <p className="text-lg mb-4">You can add multiple sections, images, or any other content here.</p>
+          <p className="text-lg">This dialog box is scrollable if the content exceeds the height.</p>
+        </div>
+        {/* Add more content as needed */}
+      </AfterTestFeed>
     </div>
   );
 };
