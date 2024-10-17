@@ -18,7 +18,7 @@ const options: Option[] = [
   { id: "option1", label: "When is your test?" },
   { id: "option2", label: "When can you take full lengths?" },
   { id: "option3", label: "How many hours each day?" },
-  { id: "option4", label: "What resources do you have?" },
+  { id: "option4", label: "What resources do you want to use?" },
 ];
 
 const days: string[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
