@@ -520,7 +520,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
           {showAnalytics ? (
             <>
               <pre
-                className="pt-5 font-mono text-xl leading-[20px] tracking-[0.4px] whitespace-pre-wrap mt-4 ml-2"
+                className="pt-5 font-mono text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap mt-4 ml-2"
                 style={{ color: "var(--theme-text-color)" }}
               >
                 {runTutorialPart1 ? tutorialText : typedText}
@@ -531,13 +531,13 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
                   <div className="flex space-x-4 mb-4">
                     <button
                       onClick={() => setShowGraphs(!showGraphs)}
-                      className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
+                      className="bg-[--theme-leaguecard-color] text-m border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
                     >
                       &gt; progress
                     </button>
                     <button
                       onClick={handleToggleView}
-                      className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
+                      className="bg-[--theme-leaguecard-color] text-m border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
                     >
                       &gt; calendar
                     </button>
@@ -674,7 +674,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
         {showNewActivityForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl w-96">
-              <h3 className="text-xl font-bold mb-4 text-black">
+              <h3 className="text-lg font-bold mb-4 text-black">
                 Add New Activity
               </h3>
               <form onSubmit={createNewActivity}>

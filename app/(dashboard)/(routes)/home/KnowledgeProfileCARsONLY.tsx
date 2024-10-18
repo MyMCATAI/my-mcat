@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { FaYoutube } from 'react-icons/fa';
 import TutorialContent from "../../../../components/home/TutorialContent";
 import TutorialVidDialog from '../../../../components/ui/TutorialVidDialog';
+import ChatBot from "@/components/chatbot/ChatBot";
 
 interface KnowledgeProfileProps {
   activities: FetchedActivity[];
@@ -121,16 +122,25 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
 
   const renderInsights = () => {
     if (currentPage !== "test") {
+      const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       return (
-        <div className="h-full flex items-center justify-center">
-          <p className="text-xl font-semibold text-[--theme-text-color]">Insert Kalypso Chat Here</p>
+        <div className="h-[calc(100vh-12.4rem)] flex flex-col">
+          <ChatBot
+            chatbotContext={{
+              contentTitle: "calendar",
+              context: `This is the calendar. Today's date is ${today}.`
+            }}
+            width="100%"
+            height="100%"
+            backgroundColor="transparent"
+          />
         </div>
       );
     }
 
     return (
-      <div className="h-full flex flex-col space-y-4">
-        <Card>
+      <div className="h-[calc(100vh-12.3rem)] flex flex-col space-y-4 overflow-auto">
+        <Card className="flex-shrink-0">
           <CardContent className="p-4 relative">
             <div className="flex items-center mb-4">
               <FaYoutube className="text-3xl text-red-600 mr-2" />
@@ -210,47 +220,51 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   };
 
   const renderSchools = (schools: School[]) => (
-    <ScrollArea className="h-full relative">
-      {schools.map((school, index) => {
-        return (
-          <div key={index} className="mb-4 p-4 bg-[--theme-leaguecard-color] rounded-lg shadow-md">
-            <div className="flex items-start">
-              <div className="mr-4 flex-shrink-0">
-                <Image
-                  src={`/colleges/${school.name.replace(/\s+/g, '')}.png`}
-                  alt={school.name}
-                  width={80}
-                  height={80}
-                  className="rounded-lg border border-[--theme-border-color] object-cover xl:w-24 xl:h-24"
-                />
-              </div>
-              <div className="flex-grow">
-                <h3 className="text-sm font-semibold text-[--theme-text-color]">{school.name}</h3>
-                <p className="text-sm text-[--theme-text-color] opacity-80">{school.location}</p>
-                <div className="mt-1">
-                  <span className="inline-block text-[--theme-hover-color] text-sm">
-                    #{school.rank} in {school.funRanking}
-                  </span>
+    <div className="h-[calc(100vh-12.3rem)] flex flex-col">
+      <ScrollArea className="flex-grow">
+        <div className="pr-4 pb-4">
+          {schools.map((school, index) => {
+            return (
+              <div key={index} className="mb-4 p-4 bg-[--theme-leaguecard-color] rounded-lg shadow-md">
+                <div className="flex items-start">
+                  <div className="mr-4 flex-shrink-0">
+                    <Image
+                      src={`/colleges/${school.name.replace(/\s+/g, '')}.png`}
+                      alt={school.name}
+                      width={80}
+                      height={80}
+                      className="rounded-lg border border-[--theme-border-color] object-cover xl:w-24 xl:h-24"
+                    />
+                  </div>
+                  <div className="flex-grow">
+                    <h3 className="text-sm font-semibold text-[--theme-text-color]">{school.name}</h3>
+                    <p className="text-sm text-[--theme-text-color] opacity-80">{school.location}</p>
+                    <div className="mt-1">
+                      <span className="inline-block text-[--theme-hover-color] text-sm">
+                        #{school.rank} in {school.funRanking}
+                      </span>
+                    </div>
+                  </div>
                 </div>
+                <p className="mt-3 text-sm text-[--theme-text-color] opacity-90">
+                  {getMascotDescription(school.name)}
+                </p>
+                {school.rank === 1 && (
+                  <Dialog open={isMVPDialogOpen} onOpenChange={setIsMVPDialogOpen}>
+                    <DialogTrigger asChild>
+                      {/* <button className="mt-2 text-sm text-blue-600 hover:underline">
+                        Highlighting the MVPs»
+                      </button> */}
+                    </DialogTrigger>
+                    <MVPDialog university={school.name} />
+                  </Dialog>
+                )}
               </div>
-            </div>
-            <p className="mt-3 text-sm text-[--theme-text-color] opacity-90">
-              {getMascotDescription(school.name)}
-            </p>
-            {school.rank === 1 && (
-              <Dialog open={isMVPDialogOpen} onOpenChange={setIsMVPDialogOpen}>
-                <DialogTrigger asChild>
-                  {/* <button className="mt-2 text-sm text-blue-600 hover:underline">
-                    Highlighting the MVPs»
-                  </button> */}
-                </DialogTrigger>
-                <MVPDialog university={school.name} />
-              </Dialog>
-            )}
-          </div>
-        );
-      })}
-    </ScrollArea>
+            );
+          })}
+        </div>
+      </ScrollArea>
+    </div>
   );
 
   const renderContent = (content: TabContent) => {
@@ -274,7 +288,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   ];
 
   return (
-    <div className="relative p-2 overflow-auto h-[calc(100vh-4.8rem)]">
+    <div className="relative p-2 overflow-hidden h-[calc(100vh-4.8rem)]">
       <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
         <div className="flex w-full">
           {tabs.map((tab) => (
