@@ -51,13 +51,19 @@ model Question {
   contentCategory     String
   questionID          String
   difficulty          Float          @default(1)
+  links               String?        @db.Text
+  tags                String?        @db.Text
+  types               String?        @db.Text
+  contentId           String?
   passage             Passage?       @relation(fields: [passageId], references: [id])
   category            Category       @relation(fields: [categoryId], references: [id])
+  content             Content?       @relation(fields: [contentId], references: [id])
   testQuestions       TestQuestion[]
   userResponses       UserResponse[]
 
   @@index([passageId])
   @@index([categoryId])
+  @@index([contentId])
 }
 
 model Category {
@@ -200,6 +206,7 @@ model Content {
   updatedAt          DateTime           @updatedAt
   category           Category           @relation(fields: [categoryId], references: [id])
   calendarActivities CalendarActivity[]
+  questions          Question[]
 
   @@index([categoryId])
 }
