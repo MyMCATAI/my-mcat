@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
 import { motion } from 'framer-motion';
 
@@ -19,12 +19,29 @@ const Tutorial: React.FC<TutorialProps> = ({
   runPart3, setRunPart3,
   runPart4, setRunPart4
 }) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const playNotification = () => {
+    if (audioRef.current) {
+      audioRef.current.play().catch(error => console.error("Audio playback failed:", error));
+    }
+  };
+
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, type } = data;
+    if (type === 'tour:start') {
+      playNotification();
+    }
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status) || type === 'tour:close') {
       endAllTutorials();
     }
   };
+
+  useEffect(() => {
+    if (runPart1 || runPart2 || runPart3 || runPart4) {
+      playNotification();
+    }
+  }, [runPart1, runPart2, runPart3, runPart4]);
 
   const endAllTutorials = () => {
     setRunPart1(false);
@@ -123,7 +140,7 @@ const Tutorial: React.FC<TutorialProps> = ({
       <div className="bg-white p-4 rounded-lg shadow-lg">
         <p className="text-lg">
           Great job! Now, let's wake up Kalypso and ask him a question about your schedule.</p>
-        <p className="text-lg mt-5">Wouldn't it be nice if you could know when to take the exam?
+        <p className="text-lg mt-5">
         </p>
       </div>
     </div>
@@ -193,7 +210,7 @@ const Tutorial: React.FC<TutorialProps> = ({
     },
     {
       target: '.knowledge-profile-component',
-      content: "Ask Kalypso your question here.",
+      content: "Ask Kalypso your question here (you can also enable voice up top!)",
       placement: 'left',
       styles: {
         options: {
@@ -224,6 +241,7 @@ const Tutorial: React.FC<TutorialProps> = ({
 
   return (
     <>
+      <audio ref={audioRef} src="/notification.mp3" />
       <Joyride
         callback={handleJoyrideCallback}
         continuous
@@ -236,7 +254,7 @@ const Tutorial: React.FC<TutorialProps> = ({
         spotlightClicks={true}
         styles={{
           options: {
-            backgroundColor: '#DBEAFE', // Change this to light blue (Tailwind's bg-blue-100)
+            backgroundColor: '#DBEAFE',
             textColor: 'black',
             primaryColor: 'var(--theme-border-color)',
             overlayColor: 'rgba(0, 0, 0, 0.5)',
@@ -256,7 +274,7 @@ const Tutorial: React.FC<TutorialProps> = ({
         spotlightClicks={true}
         styles={{
           options: {
-            backgroundColor: '#DBEAFE', // Change this to light blue (Tailwind's bg-blue-100)
+            backgroundColor: '#DBEAFE',
             textColor: 'black',
             primaryColor: 'var(--theme-border-color)',
             overlayColor: 'rgba(0, 0, 0, 0.5)',
@@ -276,7 +294,7 @@ const Tutorial: React.FC<TutorialProps> = ({
         spotlightClicks={true}
         styles={{
           options: {
-            backgroundColor: '#DBEAFE', // Change this to light blue (Tailwind's bg-blue-100)
+            backgroundColor: '#DBEAFE',
             textColor: 'black',
             primaryColor: 'var(--theme-border-color)',
             overlayColor: 'rgba(0, 0, 0, 0.5)',
@@ -296,7 +314,7 @@ const Tutorial: React.FC<TutorialProps> = ({
         spotlightClicks={true}
         styles={{
           options: {
-            backgroundColor: '#DBEAFE', // Changed to a darker blue
+            backgroundColor: '#DBEAFE',
             textColor: 'black',
             primaryColor: 'var(--theme-border-color)',
             overlayColor: 'rgba(0, 0, 0, 0.5)',

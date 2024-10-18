@@ -185,7 +185,7 @@ body.theme-sunsetCity * {
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
     --theme-hover-color: #3b82f6;
     --theme-userchatbox-color: #007afc;
-    --theme-botchatbox-color: #001226;
+    --theme-botchatbox-color: #262729;
     --theme-hover-text: #ffffff;
     --theme-border-color: #0162ff; /* This is the default blue color */
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
@@ -293,7 +293,7 @@ body.theme-sunsetCity * {
 
 .theme-sakuraTrees {
   /* Sakura Trees theme variables */
-  --theme-box-shadow: 0 0 6px 3px rgba(255, 0, 89, 0.853), inset 0 0 8px rgba(253, 57, 149, 0.659);
+  --theme-box-shadow: 0 0 8px 2px rgba(255, 0, 89, 0.7), inset 0 2px 13px rgba(253, 57, 149, 0.8);
   --theme-interface-image: url('/sakura-pattern.png');
   --theme-mainbox-color: #faeef4e6; /* Lighter, more transparent pink */
   --theme-gradient-start: #fff9ffcd;
@@ -303,8 +303,7 @@ body.theme-sunsetCity * {
   --theme-text-color: #4a0e37; /* Darker pink for better contrast */
   --theme-svg-color: #4a0e37; /* Matching text color */
   --theme-hover-color: #b85475; /* Pale violet red */
-  --theme-botchatbox-color: rgba(219, 112, 147, 0.2); /* Transparent pale violet red */
-  --theme-userchatbox-color: rgba(255, 182, 193, 0.2); /* Transparent light pink */
+  --theme-botchatbox-color: #dcdcdc; /* Transparent pale violet red */
   --theme-hover-text: #ffffff;
   --theme-border-color: #ff0080; /* Pale violet red */
   --theme-leaguecard-color: #ffedf6e6; /* Matching mainbox-color */
@@ -334,7 +333,7 @@ body.theme-sunsetCity * {
   --theme-text-color: #ffd1dc;
   --theme-svg-color: #ffffff;
   --theme-hover-color: #ff6347;
-  --theme-botchatbox-color: #3a2963;
+  --theme-botchatbox-color: #323232;
   --theme-userchatbox-color: #007afc;
   --theme-hover-text: #2c1e4a;
   --theme-border-color: #ff6347;
@@ -625,11 +624,11 @@ body {
   --theme-gradient-end: #ffffff;
   --theme-gradient-startstreak: #7d9eba;
   --theme-gradient-endstreak: #5286b3;
-  --theme-text-color: #1e81b0;
+  --theme-text-color: #0a3b52;
   --theme-svg-color: #1e81b0;
   --theme-hover-color: #4cb5e6;
-  --theme-userchatbox-color: #f0f8ff;
-  --theme-botchatbox-color: #ffffff;
+  --theme-userchatbox-color: #0c85ff;
+  --theme-botchatbox-color: #e8e9ea;
   --theme-hover-text: #ffffff;
   --theme-border-color: #4cb5e6;
   --theme-leaguecard-color: rgba(255, 255, 255, 0.9);
