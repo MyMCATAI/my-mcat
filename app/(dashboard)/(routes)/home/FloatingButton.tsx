@@ -124,7 +124,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
       )}
       {showTutoringMessage && (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black p-4 rounded-lg shadow-lg z-50">
-          You don't have enough coins to unlock the tutoring suite! Head to Anki Clinic to earn it.
+          {"You don't have enough coins to unlock the tutoring suite! Head to Anki Clinic to earn it."}
         </div>
       )}
       <span className="fixed bottom-[8rem] left-[0.625rem] z-50">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 interface LargeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  title: string;
+  title?: string; 
+  children?: ReactNode;
 }
 
 interface FeedItem {
@@ -23,7 +24,7 @@ interface FeedItem {
   content: any;
 }
 
-const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title }) => {
+const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, children }) => {
   const [score, setScore] = useState(0);
   const [showReviewFeed, setShowReviewFeed] = useState(false);
   const [userQuestion, setUserQuestion] = useState('');
@@ -106,7 +107,6 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title }
               key={i}
               progress={starProgress}
               uniqueId={`dialog-star-${i}`}
-              size={48}
             />
           );
         })}
@@ -178,7 +178,12 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title }
           {item.type === 'MultipleChoice' && (
             <div>
               <p className="text-lg font-semibold mb-4">{item.content.question}</p>
-              {item.content.options.map((option, index) => (
+              {item.content.options.map((option: {
+                option: string;
+                text: string;
+                isCorrect: boolean;
+                explanation?: string;
+              }, index: number) => (
                 <div key={index} className={`p-2 rounded ${option.isCorrect ? 'bg-green-100' : ''}`}>
                   <p>{option.option}. {option.text}</p>
                   {option.isCorrect && (
@@ -193,10 +198,15 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title }
           {item.type === 'Practice Question' && (
             <div>
               <p className="text-lg font-semibold mb-4">{item.content.question}</p>
-              {item.content.options.map((option, index) => (
+              {item.content.options.map((option: {
+                option: string;
+                text: string;
+                isCorrect: boolean;
+                explanation?: string;
+              }, index: number) => (
                 <div key={index} className={`p-2 rounded ${option.isCorrect ? 'bg-green-100' : ''}`}>
                   <p>{option.option}. {option.text}</p>
-                  {option.isCorrect && (
+                  {option.isCorrect && option.explanation && (
                     <p className="text-sm text-green-700 mt-1">
                       Correct. {option.explanation}
                     </p>
@@ -212,7 +222,7 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title }
                 Gravity is a fundamental force of nature that attracts any two masses in the universe. It was first described mathematically by Sir Isaac Newton in the 17th century. Einstein later refined our understanding of gravity with his theory of general relativity, which describes gravity as a curvature of spacetime caused by mass and energy.
               </p>
               <p className="text-lg font-semibold mb-2">Question:</p>
-              <p className="mb-4">According to the passage, how did Einstein's theory change our understanding of gravity?</p>
+              <p className="mb-4">{"According to the passage, how did Einstein's theory change our understanding of gravity?"}</p>
               <textarea 
                 className="w-full p-2 border rounded text-black"
                 rows={4}
@@ -308,7 +318,7 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title }
             <div className="bg-[--theme-gradient-end] p-4 rounded-lg shadow-lg">
               {renderStars()}
               <p className="text-xl font-semibold text-[--theme-text-color] mt-2 mb-4">
-                "Insert review of performance here"
+                {"Insert review of performance here"}
               </p>
               {renderPerformanceSummary()}
               <Button
@@ -350,7 +360,7 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title }
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
                 <h3 className="text-xl font-bold mb-4 text-black">Confirm Exit</h3>
-                <p className="mb-4 text-black">You won't be able to see this review page again. Are you sure?</p>
+                <p className="mb-4 text-black">{"You won't be able to see this review page again. Are you sure?"}</p>
                 <div className="flex items-center mb-4">
                   <Checkbox
                     id="neverShowAgain"
@@ -372,6 +382,7 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title }
               </div>
             </div>
           )}
+          {children}
         </DialogContent>
       </motion.div>
     </Dialog>

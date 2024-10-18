@@ -6,7 +6,6 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
 import MVPDialog from "@/components/MVPDialog";
 import RedditPosts from "../../../../components/RedditPosts";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FaYoutube } from 'react-icons/fa';

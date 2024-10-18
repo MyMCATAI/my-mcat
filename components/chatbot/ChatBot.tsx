@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { Styles } from 'react-chatbotify';
 
 const DynamicChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
 
@@ -183,17 +184,17 @@ const ChatBot: React.FC<ChatBotProps> = ({
     },
   };
 
-  const styles = {
+  const styles: Styles = {
     chatWindowStyle: {
       display: 'flex',
-      flexDirection: 'column',
-      height: 'calc(100vh - 12.2rem)', // or whatever relative height you prefer
+      flexDirection: 'column' as const,
+      height: 'calc(100vh - 12.2rem)',
       width: '100%',
       backgroundColor: backgroundColor,
     },
     bodyStyle: {
       flexGrow: 1,
-      overflowY: 'auto',
+      overflowY: 'auto' as const,
     },
     chatInputContainerStyle: {
       padding: '1rem',
