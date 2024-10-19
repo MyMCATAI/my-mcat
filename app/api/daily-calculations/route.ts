@@ -22,13 +22,21 @@ export async function POST(req: Request) {
       });
     }
 
-    const clinicRooms = JSON.parse(userInfo.clinicRooms);
+    let clinicRooms = [];
+    if (userInfo.clinicRooms) {
+      try {
+        clinicRooms = JSON.parse(userInfo.clinicRooms);
+      } catch (error) {
+        console.error('Error parsing clinicRooms:', error);
+      }
+    }
     
-    if (!clinicRooms || clinicRooms.length === 0) {
+    if (clinicRooms.length === 0) {
       return new NextResponse(JSON.stringify({
-        error: "No clinic rooms available",
+        message: "To start treating patients, you need to buy your firtst clinic room.",
         updatedScore: userInfo.score,
-        updatedPatientsTreated: 0,
+        newPatientsTreated: 0,
+        totalPatientsTreated: 0,
         patientsPerDay: 0,
         clinicCostPerDay: 0
       }), { 
@@ -51,7 +59,10 @@ export async function POST(req: Request) {
     }
 
     const playerLevel = calculatePlayerLevel(clinicRooms);
+    console.log("playerLevel",playerLevel);
     const levelNumber = getLevelNumber(playerLevel);
+    
+    console.log("levelNumber",levelNumber);
     const patientsPerDay = getPatientsPerDay(levelNumber);
     const clinicCostPerDay = getClinicCostPerDay(levelNumber);
 

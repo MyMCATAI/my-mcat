@@ -44,6 +44,12 @@ type Waypoint = {
 
 // Update the spriteWaypoints to include paths for different levels
 const spriteWaypoints: Record<number, Waypoint[]> = {
+  0: [
+    { x: 9.5, y: 9, direction: 'NW' },  // Start at waiting room
+    { x: 9.5, y: 8, direction: 'NE' },  // Move up
+    { x: 10, y: 8, direction: 'SE' }, // Move right
+    { x: 10, y: 9, direction: 'SW' }, // Move down
+  ],
   1: [
     { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
     { x: 5, y: 9, direction: 'NW' },  // Move NW to bottom left
@@ -216,10 +222,11 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 8},
   ]);
 
-  const [currentTestLevel, setCurrentTestLevel] = useState(1);
+  const [currentLevel, setCurrentLevel] = useState(1);
 
   // Define zoom levels for each test level
   const zoomLevels: Record<number, { scale: number, offsetX: number, offsetY: number }> = {
+    0: { scale: 2.5, offsetX: -50, offsetY: -200 },
     1: { scale: 1.5, offsetX: 150, offsetY: -50 },
     2: { scale: 1.3, offsetX: 150, offsetY: 0 },
     3: { scale: 1.3, offsetX: 150, offsetY: 0 }, // Changed to match level 2
@@ -261,7 +268,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     scale = Math.min(scale, maxScale);
 
     // Apply the zoom level scale
-    scale *= zoomLevels[currentTestLevel].scale;
+    scale *= zoomLevels[currentLevel].scale;
 
     setStageSize({
       width: baseWidth * scale,
@@ -269,7 +276,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     });
 
     return scale * 0.7;
-  }, [currentTestLevel]);
+  }, [currentLevel]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -283,34 +290,6 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   }, [calculateScale]);
 
   const [currentWaypoints, setCurrentWaypoints] = useState(spriteWaypoints[1]);
-
-  // Function to determine level based on rooms
-  const determineLevel = useCallback((rooms: string[]) => {
-    const levelRooms = [
-      'INTERN LEVEL',
-      'RESIDENT LEVEL',
-      'FELLOWSHIP LEVEL',
-      'ATTENDING LEVEL',
-      'PHYSICIAN LEVEL',
-      'MEDICAL DIRECTOR LEVEL'
-    ];
-    
-    let highestLevel = 1;
-    rooms.forEach(room => {
-      const index = levelRooms.indexOf(room);
-      if (index !== -1 && index + 1 > highestLevel) {
-        highestLevel = index + 1;
-      }
-    });
-    
-    return highestLevel;
-  }, []);
-
-  // Use useEffect to update currentWaypoints when userRooms changes
-  useEffect(() => {
-    const level = determineLevel(userRooms);
-    setCurrentWaypoints(spriteWaypoints[level]);
-  }, [userRooms, determineLevel]);
 
   // Modify the moveSprite function to use currentWaypoints
   const moveSprite = useCallback((
@@ -378,7 +357,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
           // Determine if the tile should be filled based on the current level
           let shouldFill = false;
 
-          switch (currentTestLevel) {
+          switch (currentLevel) {
             case 1:
               shouldFill = y >= gridHeight - 2 && x >= 2; // Only fill the bottom two rows, starting from the third column
               break;
@@ -408,12 +387,11 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
           }
         }
       }
-    }, [accentColor, currentTestLevel]);
+    }, [accentColor, currentLevel]);
 
     return <Graphics draw={drawGrid} />;
-  }, [getAccentColor, currentTestLevel]);
+  }, [getAccentColor, currentLevel]);
 
-  // Modify the RoomSprite component
   const RoomSprite = useCallback(({ img }: { img: GridImage }) => {
     const texture = Texture.from(img.src);
     const posX = screenX(img.x, img.y) - img.width / 4;
@@ -436,6 +414,12 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     canvasSize: { width: number, height: number },
     rooms: GridImage[]
   }> = {
+    0: {
+      canvasSize: { width: 10, height: 10 },
+      rooms: [
+        { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.04, width: 280, height: 268, zIndex: 2, opacity: 1.0},
+      ]
+    },
     1: {
       canvasSize: { width: 10, height: 10 },
       rooms: [
@@ -524,8 +508,35 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     },
   };
 
+  const determineLevel = useCallback((rooms: string[]) => {
+    const levelRooms = [
+      'INTERN LEVEL',
+      'RESIDENT LEVEL',
+      'FELLOWSHIP LEVEL',
+      'ATTENDING LEVEL',
+      'PHYSICIAN LEVEL',
+      'MEDICAL DIRECTOR LEVEL'
+    ];
+    
+    let highestLevel = 0;
+    rooms.forEach(room => {
+      const index = levelRooms.indexOf(room);
+      if (index !== -1 && index + 1 > highestLevel) {
+        highestLevel = index + 1;
+      }
+    });
+    
+    return highestLevel;
+  }, []);
+
+  useEffect(() => {
+    const newLevel = determineLevel(userRooms);
+    setCurrentLevel(newLevel);
+    setCurrentWaypoints(spriteWaypoints[newLevel]);
+  }, [userRooms, determineLevel]);
+
   // Use the current level to get the appropriate room configuration
-  const currentLevelConfig = levelConfigurations[currentTestLevel];
+  const currentLevelConfig = levelConfigurations[currentLevel];
 
   useEffect(() => {
     // Ensure all rooms for the current level are visible
@@ -534,52 +545,16 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
       newVisibleImages.add(room.id);
     });
     updateVisibleImages(newVisibleImages);
-  }, [currentTestLevel, updateVisibleImages]);
+  }, [currentLevel, updateVisibleImages]);
 
   // Update the offset based on the current test level
   const offset = useMemo(() => ({
-    x: ((gridWidth + gridHeight) * (tileWidth / 3) + zoomLevels[currentTestLevel].offsetX),
-    y: ((gridHeight * tileHeight) / 4 + zoomLevels[currentTestLevel].offsetY)
-  }), [currentTestLevel]);
+    x: ((gridWidth + gridHeight) * (tileWidth / 3) + zoomLevels[currentLevel].offsetX),
+    y: ((gridHeight * tileHeight) / 4 + zoomLevels[currentLevel].offsetY)
+  }), [currentLevel]);
 
   // Add this constant for base scale
   const BASE_ZOOM_LEVEL = zoomLevels[1].scale; // Using level 1 as our base
-
-  const cycleTestLevel = async () => {
-    const newLevel = (currentTestLevel % 6) + 1;
-    setCurrentTestLevel(newLevel);
-
-    const levelRooms = [
-      ['INTERN LEVEL'],
-      ['INTERN LEVEL', 'RESIDENT LEVEL'],
-      ['INTERN LEVEL', 'RESIDENT LEVEL', 'FELLOWSHIP LEVEL'],
-      ['INTERN LEVEL', 'RESIDENT LEVEL', 'FELLOWSHIP LEVEL', 'ATTENDING LEVEL'],
-      ['INTERN LEVEL', 'RESIDENT LEVEL', 'FELLOWSHIP LEVEL', 'ATTENDING LEVEL', 'PHYSICIAN LEVEL'],
-      ['INTERN LEVEL', 'RESIDENT LEVEL', 'FELLOWSHIP LEVEL', 'ATTENDING LEVEL', 'PHYSICIAN LEVEL', 'MEDICAL DIRECTOR LEVEL'],
-    ];
-
-    try {
-      const response = await axios.post('/api/set-test-level', { rooms: levelRooms[newLevel - 1] });
-      if (response.data.success) {
-        setUserRooms(levelRooms[newLevel - 1]);
-        
-        const newVisibleImages = new Set<string>();
-        levelRooms[newLevel - 1].forEach(roomName => {
-          const group = imageGroups.find(g => g.name === roomName);
-          if (group) {
-            group.items.forEach(item => newVisibleImages.add(item.id));
-          }
-        });
-        
-        updateVisibleImages(newVisibleImages);
-        
-        toast.success(`Test level set to ${newLevel}`);
-      }
-    } catch (error) {
-      console.error('Error setting test level:', error);
-      toast.error('Failed to set test level');
-    }
-  };
 
   const [isLargeDialogOpen, setIsLargeDialogOpen] = useState(false);
 
@@ -622,15 +597,6 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
           {clinicName && `${clinicName} Medical Center`}
         </div>
       </div>
-      
-      {/* Test Level Button */}
-      <Button
-        className="absolute bottom-4 right-4 z-50"
-        onClick={cycleTestLevel}
-      >
-        Test Level: {currentTestLevel}
-      </Button>
-
       {/* New Dialog Button */}
       <Button
         className="absolute bottom-4 right-40 z-50"
