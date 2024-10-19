@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { FaPlay, FaPause, FaForward, FaVolumeUp } from 'react-icons/fa';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { FaPlay, FaPause, FaForward, FaVolumeUp } from "react-icons/fa";
 
 interface Song {
   title: string;
@@ -8,36 +8,104 @@ interface Song {
 
 const playlists: Record<string, Song[]> = {
   cyberSpace: [
-    { title: "CS4", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace4.mp3" },
-    { title: "CS1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace2.mp3" },
-    { title: "CS2", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace1.mp3" },
-    { title: "CS3", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace3.mp3" },
-    { title: "CS5", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace_5.mp3" },
-    { title: "CS6", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/CyberSpace+6.mp3" },
-
+    {
+      title: "CS4",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace4.mp3",
+    },
+    {
+      title: "CS1",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace2.mp3",
+    },
+    {
+      title: "CS2",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace1.mp3",
+    },
+    {
+      title: "CS3",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace3.mp3",
+    },
+    {
+      title: "CS5",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace_5.mp3",
+    },
+    {
+      title: "CS6",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/CyberSpace+6.mp3",
+    },
   ],
   sakuraTrees: [
-    { title: "ST1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees1.mp3" },
-    { title: "ST2", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees2.mp3" },
-    { title: "ST3", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees3.mp3" },
-    { title: "ST4", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees4.mp3" },
-    { title: "ST5", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SakuraTrees5.mp3" },
-    { title: "ST7", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SakuraTrees7.mp3" },
+    {
+      title: "ST1",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees1.mp3",
+    },
+    {
+      title: "ST2",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees2.mp3",
+    },
+    {
+      title: "ST3",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees3.mp3",
+    },
+    {
+      title: "ST4",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees4.mp3",
+    },
+    {
+      title: "ST5",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SakuraTrees5.mp3",
+    },
+    {
+      title: "ST7",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SakuraTrees7.mp3",
+    },
   ],
   sunsetCity: [
-    { title: "SC1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity1.mp3" },
-    { title: "SC2", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity2.mp3" },
-    { title: "SC4", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity4.mp3" },
-    { title: "SC3", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity3.mp3" },
-    { title: "SC5", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SunsetCity5.mp3" },
-    { title: "SC6", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SunsetCity6.mp3" },
+    {
+      title: "SC1",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity1.mp3",
+    },
+    {
+      title: "SC2",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity2.mp3",
+    },
+    {
+      title: "SC4",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity4.mp3",
+    },
+    {
+      title: "SC3",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity3.mp3",
+    },
+    {
+      title: "SC5",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SunsetCity5.mp3",
+    },
+    {
+      title: "SC6",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SunsetCity6.mp3",
+    },
   ],
   mykonosBlue: [
-    { title: "MB1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue1.mp3" },
-    { title: "MB2", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue2.mp3" },
-    { title: "MB3", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue3.mp3" },
-    { title: "MB4", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue4.mp3" },
-    { title: "MB5", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue5.mp3" },
+    {
+      title: "MB1",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue1.mp3",
+    },
+    {
+      title: "MB2",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue2.mp3",
+    },
+    {
+      title: "MB3",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue3.mp3",
+    },
+    {
+      title: "MB4",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue4.mp3",
+    },
+    {
+      title: "MB5",
+      url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue5.mp3",
+    },
   ],
 };
 
@@ -45,9 +113,9 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [volume, setVolume] = useState(1);
-  const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [shuffledPlaylist, setShuffledPlaylist] = useState<Song[]>([]);
+  const songIndexMap = useRef<Record<string, number>>({});
 
   const playlist = playlists[theme] || [];
 
@@ -58,8 +126,13 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
   }, [playlist]);
 
   useEffect(() => {
-    shufflePlaylist();
-    setIsPlaying(false); // Stop playback when theme changes
+    if (songIndexMap.current[theme] !== undefined) {
+      setCurrentSongIndex(songIndexMap.current[theme]);
+    } else {
+      shufflePlaylist();
+      setCurrentSongIndex(0);
+    }
+    setIsPlaying(true); // Stop playback when theme changes, set to true again so that it does not stop when switching themes
   }, [theme, shufflePlaylist]);
 
   useEffect(() => {
@@ -69,7 +142,6 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
   }, [volume]);
 
   useEffect(() => {
-    setError(null);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.load();
@@ -77,7 +149,6 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
         audioRef.current.play().catch((error) => {
           console.error("Error playing audio:", error);
           setIsPlaying(false);
-          setError("Unable to play audio. Please try again.");
         });
       }
     }
@@ -101,7 +172,11 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
   };
 
   const playNextSong = () => {
-    setCurrentSongIndex((prevIndex) => (prevIndex + 1) % shuffledPlaylist.length);
+    setCurrentSongIndex((prevIndex) => {
+      const newIndex = (prevIndex + 1) % shuffledPlaylist.length;
+      songIndexMap.current[theme] = newIndex;
+      return newIndex;
+    });
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,7 +186,6 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
 
   const handlePlayError = (e: any) => {
     console.error("Error playing audio:", e);
-    setError("Unable to play audio. Please try again.");
     setIsPlaying(false);
   };
 
@@ -122,14 +196,16 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
         src={shuffledPlaylist[currentSongIndex]?.url}
         onEnded={playNextSong}
         onError={() => {
-          setError("Error loading audio. Please try another song.");
+          console.log("audio error")
           setIsPlaying(false);
         }}
       />
       <button onClick={togglePlayPause}>
         {isPlaying ? <FaPause /> : <FaPlay />}
       </button>
-      <button onClick={playNextSong}><FaForward /></button>
+      <button onClick={playNextSong}>
+        <FaForward />
+      </button>
       <div className="relative group flex items-center">
         <FaVolumeUp className="cursor-pointer mr-2" />
         <input
@@ -142,7 +218,6 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
           className="w-16 opacity-0 group-hover:opacity-100 transition-opacity"
         />
       </div>
-      {error && <span className="text-red-500 text-xs">{error}</span>}
     </div>
   );
 };
