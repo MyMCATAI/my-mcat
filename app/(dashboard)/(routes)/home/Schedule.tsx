@@ -15,19 +15,21 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Bar, Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Legend } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Legend, Tooltip as ChartTooltip } from 'chart.js';
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from 'next/navigation';
 import { CheckCircle } from 'lucide-react'; // Add this import
 import Tutorial from './Tutorial';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, ChartTooltip, Legend);
 
 interface ScheduleProps {
   activities: FetchedActivity[];
   onShowDiagnosticTest: () => void;
   handleSetTab: (tab: string) => void;
 }
+
+type Section = 'AdaptiveTutoringSuite' | 'MCATGameAnkiClinic' | 'DailyCARsSuite';
 
 const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, handleSetTab }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -91,7 +93,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
     ],
   };
 
-  const [checklists, setChecklists] = useState({
+  const [checklists, setChecklists] = useState<Record<Section, { id: number; text: string; checked: boolean; }[]>>({
     AdaptiveTutoringSuite: [
       { id: 1, text: "Complete daily adaptive quiz", checked: false },
       { id: 2, text: "Review personalized study plan", checked: false },
@@ -109,20 +111,20 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
     ],
   });
 
-  const buttonLabels = {
+  const buttonLabels: Record<Section, string> = {
     AdaptiveTutoringSuite: "Tutoring Suite",
     MCATGameAnkiClinic: "The Anki Clinic",
     DailyCARsSuite: "Daily CARs Suite",
   };
 
-  const handleCheckboxChange = async (section: string, id: number) => {
+  const handleCheckboxChange = async (section: Section, id: number) => {
     setChecklists(prevChecklists => {
       const updatedSection = prevChecklists[section].map(item =>
         item.id === id ? { ...item, checked: !item.checked } : item
       );
       
-      const allChecked = updatedSection.every(item => item.checked);
-      if (allChecked && !prevChecklists[section].every(item => item.checked)) {
+      const allChecked = updatedSection.every((item: { checked: boolean }) => item.checked);
+      if (allChecked && !prevChecklists[section].every((item: { checked: boolean }) => item.checked)) {
         setShowRewardDialog(true);
         setRewardSection(section);
         
@@ -399,7 +401,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
               display: none;
             }
           `}</style>
-          {Object.entries(checklists).map(([section, items]) => (
+          {(Object.entries(checklists) as [Section, { id: number; text: string; checked: boolean; }[]][]).map(([section, items]) => (
             <div key={section} className="mb-4 relative">
               <button
                 className={`w-full h-10 ${
@@ -423,7 +425,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
                       type="checkbox"
                       id={`checkbox-${section}-${item.id}`}
                       checked={item.checked}
-                      onChange={() => handleCheckboxChange(section, item.id)}
+                      onChange={() => handleCheckboxChange(section as Section, item.id)}
                       className="mr-2 h-4 w-4"
                     />
                     <label 
@@ -760,7 +762,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
               />
             </div>
             <p className="text-center text-lg text-black">
-              You&apos;ve completed all tasks in the {buttonLabels[rewardSection]}!
+              You&apos;ve completed all tasks in the {rewardSection && buttonLabels[rewardSection as Section]}!
             </p>
             <p className="text-center text-lg text-black">
               You&apos;ve earned <span className="font-bold">1 cupcake coin</span> for your hard work!
