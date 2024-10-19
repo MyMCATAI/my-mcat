@@ -34,7 +34,8 @@ interface HandleShowDiagnosticTestParams {
 
 const Page = () => {
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get("tab") || "test";
+  // Change this line to set "Schedule" as the default tab
+  const initialTab = searchParams.get("tab") || "Schedule";
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isPro, setIsPro] = useState(false);
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
@@ -373,9 +374,10 @@ const Page = () => {
         content = null;
     }
 
-    if (!isPro && activeTab !== "test") {
-      return <MDOnlyFeaturesDialog content={content} />;
-    }
+    // Only wrap non-Schedule content with MDOnlyFeaturesDialog
+    // if (!isPro && activeTab !== "Schedule" && activeTab !== "test") {
+    //   return <MDOnlyFeaturesDialog content={content} />;
+    // }
 
     return content;
   };
@@ -417,9 +419,9 @@ const Page = () => {
             <div className="flex items-center gap-4">
               <h2 className="text-white text-2xl ml-3 font-thin leading-normal shadow-text">
                 {activeTab === "Schedule"
-                  ? "Schedule Builder."
+                  ? "Dashboard"
                   : activeTab === "KnowledgeProfile"
-                  ? "Adaptive Tutoring Suite."
+                  ? "Adaptive Tutoring Suite"
                   : activeTab === "flashcards"
                   ? "Flashcards"
                   : activeTab === "test"
@@ -445,8 +447,8 @@ const Page = () => {
           <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
             &nbsp;
           </h2>
-          <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg">
-            <KnowledgeProfileCARsONLY activities={activities} />
+          <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
+            <KnowledgeProfileCARsONLY activities={activities} currentPage={activeTab} />
           </div>
         </div>
       </div>
