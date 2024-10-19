@@ -1,40 +1,63 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { format, addDays, isSameDay, startOfDay, isToday, isTomorrow } from "date-fns";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { isSameDay, isToday, isTomorrow } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import SettingContent from "./SettingContent";
 import { NewActivity, FetchedActivity } from "@/types";
 import { DialogHeader, DialogFooter } from "@/components/ui/dialog";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogOverlay } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
-import Image from 'next/image'
+import Image from 'next/image';
 import InteractiveCalendar from "@/components/InteractiveCalendar";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { InterludeAction } from "@/components/home/InterludeAction";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+} from "@/components/ui/tooltip";
+import { Bar, Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Legend, Tooltip as ChartTooltip } from 'chart.js';
+import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from 'next/navigation';
+import { CheckCircle } from 'lucide-react'; // Add this import
+import Tutorial from './Tutorial';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, ChartTooltip, Legend);
 
 interface ScheduleProps {
   activities: FetchedActivity[];
   onShowDiagnosticTest: () => void;
-  handleSetTab: (tab: string ) => void;
-
+  handleSetTab: (tab: string) => void;
 }
 
-const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,handleSetTab }) => {
+type Section = 'AdaptiveTutoringSuite' | 'MCATGameAnkiClinic' | 'DailyCARsSuite';
+
+const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, handleSetTab }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
   const [showNewActivityForm, setShowNewActivityForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showThankYouDialog, setShowThankYouDialog] = useState(false);
-  const [showInterlude, setShowInterlude] = useState(false);
   const [typedText, setTypedText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(true);
+  const [expandedGraph, setExpandedGraph] = useState<string | null>(null);
+  const [showGraphs, setShowGraphs] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(true);
+  const [showRewardDialog, setShowRewardDialog] = useState(false);
+  const [rewardSection, setRewardSection] = useState('');
+  const [userCoinCount, setUserCoinCount] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const fanfareRef = useRef<HTMLAudioElement>(null);
+  const [completedSections, setCompletedSections] = useState<string[]>([]);
+  const [runTutorialPart1, setRunTutorialPart1] = useState(false);
+  const [runTutorialPart2, setRunTutorialPart2] = useState(false);
+  const [runTutorialPart3, setRunTutorialPart3] = useState(false);
+  const [runTutorialPart4, setRunTutorialPart4] = useState(false);
+  const [tutorialText, setTutorialText] = useState('');
+  const [isTutorialTypingComplete, setIsTutorialTypingComplete] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(1);
+  const [hasUpdatedStudyPlan, setHasUpdatedStudyPlan] = useState(false);
+  const [showCalendarTutorial, setShowCalendarTutorial] = useState(false);
 
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
@@ -45,8 +68,107 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
   });
 
   const { user } = useUser();
-  const getActivitiesText = useMemo(() => {
 
+  // Dummy data for charts
+  const barChartData = {
+    labels: ['Biology', 'Chemistry', 'Physics', 'CARS'],
+    datasets: [
+      {
+        label: 'Hours Studied',
+        data: [12, 19, 3, 5],
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+      },
+    ],
+  };
+
+  const lineChartData = {
+    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+    datasets: [
+      {
+        label: 'Practice Test Scores',
+        data: [495, 501, 508, 512],
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1,
+      },
+    ],
+  };
+
+  const [checklists, setChecklists] = useState<Record<Section, { id: number; text: string; checked: boolean; }[]>>({
+    AdaptiveTutoringSuite: [
+      { id: 1, text: "Complete daily adaptive quiz", checked: false },
+      { id: 2, text: "Review personalized study plan", checked: false },
+      { id: 3, text: "Schedule tutoring session", checked: false },
+    ],
+    MCATGameAnkiClinic: [
+      { id: 1, text: "Play MCAT Game for 30 minutes", checked: false },
+      { id: 2, text: "Review Anki flashcards", checked: false },
+      { id: 3, text: "Create new Anki cards", checked: false },
+    ],
+    DailyCARsSuite: [
+      { id: 1, text: "Complete daily CARS passage", checked: false },
+      { id: 2, text: "Review CARS strategies", checked: false },
+      { id: 3, text: "Practice timing for CARS", checked: false },
+    ],
+  });
+
+  const buttonLabels: Record<Section, string> = {
+    AdaptiveTutoringSuite: "Tutoring Suite",
+    MCATGameAnkiClinic: "The Anki Clinic",
+    DailyCARsSuite: "Daily CARs Suite",
+  };
+
+  const handleCheckboxChange = async (section: Section, id: number) => {
+    setChecklists(prevChecklists => {
+      const updatedSection = prevChecklists[section].map(item =>
+        item.id === id ? { ...item, checked: !item.checked } : item
+      );
+      
+      const allChecked = updatedSection.every((item: { checked: boolean }) => item.checked);
+      if (allChecked && !prevChecklists[section].every((item: { checked: boolean }) => item.checked)) {
+        setShowRewardDialog(true);
+        setRewardSection(section);
+        
+        const newCompletedSections = [...completedSections, section];
+        setCompletedSections(newCompletedSections);
+        
+        // Play the appropriate sound
+        if (newCompletedSections.length === 3) {
+          if (fanfareRef.current) {
+            fanfareRef.current.play();
+          }
+        } else if (audioRef.current) {
+          audioRef.current.play();
+        }
+
+        // Update user's coin count
+        updateUserCoinCount();
+      }
+      
+      return {
+        ...prevChecklists,
+        [section]: updatedSection
+      };
+    });
+  };
+
+  const updateUserCoinCount = async () => {
+    try {
+      const response = await fetch('/api/user-info', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: 1 }),
+      });
+
+      if (response.ok) {
+        const updatedUserInfo = await response.json();
+        setUserCoinCount(updatedUserInfo.coinCount);
+      }
+    } catch (error) {
+      console.error('Error updating user coin count:', error);
+    }
+  };
+
+  const getActivitiesText = useMemo(() => {
     if (activities.length === 0) {
       return "Welcome to myMCAT.ai! It looks like this is your first time here. Let's get started by answering some questions about your test and study schedule. Would you like to take a diagnostic test to help us personalize your learning experience?";
     }
@@ -69,33 +191,84 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
     setCurrentDate(new Date());
     setTypedText('');
     setIsTypingComplete(false);
+    setTutorialText('');
+    setIsTutorialTypingComplete(false);
+
+    let text = getActivitiesText;
+    if (runTutorialPart1) {
+      if (tutorialStep === 1) {
+        text = "Hi! Hello!\n\nThis is the dashboard. Here, you'll look at statistics on progress, look at your calendar, daily tasks, and ask Kalypso any questions related to the logistics of taking the test.";
+      } else {
+        text = '';
+      }
+    }
 
     let index = 0;
     const typingTimer = setInterval(() => {
-      setTypedText(prev => getActivitiesText.slice(0, prev.length + 1));
+      if (runTutorialPart1) {
+        setTutorialText(prev => text.slice(0, prev.length + 1));
+      } else {
+        setTypedText(prev => text.slice(0, prev.length + 1));
+      }
       index++;
-      if (index > getActivitiesText.length) {
+      if (index > text.length) {
         clearInterval(typingTimer);
-        setIsTypingComplete(true);
+        if (runTutorialPart1) {
+          setIsTutorialTypingComplete(true);
+        } else {
+          setIsTypingComplete(true);
+        }
       }
     }, 15);
 
     return () => {
       clearInterval(typingTimer);
     };
-  }, [getActivitiesText]);
+  }, [getActivitiesText, runTutorialPart1, tutorialStep]);
 
-  const handleStudyPlanSaved = () => {
-    setShowSettings(false);
-    setShowThankYouDialog(true);
+  const handleTutorialStepChange = (step: number) => {
+    setTutorialStep(step);
   };
+
+  const handleStudyPlanSaved = useCallback(() => {
+    setShowSettings(false);
+    setShowAnalytics(false); // Switch to calendar mode
+    setHasUpdatedStudyPlan(true);
+    setShowCalendarTutorial(true);
+
+    // Delay before starting Tutorial Part 2
+    setTimeout(() => {
+      // Start Tutorial Part 2
+      setTutorialStep(1);
+      setRunTutorialPart2(true);
+    }, 5000);
+  }, []);
+
+  const handleCalendarModified = useCallback(() => {
+    // Start Tutorial Part 3
+    setTutorialStep(1);
+    setRunTutorialPart3(true);
+  }, []);
 
   const handleTakeDiagnosticTest = () => {
     setShowThankYouDialog(false);
     onShowDiagnosticTest();
   };
 
-  const toggleSettings = () => setShowSettings(!showSettings);
+  const toggleSettings = () => {
+    setShowSettings(!showSettings);
+    if (runTutorialPart1) {
+      endAllTutorials();
+    }
+  };
+
+  const endAllTutorials = () => {
+    setRunTutorialPart1(false);
+    setRunTutorialPart2(false);
+    setRunTutorialPart3(false);
+    setRunTutorialPart4(false);
+  };
+
   const toggleNewActivityForm = () => setShowNewActivityForm(!showNewActivityForm);
 
   const handleInputChange = (
@@ -151,145 +324,333 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
     );
   };
 
-
   const handleActionClick = () => {
-    if (activities.length === 0) {
-      setShowSettings(true);
-    } else {
-      handleSetTab("KnowledgeProfile")
-      setShowInterlude(false);
+    handleSetTab("KnowledgeProfile");
+  };
+
+  const toggleGraphExpansion = (graphId: string) => {
+    setExpandedGraph(expandedGraph === graphId ? null : graphId);
+  };
+
+  const handleToggleView = () => {
+    setShowAnalytics(!showAnalytics);
+  };
+
+  const router = useRouter();
+
+  const handleButtonClick = (section: string) => {
+    switch (section) {
+      case "DailyCARsSuite":
+        handleSetTab("test");
+        break;
+      case "MCATGameAnkiClinic":
+        router.push('/doctorsoffice');
+        break;
+      case "AdaptiveTutoringSuite":
+        handleSetTab("KnowledgeProfile");
+        break;
+      // Add more cases if needed
+      default:
+        break;
     }
   };
 
-  const toggleCalendarView = () => {
-    setShowCalendar(!showCalendar);
-    setShowInterlude(!showInterlude);
+  useEffect(() => {
+    // Fetch initial user coin count when component mounts
+    fetchUserCoinCount();
+  }, []);
+
+  const fetchUserCoinCount = async () => {
+    try {
+      const response = await fetch('/api/user-info');
+      if (response.ok) {
+        const data = await response.json();
+        setUserCoinCount(data.coinCount);
+      }
+    } catch (error) {
+      console.error('Error fetching user coin count:', error);
+    }
+  };
+
+  const handleActivateTutorial = (step: number) => {
+    setTutorialStep(step);
+    setRunTutorialPart1(true);
   };
 
   return (
-    <div className="relative p-2 h-full flex flex-col">
-      <div className="relative z-10 text-white rounded-lg flex-grow flex flex-col">
-        {/* Top Container */}
-        <div className="flex justify-between items-center mb-2">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            onClick={toggleNewActivityForm}
-            className="cursor-pointer hover:opacity-80 transition-opacity"
-          >
-            <g id="SVGRepo_iconCarrier">
-              <path d="M11 8C11 7.44772 11.4477 7 12 7C12.5523 7 13 7.44772 13 8V11H16C16.5523 11 17 11.4477 17 12C17 12.5523 16.5523 13 16 13H13V16C13 16.5523 12.5523 17 12 17C11.4477 17 11 16.5523 11 16V13H8C7.44771 13 7 12.5523 7 12C7 11.4477 7.44772 11 8 11H11V8Z" fill="#efefef"/>
-              <path fillRule="evenodd" clipRule="evenodd" d="M23 12C23 18.0751 18.0751 23 12 23C5.92487 23 1 18.0751 1 12C1 5.92487 5.92487 1 12 1C18.0751 1 23 5.92487 23 12ZM3.00683 12C3.00683 16.9668 7.03321 20.9932 12 20.9932C16.9668 20.9932 20.9932 16.9668 20.9932 12C20.9932 7.03321 16.9668 3.00683 12 3.00683C7.03321 3.00683 3.00683 7.03321 3.00683 12Z" fill="#efefef"/>
-            </g>
-          </svg>
-          <div className="flex-grow"></div>
+    <div className="flex h-full relative">
+      {/* Left Sidebar */}
+      <div className="w-1/4 p-6 flex flex-col ml-3 mt-5 mb-5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
+        style={{
+          backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          backgroundColor: "var(--theme-mainbox-color)",
+          color: "var(--theme-text-color)",
+          boxShadow: "var(--theme-box-shadow)",
+        }}
+      >
+        {/* Add the large "TODAY" title */}
+        <h1 className="text-3xl font-bold text-center">TODAY</h1>
 
-          <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger>
-        <button onClick={toggleSettings}>
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="#ffffff"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M9.25001 22L8.85001 18.8C8.63335 18.7167 8.42918 18.6167 8.23751 18.5C8.04585 18.3833 7.85835 18.2583 7.67501 18.125L4.70001 19.375L1.95001 14.625L4.52501 12.675C4.50835 12.5583 4.50001 12.4458 4.50001 12.3375V11.6625C4.50001 11.5542 4.50835 11.4417 4.52501 11.325L1.95001 9.375L4.70001 4.625L7.67501 5.875C7.85835 5.74167 8.05001 5.61667 8.25001 5.5C8.45001 5.38333 8.65001 5.28333 8.85001 5.2L9.25001 2H14.75L15.15 5.2C15.3667 5.28333 15.5708 5.38333 15.7625 5.5C15.9542 5.61667 16.1417 5.74167 16.325 5.875L19.3 4.625L22.05 9.375L19.475 11.325C19.4917 11.4417 19.5 11.5542 19.5 11.6625V12.3375C19.5 12.4458 19.4833 12.5583 19.45 12.675L22.025 14.625L19.275 19.375L16.325 18.125C16.1417 18.2583 15.95 18.3833 15.75 18.5C15.55 18.6167 15.35 18.7167 15.15 18.8L14.75 22H9.25001ZM12.05 15.5C13.0167 15.5 13.8417 15.1583 14.525 14.475C15.2083 13.7917 15.55 12.9667 15.55 12C15.55 11.0333 15.2083 10.2083 14.525 9.525C13.8417 8.84167 13.0167 8.5 12.05 8.5C11.0667 8.5 10.2375 8.84167 9.56251 9.525C8.88751 10.2083 8.55001 11.0333 8.55001 12C8.55001 12.9667 8.88751 13.7917 9.56251 14.475C10.2375 15.1583 11.0667 15.5 12.05 15.5Z"
-                fill="#ffffff"
-              />
-            </svg>
-          </button>
-          </TooltipTrigger>
-          <TooltipContent>
-            Settings
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-        </div>
-
-        {/* Settings positioned in top right */}
-        {showSettings && (
-          <div className="absolute top-8 right-4 w-80 bg-transparent rounded-lg shadow-lg z-50">
-            <SettingContent 
-              onShowDiagnosticTest={onShowDiagnosticTest} 
-              onStudyPlanSaved={handleStudyPlanSaved}
-            />
-          </div>
-        )}
-
-       {/* Interlude or Calendar */}
-       <div className="flex-grow flex flex-col h-[calc(100vh-10rem)]">
-          {showCalendar && (
-            <div className="h-[calc(100vh-200px)]">
-              <InteractiveCalendar />
-            </div>
-          )}
-          {showInterlude && (
-            <div className="flex-grow flex items-center justify-center">
-              <div className="relative w-full h-full flex items-center pl-8 pr-8 pb-6 justify-center">
-                <div className="absolute bottom-2 left-3 w-1/4">
-                  <Image 
-                    src="/kalypsotyping.gif" 
-                    alt="Typing animation" 
-                    width={300}
-                    height={300}
-                    objectFit="contain" 
-                    unoptimized
-                  />
-                </div>
-                <div className="bg-black rounded-lg p-4 w-full h-full flex flex-col justify-between overflow-hidden" style={{
-                  boxShadow: '0 0 15px 5px rgba(0, 123, 255, 0.5)'
-                }}>
-                  <pre className="pl-5 pt-5 text-blue-200 font-mono text-m whitespace-pre-wrap">
-                    {typedText}
-                  </pre>
-                  {isTypingComplete && (
-                    <InterludeAction 
-                      activities={activities}
-                      onActionClick={handleActionClick}
-                      onSkip={() => setShowInterlude(false)}
-                    />
-                  )}
-                  <div 
-                    onClick={handleActionClick}
-                    className="self-end text-blue-200 font-mono text-lg hover:text-blue-600 transition-colors animate-pulse cursor-pointer"
-                    style={{
-                      animation: 'pulse 2s cubic-bezier(0.6, 0, 0.6, 1) infinite',
-                      background: 'transparent',
-                      borderRadius: '5px',
-                      padding: '5px 10px',
-                    }}
-                  >
+        {/* Make the buttons container scrollable but hide the scrollbar */}
+        <div className="flex-grow overflow-y-auto space-y-4 pr-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <style jsx>{`
+            div::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+          {(Object.entries(checklists) as [Section, { id: number; text: string; checked: boolean; }[]][]).map(([section, items]) => (
+            <div key={section} className="mb-4 relative">
+              <button
+                className={`w-full h-10 ${
+                  completedSections.includes(section)
+                    ? 'bg-green-500 text-white'
+                    : 'bg-[--theme-hover-color] text-[--theme-hover-text]'
+                } hover:opacity-80 font-semibold shadow-md rounded transition text-m relative`}
+                onClick={() => handleButtonClick(section)}
+              >
+                {buttonLabels[section]}
+                {completedSections.includes(section) && (
+                  <div className="absolute top-1/2 right-0 transform -translate-y-1/2 -mr-2">
+                    <CheckCircle className="w-6 h-6 text-white bg-green-500 rounded-full" />
                   </div>
-                </div>
+                )}
+              </button>
+              <div className="bg-[--theme-leaguecard-color] shadow-md p-3 mt-2 space-y-2">
+                {items.map(item => (
+                  <div key={item.id} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`checkbox-${section}-${item.id}`}
+                      checked={item.checked}
+                      onChange={() => handleCheckboxChange(section as Section, item.id)}
+                      className="mr-2 h-4 w-4"
+                    />
+                    <label 
+                      htmlFor={`checkbox-${section}-${item.id}`} 
+                      className="text-sm leading-tight"
+                    >
+                      {item.text}
+                    </label>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
+          ))}
+        </div>
+      </div>
+
+      {/* Right Content */}
+      <div className="w-3/4 p-6 bg-[--theme-gray-100] flex flex-col relative">
+        {/* Settings Button */}
+        <div className="absolute top-4 right-4 z-20">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <button 
+                  onClick={toggleSettings} 
+                  className={`settings-button p-2 rounded-full shadow-md ${
+                    showSettings ? 'bg-[--theme-hover-color]' : 'bg-white'
+                  }`}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill={showSettings ? 'white' : '#333'}
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M9.25,22l-.4-3.2c-.216-.084-.42-.184-.612-.3c-.192-.117-.38-.242-.563-.375L4.7,19.375L1.95,14.625L4.525,12.675c-.016-.117-.024-.23-.024-.338V11.662c0-.108.008-.221.025-.337L1.95,9.375L4.7,4.625L7.675,5.875c.183-.134.375-.259.575-.375c.2-.117.4-.217.6-.3l.4-3.2H14.75l.4,3.2c.216.084.42.184.612.3c.192.117.38.242.563.375l2.975-.75l2.75,4.75l-2.575,1.95c.016.117.024.23.024.338v.675c0,.108-.008.221-.025.337l2.575,1.95l-2.75,4.75l-2.95-.75c-.183.133-.375.258-.575.375c-.2.117-.4.217-.6.3l-.4,3.2H9.25zM12.05,15.5c.966,0,1.791-.342,2.475-1.025c.683-.683,1.025-1.508,1.025-2.475c0-.966-.342-1.791-1.025-2.475c-.683-.683-1.508-1.025-2.475-1.025c-0.984,0-1.813,.342-2.488,1.025c-0.675,.683-1.012,1.508-1.012,2.475c0,.966,.337,1.791,1.012,2.475c.675,.683,1.504,1.025,2.488,1.025z"
+                      fill={showSettings ? 'white' : '#333'}
+                    />
+                  </svg>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Settings
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
-        {/* Calendar toggle button */}
-        <div 
-          className={`absolute bottom-7 ${showCalendar ? 'left-6' : 'right-6'} cursor-pointer`}
-          onClick={toggleCalendarView}
+        {/* Opaque Overlay */}
+        <AnimatePresence>
+          {showSettings && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-70 z-40"
+              onClick={toggleSettings}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Settings Modal */}
+        <AnimatePresence>
+          {showSettings && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-16 right-6 w-80 bg-white rounded-lg shadow-lg z-50"
+            >
+              <SettingContent 
+                onShowDiagnosticTest={onShowDiagnosticTest} 
+                onStudyPlanSaved={handleStudyPlanSaved}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Schedule Display */}
+        <div
+          className="flex-grow h-[calc(100vh-8.3rem)] rounded-[10px] p-4 flex flex-col relative overflow-hidden schedule-content"
+          style={{
+            backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundColor: "var(--theme-mainbox-color)",
+            color: "var(--theme-text-color)",
+            boxShadow: "var(--theme-box-shadow)",
+          }}
         >
-          {showCalendar ? (
-            <ChevronRight 
-              size={60} 
-              className="text-white-600 transition-transform duration-300 ease-in-out hover:text-blue-600"
-            />
+          {showAnalytics ? (
+            <>
+              <pre
+                className="pt-5 font-mono text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap mt-4 ml-2"
+                style={{ color: "var(--theme-text-color)" }}
+              >
+                {runTutorialPart1 ? tutorialText : typedText}
+              </pre>
+
+              {(isTypingComplete || isTutorialTypingComplete) && (
+                <div className="flex-grow overflow-auto mt-6">
+                  <div className="flex space-x-4 mb-4">
+                    <button
+                      onClick={() => setShowGraphs(!showGraphs)}
+                      className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
+                    >
+                      &gt; progress
+                    </button>
+                    <button
+                      onClick={handleToggleView}
+                      className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
+                    >
+                      &gt; calendar
+                    </button>
+                  </div>
+
+                  <AnimatePresence>
+                    {showGraphs && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div className="grid grid-cols-2 gap-4">
+                          <motion.div 
+                            className={`bg-white p-4 rounded-lg shadow cursor-pointer ${expandedGraph === 'studyTime' ? 'col-span-2' : ''}`}
+                            onClick={() => toggleGraphExpansion('studyTime')}
+                            layout
+                          >
+                            <h3 className="text-lg font-semibold mb-2">Study Time by Subject</h3>
+                            <AnimatePresence>
+                              {expandedGraph === 'studyTime' ? (
+                                <motion.div
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                >
+                                  <Bar data={barChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+                                </motion.div>
+                              ) : (
+                                <Bar data={barChartData} />
+                              )}
+                            </AnimatePresence>
+                          </motion.div>
+                          <motion.div 
+                            className={`bg-white p-4 rounded-lg shadow cursor-pointer ${expandedGraph === 'practiceTest' ? 'col-span-2' : ''}`}
+                            onClick={() => toggleGraphExpansion('practiceTest')}
+                            layout
+                          >
+                            <h3 className="text-lg font-semibold mb-2">Practice Test Progress</h3>
+                            <AnimatePresence>
+                              {expandedGraph === 'practiceTest' ? (
+                                <motion.div
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                >
+                                  <Line data={lineChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+                                </motion.div>
+                              ) : (
+                                <Line data={lineChartData} />
+                              )}
+                            </AnimatePresence>
+                          </motion.div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+            </>
           ) : (
-            <ChevronLeft 
-              size={60} 
-              className="text-white-600 transition-transform duration-300 ease-in-out hover:text-blue-600"
-            />
+            <div className="h-full w-full relative">
+              <InteractiveCalendar
+                currentDate={currentDate}
+                activities={activities}
+                onDateChange={setCurrentDate}
+                getActivitiesForDate={getActivitiesForDate}
+                onInteraction={handleCalendarModified}
+              />
+              <button
+                onClick={handleToggleView}
+                className="absolute bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+              >
+                Back to Overview
+              </button>
+            </div>
           )}
+
+          {/* Tutorial Buttons */}
+          <div className="absolute bottom-4 right-4 flex space-x-2">
+            <Button
+              onClick={() => setRunTutorialPart4(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+            >
+              Activate Tutorial Part 4
+            </Button>
+            <Button
+              onClick={() => setRunTutorialPart3(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+            >
+              Activate Tutorial Part 3
+            </Button>
+            <Button
+              onClick={() => setRunTutorialPart2(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+            >
+              Activate Tutorial Part 2
+            </Button>
+            <Button
+              onClick={() => setRunTutorialPart1(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+            >
+              Activate Tutorial
+            </Button>
+          </div>
         </div>
 
+        {/* Dialogs */}
+        {/* Comment out or remove the Thank You Dialog */}
+        {/*
         <Dialog open={showThankYouDialog} onOpenChange={setShowThankYouDialog}>
           <DialogOverlay className="fixed inset-0 bg-black bg-opacity-50 z-50" />
           <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
@@ -309,12 +670,14 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        */}
 
+        {/* New Activity Form */}
         {showNewActivityForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl w-96">
-              <h3 className="text-xl font-bold mb-4 text-black">
-                add new activity
+              <h3 className="text-lg font-bold mb-4 text-black">
+                Add New Activity
               </h3>
               <form onSubmit={createNewActivity}>
                 <input
@@ -382,6 +745,45 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest,ha
           </div>
         )}
       </div>
+
+      <Dialog open={showRewardDialog} onOpenChange={setShowRewardDialog}>
+        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
+          <DialogHeader className="text-center">
+            <DialogTitle className="text-center text-black">Congratulations!</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-4 space-y-2">
+            <div className="relative w-64 h-64">
+              <Image
+                src="/game-components/CupcakeCoin.gif"
+                alt="Reward"
+                layout="fill"
+                objectFit="contain"
+              />
+            </div>
+            <p className="text-center text-lg text-black">
+              You&apos;ve completed all tasks in the {rewardSection && buttonLabels[rewardSection as Section]}!
+            </p>
+            <p className="text-center text-lg text-black">
+              You&apos;ve earned <span className="font-bold">1 cupcake coin</span> for your hard work!
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <audio ref={audioRef} src="/levelup.mp3" />
+      <audio ref={fanfareRef} src="/fanfare.mp3" />
+
+      <Tutorial
+        runPart1={runTutorialPart1}
+        setRunPart1={setRunTutorialPart1}
+        runPart2={runTutorialPart2}
+        setRunPart2={setRunTutorialPart2}
+        runPart3={runTutorialPart3}
+        setRunPart3={setRunTutorialPart3}
+        runPart4={runTutorialPart4}
+        setRunPart4={setRunTutorialPart4}
+      />
     </div>
   );
 };

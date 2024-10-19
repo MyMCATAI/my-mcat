@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ResourcesMenu from './ResourcesMenu';
 import OfficeContainer from './OfficeContainer';
 import FloatingButton from '../home/FloatingButton';
@@ -152,21 +152,29 @@ const fetchData = async () => {
           fetch('/api/clinic')
         ]);
         
+        
         if (!reportResponse.ok || !clinicResponse.ok) throw new Error('Failed to fetch user report');
         if (!clinicResponse.ok) throw new Error('Failed to fetch clinic data');
         
         const reportData: DoctorOfficeStats = await reportResponse.json();
         const clinicData = await clinicResponse.json();
-        
+        console.log("reportData",reportData);
         setReportData(reportData);
         setUserRooms(clinicData.rooms);
         setUserScore(clinicData.score);
         
+        // Set streak days from the user report
+        setStreakDays(reportData.streak || 0);
+
         // Calculate and set player level, patients per day, and clinic cost
         const playerLevel = calculatePlayerLevel(clinicData.rooms);
+        console.log("playerLevel",playerLevel);
         const levelNumber = getLevelNumber(playerLevel);
+        console.log("levelNumber",levelNumber);
         const patientsPerDay = getPatientsPerDay(levelNumber);
+        console.log("patientsPerDay",patientsPerDay);
         const clinicCostPerDay = getClinicCostPerDay(levelNumber);
+        console.log("clinicCostPerDay",clinicCostPerDay);
         
         setUserLevel(playerLevel);
         setPatientsPerDay(patientsPerDay);
@@ -201,19 +209,6 @@ const fetchData = async () => {
       // Clean up the timer if the component unmounts
       return () => clearTimeout(timer);
     }
-  }, []);
-
-  useEffect(() => {
-    const fetchStreakDays = async () => {
-      try {
-        const response = await axios.get('/api/streak');
-        setStreakDays(response.data.streakDays);
-      } catch (error) {
-        console.error('Error fetching streak days:', error);
-      }
-    };
-
-    fetchStreakDays();
   }, []);
 
   const performDailyCalculations = async () => {
@@ -349,6 +344,10 @@ const toggleGroup = async (groupName: string) => {
     }
   };
 
+  const updateVisibleImages = useCallback((newVisibleImages: Set<string>) => {
+    setVisibleImages(newVisibleImages);
+  }, []);
+
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
       <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
@@ -370,6 +369,8 @@ const toggleGroup = async (groupName: string) => {
             imageGroups={imageGroups}
             toggleGroup={toggleGroup}
             onUpdateUserScore={handleUpdateUserScore}
+            setUserRooms={setUserRooms}
+            updateVisibleImages={updateVisibleImages}  // Add this line
           />
           {/* Fellowship Level button with coins and patients */}
           <div className="absolute top-4 right-4 z-50 flex items-center">
