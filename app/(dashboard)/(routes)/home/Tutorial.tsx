@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
+import Joyride, { CallBackProps, STATUS, Step, EVENTS } from 'react-joyride';
 import { motion } from 'framer-motion';
 
 interface TutorialProps {
@@ -29,10 +29,14 @@ const Tutorial: React.FC<TutorialProps> = ({
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, type } = data;
-    if (type === 'tour:start') {
+    if (type === EVENTS.TOUR_START) {
       playNotification();
     }
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status) || type === 'tour:close') {
+    if (
+      status === STATUS.FINISHED ||
+      status === STATUS.SKIPPED ||
+      type === EVENTS.TOUR_END
+    ) {
       endAllTutorials();
     }
   };
@@ -53,7 +57,7 @@ const Tutorial: React.FC<TutorialProps> = ({
   useEffect(() => {
     const scheduleContent = document.querySelector('.schedule-content');
     if (scheduleContent) {
-      const handleScheduleClick = (event: MouseEvent) => {
+      const handleScheduleClick = (event: Event) => {
         const target = event.target as HTMLElement;
         if (runPart1 && target.closest('.settings-button')) {
           endAllTutorials();
@@ -66,6 +70,7 @@ const Tutorial: React.FC<TutorialProps> = ({
         scheduleContent.removeEventListener('click', handleScheduleClick);
       };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runPart1]);
 
   const createShakeAnimation = (delay: number) => ({
@@ -110,9 +115,9 @@ const Tutorial: React.FC<TutorialProps> = ({
           ))}
         </ul>
       </section>
-
       <p className="text-lg font-semibold">
-        Let's begin solving your first problem of <span style={{ color: 'blue'}}>when should I study?</span></p>
+        Let&apos;s begin solving your first problem of <span style={{ color: 'blue' }}>when should I study?</span>
+      </p>
     </div>
   );
 
@@ -139,7 +144,7 @@ const Tutorial: React.FC<TutorialProps> = ({
       
       <div className="bg-white p-4 rounded-lg shadow-lg">
         <p className="text-lg">
-          Great job! Now, let's wake up Kalypso and ask him a question about your schedule.</p>
+          {"Great job! Now, let's wake up Kalypso and ask him a question about your schedule."}</p>
         <p className="text-lg mt-5">
         </p>
       </div>
@@ -152,7 +157,7 @@ const Tutorial: React.FC<TutorialProps> = ({
       
       <div className="bg-white p-4 rounded-lg shadow-lg">
         <p className="text-lg">
-          Yay! You've mastered the dashboard! Go ahead and checkmark it off in your Daily To-Do List!
+          {"Yay! You've mastered the dashboard! Go ahead and checkmark it off in your Daily To-Do List!"}
         </p>
       </div>
     </div>
