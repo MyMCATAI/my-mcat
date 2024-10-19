@@ -13,7 +13,7 @@ const inter = Inter({ subsets: ['latin'] })
 const robotoSlab = Roboto_Slab({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'My MCAT - Interactive MCAT Prep Platform',
+  title: 'My MCAT - Expert Prep',
   description: 'MCAT Prep but make it cool.',
   keywords: 'MCAT prep, medical school admission, interactive learning, study tools, MCAT practice tests',
   openGraph: {
