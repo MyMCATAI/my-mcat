@@ -377,6 +377,10 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
     setRunTutorialPart1(true);
   };
 
+  const handleAAMCClick = () => {
+    router.push('/integrations');
+  };
+
   return (
     <div className="flex h-full relative">
       {/* Left Sidebar */}
@@ -391,10 +395,8 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
           boxShadow: "var(--theme-box-shadow)",
         }}
       >
-        {/* Add the large "TODAY" title */}
-        <h1 className="text-3xl font-bold text-center">TODAY</h1>
+        <h1 className="text-3xl font-bold text-center mb-4">TODAY</h1>
 
-        {/* Make the buttons container scrollable but hide the scrollbar */}
         <div className="flex-grow overflow-y-auto space-y-4 pr-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <style jsx>{`
             div::-webkit-scrollbar {
@@ -402,23 +404,25 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
             }
           `}</style>
           {(Object.entries(checklists) as [Section, { id: number; text: string; checked: boolean; }[]][]).map(([section, items]) => (
-            <div key={section} className="mb-4 relative">
+            <div key={section} className="mb-6">
               <button
-                className={`w-full h-10 ${
+                className={`w-full py-3 px-4 ${
                   completedSections.includes(section)
                     ? 'bg-green-500 text-white'
                     : 'bg-[--theme-hover-color] text-[--theme-hover-text]'
-                } hover:opacity-80 font-semibold shadow-md rounded transition text-m relative`}
+                } hover:opacity-90 font-semibold shadow-md rounded-lg transition text-lg relative flex items-center justify-between`}
                 onClick={() => handleButtonClick(section)}
               >
-                {buttonLabels[section]}
-                {completedSections.includes(section) && (
-                  <div className="absolute top-1/2 right-0 transform -translate-y-1/2 -mr-2">
-                    <CheckCircle className="w-6 h-6 text-white bg-green-500 rounded-full" />
-                  </div>
+                <span>{buttonLabels[section]}</span>
+                {completedSections.includes(section) ? (
+                  <CheckCircle className="w-6 h-6 text-white" />
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 )}
               </button>
-              <div className="bg-[--theme-leaguecard-color] shadow-md p-3 mt-2 space-y-2">
+              <div className="bg-[--theme-leaguecard-color] shadow-md p-4 mt-2 space-y-2 rounded-lg">
                 {items.map(item => (
                   <div key={item.id} className="flex items-center">
                     <input
@@ -426,11 +430,11 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
                       id={`checkbox-${section}-${item.id}`}
                       checked={item.checked}
                       onChange={() => handleCheckboxChange(section as Section, item.id)}
-                      className="mr-2 h-4 w-4"
+                      className="mr-3 h-5 w-5 text-blue-600"
                     />
                     <label 
                       htmlFor={`checkbox-${section}-${item.id}`} 
-                      className="text-sm leading-tight"
+                      className="text-sm leading-tight cursor-pointer flex-grow"
                     >
                       {item.text}
                     </label>
@@ -542,6 +546,12 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
                       className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
                     >
                       &gt; calendar
+                    </button>
+                    <button
+                      onClick={handleAAMCClick}
+                      className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
+                    >
+                      AAMC
                     </button>
                   </div>
 
