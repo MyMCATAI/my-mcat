@@ -23,7 +23,9 @@
     "backfill-passageIds": "ts-node --project tsconfig.server.json scripts/backfillPassageIds.ts",
     "update-descriptions": "ts-node --project tsconfig.server.json scripts/updateTestDescriptions.ts",
     "test": "jest",
-    "upload-reviews": "ts-node --project tsconfig.server.json scripts/uploadReviews.ts"
+    "upload-reviews": "ts-node --project tsconfig.server.json scripts/uploadReviews.ts",
+    "delete-non-cars-questions": "ts-node --project tsconfig.server.json scripts/deleteNonPassageQuestions.ts",
+    "create-sara-questions": "ts-node --project tsconfig.server.json scripts/createSaraQuestions.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.633.0",
