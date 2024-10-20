@@ -369,27 +369,17 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     // Calculate correct answers
     const correctAnswers = responses.filter(r => r.isCorrect).length;
     const score = (correctAnswers / totalQuestions) * 100;
+
+    const averageTimePerQuestion = totalTimeInSeconds / totalQuestions;
   
+    // Technique: highlight, passage strikethroughs, and crossed out options
     let technique = 0;
+
+    if (numberOfPassageHighlights > 0) technique += 1;
+    if (numberOfPassageStrikethroughs > 0) technique += 1;
+    if (totalOptionsCrossedOut > 0) technique += 1;
   
-    // Calculate total passage marks
-    const totalPassageMarks = numberOfPassageHighlights + numberOfPassageStrikethroughs;
-  
-    // Points from passage marks
-    if (totalPassageMarks >= 2) {
-      technique += 2;
-    } else if (totalPassageMarks >= 1) {
-      technique += 1;
-    }
-  
-    // Points from options crossed out
-    if (totalOptionsCrossedOut >= totalQuestions) {
-      technique += 2;
-    } else if (totalOptionsCrossedOut >= totalQuestions / 2) {
-      technique += 1;
-    }
-  
-    return { score, correctAnswers, technique };
+    return { score, correctAnswers, technique, averageTimePerQuestion };
   };
 
 
@@ -400,7 +390,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     const testFinishTime = new Date();
     const totalTimeInSeconds = testHeaderRef.current?.getTotalElapsedTime() || 0;
   
-    const { score, correctAnswers, technique } = calculateScore(totalTimeInSeconds);
+    const { score, correctAnswers, technique, averageTimePerQuestion } = calculateScore(totalTimeInSeconds);
   
     setScore(score);
     setCorrectAnswer(correctAnswers);
@@ -421,13 +411,24 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   
       // Determine the number of cupcakes (points) earned
       let cupcakesEarned = 0;
-      if (score === 100) {
-        cupcakesEarned = 3;
-      } else if (score >= 60) {
-        cupcakesEarned = 2;
-      } else {
-        cupcakesEarned = 1;
+
+      // Should be consistent with getStartCount, getTimingStars, and getTechniqueStars
+      // Points are ratings in total
+      let point = 0
+
+      if (score === 100) point += 3;
+      else if (score >= 80) point += 2;
+      else if (score >= 60) point += 1;
+
+      if (averageTimePerQuestion != undefined) {
+        if (averageTimePerQuestion < 9 * 60 / 5) point += 3;
+        else if (averageTimePerQuestion < 10 * 60 / 5) point += 2;
+        else if (averageTimePerQuestion < 12 * 60 / 5) point += 1;
+        else point += 0;
       }
+
+      point += technique;
+      cupcakesEarned = Math.max(Math.round(point / 3), 1);
   
       // Update the user's score
       const scoreResponse = await fetch('/api/user-info/', {
