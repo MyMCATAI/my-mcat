@@ -377,6 +377,10 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
     setRunTutorialPart1(true);
   };
 
+  const handleAAMCClick = () => {
+    router.push('/integrations');
+  };
+
   return (
     <div className="flex h-full relative">
       {/* Left Sidebar */}
@@ -542,6 +546,12 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
                       className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
                     >
                       &gt; calendar
+                    </button>
+                    <button
+                      onClick={handleAAMCClick}
+                      className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
+                    >
+                      AAMC
                     </button>
                   </div>
 
