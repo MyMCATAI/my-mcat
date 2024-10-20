@@ -54,6 +54,7 @@ model Question {
   links               String?        @db.Text
   tags                String?        @db.Text
   types               String?        @db.Text
+  states              String?        @db.Text
   contentId           String?
   passage             Passage?       @relation(fields: [passageId], references: [id])
   category            Category       @relation(fields: [categoryId], references: [id])
@@ -104,7 +105,7 @@ model TestQuestion {
   questionId String
   sequence   Int
   test       Test     @relation(fields: [testId], references: [id])
-  question   Question @relation(fields: [questionId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([testId])
   @@index([questionId])
@@ -144,7 +145,7 @@ model UserResponse {
   isReviewed Boolean?  @default(false)
   flagged    Boolean?   @default(false)
   userTest   UserTest? @relation(fields: [userTestId], references: [id])
-  question   Question  @relation(fields: [questionId], references: [id])
+  question   Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
   Category   Category? @relation(fields: [categoryId], references: [id])
 
   @@index([userId])
