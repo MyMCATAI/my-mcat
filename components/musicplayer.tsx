@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { FaPlay, FaPause, FaForward, FaVolumeUp } from 'react-icons/fa';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { FaPlay, FaPause, FaForward, FaVolumeUp } from "react-icons/fa";
 
 interface Song {
   title: string;
@@ -49,9 +49,9 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [volume, setVolume] = useState(1);
-  const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [shuffledPlaylist, setShuffledPlaylist] = useState<Song[]>([]);
+  const songIndexMap = useRef<Record<string, number>>({});
 
   const playlist = playlists[theme] || [];
 
@@ -62,8 +62,13 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
   }, [playlist]);
 
   useEffect(() => {
-    shufflePlaylist();
-    setIsPlaying(false); // Stop playback when theme changes
+    if (songIndexMap.current[theme] !== undefined) {
+      setCurrentSongIndex(songIndexMap.current[theme]);
+    } else {
+      shufflePlaylist();
+      setCurrentSongIndex(0);
+    }
+    setIsPlaying(true); // Stop playback when theme changes, set to true again so that it does not stop when switching themes
   }, [theme, shufflePlaylist]);
 
   useEffect(() => {
@@ -73,7 +78,6 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
   }, [volume]);
 
   useEffect(() => {
-    setError(null);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.load();
@@ -81,7 +85,6 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
         audioRef.current.play().catch((error) => {
           console.error("Error playing audio:", error);
           setIsPlaying(false);
-          setError("Unable to play audio. Please try again.");
         });
       }
     }
@@ -105,7 +108,11 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
   };
 
   const playNextSong = () => {
-    setCurrentSongIndex((prevIndex) => (prevIndex + 1) % shuffledPlaylist.length);
+    setCurrentSongIndex((prevIndex) => {
+      const newIndex = (prevIndex + 1) % shuffledPlaylist.length;
+      songIndexMap.current[theme] = newIndex;
+      return newIndex;
+    });
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,7 +122,6 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
 
   const handlePlayError = (e: any) => {
     console.error("Error playing audio:", e);
-    setError("Unable to play audio. Please try again.");
     setIsPlaying(false);
   };
 
@@ -126,14 +132,16 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
         src={shuffledPlaylist[currentSongIndex]?.url}
         onEnded={playNextSong}
         onError={() => {
-          setError("Error loading audio. Please try another song.");
+          console.log("audio error")
           setIsPlaying(false);
         }}
       />
       <button onClick={togglePlayPause}>
         {isPlaying ? <FaPause /> : <FaPlay />}
       </button>
-      <button onClick={playNextSong}><FaForward /></button>
+      <button onClick={playNextSong}>
+        <FaForward />
+      </button>
       <div className="relative group flex items-center">
         <FaVolumeUp className="cursor-pointer mr-2" />
         <input
@@ -146,7 +154,6 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
           className="w-16 opacity-0 group-hover:opacity-100 transition-opacity"
         />
       </div>
-      {error && <span className="text-red-500 text-xs">{error}</span>}
     </div>
   );
 };
