@@ -152,21 +152,29 @@ const fetchData = async () => {
           fetch('/api/clinic')
         ]);
         
+        
         if (!reportResponse.ok || !clinicResponse.ok) throw new Error('Failed to fetch user report');
         if (!clinicResponse.ok) throw new Error('Failed to fetch clinic data');
         
         const reportData: DoctorOfficeStats = await reportResponse.json();
         const clinicData = await clinicResponse.json();
-        
+        console.log("reportData",reportData);
         setReportData(reportData);
         setUserRooms(clinicData.rooms);
         setUserScore(clinicData.score);
         
+        // Set streak days from the user report
+        setStreakDays(reportData.streak || 0);
+
         // Calculate and set player level, patients per day, and clinic cost
         const playerLevel = calculatePlayerLevel(clinicData.rooms);
+        console.log("playerLevel",playerLevel);
         const levelNumber = getLevelNumber(playerLevel);
+        console.log("levelNumber",levelNumber);
         const patientsPerDay = getPatientsPerDay(levelNumber);
+        console.log("patientsPerDay",patientsPerDay);
         const clinicCostPerDay = getClinicCostPerDay(levelNumber);
+        console.log("clinicCostPerDay",clinicCostPerDay);
         
         setUserLevel(playerLevel);
         setPatientsPerDay(patientsPerDay);
@@ -201,19 +209,6 @@ const fetchData = async () => {
       // Clean up the timer if the component unmounts
       return () => clearTimeout(timer);
     }
-  }, []);
-
-  useEffect(() => {
-    const fetchStreakDays = async () => {
-      try {
-        const response = await axios.get('/api/streak');
-        setStreakDays(response.data.streakDays);
-      } catch (error) {
-        console.error('Error fetching streak days:', error);
-      }
-    };
-
-    fetchStreakDays();
   }, []);
 
   const performDailyCalculations = async () => {
