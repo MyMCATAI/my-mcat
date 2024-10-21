@@ -123,7 +123,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
       path: "loop"
     },
     loop: {
-      message: async (params: { userInput: string }) => {
+      message: async (params: { userInput: string }) => { 
         const response = await sendMessage(params.userInput);
         return response || "I'm sorry, I couldn't process your request. Please try again.";
       },
@@ -195,6 +195,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
       width: '100%',
       backgroundColor: backgroundColor,
       position: 'relative',
+      zIndex: 1, // Add this line to set a base z-index for the chat window
     },
     bodyStyle: {
       flexGrow: 1,
@@ -248,12 +249,12 @@ const ChatBot: React.FC<ChatBotProps> = ({
       {avatar && (
         <div style={{
           position: 'absolute',
-          top: '30px',
+          top: '10px',
           right: '10px',
           width: '70px',
           height: '70px',
           overflow: 'hidden',
-          zIndex: 10,
+          zIndex: 9999, // Increase this value to be higher than any other component
           borderRadius: '50%',
           backgroundColor: 'rgba(255, 255, 255, 0.3)', 
         }}>
