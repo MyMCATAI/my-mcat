@@ -375,9 +375,9 @@ const Page = () => {
     }
 
     // Only wrap non-Schedule content with MDOnlyFeaturesDialog
-    if (!isPro && activeTab !== "Schedule" && activeTab !== "test") {
-       return <MDOnlyFeaturesDialog content={content} />;
-     }
+    // if (!isPro && activeTab !== "Schedule" && activeTab !== "test") {
+    //   return <MDOnlyFeaturesDialog content={content} />;
+    // }
 
     return content;
   };
@@ -427,7 +427,7 @@ const Page = () => {
                   : activeTab === "test"
                   ? "Daily CARs Practice"
                   : "Home"}
-                {isPro && " Pro"}
+                {/* {isPro && " Pro"} */}
               </h2>
               <ThemeSwitcher />
             </div>

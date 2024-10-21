@@ -114,7 +114,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
   const buttonLabels: Record<Section, string> = {
     AdaptiveTutoringSuite: "Tutoring Suite",
     MCATGameAnkiClinic: "The Anki Clinic",
-    DailyCARsSuite: "Daily CARs Suite",
+    DailyCARsSuite: "Daily CARs",
   };
 
   const handleCheckboxChange = async (section: Section, id: number) => {
@@ -406,11 +406,14 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
           {(Object.entries(checklists) as [Section, { id: number; text: string; checked: boolean; }[]][]).map(([section, items]) => (
             <div key={section} className="mb-6">
               <button
-                className={`w-full py-3 px-4 ${
-                  completedSections.includes(section)
+                className={`w-full py-3 px-4 
+                  ${completedSections.includes(section)
                     ? 'bg-green-500 text-white'
-                    : 'bg-[--theme-hover-color] text-[--theme-hover-text]'
-                } hover:opacity-90 font-semibold shadow-md rounded-lg transition text-lg relative flex items-center justify-between`}
+                    : 'bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color]'
+                  } 
+                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
+                  font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
+                  text-md`} // Changed from text-lg to match progress buttons
                 onClick={() => handleButtonClick(section)}
               >
                 <span>{buttonLabels[section]}</span>
@@ -514,9 +517,13 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
         <div
           className="flex-grow h-[calc(100vh-8.3rem)] rounded-[10px] p-4 flex flex-col relative overflow-hidden schedule-content"
           style={{
-            backgroundColor: "var(--theme-background-color)",
+            backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundColor: "var(--theme-mainbox-color)",
             color: "var(--theme-text-color)",
-            borderColor: "var(--theme-border-color)",
+            boxShadow: "var(--theme-box-shadow)",
           } as React.CSSProperties}
         >
           {showAnalytics ? (
