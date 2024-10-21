@@ -7,7 +7,7 @@ import { DialogHeader, DialogFooter } from "@/components/ui/dialog";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogOverlay } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import Image from 'next/image';
-import InteractiveCalendar from "@/components/InteractiveCalendar";
+import InteractiveCalendar from "@/components/calendar/InteractiveCalendar";
 import {
   Tooltip,
   TooltipContent,
@@ -178,12 +178,12 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
 
     if (todayActivities.length > 0) {
       const activityList = todayActivities.map(activity => activity.activityTitle).join(", ");
-      return `Welcome back to myMCAT.ai! Here's what you have scheduled for today: ${activityList}. Let's get studying!`;
+      return `Welcome back to MyMCAT.ai! Here's what you have scheduled for today: ${activityList}. Let's get studying!`;
     } else if (tomorrowActivities.length > 0) {
       const activityList = tomorrowActivities.map(activity => activity.activityTitle).join(", ");
-      return `Welcome back to myMCAT.ai! You don't have any activities scheduled for today, but tomorrow you'll be working on: ${activityList}. Take some time to prepare!`;
+      return `Welcome back to MyMCAT.ai! You don't have any activities scheduled for today, but tomorrow you'll be working on: ${activityList}. Take some time to prepare!`;
     } else {
-      return "Welcome back to myMCAT.ai! You don't have any activities scheduled for today or tomorrow. Would you like to add some new study tasks?";
+      return "Welcome back to MyMCAT.ai! You don't have any activities scheduled for today or tomorrow. Would you like to add some new study tasks?";
     }
   }, [activities]);
 
@@ -514,14 +514,10 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
         <div
           className="flex-grow h-[calc(100vh-8.3rem)] rounded-[10px] p-4 flex flex-col relative overflow-hidden schedule-content"
           style={{
-            backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
-            backgroundSize: "cover",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            backgroundColor: "var(--theme-mainbox-color)",
+            backgroundColor: "var(--theme-background-color)",
             color: "var(--theme-text-color)",
-            boxShadow: "var(--theme-box-shadow)",
-          }}
+            borderColor: "var(--theme-border-color)",
+          } as React.CSSProperties}
         >
           {showAnalytics ? (
             <>
@@ -612,20 +608,28 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
               )}
             </>
           ) : (
-            <div className="h-full w-full relative">
-              <InteractiveCalendar
-                currentDate={currentDate}
-                activities={activities}
-                onDateChange={setCurrentDate}
-                getActivitiesForDate={getActivitiesForDate}
-                onInteraction={handleCalendarModified}
-              />
-              <button
-                onClick={handleToggleView}
-                className="absolute bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+            <div className="h-full w-full relative flex flex-col">
+              <div className="flex-grow" 
+                style={{
+                  maxHeight: '90%'
+                }}
               >
-                Back to Overview
-              </button>
+                <InteractiveCalendar
+                  currentDate={currentDate}
+                  activities={activities}
+                  onDateChange={setCurrentDate}
+                  getActivitiesForDate={getActivitiesForDate}
+                  onInteraction={handleCalendarModified}
+                />
+              </div>
+              <div className="h-32 flex justify-end items-start px-4 pt-4">
+                <button
+                  onClick={handleToggleView}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+                >
+                  Back to Overview
+                </button>
+              </div>
             </div>
           )}
 
@@ -633,27 +637,27 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
           <div className="absolute bottom-4 right-4 flex space-x-2">
             <Button
               onClick={() => setRunTutorialPart4(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+              className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition text-sm opacity-80"
             >
-              Activate Tutorial Part 4
+              Tutorial Part 4
             </Button>
             <Button
               onClick={() => setRunTutorialPart3(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+              className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition text-sm opacity-80"
             >
-              Activate Tutorial Part 3
+              Tutorial Part 3
             </Button>
             <Button
               onClick={() => setRunTutorialPart2(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+              className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition text-sm opacity-80"
             >
-              Activate Tutorial Part 2
+              Tutorial Part 2
             </Button>
             <Button
               onClick={() => setRunTutorialPart1(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+              className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition text-sm opacity-80"
             >
-              Activate Tutorial
+              Tutorial Part 1
             </Button>
           </div>
         </div>

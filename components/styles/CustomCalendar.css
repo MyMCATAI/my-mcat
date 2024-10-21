@@ -1,0 +1,123 @@
+/* CustomCalendar.css */
+.custom-calendar.rbc-calendar {
+  background-color: var(--theme-background-color);
+  color: var(--theme-text-color);
+}
+
+/* Add these new styles */
+.custom-calendar .rbc-month-view,
+.custom-calendar .rbc-time-view,
+.custom-calendar .rbc-agenda-view,
+.custom-calendar .rbc-time-content,
+.custom-calendar .rbc-day-bg,
+.custom-calendar .rbc-time-slot {
+  background-color: var(--theme-background-color);
+}
+
+.custom-calendar .rbc-date-cell {
+  color: var(--theme-text-color);
+}
+
+.custom-calendar .rbc-off-range-bg {
+  background-color: var(--theme-gray-100);
+}
+
+.custom-calendar .rbc-header {
+  background-color: var(--theme-leaguecard-color);
+  color: var(--theme-text-color);
+}
+
+.custom-calendar .rbc-toolbar {
+  background-color: var(--theme-leaguecard-color);
+  color: var(--theme-text-color);
+}
+
+.custom-calendar .rbc-toolbar button {
+  color: var(--theme-text-color);
+}
+
+.custom-calendar .rbc-toolbar button:hover,
+.custom-calendar .rbc-toolbar button:active,
+.custom-calendar .rbc-toolbar button.rbc-active {
+  background-color: var(--theme-hover-color);
+}
+
+.custom-calendar .rbc-month-row + .rbc-month-row,
+.custom-calendar .rbc-day-bg + .rbc-day-bg,
+.custom-calendar .rbc-header,
+.custom-calendar .rbc-time-header-cell,
+.custom-calendar .rbc-time-slot,
+.custom-calendar .rbc-events-container {
+  border-color: var(--theme-border-color);
+}
+
+.custom-calendar .rbc-today {
+  background-color: var(--theme-hover-color);
+}
+
+.custom-calendar .rbc-event {
+  background-color: var(--theme-primary-color);
+  color: var(--theme-primary-text);
+}
+
+.custom-calendar .rbc-show-more {
+  color: var(--theme-link-color);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: var(--theme-background-color);
+  color: var(--theme-text-color);
+  padding: 20px;
+  border-radius: 5px;
+  width: 300px;
+  border: 1px solid var(--theme-border-color);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content h2 {
+  color: var(--theme-text-color);
+  margin-bottom: 15px;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 15px;
+  background-color: var(--theme-input-background);
+  color: var(--theme-text-color);
+  border: 1px solid var(--theme-border-color);
+  border-radius: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.modal-actions button {
+  margin-left: 10px;
+  padding: 8px 12px;
+  background-color: var(--theme-button-background);
+  color: var(--theme-button-text);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-actions button:hover {
+  background-color: var(--theme-button-hover-background);
+}

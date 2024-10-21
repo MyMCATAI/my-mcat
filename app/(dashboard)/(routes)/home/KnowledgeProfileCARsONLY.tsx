@@ -132,6 +132,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
             width="100%"
             height="100%"
             backgroundColor="transparent"
+            avatar="/kalypsoend.gif"
           />
         </div>
       );

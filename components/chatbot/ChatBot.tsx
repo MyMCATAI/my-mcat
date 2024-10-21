@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Styles } from 'react-chatbotify';
+import Image from 'next/image';
 
 const DynamicChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
 
@@ -14,13 +15,15 @@ interface ChatBotProps {
   width?: string | number;
   height?: string | number;
   backgroundColor?: string;
+  avatar?: string;
 }
 
 const ChatBot: React.FC<ChatBotProps> = ({ 
   chatbotContext, 
   width = '100%',
   height = '100%',
-  backgroundColor = 'transparent'
+  backgroundColor = 'transparent',
+  avatar
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -191,6 +194,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
       height: 'calc(100vh - 12.2rem)',
       width: '100%',
       backgroundColor: backgroundColor,
+      position: 'relative',
     },
     bodyStyle: {
       flexGrow: 1,
@@ -234,13 +238,37 @@ const ChatBot: React.FC<ChatBotProps> = ({
   }
 
   return (
-    <div className="w-full rounded-lg shadow-lg overflow-hidden flex flex-col" style={{
+    <div className="w-full rounded-lg shadow-lg overflow-hidden flex flex-col relative" style={{
       boxShadow: 'var(--theme-box-shadow)',
       border: '1px solid var(--theme-border-color)',
       width: width,
       height: height,
       backgroundColor: backgroundColor,
     }}>
+      {avatar && (
+        <div style={{
+          position: 'absolute',
+          top: '30px',
+          right: '10px',
+          width: '70px',
+          height: '70px',
+          overflow: 'hidden',
+          zIndex: 10,
+          borderRadius: '50%',
+          backgroundColor: 'rgba(255, 255, 255, 0.3)', 
+        }}>
+          <Image 
+            src={avatar}
+            alt="Kalypso"
+            layout="responsive"
+            width={100}
+            height={140}
+            objectFit="cover"
+            objectPosition="top center"
+            style={{ transform: 'scale(2)', transformOrigin: 'top center' }}
+          />
+        </div>
+      )}
       <DynamicChatBot
         settings={settings}
         styles={styles}
