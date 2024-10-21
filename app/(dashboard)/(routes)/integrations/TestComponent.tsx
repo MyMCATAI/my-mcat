@@ -3,7 +3,12 @@ import AAMC from './AAMC';
 import FLSpecific from './FLSpecific';
 
 interface TestComponentProps {
-  showList: boolean;
+  showList?: boolean;
+  userPrompt?: string;
+  generatedPassage?: string;
+  setGeneratedPassage?: (passage: string) => void;
+  generatedExplanation?: string;
+  setGeneratedExplanation?: (explanation: string) => void;
 }
 
 const TestComponent: React.FC<TestComponentProps> = ({ showList }) => {
