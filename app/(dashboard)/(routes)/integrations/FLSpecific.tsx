@@ -7,6 +7,7 @@ interface Question {
   troubleReason: string;
   correctThoughtProcess: string;
   difficulty: 1 | 2 | 3;
+  contentCategory: string; 
 }
 
 interface Scores {
@@ -66,6 +67,7 @@ const FLSpecific: React.FC = () => {
       troubleReason: '',
       correctThoughtProcess: '',
       difficulty: 1,
+      contentCategory: ''
     };
     setQuestions([...questions, newQuestion]);
     saveQuestions([...questions, newQuestion]);
@@ -102,7 +104,9 @@ const FLSpecific: React.FC = () => {
 
   const handleContentCategoryChange = (value: string) => {
     setContentCategoryInput(value);
-    setSelectedQuestion({...selectedQuestion, contentCategory: value});
+    if (selectedQuestion) {
+      setSelectedQuestion({...selectedQuestion, contentCategory: value});
+    }
     if (value) {
       const filtered = AAMC_CONTENT_CATEGORIES.filter(category => 
         category.toLowerCase().includes(value.toLowerCase())

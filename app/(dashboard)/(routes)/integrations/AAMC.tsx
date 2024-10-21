@@ -59,7 +59,7 @@ const AAMC: React.FC = () => {
             particularly in interpreting complex passages. For Bio/Biochem, enzyme kinetics and cellular respiration concepts are 
             strong, but consider reviewing membrane transport. In C/P, your understanding of thermodynamics is solid, but 
             electromagnetism could use more focus. P/S scores indicate good grasp of cognitive theories, but social psychology 
-            terms need attention. Overall, you're on track for a competitive score. Keep up the consistent study habits!
+            terms need attention. Overall, you&apos;re on track for a competitive score. Keep up the consistent study habits!
           </p>
         </div>
       </div>
