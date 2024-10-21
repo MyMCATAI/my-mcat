@@ -6,7 +6,10 @@ import moment from 'moment';
 import withDragAndDrop, { EventInteractionArgs } from 'react-big-calendar/lib/addons/dragAndDrop';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import '../styles/CustomCalendar.css';
+
 import { useUser } from "@clerk/nextjs";
+import AddEventModal from './AddEventModal';
 
 // Assuming you have a types file with this interface
 interface FetchedActivity {
@@ -48,6 +51,9 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [view, setView] = useState<View>('month');
   const { user } = useUser();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newEventStart, setNewEventStart] = useState<Date | null>(null);
+  const [newEventEnd, setNewEventEnd] = useState<Date | null>(null);
 
   useEffect(() => {
     fetchActivities();
@@ -148,12 +154,23 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     }
   };
 
-  const handleSelect = async ({ start, end }: { start: Date; end: Date }) => {
-    const title = window.prompt('New Event name');
-    if (title && user?.id) {
+  const handleSelect = ({ start, end }: { start: Date; end: Date }) => {
+    setNewEventStart(start);
+    setNewEventEnd(end);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setNewEventStart(null);
+    setNewEventEnd(null);
+  };
+
+  const handleModalSubmit = async (title: string) => {
+    if (title && user?.id && newEventStart && newEventEnd) {
       const newEvent: Omit<CalendarEvent, 'id'> = {
-        start,
-        end,
+        start: newEventStart,
+        end: newEventEnd,
         title,
         activityText: '',
         hours: 1
@@ -166,7 +183,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
           body: JSON.stringify({
             ...newEvent,
             userId: user.id,
-            scheduledDate: start.toISOString()
+            scheduledDate: newEventStart.toISOString()
           })
         });
 
@@ -175,6 +192,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         const createdActivity: { id: string } = await response.json();
         setEvents(prevEvents => [...prevEvents, { ...newEvent, id: createdActivity.id }]);
         onInteraction();
+        handleModalClose();
       } catch (error) {
         console.error("Error creating activity:", error);
         // You might want to add some user feedback here
@@ -199,8 +217,9 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   };
 
   return (
-    <div style={{ height: '100%' }}> {/* Changed from h-[600px] to 100% */}
+    <div className="custom-calendar" style={{ height: '100%' }}>
       <DnDCalendar
+        className="custom-calendar"
         defaultDate={moment().toDate()}
         view={view}
         onView={onView}
@@ -213,6 +232,11 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         onSelectSlot={handleSelect}
         style={{ height: "100%" }}
         eventPropGetter={eventStyleGetter}
+      />
+      <AddEventModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onSubmit={handleModalSubmit}
       />
     </div>
   );
