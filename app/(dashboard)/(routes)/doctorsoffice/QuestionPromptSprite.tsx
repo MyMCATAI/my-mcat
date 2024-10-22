@@ -12,6 +12,8 @@ interface QuestionPromptSpriteProps {
   y: number;
   scaleConstant: number;
   zIndex: number;
+  roomId: string;
+  onClick: () => void; // Add this prop
 }
 
 const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({ 
@@ -19,7 +21,9 @@ const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({
   x, 
   y, 
   scaleConstant,
-  zIndex 
+  zIndex,
+  roomId,
+  onClick
 }) => {
   const [texture, setTexture] = useState<Texture | null>(null);
   const [scale, setScale] = useState(1);
@@ -56,20 +60,23 @@ const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({
   // Interaction handlers
   const handlePointerOver = useCallback(() => {
     setIsHovered(true);
-    setScale(1.1); // Scale up on hover
+    setScale((0.1 + scaleConstant * 1 * 0.05)); // Scale up on hover
     document.body.style.cursor = 'pointer';
   }, []);
 
   const handlePointerOut = useCallback(() => {
     setIsHovered(false);
-    setScale(1);
+    setScale((0.1 + scaleConstant * 1 * 0.05));
     document.body.style.cursor = 'default';
   }, []);
 
   const handleClick = useCallback(() => {
     // Add your click handler logic here
-    console.log('Pin clicked!');
-  }, []);
+    if (onClick) {
+        onClick(); // Call the onClick prop to extend functionality
+    }
+
+  }, [onClick]);
 
   const glowFilter = new GlowFilter({
     distance: 15,
