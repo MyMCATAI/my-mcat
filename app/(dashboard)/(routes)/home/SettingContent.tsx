@@ -5,6 +5,7 @@ import { StudyPlan } from '@/types';
 import { Button } from "@/components/ui/button";
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "react-hot-toast";
 
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
@@ -51,6 +52,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState(0);
   const [isNotSureDate, setIsNotSureDate] = useState<boolean>(false);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
   useEffect(() => {
     fetchExistingStudyPlan();
@@ -130,6 +132,48 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
       alert('Error saving study plan. Please try again.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleGenerateStudyPlan = async () => {
+    setIsGenerating(true);
+    const studyPlanData = {
+      examDate: calendarValue,
+      resources: {
+        hasUWorld: selectedResources["UWorld"] || false,
+        hasAAMC: selectedResources["AAMC"] || false,
+        hasAdaptiveTutoringSuite: true, // Assuming this is always available
+        hasAnki: true, // Assuming this is always available
+      },
+      hoursPerDay,
+      fullLengthDays: Object.entries(fullLengthDays)
+        .filter(([_, value]) => value)
+        .map(([day]) => day),
+      contentReviewRatio: reviewPracticeBalance / 100,
+      useKnowledgeProfile: false, // You might want to add a toggle for this in the UI
+      alternateStudyPractice: true, // You might want to add a toggle for this in the UI
+      includeSpecificContent: false, // You might want to add a toggle for this in the UI
+    };
+
+    try {
+      const response = await fetch('/api/generate-study-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(studyPlanData),
+      });
+      console.log("response", response);
+      if (response.ok) {
+        toast.success("Study plan generated successfully!");
+        if (onStudyPlanSaved) onStudyPlanSaved();
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to generate study plan");
+      }
+    } catch (error) {
+      console.error('Error generating study plan:', error);
+      toast.error("An error occurred while generating the study plan");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -309,11 +353,19 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
         
         <div className="p-4">
           <Button
-            className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200"
+            className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200 mb-2"
             onClick={handleSave}
             disabled={isSaving}
           >
             {isSaving ? 'Saving...' : (existingStudyPlan ? 'Update Study Plan' : 'Save Study Plan')}
+          </Button>
+          
+          <Button
+            className="w-full text-[--theme-hover-text] bg-[--theme-doctorsoffice-accent] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200"
+            onClick={handleGenerateStudyPlan}
+            disabled={isGenerating || !existingStudyPlan}
+          >
+            {isGenerating ? 'Generating...' : 'Generate Study Plan'}
           </Button>
         </div>
       </div>

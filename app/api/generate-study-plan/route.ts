@@ -142,9 +142,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // Find existing study plan for the user
+    const existingStudyPlan = await prisma.studyPlan.findFirst({
+      where: { userId },
+    });
+
     // Create or update the study plan
     const studyPlan: StudyPlan = await prisma.studyPlan.upsert({
-      where: { userId },
+      where: { 
+        id: existingStudyPlan?.id ?? 'new_study_plan' // Use a dummy ID if no existing plan
+      },
       update: {
         examDate: new Date(examDate),
         resources,
@@ -255,7 +262,9 @@ async function generateStudySchedule(
     // Check if today is a preferred day for full-length exams
     if (fullLengthDays.includes(dayName) && dailyHours >= 8) {
       // Schedule Full-Length Exam
-      dayActivities.push(createActivity(studyPlan, 'Full-Length Exam', 'Exam', 8, currentDate));
+      const fullLengthExam = createActivity(studyPlan, 'Full-Length Exam', 'Exam', 8, currentDate);
+      dayActivities.push(fullLengthExam);
+      console.log('Created activity:', JSON.stringify(fullLengthExam, null, 2));
       dailyHours -= 8;
 
       // Schedule Take Up Exam on the next available day
@@ -271,6 +280,7 @@ async function generateStudySchedule(
         const contentActivity = getNextContentActivity(selectedContent, currentDate, isStudySession, studyPlan);
         if (contentActivity && contentActivity.hours <= dailyHours) {
           dayActivities.push(contentActivity);
+          console.log('Created activity:', JSON.stringify(contentActivity, null, 2));
           dailyHours -= contentActivity.hours;
           activityScheduled = true;
         }
@@ -283,7 +293,9 @@ async function generateStudySchedule(
           const task = TASK_CATEGORIES.find(t => t.name === mainTaskName);
           const taskDuration = Math.min(task.duration, dailyHours);
 
-          dayActivities.push(createActivity(studyPlan, mainTaskName, task.type || 'Study', taskDuration, currentDate));
+          const generalActivity = createActivity(studyPlan, mainTaskName, task.type || 'Study', taskDuration, currentDate);
+          dayActivities.push(generalActivity);
+          console.log('Created activity:', JSON.stringify(generalActivity, null, 2));
           dailyHours -= taskDuration;
           activityScheduled = true;
         }
@@ -380,7 +392,7 @@ function getNextContentActivity(
       const contentHours = contentItem.minutes_estimate / 60;
       const activityType = isStudySession ? 'Study' : 'Practice';
 
-      return {
+      const activity = {
         userId: studyPlan.userId,
         studyPlanId: studyPlan.id,
         categoryId: contentItem.categoryId,
@@ -393,6 +405,8 @@ function getNextContentActivity(
         scheduledDate: new Date(currentDate),
         status: "Not Started",
       };
+      console.log('Created content activity:', JSON.stringify(activity, null, 2));
+      return activity;
     }
   }
   return null;
@@ -418,7 +432,9 @@ async function scheduleTakeUpExam(
 
     if (availableHours > 0) {
       const reviewHours = Math.min(availableHours, remainingReviewHours);
-      activities.push(createActivity(studyPlan, 'Take Up Exam', 'Review', reviewHours, currentDate));
+      const takeUpExamActivity = createActivity(studyPlan, 'Take Up Exam', 'Review', reviewHours, currentDate);
+      activities.push(takeUpExamActivity);
+      console.log('Created Take Up Exam activity:', JSON.stringify(takeUpExamActivity, null, 2));
       remainingReviewHours -= reviewHours;
     }
 
@@ -465,7 +481,7 @@ function createActivity(
   duration: number,
   date: Date
 ): CalendarActivity {
-  return {
+  const activity = {
     userId: studyPlan.userId,
     studyPlanId: studyPlan.id,
     categoryId: null,
@@ -478,4 +494,6 @@ function createActivity(
     scheduledDate: new Date(date),
     status: "Not Started",
   };
+  console.log('Created activity:', JSON.stringify(activity, null, 2));
+  return activity;
 }
