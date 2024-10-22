@@ -166,36 +166,43 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     setNewEventEnd(null);
   };
 
-  const handleModalSubmit = async (title: string) => {
-    if (title && user?.id && newEventStart && newEventEnd) {
-      const newEvent: Omit<CalendarEvent, 'id'> = {
-        start: newEventStart,
-        end: newEventEnd,
-        title,
-        activityText: '',
-        hours: 1
+  const handleModalSubmit = async (eventData: CalendarActivityData) => {
+    if (user?.id && newEventStart && newEventEnd) {
+      const newEvent = {
+        activityTitle: eventData.activityTitle,
+        activityText: eventData.activityText,
+        hours: eventData.hours,
+        activityType: eventData.activityType,
+        link: eventData.link,
+        scheduledDate: eventData.scheduledDate,
+        start: newEventStart.toISOString(),
+        end: newEventEnd.toISOString(),
+        userId: user.id
       };
 
       try {
         const response = await fetch('/api/calendar-activity', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...newEvent,
-            userId: user.id,
-            scheduledDate: newEventStart.toISOString()
-          })
+          body: JSON.stringify(newEvent)
         });
 
-        if (!response.ok) throw new Error('Failed to create activity');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create activity');
+        }
 
         const createdActivity: { id: string } = await response.json();
-        setEvents(prevEvents => [...prevEvents, { ...newEvent, id: createdActivity.id }]);
+        setEvents(prevEvents => [...prevEvents, { 
+          ...newEvent, 
+          id: createdActivity.id,
+          title: eventData.activityTitle // Ensure the title is set for the calendar event
+        }]);
         onInteraction();
         handleModalClose();
       } catch (error) {
         console.error("Error creating activity:", error);
-        // You might want to add some user feedback here
+        // Add user feedback here, e.g., show an error message
       }
     }
   };
@@ -237,6 +244,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         isOpen={isModalOpen}
         onClose={handleModalClose}
         onSubmit={handleModalSubmit}
+        selectedDate={newEventStart}
       />
     </div>
   );
