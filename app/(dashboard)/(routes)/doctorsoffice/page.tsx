@@ -12,6 +12,7 @@ import Image from 'next/image';
 import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay, getLevelNumber, calculateQualityOfCare } from '@/utils/calculateResourceTotals';
 import axios from 'axios';
 import WelcomeDialog from './WelcomeDialog';
+import FlashcardsDialog from './FlashcardsDialog';
 
 const DoctorsOfficePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('doctorsoffice');
@@ -22,10 +23,19 @@ const DoctorsOfficePage: React.FC = () => {
   const [userRooms, setUserRooms] = useState<string[]>([]);
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
   const [totalPatients, setTotalPatients] = useState(0);
+  
+  // Flashcards Dialog
+  const [isFlashcardsOpen, setIsFlashcardsOpen] = useState(false);
+  const flashcardsDialogRef = useRef<{ open: () => void } | null>(null);
+  const [flashcardRoomId, setFlashcardRoomId] = useState<string>('');
+  
+  // Marketplace Dialog
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const marketplaceDialogRef = useRef<{ open: () => void } | null>(null);
-  const [isWelcomeDialogOpen, setIsWelcomeDialogOpen] = useState(false);
   const [hasOpenedMarketplace, setHasOpenedMarketplace] = useState(false);
+  
+  const [isWelcomeDialogOpen, setIsWelcomeDialogOpen] = useState(false);
+  
   // Add this state for clinic name
   const [clinicName, setClinicName] = useState<string | null>(null);
   
@@ -287,12 +297,28 @@ const fetchData = async () => {
   const handleUpdateUserScore = (newScore: number) => {
     setUserScore(newScore);
   };
+
+  // Marketplace Dialog handlers
   const handleOpenMarketplace = () => {
     setIsWelcomeDialogOpen(false);
     setIsMarketplaceOpen(true);
     setHasOpenedMarketplace(true);
     marketplaceDialogRef.current?.open();
   };
+
+  // Flashcards Dialog handlers
+  useEffect(() => {
+    if (flashcardRoomId !== '') {
+      setIsFlashcardsOpen(true);
+    }
+  }, [flashcardRoomId]);
+
+  // Add a handler to close the dialog
+  const handleCloseFlashcards = () => {
+    setIsFlashcardsOpen(false);
+    setFlashcardRoomId('');  // Reset the room ID when closing
+  };
+
   const handleWelcomeDialogOpenChange = (open: boolean) => {
     setIsWelcomeDialogOpen(open);
   };
@@ -367,6 +393,8 @@ const toggleGroup = async (groupName: string) => {
             userScore={userScore}
             userRooms={userRooms}
             imageGroups={imageGroups}
+            flashcardRoomId={flashcardRoomId}
+            setFlashcardRoomId={setFlashcardRoomId}
             toggleGroup={toggleGroup}
             onUpdateUserScore={handleUpdateUserScore}
             setUserRooms={setUserRooms}
@@ -414,6 +442,22 @@ const toggleGroup = async (groupName: string) => {
                   Tutorial
                 </a>
               </div>
+            </div>
+            <div >
+              <FlashcardsDialog
+                // ref={flashcardsDialogRef}
+                isOpen={isFlashcardsOpen}
+                onOpenChange={setIsFlashcardsOpen}
+                roomId={flashcardRoomId}
+                buttonContent={
+                  <a href="#" className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Flashcards
+                  </a>
+                }
+              />
             </div>
           </div>
         </div>

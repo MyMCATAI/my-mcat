@@ -176,6 +176,8 @@ interface OfficeContainerProps {
   userScore: number;
   userRooms: string[];
   imageGroups: ImageGroup[];
+  flashcardRoomId: string;
+  setFlashcardRoomId: React.Dispatch<React.SetStateAction<string>>;
   toggleGroup: (groupName: string) => void;
   onUpdateUserScore: (newScore: number) => void;
   setUserRooms: React.Dispatch<React.SetStateAction<string[]>>;
@@ -201,6 +203,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   userScore,
   userRooms,
   imageGroups,
+  flashcardRoomId, 
+  setFlashcardRoomId,
   toggleGroup,
   onUpdateUserScore,
   setUserRooms,
@@ -415,6 +419,11 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
           y={posY + img.height / 3} // Adjust to the center of the room  - img.height / 2
           scaleConstant={4}  
           zIndex={img.zIndex} // Slightly higher zIndex
+          roomId={img.id}
+          onClick={() => {
+            setFlashcardRoomId(img.id); // Update the state
+            console.log('Current flashcardRoomId:', img.id); // Log the new state
+          }}
         />
       </>
     );
