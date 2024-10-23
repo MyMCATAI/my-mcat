@@ -4,42 +4,79 @@ import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 
+// get a user response - Ethan check this out
 export async function GET(req: Request) {
   const { userId } = auth();
   if (!userId) {
     console.log("Unauthorized request: No userId");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
   const { searchParams } = new URL(req.url);
   const userTestId = searchParams.get('userTestId');
   const questionId = searchParams.get('questionId');
 
-  if (!userTestId || !questionId) {
-    return NextResponse.json({ error: "Missing required query parameters" }, { status: 400 });
-  }
-
   try {
-    const existingResponse = await prisma.userResponse.findFirst({
-      where: {
-        userTestId,
-        questionId,
-        userId,
-      },
-    });
+    if (userTestId && questionId) {
+      // Existing logic for fetching a specific response
+      const existingResponse = await prisma.userResponse.findFirst({
+        where: {
+          userTestId,
+          questionId,
+          userId,
+        },
+      });
 
-    if (!existingResponse) {
-      return NextResponse.json({ error: "Response not found" }, { status: 404 });
+      if (!existingResponse) {
+        return NextResponse.json({ error: "Response not found" }, { status: 404 });
+      }
+
+      return NextResponse.json(existingResponse);
+    } else if (!userTestId) {
+      // New logic for fetching all responses created today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const todayResponses = await prisma.userResponse.findMany({
+        where: {
+          userId,
+          answeredAt: {
+            gte: today,
+          },
+        },
+        include: {
+          question: {
+            select: {
+              questionContent: true,
+              questionOptions: true,
+              questionAnswerNotes: true,
+            },
+          },
+          Category: {
+            select: {
+              subjectCategory: true,
+              contentCategory: true,
+              conceptCategory: true,
+            },
+          },
+        },
+        orderBy: {
+          answeredAt: 'desc',
+        },
+      });
+
+      return NextResponse.json(todayResponses);
+    } else {
+      return NextResponse.json({ error: "Invalid query parameters" }, { status: 400 });
     }
-
-    return NextResponse.json(existingResponse);
   } catch (error) {
-    console.error('Error fetching user response:', error);
+    console.error('Error fetching user response(s):', error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 // Modify the existing POST route
+
+// create a new user response - Ethan check this out
 export async function POST(req: Request) {
   const { userId } = auth();
   if (!userId) {

@@ -373,6 +373,7 @@ const Page = () => {
       default:
         content = null;
     }
+    content = <FlashcardDeck />;
 
     // Only wrap non-Schedule content with MDOnlyFeaturesDialog
     // if (!isPro && activeTab !== "Schedule" && activeTab !== "test") {

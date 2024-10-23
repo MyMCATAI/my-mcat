@@ -21,6 +21,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
+    const subjectCategories = searchParams.get('subjects')?.split(',') || [];
 
     // Fetch all knowledge profiles for the user, sorted by mastery
     const knowledgeProfiles = await prisma.knowledgeProfile.findMany({
@@ -35,7 +36,7 @@ export async function GET(req: Request) {
     // Select the top pageSize categories with lowest mastery
     const selectedProfiles = knowledgeProfiles.slice(0, pageSize);
 
-    // Get categoryIds from shuffled profiles
+    // Get categoryIds from selected profiles
     const categoryIds = selectedProfiles.map(profile => profile.categoryId);
 
     // Fetch questions for these categories
@@ -43,10 +44,35 @@ export async function GET(req: Request) {
       where: {
         categoryId: {
           in: categoryIds
-        }
+        },
+        types: {
+          contains: 'flashcard'
+        },
+        category: subjectCategories.length > 0 ? {
+          subjectCategory: {
+            in: subjectCategories
+          }
+        } : undefined
       },
       include: {
         category: true
+      }
+    });
+
+    // Get total questions count for pagination
+    const totalQuestions = await prisma.question.count({
+      where: {
+        categoryId: {
+          in: categoryIds
+        },
+        types: {
+          contains: 'flashcard'
+        },
+        category: subjectCategories.length > 0 ? {
+          subjectCategory: {
+            in: subjectCategories
+          }
+        } : undefined
       }
     });
 
@@ -60,15 +86,6 @@ export async function GET(req: Request) {
     const endIndex = startIndex + pageSize;
     const selectedQuestions = shuffledQuestions.slice(startIndex, endIndex);
 
-    // Get total questions count for pagination
-    const totalQuestions = await prisma.question.count({
-      where: {
-        categoryId: {
-          in: categoryIds
-        }
-      }
-    });
-
     // Format the response
     const formattedQuestions = selectedQuestions.map(q => {
       const profile = knowledgeProfiles.find(p => p.categoryId === q.categoryId);
@@ -77,6 +94,7 @@ export async function GET(req: Request) {
         problem: q.questionContent,
         answer: JSON.parse(q.questionOptions)[0],
         category: q.category.conceptCategory,
+        subject: q.category.subjectCategory, // Add this line
         conceptMastery: profile?.conceptMastery || null,
         contentMastery: profile?.contentMastery || null,
         correctAnswers: profile?.correctAnswers || 0,

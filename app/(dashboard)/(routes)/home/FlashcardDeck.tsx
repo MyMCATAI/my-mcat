@@ -59,7 +59,9 @@ const FlashcardStack: React.FC = () => {
   const fetchFlashcards = async (page: number) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/flashcard?page=${page}&pageSize=10`);
+      const subjects = ["Biochemistry", "Chemistry"];
+      const subjectsParam = subjects.join(',');
+      const response = await fetch(`/api/flashcard?page=${page}&pageSize=10&subjects=${subjectsParam}`);
       const data: ApiResponse = await response.json();
 
       console.log('Fetched flashcards:', data.flashcards);
@@ -128,6 +130,7 @@ const FlashcardStack: React.FC = () => {
     const weight = action === 'weakness' || action === 'strength' ? 2 : 0.5;
 
     try {
+      //Ethan check this out, this is how we create a new user response
       const response = await fetch('/api/user-test/response', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
