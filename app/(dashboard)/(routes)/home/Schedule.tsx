@@ -1,12 +1,24 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import { isSameDay, isToday, isTomorrow } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import SettingContent from "./SettingContent";
 import { NewActivity, FetchedActivity } from "@/types";
 import { DialogHeader, DialogFooter } from "@/components/ui/dialog";
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogOverlay } from "@radix-ui/react-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogOverlay,
+} from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
-import Image from 'next/image';
+import Image from "next/image";
 import InteractiveCalendar from "@/components/calendar/InteractiveCalendar";
 import {
   Tooltip,
@@ -14,14 +26,33 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Bar, Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Legend, Tooltip as ChartTooltip } from 'chart.js';
+import { Bar, Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+  Legend,
+  Tooltip as ChartTooltip,
+} from "chart.js";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from 'next/navigation';
-import { CheckCircle } from 'lucide-react'; // Add this import
-import Tutorial from './Tutorial';
+import { useRouter } from "next/navigation";
+import { CheckCircle } from "lucide-react"; // Add this import
+import Tutorial from "./Tutorial";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, ChartTooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+  ChartTooltip,
+  Legend
+);
 
 interface ScheduleProps {
   activities: FetchedActivity[];
@@ -29,22 +60,29 @@ interface ScheduleProps {
   handleSetTab: (tab: string) => void;
 }
 
-type Section = 'AdaptiveTutoringSuite' | 'MCATGameAnkiClinic' | 'DailyCARsSuite';
+type Section =
+  | "AdaptiveTutoringSuite"
+  | "MCATGameAnkiClinic"
+  | "DailyCARsSuite";
 
-const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, handleSetTab }) => {
+const Schedule: React.FC<ScheduleProps> = ({
+  activities,
+  onShowDiagnosticTest,
+  handleSetTab,
+}) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
   const [showNewActivityForm, setShowNewActivityForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showThankYouDialog, setShowThankYouDialog] = useState(false);
-  const [typedText, setTypedText] = useState('');
+  const [typedText, setTypedText] = useState("");
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [expandedGraph, setExpandedGraph] = useState<string | null>(null);
   const [showGraphs, setShowGraphs] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(true);
   const [showRewardDialog, setShowRewardDialog] = useState(false);
-  const [rewardSection, setRewardSection] = useState('');
+  const [rewardSection, setRewardSection] = useState("");
   const [userCoinCount, setUserCoinCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const fanfareRef = useRef<HTMLAudioElement>(null);
@@ -53,8 +91,9 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
   const [runTutorialPart2, setRunTutorialPart2] = useState(false);
   const [runTutorialPart3, setRunTutorialPart3] = useState(false);
   const [runTutorialPart4, setRunTutorialPart4] = useState(false);
-  const [tutorialText, setTutorialText] = useState('');
-  const [isTutorialTypingComplete, setIsTutorialTypingComplete] = useState(false);
+  const [tutorialText, setTutorialText] = useState("");
+  const [isTutorialTypingComplete, setIsTutorialTypingComplete] =
+    useState(false);
   const [tutorialStep, setTutorialStep] = useState(1);
   const [hasUpdatedStudyPlan, setHasUpdatedStudyPlan] = useState(false);
   const [showCalendarTutorial, setShowCalendarTutorial] = useState(false);
@@ -71,29 +110,31 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
 
   // Dummy data for charts
   const barChartData = {
-    labels: ['Biology', 'Chemistry', 'Physics', 'CARS'],
+    labels: ["Biology", "Chemistry", "Physics", "CARS"],
     datasets: [
       {
-        label: 'Hours Studied',
+        label: "Hours Studied",
         data: [12, 19, 3, 5],
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
       },
     ],
   };
 
   const lineChartData = {
-    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+    labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
     datasets: [
       {
-        label: 'Practice Test Scores',
+        label: "Practice Test Scores",
         data: [495, 501, 508, 512],
-        borderColor: 'rgb(75, 192, 192)',
+        borderColor: "rgb(75, 192, 192)",
         tension: 0.1,
       },
     ],
   };
 
-  const [checklists, setChecklists] = useState<Record<Section, { id: number; text: string; checked: boolean; }[]>>({
+  const [checklists, setChecklists] = useState<
+    Record<Section, { id: number; text: string; checked: boolean }[]>
+  >({
     AdaptiveTutoringSuite: [
       { id: 1, text: "Complete daily adaptive quiz", checked: false },
       { id: 2, text: "Review personalized study plan", checked: false },
@@ -118,19 +159,26 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
   };
 
   const handleCheckboxChange = async (section: Section, id: number) => {
-    setChecklists(prevChecklists => {
-      const updatedSection = prevChecklists[section].map(item =>
+    setChecklists((prevChecklists) => {
+      const updatedSection = prevChecklists[section].map((item) =>
         item.id === id ? { ...item, checked: !item.checked } : item
       );
-      
-      const allChecked = updatedSection.every((item: { checked: boolean }) => item.checked);
-      if (allChecked && !prevChecklists[section].every((item: { checked: boolean }) => item.checked)) {
+
+      const allChecked = updatedSection.every(
+        (item: { checked: boolean }) => item.checked
+      );
+      if (
+        allChecked &&
+        !prevChecklists[section].every(
+          (item: { checked: boolean }) => item.checked
+        )
+      ) {
         setShowRewardDialog(true);
         setRewardSection(section);
-        
+
         const newCompletedSections = [...completedSections, section];
         setCompletedSections(newCompletedSections);
-        
+
         // Play the appropriate sound
         if (newCompletedSections.length === 3) {
           if (fanfareRef.current) {
@@ -143,19 +191,19 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
         // Update user's coin count
         updateUserCoinCount();
       }
-      
+
       return {
         ...prevChecklists,
-        [section]: updatedSection
+        [section]: updatedSection,
       };
     });
   };
 
   const updateUserCoinCount = async () => {
     try {
-      const response = await fetch('/api/user-info', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/user-info", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: 1 }),
       });
 
@@ -164,7 +212,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
         setUserCoinCount(updatedUserInfo.coinCount);
       }
     } catch (error) {
-      console.error('Error updating user coin count:', error);
+      console.error("Error updating user coin count:", error);
     }
   };
 
@@ -173,14 +221,22 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
       return "Welcome to myMCAT.ai! It looks like this is your first time here. Let's get started by answering some questions about your test and study schedule. Would you like to take a diagnostic test to help us personalize your learning experience?";
     }
 
-    const todayActivities = activities.filter(activity => isToday(new Date(activity.scheduledDate)));
-    const tomorrowActivities = activities.filter(activity => isTomorrow(new Date(activity.scheduledDate)));
+    const todayActivities = activities.filter((activity) =>
+      isToday(new Date(activity.scheduledDate))
+    );
+    const tomorrowActivities = activities.filter((activity) =>
+      isTomorrow(new Date(activity.scheduledDate))
+    );
 
     if (todayActivities.length > 0) {
-      const activityList = todayActivities.map(activity => activity.activityTitle).join(", ");
+      const activityList = todayActivities
+        .map((activity) => activity.activityTitle)
+        .join(", ");
       return `Welcome back to MyMCAT.ai! Here's what you have scheduled for today: ${activityList}. Let's get studying!`;
     } else if (tomorrowActivities.length > 0) {
-      const activityList = tomorrowActivities.map(activity => activity.activityTitle).join(", ");
+      const activityList = tomorrowActivities
+        .map((activity) => activity.activityTitle)
+        .join(", ");
       return `Welcome back to MyMCAT.ai! You don't have any activities scheduled for today, but tomorrow you'll be working on: ${activityList}. Take some time to prepare!`;
     } else {
       return "Welcome back to MyMCAT.ai! You don't have any activities scheduled for today or tomorrow. Would you like to add some new study tasks?";
@@ -188,27 +244,34 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
   }, [activities]);
 
   useEffect(() => {
+    const tutorialPart1Played = localStorage.getItem("tutorialPart1Played");
+    if (!tutorialPart1Played) {
+      setRunTutorialPart1(true);
+      localStorage.setItem("tutorialPart1Played", "true");
+    }
+
     setCurrentDate(new Date());
-    setTypedText('');
+    setTypedText("");
     setIsTypingComplete(false);
-    setTutorialText('');
+    setTutorialText("");
     setIsTutorialTypingComplete(false);
 
     let text = getActivitiesText;
     if (runTutorialPart1) {
       if (tutorialStep === 1) {
-        text = "Hi! Hello!\n\nThis is the dashboard. Here, you'll look at statistics on progress, look at your calendar, daily tasks, and ask Kalypso any questions related to the logistics of taking the test.";
+        text =
+          "Hi! Hello!\n\nThis is the dashboard. Here, you'll look at statistics on progress, look at your calendar, daily tasks, and ask Kalypso any questions related to the logistics of taking the test.";
       } else {
-        text = '';
+        text = "";
       }
     }
 
     let index = 0;
     const typingTimer = setInterval(() => {
       if (runTutorialPart1) {
-        setTutorialText(prev => text.slice(0, prev.length + 1));
+        setTutorialText((prev) => text.slice(0, prev.length + 1));
       } else {
-        setTypedText(prev => text.slice(0, prev.length + 1));
+        setTypedText((prev) => text.slice(0, prev.length + 1));
       }
       index++;
       if (index > text.length) {
@@ -220,6 +283,8 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
         }
       }
     }, 15);
+
+    setRunTutorialPart1(false);
 
     return () => {
       clearInterval(typingTimer);
@@ -234,14 +299,13 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
     setShowSettings(false);
     setShowAnalytics(false); // Switch to calendar mode
     setHasUpdatedStudyPlan(true);
-    setShowCalendarTutorial(true);
 
-    // Delay before starting Tutorial Part 2
-    setTimeout(() => {
-      // Start Tutorial Part 2
-      setTutorialStep(1);
-      setRunTutorialPart2(true);
-    }, 5000);
+    // // Delay before starting Tutorial Part 2
+    // setTimeout(() => {
+    //   // Start Tutorial Part 2
+    //   setTutorialStep(1);
+    //   setRunTutorialPart2(true);
+    // }, 5000);
   }, []);
 
   const handleCalendarModified = useCallback(() => {
@@ -256,10 +320,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
   };
 
   const toggleSettings = () => {
-    setShowSettings(!showSettings);
-    if (runTutorialPart1) {
-      endAllTutorials();
-    }
+    setShowSettings((prev) => !prev);
   };
 
   const endAllTutorials = () => {
@@ -269,7 +330,8 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
     setRunTutorialPart4(false);
   };
 
-  const toggleNewActivityForm = () => setShowNewActivityForm(!showNewActivityForm);
+  const toggleNewActivityForm = () =>
+    setShowNewActivityForm(!showNewActivityForm);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -344,7 +406,7 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
         handleSetTab("test");
         break;
       case "MCATGameAnkiClinic":
-        router.push('/doctorsoffice');
+        router.push("/doctorsoffice");
         break;
       case "AdaptiveTutoringSuite":
         handleSetTab("KnowledgeProfile");
@@ -362,13 +424,13 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
 
   const fetchUserCoinCount = async () => {
     try {
-      const response = await fetch('/api/user-info');
+      const response = await fetch("/api/user-info");
       if (response.ok) {
         const data = await response.json();
         setUserCoinCount(data.coinCount);
       }
     } catch (error) {
-      console.error('Error fetching user coin count:', error);
+      console.error("Error fetching user coin count:", error);
     }
   };
 
@@ -378,13 +440,14 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
   };
 
   const handleAAMCClick = () => {
-    router.push('/integrations');
+    router.push("/integrations");
   };
 
   return (
     <div className="flex h-full relative">
       {/* Left Sidebar */}
-      <div className="w-1/4 p-6 flex flex-col ml-3 mt-5 mb-5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
+      <div
+        className="w-1/4 p-6 flex flex-col ml-3 mt-5 mb-5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
         style={{
           backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
           backgroundSize: "cover",
@@ -397,19 +460,28 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
       >
         <h1 className="text-3xl font-bold text-center mb-4">TODAY</h1>
 
-        <div className="flex-grow overflow-y-auto space-y-4 pr-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div
+          className="flex-grow overflow-y-auto space-y-4 pr-2"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
           <style jsx>{`
             div::-webkit-scrollbar {
               display: none;
             }
           `}</style>
-          {(Object.entries(checklists) as [Section, { id: number; text: string; checked: boolean; }[]][]).map(([section, items]) => (
+          {(
+            Object.entries(checklists) as [
+              Section,
+              { id: number; text: string; checked: boolean }[]
+            ][]
+          ).map(([section, items]) => (
             <div key={section} className="mb-6">
               <button
                 className={`w-full py-3 px-4 
-                  ${completedSections.includes(section)
-                    ? 'bg-green-500 text-white'
-                    : 'bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color]'
+                  ${
+                    completedSections.includes(section)
+                      ? "bg-green-500 text-white"
+                      : "bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color]"
                   } 
                   hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
                   font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
@@ -420,23 +492,36 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
                 {completedSections.includes(section) ? (
                   <CheckCircle className="w-6 h-6 text-white" />
                 ) : (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 )}
               </button>
               <div className="bg-[--theme-leaguecard-color] shadow-md p-4 mt-2 space-y-2 rounded-lg">
-                {items.map(item => (
+                {items.map((item) => (
                   <div key={item.id} className="flex items-center">
                     <input
                       type="checkbox"
                       id={`checkbox-${section}-${item.id}`}
                       checked={item.checked}
-                      onChange={() => handleCheckboxChange(section as Section, item.id)}
+                      onChange={() =>
+                        handleCheckboxChange(section as Section, item.id)
+                      }
                       className="mr-3 h-5 w-5 text-blue-600"
                     />
-                    <label 
-                      htmlFor={`checkbox-${section}-${item.id}`} 
+                    <label
+                      htmlFor={`checkbox-${section}-${item.id}`}
                       className="text-sm leading-tight cursor-pointer flex-grow"
                     >
                       {item.text}
@@ -456,29 +541,27 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
-                <button 
-                  onClick={toggleSettings} 
+                <button
+                  onClick={toggleSettings}
                   className={`settings-button p-2 rounded-full shadow-md ${
-                    showSettings ? 'bg-[--theme-hover-color]' : 'bg-white'
+                    showSettings ? "bg-[--theme-hover-color]" : "bg-white"
                   }`}
                 >
                   <svg
                     width="16"
                     height="16"
                     viewBox="0 0 24 24"
-                    fill={showSettings ? 'white' : '#333'}
+                    fill={showSettings ? "white" : "#333"}
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
                       d="M9.25,22l-.4-3.2c-.216-.084-.42-.184-.612-.3c-.192-.117-.38-.242-.563-.375L4.7,19.375L1.95,14.625L4.525,12.675c-.016-.117-.024-.23-.024-.338V11.662c0-.108.008-.221.025-.337L1.95,9.375L4.7,4.625L7.675,5.875c.183-.134.375-.259.575-.375c.2-.117.4-.217.6-.3l.4-3.2H14.75l.4,3.2c.216.084.42.184.612.3c.192.117.38.242.563.375l2.975-.75l2.75,4.75l-2.575,1.95c.016.117.024.23.024.338v.675c0,.108-.008.221-.025.337l2.575,1.95l-2.75,4.75l-2.95-.75c-.183.133-.375.258-.575.375c-.2.117-.4.217-.6.3l-.4,3.2H9.25zM12.05,15.5c.966,0,1.791-.342,2.475-1.025c.683-.683,1.025-1.508,1.025-2.475c0-.966-.342-1.791-1.025-2.475c-.683-.683-1.508-1.025-2.475-1.025c-0.984,0-1.813,.342-2.488,1.025c-0.675,.683-1.012,1.508-1.012,2.475c0,.966,.337,1.791,1.012,2.475c.675,.683,1.504,1.025,2.488,1.025z"
-                      fill={showSettings ? 'white' : '#333'}
+                      fill={showSettings ? "white" : "#333"}
                     />
                   </svg>
                 </button>
               </TooltipTrigger>
-              <TooltipContent>
-                Settings
-              </TooltipContent>
+              <TooltipContent>Settings</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
@@ -505,9 +588,11 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
               exit={{ opacity: 0, y: -20 }}
               className="absolute top-16 right-6 w-80 bg-white rounded-lg shadow-lg z-50"
             >
-              <SettingContent 
-                onShowDiagnosticTest={onShowDiagnosticTest} 
+              <SettingContent
+                onShowDiagnosticTest={onShowDiagnosticTest}
                 onStudyPlanSaved={handleStudyPlanSaved}
+                onToggleCalendarView={handleToggleView}
+                onClose={toggleSettings} // Pass the function
               />
             </motion.div>
           )}
@@ -516,15 +601,17 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
         {/* Schedule Display */}
         <div
           className="flex-grow h-[calc(100vh-8.3rem)] rounded-[10px] p-4 flex flex-col relative overflow-hidden schedule-content"
-          style={{
-            backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
-            backgroundSize: "cover",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            backgroundColor: "var(--theme-mainbox-color)",
-            color: "var(--theme-text-color)",
-            boxShadow: "var(--theme-box-shadow)",
-          } as React.CSSProperties}
+          style={
+            {
+              backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
+              backgroundSize: "cover",
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "center",
+              backgroundColor: "var(--theme-mainbox-color)",
+              color: "var(--theme-text-color)",
+              boxShadow: "var(--theme-box-shadow)",
+            } as React.CSSProperties
+          }
         >
           {showAnalytics ? (
             <>
@@ -562,45 +649,67 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
                     {showGraphs && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
+                        animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.3 }}
                       >
                         <div className="grid grid-cols-2 gap-4">
-                          <motion.div 
-                            className={`bg-white p-4 rounded-lg shadow cursor-pointer ${expandedGraph === 'studyTime' ? 'col-span-2' : ''}`}
-                            onClick={() => toggleGraphExpansion('studyTime')}
+                          <motion.div
+                            className={`bg-white p-4 rounded-lg shadow cursor-pointer ${
+                              expandedGraph === "studyTime" ? "col-span-2" : ""
+                            }`}
+                            onClick={() => toggleGraphExpansion("studyTime")}
                             layout
                           >
-                            <h3 className="text-lg font-semibold mb-2">Study Time by Subject</h3>
+                            <h3 className="text-lg font-semibold mb-2">
+                              Study Time by Subject
+                            </h3>
                             <AnimatePresence>
-                              {expandedGraph === 'studyTime' ? (
+                              {expandedGraph === "studyTime" ? (
                                 <motion.div
                                   initial={{ opacity: 0 }}
                                   animate={{ opacity: 1 }}
                                   exit={{ opacity: 0 }}
                                 >
-                                  <Bar data={barChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+                                  <Bar
+                                    data={barChartData}
+                                    options={{
+                                      responsive: true,
+                                      maintainAspectRatio: false,
+                                    }}
+                                  />
                                 </motion.div>
                               ) : (
                                 <Bar data={barChartData} />
                               )}
                             </AnimatePresence>
                           </motion.div>
-                          <motion.div 
-                            className={`bg-white p-4 rounded-lg shadow cursor-pointer ${expandedGraph === 'practiceTest' ? 'col-span-2' : ''}`}
-                            onClick={() => toggleGraphExpansion('practiceTest')}
+                          <motion.div
+                            className={`bg-white p-4 rounded-lg shadow cursor-pointer ${
+                              expandedGraph === "practiceTest"
+                                ? "col-span-2"
+                                : ""
+                            }`}
+                            onClick={() => toggleGraphExpansion("practiceTest")}
                             layout
                           >
-                            <h3 className="text-lg font-semibold mb-2">Practice Test Progress</h3>
+                            <h3 className="text-lg font-semibold mb-2">
+                              Practice Test Progress
+                            </h3>
                             <AnimatePresence>
-                              {expandedGraph === 'practiceTest' ? (
+                              {expandedGraph === "practiceTest" ? (
                                 <motion.div
                                   initial={{ opacity: 0 }}
                                   animate={{ opacity: 1 }}
                                   exit={{ opacity: 0 }}
                                 >
-                                  <Line data={lineChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+                                  <Line
+                                    data={lineChartData}
+                                    options={{
+                                      responsive: true,
+                                      maintainAspectRatio: false,
+                                    }}
+                                  />
                                 </motion.div>
                               ) : (
                                 <Line data={lineChartData} />
@@ -616,9 +725,10 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
             </>
           ) : (
             <div className="h-full w-full relative flex flex-col">
-              <div className="flex-grow" 
+              <div
+                className="flex-grow"
                 style={{
-                  maxHeight: '90%'
+                  maxHeight: "90%",
                 }}
               >
                 <InteractiveCalendar
@@ -626,7 +736,8 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
                   activities={activities}
                   onDateChange={setCurrentDate}
                   getActivitiesForDate={getActivitiesForDate}
-                  onInteraction={handleCalendarModified}
+                  onInteraction={() => {}}
+                  setRunTutorialPart2={setRunTutorialPart2} // Pass the function as a prop
                 />
               </div>
               <div className="h-32 flex justify-end items-start px-4 pt-4">
@@ -771,7 +882,9 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
         <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
         <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
           <DialogHeader className="text-center">
-            <DialogTitle className="text-center text-black">Congratulations!</DialogTitle>
+            <DialogTitle className="text-center text-black">
+              Congratulations!
+            </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center justify-center p-4 space-y-2">
             <div className="relative w-64 h-64">
@@ -783,10 +896,13 @@ const Schedule: React.FC<ScheduleProps> = ({ activities, onShowDiagnosticTest, h
               />
             </div>
             <p className="text-center text-lg text-black">
-              You&apos;ve completed all tasks in the {rewardSection && buttonLabels[rewardSection as Section]}!
+              You&apos;ve completed all tasks in the{" "}
+              {rewardSection && buttonLabels[rewardSection as Section]}!
             </p>
             <p className="text-center text-lg text-black">
-              You&apos;ve earned <span className="font-bold">1 cupcake coin</span> for your hard work!
+              You&apos;ve earned{" "}
+              <span className="font-bold">1 cupcake coin</span> for your hard
+              work!
             </p>
           </div>
         </DialogContent>

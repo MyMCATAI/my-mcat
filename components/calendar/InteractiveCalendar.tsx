@@ -1,15 +1,22 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Calendar, momentLocalizer, View, stringOrDate } from 'react-big-calendar';
-import moment from 'moment';
-import withDragAndDrop, { EventInteractionArgs } from 'react-big-calendar/lib/addons/dragAndDrop';
-import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
-import '../styles/CustomCalendar.css';
+import React, { useState, useEffect } from "react";
+import {
+  Calendar,
+  momentLocalizer,
+  View,
+  stringOrDate,
+} from "react-big-calendar";
+import moment from "moment";
+import withDragAndDrop, {
+  EventInteractionArgs,
+} from "react-big-calendar/lib/addons/dragAndDrop";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "../styles/CustomCalendar.css";
 
 import { useUser } from "@clerk/nextjs";
-import AddEventModal from './AddEventModal';
+import AddEventModal from "./AddEventModal";
 
 // Assuming you have a types file with this interface
 interface FetchedActivity {
@@ -39,6 +46,7 @@ interface InteractiveCalendarProps {
   onDateChange: (date: Date) => void;
   getActivitiesForDate: (date: Date) => FetchedActivity[];
   onInteraction: () => void;
+  setRunTutorialPart2: (value: boolean) => void;
 }
 
 const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
@@ -47,9 +55,10 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   onDateChange,
   getActivitiesForDate,
   onInteraction,
+  setRunTutorialPart2,
 }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [view, setView] = useState<View>('month');
+  const [view, setView] = useState<View>("month");
   const { user } = useUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEventStart, setNewEventStart] = useState<Date | null>(null);
@@ -59,21 +68,35 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     fetchActivities();
   }, [user]);
 
+  useEffect(() => {
+    const tutorialPart2Played = localStorage.getItem("tutorialPart2Played");
+    if (!tutorialPart2Played) {
+      const timer = setTimeout(() => {
+        setRunTutorialPart2(true);
+        localStorage.setItem("tutorialPart2Played", "true");
+      }, 20000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [setRunTutorialPart2]);
+
+  localStorage.setItem("tutorialPart2Played", "true");
+
   const fetchActivities = async () => {
     if (!user?.id) return;
 
     try {
       const response = await fetch(`/api/calendar-activity?userId=${user.id}`);
-      if (!response.ok) throw new Error('Failed to fetch activities');
+      if (!response.ok) throw new Error("Failed to fetch activities");
       const activities: FetchedActivity[] = await response.json();
 
-      const formattedEvents: CalendarEvent[] = activities.map(activity => ({
+      const formattedEvents: CalendarEvent[] = activities.map((activity) => ({
         id: activity.id,
         start: new Date(activity.scheduledDate),
         end: new Date(activity.scheduledDate),
         title: activity.activityTitle,
         activityText: activity.activityText,
-        hours: activity.hours
+        hours: activity.hours,
       }));
 
       setEvents(formattedEvents);
@@ -91,16 +114,22 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     return parsed;
   };
 
-  const onEventDrop = async ({ event, start, end }: EventInteractionArgs<CalendarEvent>) => {
+  const onEventDrop = async ({
+    event,
+    start,
+    end,
+  }: EventInteractionArgs<CalendarEvent>) => {
     if (start && end) {
       try {
-        const updatedEvent: CalendarEvent = { 
-          ...event, 
-          start: parseDate(start), 
-          end: parseDate(end)
+        const updatedEvent: CalendarEvent = {
+          ...event,
+          start: parseDate(start),
+          end: parseDate(end),
         };
-        setEvents(currentEvents =>
-          currentEvents.map(ev => ev.id === updatedEvent.id ? updatedEvent : ev)
+        setEvents((currentEvents) =>
+          currentEvents.map((ev) =>
+            ev.id === updatedEvent.id ? updatedEvent : ev
+          )
         );
         await updateEventInBackend(updatedEvent);
         onInteraction();
@@ -111,16 +140,22 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     }
   };
 
-  const onEventResize = async ({ event, start, end }: EventInteractionArgs<CalendarEvent>) => {
+  const onEventResize = async ({
+    event,
+    start,
+    end,
+  }: EventInteractionArgs<CalendarEvent>) => {
     if (start && end) {
       try {
-        const updatedEvent: CalendarEvent = { 
-          ...event, 
-          start: parseDate(start), 
-          end: parseDate(end)
+        const updatedEvent: CalendarEvent = {
+          ...event,
+          start: parseDate(start),
+          end: parseDate(end),
         };
-        setEvents(currentEvents =>
-          currentEvents.map(ev => ev.id === updatedEvent.id ? updatedEvent : ev)
+        setEvents((currentEvents) =>
+          currentEvents.map((ev) =>
+            ev.id === updatedEvent.id ? updatedEvent : ev
+          )
         );
         await updateEventInBackend(updatedEvent);
         onInteraction();
@@ -134,19 +169,19 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   const updateEventInBackend = async (event: CalendarEvent) => {
     try {
       const response = await fetch(`/api/calendar-activity`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: event.id,
           scheduledDate: event.start.toISOString(),
           activityTitle: event.title,
           activityText: event.activityText,
-          hours: event.hours
-        })
+          hours: event.hours,
+        }),
       });
-  
-      if (!response.ok) throw new Error('Failed to update activity');
-      
+
+      if (!response.ok) throw new Error("Failed to update activity");
+
       return await response.json(); // Return the updated event data
     } catch (error) {
       console.error("Error updating activity:", error);
@@ -168,29 +203,32 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
 
   const handleModalSubmit = async (title: string) => {
     if (title && user?.id && newEventStart && newEventEnd) {
-      const newEvent: Omit<CalendarEvent, 'id'> = {
+      const newEvent: Omit<CalendarEvent, "id"> = {
         start: newEventStart,
         end: newEventEnd,
         title,
-        activityText: '',
-        hours: 1
+        activityText: "",
+        hours: 1,
       };
 
       try {
-        const response = await fetch('/api/calendar-activity', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/calendar-activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...newEvent,
             userId: user.id,
-            scheduledDate: newEventStart.toISOString()
-          })
+            scheduledDate: newEventStart.toISOString(),
+          }),
         });
 
-        if (!response.ok) throw new Error('Failed to create activity');
+        if (!response.ok) throw new Error("Failed to create activity");
 
         const createdActivity: { id: string } = await response.json();
-        setEvents(prevEvents => [...prevEvents, { ...newEvent, id: createdActivity.id }]);
+        setEvents((prevEvents) => [
+          ...prevEvents,
+          { ...newEvent, id: createdActivity.id },
+        ]);
         onInteraction();
         handleModalClose();
       } catch (error) {
@@ -206,18 +244,18 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
 
   const eventStyleGetter = () => {
     const style = {
-      backgroundColor: '#3174ad',
-      borderRadius: '0px',
+      backgroundColor: "#3174ad",
+      borderRadius: "0px",
       opacity: 0.8,
-      color: 'white',
-      border: '0px',
-      display: 'block'
+      color: "white",
+      border: "0px",
+      display: "block",
     };
     return { style };
   };
 
   return (
-    <div className="custom-calendar" style={{ height: '100%' }}>
+    <div className="custom-calendar" style={{ height: "100%" }}>
       <DnDCalendar
         className="custom-calendar"
         defaultDate={moment().toDate()}

@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import { StudyPlan } from '@/types';
+import { StudyPlan } from "@/types";
 import { Button } from "@/components/ui/button";
-import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 
 type ValuePiece = Date | null;
@@ -21,33 +26,55 @@ const options: Option[] = [
   { id: "option4", label: "What resources do you want to use?" },
 ];
 
-const days: string[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const days: string[] = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 const resources: string[] = ["UWorld", "AAMC", "Kaplan Books", "3rd Party FLs"];
 
 interface SettingContentProps {
   onShowDiagnosticTest?: () => void;
   onStudyPlanSaved?: () => void;
+  onToggleCalendarView?: () => void;
+  onClose?: () => void; // New prop
 }
 
-const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, onStudyPlanSaved }) => {
+const SettingContent: React.FC<SettingContentProps> = ({
+  onShowDiagnosticTest,
+  onStudyPlanSaved,
+  onToggleCalendarView,
+  onClose, // New prop
+}) => {
   const [activeOption, setActiveOption] = useState<string | null>(null);
   const [calendarValue, setCalendarValue] = useState<Value>(new Date());
   const [hoursPerDay, setHoursPerDay] = useState<Record<string, string>>({});
-  const [selectedResources, setSelectedResources] = useState<Record<string, boolean>>({});
-  const [existingStudyPlan, setExistingStudyPlan] = useState<StudyPlan | null>(null);
+  const [selectedResources, setSelectedResources] = useState<
+    Record<string, boolean>
+  >({});
+  const [existingStudyPlan, setExistingStudyPlan] = useState<StudyPlan | null>(
+    null
+  );
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [fullLengthDays, setFullLengthDays] = useState<Record<string, boolean>>({
-    Monday: false,
-    Tuesday: false,
-    Wednesday: false,
-    Thursday: false,
-    Friday: false,
-    Saturday: false,
-    Sunday: false,
-  });
+  const [fullLengthDays, setFullLengthDays] = useState<Record<string, boolean>>(
+    {
+      Monday: false,
+      Tuesday: false,
+      Wednesday: false,
+      Thursday: false,
+      Friday: false,
+      Saturday: false,
+      Sunday: false,
+    }
+  );
   const [thirdPartyFLCount, setThirdPartyFLCount] = useState<number>(0);
-  const [reviewPracticeBalance, setReviewPracticeBalance] = useState<number>(50);
+  const [reviewPracticeBalance, setReviewPracticeBalance] =
+    useState<number>(50);
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState(0);
   const [isNotSureDate, setIsNotSureDate] = useState<boolean>(false);
@@ -58,14 +85,19 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
 
   const fetchExistingStudyPlan = async () => {
     try {
-      const response = await fetch('/api/study-plan');
+      const response = await fetch("/api/study-plan");
       if (response.ok) {
         const data = await response.json();
         if (data.studyPlans && data.studyPlans.length > 0) {
           const plan = data.studyPlans[0];
           setExistingStudyPlan(plan);
           setCalendarValue(new Date(plan.examDate));
-          setSelectedResources(plan.resources.reduce((acc: any, resource: any) => ({ ...acc, [resource]: true }), {}));
+          setSelectedResources(
+            plan.resources.reduce(
+              (acc: any, resource: any) => ({ ...acc, [resource]: true }),
+              {}
+            )
+          );
           setHoursPerDay(plan.hoursPerDay);
           setFullLengthDays(plan.fullLengthDays);
           setThirdPartyFLCount(plan.thirdPartyFLCount || 0);
@@ -73,7 +105,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
         }
       }
     } catch (error) {
-      console.error('Error fetching existing study plan:', error);
+      console.error("Error fetching existing study plan:", error);
     }
   };
 
@@ -83,15 +115,32 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
 
   const formatDate = (date: Date | null): string => {
     if (!date) return "";
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    return `${
+      months[date.getMonth()]
+    } ${date.getDate()}, ${date.getFullYear()}`;
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     const studyPlanData = {
       examDate: calendarValue,
-      resources: Object.keys(selectedResources).filter(key => selectedResources[key]),
+      resources: Object.keys(selectedResources).filter(
+        (key) => selectedResources[key]
+      ),
       hoursPerDay,
       fullLengthDays,
       thirdPartyFLCount,
@@ -99,35 +148,41 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
     };
 
     try {
-      const method = existingStudyPlan ? 'PUT' : 'POST';
-      const body = existingStudyPlan ? JSON.stringify({ ...studyPlanData, id: existingStudyPlan.id }) : JSON.stringify(studyPlanData);
+      const method = existingStudyPlan ? "PUT" : "POST";
+      const body = existingStudyPlan
+        ? JSON.stringify({ ...studyPlanData, id: existingStudyPlan.id })
+        : JSON.stringify(studyPlanData);
 
-      const response = await fetch('/api/study-plan', {
+      const response = await fetch("/api/study-plan", {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body,
       });
 
       if (response.ok) {
         const updatedPlan = await response.json();
         setExistingStudyPlan(updatedPlan);
-        if (onStudyPlanSaved) onStudyPlanSaved();
+        if (onToggleCalendarView) onToggleCalendarView();
+        if (onClose) onClose(); // Close the settings window
       } else {
         // Create new study plan
-        const response = await fetch('/api/study-plan', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/study-plan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(studyPlanData),
         });
         if (response.ok) {
           const newPlan = await response.json();
           setExistingStudyPlan(newPlan);
+          if (onStudyPlanSaved) onStudyPlanSaved();
           if (onShowDiagnosticTest) onShowDiagnosticTest();
+          if (onToggleCalendarView) onToggleCalendarView();
+          if (onClose) onClose(); // Close the settings window
         }
       }
     } catch (error) {
-      console.error('Error saving study plan:', error);
-      alert('Error saving study plan. Please try again.');
+      console.error("Error saving study plan:", error);
+      alert("Error saving study plan. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -153,9 +208,9 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
         return (
           <div className="flex flex-col items-center p-2 rounded-lg shadow-md">
             {!isNotSureDate && (
-              <Calendar 
-                onChange={setCalendarValue} 
-                value={calendarValue} 
+              <Calendar
+                onChange={setCalendarValue}
+                value={calendarValue}
                 className="text-black bg-white mb-2"
               />
             )}
@@ -170,7 +225,10 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
                   }
                 }}
               />
-              <label htmlFor="notSureDate" className="ml-2 text-[--theme-text-color]">
+              <label
+                htmlFor="notSureDate"
+                className="ml-2 text-[--theme-text-color]"
+              >
                 Not sure
               </label>
             </div>
@@ -185,7 +243,12 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
                 <input
                   type="checkbox"
                   checked={fullLengthDays[day] || false}
-                  onChange={(e) => setFullLengthDays({ ...fullLengthDays, [day]: e.target.checked })}
+                  onChange={(e) =>
+                    setFullLengthDays({
+                      ...fullLengthDays,
+                      [day]: e.target.checked,
+                    })
+                  }
                 />
               </div>
             ))}
@@ -200,7 +263,9 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
                 <input
                   type="number"
                   value={hoursPerDay[day] || ""}
-                  onChange={(e) => setHoursPerDay({ ...hoursPerDay, [day]: e.target.value })}
+                  onChange={(e) =>
+                    setHoursPerDay({ ...hoursPerDay, [day]: e.target.value })
+                  }
                   className="w-16 p-1 border rounded text-[--theme-text-color] bg-[--theme-leaguecard-color]"
                 />
               </div>
@@ -215,26 +280,42 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
                 <input
                   type="checkbox"
                   checked={selectedResources[resource] || false}
-                  onChange={(e) => setSelectedResources({ ...selectedResources, [resource]: e.target.checked })}
+                  onChange={(e) =>
+                    setSelectedResources({
+                      ...selectedResources,
+                      [resource]: e.target.checked,
+                    })
+                  }
                 />
-                <span className="ml-2 text-[--theme-text-color]">{resource}</span>
-                {resource === "3rd Party FLs" && selectedResources[resource] && (
-                  <div className="ml-4 flex items-center">
-                    <button
-                      className="px-2 py-1 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded"
-                      onClick={() => setThirdPartyFLCount(Math.max(0, thirdPartyFLCount - 1))}
-                    >
-                      -
-                    </button>
-                    <span className="mx-2 text-[--theme-text-color]">{thirdPartyFLCount}</span>
-                    <button
-                      className="px-2 py-1 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded"
-                      onClick={() => setThirdPartyFLCount(thirdPartyFLCount + 1)}
-                    >
-                      +
-                    </button>
-                  </div>
-                )}
+                <span className="ml-2 text-[--theme-text-color]">
+                  {resource}
+                </span>
+                {resource === "3rd Party FLs" &&
+                  selectedResources[resource] && (
+                    <div className="ml-4 flex items-center">
+                      <button
+                        className="px-2 py-1 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded"
+                        onClick={() =>
+                          setThirdPartyFLCount(
+                            Math.max(0, thirdPartyFLCount - 1)
+                          )
+                        }
+                      >
+                        -
+                      </button>
+                      <span className="mx-2 text-[--theme-text-color]">
+                        {thirdPartyFLCount}
+                      </span>
+                      <button
+                        className="px-2 py-1 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded"
+                        onClick={() =>
+                          setThirdPartyFLCount(thirdPartyFLCount + 1)
+                        }
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
               </div>
             ))}
           </div>
@@ -258,14 +339,18 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
                 }`}
                 onClick={() => handleOptionClick(option.id)}
               >
-               <div className="flex justify-between items-center">
-                <span>{option.label}</span>
-                {option.id === "option1" && (
-                  <span className="text-sm font-medium">
-                    {isNotSureDate ? "Not sure" : (calendarValue instanceof Date ? formatDate(calendarValue) : "")}
-                  </span>
-                )}
-              </div>
+                <div className="flex justify-between items-center">
+                  <span>{option.label}</span>
+                  {option.id === "option1" && (
+                    <span className="text-sm font-medium">
+                      {isNotSureDate
+                        ? "Not sure"
+                        : calendarValue instanceof Date
+                        ? formatDate(calendarValue)
+                        : ""}
+                    </span>
+                  )}
+                </div>
               </button>
               {activeOption === option.id && (
                 <div className="mt-2 bg-[--theme-leaguecard-color] p-3 rounded-lg shadow-md">
@@ -274,7 +359,7 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
               )}
             </div>
           ))}
-          
+
           {/* Updated slider section */}
           <TooltipProvider>
             <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-md relative">
@@ -286,7 +371,9 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
                       min="0"
                       max="100"
                       value={reviewPracticeBalance}
-                      onChange={(e) => setReviewPracticeBalance(Number(e.target.value))}
+                      onChange={(e) =>
+                        setReviewPracticeBalance(Number(e.target.value))
+                      }
                       className="w-full"
                     />
                   </TooltipTrigger>
@@ -295,25 +382,36 @@ const SettingContent: React.FC<SettingContentProps> = ({ onShowDiagnosticTest, o
                     align="center"
                     className="bg-gray-800 text-white p-2 rounded"
                   >
-                    <p>We recommend doing more practice than review closer to your test date.</p>
+                    <p>
+                      We recommend doing more practice than review closer to
+                      your test date.
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </div>
               <div className="flex justify-between mt-2">
-                <span className="text-[--theme-text-color] text-sm">Review: {reviewPracticeBalance}%</span>
-                <span className="text-[--theme-text-color] text-sm">Practice: {100 - reviewPracticeBalance}%</span>
+                <span className="text-[--theme-text-color] text-sm">
+                  Review: {reviewPracticeBalance}%
+                </span>
+                <span className="text-[--theme-text-color] text-sm">
+                  Practice: {100 - reviewPracticeBalance}%
+                </span>
               </div>
             </div>
           </TooltipProvider>
         </div>
-        
+
         <div className="p-4">
           <Button
             className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200"
             onClick={handleSave}
             disabled={isSaving}
           >
-            {isSaving ? 'Saving...' : (existingStudyPlan ? 'Update Study Plan' : 'Save Study Plan')}
+            {isSaving
+              ? "Saving..."
+              : existingStudyPlan
+              ? "Update Study Plan"
+              : "Save Study Plan"}
           </Button>
         </div>
       </div>
