@@ -31,7 +31,7 @@ const playlists: Record<string, Song[]> = {
     { title: "SC4", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity4.mp3" },
     { title: "SC3", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity3.mp3" },
     { title: "SC5", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SunsetCity5.mp3" },
-    { title: "SC6", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetcity6.mp3" },
+    { title: "SC6", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SunsetCity6.mp3" },
     { title: "SC7", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetcity7.mp3" },
   ],
   mykonosBlue: [
