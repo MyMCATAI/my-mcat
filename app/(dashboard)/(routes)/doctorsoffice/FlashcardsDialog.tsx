@@ -1,0 +1,73 @@
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useRouter } from 'next/navigation';
+import { Cross2Icon } from '@radix-ui/react-icons';
+
+
+interface FlashcardsDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  roomId: string;
+}
+
+const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>(({
+  isOpen,
+  onOpenChange,
+  roomId,
+}, ref) => {
+  const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Handle dialog open/close
+  const handleOpenChange = (open: boolean) => {
+    onOpenChange(open);
+  };
+
+  // Expose open method via ref
+  useImperativeHandle(ref, () => ({
+    open: () => onOpenChange(true)
+  }));
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-[80vw] h-[80vh] bg-[--theme-doctorsoffice-accent] border text-[--theme-text-color] border-[--theme-border-color] flex flex-col">
+        <DialogHeader className="mb-2">
+          <DialogTitle className="text-[--theme-hover-text] text-center items-center justify-center rounded-md bg-[--theme-hover-color] p-2 flex">
+            <span className="flex-grow">{roomId} patient</span>
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex-grow flex">
+          {/* Main content area */}
+          <div className="w-2/3 pr-2">
+            <ScrollArea className="h-[calc(80vh-120px)] overflow-visible">
+              <div className="grid grid-cols-2 gap-2 p-1">
+                {/* Add your main content here */}
+              </div>
+            </ScrollArea>
+          </div>
+          
+          {/* Sidebar area */}
+          <div className="w-1/3 flex flex-col">
+            <div className="flex-grow bg-[--theme-leaguecard-color] p-2 rounded-md mb-2 flex flex-col">
+              <h3 className="text-lg font-semibold mb-2">Sidebar Title</h3>
+              <ScrollArea className="flex-grow mb-2">
+                {/* Add your sidebar content here */}
+              </ScrollArea>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+});
+
+FlashcardsDialog.displayName = 'FlashcardsDialog';
+
+export default FlashcardsDialog;
