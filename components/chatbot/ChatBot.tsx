@@ -1,11 +1,13 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import dynamic from 'next/dynamic';
-import { Styles } from 'react-chatbotify';
-import Image from 'next/image';
+import React, { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
+import { Styles } from "react-chatbotify";
+import Image from "next/image";
 
-const DynamicChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
+const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
+  ssr: false,
+});
 
 interface ChatBotProps {
   chatbotContext?: {
@@ -18,12 +20,12 @@ interface ChatBotProps {
   avatar?: string;
 }
 
-const ChatBot: React.FC<ChatBotProps> = ({ 
-  chatbotContext, 
-  width = '100%',
-  height = '100%',
-  backgroundColor = 'transparent',
-  avatar
+const ChatBot: React.FC<ChatBotProps> = ({
+  chatbotContext,
+  width = "100%",
+  height = "100%",
+  backgroundColor = "transparent",
+  avatar,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,22 +42,36 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
     const timer = setTimeout(() => {
       const botMessage = "Howdy";
-      window.dispatchEvent(new CustomEvent('chatbot-event', {
-        detail: { message: botMessage },
-      }));
+      window.dispatchEvent(
+        new CustomEvent("chatbot-event", {
+          detail: { message: botMessage },
+        })
+      );
     }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
 
+  const handleChatBotClick = () => {
+    const tutorialPart4Played = localStorage.getItem("tutorialPart4Played");
+    if (!tutorialPart4Played || tutorialPart4Played === "false") {
+      window.dispatchEvent(new Event("startTutorialPart4"));
+    }
+  };
+
   const sendMessage = async (message: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/conversation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, context, threadId, generateAudio: audioEnabled }),
+      const response = await fetch("/api/conversation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message,
+          context,
+          threadId,
+          generateAudio: audioEnabled,
+        }),
       });
 
       if (!response.ok) {
@@ -63,7 +79,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
       }
 
       const data = await response.json();
-      console.log('Received response:', data);
+      console.log("Received response:", data);
 
       if (data.threadId) {
         setThreadId(data.threadId);
@@ -75,8 +91,12 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
       return data.message;
     } catch (error) {
-      console.error('Error:', error);
-      setError(`An error occurred: ${error instanceof Error ? error.message : String(error)}`);
+      console.error("Error:", error);
+      setError(
+        `An error occurred: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
       return null;
     } finally {
       setIsLoading(false);
@@ -90,9 +110,9 @@ const ChatBot: React.FC<ChatBotProps> = ({
     for (let i = 0; i < audioData.length; i++) {
       view[i] = audioData.charCodeAt(i);
     }
-    const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
+    const audioBlob = new Blob([arrayBuffer], { type: "audio/mp3" });
     const audioUrl = URL.createObjectURL(audioBlob);
-    
+
     if (audioRef.current) {
       audioRef.current.src = audioUrl;
       audioRef.current.play();
@@ -114,25 +134,30 @@ const ChatBot: React.FC<ChatBotProps> = ({
   };
 
   const toggleAudio = () => {
-    setAudioEnabled(prev => !prev);
+    setAudioEnabled((prev) => !prev);
   };
 
   const flow = {
     start: {
-      message: `Meow there! I'm Kalypso the cat, your MCAT assistant. ${contentTitle ? `Cool ${contentTitle}.` : ""} How can I help you today?`,
-      path: "loop"
+      message: `Meow there! I'm Kalypso the cat, your MCAT assistant. ${
+        contentTitle ? `Cool ${contentTitle}.` : ""
+      } How can I help you today?`,
+      path: "loop",
     },
     loop: {
-      message: async (params: { userInput: string }) => { 
+      message: async (params: { userInput: string }) => {
         const response = await sendMessage(params.userInput);
-        return response || "I'm sorry, I couldn't process your request. Please try again.";
+        return (
+          response ||
+          "I'm sorry, I couldn't process your request. Please try again."
+        );
       },
-      path: "loop"
-    }
+      path: "loop",
+    },
   };
 
   const settings = {
-    general: { 
+    general: {
       embedded: true,
       showHeader: true,
       showFooter: false,
@@ -142,32 +167,45 @@ const ChatBot: React.FC<ChatBotProps> = ({
     },
     chatInput: {
       enabledPlaceholderText: "Chat with Kalypso",
-      color: 'var(--theme-text-color)',
+      color: "var(--theme-text-color)",
     },
-    chatHistory: { storageKey: "mcat_assistant_chat_history", disabled: true},
+    chatHistory: { storageKey: "mcat_assistant_chat_history", disabled: true },
     header: {
       showAvatar: false,
       title: (
         <div className="flex items-center justify-between w-full">
-          <div 
-            style={{cursor: "pointer", margin: 0, fontSize: 10, fontWeight: ""}} 
-            onClick={() => window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")}
-          >
-          </div>
+          <div
+            style={{
+              cursor: "pointer",
+              margin: 0,
+              fontSize: 10,
+              fontWeight: "",
+            }}
+            onClick={() =>
+              window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+            }
+          ></div>
           <div className="flex text-[--theme-text-color] items-center">
-            <button 
+            <button
               onClick={toggleAudio}
               className="px-2 py-1 text-xs bg-transparent hover:bg-[--theme-hover-color] transition-colors"
-              style={{ color: audioEnabled ? 'var(--theme-hover-color)' : 'var(--gray-600)' }}
+              style={{
+                color: audioEnabled
+                  ? "var(--theme-hover-color)"
+                  : "var(--gray-600)",
+              }}
             >
-              {audioEnabled ? '🔊' : '🔇'}
+              {audioEnabled ? "🔊" : "🔇"}
             </button>
-            <span className="text-[9px] ml-1" style={{ color: 'var(--gray-600)' }}>
-              {audioEnabled ? 'press mic to use voice' : 'click to talk'}
+            <span
+              className="text-[9px] ml-1"
+              style={{ color: "var(--gray-600)" }}
+            >
+              {audioEnabled ? "press mic to use voice" : "click to talk"}
             </span>
           </div>
         </div>
-      )
+      ),
     },
     notification: {
       disabled: true,
@@ -179,9 +217,9 @@ const ChatBot: React.FC<ChatBotProps> = ({
       autoSendDisabled: true,
       autoSendPeriod: 1500,
       sendAsAudio: false,
-      timeoutPeriod: 10000
+      timeoutPeriod: 10000,
     },
-    botBubble: { 
+    botBubble: {
       simStream: true,
       streamSpeed: audioEnabled ? 100 : 25,
     },
@@ -189,46 +227,52 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
   const styles: Styles = {
     chatWindowStyle: {
-      display: 'flex',
-      flexDirection: 'column' as const,
-      height: 'calc(100vh - 12.2rem)',
-      width: '100%',
+      display: "flex",
+      flexDirection: "column" as const,
+      height: "calc(100vh - 12.2rem)",
+      width: "100%",
       backgroundColor: backgroundColor,
-      position: 'relative',
+      position: "relative",
       zIndex: 1, // Add this line to set a base z-index for the chat window
     },
     bodyStyle: {
       flexGrow: 1,
-      overflowY: 'auto' as const,
+      overflowY: "auto" as const,
     },
     chatInputContainerStyle: {
-      padding: '1rem',
-      backgroundColor: 'transparent',
-      border: 'transparent',
+      padding: "1rem",
+      backgroundColor: "transparent",
+      border: "transparent",
     },
     chatInputAreaStyle: {
-      border: '1px solid var(--theme-border-color)',
-      borderRadius: '8px',
-      backgroundColor: 'transparent',
-      color: 'var(--theme-text-color)',
-      width: '100%',
+      border: "1px solid var(--theme-border-color)",
+      borderRadius: "8px",
+      backgroundColor: "transparent",
+      color: "var(--theme-text-color)",
+      width: "100%",
     },
     botBubbleStyle: {
       fontSize: ".9rem",
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-      color: 'var(--theme-text-color)',
-      backgroundColor: 'var(--theme-botchatbox-color)',
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
+      color: "var(--theme-text-color)",
+      backgroundColor: "var(--theme-botchatbox-color)",
     },
     userBubbleStyle: {
       fontSize: ".9rem",
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-      color: 'white',
-      backgroundColor: '#0d85ff',
-      textAlign: 'left'
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
+      color: "white",
+      backgroundColor: "#0d85ff",
+      textAlign: "left",
     },
-    headerStyle: {background: 'transparent', height: '0rem', border: 'transparent'},
+    headerStyle: {
+      background: "transparent",
+      height: "0rem",
+      border: "transparent",
+    },
     chatHistoryButtonStyle: {
-      fontSize: '0.5rem !important', // Even smaller font size with !important
+      fontSize: "0.5rem !important", // Even smaller font size with !important
     },
   };
 
@@ -239,26 +283,32 @@ const ChatBot: React.FC<ChatBotProps> = ({
   }
 
   return (
-    <div className="w-full rounded-lg shadow-lg overflow-hidden flex flex-col relative" style={{
-      boxShadow: 'var(--theme-box-shadow)',
-      border: '1px solid var(--theme-border-color)',
-      width: width,
-      height: height,
-      backgroundColor: backgroundColor,
-    }}>
+    <div
+      className="w-full rounded-lg shadow-lg overflow-hidden flex flex-col relative"
+      style={{
+        boxShadow: "var(--theme-box-shadow)",
+        border: "1px solid var(--theme-border-color)",
+        width: width,
+        height: height,
+        backgroundColor: backgroundColor,
+      }}
+      onClick={handleChatBotClick}
+    >
       {avatar && (
-        <div style={{
-          position: 'absolute',
-          top: '10px',
-          right: '10px',
-          width: '70px',
-          height: '70px',
-          overflow: 'hidden',
-          zIndex: 9999, // Increase this value to be higher than any other component
-          borderRadius: '50%',
-          backgroundColor: 'rgba(255, 255, 255, 0.3)', 
-        }}>
-          <Image 
+        <div
+          style={{
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            width: "70px",
+            height: "70px",
+            overflow: "hidden",
+            zIndex: 9999, // Increase this value to be higher than any other component
+            borderRadius: "50%",
+            backgroundColor: "rgba(255, 255, 255, 0.3)",
+          }}
+        >
+          <Image
             src={avatar}
             alt="Kalypso"
             layout="responsive"
@@ -266,7 +316,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
             height={140}
             objectFit="cover"
             objectPosition="top center"
-            style={{ transform: 'scale(2)', transformOrigin: 'top center' }}
+            style={{ transform: "scale(2)", transformOrigin: "top center" }}
           />
         </div>
       )}
@@ -276,8 +326,10 @@ const ChatBot: React.FC<ChatBotProps> = ({
         themes={themes}
         flow={flow}
       />
-      {error && <p style={{color: 'red'}}>{error}</p>}
-      {isPlaying && audioEnabled && <button onClick={stopAudio}>Stop Audio</button>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {isPlaying && audioEnabled && (
+        <button onClick={stopAudio}>Stop Audio</button>
+      )}
     </div>
   );
 };
