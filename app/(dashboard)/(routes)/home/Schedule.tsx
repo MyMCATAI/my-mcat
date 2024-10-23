@@ -245,11 +245,14 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   useEffect(() => {
     const tutorialPart1Played = localStorage.getItem("tutorialPart1Played");
-    if (!tutorialPart1Played) {
+    console.log("tutorialPart1Played:", tutorialPart1Played); // Debugging line
+    if (!tutorialPart1Played || tutorialPart1Played === "false") {
       setRunTutorialPart1(true);
       localStorage.setItem("tutorialPart1Played", "true");
     }
+  }, []);
 
+  useEffect(() => {
     setCurrentDate(new Date());
     setTypedText("");
     setIsTypingComplete(false);
@@ -283,8 +286,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         }
       }
     }, 15);
-
-    setRunTutorialPart1(false);
 
     return () => {
       clearInterval(typingTimer);
@@ -441,6 +442,15 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   const handleAAMCClick = () => {
     router.push("/integrations");
+  };
+
+  // Add this function to reset the local storage variables
+  const resetTutorials = () => {
+    localStorage.removeItem("tutorialPart1Played");
+    localStorage.removeItem("tutorialPart2Played");
+    console.log("Tutorials reset");
+    setRunTutorialPart1(false);
+    setRunTutorialPart2(false);
   };
 
   return (
@@ -776,6 +786,12 @@ const Schedule: React.FC<ScheduleProps> = ({
               className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition text-sm opacity-80"
             >
               Tutorial Part 1
+            </Button>
+            <Button
+              onClick={resetTutorials}
+              className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition text-sm opacity-80"
+            >
+              Reset Tutorials
             </Button>
           </div>
         </div>

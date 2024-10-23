@@ -70,17 +70,16 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
 
   useEffect(() => {
     const tutorialPart2Played = localStorage.getItem("tutorialPart2Played");
-    if (!tutorialPart2Played) {
+    if (!tutorialPart2Played || tutorialPart2Played === "false") {
       const timer = setTimeout(() => {
         setRunTutorialPart2(true);
+        console.log("tutorialPart2Played:", tutorialPart2Played); // Debugging line
         localStorage.setItem("tutorialPart2Played", "true");
       }, 20000);
 
       return () => clearTimeout(timer);
     }
-  }, [setRunTutorialPart2]);
-
-  localStorage.setItem("tutorialPart2Played", "true");
+  }, []);
 
   const fetchActivities = async () => {
     if (!user?.id) return;
