@@ -3,6 +3,7 @@ import { Stage, Container, Graphics, Sprite } from '@pixi/react';
 import { Texture, Graphics as PIXIGraphics, utils as PIXIUtils, BaseTexture, Rectangle } from 'pixi.js';
 import { ImageGroup } from './ShoppingDialog';
 import { Button } from '@/components/ui/button';
+import QuestionPromptSprite from './QuestionPromptSprite';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import {
@@ -175,6 +176,8 @@ interface OfficeContainerProps {
   userScore: number;
   userRooms: string[];
   imageGroups: ImageGroup[];
+  flashcardRoomId: string;
+  setFlashcardRoomId: React.Dispatch<React.SetStateAction<string>>;
   toggleGroup: (groupName: string) => void;
   onUpdateUserScore: (newScore: number) => void;
   setUserRooms: React.Dispatch<React.SetStateAction<string[]>>;
@@ -200,6 +203,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   userScore,
   userRooms,
   imageGroups,
+  flashcardRoomId, 
+  setFlashcardRoomId,
   toggleGroup,
   onUpdateUserScore,
   setUserRooms,
@@ -398,15 +403,29 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     const posY = screenY(img.x, img.y) - img.height / 2;
 
     return (
-      <Sprite
-        texture={texture}
-        x={posX}
-        y={posY}
-        width={img.width}
-        height={img.height}
-        alpha={img.opacity !== undefined ? img.opacity : 1}
-        zIndex={img.zIndex}
-      />
+      <>
+        <Sprite
+          texture={texture}
+          x={posX}
+          y={posY}
+          width={img.width}
+          height={img.height}
+          alpha={img.opacity !== undefined ? img.opacity : 1}
+          zIndex={img.zIndex}
+        />
+        <QuestionPromptSprite
+          src="/game-components/questionPopUp.png"
+          x={posX + img.width / 2} // Adjust to the center of the room  - img.width / 2
+          y={posY + img.height / 3} // Adjust to the center of the room  - img.height / 2
+          scaleConstant={4}  
+          zIndex={img.zIndex} // Slightly higher zIndex
+          roomId={img.id}
+          onClick={() => {
+            setFlashcardRoomId(img.id); // Update the state
+            console.log('Current flashcardRoomId:', img.id); // Log the new state
+          }}
+        />
+      </>
     );
   }, []);
 
