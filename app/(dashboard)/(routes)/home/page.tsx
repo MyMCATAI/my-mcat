@@ -176,7 +176,6 @@ const Page = () => {
         throw new Error("Failed to fetch activities");
       }
       const activities = await response.json();
-      console.error("activities:", activities);
       setActivities(activities);
     } catch (error) {
       console.error("Error fetching activities:", error);
@@ -364,7 +363,10 @@ const Page = () => {
         break;
       case "test":
         content = (
-          <TestingSuit tests={tests} testsCompletedToday={testsCompletedToday} />
+          <TestingSuit
+            tests={tests}
+            testsCompletedToday={testsCompletedToday}
+          />
         );
         break;
       case "flashcards":
@@ -412,6 +414,24 @@ const Page = () => {
     setShowUpdateNotification(false);
   };
 
+  const haveAllTutorialsPlayed = () => {
+    const tutorialPart1Played =
+      localStorage.getItem("tutorialPart1Played") === "true";
+    const tutorialPart2Played =
+      localStorage.getItem("tutorialPart2Played") === "true";
+    const tutorialPart3Played =
+      localStorage.getItem("tutorialPart3Played") === "true";
+    const tutorialPart4Played =
+      localStorage.getItem("tutorialPart4Played") === "true";
+
+    return (
+      tutorialPart1Played &&
+      tutorialPart2Played &&
+      tutorialPart3Played &&
+      tutorialPart4Played
+    );
+  };
+
   return (
     <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem]">
       <div className="text-white flex gap-[1.5rem]">
@@ -449,7 +469,10 @@ const Page = () => {
             &nbsp;
           </h2>
           <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
-            <KnowledgeProfileCARsONLY activities={activities} currentPage={activeTab} />
+            <KnowledgeProfileCARsONLY
+              activities={activities}
+              currentPage={activeTab}
+            />
           </div>
         </div>
       </div>
@@ -515,7 +538,7 @@ const Page = () => {
 
       {/* Update Notification Popup */}
       <UpdateNotificationPopup
-        open={showUpdateNotification}
+        open={showUpdateNotification && haveAllTutorialsPlayed()}
         onOpenChange={handleCloseUpdateNotification}
       />
     </div>
