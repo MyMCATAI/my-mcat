@@ -23,7 +23,7 @@ const playlists: Record<string, Song[]> = {
     { title: "ST4", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees4.mp3" },
     { title: "ST5", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SakuraTrees5.mp3" },
     { title: "ST6", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuratrees6.mp3" },
-    { title: "ST7", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/SakuraTrees7.mp3" },
+    { title: "ST7", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees7.mp3" },
   ],
   sunsetCity: [
     { title: "SC1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity1.mp3" },
