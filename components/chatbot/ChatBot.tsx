@@ -37,6 +37,10 @@ const ChatBot: React.FC<ChatBotProps> = ({
   const context = chatbotContext?.context;
   const contentTitle = chatbotContext?.contentTitle;
   const [isFirstResponse, setIsFirstResponse] = useState(true);
+  const [cmdPressed, setCmdPressed] = useState(false);
+  const cmdPressedRef = useRef(false);
+  const cmdPressedTime = useRef<number | null>(null);
+  const cmdReleaseTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -50,7 +54,50 @@ const ChatBot: React.FC<ChatBotProps> = ({
       );
     }, 1000);
 
-    return () => clearTimeout(timer);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Meta' || event.key === 'Control') {
+        if (!cmdPressedRef.current) {
+          cmdPressedRef.current = true;
+          cmdPressedTime.current = Date.now();
+          setCmdPressed(true);
+        }
+      } else {
+        cmdPressedRef.current = false;
+        cmdPressedTime.current = null;
+        setCmdPressed(false);
+        if (cmdReleaseTimer.current) {
+          clearTimeout(cmdReleaseTimer.current);
+        }
+      }
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Meta' || event.key === 'Control') {
+        if (cmdPressedRef.current && cmdPressedTime.current) {
+          const pressDuration = Date.now() - cmdPressedTime.current;
+          if (pressDuration < 500) { // Only toggle if pressed for less than 500ms
+            cmdReleaseTimer.current = setTimeout(() => {
+              toggleAudio();
+            }, 50); // Small delay to ensure no other keys were pressed
+          }
+        }
+        cmdPressedRef.current = false;
+        cmdPressedTime.current = null;
+        setCmdPressed(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      if (cmdReleaseTimer.current) {
+        clearTimeout(cmdReleaseTimer.current);
+      }
+      clearTimeout(timer);
+    };
   }, []);
 
   const sendMessage = async (message: string) => {
@@ -169,6 +216,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
     chatInput: {
       enabledPlaceholderText: "Chat with Kalypso",
       color: "var(--theme-text-color)",
+      blockSpam: true,
     },
     chatHistory: { storageKey: "mcat_assistant_chat_history", disabled: true },
     header: {
@@ -202,7 +250,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
               className="text-[9px] ml-1"
               style={{ color: "var(--gray-600)" }}
             >
-              {audioEnabled ? "press mic to use voice" : "click to talk"}
+              {audioEnabled ? "speak with the mic" : "toggle voice with 'cmd' key"}
             </span>
           </div>
         </div>
@@ -213,12 +261,12 @@ const ChatBot: React.FC<ChatBotProps> = ({
     },
     voice: {
       disabled: !audioEnabled,
-      defaultToggledOn: audioEnabled,
+      defaultToggledOn: true,
       language: "en-US",
-      autoSendDisabled: true,
-      autoSendPeriod: 1500,
+      autoSendDisabled: false,
+      autoSendPeriod: 3000,
       sendAsAudio: false,
-      timeoutPeriod: 10000,
+      timeoutPeriod: 50000,
     },
     botBubble: {
       simStream: true,
