@@ -36,6 +36,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const context = chatbotContext?.context;
   const contentTitle = chatbotContext?.contentTitle;
+  const [isFirstResponse, setIsFirstResponse] = useState(true);
 
   useEffect(() => {
     setIsMounted(true);
@@ -51,13 +52,6 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
     return () => clearTimeout(timer);
   }, []);
-
-  const handleChatBotClick = () => {
-    const tutorialPart4Played = localStorage.getItem("tutorialPart4Played");
-    if (!tutorialPart4Played || tutorialPart4Played === "false") {
-      window.dispatchEvent(new Event("startTutorialPart4"));
-    }
-  };
 
   const sendMessage = async (message: string) => {
     setIsLoading(true);
@@ -87,6 +81,16 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
       if (audioEnabled && data.audio) {
         playAudio(data.audio);
+      }
+
+      // Check if this is the first response and tutorial hasn't been played
+      if (isFirstResponse) {
+        setIsFirstResponse(false);
+        const tutorialPart4Played = localStorage.getItem("tutorialPart4Played");
+        if (!tutorialPart4Played || tutorialPart4Played === "false") {
+          window.dispatchEvent(new Event("startTutorialPart4"));
+          localStorage.setItem("tutorialPart4Played", "true");
+        }
       }
 
       return data.message;
@@ -147,10 +151,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
     loop: {
       message: async (params: { userInput: string }) => {
         const response = await sendMessage(params.userInput);
-        return (
-          response ||
-          "I'm sorry, I couldn't process your request. Please try again."
-        );
+        return response || "I'm sorry, I couldn't process your request. Please try again.";
       },
       path: "loop",
     },
@@ -292,7 +293,6 @@ const ChatBot: React.FC<ChatBotProps> = ({
         height: height,
         backgroundColor: backgroundColor,
       }}
-      onClick={handleChatBotClick}
     >
       {avatar && (
         <div
