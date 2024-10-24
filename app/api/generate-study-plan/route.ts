@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
+import { Prisma } from '@prisma/client';
 
 // Define task categories with their properties
 const TASK_CATEGORIES = [
@@ -60,9 +61,9 @@ interface StudyPlan {
   userId: string;
   creationDate: Date;
   examDate: Date;
-  resources: Resources;
-  hoursPerDay: { [key: string]: number };
-  fullLengthDays: string[];
+  resources: Prisma.JsonValue;
+  hoursPerDay: Prisma.JsonValue;
+  fullLengthDays: Prisma.JsonValue;
   updatedAt: Date;
 }
 
@@ -77,13 +78,20 @@ interface KnowledgeProfile {
   id: string;
   userId: string;
   categoryId: string;
-  conceptMastery: number;
+  conceptMastery: number | null; // Allow null values
   category: Category;
+  // Add any other fields that might be present in your Prisma model
 }
 
 interface Category {
   id: string;
   subjectCategory: string;
+  contentCategory: string;
+  conceptCategory: string;
+  generalWeight: number;
+  section: string;
+  color: string;
+  icon: string;
 }
 
 interface ContentItem {
@@ -291,13 +299,15 @@ async function generateStudySchedule(
         const mainTaskName = determineMainTask(resources, contentReviewRatio);
         if (mainTaskName) {
           const task = TASK_CATEGORIES.find(t => t.name === mainTaskName);
-          const taskDuration = Math.min(task.duration, dailyHours);
+          if (task && typeof task.duration === 'number') {
+            const taskDuration = Math.min(task.duration, dailyHours);
 
-          const generalActivity = createActivity(studyPlan, mainTaskName, task.type || 'Study', taskDuration, currentDate);
-          dayActivities.push(generalActivity);
-          console.log('Created activity:', JSON.stringify(generalActivity, null, 2));
-          dailyHours -= taskDuration;
-          activityScheduled = true;
+            const generalActivity = createActivity(studyPlan, mainTaskName, task.type || 'Study', taskDuration, currentDate);
+            dayActivities.push(generalActivity);
+            console.log('Created activity:', JSON.stringify(generalActivity, null, 2));
+            dailyHours -= taskDuration;
+            activityScheduled = true;
+          }
         }
       }
 
@@ -339,10 +349,13 @@ function calculateTotalAvailableHours(hoursPerDay: { [key: string]: number }, st
 
 // Function to allocate study time based on knowledge profiles
 function allocateStudyTime(knowledgeProfiles: KnowledgeProfile[], totalStudyHours: number): CategoryAllocation[] {
-  const totalMastery = knowledgeProfiles.reduce((sum, profile) => sum + (1 - profile.conceptMastery), 0);
+  // Calculate total inverse mastery, treating null as 0 (lowest mastery)
+  const totalInverseMastery = knowledgeProfiles.reduce((sum, profile) => 
+    sum + (1 - (profile.conceptMastery ?? 0)), 0);
+
   return knowledgeProfiles.map(profile => ({
     ...profile,
-    allocatedHours: totalStudyHours * ((1 - profile.conceptMastery) / totalMastery),
+    allocatedHours: totalStudyHours * ((1 - (profile.conceptMastery ?? 0)) / totalInverseMastery),
   }));
 }
 
@@ -497,3 +510,4 @@ function createActivity(
   console.log('Created activity:', JSON.stringify(activity, null, 2));
   return activity;
 }
+

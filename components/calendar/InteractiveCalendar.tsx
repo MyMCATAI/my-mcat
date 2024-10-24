@@ -33,6 +33,18 @@ const localizer = momentLocalizer(moment);
 
 const DnDCalendar = withDragAndDrop<CalendarEvent>(Calendar);
 
+interface CalendarActivityData {
+  activityTitle: string;
+  activityText: string;
+  hours: number;
+  activityType: string;
+  link?: string;
+  scheduledDate: string; // Change this to string to match the API
+  categoryId?: string;
+  status?: string;
+  contentId?: string;
+}
+
 interface InteractiveCalendarProps {
   currentDate: Date;
   activities: FetchedActivity[];
@@ -40,6 +52,18 @@ interface InteractiveCalendarProps {
   getActivitiesForDate: (date: Date) => FetchedActivity[];
   onInteraction: () => void;
 }
+
+// Add this conversion function
+const convertToCalendarEvent = (activity: CalendarActivityData & { id: string }): CalendarEvent => {
+  return {
+    id: activity.id,
+    start: new Date(activity.scheduledDate),
+    end: new Date(activity.scheduledDate),
+    title: activity.activityTitle,
+    activityText: activity.activityText,
+    hours: activity.hours
+  };
+};
 
 const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   currentDate,
@@ -169,15 +193,9 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   const handleModalSubmit = async (eventData: CalendarActivityData) => {
     if (user?.id && newEventStart && newEventEnd) {
       const newEvent = {
-        activityTitle: eventData.activityTitle,
-        activityText: eventData.activityText,
-        hours: eventData.hours,
-        activityType: eventData.activityType,
-        link: eventData.link,
-        scheduledDate: eventData.scheduledDate,
-        start: newEventStart.toISOString(),
-        end: newEventEnd.toISOString(),
-        userId: user.id
+        ...eventData,
+        scheduledDate: newEventStart.toISOString(), // Convert Date to ISO string
+        userId: user.id,
       };
 
       try {
@@ -192,12 +210,9 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
           throw new Error(errorData.error || 'Failed to create activity');
         }
 
-        const createdActivity: { id: string } = await response.json();
-        setEvents(prevEvents => [...prevEvents, { 
-          ...newEvent, 
-          id: createdActivity.id,
-          title: eventData.activityTitle // Ensure the title is set for the calendar event
-        }]);
+        const createdActivity: { id: string } & CalendarActivityData = await response.json();
+        
+        setEvents(prevEvents => [...prevEvents, convertToCalendarEvent(createdActivity)]);
         onInteraction();
         handleModalClose();
       } catch (error) {

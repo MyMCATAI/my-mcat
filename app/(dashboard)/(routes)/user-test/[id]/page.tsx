@@ -16,7 +16,7 @@ export default function UserTestReviewPage() {
   const [error, setError] = useState<string | null>(null);
   const passageCacheRef = useRef<Record<string, Passage>>({});
   const params = useParams();
-  const { id } = params;
+  const id = params?.id;
 
   const [chatbotContext, setChatbotContext] = useState({
     contentTitle: "",
@@ -24,7 +24,11 @@ export default function UserTestReviewPage() {
   });
 
   useEffect(() => {
-    if (id) fetchUserTest(id as string);
+    if (typeof id === 'string') {
+      fetchUserTest(id);
+    } else if (Array.isArray(id)) {
+      fetchUserTest(id[0]); // Use the first id if it's an array
+    }
   }, [id]);
 
   useEffect(() => {
