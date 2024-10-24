@@ -1,7 +1,123 @@
+// app/api/generate-study-plan/route.ts
+
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 
+// Define task categories with their properties
+const TASK_CATEGORIES = [
+  {
+    name: 'Daily CARS Practice',
+    optional: true,
+    duration: 0.5,
+    priority: 2,
+  },
+  {
+    name: 'Adaptive Tutoring Suite',
+    optional: true,
+    duration: 3,
+    chunkable: true,
+    chunkSize: 1,
+    priority: 2,
+    type: 'Content',
+  },
+  {
+    name: 'Anki Clinic',
+    optional: true,
+    duration: 0.5,
+    priority: 2,
+    type: 'Content',
+  },
+  {
+    name: 'UWorld',
+    duration: 2,
+    priority: 3,
+    type: 'Review',
+  },
+  {
+    name: 'AAMC Materials',
+    duration: 2,
+    priority: 3,
+    type: 'Review',
+  },
+  {
+    name: 'Full-Length Exam',
+    duration: 8,
+    priority: 5,
+  },
+  {
+    name: 'Take Up Exam',
+    totalDuration: 5,
+    chunkable: true,
+    chunkSize: 1,
+    priority: 4,
+  },
+];
+
+// Define interfaces for TypeScript
+interface StudyPlan {
+  id: string;
+  userId: string;
+  creationDate: Date;
+  examDate: Date;
+  resources: Resources;
+  hoursPerDay: { [key: string]: number };
+  fullLengthDays: string[];
+  updatedAt: Date;
+}
+
+interface Resources {
+  hasUWorld: boolean;
+  hasAAMC: boolean;
+  hasAdaptiveTutoringSuite: boolean;
+  hasAnki: boolean;
+}
+
+interface KnowledgeProfile {
+  id: string;
+  userId: string;
+  categoryId: string;
+  conceptMastery: number;
+  category: Category;
+}
+
+interface Category {
+  id: string;
+  subjectCategory: string;
+}
+
+interface ContentItem {
+  id: string;
+  title: string;
+  minutes_estimate: number;
+  type: string;
+  link: string;
+  categoryId: string;
+}
+
+interface CalendarActivity {
+  userId: string;
+  studyPlanId: string;
+  categoryId?: string | null;
+  contentId?: string | null;
+  activityText: string;
+  activityTitle: string;
+  hours: number;
+  activityType: string;
+  link?: string;
+  scheduledDate: Date;
+  status: string;
+}
+
+interface CategoryAllocation extends KnowledgeProfile {
+  allocatedHours: number;
+}
+
+interface SelectedContentItem extends ContentItem {
+  category: Category;
+}
+
+// Handler for generating the study plan
 export async function POST(req: Request) {
   const { userId } = auth();
   if (!userId) {
@@ -9,230 +125,375 @@ export async function POST(req: Request) {
   }
 
   try {
-    console.log("1. Starting study plan generation for user:", userId);
+    // Parse the request body to get user input
+    const body = await req.json();
+    const {
+      examDate,
+      resources,
+      hoursPerDay,
+      fullLengthDays,
+      contentReviewRatio = 0.5,
+      useKnowledgeProfile = false,
+      alternateStudyPractice = false,
+      includeSpecificContent = false,
+    } = body;
 
-    // 1. Fetch necessary data
-    console.log("2. Fetching study plan...");
-    const studyPlan = await prisma.studyPlan.findFirst({
+    if (!examDate || !resources || !hoursPerDay) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // Find existing study plan for the user
+    const existingStudyPlan = await prisma.studyPlan.findFirst({
       where: { userId },
     });
 
-    if (!studyPlan) {
-      console.log("No study plan found for user:", userId);
-      return NextResponse.json({ error: "No study plan found" }, { status: 404 });
-    }
-    console.log("Study plan found:", studyPlan.id);
-
-    console.log("3. Fetching knowledge profiles...");
-    const knowledgeProfiles = await prisma.knowledgeProfile.findMany({
-      where: { userId },
-      include: { category: true },
-      orderBy: { conceptMastery: 'asc' }
+    // Create or update the study plan
+    const studyPlan: StudyPlan = await prisma.studyPlan.upsert({
+      where: { 
+        id: existingStudyPlan?.id ?? 'new_study_plan' // Use a dummy ID if no existing plan
+      },
+      update: {
+        examDate: new Date(examDate),
+        resources,
+        hoursPerDay,
+        fullLengthDays,
+      },
+      create: {
+        userId,
+        examDate: new Date(examDate),
+        resources,
+        hoursPerDay,
+        fullLengthDays,
+      },
     });
-    console.log("Knowledge profiles fetched:", knowledgeProfiles.length);
 
-    console.log("4. Fetching content...");
-    const content = await prisma.content.findMany();
-    console.log("Content items fetched:", content.length);
-
-    // 2. Process StudyPlan data
-    console.log("5. Processing study plan data...");
-    const today = new Date();
-    const examDate = new Date(studyPlan.examDate);
-    const totalDays = Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-    
-    // Parse hoursPerDay
-    let hoursPerDay: { [key: string]: number };
-    try {
-      hoursPerDay = JSON.parse(studyPlan.hoursPerDay as string);
-    } catch (error) {
-      console.error("Error parsing hoursPerDay:", error);
-      hoursPerDay = {
-        Sunday: 2, Monday: 2, Tuesday: 2, Wednesday: 1,
-        Thursday: 2, Friday: 2, Saturday: 2
-      };
+    // Fetch knowledge profiles if requested
+    let knowledgeProfiles: KnowledgeProfile[] = [];
+    if (useKnowledgeProfile) {
+      knowledgeProfiles = await prisma.knowledgeProfile.findMany({
+        where: { userId },
+        include: { category: true },
+        orderBy: { conceptMastery: 'asc' },
+      });
     }
 
-    // todo Parse fullLengthDays
-    // const fullLengthDays = (studyPlan.fullLengthDays as string)
-    //   .split('')
-    //   .map(char => char === '1');
-    
-    const totalStudyHours = calculateTotalStudyHours(hoursPerDay, totalDays);
-    console.log("Total study days:", totalDays, "Total study hours:", totalStudyHours);
+    // Fetch content if including specific content items
+    let contentItems: ContentItem[] = [];
+    if (includeSpecificContent) {
+      contentItems = await prisma.content.findMany();
+    }
 
-    // 3. Sort categories (already done in knowledgeProfiles query)
-    console.log("6. Categories sorted by concept mastery (ascending):");
-    knowledgeProfiles.forEach(profile => {
-      console.log(`- ${profile.category.subjectCategory}: ${profile.conceptMastery}`);
-    });
+    // Generate the study schedule
+    const calendarActivities = await generateStudySchedule(
+      studyPlan,
+      resources,
+      hoursPerDay,
+      fullLengthDays,
+      contentReviewRatio,
+      knowledgeProfiles,
+      contentItems,
+      alternateStudyPractice,
+      includeSpecificContent
+    );
 
-    // 4. Allocate study time for each category
-    console.log("7. Allocating study time for each category...");
-    const categoryAllocation = allocateStudyTime(knowledgeProfiles, totalStudyHours);
-    categoryAllocation.forEach(allocation => {
-      console.log(`- ${allocation.category.subjectCategory}: ${allocation.allocatedHours.toFixed(2)} hours`);
-    });
-
-    // 5. Select appropriate Content for each category
-    console.log("8. Selecting appropriate content for each category...");
-    const selectedContent = selectContent(categoryAllocation, content);
-    selectedContent.forEach(category => {
-      console.log(`- ${category.category.subjectCategory}: ${category.content.length} items selected`);
-    });
-
-    // 6. Generate CalendarActivities
-    console.log("9. Generating calendar activities...");
-    const calendarActivities = generateCalendarActivities(selectedContent, studyPlan, today);
-    console.log("Total calendar activities generated:", calendarActivities.length);
-
-    // 7. Save CalendarActivities to the database
-    console.log("10. Saving calendar activities to the database...");
+    // Save activities to the database
     await prisma.calendarActivity.createMany({
-      data: calendarActivities
+      data: calendarActivities,
     });
-    console.log("Calendar activities saved successfully");
 
-    return NextResponse.json({ message: "Study plan generated successfully" }, { status: 200 });
+    return NextResponse.json({ message: "Study plan generated successfully" }, { status: 201 });
   } catch (error) {
     console.error('Error generating study plan:', error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-function calculateTotalStudyHours(
+// Function to generate the study schedule
+async function generateStudySchedule(
+  studyPlan: StudyPlan,
+  resources: Resources,
   hoursPerDay: { [key: string]: number },
-  // fullLengthDays: boolean[],
-  totalDays: number
-): number {
-  console.log("Calculating total study hours...");
-  let totalHours = 0;
+  fullLengthDays: string[],
+  contentReviewRatio: number,
+  knowledgeProfiles: KnowledgeProfile[],
+  contentItems: ContentItem[],
+  alternateStudyPractice: boolean,
+  includeSpecificContent: boolean
+): Promise<CalendarActivity[]> {
+  const activities: CalendarActivity[] = [];
+  const today = new Date();
+  const examDate = new Date(studyPlan.examDate);
+  const totalDays = Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  for (let i = 0; i < totalDays; i++) {
-    const dayOfWeek = (i + new Date().getDay()) % 7;
-    const dayName = daysOfWeek[dayOfWeek];
-    // totalHours += fullLengthDays[dayOfWeek] ? hoursPerDay[dayName] : hoursPerDay[dayName] / 2;
-    totalHours += hoursPerDay[dayName]
+  let currentDate = new Date(today);
+  let isStudySession = true;
+
+  // Calculate total available study hours
+  const totalStudyHours = calculateTotalAvailableHours(hoursPerDay, studyPlan);
+
+  // Allocate study time per category if using knowledge profiles
+  let categoryAllocations: CategoryAllocation[] = [];
+  if (knowledgeProfiles.length > 0) {
+    categoryAllocations = allocateStudyTime(knowledgeProfiles, totalStudyHours);
   }
-  console.log("Total study hours calculated:", totalHours);
+
+  // Select content per category if including specific content items
+  let selectedContent: { category: Category; content: SelectedContentItem[] }[] = [];
+  if (includeSpecificContent && categoryAllocations.length > 0) {
+    selectedContent = selectContent(categoryAllocations, contentItems);
+  }
+
+  // Iterate through each day until the exam date
+  for (let i = 0; i <= totalDays; i++) {
+    const dayOfWeek = currentDate.getDay();
+    const dayName = daysOfWeek[dayOfWeek];
+    const availableHours = hoursPerDay[dayName] || 0;
+
+    // Skip if no hours are available
+    if (availableHours === 0) {
+      currentDate.setDate(currentDate.getDate() + 1);
+      continue;
+    }
+
+    let dailyHours = availableHours;
+    const dayActivities: CalendarActivity[] = [];
+
+    // Check if today is a preferred day for full-length exams
+    if (fullLengthDays.includes(dayName) && dailyHours >= 8) {
+      // Schedule Full-Length Exam
+      const fullLengthExam = createActivity(studyPlan, 'Full-Length Exam', 'Exam', 8, currentDate);
+      dayActivities.push(fullLengthExam);
+      console.log('Created activity:', JSON.stringify(fullLengthExam, null, 2));
+      dailyHours -= 8;
+
+      // Schedule Take Up Exam on the next available day
+      await scheduleTakeUpExam(activities, studyPlan, currentDate, hoursPerDay);
+    }
+
+    // Schedule other activities
+    while (dailyHours >= 0.5) {
+      let activityScheduled = false;
+
+      if (includeSpecificContent && selectedContent.length > 0) {
+        // Schedule specific content items
+        const contentActivity = getNextContentActivity(selectedContent, currentDate, isStudySession, studyPlan);
+        if (contentActivity && contentActivity.hours <= dailyHours) {
+          dayActivities.push(contentActivity);
+          console.log('Created activity:', JSON.stringify(contentActivity, null, 2));
+          dailyHours -= contentActivity.hours;
+          activityScheduled = true;
+        }
+      }
+
+      if (!activityScheduled) {
+        // Schedule general tasks based on contentReviewRatio
+        const mainTaskName = determineMainTask(resources, contentReviewRatio);
+        if (mainTaskName) {
+          const task = TASK_CATEGORIES.find(t => t.name === mainTaskName);
+          const taskDuration = Math.min(task.duration, dailyHours);
+
+          const generalActivity = createActivity(studyPlan, mainTaskName, task.type || 'Study', taskDuration, currentDate);
+          dayActivities.push(generalActivity);
+          console.log('Created activity:', JSON.stringify(generalActivity, null, 2));
+          dailyHours -= taskDuration;
+          activityScheduled = true;
+        }
+      }
+
+      if (alternateStudyPractice) {
+        isStudySession = !isStudySession;
+      }
+
+      if (!activityScheduled) {
+        break;
+      }
+    }
+
+    activities.push(...dayActivities);
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return activities;
+}
+
+// Function to calculate total available study hours
+function calculateTotalAvailableHours(hoursPerDay: { [key: string]: number }, studyPlan: StudyPlan): number {
+  const today = new Date();
+  const examDate = new Date(studyPlan.examDate);
+  const totalDays = Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  let totalHours = 0;
+  let currentDate = new Date(today);
+
+  for (let i = 0; i <= totalDays; i++) {
+    const dayOfWeek = currentDate.getDay();
+    const dayName = daysOfWeek[dayOfWeek];
+    totalHours += hoursPerDay[dayName] || 0;
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
   return totalHours;
 }
 
-function allocateStudyTime(knowledgeProfiles: any[], totalStudyHours: number): any[] {
-  console.log("Allocating study time based on knowledge profiles...");
-  const totalMastery = knowledgeProfiles.reduce((sum, profile) => sum + (1 - (profile.conceptMastery || 0)), 0);
+// Function to allocate study time based on knowledge profiles
+function allocateStudyTime(knowledgeProfiles: KnowledgeProfile[], totalStudyHours: number): CategoryAllocation[] {
+  const totalMastery = knowledgeProfiles.reduce((sum, profile) => sum + (1 - profile.conceptMastery), 0);
   return knowledgeProfiles.map(profile => ({
     ...profile,
-    allocatedHours: totalStudyHours * ((1 - (profile.conceptMastery || 0)) / totalMastery)
+    allocatedHours: totalStudyHours * ((1 - profile.conceptMastery) / totalMastery),
   }));
 }
 
-function selectContent(categoryAllocation: any[], content: any[]): any[] {
-  console.log("Selecting content for each category...");
-  return categoryAllocation.map(category => {
-    const categoryContent = content.filter(c => c.categoryId === category.categoryId);
+// Function to select content for each category
+function selectContent(
+  categoryAllocations: CategoryAllocation[],
+  contentItems: ContentItem[]
+): { category: Category; content: SelectedContentItem[] }[] {
+  return categoryAllocations.map(category => {
+    const categoryContent = contentItems.filter(c => c.categoryId === category.categoryId);
     let remainingHours = category.allocatedHours;
-    const selected = [];
-
-    console.log(`- Category: ${category.category.subjectCategory}, Allocated hours: ${remainingHours.toFixed(2)}`);
+    const selected: SelectedContentItem[] = [];
 
     while (remainingHours > 0 && categoryContent.length > 0) {
       const randomIndex = Math.floor(Math.random() * categoryContent.length);
       const selectedContent = categoryContent[randomIndex];
-      
+
       if (selectedContent.minutes_estimate / 60 <= remainingHours) {
-        selected.push(selectedContent);
+        selected.push({
+          ...selectedContent,
+          category: category.category,
+        });
         remainingHours -= selectedContent.minutes_estimate / 60;
         categoryContent.splice(randomIndex, 1);
-        console.log(`  Selected: ${selectedContent.title} (${(selectedContent.minutes_estimate / 60).toFixed(2)} hours)`);
       } else {
         break;
       }
     }
 
-    console.log(`  Total selected: ${selected.length} items, Remaining hours: ${remainingHours.toFixed(2)}`);
-
     return {
       category: category.category,
-      content: selected
+      content: selected,
     };
   });
 }
 
-function generateCalendarActivities(selectedContent: any[], studyPlan: any, startDate: Date): any[] {
-  console.log("Generating calendar activities...");
-  const activities = [];
-  let currentDate = new Date(startDate);
-  
-  // Parse hoursPerDay
-  let hoursPerDay: { [key: string]: number };
-  try {
-    hoursPerDay = JSON.parse(studyPlan.hoursPerDay as string);
-  } catch (error) {
-    console.error("Error parsing hoursPerDay:", error);
-    hoursPerDay = {
-      Sunday: 2, Monday: 2, Tuesday: 2, Wednesday: 1,
-      Thursday: 2, Friday: 2, Saturday: 2
-    };
+// Function to get the next content activity
+function getNextContentActivity(
+  selectedContent: { category: Category; content: SelectedContentItem[] }[],
+  currentDate: Date,
+  isStudySession: boolean,
+  studyPlan: StudyPlan
+): CalendarActivity | null {
+  for (const categoryContent of selectedContent) {
+    if (categoryContent.content.length > 0) {
+      const contentItem = categoryContent.content.shift()!;
+      const contentHours = contentItem.minutes_estimate / 60;
+      const activityType = isStudySession ? 'Study' : 'Practice';
+
+      const activity = {
+        userId: studyPlan.userId,
+        studyPlanId: studyPlan.id,
+        categoryId: contentItem.categoryId,
+        contentId: contentItem.id,
+        activityText: `${activityType} ${contentItem.title}`,
+        activityTitle: `${activityType} ${contentItem.title}`,
+        hours: contentHours,
+        activityType: contentItem.type,
+        link: contentItem.link,
+        scheduledDate: new Date(currentDate),
+        status: "Not Started",
+      };
+      console.log('Created content activity:', JSON.stringify(activity, null, 2));
+      return activity;
+    }
   }
+  return null;
+}
+
+// Function to schedule Take Up Exam sessions
+async function scheduleTakeUpExam(
+  activities: CalendarActivity[],
+  studyPlan: StudyPlan,
+  examDate: Date,
+  hoursPerDay: { [key: string]: number }
+) {
+  let remainingReviewHours = 5;
+  let currentDate = new Date(examDate);
+  currentDate.setDate(currentDate.getDate() + 1);
 
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  let contentIndex = 0;
-  let categoryIndex = 0;
-  let isStudy = true; // Toggle between "study" and "practice"
-
-  while (currentDate < studyPlan.examDate) {
+  while (remainingReviewHours > 0) {
     const dayOfWeek = currentDate.getDay();
     const dayName = daysOfWeek[dayOfWeek];
-    const availableHours = hoursPerDay[dayName];
-    let dailyActivities = 0;
-    let dailyHours = 0;
+    const availableHours = hoursPerDay[dayName] || 0;
 
-    while (dailyActivities < 2 && dailyHours < availableHours && categoryIndex < selectedContent.length) {
-      const categoryContent = selectedContent[categoryIndex];
-      const content = categoryContent.content[contentIndex];
-
-      if (!content) {
-        categoryIndex++;
-        contentIndex = 0;
-        continue;
-      }
-
-      const contentHours = content.minutes_estimate / 60;
-
-      if (dailyHours + contentHours <= availableHours) {
-        const activityType = isStudy ? 'Study' : 'Practice';
-        
-        activities.push({
-          userId: studyPlan.userId,
-          studyPlanId: studyPlan.id,
-          categoryId: categoryContent.category.id,
-          contentId: content.id,
-          activityText: `${activityType} ${content.title}`,
-          activityTitle: `${activityType} ${content.title}`,
-          hours: contentHours,
-          activityType: content.type,
-          link: content.link,
-          scheduledDate: new Date(currentDate),
-          status: "Not Started"
-        });
-
-        console.log(`Scheduled: ${activityType} ${content.title} on ${currentDate.toISOString().split('T')[0]} (${contentHours.toFixed(2)} hours)`);
-
-        dailyActivities++;
-        dailyHours += contentHours;
-        contentIndex++;
-        isStudy = !isStudy; // Toggle between "study" and "practice"
-      } else {
-        break;
-      }
+    if (availableHours > 0) {
+      const reviewHours = Math.min(availableHours, remainingReviewHours);
+      const takeUpExamActivity = createActivity(studyPlan, 'Take Up Exam', 'Review', reviewHours, currentDate);
+      activities.push(takeUpExamActivity);
+      console.log('Created Take Up Exam activity:', JSON.stringify(takeUpExamActivity, null, 2));
+      remainingReviewHours -= reviewHours;
     }
 
     currentDate.setDate(currentDate.getDate() + 1);
-    currentDate.setHours(9, 0, 0, 0); // Reset to 9 AM for the next day
+  }
+}
+
+// Function to determine the main task based on contentReviewRatio
+function determineMainTask(resources: Resources, contentReviewRatio: number): string | null {
+  const contentTasks: string[] = [];
+  const reviewTasks: string[] = [];
+
+  if (resources.hasAdaptiveTutoringSuite) {
+    contentTasks.push('Adaptive Tutoring Suite');
+  }
+  if (resources.hasAnki) {
+    contentTasks.push('Anki Clinic');
+  }
+  if (resources.hasUWorld) {
+    reviewTasks.push('UWorld');
+  }
+  if (resources.hasAAMC) {
+    reviewTasks.push('AAMC Materials');
   }
 
-  console.log(`Total activities generated: ${activities.length}`);
-  return activities;
+  const rand = Math.random();
+
+  if (rand < contentReviewRatio && reviewTasks.length > 0) {
+    return reviewTasks[Math.floor(Math.random() * reviewTasks.length)];
+  } else if (contentTasks.length > 0) {
+    return contentTasks[Math.floor(Math.random() * contentTasks.length)];
+  } else if (reviewTasks.length > 0) {
+    return reviewTasks[Math.floor(Math.random() * reviewTasks.length)];
+  } else {
+    return null;
+  }
+}
+
+// Function to create an activity object
+function createActivity(
+  studyPlan: StudyPlan,
+  name: string,
+  type: string,
+  duration: number,
+  date: Date
+): CalendarActivity {
+  const activity = {
+    userId: studyPlan.userId,
+    studyPlanId: studyPlan.id,
+    categoryId: null,
+    contentId: null,
+    activityText: `Work on ${name}`,
+    activityTitle: name,
+    hours: duration,
+    activityType: type,
+    link: '',
+    scheduledDate: new Date(date),
+    status: "Not Started",
+  };
+  console.log('Created activity:', JSON.stringify(activity, null, 2));
+  return activity;
 }
