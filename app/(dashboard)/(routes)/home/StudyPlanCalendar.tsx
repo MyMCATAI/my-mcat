@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CalendarActivity } from '@/types'; // Make sure to create this type
+import { CalendarActivity } from '@/types';
 
 const StudyPlanCalendar: React.FC = () => {
   const [activities, setActivities] = useState<CalendarActivity[]>([]);
