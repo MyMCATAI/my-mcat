@@ -1,15 +1,22 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Calendar, momentLocalizer, View, stringOrDate } from 'react-big-calendar';
-import moment from 'moment';
-import withDragAndDrop, { EventInteractionArgs } from 'react-big-calendar/lib/addons/dragAndDrop';
-import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
-import '../styles/CustomCalendar.css';
+import React, { useState, useEffect } from "react";
+import {
+  Calendar,
+  momentLocalizer,
+  View,
+  stringOrDate,
+} from "react-big-calendar";
+import moment from "moment";
+import withDragAndDrop, {
+  EventInteractionArgs,
+} from "react-big-calendar/lib/addons/dragAndDrop";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "../styles/CustomCalendar.css";
 
 import { useUser } from "@clerk/nextjs";
-import AddEventModal from './AddEventModal';
+import AddEventModal from "./AddEventModal";
 
 // Assuming you have a types file with this interface
 interface FetchedActivity {
@@ -51,6 +58,8 @@ interface InteractiveCalendarProps {
   onDateChange: (date: Date) => void;
   getActivitiesForDate: (date: Date) => FetchedActivity[];
   onInteraction: () => void;
+  setRunTutorialPart2: (value: boolean) => void;
+  setRunTutorialPart3: (value: boolean) => void;
 }
 
 // Add this conversion function
@@ -71,9 +80,11 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   onDateChange,
   getActivitiesForDate,
   onInteraction,
+  setRunTutorialPart2,
+  setRunTutorialPart3,
 }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [view, setView] = useState<View>('month');
+  const [view, setView] = useState<View>("month");
   const { user } = useUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEventStart, setNewEventStart] = useState<Date | null>(null);
@@ -83,21 +94,34 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     fetchActivities();
   }, [user]);
 
+  useEffect(() => {
+    const tutorialPart2Played = localStorage.getItem("tutorialPart2Played");
+    if (!tutorialPart2Played || tutorialPart2Played === "false") {
+      const timer = setTimeout(() => {
+        setRunTutorialPart2(true);
+        console.log("tutorialPart2Played:", tutorialPart2Played); // Debugging line
+        localStorage.setItem("tutorialPart2Played", "true");
+      }, 20000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   const fetchActivities = async () => {
     if (!user?.id) return;
 
     try {
       const response = await fetch(`/api/calendar-activity?userId=${user.id}`);
-      if (!response.ok) throw new Error('Failed to fetch activities');
+      if (!response.ok) throw new Error("Failed to fetch activities");
       const activities: FetchedActivity[] = await response.json();
 
-      const formattedEvents: CalendarEvent[] = activities.map(activity => ({
+      const formattedEvents: CalendarEvent[] = activities.map((activity) => ({
         id: activity.id,
         start: new Date(activity.scheduledDate),
         end: new Date(activity.scheduledDate),
         title: activity.activityTitle,
         activityText: activity.activityText,
-        hours: activity.hours
+        hours: activity.hours,
       }));
 
       setEvents(formattedEvents);
@@ -115,16 +139,22 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     return parsed;
   };
 
-  const onEventDrop = async ({ event, start, end }: EventInteractionArgs<CalendarEvent>) => {
+  const onEventDrop = async ({
+    event,
+    start,
+    end,
+  }: EventInteractionArgs<CalendarEvent>) => {
     if (start && end) {
       try {
-        const updatedEvent: CalendarEvent = { 
-          ...event, 
-          start: parseDate(start), 
-          end: parseDate(end)
+        const updatedEvent: CalendarEvent = {
+          ...event,
+          start: parseDate(start),
+          end: parseDate(end),
         };
-        setEvents(currentEvents =>
-          currentEvents.map(ev => ev.id === updatedEvent.id ? updatedEvent : ev)
+        setEvents((currentEvents) =>
+          currentEvents.map((ev) =>
+            ev.id === updatedEvent.id ? updatedEvent : ev
+          )
         );
         await updateEventInBackend(updatedEvent);
         onInteraction();
@@ -135,16 +165,22 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     }
   };
 
-  const onEventResize = async ({ event, start, end }: EventInteractionArgs<CalendarEvent>) => {
+  const onEventResize = async ({
+    event,
+    start,
+    end,
+  }: EventInteractionArgs<CalendarEvent>) => {
     if (start && end) {
       try {
-        const updatedEvent: CalendarEvent = { 
-          ...event, 
-          start: parseDate(start), 
-          end: parseDate(end)
+        const updatedEvent: CalendarEvent = {
+          ...event,
+          start: parseDate(start),
+          end: parseDate(end),
         };
-        setEvents(currentEvents =>
-          currentEvents.map(ev => ev.id === updatedEvent.id ? updatedEvent : ev)
+        setEvents((currentEvents) =>
+          currentEvents.map((ev) =>
+            ev.id === updatedEvent.id ? updatedEvent : ev
+          )
         );
         await updateEventInBackend(updatedEvent);
         onInteraction();
@@ -158,19 +194,19 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   const updateEventInBackend = async (event: CalendarEvent) => {
     try {
       const response = await fetch(`/api/calendar-activity`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: event.id,
           scheduledDate: event.start.toISOString(),
           activityTitle: event.title,
           activityText: event.activityText,
-          hours: event.hours
-        })
+          hours: event.hours,
+        }),
       });
-  
-      if (!response.ok) throw new Error('Failed to update activity');
-      
+
+      if (!response.ok) throw new Error("Failed to update activity");
+
       return await response.json(); // Return the updated event data
     } catch (error) {
       console.error("Error updating activity:", error);
@@ -190,29 +226,34 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     setNewEventEnd(null);
   };
 
-  const handleModalSubmit = async (eventData: CalendarActivityData) => {
-    if (user?.id && newEventStart && newEventEnd) {
-      const newEvent = {
-        ...eventData,
-        scheduledDate: newEventStart.toISOString(), // Convert Date to ISO string
-        userId: user.id,
+  const handleModalSubmit = async (title: string) => {
+    if (title && user?.id && newEventStart && newEventEnd) {
+      const newEvent: Omit<CalendarEvent, "id"> = {
+        start: newEventStart,
+        end: newEventEnd,
+        title,
+        activityText: "",
+        hours: 1,
       };
 
       try {
-        const response = await fetch('/api/calendar-activity', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newEvent)
+        const response = await fetch("/api/calendar-activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...newEvent,
+            userId: user.id,
+            scheduledDate: newEventStart.toISOString(),
+          }),
         });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to create activity');
-        }
+        if (!response.ok) throw new Error("Failed to create activity");
 
-        const createdActivity: { id: string } & CalendarActivityData = await response.json();
-        
-        setEvents(prevEvents => [...prevEvents, convertToCalendarEvent(createdActivity)]);
+        const createdActivity: { id: string } = await response.json();
+        setEvents((prevEvents) => [
+          ...prevEvents,
+          { ...newEvent, id: createdActivity.id },
+        ]);
         onInteraction();
         handleModalClose();
       } catch (error) {
@@ -228,18 +269,42 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
 
   const eventStyleGetter = () => {
     const style = {
-      backgroundColor: '#3174ad',
-      borderRadius: '0px',
+      backgroundColor: "#3174ad",
+      borderRadius: "0px",
       opacity: 0.8,
-      color: 'white',
-      border: '0px',
-      display: 'block'
+      color: "white",
+      border: "0px",
+      display: "block",
     };
     return { style };
   };
 
+  const handleCalendarClick = () => {
+    const tutorialPart3Played = localStorage.getItem("tutorialPart3Played");
+    if (!tutorialPart3Played || tutorialPart3Played === "false") {
+      setTimeout(() => {
+        setRunTutorialPart3(true);
+        console.log("tutorialPart3Played:", tutorialPart3Played); // Debugging line
+        localStorage.setItem("tutorialPart3Played", "true");
+      }, 10000);
+    }
+  };
+
+  const handleEventSubmit = (eventData: CalendarActivityData) => {
+    // Call the existing handleModalSubmit with the title
+    handleModalSubmit(eventData.activityTitle);
+    
+    // You might want to do something with the rest of the eventData here
+    // For example, logging or storing it for later use
+    console.log('Full event data:', eventData);
+  };
+
   return (
-    <div className="custom-calendar" style={{ height: '100%' }}>
+    <div
+      className="custom-calendar"
+      style={{ height: "100%" }}
+      onClick={handleCalendarClick}
+    >
       <DnDCalendar
         className="custom-calendar"
         defaultDate={moment().toDate()}
@@ -258,7 +323,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
       <AddEventModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
-        onSubmit={handleModalSubmit}
+        onSubmit={handleEventSubmit}
         selectedDate={newEventStart}
       />
     </div>
