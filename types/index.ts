@@ -149,3 +149,20 @@ export interface DoctorOfficeStats {
   averageStarRating: number | null;
   clinicCostPerDay: number;
 }
+
+export interface CalendarActivity {
+  id: string;
+  userId: string;
+  studyPlanId: string;
+  categoryId: string | null;
+  activityText: string;
+  activityTitle: string;
+  hours: number;
+  activityType: string;
+  link: string | null;
+  scheduledDate: string;
+  createdAt: string; // or Date
+  updatedAt: string; // or Date
+  status: string;
+  contentId: string | null;
+}

@@ -5,7 +5,7 @@ import EditQuestions from "../../editquestions";
 
 export default function EditQuestionsPage() {
   const params = useParams();
-  const passageId = params.id as string;
+  const passageId = params?.id as string;
 
   return (
     <EditQuestions

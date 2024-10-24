@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { UserTest, UserResponse, Passage, Question } from '@/types';
+import { UserTest, Passage } from '@/types';
 import PassageComponent from "@/components/test/Passage";
 import ReviewQuestionComponent from "./ReviewQuestion";
 

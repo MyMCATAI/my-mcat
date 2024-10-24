@@ -6,7 +6,7 @@ import { VocabProvider } from '@/contexts/VocabContext'; // Import VocabProvider
 
 const TestQuestions = () => {
   const searchParams = useSearchParams();
-  const testId = searchParams.get('id');
+  const testId = searchParams?.get('id');
 
   useEffect(() => {
     // Disable scrolling and hide overflow on mount
