@@ -46,15 +46,15 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
   const pathname = usePathname();
   const ballerSectionRef = useRef(null);
   const proModal = useProModal();
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const { theme } = useTheme(); // Use the theme from context
 
   // Hiding navbar on test questions page
-  if (pathname.includes('/test/testquestions')) {
+  if (pathname?.includes('/test/testquestions')) {
     return null;
   }
 
-  const isPro = subscription !== "free";
+  // const isPro = subscription !== "free";
 
   return (
     <> 
