@@ -68,7 +68,8 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
       shufflePlaylist();
       setCurrentSongIndex(0);
     }
-    setIsPlaying(true); // Stop playback when theme changes, set to true again so that it does not stop when switching themes
+    // Remove this line to prevent autoplay when theme changes
+    // setIsPlaying(true);
   }, [theme, shufflePlaylist]);
 
   useEffect(() => {

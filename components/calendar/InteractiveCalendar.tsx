@@ -101,7 +101,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         setRunTutorialPart2(true);
         console.log("tutorialPart2Played:", tutorialPart2Played); // Debugging line
         localStorage.setItem("tutorialPart2Played", "true");
-      }, 20000);
+      }, 6000); // Changed from 20000 to 6000 milliseconds
 
       return () => clearTimeout(timer);
     }
