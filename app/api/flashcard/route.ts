@@ -10,11 +10,22 @@ function shuffleArray<T>(array: T[]): T[] {
   return array;
 }
 
+const doctorsOfficeQuestions = await prisma.question.findMany({
+  take: 10,
+  select: {
+    id: true,
+    questionContent: true,
+    questionOptions: true
+  }
+});
+
 export async function GET(req: Request) {
+  console.log('GET request received');
   try {
     const { userId } = auth();
 
     if (!userId) {
+      console.log('Unauthorized');
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -23,20 +34,21 @@ export async function GET(req: Request) {
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
     const subjectCategories = searchParams.get('subjects')?.split(',') || [];
 
-    // Fetch all knowledge profiles for the user, sorted by mastery
-    const knowledgeProfiles = await prisma.knowledgeProfile.findMany({
-      where: { userId },
-      orderBy: [
-        { conceptMastery: 'asc' },
-        { contentMastery: 'asc' }
-      ],
-      include: { category: true }
-    });
+    // // Fetch all knowledge profiles for the user, sorted by mastery
+    // const knowledgeProfiles = await prisma.knowledgeProfile.findMany({
+    //   where: { userId },
+    //   orderBy: [
+    //     { conceptMastery: 'asc' },
+    //     { contentMastery: 'asc' }
+    //   ],
+    //   include: { category: true }
+    // });
+    // console.log('Knowledge profiles:', knowledgeProfiles);
 
     // Select the top pageSize categories with lowest mastery
     const selectedProfiles = knowledgeProfiles.slice(0, pageSize);
 
-    // Get categoryIds from selected profiles
+    // Get categoryIds from shuffled profiles
     const categoryIds = selectedProfiles.map(profile => profile.categoryId);
 
     // Fetch questions for these categories
@@ -44,35 +56,10 @@ export async function GET(req: Request) {
       where: {
         categoryId: {
           in: categoryIds
-        },
-        types: {
-          contains: 'flashcard'
-        },
-        category: subjectCategories.length > 0 ? {
-          subjectCategory: {
-            in: subjectCategories
-          }
-        } : undefined
+        }
       },
       include: {
         category: true
-      }
-    });
-
-    // Get total questions count for pagination
-    const totalQuestions = await prisma.question.count({
-      where: {
-        categoryId: {
-          in: categoryIds
-        },
-        types: {
-          contains: 'flashcard'
-        },
-        category: subjectCategories.length > 0 ? {
-          subjectCategory: {
-            in: subjectCategories
-          }
-        } : undefined
       }
     });
 
