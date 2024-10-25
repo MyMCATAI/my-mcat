@@ -198,10 +198,11 @@ model Content {
   title              String             @default("")
   categoryId         String
   link               String             @default("")
+  audioLink               String             @default("")
   type               String             @default("")
   total_timing       Float              @default(0)
   minutes_estimate   Float              @default(0)
-  transcript         String?            @db.Text
+    transcript         String?            @db.LongText
   summary            String?            @db.Text
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
