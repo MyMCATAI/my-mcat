@@ -6,6 +6,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useRouter } from 'next/navigation';
+import FlashcardDeck from '../home/FlashcardDeck';
+import { Cross2Icon } from '@radix-ui/react-icons';
 
 
 interface FlashcardsDialogProps {
@@ -45,8 +48,8 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
             {/* Main content area */}
             <div className="w-2/3 pr-2">
               <ScrollArea className="h-[calc(80vh-120px)] overflow-visible">
-                <div className="grid grid-cols-2 gap-2 p-1">
-                  {/* Add your main content here */}
+                <div className="p-4">
+                  <FlashcardDeck roomId={roomId}/> {/* Create a new FlashcardDseck component */}
                 </div>
               </ScrollArea>
             </div>
