@@ -10,106 +10,59 @@ function shuffleArray<T>(array: T[]): T[] {
   return array;
 }
 
+async function getFlashcards(userId: string, subjectCategory?: string) {
+  const flashcards = await prisma.question.findMany({
+    where: {
+      types: "flashcard",
+      ...(subjectCategory && {
+        category: {
+          subjectCategory: subjectCategory
+        }
+      })
+    },
+    take: 10, // TODO: add pagination - low priority
+    include: {
+      userResponses: {
+        where: { userId },
+        select: {
+          isCorrect: true,
+          timeSpent: true,
+        },
+      },
+      category: {
+        select: {
+          subjectCategory: true,
+          conceptCategory: true,
+        },
+      },
+    },
+  });
+
+  return flashcards;
+}
+
 export async function GET(req: Request) {
+  console.log('GET request received');
   try {
     const { userId } = auth();
 
     if (!userId) {
+      console.log('Unauthorized');
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '10');
-    const subjectCategories = searchParams.get('subjects')?.split(',') || [];
+    const subjectCategory = searchParams.get('select') || 'Sociology';
+    console.log('subjectCategory:', subjectCategory);
 
-    // Fetch all knowledge profiles for the user, sorted by mastery
-    const knowledgeProfiles = await prisma.knowledgeProfile.findMany({
-      where: { userId },
-      orderBy: [
-        { conceptMastery: 'asc' },
-        { contentMastery: 'asc' }
-      ],
-      include: { category: true }
-    });
+    // Ethan check this out
+    // subjectCategory is the subject category, e.g. Sociology, Psychology, Chemistry, Physics, Biology, Biochemistry -> pass as input
 
-    // Select the top pageSize categories with lowest mastery
-    const selectedProfiles = knowledgeProfiles.slice(0, pageSize);
 
-    // Get categoryIds from selected profiles
-    const categoryIds = selectedProfiles.map(profile => profile.categoryId);
+    const questions = await getFlashcards(userId, subjectCategory);
 
-    // Fetch questions for these categories
-    const questions = await prisma.question.findMany({
-      where: {
-        categoryId: {
-          in: categoryIds
-        },
-        types: {
-          contains: 'flashcard'
-        },
-        category: subjectCategories.length > 0 ? {
-          subjectCategory: {
-            in: subjectCategories
-          }
-        } : undefined
-      },
-      include: {
-        category: true
-      }
-    });
-
-    // Get total questions count for pagination
-    const totalQuestions = await prisma.question.count({
-      where: {
-        categoryId: {
-          in: categoryIds
-        },
-        types: {
-          contains: 'flashcard'
-        },
-        category: subjectCategories.length > 0 ? {
-          subjectCategory: {
-            in: subjectCategories
-          }
-        } : undefined
-      }
-    });
-
-    // todo make this use the real algo
-
-    // Shuffle questions
-    const shuffledQuestions = shuffleArray(questions);
-
-    // Select questions for the current page
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const selectedQuestions = shuffledQuestions.slice(startIndex, endIndex);
-
-    // Format the response
-    const formattedQuestions = selectedQuestions.map(q => {
-      const profile = knowledgeProfiles.find(p => p.categoryId === q.categoryId);
-      return {
-        id: q.id,
-        problem: q.questionContent,
-        answer: JSON.parse(q.questionOptions)[0],
-        category: q.category.conceptCategory,
-        subject: q.category.subjectCategory, // Add this line
-        conceptMastery: profile?.conceptMastery || null,
-        contentMastery: profile?.contentMastery || null,
-        correctAnswers: profile?.correctAnswers || 0,
-        totalAttempts: profile?.totalAttempts || 0,
-        lastAttemptAt: profile?.lastAttemptAt || null
-      };
-    });
-
-    const result = {
-      flashcards: formattedQuestions,
-      totalPages: Math.ceil(totalQuestions / pageSize),
-      currentPage: page
-    };
-
-    return NextResponse.json(result);
+    return NextResponse.json(questions);
+    
   } catch (error) {
     console.log('[FLASHCARDS_GET]', error);
     return new NextResponse("Internal Error", { status: 500 });

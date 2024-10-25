@@ -8,20 +8,17 @@ import ContentRenderer from '@/components/ContentRenderer';
 
 interface Flashcard {
   id: string;
-  problem: string;
-  answer: string;
-  category: string;
-  conceptMastery: number | null;
-  contentMastery: number | null;
-  correctAnswers: number;
-  totalAttempts: number;
-  lastAttemptAt: string | null;
+  questionContent: string;
+  questionOptions: string[];
+  category: {
+    subjectCategory: string;
+    conceptCategory: string;
+  };
+  userResponses: Array<{ isCorrect: boolean; timeSpent: number }>;
 }
 
-interface ApiResponse {
-  flashcards: Flashcard[];
-  totalPages: number;
-  currentPage: number;
+interface FlashcardDeckProps {
+  roomId: string; // Define the roomId prop
 }
 
 const settings = {
@@ -34,7 +31,7 @@ const physics = {
   animateBack: { friction: 10, tension: 200 }
 };
 
-const FlashcardStack: React.FC = () => {
+const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId}) => {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -53,28 +50,32 @@ const FlashcardStack: React.FC = () => {
   
 
   useEffect(() => {
-    fetchFlashcards(1);
+    fetchFlashcards();
   }, []);
 
-  const fetchFlashcards = async (page: number) => {
+  const subjectMap: { [key: string]: string } = {
+    '1': 'Sociology',
+    '2': 'Psychology',
+    '3': 'Chemistry',
+    '4': 'Physics',
+    '5': 'Biology',
+    '6': 'Biochemistry'
+  };
+  const fetchFlashcards = async () => {
     setIsLoading(true);
     try {
-      const subjects = ["Biochemistry", "Chemistry"];
-      const subjectsParam = subjects.join(',');
-      const response = await fetch(`/api/flashcard?page=${page}&pageSize=10&subjects=${subjectsParam}`);
-      const data: ApiResponse = await response.json();
+      const subject = subjectMap[roomId] || 'Sociology';
+      const response = await fetch(`/api/flashcard?select=${subject}`);
+      const data = await response.json();
 
-      console.log('Fetched flashcards:', data.flashcards);
-      setFlashcards(prevCards => [...prevCards, ...data.flashcards]);
-      setTotalPages(data.totalPages);
-      setCurrentPage(data.currentPage);
+      console.log(data)
+      setFlashcards(data); // Assuming data is already in the correct format
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching flashcards:', error);
       setIsLoading(false);
     }
   };
-
   
   const handleLinkClick = useCallback((href: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent the click from bubbling up to the card
@@ -98,7 +99,7 @@ const FlashcardStack: React.FC = () => {
   useEffect(() => {
     correctSoundRef.current = new Audio('/correctflash_v2.mp3');
     incorrectSoundRef.current = new Audio('/incorrectflash_v2.mp3');
-    fetchFlashcards(1);
+    fetchFlashcards();
   }, []);
 
 
@@ -106,14 +107,15 @@ const FlashcardStack: React.FC = () => {
     if (flashcards.length === 0 || currentCardIndex >= flashcards.length) {
       return '';
     }
-    return isRevealed ? flashcards[currentCardIndex].answer : flashcards[currentCardIndex].problem;
+
+    return isRevealed ? flashcards[currentCardIndex].questionOptions[0] : flashcards[currentCardIndex].questionContent;
   };
 
   const getNextCardContent = () => {
     if (flashcards.length === 0 || nextCardIndex >= flashcards.length) {
       return '';
     }
-    return flashcards[nextCardIndex].problem;
+    return flashcards[nextCardIndex].questionContent;
   };
 
   const getCurrentDateTime = () => {
@@ -135,7 +137,7 @@ const FlashcardStack: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           questionId: currentCard.id,
-          userAnswer: isCorrect ? currentCard.answer : 'Incorrect', // Simplification
+          userAnswer: isCorrect ? currentCard.questionOptions[0] : 'Incorrect', // Simplification
           isCorrect,
           userNotes: `Action: ${action}, Weight: ${weight}`,
           weighting: weight,
@@ -152,11 +154,12 @@ const FlashcardStack: React.FC = () => {
     }
   }, []);
 
-  const loadMoreCards = () => {
-    if (currentPage < totalPages) {
-      fetchFlashcards(currentPage + 1);
-    }
-  };
+  // todo handle pagination
+  // const loadMoreCards = () => {
+  //   if (currentPage < totalPages) {
+  //     fetchFlashcards(currentPage + 1);
+  //   }
+  // };
 
   const [{ x, y, rotation, cardOpacity }, api] = useSpring(() => ({
     x: 0,
@@ -196,9 +199,6 @@ const FlashcardStack: React.FC = () => {
       onRest: () => {
         setCurrentCardIndex(prevIndex => {
           const newIndex = (prevIndex + 1);
-          if (newIndex === flashcards.length - 1) {
-            loadMoreCards();
-          }
           return newIndex;
         });
         setNextCardIndex(prevIndex => (prevIndex + 1));
@@ -365,7 +365,7 @@ const FlashcardStack: React.FC = () => {
         <div className="text-white">Loading flashcards...</div>
       ) : (
         <>
-          <div className="relative w-[75%] h-80 mb-5 mt-7">
+          <div className="relative w-full h-80 mb-5 mt-7">
             {/* Background cards */}
             <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-4 translate-y-6 border-blue-400 border-2" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
             <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-2 translate-y-3 border-blue-400 border-2 bg-[url('/circuitpattern2.png')] bg-cover bg-blend-overlay" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
@@ -394,10 +394,10 @@ const FlashcardStack: React.FC = () => {
               }}
             >
               <div className="w-full h-full overflow-y-auto flex mb-2 flex-col justify-center items-center">
-              <ContentRenderer 
-                content={getCurrentCardContent()} 
-                onLinkClick={(href: string, event: React.MouseEvent<Element, MouseEvent>) => handleLinkClick(href, event as React.MouseEvent)} 
-              />
+                <ContentRenderer 
+                  content={getCurrentCardContent()} 
+                  onLinkClick={(href: string, event: React.MouseEvent<Element, MouseEvent>) => handleLinkClick(href, event as React.MouseEvent)} 
+                />
               </div>
             </animated.div>
           </div>
@@ -434,4 +434,4 @@ const FlashcardStack: React.FC = () => {
   );
 };
 
-export default FlashcardStack;
+export default FlashcardDeck;

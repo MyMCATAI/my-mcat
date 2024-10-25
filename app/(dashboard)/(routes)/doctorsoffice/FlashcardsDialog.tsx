@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
+import FlashcardDeck from '@/app/(dashboard)/(routes)/home/FlashcardDeck'; // Import the FlashcardDeck component
 
 interface FlashcardsDialogProps {
   isOpen: boolean;
@@ -41,12 +41,12 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
               <span className="flex-grow">{roomId} patient</span>
             </DialogTitle>
           </DialogHeader>
+          
           <div className="flex-grow flex">
-            {/* Main content area */}
-            <div className="w-2/3 pr-2">
-              <ScrollArea className="h-[calc(80vh-120px)] overflow-visible">
-                <div className="grid grid-cols-2 gap-2 p-1">
-                  {/* Add your main content here */}
+            <div className="w-2/3 pr-2 h-full flex flex-col">
+              <ScrollArea className="flex-1 overflow-visible">
+                <div className="h-full flex flex-col">
+                  <FlashcardDeck roomId={roomId} />
                 </div>
               </ScrollArea>
             </div>
