@@ -488,7 +488,7 @@ const Schedule: React.FC<ScheduleProps> = ({
     <div className="flex h-full relative">
       {/* Left Sidebar */}
       <div
-        className="w-1/4 p-6 flex flex-col ml-3 mt-5 mb-5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
+        className="w-1/4 p-5 flex flex-col ml-3 mt-2.5 mb-2.5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
         style={{
           backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
           backgroundSize: "cover",
@@ -576,7 +576,7 @@ const Schedule: React.FC<ScheduleProps> = ({
       </div>
 
       {/* Right Content */}
-      <div className="w-3/4 p-6 bg-[--theme-gray-100] flex flex-col relative">
+      <div className="w-3/4 p-2.5 bg-[--theme-gray-100] flex flex-col relative">
         {/* Settings Button */}
         <div className="absolute top-4 right-4 z-20">
           <TooltipProvider>
@@ -657,7 +657,7 @@ const Schedule: React.FC<ScheduleProps> = ({
           {showAnalytics ? (
             <>
               <pre
-                className="pt-5 font-mono text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap mt-4 ml-2"
+                className="pt-5 font-mono text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap mt-2 ml-2"
                 style={{ color: "var(--theme-text-color)" }}
               >
                 {runTutorialPart1 ? tutorialText : typedText}
