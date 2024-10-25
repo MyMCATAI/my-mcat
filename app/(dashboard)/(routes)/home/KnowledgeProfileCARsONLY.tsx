@@ -123,7 +123,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
     if (currentPage !== "test") {
       const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       return (
-        <div className="h-[calc(100vh-12.4rem)] flex flex-col">
+        <div className="h-[calc(100vh-11.6rem)] flex flex-col">
           <ChatBot
             chatbotContext={{
               contentTitle: "calendar",
@@ -139,7 +139,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
     }
 
     return (
-      <div className="h-[calc(100vh-12.3rem)] flex flex-col space-y-4 overflow-auto">
+      <div className="h-[calc(100vh-11.6rem)] flex flex-col space-y-4 overflow-auto">
         <Card className="flex-shrink-0">
           <CardContent className="p-4 relative">
             <div className="flex items-center mb-4">
@@ -288,7 +288,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   ];
 
   return (
-    <div className="relative p-2 overflow-hidden h-[calc(100vh-4.8rem)]">
+    <div className="relative p-2 overflow-hidden h-[calc(100vh-3.9rem)]">
       <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
         <div className="flex w-full">
           {tabs.map((tab) => (

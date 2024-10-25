@@ -278,7 +278,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
     chatWindowStyle: {
       display: "flex",
       flexDirection: "column" as const,
-      height: "calc(100vh - 12.2rem)",
+      height: "calc(100vh - 11.6rem)",
       width: "100%",
       backgroundColor: backgroundColor,
       position: "relative",
