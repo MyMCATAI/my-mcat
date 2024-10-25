@@ -435,7 +435,7 @@ const Page = () => {
     <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem]">
       <div className="text-white flex gap-[1.5rem]">
         <div className="w-3/4 relative">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center"> {/* Add margin-bottom */}
             <div className="flex items-center gap-4">
               <h2 className="text-white text-2xl ml-3 font-thin leading-normal shadow-text">
                 {activeTab === "Schedule"
@@ -453,7 +453,7 @@ const Page = () => {
             </div>
           </div>
           <div className="relative">
-            <div className="p-3 gradientbg overflow-auto h-[calc(100vh-5rem)] rounded-lg">
+            <div className="p-3 gradientbg h-[calc(100vh-5rem)] rounded-lg">
               {renderContent()}
             </div>
             <FloatingButton
