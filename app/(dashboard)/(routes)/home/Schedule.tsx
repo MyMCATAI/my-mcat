@@ -57,6 +57,7 @@ interface ScheduleProps {
   activities: FetchedActivity[];
   onShowDiagnosticTest: () => void;
   handleSetTab: (tab: string) => void;
+  isActive: boolean;
 }
 
 type Section =
@@ -68,6 +69,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   activities,
   onShowDiagnosticTest,
   handleSetTab,
+  isActive,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
@@ -483,6 +485,12 @@ const Schedule: React.FC<ScheduleProps> = ({
       setIsResetting(false);
     }, 2000);
   };
+
+  useEffect(() => {
+    if (!isActive) {
+      setShowSettings(false);
+    }
+  }, [isActive]);
 
   return (
     <div className="flex h-full relative">

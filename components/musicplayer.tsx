@@ -48,7 +48,7 @@ const playlists: Record<string, Song[]> = {
 const MusicPlayer = ({ theme }: { theme: string }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
-  const [volume, setVolume] = useState(1);
+  const [volume, setVolume] = useState(0.4);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [shuffledPlaylist, setShuffledPlaylist] = useState<Song[]>([]);
   const songIndexMap = useRef<Record<string, number>>({});
@@ -56,7 +56,7 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
   const playlist = playlists[theme] || [];
 
   const shufflePlaylist = useCallback(() => {
-    const shuffled = [...playlist].sort(() => Math.random() - 0.5);
+    const shuffled = [...playlist].sort(() => Math.random() - 0.6);
     setShuffledPlaylist(shuffled);
     setCurrentSongIndex(0);
   }, [playlist]);
