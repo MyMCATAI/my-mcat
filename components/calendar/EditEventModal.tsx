@@ -6,17 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
-// Hanis: Calendar event creation modal todo (this can also be an event edit modal)
-// fix backend for creating calendar events, - Post
-// Add functionality for deleting calendar events - Delete
-// Add functionality for editing calendar events - Put
-
-
-interface AddEventModalProps {
+interface EditEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (eventData: CalendarActivityData) => void;
-  selectedDate: Date | null;
+  onDelete: (eventId: string) => void;
+  event: CalendarEvent | null;
 }
 
 interface CalendarActivityData {
@@ -24,40 +19,57 @@ interface CalendarActivityData {
   activityText: string;
   hours: number;
   activityType: string;
-  link?: string | null;
+  link?: string;
   scheduledDate: string;
   categoryId?: string;
   contentId?: string;
 }
 
-const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onSubmit, selectedDate }) => {
+interface CalendarEvent {
+  id: string;
+  start: Date;
+  end: Date;
+  title: string;
+  activityText: string;
+  hours: number;
+  activityType?: string;
+  link?: string | null;
+}
+
+const EditEventModal: React.FC<EditEventModalProps> = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  onDelete,
+  event,
+}) => {
   const [eventData, setEventData] = useState<CalendarActivityData>({
     activityTitle: '',
     activityText: '',
     hours: 1,
     activityType: '',
     link: '',
-    scheduledDate: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
+    scheduledDate: '',
     categoryId: '',
     contentId: '',
   });
 
   useEffect(() => {
-    if (isOpen) {
+    if (event) {
       setEventData({
-        activityTitle: '',
-        activityText: '',
-        hours: 1,
-        activityType: '',
-        link: '',
-        scheduledDate: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
+        activityTitle: event.title,
+        activityText: event.activityText,
+        hours: event.hours,
+        activityType: event.activityType || '',
+        link: event.link || '',
+        scheduledDate: event.start.toISOString().split('T')[0],
         categoryId: '',
         contentId: '',
       });
     }
-  }, [isOpen, selectedDate]);
+  }, [event]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { target: { name: string; value: string } }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setEventData(prev => ({ ...prev, [name]: name === 'hours' ? parseFloat(value) : value }));
   };
@@ -68,11 +80,17 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onSubmit
     onClose();
   };
 
+  const handleDelete = () => {
+    if (event) {
+      onDelete(event.id);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-gray-900">Add New Event</DialogTitle>
+          <DialogTitle className="text-gray-900">Edit Event</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 text-gray-800">
           <div className="space-y-2">
@@ -116,7 +134,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onSubmit
           </div>
           <div className="space-y-2">
             <Label htmlFor="activityType" className="text-gray-900">Activity Type</Label>
-            <Select name="activityType" value={eventData.activityType} onValueChange={(value) => handleChange({ target: { name: 'activityType', value } })}>
+            <Select name="activityType" value={eventData.activityType} onValueChange={(value) => handleChange({ target: { name: 'activityType', value } } as any)}>
               <SelectTrigger className="text-gray-900">
                 <SelectValue placeholder="Select activity type" />
               </SelectTrigger>
@@ -133,7 +151,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onSubmit
             <Input
               id="link"
               name="link"
-              value={eventData.link || ''}
+              value={eventData.link}
               onChange={handleChange}
               placeholder="Enter related link"
               className="text-gray-900"
@@ -151,7 +169,10 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onSubmit
             <Button type="button" variant="outline" onClick={onClose} className="text-gray-800">
               Cancel
             </Button>
-            <Button type="submit" className="text-white bg-gray-900 hover:bg-gray-800">Add Event</Button>
+            <Button type="submit" className="text-white bg-gray-900 hover:bg-gray-800">Update Event</Button>
+            <Button type="button" variant="outline" onClick={handleDelete} className="text-gray-800">
+              Delete Event
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -159,4 +180,4 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onSubmit
   );
 };
 
-export default AddEventModal;
+export default EditEventModal;
