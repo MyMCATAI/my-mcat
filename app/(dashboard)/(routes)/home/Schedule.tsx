@@ -787,10 +787,10 @@ const Schedule: React.FC<ScheduleProps> = ({
                   getActivitiesForDate={getActivitiesForDate}
                   onInteraction={() => {}}
                   setRunTutorialPart2={setRunTutorialPart2}
-                  setRunTutorialPart3={setRunTutorialPart3} // Pass the function
+                  setRunTutorialPart3={setRunTutorialPart3}
                 />
               </div>
-              <div className="h-32 flex justify-end items-start px-4 pt-4">
+              <div className="h-32 flex justify-between items-start px-4 pt-4">
                 <button
                   onClick={handleToggleView}
                   className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
