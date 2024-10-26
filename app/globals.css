@@ -197,7 +197,7 @@ body.theme-sunsetCity * {
     --theme-flashcard-text-color: #ffffff; /* White text for CyberSpace theme */
     --theme-adaptive-tutoring-color: #001226;
     --theme-adaptive-tutoring-boxShadow: 0 0 8px 2px rgba(0, 123, 255, 0.5);
-    --theme-adaptive-tutoring-boxShadow-hover: 0 0 20px 7px rgba(0, 123, 255, 0.8);
+    --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 4px rgba(0, 123, 255, 0.8);
   }
 
 }
@@ -315,9 +315,9 @@ body.theme-sunsetCity * {
   --theme-doctorsoffice-accent: #ffc1d8; /* Light pink */
   --theme-flashcard-color: #ffffff; /* White for light SakuraTrees theme */
   --theme-flashcard-text-color: #4a0e37; /* Dark pink text for SakuraTrees theme */
-  --theme-adaptive-tutoring-color: #faeef4e6;
+  --theme-adaptive-tutoring-color: #faeef4;
   --theme-adaptive-tutoring-boxShadow: 0 0 5px 2px rgba(255, 0, 89, 0.5);
-  --theme-adaptive-tutoring-boxShadow-hover: 0 0 15px 7px rgba(255, 0, 89, 0.8);
+  --theme-adaptive-tutoring-boxShadow-hover: 0 0 10px 4px rgba(255, 0, 89, 0.8);
 }
 
 /* Add theme-specific gradients */
@@ -648,7 +648,7 @@ body {
   --theme-flashcard-text-color: #1e81b0; /* Blue text for MykonosBlue theme */
   --theme-adaptive-tutoring-color: #f0f9fc;
   --theme-adaptive-tutoring-boxShadow: 0 0 8px 3px rgba(63, 194, 255, 0.5);
-  --theme-adaptive-tutoring-boxShadow-hover: 0 0 15px 7px rgba(76, 181, 230, 0.8);
+  --theme-adaptive-tutoring-boxShadow-hover: 0 0 11px 5px rgba(76, 181, 230, 0.8);
 }
 
 .theme-mykonosBlue .gradientbg {
