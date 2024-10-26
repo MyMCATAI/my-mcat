@@ -120,16 +120,22 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   };
 
   const renderInsights = () => {
-    let context = "";
-    let contentTitle = "";
-
-    if (currentPage === "Schedule") {
+    if (currentPage !== "test") {
       const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      context = `This is the calendar. Today's date is ${today}.`;
-      contentTitle = "calendar";
-    } else if (currentPage === "KnowledgeProfile") {
-      context = "This is the Adaptive Tutoring page. Here, you can find personalized learning resources and activities tailored to your needs.";
-      contentTitle = "adaptive tutoring";
+      return (
+        <div className="h-[calc(100vh-11.6rem)] flex flex-col">
+          <ChatBot
+            chatbotContext={{
+              contentTitle: "calendar",
+              context: `This is the calendar. Today's date is ${today}.`
+            }}
+            width="100%"
+            height="100%"
+            backgroundColor="transparent"
+            avatar="/kalypsoend.gif"
+          />
+        </div>
+      );
     }
 
     return (
@@ -177,16 +183,9 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
         </Card>
         <Card className="flex-grow overflow-hidden">
           <CardContent className="p-4 h-full overflow-hidden">
-            <ChatBot
-              chatbotContext={{
-                contentTitle: contentTitle,
-                context: context
-              }}
-              width="100%"
-              height="100%"
-              backgroundColor="transparent"
-              avatar="/kalypsoend.gif"
-            />
+            <div className="h-full overflow-auto">
+              <RedditPosts />
+            </div>
           </CardContent>
         </Card>
       </div>
