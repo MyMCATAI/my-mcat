@@ -13,9 +13,9 @@ const inter = Inter({ subsets: ['latin'] })
 const robotoSlab = Roboto_Slab({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'My MCAT - Expert Prep',
+  title: 'My MCAT - Beat The Competition',
   description: 'MCAT Prep but make it cool.',
-  keywords: 'MCAT prep, medical school admission, interactive learning, study tools, MCAT practice tests',
+  keywords: 'MCAT prep, medical school admission, interactive learning, study tools, MCAT practice tests, MyMCAT, AI MCAT Prep',
   openGraph: {
     title: 'My MCAT - Your Path to MCAT Success',
     description: 'Prepare for the MCAT with our innovative, gamified learning platform. Boost your scores and make studying enjoyable.',
@@ -33,6 +33,9 @@ export const metadata: Metadata = {
     title: 'My MCAT - Revolutionary MCAT Preparation',
     description: 'Transform your MCAT study experience with My MCAT. Engaging, effective, and tailored for success.',
     images: ['/knowledge.png'],
+  },
+  alternates: {
+    canonical: 'https://mymcat.ai',
   },
 }
 
