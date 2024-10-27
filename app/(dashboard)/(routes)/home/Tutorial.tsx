@@ -98,20 +98,10 @@ const Tutorial: React.FC<TutorialProps> = ({
 
       <section className="bg-white p-4 rounded-lg shadow-lg">
         <p className="mb-4">
-          The MCAT is a seven hour and thirty minute exam that covers eight
-          subjects.
+          The MCAT is a beast of a test that requires your best.
         </p>
-
         <p className="mb-4">
-          Although there is a lot of resources out there to take the test, there
-          is a distinct lack of guidance. You can use all of the right resources
-          and still score below your potential.
-        </p>
-
-        <p className="mb-4">
-          We offer a BETTER way to approach MCAT prep with an all-in-one
-          platform that integrates essential resources with our own amazing
-          content to solve these three questions for you:
+          To beat your competition, some of the brightest students in the world, you must answer these three questions:
         </p>
         <ul className="list-none space-y-2">
           {[
