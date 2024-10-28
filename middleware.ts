@@ -13,13 +13,17 @@ const publicRoutes = [
   "/privacypolicy",
   "/redirect",
   "/api/webhook",
-  // Add these to allow crawlers to access your sitemap and robots.txt
   "/sitemap.xml",
-  "/robots.txt"
+  "/robots.txt",
+  "/parallax/(.*)",
+  "/colleges/(.*)",
+  "/game-components/(.*)",
+  "/icons/(.*)",
+  "/landingpage/(.*)"
 ];
 
 const isPublicRoute = createRouteMatcher(publicRoutes);
-const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
+const isAdminRoute = createRouteMatcher(["/admin(.*)"])
 
 const allowedAdminUserIds = [
   "user_2jCZfJZbTtFdqyqwcjaMNTOz1Lm",
@@ -49,10 +53,10 @@ export default clerkMiddleware((auth, request) => {
   return NextResponse.next();
 });
 
-// Simplify the matcher pattern
+// Update the config matcher to explicitly exclude all static assets
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-    '/(api|trpc)(.*)'
+    // Exclude static files and public assets
+    '/((?!_next/static|_next/image|favicon.ico|parallax/|colleges/|game-components/|icons/|landingpage/|.*\\
   ],
 };
