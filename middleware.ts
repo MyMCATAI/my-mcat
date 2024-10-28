@@ -57,6 +57,10 @@ export default clerkMiddleware((auth, request) => {
 export const config = {
   matcher: [
     // Exclude static files and public assets
-    '/((?!_next/static|_next/image|favicon.ico|parallax/|colleges/|game-components/|icons/|landingpage/|.*\\.(jpg|png|gif|ico|svg|woff|woff2)).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico).*)',
+    '/api/:path*',
+    '/trpc/:path*',
+    '/((?!parallax|colleges|game-components|icons|landingpage).*)',
+    '/((?!\\.(?:svg|jpg|png|gif|ico|json|xml)).*)'
   ],
 };
