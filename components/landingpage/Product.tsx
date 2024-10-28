@@ -85,7 +85,7 @@ const Product = () => {
           <Image
             ref={sun}
             className="sun absolute"
-            src="/parallex test/sun.svg"
+            src="/sun.svg"
             alt="Sun"
             width={300}
             height={300}
@@ -94,7 +94,7 @@ const Product = () => {
           <Image
             ref={mountain3}
             className="mountain-3 absolute bottom-0 left-0 w-full"
-            src="/parallex test/mountain-3.svg"
+            src="/mountain-3.svg"
             alt="Mountain 3"
             layout="responsive"
             width={300}
@@ -103,7 +103,7 @@ const Product = () => {
           <Image
             ref={mountain2}
             className="mountain-2 absolute bottom-0 left-0 w-full"
-            src="/parallex test/mountain-2.svg"
+            src="/mountain-2.svg"
             alt="Mountain 2"
             layout="responsive"
             width={300}
@@ -112,7 +112,7 @@ const Product = () => {
           <Image
             ref={mountain1}
             className="mountain-1 absolute bottom-0 left-0 w-full"
-            src="/parallex test/mountain-1.svg"
+            src="/mountain-1.svg"
             alt="Mountain 1"
             layout="responsive"
             width={300}
@@ -121,7 +121,7 @@ const Product = () => {
           <Image
             ref={cloudsBottom}
             className="clouds-bottom"
-            src="/parallex test/cloud-bottom.svg"
+            src="/cloud-bottom.svg"
             alt="Clouds Bottom"
             width={300}
             height={250}
@@ -129,7 +129,7 @@ const Product = () => {
           <Image
             ref={cloudsLeft}
             className="clouds-left"
-            src="/parallex test/clouds-left.svg"
+            src="/clouds-left.svg"
             alt="Clouds Left"
             width={300}
             height={250}
@@ -137,7 +137,7 @@ const Product = () => {
           <Image
             ref={cloudsRight}
             className="clouds-right"
-            src="/parallex test/clouds-right.svg"
+            src="/clouds-right.svg"
             alt="Clouds Right"
             width={300}
             height={250}
@@ -145,7 +145,7 @@ const Product = () => {
           <Image
             ref={stars}
             className="stars"
-            src="/parallex test/stars.svg"
+            src="/stars.svg"
             alt="Stars"
             width={300}
             height={300}
