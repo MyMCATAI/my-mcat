@@ -107,8 +107,19 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId}) => {
     if (flashcards.length === 0 || currentCardIndex >= flashcards.length) {
       return '';
     }
+    
+    const currentCard = flashcards[currentCardIndex];
+    console.log(currentCard.questionContent);
+    const answerMatches = currentCard.questionContent.match(/{{c1::(.*?)}}/g); // Get all matches
 
-    return isRevealed ? flashcards[currentCardIndex].questionOptions[0] : flashcards[currentCardIndex].questionContent;
+    // Extract the content without the delimiters and join with commas
+    const answer = answerMatches 
+      ? answerMatches.map(match => match.slice(6, -2)).join(', ') // Remove {{c1:: and }} and join
+      : ''; // Default to empty string if no matches
+
+    const question = currentCard.questionContent.replace(/{{(.*?)}}/g, '_________');
+
+    return isRevealed ? answer : question;
   };
 
   const getNextCardContent = () => {
@@ -365,41 +376,36 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId}) => {
         <div className="text-white">Loading flashcards...</div>
       ) : (
         <>
-          <div className="relative w-full h-80 mb-5 mt-7">
-            {/* Background cards */}
-            <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-4 translate-y-6 border-blue-400 border-2" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
-            <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-2 translate-y-3 border-blue-400 border-2 bg-[url('/circuitpattern2.png')] bg-cover bg-blend-overlay" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
-            
+          <div className="relative w-[80%] h-80 mb-5 mt-7">
+            {flashcards.length - currentCardIndex > 2 && ( // Show bottom card if 3 or more cards remaining
+                <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-4 translate-y-6 border-blue-400 border-2" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
+            )}
+            {flashcards.length - currentCardIndex > 1 && ( // Show next card if 2 or more cards remaining
+                <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-2 translate-y-3 border-blue-400 border-2" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
+            )}
+
             {/* Next card (always visible) */}
-            <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay overflow-hidden" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}>
-              <div className="w-full h-full mb-2 overflow-y-auto flex flex-col justify-center items-center">
-              <ContentRenderer 
-                content={getNextCardContent()} 
-                onLinkClick={(href: string, event: React.MouseEvent<Element, MouseEvent>) => handleLinkClick(href, event as React.MouseEvent)} 
-              />
-              </div>
-            </div>
-            
-            {/* Current card */}
-            <animated.div
-              {...bind()} 
-              className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 cursor-pointer border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay overflow-hidden"
-              style={{
-                x,
-                y,
-                rotateZ: rotation,
-                opacity: cardOpacity,
-                touchAction: 'none',
-                boxShadow: '0 0 3px 1px rgba(0, 123, 255, 0.5)',
-              }}
-            >
-              <div className="w-full h-full overflow-y-auto flex mb-2 flex-col justify-center items-center">
-                <ContentRenderer 
-                  content={getCurrentCardContent()} 
-                  onLinkClick={(href: string, event: React.MouseEvent<Element, MouseEvent>) => handleLinkClick(href, event as React.MouseEvent)} 
-                />
-              </div>
-            </animated.div>
+            {flashcards.length - currentCardIndex > 0 && ( // Show current card if 1 or more cards remaining
+              <animated.div
+                {...bind()} 
+                className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 cursor-pointer border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay overflow-hidden"
+                style={{
+                  x,
+                  y,
+                  rotateZ: rotation,
+                  opacity: cardOpacity,
+                  touchAction: 'none',
+                  boxShadow: '0 0 3px 1px rgba(0, 123, 255, 0.5)',
+                }}
+              >
+                <div className="w-full h-full overflow-y-auto flex mb-2 flex-col justify-center items-center">
+                  <ContentRenderer 
+                    content={getCurrentCardContent()} 
+                    onLinkClick={(href: string, event: React.MouseEvent<Element, MouseEvent>) => handleLinkClick(href, event as React.MouseEvent)} 
+                  />
+                </div>
+              </animated.div>
+            )}
           </div>
         </>
       )}
