@@ -1,0 +1,56 @@
+.custom-toolbar {
+    display: flex;
+    flex-direction: column;
+    background-color: #1E1E2F;
+    color: white;
+    font-family: Arial, sans-serif;
+    padding: 5px;
+  }
+  
+  .toolbar-row {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center elements horizontally */
+    gap: 8px;
+  }
+  
+  .toolbar-row:first-child {
+    justify-content: space-between;
+  }
+  
+  .toolbar-label {
+    font-size: 1em;
+    font-weight: bold;
+    flex-grow: 1; /* Allows the label to take up space and be centered */
+    text-align: center;
+  }
+  
+  .custom-toolbar button {
+    padding: 8px 12px;
+    background-color: #2D2D3F;
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 14px;
+  }
+  
+  .custom-toolbar button:hover {
+    background-color: #3C3C57;
+  }
+  
+  .custom-toolbar button.active {
+    background-color: #FF5A5F;
+  }
+  
+  /* Styling for first row buttons */
+  .toolbar-row:first-child button {
+    background-color: #1E1E2F;
+  }
+  
+  /* Additional styles to center the view buttons */
+  .view-selection {
+    justify-content: center; /* Center the view selection buttons */
+    gap: 4px;
+  }
+  

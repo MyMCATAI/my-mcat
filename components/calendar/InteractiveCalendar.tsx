@@ -1,11 +1,14 @@
 "use client";
 
+// TODO:  Event creation - show in frontend, post new calendar event in backend
+
 import React, { useState, useEffect } from "react";
 import {
   Calendar,
   momentLocalizer,
   View,
   stringOrDate,
+  NavigateAction,
 } from "react-big-calendar";
 import moment from "moment";
 import withDragAndDrop, {
@@ -17,6 +20,9 @@ import "../styles/CustomCalendar.css";
 
 import { useUser } from "@clerk/nextjs";
 import AddEventModal from "./AddEventModal";
+import EditEventModal from "./EditEventModal";
+import ErrorModal from "@/components/calendar/ErrorModal";
+import ConfirmModal from "@/components/calendar/ConfirmModal";
 
 // Assuming you have a types file with this interface
 interface FetchedActivity {
@@ -25,6 +31,8 @@ interface FetchedActivity {
   activityTitle: string;
   activityText: string;
   hours: number;
+  activityType: string;
+  link?: string | null;
 }
 
 interface CalendarEvent {
@@ -34,6 +42,8 @@ interface CalendarEvent {
   title: string;
   activityText: string;
   hours: number;
+  activityType: string;
+  link?: string | null;
 }
 
 const localizer = momentLocalizer(moment);
@@ -45,7 +55,7 @@ interface CalendarActivityData {
   activityText: string;
   hours: number;
   activityType: string;
-  link?: string;
+  link?: string | null;
   scheduledDate: string; // Change this to string to match the API
   categoryId?: string;
   status?: string;
@@ -70,7 +80,9 @@ const convertToCalendarEvent = (activity: CalendarActivityData & { id: string })
     end: new Date(activity.scheduledDate),
     title: activity.activityTitle,
     activityText: activity.activityText,
-    hours: activity.hours
+    hours: activity.hours,
+    activityType: activity.activityType,
+    link: activity.link,
   };
 };
 
@@ -89,6 +101,12 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEventStart, setNewEventStart] = useState<Date | null>(null);
   const [newEventEnd, setNewEventEnd] = useState<Date | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [date, setDate] = useState(currentDate);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     fetchActivities();
@@ -122,7 +140,10 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         title: activity.activityTitle,
         activityText: activity.activityText,
         hours: activity.hours,
+        activityType: activity.activityType,
+        link: activity.link,
       }));
+      console.log("formattedEvents:", formattedEvents);
 
       setEvents(formattedEvents);
     } catch (error) {
@@ -202,12 +223,14 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
           activityTitle: event.title,
           activityText: event.activityText,
           hours: event.hours,
+          activityType: event.activityType,
+          link: event.link,
         }),
       });
 
       if (!response.ok) throw new Error("Failed to update activity");
 
-      return await response.json(); // Return the updated event data
+      return await response.json();
     } catch (error) {
       console.error("Error updating activity:", error);
       throw error;
@@ -226,46 +249,54 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     setNewEventEnd(null);
   };
 
-  const handleModalSubmit = async (title: string) => {
-    if (title && user?.id && newEventStart && newEventEnd) {
-      const newEvent: Omit<CalendarEvent, "id"> = {
-        start: newEventStart,
-        end: newEventEnd,
-        title,
-        activityText: "",
-        hours: 1,
-      };
-
+  const handleModalSubmit = async (eventData: CalendarActivityData) => {
+    if (eventData.activityTitle && user?.id && newEventStart && newEventEnd) {
       try {
         const response = await fetch("/api/calendar-activity", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            ...newEvent,
             userId: user.id,
+            activityTitle: eventData.activityTitle,
+            activityText: eventData.activityText,
+            hours: eventData.hours,
+            activityType: eventData.activityType,
+            link: eventData.link,
             scheduledDate: newEventStart.toISOString(),
+            categoryId: eventData.categoryId,
+            contentId: eventData.contentId,
           }),
         });
 
-        if (!response.ok) throw new Error("Failed to create activity");
+        if (!response.ok) {
+          const errorData = await response.json();
+          setErrorMessage(errorData.error || "Failed to create activity");
+          throw new Error(errorData.error || "Failed to create activity");
+        }
 
-        const createdActivity: { id: string } = await response.json();
-        setEvents((prevEvents) => [
-          ...prevEvents,
-          { ...newEvent, id: createdActivity.id },
-        ]);
+        const createdActivity: CalendarActivityData & { id: string } = await response.json();
+        setEvents((prevEvents) => [...prevEvents, convertToCalendarEvent(createdActivity)]);
         onInteraction();
         handleModalClose();
       } catch (error) {
         console.error("Error creating activity:", error);
-        // Add user feedback here, e.g., show an error message
+        setErrorMessage("Failed to create activity");
       }
     }
   };
 
   const onView = (newView: View) => {
     setView(newView);
+    if (newView === "agenda") {
+      // Get the first day of the current month
+      const start = moment(date).startOf('month').toDate();
+      setDate(start);
+      onDateChange(start);
+    }
   };
+
+  // Calculate the number of days in the current month
+  const daysInMonth = moment(date).daysInMonth();
 
   const eventStyleGetter = () => {
     const style = {
@@ -274,7 +305,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
       opacity: 0.8,
       color: "white",
       border: "0px",
-      display: "block",
+      // display: "block",  // It will causes rowSpan malfunctions
     };
     return { style };
   };
@@ -291,23 +322,94 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   };
 
   const handleEventSubmit = (eventData: CalendarActivityData) => {
-    // Call the existing handleModalSubmit with the title
-    handleModalSubmit(eventData.activityTitle);
+    // Call handleModalSubmit with the entire eventData object
+    handleModalSubmit(eventData);
     
-    // You might want to do something with the rest of the eventData here
-    // For example, logging or storing it for later use
+    // You can still log the full event data if needed
     console.log('Full event data:', eventData);
   };
 
+  const handleEventClick = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setSelectedEvent(null);
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    setEventToDelete(eventId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (eventToDelete) {
+      try {
+        const response = await fetch(`/api/calendar-activity?id=${eventToDelete}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete event');
+        }
+
+        setEvents((currentEvents) => currentEvents.filter((ev) => ev.id !== eventToDelete));
+        onInteraction();
+        handleEditModalClose();
+      } catch (error) {
+        console.error('Error deleting event:', error);
+        setErrorMessage('Failed to delete event');
+      }
+    }
+    setShowDeleteConfirm(false);
+    setEventToDelete(null);
+  };
+
+  const handleEditModalSubmit = async (updatedEventData: CalendarActivityData) => {
+    if (selectedEvent) {
+      try {
+        const updatedEvent: CalendarEvent = {
+          ...selectedEvent,
+          title: updatedEventData.activityTitle,
+          activityText: updatedEventData.activityText,
+          hours: updatedEventData.hours,
+          activityType: updatedEventData.activityType,
+          link: updatedEventData.link,
+        };
+        const updatedEventFromServer = await updateEventInBackend(updatedEvent);
+        setEvents((currentEvents) =>
+          currentEvents.map((ev) =>
+            ev.id === updatedEventFromServer.id ? convertToCalendarEvent(updatedEventFromServer) : ev
+          )
+        );
+        onInteraction();
+        handleEditModalClose();
+      } catch (error) {
+        console.error("Error updating event:", error);
+        // Add user feedback here, e.g., show an error message
+      }
+    }
+  };
+
+  const handleNavigate = (newDate: Date, view: View, action: NavigateAction) => {
+    if (view === 'agenda') {
+      const start = moment(newDate).startOf('month').toDate();
+      setDate(start);
+      onDateChange(start);
+    } else {
+      setDate(newDate);
+      onDateChange(newDate);
+    }
+  };
+
   return (
-    <div
-      className="custom-calendar"
-      style={{ height: "100%" }}
-      onClick={handleCalendarClick}
-    >
+    <div className="custom-calendar" style={{ height: "100%", position: "relative" }}>
       <DnDCalendar
         className="custom-calendar"
-        defaultDate={moment().toDate()}
+        date={date}
+        onNavigate={handleNavigate}
         view={view}
         onView={onView}
         events={events}
@@ -317,14 +419,42 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         resizable
         selectable
         onSelectSlot={handleSelect}
+        onSelectEvent={handleEventClick}
         style={{ height: "100%" }}
         eventPropGetter={eventStyleGetter}
+        length={daysInMonth}
+        endAccessor={(event) => {
+          const eventEnd = moment(event.end);
+          const monthEnd = moment(date).endOf('month');
+          return eventEnd.isAfter(monthEnd) ? monthEnd.toDate() : event.end;
+        }}
       />
       <AddEventModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
         onSubmit={handleEventSubmit}
         selectedDate={newEventStart}
+      />
+      <EditEventModal
+        isOpen={isEditModalOpen}
+        onClose={handleEditModalClose}
+        onSubmit={handleEditModalSubmit}
+        onDelete={handleDeleteEvent}
+        event={selectedEvent}
+      />
+      <ErrorModal 
+        isOpen={errorMessage !== null}
+        message={errorMessage || ''}
+        onClose={() => setErrorMessage(null)}
+      />
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        message="Are you sure you want to delete this event?"
+        onConfirm={confirmDelete}
+        onCancel={() => {
+          setShowDeleteConfirm(false);
+          setEventToDelete(null);
+        }}
       />
     </div>
   );
