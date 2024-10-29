@@ -56,11 +56,7 @@ export default clerkMiddleware((auth, request) => {
 // Update the config matcher to explicitly exclude all static assets
 export const config = {
   matcher: [
-    // Exclude static files and public assets
-    '/((?!_next/static|_next/image|favicon\\.ico).*)',
-    '/api/:path*',
-    '/trpc/:path*',
-    '/((?!parallax|colleges|game-components|icons|landingpage).*)',
-    '/((?!\\.(?:svg|jpg|png|gif|ico|json|xml)).*)'
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/(api|trpc)(.*)'
   ],
 };
