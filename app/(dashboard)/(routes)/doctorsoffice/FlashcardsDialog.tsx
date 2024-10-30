@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import QuestionDeck from './QuestionDeck';
+import FlashcardDeck from './FlashcardDeck';
 import { useSpring, animated, config } from '@react-spring/web';
 import { TestTube2 } from 'lucide-react';
 import Interruption from './Interruption';
@@ -190,7 +190,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
               <div className="flex-grow bg-[--theme-leaguecard-color] p-2 rounded-md flex flex-col min-h-0">
                 <ScrollArea className="flex-grow">
                   <div className="h-full">
-                    <QuestionDeck 
+                    <FlashcardDeck 
                       roomId={roomId} 
                       onWrongAnswer={handleWrongCard}
                       onCorrectAnswer={handleCorrectAnswer}

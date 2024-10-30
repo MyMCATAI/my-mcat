@@ -33,7 +33,7 @@ const physics = {
   animateBack: { friction: 10, tension: 200 }
 };
 
-const QuestionDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onCorrectAnswer}) => {
+const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onCorrectAnswer}) => {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -358,5 +358,5 @@ const QuestionDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onCo
   );
 };
 
-export default QuestionDeck;
+export default FlashcardDeck;
  
