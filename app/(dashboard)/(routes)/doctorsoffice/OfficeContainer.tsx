@@ -237,7 +237,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     3: { scale: 1.3, offsetX: 150, offsetY: 0 }, // Changed to match level 2
     4: { scale: 1.1, offsetX: 150, offsetY: 50 },
     5: { scale: 1.0, offsetX: 50, offsetY: 50 },
-    6: { scale: 1.0, offsetX: 0, offsetY: 0 },
+    6: { scale: 1.0, offsetX: 0, offsetY: 90 },
   };
 
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -415,14 +415,14 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
         />
         <QuestionPromptSprite
           src="/game-components/questionPopUp.png"
-          x={posX + img.width / 2} // Adjust to the center of the room  - img.width / 2
-          y={posY + img.height / 3} // Adjust to the center of the room  - img.height / 2
+          x={posX + img.width / 2}
+          y={posY + img.height / 5}
           scaleConstant={4}  
-          zIndex={img.zIndex} // Slightly higher zIndex
+          zIndex={img.zIndex}
           roomId={img.id}
           onClick={() => {
-            setFlashcardRoomId(img.id); // Update the state
-            console.log('Current flashcardRoomId:', img.id); // Log the new state
+            setFlashcardRoomId(img.id);
+            console.log('Current flashcardRoomId:', img.id);
           }}
         />
       </>

@@ -16,15 +16,27 @@ interface KalypsoData {
 interface ChatBotWidgetNoChatBotProps {
   reportData: ReportData | null;
   onResponse?: (message: string, dismissFunc: () => void) => void;
+  initialState?: 'wait' | 'distressed';
 }
 
 type KalypsoState = 'wait' | 'talk' | 'end' | 'start';
 
-const ChatBotWidgetNoChatBot: React.FC<ChatBotWidgetNoChatBotProps> = ({ reportData, onResponse }) => {
+const ChatBotWidgetNoChatBot: React.FC<ChatBotWidgetNoChatBotProps> = ({ 
+  reportData, 
+  onResponse,
+  initialState = 'wait' 
+}) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [kalypsoState, setKalypsoState] = useState<KalypsoState>('wait');
-  const [kalypsoSrc, setKalypsoSrc] = useState('/kalypsowait.gif');
+  const [kalypsoState, setKalypsoState] = useState<KalypsoState>(initialState as KalypsoState);
+  const [kalypsoSrc, setKalypsoSrc] = useState(
+    initialState === 'distressed' ? '/kalypsodistressed.gif' : '/kalypsowait.gif'
+  );
   const [showDots, setShowDots] = useState(false);
+
+  useEffect(() => {
+    setKalypsoSrc(initialState === 'distressed' ? '/kalypsodistressed.gif' : '/kalypsowait.gif');
+    setKalypsoState(initialState as KalypsoState);
+  }, [initialState]);
 
   const handleClick = async () => {
     if (isLoading) return;
