@@ -25,7 +25,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { categoryId, activityText, activityTitle, hours, activityType, link, scheduledDate } = body;
 
-    console.log("body", body);
     const missingFields = [];
     if (!activityText) missingFields.push("activityText");
     if (!activityTitle) missingFields.push("activityTitle");
@@ -156,6 +155,3 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-
-// Hanis: Todo create delete route
-

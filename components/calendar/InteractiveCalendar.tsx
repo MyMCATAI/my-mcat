@@ -403,6 +403,10 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     }
   };
 
+  // Test whether study plan removes future activities
+  // const HARDCODED_TODAY = new Date('2024-10-30');
+  // HARDCODED_TODAY.setHours(0, 0, 0, 0);
+
   return (
     <div className="custom-calendar" style={{ height: "100%", position: "relative" }}>
       <DnDCalendar
@@ -422,6 +426,8 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         style={{ height: "100%" }}
         eventPropGetter={eventStyleGetter}
         length={daysInMonth}
+        // Test whether study plan removes future activities
+        // getNow={() => HARDCODED_TODAY}
         endAccessor={(event) => {
           const eventEnd = moment(event.end);
           const monthEnd = moment(date).endOf('month');
