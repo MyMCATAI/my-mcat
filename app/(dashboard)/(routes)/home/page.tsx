@@ -353,6 +353,7 @@ const Page = () => {
             onShowDiagnosticTest={handleShowDiagnosticTest}
             handleSetTab={handleTabChange}
             isActive={activeTab === "Schedule"}
+            onActivitiesUpdate={fetchActivities}
           />
         );
         break;

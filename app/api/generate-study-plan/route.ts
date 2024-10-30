@@ -12,6 +12,7 @@ const TASK_CATEGORIES = [
     optional: true,
     duration: 0.5,
     priority: 2,
+    description: "Practice CARS passages to improve your critical analysis and reasoning skills. Focus on understanding complex arguments, identifying main ideas, and developing your reading speed and comprehension.",
   },
   {
     name: 'Adaptive Tutoring Suite',
@@ -21,6 +22,7 @@ const TASK_CATEGORIES = [
     chunkSize: 1,
     priority: 2,
     type: 'Content',
+    description: "Engage with personalized content tailored to your knowledge gaps. Review key concepts, practice problem-solving, and strengthen your understanding of challenging topics through interactive learning modules.",
   },
   {
     name: 'Anki Clinic',
@@ -28,23 +30,27 @@ const TASK_CATEGORIES = [
     duration: 0.5,
     priority: 2,
     type: 'Content',
+    description: "Review and reinforce key concepts using spaced repetition. Focus on high-yield facts, strengthen your recall ability, and maintain long-term retention of important MCAT content.",
   },
   {
     name: 'UWorld',
     duration: 2,
     priority: 3,
     type: 'Review',
+    description: "Complete UWorld question blocks focusing on identifying knowledge gaps and improving test-taking strategies. Review explanations thoroughly and create notes on commonly missed concepts.",
   },
   {
     name: 'AAMC Materials',
     duration: 2,
     priority: 3,
     type: 'Review',
+    description: "Work through official AAMC practice materials to familiarize yourself with actual MCAT-style questions. Focus on understanding the reasoning behind correct and incorrect answers to improve your test-taking approach.",
   },
   {
     name: 'Full-Length Exam',
     duration: 8,
     priority: 5,
+    description: "Complete a full-length practice exam under test-day conditions. Maintain strict timing, take appropriate breaks, and simulate the actual testing environment to build stamina and familiarity with the MCAT format.",
   },
   {
     name: 'Take Up Exam',
@@ -52,6 +58,7 @@ const TASK_CATEGORIES = [
     chunkable: true,
     chunkSize: 1,
     priority: 4,
+    description: "Review your full-length exam in detail. Analyze each question, understand the reasoning behind correct and incorrect answers, identify patterns in your mistakes, and create targeted study plans to address weak areas.",
   },
 ];
 
@@ -125,6 +132,10 @@ interface SelectedContentItem extends ContentItem {
   category: Category;
 }
 
+// Test whether study plan removes future activities
+// const HARDCODED_TODAY = new Date('2024-10-30');
+// HARDCODED_TODAY.setHours(0, 0, 0, 0);
+
 // Handler for generating the study plan
 export async function POST(req: Request) {
   const { userId } = auth();
@@ -150,21 +161,39 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Find existing study plan for the user
+    // Test whether study plan removes future activities
+    // const today = HARDCODED_TODAY;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Find existing study plan and activities for the user
     const existingStudyPlan = await prisma.studyPlan.findFirst({
       where: { userId },
     });
 
+    // If there's an existing plan, only delete future activities
+    if (existingStudyPlan) {
+      await prisma.calendarActivity.deleteMany({
+        where: {
+          studyPlanId: existingStudyPlan.id,
+          scheduledDate: {
+            gte: today
+          }
+        }
+      });
+    }
+
     // Create or update the study plan
     const studyPlan: StudyPlan = await prisma.studyPlan.upsert({
       where: { 
-        id: existingStudyPlan?.id ?? 'new_study_plan' // Use a dummy ID if no existing plan
+        id: existingStudyPlan?.id ?? 'new_study_plan'
       },
       update: {
         examDate: new Date(examDate),
         resources,
         hoursPerDay,
         fullLengthDays,
+        updatedAt: new Date()
       },
       create: {
         userId,
@@ -201,7 +230,8 @@ export async function POST(req: Request) {
       knowledgeProfiles,
       contentItems,
       alternateStudyPractice,
-      includeSpecificContent
+      includeSpecificContent,
+      today
     );
 
     // Save activities to the database
@@ -226,15 +256,15 @@ async function generateStudySchedule(
   knowledgeProfiles: KnowledgeProfile[],
   contentItems: ContentItem[],
   alternateStudyPractice: boolean,
-  includeSpecificContent: boolean
+  includeSpecificContent: boolean,
+  startDate: Date = new Date()
 ): Promise<CalendarActivity[]> {
   const activities: CalendarActivity[] = [];
-  const today = new Date();
   const examDate = new Date(studyPlan.examDate);
-  const totalDays = Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+  const totalDays = Math.ceil((examDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
 
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  let currentDate = new Date(today);
+  let currentDate = new Date(startDate);
   let isStudySession = true;
 
   // Calculate total available study hours
@@ -253,10 +283,13 @@ async function generateStudySchedule(
   }
 
   // Iterate through each day until the exam date
-  for (let i = 0; i <= totalDays; i++) {
+  for (let i = 0; i < totalDays; i++) {
     const dayOfWeek = currentDate.getDay();
     const dayName = daysOfWeek[dayOfWeek];
     const availableHours = hoursPerDay[dayName] || 0;
+
+    // Track tasks already scheduled for this day
+    const scheduledTasksForDay = new Set<string>();
 
     // Skip if no hours are available
     if (availableHours === 0) {
@@ -268,14 +301,12 @@ async function generateStudySchedule(
     const dayActivities: CalendarActivity[] = [];
 
     // Check if today is a preferred day for full-length exams
-    if (fullLengthDays.includes(dayName) && dailyHours >= 8) {
-      // Schedule Full-Length Exam
+    if (fullLengthDays.includes(dayName) && dailyHours >= 8 && !scheduledTasksForDay.has('Full-Length Exam')) {
       const fullLengthExam = createActivity(studyPlan, 'Full-Length Exam', 'Exam', 8, currentDate);
       dayActivities.push(fullLengthExam);
-      console.log('Created activity:', JSON.stringify(fullLengthExam, null, 2));
+      scheduledTasksForDay.add('Full-Length Exam');
       dailyHours -= 8;
 
-      // Schedule Take Up Exam on the next available day
       await scheduleTakeUpExam(activities, studyPlan, currentDate, hoursPerDay);
     }
 
@@ -284,27 +315,24 @@ async function generateStudySchedule(
       let activityScheduled = false;
 
       if (includeSpecificContent && selectedContent.length > 0) {
-        // Schedule specific content items
         const contentActivity = getNextContentActivity(selectedContent, currentDate, isStudySession, studyPlan);
-        if (contentActivity && contentActivity.hours <= dailyHours) {
+        if (contentActivity && contentActivity.hours <= dailyHours && !scheduledTasksForDay.has(contentActivity.activityTitle)) {
           dayActivities.push(contentActivity);
-          console.log('Created activity:', JSON.stringify(contentActivity, null, 2));
+          scheduledTasksForDay.add(contentActivity.activityTitle);
           dailyHours -= contentActivity.hours;
           activityScheduled = true;
         }
       }
 
       if (!activityScheduled) {
-        // Schedule general tasks based on contentReviewRatio
-        const mainTaskName = determineMainTask(resources, contentReviewRatio);
+        const mainTaskName = determineMainTask(resources, contentReviewRatio, scheduledTasksForDay);
         if (mainTaskName) {
           const task = TASK_CATEGORIES.find(t => t.name === mainTaskName);
           if (task && typeof task.duration === 'number') {
             const taskDuration = Math.min(task.duration, dailyHours);
-
             const generalActivity = createActivity(studyPlan, mainTaskName, task.type || 'Study', taskDuration, currentDate);
             dayActivities.push(generalActivity);
-            console.log('Created activity:', JSON.stringify(generalActivity, null, 2));
+            scheduledTasksForDay.add(mainTaskName);
             dailyHours -= taskDuration;
             activityScheduled = true;
           }
@@ -337,7 +365,7 @@ function calculateTotalAvailableHours(hoursPerDay: { [key: string]: number }, st
   let totalHours = 0;
   let currentDate = new Date(today);
 
-  for (let i = 0; i <= totalDays; i++) {
+  for (let i = 0; i < totalDays; i++) {
     const dayOfWeek = currentDate.getDay();
     const dayName = daysOfWeek[dayOfWeek];
     totalHours += hoursPerDay[dayName] || 0;
@@ -437,8 +465,13 @@ async function scheduleTakeUpExam(
   currentDate.setDate(currentDate.getDate() + 1);
 
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const finalExamDate = new Date(studyPlan.examDate);
 
   while (remainingReviewHours > 0) {
+    if (currentDate >= finalExamDate) {
+      break;
+    }
+
     const dayOfWeek = currentDate.getDay();
     const dayName = daysOfWeek[dayOfWeek];
     const availableHours = hoursPerDay[dayName] || 0;
@@ -447,7 +480,6 @@ async function scheduleTakeUpExam(
       const reviewHours = Math.min(availableHours, remainingReviewHours);
       const takeUpExamActivity = createActivity(studyPlan, 'Take Up Exam', 'Review', reviewHours, currentDate);
       activities.push(takeUpExamActivity);
-      console.log('Created Take Up Exam activity:', JSON.stringify(takeUpExamActivity, null, 2));
       remainingReviewHours -= reviewHours;
     }
 
@@ -456,20 +488,24 @@ async function scheduleTakeUpExam(
 }
 
 // Function to determine the main task based on contentReviewRatio
-function determineMainTask(resources: Resources, contentReviewRatio: number): string | null {
+function determineMainTask(
+  resources: Resources, 
+  contentReviewRatio: number, 
+  scheduledTasksForDay: Set<string>
+): string | null {
   const contentTasks: string[] = [];
   const reviewTasks: string[] = [];
 
-  if (resources.hasAdaptiveTutoringSuite) {
+  if (resources.hasAdaptiveTutoringSuite && !scheduledTasksForDay.has('Adaptive Tutoring Suite')) {
     contentTasks.push('Adaptive Tutoring Suite');
   }
-  if (resources.hasAnki) {
+  if (resources.hasAnki && !scheduledTasksForDay.has('Anki Clinic')) {
     contentTasks.push('Anki Clinic');
   }
-  if (resources.hasUWorld) {
+  if (resources.hasUWorld && !scheduledTasksForDay.has('UWorld')) {
     reviewTasks.push('UWorld');
   }
-  if (resources.hasAAMC) {
+  if (resources.hasAAMC && !scheduledTasksForDay.has('AAMC Materials')) {
     reviewTasks.push('AAMC Materials');
   }
 
@@ -494,20 +530,23 @@ function createActivity(
   duration: number,
   date: Date
 ): CalendarActivity {
+  const taskCategory = TASK_CATEGORIES.find(t => t.name === name);
+  const scheduledDate = new Date(date);
+  scheduledDate.setHours(0, 0, 0, 0);
+  
   const activity = {
     userId: studyPlan.userId,
     studyPlanId: studyPlan.id,
     categoryId: null,
     contentId: null,
-    activityText: `Work on ${name}`,
+    activityText: taskCategory?.description || `Work on ${name}`,
     activityTitle: name,
     hours: duration,
     activityType: type,
     link: '',
-    scheduledDate: new Date(date),
+    scheduledDate,
     status: "Not Started",
   };
-  console.log('Created activity:', JSON.stringify(activity, null, 2));
   return activity;
 }
 
