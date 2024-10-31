@@ -176,19 +176,40 @@ import { ThemedSkeleton } from "@/components/ATS/ThemedSkeleton";
     }, []);
   
     const fetchQuestions = useCallback(async (conceptCategory: string) => {
-      try {
-        const response = await fetch(
-          `/api/question?conceptCategory=${conceptCategory.replace(/ /g, "_")}&page=1&pageSize=10`
-        );
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
+      const maxAttempts = 1;
+      let lastError;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const response = await fetch(
+            `/api/question?conceptCategory=${conceptCategory.replace(/ /g, "_")}&page=1&pageSize=10`
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Question API response data:', data);
+            
+            if (!data) {
+              lastError = new Error('No data received from API');
+              continue;
+            }
+
+            if (!data.questions) {
+              lastError = new Error(`Missing questions in response: ${JSON.stringify(data)}`);
+              continue;
+            }
+
+            return data.questions;
+          }
+          
+          lastError = new Error(`API returned status ${response.status}`);
+        } catch (error) {
+          console.error('Error in fetchQuestions:', error);
+          lastError = error instanceof Error ? error : new Error(String(error));
         }
-        const data = await response.json();
-        return data.category.questions;
-      } catch (error) {
-        console.error("Error fetching questions:", error);
-        return [];
       }
+
+      throw lastError;
     }, []);
   
     const fetchContentAndQuestions = useCallback(async (category: string) => {

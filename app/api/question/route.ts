@@ -7,6 +7,8 @@ import prisma from "@/lib/prismadb";
 import { allowedAdminUserIds } from '@/lib/utils';
 
 export async function GET(req: Request) {
+  
+  console.log("GET request received");
 
   const seenTimes: number = 3; // for filtering, number of times the question has been seen within last intervalTotalHours
   const intervalTotalHours: number = 48; // for filtering, time interval for filtering out frequently presented questions
@@ -40,7 +42,7 @@ export async function GET(req: Request) {
       conceptCategory: conceptCategory || undefined,
       page, 
       pageSize,
-      difficulty: difficulty || undefined,
+      desiredDifficulty: difficulty || undefined,
       types: types || undefined,
       seenTimes,
       intervalTotalHours, // Pass the maxRelevantIntervalHours for filtering UserResponse

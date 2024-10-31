@@ -4,9 +4,7 @@ import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prismadb from "@/lib/prismadb";
 import { Question, KnowledgeProfile, UserResponse } from '@prisma/client'; // Import types from Prisma
-
-
-
+import * as dfd from "danfojs-node";
 
 interface FlattenedQuestionResponse extends Question {  
   // Category fields (prefixed with category_)
@@ -69,9 +67,12 @@ export const getQuestions = async (params: {
   const where: any = {
     ...(categoryId && { categoryId }),
     ...(passageId && { passageId }),
-    ...(contentCategory && { contentCategory }),
-    ...(conceptCategory && { conceptCategory }),
     ...(types && { types }),
+    // Move category-related filters to the category relation
+    category: {
+      ...(contentCategory && { contentCategory }),
+      ...(conceptCategory && { conceptCategory }),
+    },
   };
   console.log('Where clause:', JSON.stringify(where));
 
@@ -90,6 +91,9 @@ export const getQuestions = async (params: {
         },
       },
     });
+
+    console.log('Questions found:', questions.length);
+    console.log('First question:', JSON.stringify(questions[0], null, 2));
 
     const filteredResponses = await prismadb.question.findMany({ 
       where,
@@ -113,16 +117,23 @@ export const getQuestions = async (params: {
       },
     });
 
+    console.log('Filtered responses found:', filteredResponses.length);
+
     // implement hard filters
     // also takes care of the flattening logic
     const hardFilteredQuestions: FlattenedQuestionResponse[] = questions.map((question) => {
+      if (!question) {
+        console.warn('Null/undefined question found in array');
+        return null;
+      }
+      
       const matchedTuples = filteredResponses.filter((resp) => resp.id === question.id);
 
       // count the number of recent responses, this is to filter out the frequently seen questions
       const recentResponseCount = matchedTuples[0]?.userResponses?.filter(
         response => response.answeredAt >= new Date(Date.now() - params.intervalTotalHours! * 3600 * 1000)
       ).length || 0;
-      const passesSeenTimes = recentResponseCount >= seenTimes;
+      const passesSeenTimes = recentResponseCount <= seenTimes;
 
       // filter out the questions that are answered correctly recently
       const recentCorrectResponseCount = matchedTuples[0]?.userResponses?.filter(
@@ -140,8 +151,18 @@ export const getQuestions = async (params: {
         ? sortedResponses.filter(response => !response.isCorrect).length
         : sortedResponses.slice(0, lastCorrectIndex).filter(response => !response.isCorrect).length;      
 
-
-      const knowledgeProfile = question.category.knowledgeProfiles[0]; // Assuming we always take the first profile
+      
+      // handle the case where there is no knowledge profile
+      const knowledgeProfile = question.category.knowledgeProfiles[0] || {
+        id: '',
+        userId: '',
+        categoryId: '',
+        correctAnswers: 0,
+        totalAttempts: 0,
+        lastAttemptAt: new Date(),
+        conceptMastery: 0,
+        contentMastery: 0.5,
+      };
 
       return {
         // Base Question fields
@@ -186,48 +207,64 @@ export const getQuestions = async (params: {
         passesCorrectTimes,
         incorrectStreak,
       }
-    }).filter(question => question.passesSeenTimes && question.passesCorrectTimes);
+    }).filter((question) => {
+      if (!question) return false; // Remove null elements
+      
+      // Only keep questions that either:
+      // 1. Haven't been seen too many times (passesSeenTimes is true) OR
+      // 2. Haven't been answered correctly recently (passesCorrectTimes is true)
+      return question.id && question.passesSeenTimes && question.passesCorrectTimes;
+    });
   
+    console.log('Hard filtered questions:', hardFilteredQuestions.length);
 
     // Scoring function for probabilistic question selection
-    const questionScoringFunction = (questions: FlattenedQuestionResponse[]) => {
-      const dfd = require("danfojs-node");
+    const questionScoringFunction = (questions: FlattenedQuestionResponse[]) => {      
       
+      // Helper function to safely normalize a Series
+      const safeNormalize = (series: any) => {
+        const maxVal = series.max();
+        // If max is 0 or series is empty, return series of same length filled with 0s
+        if (maxVal === 0 || maxVal === undefined) {
+          return new dfd.Series(Array(series.size).fill(1));
+        }
+        return series.div(new dfd.Series(Array(series.size).fill(maxVal)));
+      };
+
       // incorrect streak boost factor, normalize from 0-1
       const incorrectStreakBoostFactor = 2;
       const incorrectStreakScores = new dfd.Series(questions.map(q => q.incorrectStreak * incorrectStreakBoostFactor));
-      const normalizedIncorrectStreakScores = incorrectStreakScores.div(incorrectStreakScores.max());
+      const normalizedIncorrectStreakScores = safeNormalize(incorrectStreakScores);
 
       // concept mastery boost factor
       const conceptMasteryScores = new dfd.Series(questions.map(q => q.knowledge_conceptMastery ?? 0.5));
-      const normalizedConceptMasteryScores = conceptMasteryScores.div(conceptMasteryScores.max());
+      const normalizedConceptMasteryScores = safeNormalize(conceptMasteryScores);
       
       // content mastery boost factor
       const contentMasteryScores = new dfd.Series(questions.map(q => q.knowledge_contentMastery ?? 0.5));
-      const normalizedContentMasteryScores = contentMasteryScores.div(contentMasteryScores.max());
+      const normalizedContentMasteryScores = safeNormalize(contentMasteryScores);
 
       // difficulty boost factor
-      const desiredDifficultyScores = desiredDifficulty === null 
-        ? new dfd.Series(questions.map(() => 0)) // Vector of 0s if desiredDifficulty is null
-        : new dfd.Series(questions.map(q => q.difficulty === desiredDifficulty ? 1 : 0));
-      const normalizedDesiredDifficultyScores = desiredDifficultyScores.div(desiredDifficultyScores.max());
+      const desiredDifficultyScores = new dfd.Series(
+        questions.map(q => q.difficulty === desiredDifficulty ? 1 : 0)
+      );
+      const normalizedDesiredDifficultyScores = safeNormalize(desiredDifficultyScores);
 
-      // test Frequency  boost factor
+      // test Frequency boost factor
       const testFrequencyScores = new dfd.Series(questions.map(q => q.category_generalWeight));
-      const normalizedtestFrequencyScores = testFrequencyScores.div(testFrequencyScores.max());
+      const normalizedtestFrequencyScores = safeNormalize(testFrequencyScores);
 
       // weighted probability vector
-      const weightedProbabilityVector = normalizedIncorrectStreakScores.mul(incorrectStreakProbWeight)
-      .add(normalizedConceptMasteryScores.mul(conceptContentMasteryProbWeight/2))
-      .add(normalizedContentMasteryScores.mul(conceptContentMasteryProbWeight/2))
-      .add(normalizedDesiredDifficultyScores.mul(desiredDifficultyProbWeight))
-      .add(normalizedtestFrequencyScores.mul(testFrequencyProbWeight));
-
-      return weightedProbabilityVector;
+      return normalizedIncorrectStreakScores.mul(incorrectStreakProbWeight)
+        .add(normalizedConceptMasteryScores.mul(conceptContentMasteryProbWeight/2))
+        .add(normalizedContentMasteryScores.mul(conceptContentMasteryProbWeight/2))
+        .add(normalizedDesiredDifficultyScores.mul(desiredDifficultyProbWeight))
+        .add(normalizedtestFrequencyScores.mul(testFrequencyProbWeight));
     }
     
     // Randomly select questions based on weights
     const probabilityWeights = questionScoringFunction(hardFilteredQuestions);
+    console.log('Probability weights:', dfd.toJSON(probabilityWeights));
     const selectRandomQuestions = (questions: FlattenedQuestionResponse[], weights: any, count: number) => {
       const selected = new Set();
       const totalWeight = weights.values.reduce((a: number, b: number) => a + b, 0);
@@ -248,121 +285,24 @@ export const getQuestions = async (params: {
       }
       return Array.from(selected).map(index => questions[index as number]);
     }
-    
 
-    // choose questions based on the scoring function
-    const selectedQuestions = hardFilteredQuestions.map((question) => {
-      const score = questionScoringFunction([question]);
-      return { ...question, score };
-    }).sort((a, b) => b.score - a.score).slice(0, pageSize);
+    console.log('Random filtered questions:', selectRandomQuestions(hardFilteredQuestions, probabilityWeights, pageSize).length);
 
+    // Create final response
+    const totalQuestions = hardFilteredQuestions.length;
+    const totalPages = Math.ceil(totalQuestions / pageSize);
+    const selectedQuestions = selectRandomQuestions(hardFilteredQuestions, probabilityWeights, pageSize);
 
-    
+    return {
+      questions: selectedQuestions.map(q => ({
+        ...q,
+        questionOptions: q.questionOptions.split('|'),
+        context: q.context
+      })),
+      totalPages,
+      currentPage: page,
+    };
 
-
-
-
-
-
-
-
-
-
-
-
-    return questions.map((question) => {
-      const matchedTuples = filteredResponses.filter((resp) => resp.id === question.id);
-
-      // count the number of recent responses, this is to filter out the frequently seen questions
-      const recentResponseCount = matchedTuples[0]?.userResponses?.filter(
-        response => response.answeredAt >= new Date(Date.now() - params.intervalTotalHours * 3600 * 1000)
-      ).length || 0;
-      const passesSeenTimes = recentResponseCount >= seenTimes;
-
-      // filter out the questions that are answered correctly recently
-      const recentCorrectResponseCount = matchedTuples[0]?.userResponses?.filter(
-        response => response.isCorrect && 
-        response.answeredAt >= new Date(Date.now() - params.intervalCorrectHours * 3600 * 1000)
-      ).length || 0;
-      const passesCorrectTimes = recentCorrectResponseCount < 1;
-
-      // Count incorrect responses since last correct (or all incorrect if no correct found)
-      const sortedResponses = matchedTuples[0]?.userResponses?.sort(
-        (a, b) => b.answeredAt.getTime() - a.answeredAt.getTime()
-      ) || [];
-      const lastCorrectIndex = sortedResponses.findIndex(response => response.isCorrect);
-      const incorrectStreak = lastCorrectIndex === -1 
-        ? sortedResponses.filter(response => !response.isCorrect).length
-        : sortedResponses.slice(0, lastCorrectIndex).filter(response => !response.isCorrect).length;      
-
-        return {
-          ...question,
-          passesSeenTimes,
-          passesCorrectTimes,
-          incorrectStreak,
-        }
-    }).filter(question => question.passesSeenTimes && question.passesCorrectTimes); // Filter out hard removals
-
-
-
-
-    if (conceptCategory) {
-      const category = await prismadb.category.findFirst({
-        where,
-        include: {
-          questions: {
-            where,
-            include: {
-              passage: true,
-            },
-            skip,
-            take: pageSize,
-          },
-        },
-      });
-
-      const total = await prismadb.question.count({
-        where: {
-          ...where,
-          category: { conceptCategory },
-        },
-      });
-
-      return {
-        category: {
-          ...category,
-          questions: category?.questions.map(q => ({
-            ...q,
-            questionOptions: q.questionOptions.split('|'),
-            context: q.context // Ensure context is included
-          })) || [],
-        },
-        totalPages: Math.ceil(total / pageSize),
-        currentPage: page,
-      };
-    } else {
-      const questions = await prismadb.question.findMany({
-        where,
-        include: {
-          passage: true,
-          category: true,
-        },
-        skip,
-        take: pageSize,
-      });
-
-      const total = await prismadb.question.count({ where });
-
-      return {
-        questions: questions.map(q => ({
-          ...q,
-          questionOptions: q.questionOptions.split('|'),
-          context: q.context // Ensure context is included
-        })),
-        totalPages: Math.ceil(total / pageSize),
-        currentPage: page,
-      };
-    }
   } catch (error) {
     console.error('Error in getQuestions:', error);
     throw error;
