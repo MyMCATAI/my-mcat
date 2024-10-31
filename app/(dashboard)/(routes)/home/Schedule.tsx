@@ -16,7 +16,6 @@ import {
   DialogTitle,
   DialogOverlay,
 } from "@radix-ui/react-dialog";
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import InteractiveCalendar from "@/components/calendar/InteractiveCalendar";
 import {
@@ -489,6 +488,42 @@ const Schedule: React.FC<ScheduleProps> = ({
       setShowSettings(false);
     }
   }, [isActive]);
+
+  // const handleTestEmail = async () => {
+  //   try {
+  //     if (!user?.emailAddresses[0]?.emailAddress) {
+  //       console.error('No email address found for user');
+  //       return;
+  //     }
+
+  //     const response = await fetch('/api/send-email', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         email: user.emailAddresses[0].emailAddress,
+  //         template: 'welcome',
+  //         data: {
+  //           name: user.firstName || 'there'
+  //         }
+  //       })
+  //     });
+
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(errorData.error || 'Failed to send email');
+  //     }
+
+  //     // Add user feedback
+  //     alert('Test email sent successfully! Please check your inbox.');
+  //     console.log('Test email sent successfully');
+  //   } catch (error) {
+  //     // Add user feedback
+  //     alert('Failed to send test email. Please try again.');
+  //     console.error('Error sending test email:', error);
+  //   }
+  // };
 
   return (
     <div className="flex h-full relative">
