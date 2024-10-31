@@ -28,6 +28,10 @@ export async function GET(req: Request) {
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
     const difficulty = searchParams.get('difficulty') ? parseInt(searchParams.get('difficulty')!) : undefined; // Set to undefined if not specified
     const types = searchParams.get('types');
+    const incorrectStreakProbWeight = parseFloat(searchParams.get('incorrectStreakProbWeight') || '0.25');
+    const conceptContentMasteryProbWeight = parseFloat(searchParams.get('conceptContentMasteryProbWeight') || '0.5');
+    const desiredDifficultyProbWeight = parseFloat(searchParams.get('desiredDifficultyProbWeight') || '0.05');
+    const testFrequencyProbWeight = parseFloat(searchParams.get('testFrequencyProbWeight') || '0.2');
     
     const result = await getQuestions({ 
       categoryId: categoryId || undefined, 
@@ -42,6 +46,10 @@ export async function GET(req: Request) {
       intervalTotalHours, // Pass the maxRelevantIntervalHours for filtering UserResponse
       intervalCorrectHours, // Pass the maxRelevantIntervalHours for filtering UserResponse
       userId,
+      incorrectStreakProbWeight, 
+      conceptContentMasteryProbWeight, 
+      desiredDifficultyProbWeight, 
+      testFrequencyProbWeight
     });
 
     return NextResponse.json(result);
