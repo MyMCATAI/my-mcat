@@ -7,6 +7,11 @@ import prisma from "@/lib/prismadb";
 import { allowedAdminUserIds } from '@/lib/utils';
 
 export async function GET(req: Request) {
+
+  const seenTimes: number = 3; // for filtering, number of times the question has been seen within last intervalTotalHours
+  const intervalTotalHours: number = 48; // for filtering, time interval for filtering out frequently presented questions
+  const intervalCorrectHours: number = 72; // for filtering, time interval for filtering out correctly answered questions
+
   try {
     const { userId } = auth();
     
@@ -21,6 +26,8 @@ export async function GET(req: Request) {
     const conceptCategory = searchParams.get('conceptCategory')?.replace(/_/g, ' ') || '';
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
+    const difficulty = searchParams.get('difficulty') ? parseInt(searchParams.get('difficulty')!) : undefined; // Set to undefined if not specified
+    const types = searchParams.get('types');
     
     const result = await getQuestions({ 
       categoryId: categoryId || undefined, 
@@ -28,7 +35,13 @@ export async function GET(req: Request) {
       contentCategory: contentCategory || undefined,
       conceptCategory: conceptCategory || undefined,
       page, 
-      pageSize 
+      pageSize,
+      difficulty: difficulty || undefined,
+      types: types || undefined,
+      seenTimes,
+      intervalTotalHours, // Pass the maxRelevantIntervalHours for filtering UserResponse
+      intervalCorrectHours, // Pass the maxRelevantIntervalHours for filtering UserResponse
+      userId,
     });
 
     return NextResponse.json(result);
