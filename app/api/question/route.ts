@@ -1,4 +1,4 @@
-// File: app/api/questions/route.ts
+// File: app/api/question/route.ts
 
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
@@ -34,12 +34,14 @@ export async function GET(req: Request) {
     const conceptContentMasteryProbWeight = parseFloat(searchParams.get('conceptContentMasteryProbWeight') || '0.5');
     const desiredDifficultyProbWeight = parseFloat(searchParams.get('desiredDifficultyProbWeight') || '0.05');
     const testFrequencyProbWeight = parseFloat(searchParams.get('testFrequencyProbWeight') || '0.2');
+    const subjectCategory = searchParams.get('subjectCategory')?.replace(/_/g, ' ') || ''; 
     
     const result = await getQuestions({ 
       categoryId: categoryId || undefined, 
       passageId: passageId || undefined, 
       contentCategory: contentCategory || undefined,
       conceptCategory: conceptCategory || undefined,
+      subjectCategory: subjectCategory || undefined,
       page, 
       pageSize,
       desiredDifficulty: difficulty || undefined,

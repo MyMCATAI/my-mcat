@@ -5,6 +5,7 @@ import { Check, X, Undo2, Skull, Dumbbell } from 'lucide-react';
 import { useSpring, animated } from '@react-spring/web'
 import { useDrag } from '@use-gesture/react';
 import ContentRenderer from '@/components/ContentRenderer';
+import { FlattenedQuestionResponse } from '@/lib/question';
 
 interface Flashcard {
   id: string;
@@ -79,11 +80,36 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
     setIsLoading(true);
     try {
       const subject = subjectMap[roomId] || 'Sociology';
-      const response = await fetch(`/api/flashcard?select=${subject}`);
+      console.log(`/api/question?subjectCategory=${subject.replace(/ /g, "_")}&types=flashcard&page=1&pageSize=10`);
+      const response = await fetch(`/api/question?subjectCategory=${subject.replace(/ /g, "_")}&types=flashcard&page=1&pageSize=10`);
+      
       const data = await response.json();
+      interface Flashcard {
+        id: string;
+        questionContent: string;
+        questionOptions: string[];
+        category: {
+          subjectCategory: string;
+          conceptCategory: string;
+        };
+        userResponses: Array<{ isCorrect: boolean; timeSpent: number }>;
+      }
+      const transformedFlashcards = data.questions.map((question: FlattenedQuestionResponse) => ({
+        id: question.id,
+        questionContent: question.questionContent,
+        questionOptions: question.questionOptions || '',
+        category: {
+          subjectCategory: question.category_subjectCategory,
+          conceptCategory: question.category_conceptCategory,
+        },
+        difficulty: question.difficulty || 1,
+        tags: question.tags || []
+      }));
+      console.log(transformedFlashcards);
+      console.log(transformedFlashcards[1]);
+      console.log(transformedFlashcards[2]);
 
-      console.log(data)
-      setFlashcards(data); // Assuming data is already in the correct format
+      setFlashcards(transformedFlashcards); // Assuming data is already in the correct format
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching flashcards:', error);

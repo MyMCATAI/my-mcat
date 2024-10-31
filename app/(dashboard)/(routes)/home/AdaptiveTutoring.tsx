@@ -184,6 +184,7 @@ import { ThemedSkeleton } from "@/components/ATS/ThemedSkeleton";
           const response = await fetch(
             `/api/question?conceptCategory=${conceptCategory.replace(/ /g, "_")}&page=1&pageSize=10`
           );
+          console.log(`/api/question?conceptCategory=${conceptCategory.replace(/ /g, "_")}&page=1&pageSize=10`);
           
           if (response.ok) {
             const data = await response.json();

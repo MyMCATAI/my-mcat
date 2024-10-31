@@ -6,7 +6,7 @@ import prismadb from "@/lib/prismadb";
 import { Question, KnowledgeProfile, UserResponse } from '@prisma/client'; // Import types from Prisma
 import * as dfd from "danfojs-node";
 
-interface FlattenedQuestionResponse extends Question {  
+export interface FlattenedQuestionResponse extends Question {  
   // Category fields (prefixed with category_)
   category_id: string;
   category_subjectCategory: string;
@@ -35,11 +35,14 @@ interface FlattenedQuestionResponse extends Question {
 
 
 
+
+
 export const getQuestions = async (params: {
   categoryId?: string;
   passageId?: string;
   contentCategory?: string;
   conceptCategory?: string;
+  subjectCategory?: string;
   page?: number;
   pageSize?: number;
   userId: string;
@@ -54,7 +57,7 @@ export const getQuestions = async (params: {
   testFrequencyProbWeight?: number;
 }) => {
   console.log('Params:', JSON.stringify(params));
-  const { categoryId, passageId, contentCategory, conceptCategory, userId, desiredDifficulty, types, seenTimes = 3, intervalTotalHours = 72, intervalCorrectHours = 72, incorrectStreakProbWeight = 0.25,
+  const { categoryId, passageId, contentCategory, conceptCategory, subjectCategory, userId, desiredDifficulty, types, seenTimes = 3, intervalTotalHours = 72, intervalCorrectHours = 72, incorrectStreakProbWeight = 0.25,
     conceptContentMasteryProbWeight = 0.5,
     desiredDifficultyProbWeight = 0.05,
     testFrequencyProbWeight = 0.2,
@@ -72,9 +75,9 @@ export const getQuestions = async (params: {
     category: {
       ...(contentCategory && { contentCategory }),
       ...(conceptCategory && { conceptCategory }),
+      ...(subjectCategory && { subjectCategory }),
     },
   };
-  console.log('Where clause:', JSON.stringify(where));
 
   try {
     const questions = await prismadb.question.findMany({
@@ -92,8 +95,6 @@ export const getQuestions = async (params: {
       },
     });
 
-    console.log('Questions found:', questions.length);
-    console.log('First question:', JSON.stringify(questions[0], null, 2));
 
     const filteredResponses = await prismadb.question.findMany({ 
       where,
@@ -116,8 +117,6 @@ export const getQuestions = async (params: {
         },
       },
     });
-
-    console.log('Filtered responses found:', filteredResponses.length);
 
     // implement hard filters
     // also takes care of the flattening logic
