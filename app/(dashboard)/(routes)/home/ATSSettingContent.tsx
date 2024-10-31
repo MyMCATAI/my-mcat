@@ -7,8 +7,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Category } from "@/types";
+import { useTheme } from "@/contexts/ThemeContext";
+// import { StrikethroughCheckbox } from "@/components/ui/StrikethroughCheckbox";
+// import CategorySearchResults from "./CategorySearchResults";
+import FilterButton from "@/components/ui/FilterButton";
 
 interface Option {
   id: string;
@@ -17,15 +21,22 @@ interface Option {
 
 const options: Option[] = [
   { id: "option1", label: "Can Kalypso ask you questions?" },
+  // { id: "option3", label: "Want to ignore a specific subject?" },
   { id: "option2", label: "Want to change current categories?" },
-  { id: "option3", label: "Want to ignore a specific subject?" },
 ];
 
 interface ATSSettingContentProps {
   onClose?: () => void;
+  checkedCategories: Category[];
+  setCheckedCategories: React.Dispatch<React.SetStateAction<Category[]>>;
 }
 
-const ATSSettingContent: React.FC<ATSSettingContentProps> = ({ onClose }) => {
+const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
+  onClose,
+  checkedCategories,
+  setCheckedCategories,
+}) => {
+  const { theme } = useTheme();
   const [activeOption, setActiveOption] = useState<string | null>(null);
   const [contentPreferences, setContentPreferences] = useState({
     videos: true,
@@ -36,28 +47,81 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({ onClose }) => {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subjectFocus, setSubjectFocus] = useState({
-    Biochemistry: true,
-    Biology: true,
-    GenChem: true,
-    OChem: true,
-    Physics: true,
-    Psychology: true,
-    Sociology: true,
+    Biochemistry: false,
+    Biology: false,
+    GenChem: false,
+    OChem: false,
+    Physics: false,
+    Psychology: false,
+    Sociology: false,
   });
-  const [kalypsoInterruptions, setKalypsoInterruptions] = useState<string>("occasionally");
+  const [kalypsoInterruptions, setKalypsoInterruptions] =
+    useState<string>("occasionally");
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [limitMessage, setLimitMessage] = useState<string | null>(null);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const url = new URL("/api/category-search", window.location.origin);
+  //       url.searchParams.append("page", "1");
+  //       url.searchParams.append("pageSize", "7");
+  //       url.searchParams.append("useKnowledgeProfiles", "true");
+
+  //       // const excludeSubjects = Object.entries(subjectFocus)
+  //       //   .filter(([_, isChecked]) => isChecked)
+  //       //   .map(([subject]) => subject);
+
+  //       // console.log(excludeSubjects);
+
+  //       // if (excludeSubjects.length > 0) {
+  //       //   url.searchParams.append("excludeSubjects", excludeSubjects.join(","));
+  //       // }
+
+  //       const response = await fetch(url.toString());
+  //       if (!response.ok) {
+  //         throw new Error("Network response was not ok");
+  //       }
+  //       const data = await response.json();
+  //       setCategories(data.items);
+  //     } catch (error) {
+  //       console.error("Error fetching categories:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, [subjectFocus]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    fetchCategories(searchQuery, selectedSubject, currentPage);
+  }, [selectedSubject, currentPage]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (
+    searchQuery: string,
+    subject: string,
+    page: number
+  ) => {
     try {
       setIsLoading(true);
-      const url = new URL("/api/category", window.location.origin);
-      url.searchParams.append("page", "1");
-      url.searchParams.append("pageSize", "6");
+      const url = new URL("/api/category-search", window.location.origin);
+      url.searchParams.append("page", page.toString());
+      url.searchParams.append("pageSize", "7");
       url.searchParams.append("useKnowledgeProfiles", "true");
+
+      if (searchQuery) {
+        url.searchParams.append("searchQuery", searchQuery);
+      }
+
+      if (subject) {
+        url.searchParams.append("subject", subject);
+      }
 
       const response = await fetch(url.toString());
       if (!response.ok) {
@@ -76,13 +140,50 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({ onClose }) => {
     setActiveOption(activeOption === optionId ? null : optionId);
   };
 
-  const randomizeCategories = () => {
-    const shuffled = [...categories].sort(() => 0.5 - Math.random());
-    setCategories(shuffled.slice(0, 6)); // Keep only the first 6 categories
+  const randomizeCategories = async () => {
+    try {
+      setIsLoading(true);
+      const url = new URL("/api/category-search", window.location.origin);
+      url.searchParams.append("page", "1");
+      url.searchParams.append("pageSize", "7");
+      url.searchParams.append("useKnowledgeProfiles", "true");
+      url.searchParams.append("random", "true");
+
+      // const excludeSubjects = Object.entries(subjectFocus)
+      //   .filter(([_, isChecked]) => isChecked)
+      //   .map(([subject]) => subject);
+
+      // if (excludeSubjects.length > 0) {
+      //   url.searchParams.append("excludeSubjects", excludeSubjects.join(","));
+      // }
+
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      setCategories(data.items);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDone = () => {
     if (onClose) onClose();
+  };
+
+  // Save checked categories to local storage whenever they change
+  const handleCategoryCheck = (category: Category, isChecked: boolean) => {
+    if (isChecked && checkedCategories.length >= 7) {
+      setLimitMessage("Maximum limit of 7 categories reached.");
+      return;
+    }
+    setLimitMessage(null);
+    setCheckedCategories((prev) =>
+      isChecked ? [category, ...prev] : prev.filter((c) => c.id !== category.id)
+    );
   };
 
   const renderOptionContent = () => {
@@ -95,50 +196,124 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({ onClose }) => {
                 <div className="text-center py-2">Please wait...</div>
               ) : (
                 <>
+                  <div className="flex items-center justify-center mb-4">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          fetchCategories(
+                            searchQuery,
+                            selectedSubject,
+                            currentPage
+                          );
+                        }
+                      }}
+                      onClick={() => setShowSearchResults(true)}
+                      placeholder="Search categories..."
+                      className={`border rounded-md p-2 w-full theme-box theme-${theme}`}
+                      style={{
+                        backgroundColor: "var(--theme-background-color)",
+                        color: "var(--theme-text-color)",
+                        borderColor: "var(--theme-border-color)",
+                      }}
+                    />
+                    <FilterButton
+                      subjects={Object.keys(subjectFocus)}
+                      onFilterChange={(subject) => {
+                        setSelectedSubject(subject);
+                        setCurrentPage(1);
+                      }}
+                    />
+                  </div>
+                  {/* 
+                  {showSearchResults && (
+                    <CategorySearchResults
+                      categories={categories}
+                      onClose={() => setShowSearchResults(false)}
+                    />
+                  )} */}
+
                   {categories.map((category) => (
-                    <div key={category.id} className="flex items-center gap-2 p-0.5">
-                      <button className="p-1 hover:bg-[--theme-hover-color] rounded-full transition-colors duration-200">
-                        <Search size={16} className="text-[--theme-text-color]" />
-                      </button>
-                      <span className="text-[--theme-text-color] text-md">{category.conceptCategory}</span>
+                    <div
+                      key={category.id}
+                      className="flex items-center gap-2 p-0.5"
+                    >
+                      <Checkbox
+                        id={category.id}
+                        checked={checkedCategories.some(
+                          (c) => c.id === category.id
+                        )}
+                        onCheckedChange={(isChecked) =>
+                          handleCategoryCheck(category, isChecked as boolean)
+                        }
+                      />
+                      <span className="text-[--theme-text-color] text-md">
+                        {category.conceptCategory}
+                      </span>
                     </div>
                   ))}
+
+                  {limitMessage && (
+                    <div className="text-red-500 text-sm mt-2">
+                      {limitMessage}
+                    </div>
+                  )}
+
                   <button
-                    onClick={randomizeCategories}
+                    onClick={() => setCheckedCategories([])}
+                    className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
+                      bg-transparent text-[--theme-text-color]
+                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                      transition duration-200"
+                  >
+                    <span>Reset Checked Categories</span>
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((prev) => prev + 1)}
                     className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
                       bg-transparent text-[--theme-text-color]
                       hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
                       transition duration-200"
                   >
                     <RefreshCw size={16} />
-                    <span>Regenerate all content categories</span>
+                    <span>Next Page of Categories</span>
                   </button>
                 </>
               )}
             </div>
           </div>
         );
-      case "option3":
-        return (
-          <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md">
-            <div className="space-y-2">
-              {Object.entries(subjectFocus).map(([subject, isChecked]) => (
-                <div key={subject} className="flex items-center">
-                  <Checkbox
-                    id={subject}
-                    checked={isChecked}
-                    onCheckedChange={(checked) =>
-                      setSubjectFocus({ ...subjectFocus, [subject]: checked as boolean })
-                    }
-                  />
-                  <label htmlFor={subject} className="ml-2 capitalize">
-                    {subject.replace('_', ' ')}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
+      // case "option3":
+      //   return (
+      //     <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md">
+      //       <div className="space-y-2">
+      //         {Object.entries(subjectFocus).map(([subject, isChecked]) => (
+      //           <div key={subject} className="flex items-center">
+      //             <Checkbox
+      //               id={subject}
+      //               checked={isChecked}
+      //               onCheckedChange={(checked) =>
+      //                 setSubjectFocus({
+      //                   ...subjectFocus,
+      //                   [subject]: checked as boolean,
+      //                 })
+      //               }
+      //             />
+      //             <label
+      //               htmlFor={subject}
+      //               className={`ml-2 capitalize ${
+      //                 isChecked ? "line-through" : ""
+      //               }`}
+      //             >
+      //               {subject.replace("_", " ")}
+      //             </label>
+      //           </div>
+      //         ))}
+      //       </div>
+      //     </div>
+      //   );
       case "option1":
         return (
           <div className="bg-[transparent] p-4 rounded-lg shadow-md">
@@ -180,9 +355,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({ onClose }) => {
               <span>{option.label}</span>
             </button>
             {activeOption === option.id && (
-              <div className="mt-2">
-                {renderOptionContent()}
-              </div>
+              <div className="mt-2">{renderOptionContent()}</div>
             )}
           </div>
         ))}
