@@ -13,7 +13,7 @@ interface ChatBotProps {
   chatbotContext?: {
     contentTitle: string;
     context: string;
-  };
+  } | null
   width?: string | number;
   height?: string | number;
   backgroundColor?: string;
@@ -101,6 +101,9 @@ const ChatBot: React.FC<ChatBotProps> = ({
   }, []);
 
   const sendMessage = async (message: string) => {
+
+    console.log("Sending message:", message);
+    console.log("Context:", context);
     setIsLoading(true);
     setError(null);
     try {
@@ -188,6 +191,16 @@ const ChatBot: React.FC<ChatBotProps> = ({
     setAudioEnabled((prev) => !prev);
   };
 
+
+  // initial context to provide to the LLM
+
+  const initialContext = "After introductions I will speak only in french so that you can learn mcat in french"
+  const hiddenContextMessage = {
+    type: "bot",
+    message: initialContext,
+    hidden: true,
+  };
+
   const flow = {
     start: {
       message: `Meow there! I'm Kalypso the cat, your MCAT assistant. ${
@@ -218,7 +231,11 @@ const ChatBot: React.FC<ChatBotProps> = ({
       color: "var(--theme-text-color)",
       blockSpam: true,
     },
-    chatHistory: { storageKey: "mcat_assistant_chat_history", disabled: true },
+    chatHistory: { 
+      storageKey: "mcat_assistant_chat_history", 
+      disabled: true,
+      initialMessages: context ? [hiddenContextMessage] : []
+    },
     header: {
       showAvatar: false,
       title: (
@@ -278,20 +295,27 @@ const ChatBot: React.FC<ChatBotProps> = ({
     chatWindowStyle: {
       display: "flex",
       flexDirection: "column" as const,
-      height: "calc(100vh - 11.6rem)",
+      height: "100%",
       width: "100%",
       backgroundColor: backgroundColor,
       position: "relative",
-      zIndex: 1, // Add this line to set a base z-index for the chat window
+      zIndex: 1,
     },
     bodyStyle: {
-      flexGrow: 1,
+      flex: "1",
       overflowY: "auto" as const,
+      height: "calc(100vh - 150px)",
+      maxHeight: "100%",
+      paddingBottom: "1rem",
     },
     chatInputContainerStyle: {
+      position: 'sticky',
+      bottom: 0,
+      backgroundColor: backgroundColor,
+      borderTop: "1px solid var(--theme-border-color)",
       padding: "1rem",
-      backgroundColor: "transparent",
-      border: "transparent",
+      width: "100%",
+      zIndex: 2,
     },
     chatInputAreaStyle: {
       border: "1px solid var(--theme-border-color)",
@@ -321,25 +345,30 @@ const ChatBot: React.FC<ChatBotProps> = ({
       border: "transparent",
     },
     chatHistoryButtonStyle: {
-      fontSize: "0.5rem !important", // Even smaller font size with !important
+      fontSize: "0.5rem !important", 
     },
   };
 
   const themes = [{ id: "simple_blue", version: "0.1.0" }];
 
   if (!isMounted) {
-    return null; // or a loading spinner
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[--theme-text-color]" />
+      </div>
+    );
   }
 
   return (
     <div
-      className="w-full rounded-lg shadow-lg overflow-hidden flex flex-col relative"
+      className="w-full h-full rounded-lg shadow-lg flex flex-col"
       style={{
         boxShadow: "var(--theme-box-shadow)",
         border: "1px solid var(--theme-border-color)",
         width: width,
         height: height,
         backgroundColor: backgroundColor,
+        overflow: 'hidden',
       }}
     >
       {avatar && (
@@ -368,12 +397,20 @@ const ChatBot: React.FC<ChatBotProps> = ({
           />
         </div>
       )}
-      <DynamicChatBot
-        settings={settings}
-        styles={styles}
-        themes={themes}
-        flow={flow}
-      />
+      <div className="flex-1 relative w-full" style={{ overflow: 'auto' }}>
+        <DynamicChatBot
+          settings={{
+            ...settings,
+            chatWindow: {
+              ...settings.chatWindow,
+              autoJumpToBottom: true,
+            }
+          }}
+          styles={styles}
+          themes={themes}
+          flow={flow}
+        />
+      </div>
       {error && <p style={{ color: "red" }}>{error}</p>}
       {isPlaying && audioEnabled && (
         <button onClick={stopAudio}>Stop Audio</button>

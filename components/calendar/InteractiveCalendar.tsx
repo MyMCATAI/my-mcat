@@ -143,7 +143,6 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         activityType: activity.activityType,
         link: activity.link,
       }));
-      console.log("formattedEvents:", formattedEvents);
 
       setEvents(formattedEvents);
     } catch (error) {

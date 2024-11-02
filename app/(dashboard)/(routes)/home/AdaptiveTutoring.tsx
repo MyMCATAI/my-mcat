@@ -64,7 +64,14 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
     const podcastButtonRef = useRef<HTMLButtonElement>(null);
     const [isPodcastHovered, setIsPodcastHovered] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
+    const [playedSeconds, setPlayedSeconds] = useState<number>(0);
 
+    const formatTime = (seconds: number): string => {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.floor(seconds % 60);
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    };
+    
     // Fetch categories and set initial category
     useEffect(() => {
       const fetchInitialData = async () => {
@@ -92,7 +99,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
         setIsPlaying(false);
       }
     }, [currentContentId, content]);
-
+    
 
     
   // Update chatbot context when current content changes
@@ -101,10 +108,29 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
     if (currentContent && currentContent.transcript) {
       setChatbotContext({
         contentTitle: currentContent.title || "Untitled",
-        context: `Here's a transcript of the content that I'm currently looking at: ${currentContent.transcript} Only refer to this if I ask a question directly about what I'm studying`,
+        context: `Here's a transcript of the ${currentContent.type} im looking at: ${currentContent.transcript}. Refer to this as context if I ask a question directly about what I'm studying`,
       });
     }
   }, [currentContentId, content, setChatbotContext]);
+
+  // Separate effect for video timestamp updates
+  useEffect(() => {
+    const currentContent = content.find((item) => item.id === currentContentId);
+    if (currentContent?.type === "video") {
+      const interval = setInterval(() => {
+        const prevContext = currentContent.transcript || "";
+        // Remove any existing timestamp information
+        const baseContext = prevContext.replace(/I'm currently at timestamp \d+:\d+ in the video\. /, '');
+        
+        setChatbotContext({
+          contentTitle: currentContent.title || "Untitled",
+          context: `I'm currently at timestamp ${formatTime(playedSeconds)} in the video. ${baseContext}`
+        });
+      }, 10000); // Updates every 10 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [currentContentId, content, playedSeconds, setChatbotContext, formatTime]);
 
   const updateContentVisibility = useCallback((fetchedContent: ContentItem[]) => {
     const hasVideos = fetchedContent.some((item) => item.type === "video");
@@ -158,7 +184,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
         setChatbotContext({
           contentTitle: clickedContent.title,
           context: clickedContent.transcript
-            ? "Here's a transcript of the content that I'm currently looking at: " +
+            ? "Here's a transcript of the " + clickedContent.type + " that I'm currently looking at: " +
               clickedContent.transcript +
               " Only refer to this if I ask a question directly about what I'm studying"
             : ""
@@ -552,6 +578,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
                     {contentType ==="video" &&
                     currentContent &&
                     currentContent.type === "video" && (
+
                       <div className="h-[calc(100vh-23rem)]">
                         <ReactPlayer
                           className="w-full h-full"
@@ -560,6 +587,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
                           muted
                           width="100%"
                           height="100%"
+                          onProgress={({ playedSeconds }) => setPlayedSeconds(playedSeconds)}
                           onEnded={() => setIsPlaying(false)}
                           controls={true}
                         />
