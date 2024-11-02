@@ -303,7 +303,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
             <div className="flex justify-end">
               <button
                 type="submit"
-                className="py-2 px-4 bg-gray-200 text-black rounded-md hover:opacity-60 transition-opacity"
+                className="py-2 px-4 border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-md transition-opacity"
               >
                 Send Request
               </button>
@@ -399,7 +399,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
                           );
                         })}
                         <span className="ml-2 text-sm text-[--theme-text-color] opacity-80">
-                          ({tutor.reviews} reviews)
+                          ({tutor.reviews})
                         </span>
                       </div>
                     </div>
