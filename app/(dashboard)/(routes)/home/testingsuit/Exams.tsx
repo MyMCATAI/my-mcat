@@ -283,7 +283,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
             </div>
             <div className="flex flex-col">
               <pre
-                className="font-mono text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap flex-1 mt-4 ml-2"
+                className="text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap flex-1 mt-4 ml-2"
                 style={{ color: "var(--theme-text-color)" }}
               >
                 {welcomeAndTestMessage}
@@ -372,7 +372,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
               }
             />
             <h3
-              className="text-m font-semibold mt-3 mb-3 text-center font-mono"
+              className="text-m font-semibold mt-3 mb-3 text-center"
               style={{ color: "var(--theme-text-color)" }}
             >
               CARs Tests
