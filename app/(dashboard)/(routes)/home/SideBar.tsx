@@ -13,9 +13,13 @@ import TutorialContent from "../../../../components/home/TutorialContent";
 import TutorialVidDialog from '../../../../components/ui/TutorialVidDialog';
 import ChatBot from "@/components/chatbot/ChatBot";
 
-interface KnowledgeProfileProps {
+interface SideBarProps {
   activities: FetchedActivity[];
   currentPage: string;
+  chatbotContext: {
+    contentTitle: string;
+    context: string;
+  } | null;
 }
 
 interface School {
@@ -33,7 +37,7 @@ type TabContent =
 
 type VideoCategory = 'RBT' | 'RWT' | 'CMP';
 
-const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initialActivities, currentPage }) => {
+const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, currentPage, chatbotContext }) => {
   const [activeTab, setActiveTab] = useState("tab1");
   const [schools, setSchools] = useState<School[]>([
     { name: "Pomona College", location: "Claremont, CA", rank: 1, tuition: 500, funRanking: "Cupcake Rankings" },
@@ -120,26 +124,24 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   };
 
   const renderInsights = () => {
-    if (currentPage !== "test") {
-      const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    if (currentPage !== "CARS") {
       return (
-        <div className="h-[calc(100vh-11.6rem)] flex flex-col">
-          <ChatBot
-            chatbotContext={{
-              contentTitle: "calendar",
-              context: `This is the calendar. Today's date is ${today}.`
-            }}
-            width="100%"
-            height="100%"
-            backgroundColor="transparent"
-            avatar="/kalypsoend.gif"
-          />
+        <div className="h-full flex flex-col">
+          <div className="flex-1 min-h-0">
+            <ChatBot
+              chatbotContext={chatbotContext}
+              width="100%"
+              height="100%"
+              backgroundColor="transparent"
+              avatar="/kalypsoend.gif"
+            />
+          </div>
         </div>
       );
     }
 
     return (
-      <div className="h-[calc(100vh-11.6rem)] flex flex-col space-y-4 overflow-auto">
+      <div className="h-[calc(100vh-14rem)] flex flex-col space-y-4 overflow-auto">
         <Card className="flex-shrink-0">
           <CardContent className="p-4 relative">
             <div className="flex items-center mb-4">
@@ -220,7 +222,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   };
 
   const renderSchools = (schools: School[]) => (
-    <div className="h-[calc(100vh-12.3rem)] flex flex-col">
+    <div className="h-[calc(100vh-14rem)] flex flex-col">
       <ScrollArea className="flex-grow">
         <div className="pr-4 pb-4">
           {schools.map((school, index) => {
@@ -278,7 +280,6 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
     return null;
   };
 
-  const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [isMVPDialogOpen, setIsMVPDialogOpen] = useState(false);
 
   const tabs: { id: string; label: string; content: TabContent }[] = [
@@ -288,9 +289,9 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   ];
 
   return (
-    <div className="relative p-2 overflow-hidden h-[calc(100vh-3.9rem)]">
+    <div className="relative p-2 overflow-hidden h-full">
       <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
-        <div className="flex w-full">
+        <div className="flex w-full flex-shrink-0">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -305,7 +306,7 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
             </button>
           ))}
         </div>
-        <div className={`mt-4 ${activeTab === 'tab2' ? 'bg-transparent' : 'bg-[--theme-mainbox-color]'} flex-grow mb-8 overflow-hidden relative`}>
+        <div className={`mt-4 ${activeTab === 'tab2' ? 'bg-transparent' : 'bg-[--theme-mainbox-color]'} flex-1 min-h-0 mb-8 overflow-hidden relative`}>
           {renderContent(tabs.find(tab => tab.id === activeTab)!.content)}
         </div>
       </div>
@@ -318,4 +319,4 @@ const KnowledgeProfile: React.FC<KnowledgeProfileProps> = ({ activities: initial
   );
 };
 
-export default KnowledgeProfile;
+export default SideBar;

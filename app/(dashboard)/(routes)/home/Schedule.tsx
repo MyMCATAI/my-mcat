@@ -424,7 +424,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const handleButtonClick = (section: string) => {
     switch (section) {
       case "DailyCARsSuite":
-        handleSetTab("test");
+        handleSetTab("CARS");
         break;
       case "MCATGameAnkiClinic":
         router.push("/doctorsoffice");
