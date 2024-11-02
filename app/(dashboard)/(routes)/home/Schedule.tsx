@@ -56,6 +56,7 @@ interface ScheduleProps {
   activities: FetchedActivity[];
   onShowDiagnosticTest: () => void;
   handleSetTab: (tab: string) => void;
+  isActive: boolean;
 }
 
 type Section =
@@ -67,6 +68,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   activities,
   onShowDiagnosticTest,
   handleSetTab,
+  isActive,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
@@ -479,11 +481,17 @@ const Schedule: React.FC<ScheduleProps> = ({
     }, 2000);
   };
 
+  useEffect(() => {
+    if (!isActive) {
+      setShowSettings(false);
+    }
+  }, [isActive]);
+
   return (
     <div className="flex h-full relative">
       {/* Left Sidebar */}
       <div
-        className="w-1/4 p-6 flex flex-col ml-3 mt-5 mb-5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
+        className="w-1/4 p-5 flex flex-col ml-3 mt-2.5 mb-2.5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
         style={{
           backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
           backgroundSize: "cover",
@@ -571,7 +579,7 @@ const Schedule: React.FC<ScheduleProps> = ({
       </div>
 
       {/* Right Content */}
-      <div className="w-3/4 p-6 bg-[--theme-gray-100] flex flex-col relative">
+      <div className="w-3/4 p-2.5 bg-[--theme-gray-100] flex flex-col relative">
         {/* Settings Button */}
         <div className="absolute top-4 right-4 z-20">
           <TooltipProvider>
@@ -768,10 +776,10 @@ const Schedule: React.FC<ScheduleProps> = ({
                   getActivitiesForDate={getActivitiesForDate}
                   onInteraction={() => {}}
                   setRunTutorialPart2={setRunTutorialPart2}
-                  setRunTutorialPart3={setRunTutorialPart3} // Pass the function
+                  setRunTutorialPart3={setRunTutorialPart3}
                 />
               </div>
-              <div className="h-32 flex justify-end items-start px-4 pt-4">
+              <div className="h-32 flex justify-between items-start px-4 pt-4">
                 <button
                   onClick={handleToggleView}
                   className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"

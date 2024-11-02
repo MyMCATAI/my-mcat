@@ -144,7 +144,6 @@ body.theme-sunsetCity * {
 @layer base {
   :root {
     /* CyberSpace theme variables (default) */
-    --theme-box-shadow: 0 0 8px 2px #007bff80, inset 0 0 15px rgba(0, 0, 246, 0.7);
     --theme-interface-image: url('/circuitpattern2.png');
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -196,6 +195,9 @@ body.theme-sunsetCity * {
     --theme-doctorsoffice-accent: #2e5387;
     --theme-flashcard-color: #001a3a; /* Darker shade for CyberSpace theme */
     --theme-flashcard-text-color: #ffffff; /* White text for CyberSpace theme */
+    --theme-adaptive-tutoring-color: #001226;
+    --theme-adaptive-tutoring-boxShadow: 0 0 8px 2px rgba(0, 123, 255, 0.5);
+    --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 4px rgba(0, 123, 255, 0.8);
   }
 
 }
@@ -313,6 +315,9 @@ body.theme-sunsetCity * {
   --theme-doctorsoffice-accent: #ffc1d8; /* Light pink */
   --theme-flashcard-color: #ffffff; /* White for light SakuraTrees theme */
   --theme-flashcard-text-color: #4a0e37; /* Dark pink text for SakuraTrees theme */
+  --theme-adaptive-tutoring-color: #faeef4;
+  --theme-adaptive-tutoring-boxShadow: 0 0 5px 2px rgba(255, 0, 89, 0.5);
+  --theme-adaptive-tutoring-boxShadow-hover: 0 0 10px 4px rgba(255, 0, 89, 0.8);
 }
 
 /* Add theme-specific gradients */
@@ -337,13 +342,16 @@ body.theme-sunsetCity * {
   --theme-userchatbox-color: #007afc;
   --theme-hover-text: #2c1e4a;
   --theme-border-color: #ff6347;
-  --theme-leaguecard-color: rgba(44, 30, 74, 1);
+  --theme-leaguecard-color: #2c1e4a;
   --theme-navbutton-color: #49327c;
   --svg-invert: 0;
   --theme-reddit-color: #3a2963;
   --theme-doctorsoffice-accent: #3a2963;
   --theme-flashcard-color: #f4f0ff; /* Darker shade for SunsetCity theme */
   --theme-flashcard-text-color: #2c1e4a; /* Dark purple text for SunsetCity theme */
+  --theme-adaptive-tutoring-color: #001226;
+  --theme-adaptive-tutoring-boxShadow: 0 0 10px 1px rgba(255, 99, 71, 0.5);
+  --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 5px rgba(255, 99, 71, 0.8);
 }
 
 .theme-sunsetCity .gradientbg {
@@ -638,6 +646,9 @@ body {
   --theme-doctorsoffice-accent: #d7ecff;
   --theme-flashcard-color: #ffffff; /* White for light MykonosBlue theme */
   --theme-flashcard-text-color: #1e81b0; /* Blue text for MykonosBlue theme */
+  --theme-adaptive-tutoring-color: #f0f9fc;
+  --theme-adaptive-tutoring-boxShadow: 0 0 8px 3px rgba(63, 194, 255, 0.5);
+  --theme-adaptive-tutoring-boxShadow-hover: 0 0 11px 5px rgba(76, 181, 230, 0.8);
 }
 
 .theme-mykonosBlue .gradientbg {
@@ -706,3 +717,5 @@ html::-webkit-scrollbar {
 .theme-mykonosBlue .themed-scrollbar::-webkit-scrollbar-thumb {
   background-color: #4cb5e6;
 }
+
+

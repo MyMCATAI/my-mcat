@@ -1,4 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+
+// Hanis: Calendar event creation modal todo (this can also be an event edit modal)
+// fix backend for creating calendar events, - Post
+// Add functionality for deleting calendar events - Delete
+// Add functionality for editing calendar events - Put
+
 
 interface AddEventModalProps {
   isOpen: boolean;
@@ -12,8 +24,10 @@ interface CalendarActivityData {
   activityText: string;
   hours: number;
   activityType: string;
-  link?: string;
+  link?: string | null;
   scheduledDate: string;
+  categoryId?: string;
+  contentId?: string;
 }
 
 const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onSubmit, selectedDate }) => {
@@ -24,18 +38,26 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onSubmit
     activityType: '',
     link: '',
     scheduledDate: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
+    categoryId: '',
+    contentId: '',
   });
 
   useEffect(() => {
-    if (selectedDate) {
-      setEventData(prev => ({
-        ...prev,
-        scheduledDate: selectedDate.toISOString().split('T')[0]
-      }));
+    if (isOpen) {
+      setEventData({
+        activityTitle: '',
+        activityText: '',
+        hours: 1,
+        activityType: '',
+        link: '',
+        scheduledDate: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
+        categoryId: '',
+        contentId: '',
+      });
     }
-  }, [selectedDate]);
+  }, [isOpen, selectedDate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { target: { name: string; value: string } }) => {
     const { name, value } = e.target;
     setEventData(prev => ({ ...prev, [name]: name === 'hours' ? parseFloat(value) : value }));
   };
@@ -46,83 +68,94 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onSubmit
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Add New Event</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="activityTitle"
-            value={eventData.activityTitle}
-            onChange={handleChange}
-            placeholder="Event title"
-            required
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-          />
-          <textarea
-            name="activityText"
-            value={eventData.activityText}
-            onChange={handleChange}
-            placeholder="Event description"
-            required
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-          />
-          <input
-            type="number"
-            name="hours"
-            value={eventData.hours}
-            onChange={handleChange}
-            placeholder="Duration (hours)"
-            required
-            min="0.5"
-            step="0.5"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-          />
-          <select
-            name="activityType"
-            value={eventData.activityType}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-          >
-            <option value="">Select activity type</option>
-            <option value="Study">Study</option>
-            <option value="Practice">Practice</option>
-            <option value="Review">Review</option>
-            {/* Add more options as needed */}
-          </select>
-          <input
-            type="url"
-            name="link"
-            value={eventData.link}
-            onChange={handleChange}
-            placeholder="Related link (optional)"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-          />
-          <div className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-            {eventData.scheduledDate}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="text-gray-900">Add New Event</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 text-gray-800">
+          <div className="space-y-2">
+            <Label htmlFor="activityTitle" className="text-gray-900">Event Title</Label>
+            <Input
+              id="activityTitle"
+              name="activityTitle"
+              value={eventData.activityTitle}
+              onChange={handleChange}
+              placeholder="Enter event title"
+              required
+              className="text-gray-900"
+            />
           </div>
-          <div className="flex justify-end space-x-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
-            >
+          <div className="space-y-2">
+            <Label htmlFor="activityText" className="text-gray-900">Event Description</Label>
+            <Textarea
+              id="activityText"
+              name="activityText"
+              value={eventData.activityText}
+              onChange={handleChange}
+              placeholder="Enter event description"
+              required
+              className="text-gray-900"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="hours" className="text-gray-900">Duration (hours)</Label>
+            <Input
+              type="number"
+              id="hours"
+              name="hours"
+              value={eventData.hours}
+              onChange={handleChange}
+              placeholder="Enter duration"
+              required
+              min="0.5"
+              step="0.5"
+              className="text-gray-900"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="activityType" className="text-gray-900">Activity Type</Label>
+            <Select name="activityType" value={eventData.activityType} onValueChange={(value) => handleChange({ target: { name: 'activityType', value } })}>
+              <SelectTrigger className="text-gray-900">
+                <SelectValue placeholder="Select activity type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Study">Study</SelectItem>
+                <SelectItem value="Practice">Practice</SelectItem>
+                <SelectItem value="Review">Review</SelectItem>
+                {/* Add more options as needed */}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="link" className="text-gray-900">Related Link (optional)</Label>
+            <Input
+              id="link"
+              name="link"
+              value={eventData.link || ''}
+              onChange={handleChange}
+              placeholder="Enter related link"
+              className="text-gray-900"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-900">Scheduled Date</Label>
+            <Input
+              value={eventData.scheduledDate}
+              readOnly
+              className="bg-muted text-gray-900"
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} className="text-gray-800">
               Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600"
-            >
-              Add Event
-            </button>
-          </div>
+            </Button>
+            <Button type="submit" className="text-white bg-gray-900 hover:bg-gray-800">Add Event</Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

@@ -62,6 +62,7 @@ const Page = () => {
   const [message, setMessage] = useState("");
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [showUpdateNotification, setShowUpdateNotification] = useState(false);
+  const [currentPage, setCurrentPage] = useState("Schedule");
 
   useEffect(() => {
     const initializePage = async () => {
@@ -345,15 +346,18 @@ const Page = () => {
             activities={activities}
             onShowDiagnosticTest={handleShowDiagnosticTest}
             handleSetTab={setActiveTab}
+            isActive={activeTab === "Schedule"}
           />
         );
         break;
       case "KnowledgeProfile":
         content = (
-          <AdaptiveTutoring
-            toggleChatBot={toggleChatBot}
-            setChatbotContext={setChatbotContext}
-          />
+          <div className="h-full overflow-hidden"> {/* Add this wrapper */}
+            <AdaptiveTutoring
+              toggleChatBot={toggleChatBot}
+              setChatbotContext={setChatbotContext}
+            />
+          </div>
         );
         break;
       case "AdaptiveTutoring":
@@ -426,11 +430,16 @@ const Page = () => {
     );
   };
 
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    setCurrentPage(newTab);
+  };
+
   return (
-    <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem]">
-      <div className="text-white flex gap-[1.5rem]">
-        <div className="w-3/4 relative">
-          <div className="flex justify-between items-center">
+    <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
+      <div className="text-white flex gap-[1.5rem] overflow-visible">
+        <div className="w-3/4 relative overflow-visible">
+          <div className="flex justify-between items-center"> {/* Add margin-bottom */}
             <div className="flex items-center gap-4">
               <h2 className="text-white text-2xl ml-3 font-thin leading-normal shadow-text">
                 {activeTab === "Schedule"
@@ -445,12 +454,12 @@ const Page = () => {
               <ThemeSwitcher />
             </div>
           </div>
-          <div className="relative">
-            <div className="p-3 gradientbg overflow-auto h-[calc(100vh-5rem)] rounded-lg">
+          <div className="relative overflow-visible">
+            <div className="p-3 gradientbg h-[calc(100vh-5rem)] rounded-lg overflow-visible"> {/* Changed from overflow-hidden to overflow-visible */}
               {renderContent()}
             </div>
             <FloatingButton
-              onTabChange={setActiveTab}
+              onTabChange={handleTabChange}
               currentPage="home"
               initialTab={activeTab}
             />
@@ -463,7 +472,7 @@ const Page = () => {
           <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
             <KnowledgeProfileCARsONLY
               activities={activities}
-              currentPage={activeTab}
+              currentPage={currentPage}
             />
           </div>
         </div>

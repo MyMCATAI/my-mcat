@@ -25,8 +25,7 @@ export const ThemedSkeleton: React.FC<ThemedSkeletonProps> = ({ theme }) => {
     <div
       className="overflow-hidden rounded-lg text-center mb-2 relative group min-h-[100px] flex flex-col justify-between items-center"
       style={{ 
-        backgroundColor: '#001226',
-        boxShadow: '0 0 10px 2px rgba(0, 123, 255, 0.5)',
+        backgroundColor: 'var(--theme-adaptive-tutoring-color)',
       }}
     >
       <div className="relative w-full h-full flex flex-col justify-center items-center">

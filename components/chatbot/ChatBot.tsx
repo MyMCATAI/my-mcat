@@ -278,7 +278,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
     chatWindowStyle: {
       display: "flex",
       flexDirection: "column" as const,
-      height: "calc(100vh - 12.2rem)",
+      height: "calc(100vh - 11.6rem)",
       width: "100%",
       backgroundColor: backgroundColor,
       position: "relative",
@@ -346,14 +346,14 @@ const ChatBot: React.FC<ChatBotProps> = ({
         <div
           style={{
             position: "absolute",
-            top: "10px",
-            right: "10px",
-            width: "70px",
-            height: "70px",
+            top: "0.625rem",
+            right: "0.625rem",
+            width: "4.375rem",
+            height: "4.375rem",
             overflow: "hidden",
-            zIndex: 9999, // Increase this value to be higher than any other component
+            zIndex: 9999,
             borderRadius: "50%",
-            backgroundColor: "rgba(255, 255, 255, 0.3)",
+            backgroundColor: "var(--theme-doctorsoffice-accent)",
           }}
         >
           <Image
