@@ -47,6 +47,14 @@ async function createAudioStreamFromText(text: string): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
+function validateMessageLength(text: string, maxWords: number = 1500): string {
+  const words = text.trim().split(/\s+/);
+  if (words.length > maxWords) {
+    return words.slice(0, maxWords).join(' ');
+  }
+  return text;
+}
+
 export async function POST(req: Request) {
   try {
     const { userId } = auth();
@@ -81,8 +89,10 @@ export async function POST(req: Request) {
 
     console.log('Using thread:', currentThreadId);
 
-    // Combine message and context if context is provided
-    const fullMessage = context ? `Context: ${context}\n\nUser Message: ${message}` : message;
+    // max length is 1500 words
+    const fullMessage = context 
+      ? validateMessageLength(`Context: ${context}\n\nUser Message: ${message}`)
+      : validateMessageLength(message);
 
     // Add the combined message to the thread
     await openai.beta.threads.messages.create(currentThreadId, {
