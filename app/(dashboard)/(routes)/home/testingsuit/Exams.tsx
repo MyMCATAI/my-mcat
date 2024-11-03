@@ -166,7 +166,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
       <div className="flex-grow grid grid-cols-1 md:grid-cols-7 gap-4">
         <div className="md:col-span-5 mr mb-4">
           <div
-            className="h-[calc(100vh-8.3rem)] rounded-[10px] p-4 flex flex-col relative"
+            className="h-[calc(100vh-7.6rem)] rounded-[10px] p-4 flex flex-col relative"
             style={{
               backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
               backgroundSize: "cover",
@@ -351,7 +351,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
         </div>
         <div className="md:col-span-2">
           <div
-            className="h-[calc(100vh-8.3rem)] overflow-y-auto rounded-lg p-4 bg-[#001226] relative"
+            className="h-[calc(100vh-7.6rem)] overflow-y-auto rounded-lg p-4 bg-[#001226] relative"
             style={{
               backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
               backgroundSize: "cover",
@@ -372,7 +372,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
               }
             />
             <h3
-              className="text-m font-semibold mt-3 mb-3 text-center font-mono"
+              className="text-m font-semibold mt-3 mb-3 text-center"
               style={{ color: "var(--theme-text-color)" }}
             >
               CARs Tests

@@ -18,6 +18,9 @@ interface ChatBotProps {
   height?: string | number;
   backgroundColor?: string;
   avatar?: string;
+  chatbotRef?: React.MutableRefObject<{
+    sendMessage: (message: string) => void;
+  }>;
 }
 
 const ChatBot: React.FC<ChatBotProps> = ({
@@ -26,6 +29,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
   height = "100%",
   backgroundColor = "transparent",
   avatar,
+  chatbotRef,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,67 +47,98 @@ const ChatBot: React.FC<ChatBotProps> = ({
   const cmdReleaseTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    setIsMounted(true);
-
-    const timer = setTimeout(() => {
-      const botMessage = "Howdy";
-      window.dispatchEvent(
-        new CustomEvent("chatbot-event", {
-          detail: { message: botMessage },
-        })
-      );
-    }, 1000);
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Meta' || event.key === 'Control') {
-        if (!cmdPressedRef.current) {
-          cmdPressedRef.current = true;
-          cmdPressedTime.current = Date.now();
-          setCmdPressed(true);
+    if (chatbotRef) {
+      chatbotRef.current = {
+        sendMessage: (message: string) => {
+          
+          // Set the textarea value and simulate Enter press
+          const textarea = document.querySelector('textarea');
+          if (textarea) {
+            // Set value
+            textarea.value = message;
+            
+            // Create and dispatch Enter keydown event
+            const enterEvent = new KeyboardEvent('keydown', {
+              key: 'Enter',
+              code: 'Enter',
+              keyCode: 13,
+              which: 13,
+              bubbles: true
+            });
+            
+            // Focus the textarea and dispatch the event
+            textarea.focus();
+            setTimeout(() => {
+              textarea.dispatchEvent(enterEvent);
+            }, 50);
+          }
         }
-      } else {
-        cmdPressedRef.current = false;
-        cmdPressedTime.current = null;
-        setCmdPressed(false);
+      };
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) {
+      setIsMounted(true);
+
+      const timer = setTimeout(() => {
+        const botMessage = "Howdy";
+        window.dispatchEvent(
+          new CustomEvent("chatbot-event", {
+            detail: { message: botMessage },
+          })
+        );
+      }, 1000);
+
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Meta' || event.key === 'Control') {
+          if (!cmdPressedRef.current) {
+            cmdPressedRef.current = true;
+            cmdPressedTime.current = Date.now();
+            setCmdPressed(true);
+          }
+        } else {
+          cmdPressedRef.current = false;
+          cmdPressedTime.current = null;
+          setCmdPressed(false);
+          if (cmdReleaseTimer.current) {
+            clearTimeout(cmdReleaseTimer.current);
+          }
+        }
+      };
+
+      const handleKeyUp = (event: KeyboardEvent) => {
+        if (event.key === 'Meta' || event.key === 'Control') {
+          if (cmdPressedRef.current && cmdPressedTime.current) {
+            const pressDuration = Date.now() - cmdPressedTime.current;
+            if (pressDuration < 500) { // Only toggle if pressed for less than 500ms
+              cmdReleaseTimer.current = setTimeout(() => {
+                toggleAudio();
+              }, 50); // Small delay to ensure no other keys were pressed
+            }
+          }
+          cmdPressedRef.current = false;
+          cmdPressedTime.current = null;
+          setCmdPressed(false);
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('keyup', handleKeyUp);
+
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
         if (cmdReleaseTimer.current) {
           clearTimeout(cmdReleaseTimer.current);
         }
-      }
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key === 'Meta' || event.key === 'Control') {
-        if (cmdPressedRef.current && cmdPressedTime.current) {
-          const pressDuration = Date.now() - cmdPressedTime.current;
-          if (pressDuration < 500) { // Only toggle if pressed for less than 500ms
-            cmdReleaseTimer.current = setTimeout(() => {
-              toggleAudio();
-            }, 50); // Small delay to ensure no other keys were pressed
-          }
-        }
-        cmdPressedRef.current = false;
-        cmdPressedTime.current = null;
-        setCmdPressed(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      if (cmdReleaseTimer.current) {
-        clearTimeout(cmdReleaseTimer.current);
-      }
-      clearTimeout(timer);
-    };
-  }, []);
+        clearTimeout(timer);
+      };
+    }
+  }, [isMounted]);
 
   const sendMessage = async (message: string) => {
 
-    console.log("Sending message:", message);
-    console.log("Context:", context);
     setIsLoading(true);
     setError(null);
     try {
@@ -191,7 +226,6 @@ const ChatBot: React.FC<ChatBotProps> = ({
     setAudioEnabled((prev) => !prev);
   };
 
-
   // initial context to provide to the LLM
 
   const initialContext = "After introductions I will speak only in french so that you can learn mcat in french"
@@ -204,7 +238,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
   const flow = {
     start: {
       message: `Meow there! I'm Kalypso the cat, your MCAT assistant. ${
-        contentTitle ? `Cool ${contentTitle}.` : ""
+        contentTitle ? `I see you're looking at ${contentTitle}.` : ""
       } How can I help you today?`,
       path: "loop",
     },
@@ -222,6 +256,11 @@ const ChatBot: React.FC<ChatBotProps> = ({
       embedded: true,
       showHeader: true,
       showFooter: false,
+    },
+    event: {
+      rcbUserSubmitText: true,
+      rcbPreInjectMessage: true,
+      rcbPostInjectMessage: true,
     },
     chatWindow: {
       autoJumpToBottom: true,
@@ -295,7 +334,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
     chatWindowStyle: {
       display: "flex",
       flexDirection: "column" as const,
-      height: "calc(100vh - 14.8rem)",
+      height: "calc(100vh - 11.8rem)",
       width: "100%",
       backgroundColor: backgroundColor,
       position: "relative",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { FetchedActivity } from '@/types';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,10 +20,10 @@ import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog
 interface SideBarProps {
   activities: FetchedActivity[];
   currentPage: string;
-  chatbotContext: {
-    contentTitle: string;
-    context: string;
-  } | null;
+  chatbotContext: any;
+  chatbotRef: React.MutableRefObject<{
+    sendMessage: (message: string) => void;
+  }>;
 }
 
 interface Tutor {
@@ -34,11 +34,6 @@ interface Tutor {
   price: number;
 }
 
-interface TutorExpertise {
-  name: string;
-  expertise: string[];
-}
-
 type TabContent = 
   | { type: 'insights'; videos: { id: string; title: string }[] }
   | { type: 'tutors'; schools: Tutor[] }
@@ -46,7 +41,7 @@ type TabContent =
 
 type VideoCategory = 'RBT' | 'RWT' | 'CMP';
 
-const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, currentPage, chatbotContext }) => {
+const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, currentPage, chatbotContext, chatbotRef }) => {
   const [activeTab, setActiveTab] = useState("tab1");
   const [tutors, setTutors] = useState<Tutor[]>([
     { name: "Ali N.", university: "Duke University", stars: 4.5, reviews: 5, price: 150 },
@@ -129,9 +124,10 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
   const renderInsights = () => {
     if (currentPage !== "CARS") {
       return (
-        <div className="h-full flex flex-col">
+        <div className="h-[calc(100vh-11.6rem)] flex flex-col">
           <div className="flex-1 min-h-0">
             <ChatBot
+              chatbotRef={chatbotRef}
               chatbotContext={chatbotContext}
               width="100%"
               height="100%"
@@ -144,7 +140,7 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
     }
 
     return (
-      <div className="h-[calc(100vh-14rem)] flex flex-col space-y-4 overflow-auto">
+      <div className="h-[calc(100vh-11.6rem)] flex flex-col space-y-4 overflow-auto">
         <Card className="flex-shrink-0">
           <CardContent className="p-4 relative">
             <div className="flex items-center mb-4">
@@ -449,7 +445,7 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
   };
 
   return (
-    <div className="relative p-2 overflow-hidden h-[calc(100vh-7rem)]">
+    <div className="relative p-2 overflow-hidden h-[calc(100vh-3.9rem)]">
       <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
         <div className="flex w-full flex-shrink-0">
           {tabs.map((tab) => (
