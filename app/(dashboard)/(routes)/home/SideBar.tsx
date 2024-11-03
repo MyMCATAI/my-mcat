@@ -12,6 +12,10 @@ import { FaYoutube } from 'react-icons/fa';
 import TutorialContent from "../../../../components/home/TutorialContent";
 import TutorialVidDialog from '../../../../components/ui/TutorialVidDialog';
 import ChatBot from "@/components/chatbot/ChatBot";
+import { useUser } from "@clerk/clerk-react";
+import toast from "react-hot-toast";
+import { Star, StarHalf } from 'lucide-react';
+import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface SideBarProps {
   activities: FetchedActivity[];
@@ -22,34 +26,33 @@ interface SideBarProps {
   } | null;
 }
 
-interface School {
+interface Tutor {
   name: string;
-  location: string;
-  rank: number;
-  tuition: number;
-  funRanking: string;
+  university: string;
+  stars: number;
+  reviews: number;
+  price: number;
+}
+
+interface TutorExpertise {
+  name: string;
+  expertise: string[];
 }
 
 type TabContent = 
   | { type: 'insights'; videos: { id: string; title: string }[] }
-  | { type: 'league'; schools: School[] }
+  | { type: 'tutors'; schools: Tutor[] }
   | { type: 'tutorial' };
 
 type VideoCategory = 'RBT' | 'RWT' | 'CMP';
 
 const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, currentPage, chatbotContext }) => {
   const [activeTab, setActiveTab] = useState("tab1");
-  const [schools, setSchools] = useState<School[]>([
-    { name: "Pomona College", location: "Claremont, CA", rank: 1, tuition: 500, funRanking: "Cupcake Rankings" },
-    { name: "Princeton University", location: "Princeton, NJ", rank: 2, tuition: 450, funRanking: "Cupcake Rankings" },
-    { name: "Rice University", location: "Houston, TX", rank: 3, tuition: 400, funRanking: "Cupcake Rankings" },
-    { name: "University of Houston", location: "Houston, TX", rank: 4, tuition: 350, funRanking: "Cupcake Rankings" },
-    { name: "University of Richmond", location: "Richmond, VA", rank: 5, tuition: 300, funRanking: "Cupcake Rankings" },
-    { name: "UT Dallas", location: "Richardson, TX", rank: 6, tuition: 250, funRanking: "Cupcake Rankings" },
-    { name: "Tulane University", location: "New Orleans, LA", rank: 7, tuition: 200, funRanking: "Cupcake Rankings" },
-    { name: "Cornell University", location: "Ithaca, NY", rank: 8, tuition: 150, funRanking: "Cupcake Rankings" },
-    { name: "UC San Diego", location: "La Jolla, CA", rank: 9, tuition: 100, funRanking: "Cupcake Rankings" },
-    { name: "Northwestern University", location: "Evanston, IL", rank: 10, tuition: 50, funRanking: "Cupcake Rankings" }
+  const [tutors, setTutors] = useState<Tutor[]>([
+    { name: "Ali N.", university: "Duke University", stars: 4.5, reviews: 5, price: 150 },
+    { name: "Prynce K.", university: "Rice University", stars: 5, reviews: 16, price: 50 },
+    { name: "Saanvi A.", university: "New York University", stars: 5, reviews: 3, price: 85 },
+    { name: "Ethan K.", university: "Univ of Pennsylvania", stars: 4.5, reviews: 8, price: 200 }
   ]);
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -194,73 +197,134 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
     );
   };
 
-  const getMascotDescription = (schoolName: string): string => {
-    switch (schoolName) {
-      case "Pomona College":
-        return "Cecil the Sagehen, a rare bird native to California, is Pomona's unique mascot. Known for its distinctive call and vibrant plumage, Cecil embodies the college's spirit of individuality. Interestingly, Pomona is the only college in the U.S. with a Sagehen mascot, making it truly one-of-a-kind in collegiate sports.";
-      case "Princeton University":
-        return "The Tiger, Princeton's fierce mascot since 1882, is a symbol of strength and pride. Its iconic stripes and powerful presence have inspired generations of students. The famous 'Eye of the Tiger' song was actually inspired by Princeton's mascot, further cementing its place in pop culture and sports history.";
-      case "Rice University":
-        return "Sammy the Owl, named after Rice's first president William Marsh Rice, is known for his dramatic entrances at games. Often arriving by helicopter, Sammy embodies the university's innovative spirit. This wise owl has been the official mascot since 1917, representing intelligence and foresight in Rice's academic pursuits.";
-      case "University of Houston":
-        return "Shasta the Cougar, named after the school's original location on San Jacinto Street, was a live mascot until 1989. Now a costumed character, Shasta continues to embody the spirit and tenacity of UH students. The cougar represents strength, agility, and the fierce determination that Houston is known for.";
-      case "University of Richmond":
-        return "WebstUR the Spider was chosen due to a unique spider species discovered on campus in 1842. This eight-legged mascot represents the university's connection to nature and scientific discovery. Interestingly, Richmond is the only university in the U.S. with a spider as its mascot, making it stand out in collegiate sports.";
-      case "UT Dallas":
-        return "Temoc, whose name is 'comet' spelled backwards, is a blue-skinned cosmic humanoid mascot. This unique character perfectly represents UTD's focus on space, technology, and innovation. Temoc's otherworldly appearance and name reflect the university's forward-thinking approach and its strong programs in science and engineering.";
-      case "Tulane University":
-        return "Riptide the Pelican, inspired by Louisiana's state bird, replaced the former 'angry wave' mascot in 1998. This coastal bird represents Tulane's strong connection to New Orleans and the Gulf region. Riptide is known for its energetic presence at games and its ability to unite students with its distinctive pelican charm.";
-      case "Cornell University":
-        return "The Big Red Bear, unofficially named 'Touchdown', has a fascinating history. It first arrived on campus by train in 1915 as Cornell's live bear mascot. Today, the costumed version continues to rally crowds at sporting events. The bear represents strength, courage, and the wild spirit of Cornell's natural surroundings.";
-      case "UC San Diego":
-        return "King Triton, the mythical sea god, is an apt choice for UCSD's coastal campus. This powerful deity of the ocean embodies the university's strong connection to marine science and oceanography. Triton's trident is a symbol of the school's three pillars: education, research, and service, making waves in academia and beyond.";
-      case "Northwestern University":
-        return "Willie the Wildcat, introduced in 1933, has a legendary status among college mascots. Once, Willie reportedly tackled an opposing team's player who was running towards the wrong end zone, showcasing true team spirit. This purple-clad feline represents Northwestern's fierce competitive nature both in academics and athletics.";
+  const getTutorDescription = (tutorName: string): string => {
+    switch (tutorName) {
+      case "Ali N.":
+        return "Ali N. is a highly experienced tutor with a focus on B/B and C/P subjects. With 5 stars and 5 reviews, Ali has a proven track record of helping students achieve their academic goals. Ali's price is $150 per hour.";
+      case "Prynce K.":
+        return "Prynce K. is a top-rated tutor with a focus on CARS. With 5 stars and 16 reviews, Prynce has a proven track record of helping students achieve their academic goals. Prynce's price is $50 per hour.";
+      case "Saanvi A.":
+        return "Saanvi A. is a highly experienced tutor with a focus on P/S subjects. With 5 stars and 3 reviews, Saanvi has a proven track record of helping students achieve their academic goals. Saanvi's price is $85 per hour.";
+      case "Ethan K.":
+        return "Ethan K. is a highly experienced tutor with a focus on B/B and CARS subjects. With 4.5 stars and 8 reviews, Ethan has a proven track record of helping students achieve their academic goals. Ethan's price is $200 per hour.";
       default:
-        return "This school boasts a unique and spirited mascot with its own fascinating history. From its origins to its current incarnation, the mascot embodies the values, traditions, and spirit of the institution. It serves as a rallying point for students, alumni, and fans, creating a sense of unity and pride on campus and beyond.";
+        return "This tutor boasts a unique and spirited mascot with its own fascinating history. From its origins to its current incarnation, the mascot embodies the values, traditions, and spirit of the institution. It serves as a rallying point for students, alumni, and fans, creating a sense of unity and pride on campus and beyond.";
     }
   };
 
-  const renderSchools = (schools: School[]) => (
-    <div className="h-[calc(100vh-14rem)] flex flex-col">
+  const tutorExpertise: Record<string, string[]> = {
+    "Ali N.": ["B/B", "C/P"],
+    "Prynce K.": ["CARS"],
+    "Saanvi A.": ["P/S"],
+    "Ethan K.": ["B/B", "CARS"],
+  };
+
+  const renderTutors = (tutors: Tutor[]) => (
+    <div className="h-[calc(100vh-12.3rem)] flex flex-col">
       <ScrollArea className="flex-grow">
         <div className="pr-4 pb-4">
-          {schools.map((school, index) => {
+          <div className="mb-3 flex justify-center">
+            <Dialog>
+              <DialogTrigger asChild>
+                <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-opacity">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                  <span className="text-sm font-medium">Add yourself to the tutoring board</span>
+                </button>
+              </DialogTrigger>
+              <AddTutorDialog />
+            </Dialog>
+          </div>
+
+          {tutors.map((tutor, index) => {
+            const firstName = tutor.name.split(/[\s.]/, 1)[0];
+            
             return (
               <div key={index} className="mb-4 p-4 bg-[--theme-leaguecard-color] rounded-lg shadow-md">
                 <div className="flex items-start">
                   <div className="mr-4 flex-shrink-0">
                     <Image
-                      src={`/colleges/${school.name.replace(/\s+/g, '')}.png`}
-                      alt={school.name}
+                      src={`/tutors/${tutor.name.replace(/\s+/g, '')}.png`}
+                      alt={tutor.name}
                       width={80}
                       height={80}
                       className="rounded-lg border border-[--theme-border-color] object-cover xl:w-24 xl:h-24"
                     />
                   </div>
                   <div className="flex-grow">
-                    <h3 className="text-sm font-semibold text-[--theme-text-color]">{school.name}</h3>
-                    <p className="text-sm text-[--theme-text-color] opacity-80">{school.location}</p>
-                    <div className="mt-1">
-                      <span className="inline-block text-[--theme-hover-color] text-sm">
-                        #{school.rank} in {school.funRanking}
-                      </span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-[--theme-text-color]">{tutor.name}</h3>
+                        {tutorExpertise[tutor.name] && (
+                          <div className="flex items-center gap-1">
+                            {tutorExpertise[tutor.name].map((expertise, i) => (
+                              <span
+                                key={i}
+                                className="px-2 py-0.5 text-xs rounded-full bg-[--theme-hover-color] text-[--theme-hover-text]"
+                              >
+                                {expertise}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-sm text-[--theme-text-color] opacity-80">{tutor.university}</p>
+                    <div className="mt-1 flex items-center">
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => {
+                          const starValue = i + 1;
+                          const isHalfStar = tutor.stars % 1 !== 0 && Math.ceil(tutor.stars) === starValue;
+                          
+                          return isHalfStar ? (
+                            <StarHalf
+                              key={i}
+                              className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                            />
+                          ) : (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < tutor.stars 
+                                  ? "fill-yellow-400 text-yellow-400" 
+                                  : "fill-none text-gray-300"
+                              }`}
+                            />
+                          );
+                        })}
+                        <span className="ml-2 text-sm text-[--theme-text-color] opacity-80">
+                          ({tutor.reviews})
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
                 <p className="mt-3 text-sm text-[--theme-text-color] opacity-90">
-                  {getMascotDescription(school.name)}
+                  {getTutorDescription(tutor.name)}
                 </p>
-                {school.rank === 1 && (
-                  <Dialog open={isMVPDialogOpen} onOpenChange={setIsMVPDialogOpen}>
+                <div className="mt-4 flex justify-end">
+                  <Dialog>
                     <DialogTrigger asChild>
-                      {/* <button className="mt-2 text-sm text-blue-600 hover:underline">
-                        Highlighting the MVPs»
-                      </button> */}
+                      <button 
+                        className="text-sm font-medium text-blue-500 hover:text-[--theme-hover-color] transition-colors duration-200 underline-offset-4 hover:underline"
+                      >
+                        Book {tutor.name === "Prynce K." ? `(50 coins/hr)` : `($${tutor.price}/hr)`}
+                      </button>
                     </DialogTrigger>
-                    <MVPDialog university={school.name} />
+                    <BookTutorDialog tutor={tutor} />
                   </Dialog>
-                )}
+                </div>
               </div>
             );
           })}
@@ -272,8 +336,8 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
   const renderContent = (content: TabContent) => {
     if (content.type === 'insights') {
       return renderInsights();
-    } else if (content.type === 'league') {
-      return renderSchools(content.schools);
+    } else if (content.type === 'tutors') {
+      return renderTutors(content.schools);
     } else if (content.type === 'tutorial') {
       return <TutorialContent />;
     }
@@ -284,12 +348,109 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
 
   const tabs: { id: string; label: string; content: TabContent }[] = [
     { id: "tab1", label: "Insights", content: { type: 'insights', videos: videos } },
-    { id: "tab2", label: "League", content: { type: 'league', schools: schools } },
+    { id: "tab2", label: "Tutors", content: { type: 'tutors', schools: tutors } },
     { id: "tab3", label: "Bulletin", content: { type: 'tutorial' } },
   ];
 
+  const AddTutorDialog = () => (
+    <DialogContent className="max-w-[60rem] bg-[--theme-leaguecard-color] border text-[--theme-text-color] border-[--theme-border-color]">
+      <DialogHeader>
+        <DialogTitle className="text-[--theme-text-color] text-center">Listing Yourself as an MCAT Tutor</DialogTitle>
+      </DialogHeader>
+      <div className="py-4">
+        <div className="space-y-4">
+          <p className="text-md">
+            MyMCAT seeks to empower tutors, unlike tutoring firms that take a 50% cut while providing little value. For that reason, in our early stages, we do not take a cut off your labor, but we do expect excellence from everyone working to serve students — even for contractors.
+          </p>
+          <div>
+            <p className="font-medium mb-2">Enlisting with MyMCAT requires three things:</p>
+            <ol className="list-decimal list-inside space-y-2 text-sm">
+              <li>A score of 515+, verified by screensharing</li>
+              <li>A tutoring session with Prynce to verify skills</li>
+              <li>Attendance of a group orientation</li>
+            </ol>
+            <p className="text-md mt-3">
+              Please book an initial session with Prynce to verify your skills for listing.
+            </p>
+          </div>
+          <div className="w-[calc(100%-2rem)] bg-white h-[calc(100vh-30rem)] rounded-lg overflow-hidden mx-auto">
+            <iframe 
+              src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ3hMOL4oJtFVHit6w6WyM2EuvBFRPoG59w6a-T0rU14-PWTIPMVRDlOx3PrYoVMpNYOVo4UhVXk?gv=true" 
+              className="w-full h-full border-0"
+            />
+          </div>
+        </div>
+      </div>
+    </DialogContent>
+  );
+
+  const BookTutorDialog = ({ tutor }: { tutor: Tutor }) => {
+    const { user } = useUser();
+    const [messageForm, setMessageForm] = useState({ message: '' });
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!user) {
+        toast.error('You must be logged in to send a message.');
+        return;
+      }
+      try {
+        const response = await fetch('/api/send-message', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: messageForm.message,
+          }),
+        });
+
+        if (response.ok) {
+          toast.success('Message sent successfully!');
+          setMessageForm({ message: '' });
+        } else {
+          throw new Error('Failed to send message');
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
+        toast.error('Failed to send message. Please try again.');
+      }
+    };
+
+    return (
+      <DialogContent className="max-w-[40rem] bg-[--theme-leaguecard-color] border text-[--theme-text-color] border-[--theme-border-color]">
+        <DialogHeader>
+          <DialogTitle className="text-[--theme-text-color] text-center">Book a Session</DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          <p className="text-center mb-4">
+            Please send us your preferred time slots to book a session with {tutor.name}
+          </p>
+          <form onSubmit={handleSendMessage} className="space-y-2">
+            <textarea
+              placeholder="Enter your preferred time slots..."
+              value={messageForm.message}
+              onChange={(e) => setMessageForm({ message: e.target.value })}
+              className="w-full p-2 rounded resize-none text-gray-800"
+              required
+              rows={3}
+            />
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="py-2 px-4 border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-md transition-opacity"
+              >
+                Send Request
+              </button>
+            </div>
+          </form>
+        </div>
+      </DialogContent>
+    );
+  };
+
   return (
-    <div className="relative p-2 overflow-hidden h-full">
+    <div className="relative p-2 overflow-hidden h-[calc(100vh-7rem)]">
       <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
         <div className="flex w-full flex-shrink-0">
           {tabs.map((tab) => (
