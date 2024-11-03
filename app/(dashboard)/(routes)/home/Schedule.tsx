@@ -462,10 +462,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     setRunTutorialPart1(true);
   };
 
-  const handleAAMCClick = () => {
-    router.push("/integrations");
-  };
-
   // Add this function to reset the local storage variables
   const resetTutorials = () => {
     setIsResetting(true);
@@ -668,7 +664,7 @@ const Schedule: React.FC<ScheduleProps> = ({
           {showAnalytics ? (
             <>
               <pre
-                className="pt-5 font-mono text-m leading-[24px] tracking-[0.4px] whitespace-pre-wrap mt-2 ml-2"
+                className="pt-5 text-m leading-[1.5rem] tracking-[0.025rem] whitespace-pre-wrap mt-2 ml-2"
                 style={{ color: "var(--theme-text-color)" }}
               >
                 {runTutorialPart1 ? tutorialText : typedText}
@@ -688,12 +684,6 @@ const Schedule: React.FC<ScheduleProps> = ({
                       className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
                     >
                       &gt; calendar
-                    </button>
-                    <button
-                      onClick={handleAAMCClick}
-                      className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
-                    >
-                      AAMC
                     </button>
                   </div>
 
