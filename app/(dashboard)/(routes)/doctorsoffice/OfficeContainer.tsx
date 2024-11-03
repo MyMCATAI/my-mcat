@@ -31,21 +31,38 @@ interface GridImage {
 }
 
 // Map of images to be used for QuestionPromptSprite
-export const roomToSubjectMap: Record<string, string> = {
-  'ExaminationRoom1': 'Biochemistry',
-  'ExaminationRoom2': 'Psychology',
-  'Bathroom1': 'Biology',
-  'Lab1': 'Chemistry',
-  'DoctorsOffice1': 'Physics',
-  'HighCare1': 'Sociology',
-  'HighCare2': 'Biochemistry',
-  'MRIMachine1': 'Psychology',
-  'MRIMachine2': 'Biology',
-  'OperatingRoom1': 'Chemistry',
-  'CATScan1': 'Physics',
-  'CATScan2': 'Sociology',
-  'MedicalCloset1': 'Biochemistry',
-  'WaitingRoom1': 'Psychology'
+export const roomToSubjectMap: Record<string, string[]> = {
+  'WaitingRoom1': ['Sociology'],
+  'ExaminationRoom1': ['Psychology'],
+  'ExaminationRoom2': ['Psychology'],
+  'DoctorsOffice1': ['Sociology'],
+  'Bathroom1': [''], // Empty array since it has no content
+  'Lab1': ['Biology','Biochemistry'],
+  'HighCare1': ['Biology'],
+  'HighCare2': ['Biology','Biochemistry'],
+  'OperatingRoom1': ['Biochemistry'],
+  'MedicalCloset1': ['Biochemistry'],
+  'MRIMachine1': ['Chemistry','Physics'],
+  'MRIMachine2': ['Physics','Chemistry'],
+  'CATScan1': ['Physics'],
+  'CATScan2': ['Physics'],
+};
+
+export const roomToContentMap: Record<string, string[]> = {
+  'WaitingRoom1': ['8A', '8B', '8C'],
+  'ExaminationRoom1': ['6A', '6B', '6C'],
+  'ExaminationRoom2': ['7A', '7B', '7C'],
+  'DoctorsOffice1': ['9A', '9B', '10A'],
+  'Bathroom1': [],  // Empty array since it has no content
+  'Lab1': ['2A', '2B', '2C', '1C'],
+  'HighCare1': ['3A', '3B'],
+  'HighCare2': ['1A', '1B', '5E'],
+  'OperatingRoom1': ['1D'],
+  'MedicalCloset1': ['5C', '5D'],
+  'MRIMachine1': ['4E', '5A', '5B'],
+  'MRIMachine2': ['4C', '4D'],
+  'CATScan1': ['4B'],
+  'CATScan2': ['4A']
 };
 
 // Define constants outside the component
@@ -433,7 +450,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
         />
         
         <QuestionPromptSprite
-          src={`/game-components/questionPopup${roomToSubjectMap[img.id]}.png`}
+          src={`/game-components/questionPopup${roomToSubjectMap[img.id][0]}.png`}
           x={posX + img.width / 2}
           y={posY + img.height / 5}
           scaleConstant={4}  

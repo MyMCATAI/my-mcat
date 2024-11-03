@@ -24,28 +24,42 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const categoryId = searchParams.get('categoryId');
     const passageId = searchParams.get('passageId');
-    const contentCategory = searchParams.get('contentCategory');
-    const conceptCategory = searchParams.get('conceptCategory')?.replace(/_/g, ' ') || '';
+    
+    // Convert string inputs to string arrays
+    const contentCategory = searchParams.get('contentCategory')
+      ? [searchParams.get('contentCategory')!]
+      : undefined;
+    
+    const conceptCategory = searchParams.getAll('conceptCategory')
+      .map(cat => cat.replace(/_/g, ' '))
+      || undefined;
+    
+    const subjectCategory = searchParams.getAll('subjectCategory')
+      .map(cat => cat.replace(/_/g, ' '))
+      || undefined;
+
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
     const difficulty = searchParams.get('difficulty') ? parseInt(searchParams.get('difficulty')!) : undefined; // Set to undefined if not specified
-    const types = searchParams.get('types');
+    const types = searchParams.getAll('types')
+      .map(type => type.trim())
+      .filter(type => type.length > 0) // Remove any empty strings
+      || [];
     const incorrectStreakProbWeight = parseFloat(searchParams.get('incorrectStreakProbWeight') || '0.25');
     const conceptContentMasteryProbWeight = parseFloat(searchParams.get('conceptContentMasteryProbWeight') || '0.5');
     const desiredDifficultyProbWeight = parseFloat(searchParams.get('desiredDifficultyProbWeight') || '0.05');
     const testFrequencyProbWeight = parseFloat(searchParams.get('testFrequencyProbWeight') || '0.2');
-    const subjectCategory = searchParams.get('subjectCategory')?.replace(/_/g, ' ') || ''; 
-    
+
     const result = await getQuestions({ 
       categoryId: categoryId || undefined, 
       passageId: passageId || undefined, 
-      contentCategory: contentCategory || undefined,
-      conceptCategory: conceptCategory || undefined,
-      subjectCategory: subjectCategory || undefined,
+      contentCategory: contentCategory || [],
+      conceptCategory: conceptCategory || [],
+      subjectCategory: subjectCategory || [],
       page, 
       pageSize,
       desiredDifficulty: difficulty || undefined,
-      types: types || undefined,
+      types: types || [],
       seenTimes,
       intervalTotalHours, // Pass the maxRelevantIntervalHours for filtering UserResponse
       intervalCorrectHours, // Pass the maxRelevantIntervalHours for filtering UserResponse

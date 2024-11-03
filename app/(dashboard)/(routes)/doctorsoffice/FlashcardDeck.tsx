@@ -7,6 +7,7 @@ import { useDrag } from '@use-gesture/react';
 import ContentRenderer from '@/components/ContentRenderer';
 import { FlattenedQuestionResponse } from '@/lib/question';
 import { roomToSubjectMap } from './OfficeContainer';
+import { roomToContentMap } from './OfficeContainer';
 
 interface Flashcard {
   id: string;
@@ -38,6 +39,7 @@ const physics = {
 const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onCorrectAnswer}) => {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [cardStartTime, setCardStartTime] = useState<number>(Date.now());
   const [isRevealed, setIsRevealed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -67,21 +69,29 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
   const fetchFlashcards = async () => {
     setIsLoading(true);
     try {
-      const subject = roomToSubjectMap[roomId] || 'Sociology';
-      console.log(`/api/question?subjectCategory=${subject.replace(/ /g, "_")}&types=flashcard&page=1&pageSize=10`);
-      const response = await fetch(`/api/question?subjectCategory=${subject.replace(/ /g, "_")}&types=flashcard&page=1&pageSize=10`);
+      const subjects = Array.isArray(roomToSubjectMap[roomId]) 
+        ? roomToSubjectMap[roomId] 
+        : roomToSubjectMap[roomId] || [];
+      const contents = Array.isArray(roomToContentMap[roomId])
+        ? roomToContentMap[roomId]
+        : roomToContentMap[roomId] || [];
+      
+      const subjectParams = subjects
+        .map(subject => `subjectCategory=${encodeURIComponent(subject.replace(/ /g, "_"))}`)
+        .join('&');
+      const contentParams = contents
+        .map(content => `contentCategory=${encodeURIComponent(content.replace(/ /g, "_"))}`)
+        .join('&');
+
+      const pageNumber = 1;
+      const pageSize = 10;
+
+      console.log(`/api/question?${subjectParams}&${contentParams}&types=flashcard&page=${pageNumber}&pageSize=${pageSize}`);
+      const response = await fetch(`/api/question?${subjectParams}&${contentParams}&types=flashcard&page=${pageNumber}&pageSize=${pageSize}`);
       
       const data = await response.json();
-      interface Flashcard {
-        id: string;
-        questionContent: string;
-        questionOptions: string[];
-        category: {
-          subjectCategory: string;
-          conceptCategory: string;
-        };
-        userResponses: Array<{ isCorrect: boolean; timeSpent: number }>;
-      }
+      setCardStartTime(Date.now());
+
       const transformedFlashcards = data.questions.map((question: FlattenedQuestionResponse) => ({
         id: question.id,
         questionContent: question.questionContent,
@@ -165,6 +175,9 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
       return; // Exit early if no more cards
     }
 
+    const timeSpent = Math.floor((Date.now() - cardStartTime)/1000);
+    setCardStartTime(Date.now());
+
     if (isCorrect) {
       onCorrectAnswer();
       if (correctSound.current) {
@@ -186,8 +199,8 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
           questionId: currentCard.id,
           userAnswer: isCorrect ? currentCard.questionOptions[0] : 'Incorrect',
           isCorrect,
-          userNotes: `Action: ${action}, Weight: ${weight}`,
-          weighting: weight,
+          timeSpent,
+          userNotes: `Action: ${action}`,
           userTestId: `Flashcard-${getCurrentDateTime()}`,
         }),
       });
@@ -215,15 +228,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
   };
 
   const handleSwipe = (direction: string) => {
-    console.log("handleSwipe, ", direction, "Current Card Index:", currentCardIndex, "Total Cards:", flashcards.length);
-    // Check if we've gone through all cards
-    console.log("handleSwipe called", {
-      flashcardsLength: flashcards.length,
-      flashcardsRefLength: flashcardsRef.current.length,
-      currentCardIndex,
-      direction
-    });
-
+    
     // Guard against empty flashcards
     if (flashcardsRef.current.length === 0) {
       console.log("No flashcards available");

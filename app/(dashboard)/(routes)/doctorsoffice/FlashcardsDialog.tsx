@@ -146,7 +146,12 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
           <DialogHeader className="mb-2 flex-shrink-0">
             <DialogTitle className="text-[--theme-hover-text] text-center items-center justify-center rounded-md bg-[--theme-hover-color] p-2 flex">
               <span className="flex-grow">
-                {roomToSubjectMap[roomId]} flashcards
+                {Array.isArray(roomToSubjectMap[roomId]) 
+                  ? roomToSubjectMap[roomId].length === 1
+                    ? roomToSubjectMap[roomId][0]
+                    : roomToSubjectMap[roomId].join(' & ')
+                  : roomToSubjectMap[roomId]
+                } flashcards
               </span>
               <button 
                 onClick={handleInterruption}

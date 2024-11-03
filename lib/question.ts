@@ -33,21 +33,17 @@ export interface FlattenedQuestionResponse extends Question {
   incorrectStreak: number;
 }
 
-
-
-
-
 export const getQuestions = async (params: {
   categoryId?: string;
   passageId?: string;
-  contentCategory?: string;
-  conceptCategory?: string;
-  subjectCategory?: string;
+  contentCategory?: string[];  
+  conceptCategory?: string[]; 
+  subjectCategory?: string[];  
   page?: number;
   pageSize?: number;
   userId: string;
   desiredDifficulty?: number;
-  types?: string;
+  types?: string[];
   seenTimes?: number;
   intervalTotalHours?: number;
   intervalCorrectHours?: number;
@@ -64,18 +60,28 @@ export const getQuestions = async (params: {
     page = 1, 
     pageSize = 10 
   } = params;
-  const skip = (page - 1) * pageSize;
+
   const maxRelevantIntervalHours = Math.max(intervalTotalHours, intervalCorrectHours);
 
   const where: any = {
     ...(categoryId && { categoryId }),
     ...(passageId && { passageId }),
-    ...(types && { types }),
-    // Move category-related filters to the category relation
+    ...(types?.length && { 
+      types: {
+        in: types // Now correctly passing an array to the 'in' operator
+      }
+    }),
+    // Modified category filters to use OR conditions when arrays have items
     category: {
-      ...(contentCategory && { contentCategory }),
-      ...(conceptCategory && { conceptCategory }),
-      ...(subjectCategory && { subjectCategory }),
+      ...(contentCategory?.length && { 
+        contentCategory: { in: contentCategory } 
+      }),
+      ...(conceptCategory?.length && { 
+        conceptCategory: { in: conceptCategory } 
+      }),
+      ...(subjectCategory?.length && { 
+        subjectCategory: { in: subjectCategory } 
+      }),
     },
   };
 
