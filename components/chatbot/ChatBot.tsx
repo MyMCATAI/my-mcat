@@ -295,18 +295,15 @@ const ChatBot: React.FC<ChatBotProps> = ({
     chatWindowStyle: {
       display: "flex",
       flexDirection: "column" as const,
-      height: "100%",
+      height: "calc(100vh - 14.8rem)",
       width: "100%",
       backgroundColor: backgroundColor,
       position: "relative",
       zIndex: 1,
     },
     bodyStyle: {
-      flex: "1",
+      flexGrow: 1,
       overflowY: "auto" as const,
-      height: "calc(100vh - 150px)",
-      maxHeight: "100%",
-      paddingBottom: "1rem",
     },
     chatInputContainerStyle: {
       position: 'sticky',
@@ -361,14 +358,13 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
   return (
     <div
-      className="w-full h-full rounded-lg shadow-lg flex flex-col"
+      className="w-full rounded-lg shadow-lg overflow-hidden flex flex-col relative"
       style={{
         boxShadow: "var(--theme-box-shadow)",
         border: "1px solid var(--theme-border-color)",
         width: width,
         height: height,
         backgroundColor: backgroundColor,
-        overflow: 'hidden',
       }}
     >
       {avatar && (
