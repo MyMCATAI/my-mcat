@@ -23,6 +23,7 @@ import AddEventModal from "./AddEventModal";
 import EditEventModal from "./EditEventModal";
 import ErrorModal from "@/components/calendar/ErrorModal";
 import ConfirmModal from "@/components/calendar/ConfirmModal";
+import { isSameDay } from "date-fns";
 
 // Assuming you have a types file with this interface
 interface FetchedActivity {
@@ -33,6 +34,7 @@ interface FetchedActivity {
   hours: number;
   activityType: string;
   link?: string | null;
+  tasks?: any[];
 }
 
 interface CalendarEvent {
@@ -44,6 +46,7 @@ interface CalendarEvent {
   hours: number;
   activityType: string;
   link?: string | null;
+  tasks?: any[];
 }
 
 const localizer = momentLocalizer(moment);
@@ -60,6 +63,7 @@ interface CalendarActivityData {
   categoryId?: string;
   status?: string;
   contentId?: string;
+  tasks?: any[];
 }
 
 interface InteractiveCalendarProps {
@@ -70,10 +74,13 @@ interface InteractiveCalendarProps {
   onInteraction: () => void;
   setRunTutorialPart2: (value: boolean) => void;
   setRunTutorialPart3: (value: boolean) => void;
+  handleSetTab: (tab: string) => void;
+  onTasksUpdate: (eventId: string, tasks: any[]) => void;
+  updateTodaySchedule: () => void;
 }
 
 // Add this conversion function
-const convertToCalendarEvent = (activity: CalendarActivityData & { id: string }): CalendarEvent => {
+const convertToCalendarEvent = (activity: any): CalendarEvent => {
   return {
     id: activity.id,
     start: new Date(activity.scheduledDate),
@@ -83,6 +90,7 @@ const convertToCalendarEvent = (activity: CalendarActivityData & { id: string })
     hours: activity.hours,
     activityType: activity.activityType,
     link: activity.link,
+    tasks: activity.tasks || [],
   };
 };
 
@@ -94,6 +102,9 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   onInteraction,
   setRunTutorialPart2,
   setRunTutorialPart3,
+  handleSetTab,
+  onTasksUpdate,
+  updateTodaySchedule,
 }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [view, setView] = useState<View>("month");
@@ -142,8 +153,10 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         hours: activity.hours,
         activityType: activity.activityType,
         link: activity.link,
+        tasks: activity.tasks,
       }));
 
+      console.log('formattedEvents are', formattedEvents);
       setEvents(formattedEvents);
     } catch (error) {
       console.error("Error fetching activities:", error);
@@ -251,6 +264,16 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   const handleModalSubmit = async (eventData: CalendarActivityData) => {
     if (eventData.activityTitle && user?.id && newEventStart && newEventEnd) {
       try {
+        // Fetch default tasks only for new events
+        let tasks = [];
+        try {
+          const defaultTasks = await fetch(`/api/event-task?eventTitle=${eventData.activityTitle}`).then(res => res.json());
+          tasks = defaultTasks;
+        } catch (error) {
+          console.error('Error fetching default tasks:', error);
+          tasks = [];
+        }
+
         const response = await fetch("/api/calendar-activity", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -264,6 +287,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
             scheduledDate: newEventStart.toISOString(),
             categoryId: eventData.categoryId,
             contentId: eventData.contentId,
+            tasks: tasks, // Include the default tasks
           }),
         });
 
@@ -274,7 +298,17 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         }
 
         const createdActivity: CalendarActivityData & { id: string } = await response.json();
-        setEvents((prevEvents) => [...prevEvents, convertToCalendarEvent(createdActivity)]);
+        const calendarEvent = convertToCalendarEvent(createdActivity);
+        setEvents((prevEvents) => [...prevEvents, calendarEvent]);
+        
+        // Update today's schedule if the new event is for today
+        const today = new Date();
+        const eventDate = new Date(createdActivity.scheduledDate);
+        if (isSameDay(today, eventDate) && onTasksUpdate && updateTodaySchedule) {
+          onTasksUpdate(createdActivity.id, tasks);
+          updateTodaySchedule();
+        }
+
         onInteraction();
         handleModalClose();
       } catch (error) {
@@ -355,6 +389,11 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         }
 
         setEvents((currentEvents) => currentEvents.filter((ev) => ev.id !== eventToDelete));
+        const deletedEvent = events.find(ev => ev.id === eventToDelete);
+        if (deletedEvent && isSameDay(new Date(), deletedEvent.start)) {
+          updateTodaySchedule();
+        }
+
         onInteraction();
         handleEditModalClose();
       } catch (error) {
@@ -369,25 +408,58 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   const handleEditModalSubmit = async (updatedEventData: CalendarActivityData) => {
     if (selectedEvent) {
       try {
-        const updatedEvent: CalendarEvent = {
-          ...selectedEvent,
-          title: updatedEventData.activityTitle,
-          activityText: updatedEventData.activityText,
-          hours: updatedEventData.hours,
-          activityType: updatedEventData.activityType,
-          link: updatedEventData.link,
+        // Create payload with existing tasks if not provided in update
+        const payload = {
+          ...updatedEventData,
+          id: selectedEvent.id,
+          scheduledDate: selectedEvent.start.toISOString(),
+          tasks: updatedEventData.tasks || selectedEvent.tasks
         };
-        const updatedEventFromServer = await updateEventInBackend(updatedEvent);
+
+        const response = await fetch(`/api/calendar-activity`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update event');
+        }
+
+        const updatedEventFromServer = await response.json();
+        
+        // Update the events state with the new data
         setEvents((currentEvents) =>
           currentEvents.map((ev) =>
-            ev.id === updatedEventFromServer.id ? convertToCalendarEvent(updatedEventFromServer) : ev
+            ev.id === selectedEvent.id
+              ? {
+                  ...ev,
+                  title: updatedEventFromServer.activityTitle,
+                  activityText: updatedEventFromServer.activityText,
+                  hours: updatedEventFromServer.hours,
+                  activityType: updatedEventFromServer.activityType,
+                  link: updatedEventFromServer.link,
+                  tasks: updatedEventFromServer.tasks,
+                  start: new Date(updatedEventFromServer.scheduledDate),
+                  end: new Date(updatedEventFromServer.scheduledDate),
+                }
+              : ev
           )
         );
+
+        const today = new Date();
+        const eventDate = new Date(updatedEventFromServer.scheduledDate);
+        if (isSameDay(today, eventDate) && updateTodaySchedule) {
+          updateTodaySchedule();
+        }
+
         onInteraction();
         handleEditModalClose();
       } catch (error) {
         console.error("Error updating event:", error);
-        // Add user feedback here, e.g., show an error message
+        setErrorMessage("Failed to update event");
       }
     }
   };
@@ -446,6 +518,8 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         onSubmit={handleEditModalSubmit}
         onDelete={handleDeleteEvent}
         event={selectedEvent}
+        handleSetTab={handleSetTab}
+        onTasksUpdate={onTasksUpdate}
       />
       <ErrorModal 
         isOpen={errorMessage !== null}

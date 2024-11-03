@@ -4,13 +4,21 @@ import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 import { Prisma } from '@prisma/client';
+import { GET as getEventTasks } from '../event-task/route';
 
 // Define task categories with their properties
 const TASK_CATEGORIES = [
   {
-    name: 'Daily CARS Practice',
+    name: 'MyMCAT Daily CARs',
     optional: true,
     duration: 0.5,
+    priority: 2,
+    description: "Practice CARS passages to improve your critical analysis and reasoning skills. Focus on understanding complex arguments, identifying main ideas, and developing your reading speed and comprehension.",
+  },
+  {
+    name: 'Daily CARs',
+    optional: true,
+    duration: 1,
     priority: 2,
     description: "Practice CARS passages to improve your critical analysis and reasoning skills. Focus on understanding complex arguments, identifying main ideas, and developing your reading speed and comprehension.",
   },
@@ -110,6 +118,11 @@ interface ContentItem {
   categoryId: string;
 }
 
+interface Task {
+  text: string;
+  completed: boolean;
+}
+
 interface CalendarActivity {
   userId: string;
   studyPlanId: string;
@@ -122,6 +135,7 @@ interface CalendarActivity {
   link?: string;
   scheduledDate: Date;
   status: string;
+  tasks: Task[];
 }
 
 interface CategoryAllocation extends KnowledgeProfile {
@@ -135,6 +149,19 @@ interface SelectedContentItem extends ContentItem {
 // Test whether study plan removes future activities
 // const HARDCODED_TODAY = new Date('2024-10-30');
 // HARDCODED_TODAY.setHours(0, 0, 0, 0);
+
+// Add this helper function
+// async function getDefaultTasksForActivity(activityTitle: string) {
+//   try {
+//     const filePath = path.join(process.cwd(), 'app', 'api', 'event-task', 'taskList.csv');
+//     const csvContent = await fs.readFile(filePath, 'utf8');
+//     const taskMapping = parseDefaultTasks(csvContent);
+//     return taskMapping[activityTitle] || [];
+//   } catch (error) {
+//     console.error('Error loading default tasks:', error);
+//     return [];
+//   }
+// }
 
 // Handler for generating the study plan
 export async function POST(req: Request) {
@@ -151,7 +178,7 @@ export async function POST(req: Request) {
       resources,
       hoursPerDay,
       fullLengthDays,
-      contentReviewRatio = 0.5,
+      contentReviewRatio = 0.8,
       useKnowledgeProfile = false,
       alternateStudyPractice = false,
       includeSpecificContent = false,
@@ -234,10 +261,23 @@ export async function POST(req: Request) {
       today
     );
 
-    // Save activities to the database
-    await prisma.calendarActivity.createMany({
-      data: calendarActivities,
-    });
+    // When creating activities, add default tasks
+    for (const activity of calendarActivities) {
+      const mockRequest = new Request(
+        `${process.env.NEXT_PUBLIC_APP_URL}/api/event-task?eventTitle=${encodeURIComponent(activity.activityTitle)}`
+      );
+      
+      const tasksResponse = await getEventTasks(mockRequest);
+      const defaultTasks = await tasksResponse.json();
+      
+      // Create the activity in the database with tasks
+      await prisma.calendarActivity.create({
+        data: {
+          ...activity,
+          tasks: defaultTasks ? JSON.parse(JSON.stringify(defaultTasks)) : [] // Provide empty array as fallback
+        }
+      });
+    }
 
     return NextResponse.json({ message: "Study plan generated successfully" }, { status: 201 });
   } catch (error) {
@@ -250,7 +290,7 @@ export async function POST(req: Request) {
 async function generateStudySchedule(
   studyPlan: StudyPlan,
   resources: Resources,
-  hoursPerDay: { [key: string]: number },
+  hoursPerDay: { [key: string]: string },
   fullLengthDays: string[],
   contentReviewRatio: number,
   knowledgeProfiles: KnowledgeProfile[],
@@ -262,18 +302,15 @@ async function generateStudySchedule(
   const activities: CalendarActivity[] = [];
   const examDate = new Date(studyPlan.examDate);
   const totalDays = Math.ceil((examDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
-
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  let currentDate = new Date(startDate);
   let isStudySession = true;
 
-  // Calculate total available study hours
-  const totalStudyHours = calculateTotalAvailableHours(hoursPerDay, studyPlan);
+  let totalAvailableHours = calculateTotalAvailableHours(hoursPerDay, studyPlan);
 
   // Allocate study time per category if using knowledge profiles
   let categoryAllocations: CategoryAllocation[] = [];
   if (knowledgeProfiles.length > 0) {
-    categoryAllocations = allocateStudyTime(knowledgeProfiles, totalStudyHours);
+    categoryAllocations = allocateStudyTime(knowledgeProfiles, totalAvailableHours);
   }
 
   // Select content per category if including specific content items
@@ -282,60 +319,124 @@ async function generateStudySchedule(
     selectedContent = selectContent(categoryAllocations, contentItems);
   }
 
-  // Iterate through each day until the exam date
-  for (let i = 0; i < totalDays; i++) {
+  // Calculate exam schedule if more than 70 days until exam
+  const availableExams = [...THIRD_PARTY_EXAMS];
+  if (resources.hasAAMC) {
+    availableExams.push(...AAMC_EXAMS);
+  }
+  
+  // Handle full length exams
+  let examSchedule: { date: Date; examName: string }[] = [];
+  const daysForFLExams = Math.min(totalDays, 70);
+  const daysBeforeLastExam = 5; // Buffer before final exam
+  const examInterval = Math.floor((daysForFLExams - daysBeforeLastExam) / availableExams.length);
+  
+  // Schedule exams backwards from the exam date
+  let currentExamDate = new Date(examDate);
+  currentExamDate.setDate(currentExamDate.getDate() - daysBeforeLastExam);
+  
+  for (let i = availableExams.length - 1; i >= 0; i--) {
+    // Find the next available full length day
+    while (!fullLengthDays.includes(daysOfWeek[currentExamDate.getDay()])) {
+      currentExamDate.setDate(currentExamDate.getDate() - 1);
+    }
+    
+    examSchedule.unshift({
+      date: new Date(currentExamDate),
+      examName: availableExams[i]
+    });
+    
+    currentExamDate.setDate(currentExamDate.getDate() - examInterval);
+  }
+
+  // Handle CARs schedule
+  // P(i) = i^exponent / sum of all weights
+  // weights = [i**exponent for i in range(1, total_days + 1)]
+  // Generate AAMC CARS schedule after exam schedule is created
+  const NUM_AAMC_CARS = 18;
+  const CARS_EXPONENT = 4;
+  
+  // Create array of available days (excluding exam days)
+  const availableDays: Date[] = [];
+  let tempDate = new Date(startDate);
+  while (tempDate < examDate) {
+    // Check if this day isn't a full-length exam day
+    if (!examSchedule.some(exam => exam.date.getTime() === tempDate.getTime())) {
+      availableDays.push(new Date(tempDate));
+    }
+    tempDate.setDate(tempDate.getDate() + 1);
+  }
+
+  // Generate weights for each available day
+  const weights = availableDays.map((_, index) => 
+    Math.pow(index + 1, CARS_EXPONENT)
+  );
+  const totalWeight = weights.reduce((a, b) => a + b, 0);
+  const probabilities = weights.map(w => 
+    Number((w / totalWeight).toFixed(3))
+  );
+
+  // Select days for AAMC CARS
+  const aamcCarsDays = new Set<number>();
+  while (aamcCarsDays.size < NUM_AAMC_CARS && availableDays.length > aamcCarsDays.size) {
+    const selectedIndex = weightedRandomChoice(probabilities);
+    aamcCarsDays.add(selectedIndex);
+  }
+
+  // Store the selected days for use in determineMainTask
+  const aamcCarsSchedule = new Set(
+    Array.from(aamcCarsDays).map(index => availableDays[index].getTime())
+  );
+
+  // Calculate initial content review ratio (80/20)
+  // Probably use contentReviewRatio
+  let currentReviewRatio = 0.8;
+  const ratioChangePerDay = (0.8 - 0.2) / totalDays; // Linear progression from 80/20 to 20/80
+
+  let currentDate = new Date(startDate);
+  while (currentDate < examDate) {
     const dayOfWeek = currentDate.getDay();
     const dayName = daysOfWeek[dayOfWeek];
-    const availableHours = hoursPerDay[dayName] || 0;
-
-    // Track tasks already scheduled for this day
-    const scheduledTasksForDay = new Set<string>();
-
-    // Skip if no hours are available
+    const availableHours = parseInt(hoursPerDay[dayName]) || 0;
+    
     if (availableHours === 0) {
       currentDate.setDate(currentDate.getDate() + 1);
       continue;
     }
 
-    let dailyHours = availableHours;
-    const dayActivities: CalendarActivity[] = [];
+    const scheduledTasksForDay = new Set<string>();
 
-    // Check if today is a preferred day for full-length exams
-    if (fullLengthDays.includes(dayName) && dailyHours >= 8 && !scheduledTasksForDay.has('Full-Length Exam')) {
-      const fullLengthExam = createActivity(studyPlan, 'Full-Length Exam', 'Exam', 8, currentDate);
-      dayActivities.push(fullLengthExam);
-      scheduledTasksForDay.add('Full-Length Exam');
-      dailyHours -= 8;
+    // Check if there's a scheduled exam for this day
+    const scheduledExam = examSchedule.find(exam => 
+      exam.date.getTime() === currentDate.getTime()
+    );
 
+    if (scheduledExam) {
+      // Schedule full length exam
+      const examActivity = createActivity(
+        studyPlan,
+        scheduledExam.examName,
+        'Exam',
+        8,
+        currentDate
+      );
+      activities.push(examActivity);
+
+      // Schedule take-up exam for the following days
       await scheduleTakeUpExam(activities, studyPlan, currentDate, hoursPerDay);
-    }
+    } else {
+      // Regular study day
+      let remainingHours = availableHours;
 
-    // Schedule other activities
-    while (dailyHours >= 0.5) {
       let activityScheduled = false;
 
       if (includeSpecificContent && selectedContent.length > 0) {
         const contentActivity = getNextContentActivity(selectedContent, currentDate, isStudySession, studyPlan);
-        if (contentActivity && contentActivity.hours <= dailyHours && !scheduledTasksForDay.has(contentActivity.activityTitle)) {
-          dayActivities.push(contentActivity);
+        if (contentActivity && contentActivity.hours <= remainingHours && !scheduledTasksForDay.has(contentActivity.activityTitle)) {
+          activities.push(contentActivity);
           scheduledTasksForDay.add(contentActivity.activityTitle);
-          dailyHours -= contentActivity.hours;
+          remainingHours -= contentActivity.hours;
           activityScheduled = true;
-        }
-      }
-
-      if (!activityScheduled) {
-        const mainTaskName = determineMainTask(resources, contentReviewRatio, scheduledTasksForDay);
-        if (mainTaskName) {
-          const task = TASK_CATEGORIES.find(t => t.name === mainTaskName);
-          if (task && typeof task.duration === 'number') {
-            const taskDuration = Math.min(task.duration, dailyHours);
-            const generalActivity = createActivity(studyPlan, mainTaskName, task.type || 'Study', taskDuration, currentDate);
-            dayActivities.push(generalActivity);
-            scheduledTasksForDay.add(mainTaskName);
-            dailyHours -= taskDuration;
-            activityScheduled = true;
-          }
         }
       }
 
@@ -343,20 +444,56 @@ async function generateStudySchedule(
         isStudySession = !isStudySession;
       }
 
-      if (!activityScheduled) {
-        break;
+      // Get main tasks for the day
+      const mainTasks = determineMainTask(
+        resources,
+        currentReviewRatio,
+        scheduledTasksForDay,
+        totalAvailableHours,
+        totalDays,
+        aamcCarsSchedule,
+        currentDate
+      );
+
+      // Schedule each task
+      for (const taskName of mainTasks) {
+        const task = TASK_CATEGORIES.find(t => t.name === taskName);
+        if (task && typeof task.duration === 'number' && remainingHours >= task.duration) {
+          const activity = createActivity(
+            studyPlan,
+            taskName,
+            task.type || 'Study',
+            task.duration,
+            currentDate
+          );
+          activities.push(activity);
+          scheduledTasksForDay.add(taskName);
+          remainingHours -= task.duration;
+        }
       }
     }
 
-    activities.push(...dayActivities);
+    totalAvailableHours -= availableHours;
+    currentReviewRatio -= ratioChangePerDay;
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return activities;
 }
 
+// Helper function for weighted random selection
+function weightedRandomChoice(probabilities: number[]): number {
+  const r = Math.random();
+  let sum = 0;
+  for (let i = 0; i < probabilities.length; i++) {
+    sum += probabilities[i];
+    if (r <= sum) return i;
+  }
+  return probabilities.length - 1;
+}
+
 // Function to calculate total available study hours
-function calculateTotalAvailableHours(hoursPerDay: { [key: string]: number }, studyPlan: StudyPlan): number {
+function calculateTotalAvailableHours(hoursPerDay: { [key: string]: string }, studyPlan: StudyPlan): number {
   const today = new Date();
   const examDate = new Date(studyPlan.examDate);
   const totalDays = Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
@@ -368,7 +505,7 @@ function calculateTotalAvailableHours(hoursPerDay: { [key: string]: number }, st
   for (let i = 0; i < totalDays; i++) {
     const dayOfWeek = currentDate.getDay();
     const dayName = daysOfWeek[dayOfWeek];
-    totalHours += hoursPerDay[dayName] || 0;
+    totalHours += parseInt(hoursPerDay[dayName]) || 0;
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
@@ -445,8 +582,8 @@ function getNextContentActivity(
         link: contentItem.link,
         scheduledDate: new Date(currentDate),
         status: "Not Started",
+        tasks: [],
       };
-      console.log('Created content activity:', JSON.stringify(activity, null, 2));
       return activity;
     }
   }
@@ -458,7 +595,7 @@ async function scheduleTakeUpExam(
   activities: CalendarActivity[],
   studyPlan: StudyPlan,
   examDate: Date,
-  hoursPerDay: { [key: string]: number }
+  hoursPerDay: { [key: string]: string }
 ) {
   let remainingReviewHours = 5;
   let currentDate = new Date(examDate);
@@ -474,7 +611,7 @@ async function scheduleTakeUpExam(
 
     const dayOfWeek = currentDate.getDay();
     const dayName = daysOfWeek[dayOfWeek];
-    const availableHours = hoursPerDay[dayName] || 0;
+    const availableHours = parseInt(hoursPerDay[dayName]) || 0;
 
     if (availableHours > 0) {
       const reviewHours = Math.min(availableHours, remainingReviewHours);
@@ -487,38 +624,55 @@ async function scheduleTakeUpExam(
   }
 }
 
-// Function to determine the main task based on contentReviewRatio
+// Function to determine the main task based on contentReviewRatio and available resources
 function determineMainTask(
   resources: Resources, 
-  contentReviewRatio: number, 
-  scheduledTasksForDay: Set<string>
-): string | null {
-  const contentTasks: string[] = [];
-  const reviewTasks: string[] = [];
+  contentReviewRatio: number,
+  scheduledTasksForDay: Set<string>,
+  hoursUntilExam: number,
+  totalDays: number,
+  aamcCarsSchedule: Set<number>,
+  currentDate: Date
+): string[] {
+  const tasks: string[] = [];
+  const isReviewDay = Math.random() < contentReviewRatio;
+  
+  // Calculate CARS duration based on exam proximity
+  // More 30-min sessions early on, more 60-min sessions closer to exam
 
-  if (resources.hasAdaptiveTutoringSuite && !scheduledTasksForDay.has('Adaptive Tutoring Suite')) {
-    contentTasks.push('Adaptive Tutoring Suite');
-  }
-  if (resources.hasAnki && !scheduledTasksForDay.has('Anki Clinic')) {
-    contentTasks.push('Anki Clinic');
-  }
-  if (resources.hasUWorld && !scheduledTasksForDay.has('UWorld')) {
-    reviewTasks.push('UWorld');
-  }
-  if (resources.hasAAMC && !scheduledTasksForDay.has('AAMC Materials')) {
-    reviewTasks.push('AAMC Materials');
+  // Determine CARS type based on schedule
+  if (!scheduledTasksForDay.has('MyMCAT Daily CARs') && !scheduledTasksForDay.has('Daily CARs')) {
+    const useAAMCCars = aamcCarsSchedule.has(currentDate.getTime());
+    tasks.push(useAAMCCars ? 'Daily CARs' : 'MyMCAT Daily CARs');
   }
 
-  const rand = Math.random();
+  // Always add core daily tasks if not already scheduled
+  if (!scheduledTasksForDay.has('Adaptive Tutoring Suite')) {
+    tasks.push('Adaptive Tutoring Suite');
+  }
+  
+  if (!scheduledTasksForDay.has('Anki Clinic')) {
+    tasks.push('Anki Clinic');
+  }
 
-  if (rand < contentReviewRatio && reviewTasks.length > 0) {
-    return reviewTasks[Math.floor(Math.random() * reviewTasks.length)];
-  } else if (contentTasks.length > 0) {
-    return contentTasks[Math.floor(Math.random() * contentTasks.length)];
-  } else if (reviewTasks.length > 0) {
-    return reviewTasks[Math.floor(Math.random() * reviewTasks.length)];
+  // Handle review vs practice days
+  if (isReviewDay) {
+    // Review day has ATS, Anki, and CARs
+    return tasks;
   } else {
-    return null;
+    // Practice day: Replace ATS and Anki with practice materials
+    // If less than 180 hours until exam and has AAMC materials, prioritize AAMC
+    if (hoursUntilExam < 180 && resources.hasAAMC && !scheduledTasksForDay.has('AAMC Materials')) {
+      return ['AAMC Materials', tasks[0]]; // Keep CARS, replace others with AAMC
+    }
+    
+    // If has UWorld and not already scheduled
+    if (resources.hasUWorld && !scheduledTasksForDay.has('UWorld')) {
+      return ['UWorld', tasks[0]]; // Keep CARS, replace others with UWorld
+    }
+    
+    // If no practice materials available, keep the review day schedule
+    return tasks;
   }
 }
 
@@ -546,7 +700,25 @@ function createActivity(
     link: '',
     scheduledDate,
     status: "Not Started",
+    tasks: [], // Will be populated with default tasks
   };
   return activity;
 }
+
+const THIRD_PARTY_EXAMS = [
+  "Unscored sample full Length Exam",
+  "Full Length Exam(FL1)",
+  "Full Length Exam(FL2)",
+  "Full Length Exam(FL3)",
+  "Full Length Exam(FL4)",
+];
+
+const AAMC_EXAMS = [
+  "AAMC full Length Exam 1",
+  "AAMC full Length Exam 2",
+  "AAMC full Length Exam 3",
+  "AAMC full Length Exam 4",
+  "AAMC full Length Exam 5",
+  "AAMC full Length Exam 6",
+];
 

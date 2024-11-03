@@ -88,3 +88,45 @@ export function getRelevantTranscript(transcript: string, currentTime: number, m
 
   return relevantText.trim();
 }
+
+
+export interface Task {
+  text: string;
+  completed: boolean;
+}
+
+export interface TaskMapping {
+  [eventTitle: string]: any;
+}
+
+export const parseDefaultTasks = (csvContent: string): TaskMapping => {
+  const lines = csvContent.split('\n').filter(line => line.trim());
+  const mapping: TaskMapping = {};
+  
+  // Skip header row
+  for (let i = 1; i < lines.length; i++) {
+    const row = lines[i].split(',').map(cell => cell.trim());
+    
+    // CSV format: Minutes,Task,Task 1,Task 2,Task 3
+    const minutes = row[0];
+    const taskName = row[1];
+    const tasks = row.slice(2)
+      .filter(task => task && task !== '')
+      .map(task => ({
+        text: task,
+        completed: false
+      }));
+    
+    if (taskName) {
+      // If taskName already exists, append new tasks to existing array
+      if (mapping[taskName]) {
+        mapping[taskName].push(tasks);
+      } else {
+        // Otherwise, create new array with tasks
+        mapping[taskName] = [tasks];
+      }
+    }
+  }
+  
+  return mapping;
+};
