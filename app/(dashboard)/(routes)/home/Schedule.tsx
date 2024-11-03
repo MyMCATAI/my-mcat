@@ -56,8 +56,10 @@ ChartJS.register(
 interface ScheduleProps {
   activities: FetchedActivity[];
   onShowDiagnosticTest: () => void;
+  onStudyPlanSaved?: () => void;
   handleSetTab: (tab: string) => void;
   isActive: boolean;
+  onActivitiesUpdate?: () => void;
 }
 
 type Section =
@@ -68,8 +70,10 @@ type Section =
 const Schedule: React.FC<ScheduleProps> = ({
   activities,
   onShowDiagnosticTest,
+  onStudyPlanSaved,
   handleSetTab,
   isActive,
+  onActivitiesUpdate,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
@@ -373,8 +377,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...newActivity,
-          userId: user?.id,
-          studyPlanId: "placeholder-study-plan-id", // Replace with actual study plan ID
         }),
       });
 
@@ -641,7 +643,8 @@ const Schedule: React.FC<ScheduleProps> = ({
                 onShowDiagnosticTest={onShowDiagnosticTest}
                 onStudyPlanSaved={handleStudyPlanSaved}
                 onToggleCalendarView={handleToggleView}
-                onClose={toggleSettings} // Pass the function
+                onClose={toggleSettings}
+                onActivitiesUpdate={onActivitiesUpdate}
               />
             </motion.div>
           )}

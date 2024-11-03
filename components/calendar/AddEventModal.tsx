@@ -6,12 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
-// Hanis: Calendar event creation modal todo (this can also be an event edit modal)
-// fix backend for creating calendar events, - Post
-// Add functionality for deleting calendar events - Delete
-// Add functionality for editing calendar events - Put
-
-
 interface AddEventModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -35,7 +29,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onSubmit
     activityTitle: '',
     activityText: '',
     hours: 1,
-    activityType: '',
+    activityType: 'Study',
     link: '',
     scheduledDate: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
     categoryId: '',
@@ -48,7 +42,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onSubmit
         activityTitle: '',
         activityText: '',
         hours: 1,
-        activityType: '',
+        activityType: 'Study',
         link: '',
         scheduledDate: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
         categoryId: '',

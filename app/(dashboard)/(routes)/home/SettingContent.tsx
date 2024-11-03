@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "react-hot-toast";
+import "./style.css";
 
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
@@ -43,14 +44,16 @@ interface SettingContentProps {
   onShowDiagnosticTest?: () => void;
   onStudyPlanSaved?: () => void;
   onToggleCalendarView?: () => void;
-  onClose?: () => void; // New prop
+  onClose?: () => void;
+  onActivitiesUpdate?: () => void;
 }
 
 const SettingContent: React.FC<SettingContentProps> = ({
   onShowDiagnosticTest,
   onStudyPlanSaved,
   onToggleCalendarView,
-  onClose, // New prop
+  onClose,
+  onActivitiesUpdate,
 }) => {
   const [activeOption, setActiveOption] = useState<string | null>(null);
   const [calendarValue, setCalendarValue] = useState<Value>(new Date());
@@ -87,27 +90,46 @@ const SettingContent: React.FC<SettingContentProps> = ({
 
   const fetchExistingStudyPlan = async () => {
     try {
-      const response = await fetch("/api/study-plan");
+      const response = await fetch('/api/study-plan');
       if (response.ok) {
         const data = await response.json();
         if (data.studyPlans && data.studyPlans.length > 0) {
+          // Get the most recent study plan (should be first due to orderBy desc)
           const plan = data.studyPlans[0];
           setExistingStudyPlan(plan);
+          
+          // Update exam date
           setCalendarValue(new Date(plan.examDate));
-          setSelectedResources(
-            plan.resources.reduce(
-              (acc: any, resource: any) => ({ ...acc, [resource]: true }),
-              {}
-            )
-          );
-          setHoursPerDay(plan.hoursPerDay);
-          setFullLengthDays(plan.fullLengthDays);
-          setThirdPartyFLCount(plan.thirdPartyFLCount || 0);
-          setReviewPracticeBalance(plan.reviewPracticeBalance || 50);
+          
+          // Update resources with all options
+          const resources = plan.resources as {
+            hasAAMC: boolean;
+            hasAnki: boolean;
+            hasUWorld: boolean;
+            hasAdaptiveTutoringSuite: boolean;
+            hasKaplanBooks?: boolean;
+            hasThirdPartyFLs?: boolean;
+          };
+          setSelectedResources({
+            'UWorld': resources.hasUWorld,
+            'AAMC': resources.hasAAMC,
+            'Kaplan Books': resources.hasKaplanBooks || false,
+            '3rd Party FLs': resources.hasThirdPartyFLs || false,
+          });
+          
+          setHoursPerDay(plan.hoursPerDay as Record<string, string>);
+          
+          // Update full length days
+          const fullLengthDaysObj = days.reduce((acc, day) => ({
+            ...acc,
+            [day]: (plan.fullLengthDays as string[]).includes(day)
+          }), {});
+          setFullLengthDays(fullLengthDaysObj);
         }
       }
     } catch (error) {
       console.error("Error fetching existing study plan:", error);
+      toast.error("Failed to load study plan");
     }
   };
 
@@ -140,9 +162,14 @@ const SettingContent: React.FC<SettingContentProps> = ({
     setIsSaving(true);
     const studyPlanData = {
       examDate: calendarValue,
-      resources: Object.keys(selectedResources).filter(
-        (key) => selectedResources[key]
-      ),
+      resources: {
+        hasUWorld: selectedResources["UWorld"] || false,
+        hasAAMC: selectedResources["AAMC"] || false,
+        hasAdaptiveTutoringSuite: true,
+        hasAnki: true,
+        hasKaplanBooks: selectedResources["Kaplan Books"] || false,
+        hasThirdPartyFLs: selectedResources["3rd Party FLs"] || false,
+      },
       hoursPerDay,
       fullLengthDays,
       thirdPartyFLCount,
@@ -220,6 +247,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
       if (response.ok) {
         toast.success("Study plan generated successfully!");
         if (onStudyPlanSaved) onStudyPlanSaved();
+        if (onActivitiesUpdate) onActivitiesUpdate();
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || "Failed to generate study plan");
@@ -256,6 +284,9 @@ const SettingContent: React.FC<SettingContentProps> = ({
                 onChange={setCalendarValue}
                 value={calendarValue}
                 className="text-black bg-white mb-2"
+                formatMonthYear={(locale, date) => {
+                  return date.toLocaleString('default', { month: 'long' });
+                }}
               />
             )}
             <div className="flex items-center">
@@ -306,10 +337,13 @@ const SettingContent: React.FC<SettingContentProps> = ({
                 <span className="text-[--theme-text-color]">{day}</span>
                 <input
                   type="number"
-                  value={hoursPerDay[day] || ""}
-                  onChange={(e) =>
-                    setHoursPerDay({ ...hoursPerDay, [day]: e.target.value })
-                  }
+                  min="0"
+                  max="24"
+                  value={hoursPerDay[day] || "3"}
+                  onChange={(e) => {
+                    const value = Math.min(24, Math.max(0, Number(e.target.value)));
+                    setHoursPerDay({ ...hoursPerDay, [day]: value.toString() });
+                  }}
                   className="w-16 p-1 border rounded text-[--theme-text-color] bg-[--theme-leaguecard-color]"
                 />
               </div>
@@ -446,25 +480,26 @@ const SettingContent: React.FC<SettingContentProps> = ({
         </div>
 
         <div className="p-4">
-          <Button
-            className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200 mb-2"
-            onClick={handleSave}
-            disabled={isSaving}
-          >
-            {isSaving
-              ? "Saving..."
-              : existingStudyPlan
-              ? "Update Study Plan"
-              : "Save Study Plan"}
-          </Button>
-          
-          <Button
-            className="w-full text-[--theme-hover-text] bg-[--theme-doctorsoffice-accent] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200"
-            onClick={handleGenerateStudyPlan}
-            disabled={isGenerating || !existingStudyPlan}
-          >
-            {isGenerating ? 'Generating...' : 'Generate Study Plan'}
-          </Button>
+          {existingStudyPlan ? (
+            <Button
+              className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200"
+              onClick={() => {
+                handleSave();
+                handleGenerateStudyPlan();
+              }}
+              disabled={isSaving}
+            >
+              {isSaving ? "Saving..." : "Update Study Plan"}
+            </Button>
+          ) : (
+            <Button
+              className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200"
+              onClick={handleGenerateStudyPlan}
+              disabled={isGenerating}
+            >
+              {isGenerating ? 'Generating...' : 'Generate Study Plan'}
+            </Button>
+          )}
         </div>
       </div>
     </div>

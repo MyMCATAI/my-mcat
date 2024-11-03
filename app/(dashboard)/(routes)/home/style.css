@@ -1,0 +1,30 @@
+.react-calendar__navigation {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 8px;
+}
+
+.react-calendar__navigation button {
+min-width: 24px;
+background: none;
+font-size: 12px;
+padding: 2px;
+}
+
+.react-calendar__navigation__label {
+flex-grow: 1;
+font-weight: bold;
+font-size: 18px;
+color: #000;
+text-align: center;
+max-width: 100%;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+margin: 0 4px;
+}
+
+.react-calendar__navigation__arrow {
+font-size: 12px;
+}  
