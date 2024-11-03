@@ -69,6 +69,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
   const fetchFlashcards = async () => {
     setIsLoading(true);
     try {
+      // Your existing flashcard fetching code
       const subjects = Array.isArray(roomToSubjectMap[roomId]) 
         ? roomToSubjectMap[roomId] 
         : roomToSubjectMap[roomId] || [];
@@ -86,7 +87,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
       const pageNumber = 1;
       const pageSize = 10;
 
-      console.log(`/api/question?${subjectParams}&${contentParams}&types=flashcard&page=${pageNumber}&pageSize=${pageSize}`);
       const response = await fetch(`/api/question?${subjectParams}&${contentParams}&types=flashcard&page=${pageNumber}&pageSize=${pageSize}`);
       
       const data = await response.json();
@@ -101,13 +101,11 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
           conceptCategory: question.category_conceptCategory,
         },
         difficulty: question.difficulty || 1,
-        tags: question.tags || []
+        tags: question.tags || [],
       }));
 
-      setFlashcards(transformedFlashcards); // Assuming data is already in the correct format
+      setFlashcards(transformedFlashcards);
       setIsLoading(false);
-      console.log("Flashcards fetched: ", transformedFlashcards);
-      console.log("Flashcards length: ", transformedFlashcards.length);
     } catch (error) {
       console.error('Error fetching flashcards:', error);
       setIsLoading(false);
@@ -168,11 +166,9 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
   const handleUserResponse = useCallback(async (action: 'correct' | 'incorrect' | 'weakness' | 'strength') => {
     const currentCard = flashcardsRef.current[currentCardIndexRef.current];
     const isCorrect = action === 'correct' || action === 'strength';
-    console.log("handleUserResponse, ", "Current Card Index:", currentCardIndexRef.current, "Total Cards:", flashcardsRef.current.length, "isCorrect:", isCorrect);
 
-    // Check if we've gone through all cards
     if (currentCardIndexRef.current >= flashcardsRef.current.length) {
-      return; // Exit early if no more cards
+      return;
     }
 
     const timeSpent = Math.floor((Date.now() - cardStartTime)/1000);
@@ -192,17 +188,19 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
     }
 
     try {
+      const requestBody = {
+        questionId: currentCard.id,
+        userAnswer: isCorrect ? 'Correct' : 'Incorrect', // currentCard.questionOptions[0], we need to figure out a regex to select the answer from this commented out code
+        isCorrect,
+        timeSpent,
+        userNotes: `Action: ${action}`,
+      };
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
+      
       const response = await fetch('/api/user-test/response', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          questionId: currentCard.id,
-          userAnswer: isCorrect ? currentCard.questionOptions[0] : 'Incorrect',
-          isCorrect,
-          timeSpent,
-          userNotes: `Action: ${action}`,
-          userTestId: `Flashcard-${getCurrentDateTime()}`,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -212,7 +210,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
     } catch (error) {
       console.error('Error saving flashcard response:', error);
     }
-  }, [onCorrectAnswer, onWrongAnswer, playSound]);
+  }, [onCorrectAnswer, onWrongAnswer, playSound, cardStartTime]);
 
   const [{ opacity }, api] = useSpring(() => ({
     opacity: 1,
