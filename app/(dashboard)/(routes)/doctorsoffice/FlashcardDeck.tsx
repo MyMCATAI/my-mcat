@@ -86,10 +86,10 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
 
       const pageNumber = 1;
       const pageSize = 10;
-
       const response = await fetch(`/api/question?${subjectParams}&${contentParams}&types=flashcard&page=${pageNumber}&pageSize=${pageSize}`);
       
       const data = await response.json();
+      console.log('Before state updates');
       setCardStartTime(Date.now());
 
       const transformedFlashcards = data.questions.map((question: FlattenedQuestionResponse) => ({
@@ -106,6 +106,17 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
 
       setFlashcards(transformedFlashcards);
       setIsLoading(false);
+      console.log('After state updates');
+    
+      // Add this to see what's happening next
+      setTimeout(() => {
+        console.log('Current state:', {
+          isLoading: false,
+          flashcardsLength: transformedFlashcards.length,
+          currentCardIndex,
+          isRevealed
+        });
+      }, 0);
     } catch (error) {
       console.error('Error fetching flashcards:', error);
       setIsLoading(false);
@@ -123,7 +134,19 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
   }, []);
 
   useEffect(() => {
-    fetchFlashcards();
+    let mounted = true;
+    
+    const fetch = async () => { 
+      if (mounted) {
+        await fetchFlashcards();
+      }
+    };
+    
+    fetch();
+    
+    return () => { // Cleanup function to prevent double rendering
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -134,8 +157,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
   useEffect(() => {
     currentCardIndexRef.current = currentCardIndex;
   }, [currentCardIndex]);
-
-  
 
   const getQuestionContent = () => {
     if (flashcards.length === 0 || currentCardIndex >= flashcards.length) {
@@ -311,7 +332,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
   const handlePrevious = () => {
     const newCurrentIndex = (currentCardIndex - 1 + flashcards.length) % flashcards.length;
     setCurrentCardIndex(newCurrentIndex);
-    setNextCardIndex(currentCardIndex);
     setIsRevealed(false);
   };
 
