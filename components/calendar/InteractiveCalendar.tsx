@@ -70,6 +70,7 @@ interface InteractiveCalendarProps {
   onInteraction: () => void;
   setRunTutorialPart2: (value: boolean) => void;
   setRunTutorialPart3: (value: boolean) => void;
+  handleSetTab: (tab: string) => void;
 }
 
 // Add this conversion function
@@ -94,6 +95,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   onInteraction,
   setRunTutorialPart2,
   setRunTutorialPart3,
+  handleSetTab,
 }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [view, setView] = useState<View>("month");
@@ -446,6 +448,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         onSubmit={handleEditModalSubmit}
         onDelete={handleDeleteEvent}
         event={selectedEvent}
+        handleSetTab={handleSetTab}
       />
       <ErrorModal 
         isOpen={errorMessage !== null}

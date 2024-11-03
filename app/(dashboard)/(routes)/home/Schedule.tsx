@@ -781,6 +781,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                   onInteraction={() => {}}
                   setRunTutorialPart2={setRunTutorialPart2}
                   setRunTutorialPart3={setRunTutorialPart3}
+                  handleSetTab={handleSetTab}
                 />
               </div>
               <div className="h-32 flex justify-between items-start px-4 pt-4">

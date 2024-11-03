@@ -446,7 +446,6 @@ function getNextContentActivity(
         scheduledDate: new Date(currentDate),
         status: "Not Started",
       };
-      console.log('Created content activity:', JSON.stringify(activity, null, 2));
       return activity;
     }
   }

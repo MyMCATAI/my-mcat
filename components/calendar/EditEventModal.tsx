@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,7 @@ interface EditEventModalProps {
   onSubmit: (eventData: CalendarActivityData) => void;
   onDelete: (eventId: string) => void;
   event: CalendarEvent | null;
+  handleSetTab: (tab: string) => void;
 }
 
 interface CalendarActivityData {
@@ -42,7 +43,8 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
   onClose,
   onSubmit,
   onDelete,
-  event
+  event,
+  handleSetTab,
 }) => {
   const router = useRouter();
   const [isEditMode, setIsEditMode] = useState(false);
@@ -103,6 +105,23 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
   const handleClose = () => {
     setIsEditMode(false);
     onClose();
+  };
+
+  const handleNavigation = (activityTitle: string) => {
+    switch (activityTitle) {
+      case "Daily CARS Practice":
+        handleSetTab("test");
+        break;
+      case "Anki Clinic":
+        router.push("/doctorsoffice");
+        break;
+      case "Adaptive Tutoring Suite":
+        handleSetTab("KnowledgeProfile");
+        break;
+      default:
+        break;
+    }
+    handleClose();
   };
 
   return (
@@ -190,6 +209,13 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                 />
               </div>
               <DialogFooter className="flex flex-row gap-2 mt-4 w-full justify-between">
+                <Button 
+                  type="button" 
+                  onClick={() => handleNavigation(event?.title)}
+                  className="text-white bg-gray-900 hover:bg-gray-800"
+                >
+                  Go to Activity
+                </Button>
                 <Button 
                   type="button" 
                   variant="outline" 
