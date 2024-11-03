@@ -283,7 +283,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
             </div>
             <div className="flex flex-col">
               <pre
-                className="font-mono text-m leading-[20px] tracking-[0.4px] whitespace-pre-wrap flex-1 mt-4 ml-2"
+                className="text-m leading-[1.5rem] tracking-[0.025rem] whitespace-pre-wrap flex-1 mt-4 ml-2"
                 style={{ color: "var(--theme-text-color)" }}
               >
                 {welcomeAndTestMessage}
