@@ -204,7 +204,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
   const flow = {
     start: {
       message: `Meow there! I'm Kalypso the cat, your MCAT assistant. ${
-        contentTitle ? `Cool ${contentTitle}.` : ""
+        contentTitle ? `I see you're looking at ${contentTitle}.` : ""
       } How can I help you today?`,
       path: "loop",
     },

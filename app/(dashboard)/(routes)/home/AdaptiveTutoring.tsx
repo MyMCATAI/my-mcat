@@ -34,6 +34,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useMessages } from "react-chatbotify";
 
 interface ContentItem {
   id: string;
@@ -93,6 +94,64 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     };
     
   const [initialCategories, setInitialCategories] = useState<Category[]>([]);
+
+  const { injectMessage } = useMessages();
+
+  // Add state to track current content context
+  const [currentContext, setCurrentContext] = useState<{
+    contentTitle: string;
+    context: string;
+  } | null>(null);
+
+  const generateAndInjectQuestion = async () => {
+    try {
+      // Use currentContext instead of chatbotContext
+      if (!currentContext?.context) {
+        await injectMessage("I don't have any content context yet. Please select some content first!");
+        return;
+      }
+
+      const mcqPrompt = `Based on the following content, generate a multiple choice question with 4 options (A, B, C, D). Make it challenging but fair:
+
+      ${currentContext.context}
+
+      Format the response as:
+      [question text]
+      
+      A) [option A]
+      B) [option B]
+      C) [option C]
+      D) [option D]
+      `;
+
+      const response = await fetch('/api/conversation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: mcqPrompt,
+          context: currentContext.context,
+          generateAudio: false
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      await injectMessage(data.message);
+      
+    } catch (error) {
+      console.error('Error generating question:', error);
+      await injectMessage("I apologize, I couldn't generate a question at this time. Please try again.");
+    }
+  };
+
+  const handleChatClick = async () => {
+    toggleChatBot();
+    await generateAndInjectQuestion();
+  };
 
   // Fetch categories and set initial category
   useEffect(() => {
@@ -155,10 +214,12 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   useEffect(() => {
     const currentContent = content.find((item) => item.id === currentContentId);
     if (currentContent && currentContent.transcript) {
-      setChatbotContext({
+      const newContext = {
         contentTitle: currentContent.title || "Untitled",
         context: `Here's a transcript of the ${currentContent.type} im looking at: ${currentContent.transcript}. Refer to this as context if I ask a question directly about what I'm studying`,
-      });
+      };
+      setChatbotContext(newContext);
+      setCurrentContext(newContext); // Update local state as well
     }
   }, [currentContentId, content, setChatbotContext]);
 
@@ -241,10 +302,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
           : "",
       });
     }
-  };
-
-  const handleChatClick = () => {
-    toggleChatBot();
   };
 
   const fetchContent = useCallback(async (conceptCategory: string) => {
@@ -653,7 +710,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                     currentContent &&
                     currentContent.type === "video" && (
 
-                      <div className="h-[calc(100vh-23rem)]">
+                      <div className="h-[calc(100vh-26rem)]">
                         <ReactPlayer
                           className="w-full h-full"
                           url={currentContent.link}
@@ -700,7 +757,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                   {contentType === "reading" &&
                     currentContent &&
                     currentContent.type === "reading" && (
-                      <div className="h-[calc(100vh-20.5rem)] overflow-y-auto">
+                      <div className="h-[calc(100vh-23.5rem)] overflow-y-auto">
                         <div
                           className="relative"
                           style={{ height: "calc(100% - 2.5rem)" }}
