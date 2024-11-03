@@ -664,7 +664,7 @@ const Schedule: React.FC<ScheduleProps> = ({
           {showAnalytics ? (
             <>
               <pre
-                className="pt-5 font-mono text-m leading-[24px] tracking-[0.4px] whitespace-pre-wrap mt-2 ml-2"
+                className="pt-5 text-m leading-[1.5rem] tracking-[0.025rem] whitespace-pre-wrap mt-2 ml-2"
                 style={{ color: "var(--theme-text-color)" }}
               >
                 {runTutorialPart1 ? tutorialText : typedText}

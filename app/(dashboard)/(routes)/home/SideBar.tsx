@@ -200,15 +200,15 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
   const getTutorDescription = (tutorName: string): string => {
     switch (tutorName) {
       case "Ali N.":
-        return "Ali N. is a highly experienced tutor with a focus on B/B and C/P subjects. With 5 stars and 5 reviews, Ali has a proven track record of helping students achieve their academic goals. Ali's price is $150 per hour.";
+        return "Hello hello y'all, I'm Ali! I scored a 520 with a 132 in Bio/Biochem and C/P. At Duke, I played basketball (okay, not for the D1 team, but I was pretty good!). I like to tutor very hands on: my sessions consist of working with you through practice tests and really drilling down into what you do wrong (and right!). I'm a huge fan of soccer and Lil Uzi Vert. Hit me up :)";
       case "Prynce K.":
-        return "Prynce K. is a top-rated tutor with a focus on CARS. With 5 stars and 16 reviews, Prynce has a proven track record of helping students achieve their academic goals. Prynce's price is $50 per hour.";
+        return "S'up. I'm the founder of the website you're on. I scored a 523 overall, with a 132 in CARs, and spent two years tutoring the MCAT at various firms (who all suck imo). My average increase is around 10-15 points, with a lot of students making massive leaps; but, nowdays, I have limited time as I'm making the most beautiful study software in history. If you're a dedicated student who uses this website frequently, then I'm very interested in meeting/working with you.";
       case "Saanvi A.":
-        return "Saanvi A. is a highly experienced tutor with a focus on P/S subjects. With 5 stars and 3 reviews, Saanvi has a proven track record of helping students achieve their academic goals. Saanvi's price is $85 per hour.";
+        return "I'm Saanvi. My MCAT journey was a bit unconventional and a little embarassing: I actually scored a 492 on my first exam. Eventually, I worked hard to earn a 516 but I learned A LOT about what you should and shouldn't do. I really like working with non-trad students since I emphathize with the struggles you face. Recently, I graduated NYU and work as a Clinic Research Coordinator at Einstein.";
       case "Ethan K.":
-        return "Ethan K. is a highly experienced tutor with a focus on B/B and CARS subjects. With 4.5 stars and 8 reviews, Ethan has a proven track record of helping students achieve their academic goals. Ethan's price is $200 per hour.";
+        return "I'm a grad student at UPenn and I'm passionate about helping others succeed in CARs and Bio/Biochem. With my 525 score, I've developed a range of strategies to tackle the toughest passages and questions, and I'd love to share them with you. Let's work together to master the MCAT.";
       default:
-        return "This tutor boasts a unique and spirited mascot with its own fascinating history. From its origins to its current incarnation, the mascot embodies the values, traditions, and spirit of the institution. It serves as a rallying point for students, alumni, and fans, creating a sense of unity and pride on campus and beyond.";
+        return "This tutor boasts a unique and spirited teaching style with its own fascinating history. From its origins to its current incarnation, the tutor embodies the values, traditions, and spirit of the institution. It serves as a rallying point for students, alumni, and fans, creating a sense of unity and pride on campus and beyond.";
     }
   };
 
@@ -367,7 +367,6 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
             <ol className="list-decimal list-inside space-y-2 text-sm">
               <li>A score of 515+, verified by screensharing</li>
               <li>A tutoring session with Prynce to verify skills</li>
-              <li>Attendance of a group orientation</li>
             </ol>
             <p className="text-md mt-3">
               Please book an initial session with Prynce to verify your skills for listing.
