@@ -30,6 +30,24 @@ interface GridImage {
   opacity?: number;
 }
 
+// Map of images to be used for QuestionPromptSprite
+export const roomToSubjectMap: Record<string, string> = {
+  'ExaminationRoom1': 'Biochemistry',
+  'ExaminationRoom2': 'Psychology',
+  'Bathroom1': 'Biology',
+  'Lab1': 'Chemistry',
+  'DoctorsOffice1': 'Physics',
+  'HighCare1': 'Sociology',
+  'HighCare2': 'Biochemistry',
+  'MRIMachine1': 'Psychology',
+  'MRIMachine2': 'Biology',
+  'OperatingRoom1': 'Chemistry',
+  'CATScan1': 'Physics',
+  'CATScan2': 'Sociology',
+  'MedicalCloset1': 'Biochemistry',
+  'WaitingRoom1': 'Psychology'
+};
+
 // Define constants outside the component
 const tileWidth = 128;
 const tileHeight = 64;
@@ -413,8 +431,9 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
           alpha={img.opacity !== undefined ? img.opacity : 1}
           zIndex={img.zIndex}
         />
+        
         <QuestionPromptSprite
-          src="/game-components/questionPopUp.png"
+          src={`/game-components/questionPopup${roomToSubjectMap[img.id]}.png`}
           x={posX + img.width / 2}
           y={posY + img.height / 5}
           scaleConstant={4}  

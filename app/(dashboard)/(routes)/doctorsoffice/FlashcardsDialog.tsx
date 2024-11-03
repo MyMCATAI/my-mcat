@@ -10,7 +10,7 @@ import FlashcardDeck from './FlashcardDeck';
 import { useSpring, animated, config } from '@react-spring/web';
 import { TestTube2 } from 'lucide-react';
 import Interruption from './Interruption';
-
+import { roomToSubjectMap } from './OfficeContainer';
 interface WrongCard {
   question: string;
   answer: string;
@@ -146,7 +146,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
           <DialogHeader className="mb-2 flex-shrink-0">
             <DialogTitle className="text-[--theme-hover-text] text-center items-center justify-center rounded-md bg-[--theme-hover-color] p-2 flex">
               <span className="flex-grow">
-                {roomId} patient
+                {roomToSubjectMap[roomId]} flashcards
               </span>
               <button 
                 onClick={handleInterruption}
@@ -188,8 +188,8 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
 
             <div className="w-2/3 pr-2 flex flex-col min-h-0 relative">
               <div className="flex-grow bg-[--theme-leaguecard-color] p-2 rounded-md flex flex-col min-h-0">
-                <ScrollArea className="flex-grow">
-                  <div className="h-full">
+                <ScrollArea className="flex-grow h-full">
+                  <div className="h-full w-full flex items-center justify-center min-h-[500px]">
                     <FlashcardDeck 
                       roomId={roomId} 
                       onWrongAnswer={handleWrongCard}

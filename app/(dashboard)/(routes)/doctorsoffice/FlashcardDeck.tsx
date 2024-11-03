@@ -6,6 +6,7 @@ import { useSpring, animated } from '@react-spring/web'
 import { useDrag } from '@use-gesture/react';
 import ContentRenderer from '@/components/ContentRenderer';
 import { FlattenedQuestionResponse } from '@/lib/question';
+import { roomToSubjectMap } from './OfficeContainer';
 
 interface Flashcard {
   id: string;
@@ -48,11 +49,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
   const flashcardsRef = useRef<Flashcard[]>([]);
   const currentCardIndexRef = useRef<number>(0);
   
-
-  useEffect(() => {
-    fetchFlashcards();
-  }, []);
-
   useEffect(() => {
     correctSound.current = new Audio('/correct.mp3');
     whooshSound.current = new Audio('/whoosh.mp3');
@@ -68,18 +64,10 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
     sound.play().catch(e => console.error('Error playing sound:', e));
   }, []);
 
-  const subjectMap: { [key: string]: string } = {
-    '1': 'Sociology',
-    '2': 'Psychology',
-    '3': 'Chemistry',
-    '4': 'Physics',
-    '5': 'Biology',
-    '6': 'Biochemistry'
-  };
   const fetchFlashcards = async () => {
     setIsLoading(true);
     try {
-      const subject = subjectMap[roomId] || 'Sociology';
+      const subject = roomToSubjectMap[roomId] || 'Sociology';
       console.log(`/api/question?subjectCategory=${subject.replace(/ /g, "_")}&types=flashcard&page=1&pageSize=10`);
       const response = await fetch(`/api/question?subjectCategory=${subject.replace(/ /g, "_")}&types=flashcard&page=1&pageSize=10`);
       
@@ -105,12 +93,11 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
         difficulty: question.difficulty || 1,
         tags: question.tags || []
       }));
-      console.log(transformedFlashcards);
-      console.log(transformedFlashcards[1]);
-      console.log(transformedFlashcards[2]);
 
       setFlashcards(transformedFlashcards); // Assuming data is already in the correct format
       setIsLoading(false);
+      console.log("Flashcards fetched: ", transformedFlashcards);
+      console.log("Flashcards length: ", transformedFlashcards.length);
     } catch (error) {
       console.error('Error fetching flashcards:', error);
       setIsLoading(false);
@@ -127,8 +114,12 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
     toggleReveal();
   }, []);
 
+  useEffect(() => {
+    fetchFlashcards();
+  }, []);
 
   useEffect(() => {
+    console.log("Flashcards updated:", flashcards.length);
     flashcardsRef.current = flashcards;
   }, [flashcards]);
   
@@ -136,10 +127,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
     currentCardIndexRef.current = currentCardIndex;
   }, [currentCardIndex]);
 
-  useEffect(() => {
-    fetchFlashcards();
-  }, []);
-
+  
 
   const getQuestionContent = () => {
     if (flashcards.length === 0 || currentCardIndex >= flashcards.length) {
@@ -170,6 +158,12 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
   const handleUserResponse = useCallback(async (action: 'correct' | 'incorrect' | 'weakness' | 'strength') => {
     const currentCard = flashcardsRef.current[currentCardIndexRef.current];
     const isCorrect = action === 'correct' || action === 'strength';
+    console.log("handleUserResponse, ", "Current Card Index:", currentCardIndexRef.current, "Total Cards:", flashcardsRef.current.length, "isCorrect:", isCorrect);
+
+    // Check if we've gone through all cards
+    if (currentCardIndexRef.current >= flashcardsRef.current.length) {
+      return; // Exit early if no more cards
+    }
 
     if (isCorrect) {
       onCorrectAnswer();
@@ -207,13 +201,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
     }
   }, [onCorrectAnswer, onWrongAnswer, playSound]);
 
-  // todo handle pagination
-  // const loadMoreCards = () => {
-  //   if (currentPage < totalPages) {
-  //     fetchFlashcards(currentPage + 1);
-  //   }
-  // };
-
   const [{ opacity }, api] = useSpring(() => ({
     opacity: 1,
   }));
@@ -228,6 +215,27 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({roomId, onWrongAnswer, onC
   };
 
   const handleSwipe = (direction: string) => {
+    console.log("handleSwipe, ", direction, "Current Card Index:", currentCardIndex, "Total Cards:", flashcards.length);
+    // Check if we've gone through all cards
+    console.log("handleSwipe called", {
+      flashcardsLength: flashcards.length,
+      flashcardsRefLength: flashcardsRef.current.length,
+      currentCardIndex,
+      direction
+    });
+
+    // Guard against empty flashcards
+    if (flashcardsRef.current.length === 0) {
+      console.log("No flashcards available");
+      return;
+    }
+
+    // Check if we've gone through all cards
+    if (currentCardIndex >= flashcardsRef.current.length) {
+      console.log("All cards viewed");
+      return;
+    }
+
     api.start({
       opacity: 0,
       config: { duration: 200 },
