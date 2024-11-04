@@ -382,7 +382,7 @@ const Page = () => {
         );
         break;
       case "flashcards":
-        content = <FlashcardDeck />;
+        content = <FlashcardDeck  />;
         break;
       default:
         content = null;

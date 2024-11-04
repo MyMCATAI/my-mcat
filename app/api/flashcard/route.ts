@@ -35,14 +35,14 @@ export async function GET(req: Request) {
     const subjectCategories = searchParams.get('subjects')?.split(',') || [];
 
     // // Fetch all knowledge profiles for the user, sorted by mastery
-    // const knowledgeProfiles = await prisma.knowledgeProfile.findMany({
-    //   where: { userId },
-    //   orderBy: [
-    //     { conceptMastery: 'asc' },
-    //     { contentMastery: 'asc' }
-    //   ],
-    //   include: { category: true }
-    // });
+    const knowledgeProfiles = await prisma.knowledgeProfile.findMany({
+      where: { userId },
+      orderBy: [
+        { conceptMastery: 'asc' },
+        { contentMastery: 'asc' }
+      ],
+      include: { category: true }
+    });
     // console.log('Knowledge profiles:', knowledgeProfiles);
 
     // Select the top pageSize categories with lowest mastery
@@ -90,6 +90,7 @@ export async function GET(req: Request) {
       };
     });
 
+    const totalQuestions = questions.length;
     const result = {
       flashcards: formattedQuestions,
       totalPages: Math.ceil(totalQuestions / pageSize),
