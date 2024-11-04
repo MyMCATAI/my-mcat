@@ -34,6 +34,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useMessages, RcbPostInjectMessageEvent, useFlow, useTextArea } from "react-chatbotify";
+import { getRelevantTranscript } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ContentItem {
   id: string;
@@ -50,11 +58,15 @@ interface AdaptiveTutoringProps {
     contentTitle: string;
     context: string;
   }) => void;
+  chatbotRef: React.MutableRefObject<{
+    sendMessage: (message: string) => void;
+  }>;
 }
 
 const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   toggleChatBot,
   setChatbotContext,
+  chatbotRef,
 }) => {
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -155,9 +167,10 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   useEffect(() => {
     const currentContent = content.find((item) => item.id === currentContentId);
     if (currentContent && currentContent.transcript) {
+      const relevantTranscript = getRelevantTranscript(currentContent.transcript, playedSeconds);
       setChatbotContext({
         contentTitle: currentContent.title || "Untitled",
-        context: `Here's a transcript of the ${currentContent.type} im looking at: ${currentContent.transcript}. Refer to this as context if I ask a question directly about what I'm studying`,
+        context: `Here's a transcript of the ${currentContent.type} I'm looking at: ${relevantTranscript}. Refer to this as context if I ask a question directly about what I'm studying`,
       });
     }
   }, [currentContentId, content, setChatbotContext]);
@@ -165,21 +178,36 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   // Separate effect for video timestamp updates
   useEffect(() => {
     const currentContent = content.find((item) => item.id === currentContentId);
-    if (currentContent?.type === "video") {
+    if (!currentContent?.transcript) return;
+
+    // Initial context setup for any content type
+    const initialTranscript = getRelevantTranscript(currentContent.transcript, playedSeconds);
+    setChatbotContext({
+      contentTitle: currentContent.title || "Untitled",
+      context: `I'm currently at timestamp ${formatTime(playedSeconds)} in the ${currentContent.type}. Here's a transcript of what I'm looking at: ${initialTranscript}. Refer to this as context if I ask a question directly about what I'm studying`,
+    });
+
+    // Only set up interval for videos
+    if (currentContent.type === "video" && isPlaying) {
+      let lastPosition = Math.floor(playedSeconds / 30); 
+
       const interval = setInterval(() => {
-        const prevContext = currentContent.transcript || "";
-        // Remove any existing timestamp information
-        const baseContext = prevContext.replace(/I'm currently at timestamp \d+:\d+ in the video\. /, '');
+        const currentPosition = Math.floor(playedSeconds / 30);
         
-        setChatbotContext({
-          contentTitle: currentContent.title || "Untitled",
-          context: `I'm currently at timestamp ${formatTime(playedSeconds)} in the video. ${baseContext}`
-        });
-      }, 10000); // Updates every 10 seconds
+        if (currentPosition !== lastPosition) {
+          lastPosition = currentPosition;
+          const relevantTranscript = getRelevantTranscript(currentContent.transcript!, playedSeconds);
+          
+          setChatbotContext({
+            contentTitle: currentContent.title || "Untitled",
+            context: `I'm currently at timestamp ${formatTime(playedSeconds)} in the video. Here's the recent transcript: ${relevantTranscript}`
+          });
+        }
+      }, 5000); // Check every 5 seconds
 
       return () => clearInterval(interval);
     }
-  }, [currentContentId, content, playedSeconds, setChatbotContext, formatTime]);
+  }, [currentContentId, content, isPlaying, playedSeconds]);
 
   const updateContentVisibility = useCallback((fetchedContent: ContentItem[]) => {
     const hasVideos = fetchedContent.some((item) => item.type === "video");
@@ -241,10 +269,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
           : "",
       });
     }
-  };
-
-  const handleChatClick = () => {
-    toggleChatBot();
   };
 
   const fetchContent = useCallback(async (conceptCategory: string) => {
@@ -470,7 +494,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     };
   }, [isPodcastHovered]);
 
-  const handlePodcastMouseEnter = () => {
+  const handlePodcastMouseEnter = async () => {
     setIsPodcastHovered(true);
     updatePodcastPosition();
   };
@@ -483,6 +507,16 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     setIsFullScreen(!isFullScreen);
   };
 
+  const handleCatClick = (type: "explain" | "question") => {
+    const message = type === "explain" ? "I'm confused about this topic. Can you explain it to me?" : "Can you ask me a conceptual multiple choice question to test my understanding?";
+    
+    if (chatbotRef.current?.sendMessage) {
+      chatbotRef.current.sendMessage(message);
+    } else {
+      console.warn("ChatBot ref not ready");
+    }
+  };
+  
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
       <div className="flex items-stretch w-full mb-3">
@@ -628,20 +662,31 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                   />
                 </div>
               </button>
-              <button
-                onClick={handleChatClick}
-                className="p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
-              >
-                <div className="w-7 h-7 relative theme-box">
-                  <Image
-                    src="/cat.svg"
-                    layout="fill"
-                    objectFit="contain"
-                    alt="cat"
-                    className="theme-svg"
-                  />
-                </div>
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
+                  >
+                    <div className="w-7 h-7 relative theme-box">
+                      <Image
+                        src="/cat.svg"
+                        layout="fill"
+                        objectFit="contain"
+                        alt="cat assistant"
+                        className="theme-svg"
+                      />
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => handleCatClick("explain")}>
+                    Explain
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleCatClick("question")}>
+                    Question
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             <div className="p-2 flex-grow overflow-y-auto scrollbar-hide">
@@ -705,7 +750,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                           className="relative"
                           style={{ height: "calc(100% - 2.5rem)" }}
                         >
-                          <Dialog>
+                          <Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
                             <DialogTrigger asChild>
                               <button
                                 onClick={toggleFullScreen}
@@ -721,7 +766,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                               <div className="relative w-full h-full">
                                 <button
                                   onClick={() => setIsFullScreen(false)}
-                                  className="absolute top-2 right-2 z-10 p-3 bg-[--theme-leaguecard-color] border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-text-color] rounded-lg text-white hover:bg-gray-700 transition-colors duration-200"
+                                  className="absolute top-2 right-2 z-10 p-3 bg-[--theme-adaptive-tutoring-color] border border-[--theme-border-color] rounded-lg text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors duration-200"
                                   style={{
                                     width: "3.25rem",
                                     height: "3.25rem",
@@ -800,7 +845,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                 .map((_, index) => (
                   <Skeleton
                     key={index}
-                    className="h-[90px] w-full rounded-lg"
+                    className="h-[90px] w-full rounded-lg mb-5"
                   />
                 ))
             ) : (

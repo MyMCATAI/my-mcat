@@ -11,7 +11,6 @@ import TestingSuit from "./TestingSuit";
 import { toast } from "@/components/ui/use-toast";
 import ThemeSwitcher from "@/components/home/ThemeSwitcher";
 import { useSearchParams } from "next/navigation";
-import MDOnlyFeaturesDialog from "@/components/home/MDOnlyFeaturesDialog";
 import {
   Dialog,
   DialogContent,
@@ -40,7 +39,7 @@ const Page = () => {
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const scrollPosition = 130;
+  const scrollPosition = 7.125;
   const [tests, setTests] = useState<Test[]>([]);
   const [testsCompletedToday, setTestsCompletedToday] = useState(0);
   const [showScorePopup, setShowScorePopup] = useState(false);
@@ -64,6 +63,9 @@ const Page = () => {
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [showUpdateNotification, setShowUpdateNotification] = useState(false);
   const [currentPage, setCurrentPage] = useState("Schedule");
+  const chatbotRef = useRef<{ sendMessage: (message: string) => void; }>({
+    sendMessage: () => {}
+  });
 
   useEffect(() => {
     const initializePage = async () => {
@@ -363,6 +365,7 @@ const Page = () => {
             <AdaptiveTutoring
               toggleChatBot={toggleChatBot}
               setChatbotContext={setChatbotContext}
+              chatbotRef={chatbotRef}
             />
           </div>
         );
@@ -394,8 +397,23 @@ const Page = () => {
   };
 
   useEffect(() => {
-    window.scrollTo({ top: scrollPosition, behavior: "smooth" });
-  }, []);
+    const handleScroll = () => {
+      const remToPixels = (rem: number) => rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const scrollToPosition = remToPixels(scrollPosition);
+      
+      window.scrollTo({
+        top: scrollToPosition,
+        behavior: 'smooth'
+      });
+    };
+
+    // Wait for content to load
+    const timer = setTimeout(() => {
+      handleScroll();
+    }, 100); // Small delay to ensure content is rendered
+
+    return () => clearTimeout(timer);
+  }, [activities, activeTab]); // Re-run when content changes
 
   const switchKalypsoState = (newState: "wait" | "talk" | "end" | "start") => {
     setKalypsoState(newState);
@@ -501,117 +519,118 @@ const Page = () => {
   };
 
   return (
-    <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
-      <div className="text-white flex gap-[1.5rem] overflow-visible">
-        <div className="w-3/4 relative overflow-visible">
-          <div className="flex justify-between items-center"> {/* Add margin-bottom */}
-            <div className="flex items-center gap-4">
-              <h2 className="text-white text-2xl ml-3 font-thin leading-normal shadow-text">
-                {activeTab === "Schedule"
-                  ? "Dashboard"
-                  : activeTab === "KnowledgeProfile"
-                  ? "Adaptive Tutoring Suite"
-                  : activeTab === "flashcards"
-                  ? "Flashcards"
-                  : activeTab === "CARS"
-                  ? "Daily CARs Practice"
-                  : "Home"}
-                {/* {isPro && " Pro"} */}
-              </h2>
-              <ThemeSwitcher />
+      <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
+        <div className="text-white flex gap-[1.5rem] overflow-visible">
+          <div className="w-3/4 relative overflow-visible">
+            <div className="flex justify-between items-center"> {/* Add margin-bottom */}
+              <div className="flex items-center gap-4">
+                <h2 className="text-white text-2xl ml-3 font-thin leading-normal shadow-text">
+                  {activeTab === "Schedule"
+                    ? "Dashboard"
+                    : activeTab === "KnowledgeProfile"
+                    ? "Adaptive Tutoring Suite"
+                    : activeTab === "flashcards"
+                    ? "Flashcards"
+                    : activeTab === "CARS"
+                    ? "Daily CARs Practice"
+                    : "Home"}
+                  {/* {isPro && " Pro"} */}
+                </h2>
+                <ThemeSwitcher />
+              </div>
             </div>
-          </div>
-          <div className="relative overflow-visible">
-            <div className="p-3 gradientbg h-[calc(100vh-8rem)] rounded-lg overflow-visible"> {/* Changed from overflow-hidden to overflow-visible */}
-              {renderContent()}
-            </div>
-            <FloatingButton
-              onTabChange={handleTabChange}
-              currentPage="home"
-              initialTab={activeTab}
-            />
-          </div>
-        </div>
-        <div className="w-1/4">
-          <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
-            &nbsp;
-          </h2>
-
-          <div className="gradientbg p-3 h-[calc(100vh-8rem)] rounded-lg knowledge-profile-component">
-            <SideBar
-              activities={activities}
-              currentPage={currentPage}
-              chatbotContext={chatbotContext}
-            />
-          </div>
-        </div>
-      </div>
-      {/* Diagnostic Test Dialog */}
-      <Dialog open={showDiagnosticTest} onOpenChange={setShowDiagnosticTest}>
-        <DialogOverlay className="fixed inset-0 bg-black bg-opacity-80 z-50" />
-        <DialogContent className="max-w-4xl w-full max-h-[95vh] flex flex-col bg-[#001226] text-white border border-sky-500 rounded-lg">
-          <DialogHeader className="border-b border-sky-500 pb-4">
-            <DialogTitle className="text-2xl font-semibold text-gray-300">
-              Complete this test to help us understand your current knowledge
-              level.
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex-grow py-3">
-            {diagnosticTestId && (
-              <TestComponent
-                testId={diagnosticTestId}
-                onTestComplete={handleTestComplete}
+            <div className="relative overflow-visible">
+              <div className="p-3 gradientbg h-[calc(100vh-5rem)] rounded-lg">
+                {renderContent()}
+              </div>
+              <FloatingButton
+                onTabChange={handleTabChange}
+                currentPage="home"
+                initialTab={activeTab}
               />
-            )}
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+          <div className="w-1/4">
+            <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
+              &nbsp;
+            </h2>
 
-      {/* Score Popup */}
-      <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
-        <DialogContent className="bg-[#001226] text-white border border-sky-500 rounded-lg">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold text-sky-300">
-              Test Completed!
-            </DialogTitle>
-            <DialogDescription className="text-gray-300">
-              Great job on completing the diagnostic test.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-xl">
-              Your Score:{" "}
-              <span className="font-bold text-sky-300">
-                {testScore.toFixed(2)}%
-              </span>
-            </p>
+            <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
+              <SideBar
+                activities={activities}
+                currentPage={currentPage}
+                chatbotContext={chatbotContext}
+                chatbotRef={chatbotRef}
+              />
+            </div>
           </div>
-          <div className="flex justify-end">
-            <Button
-              onClick={() => setShowScorePopup(false)}
-              className="bg-sky-500 hover:bg-sky-600 text-white"
-              disabled={isUpdatingProfile || isGeneratingActivities}
-            >
-              {isUpdatingProfile || isGeneratingActivities
-                ? "Processing..."
-                : "Close"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+        {/* Diagnostic Test Dialog */}
+        <Dialog open={showDiagnosticTest} onOpenChange={setShowDiagnosticTest}>
+          <DialogOverlay className="fixed inset-0 bg-black bg-opacity-80 z-50" />
+          <DialogContent className="max-w-4xl w-full max-h-[95vh] flex flex-col bg-[#001226] text-white border border-sky-500 rounded-lg">
+            <DialogHeader className="border-b border-sky-500 pb-4">
+              <DialogTitle className="text-2xl font-semibold text-gray-300">
+                Complete this test to help us understand your current knowledge
+                level.
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-grow py-3">
+              {diagnosticTestId && (
+                <TestComponent
+                  testId={diagnosticTestId}
+                  onTestComplete={handleTestComplete}
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
-      {/* Welcome Popup */}
-      <WelcomePopUp
-        open={showWelcomePopup}
-        onOpenChange={handleCloseWelcomePopup}
-      />
+        {/* Score Popup */}
+        <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
+          <DialogContent className="bg-[#001226] text-white border border-sky-500 rounded-lg">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-semibold text-sky-300">
+                Test Completed!
+              </DialogTitle>
+              <DialogDescription className="text-gray-300">
+                Great job on completing the diagnostic test.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-xl">
+                Your Score:{" "}
+                <span className="font-bold text-sky-300">
+                  {testScore.toFixed(2)}%
+                </span>
+              </p>
+            </div>
+            <div className="flex justify-end">
+              <Button
+                onClick={() => setShowScorePopup(false)}
+                className="bg-sky-500 hover:bg-sky-600 text-white"
+                disabled={isUpdatingProfile || isGeneratingActivities}
+              >
+                {isUpdatingProfile || isGeneratingActivities
+                  ? "Processing..."
+                  : "Close"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-      {/* Update Notification Popup */}
-      <UpdateNotificationPopup
-        open={showUpdateNotification && haveAllTutorialsPlayed()}
-        onOpenChange={handleCloseUpdateNotification}
-      />
-    </div>
+        {/* Welcome Popup */}
+        <WelcomePopUp
+          open={showWelcomePopup}
+          onOpenChange={handleCloseWelcomePopup}
+        />
+
+        {/* Update Notification Popup */}
+        <UpdateNotificationPopup
+          open={showUpdateNotification && haveAllTutorialsPlayed()}
+          onOpenChange={handleCloseUpdateNotification}
+        />
+      </div>
   );
 };
 
