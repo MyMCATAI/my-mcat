@@ -6,111 +6,35 @@ import { useSpring, animated } from '@react-spring/web'
 import { useDrag } from '@use-gesture/react';
 import ContentRenderer from '@/components/ContentRenderer';
 
-
-interface FlashcardData {
-  question: string;
-  options: string[];
-  correctAnswer: string;
+interface Flashcard {
+  id: string;
+  problem: string;
+  answer: string;
+  category: string;
+  conceptMastery: number | null;
+  contentMastery: number | null;
+  correctAnswers: number;
+  totalAttempts: number;
+  lastAttemptAt: string | null;
 }
 
-class Flashcard {
-  private question: string;
-  private options: string[];
-  private correctAnswer: string;
-  private isRevealed: boolean;
-
-  constructor({ question, options, correctAnswer }: FlashcardData) {
-    // Validate inputs
-    if (!question || typeof question !== 'string') {
-      throw new Error('Question must be a non-empty string');
-    }
-    if (!Array.isArray(options) || options.length === 0) {
-      throw new Error('Options must be a non-empty array');
-    }
-
-    this.question = question;
-    this.options = options;
-    this.correctAnswer = correctAnswer;
-    this.isRevealed = false;
-  }
-
-  static createFromQuestionData(data: DoctorsOfficeQuestionData): Flashcard {
-    try {
-      const options = JSON.parse(data.questionOptions);
-      return new Flashcard({
-        question: data.questionContent,
-        options: options,
-        correctAnswer: options[0] // Assuming first option is correct answer
-      });
-    } catch (error: any) {
-      console.error(`Error parsing question data for ID ${data.id}:`, error);
-      throw new Error(`Failed to create flashcard from question data: ${error.message}`);
-    }
-  }
-
-
-  public getQuestion(): string {
-    return this.question;
-  }
-
-  public getOptions(): string[] {
-    return [...this.options]; // Return a copy to prevent direct modification
-  }
-
-  public checkAnswer(answer: string): boolean {
-    return answer === this.correctAnswer;
-  }
-
-  public revealAnswer(): string {
-    this.isRevealed = true;
-    return this.correctAnswer;
-  }
-
-  public hideAnswer(): void {
-    this.isRevealed = false;
-  }
-
-  public shuffleOptions(): void {
-    for (let i = this.options.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [this.options[i], this.options[j]] = [this.options[j], this.options[i]];
-    }
-  }
-
-  public getState(): { isRevealed: boolean } {
-    return {
-      isRevealed: this.isRevealed
-    };
-  }
-
-  public toString(): string {
-    return `Question: ${this.question}\nOptions: ${this.options.join(', ')}\n${
-      this.isRevealed ? `Correct Answer: ${this.correctAnswer}` : '(Answer Hidden)'
-    }`;
-  }
+interface ApiResponse {
+  flashcards: Flashcard[];
+  totalPages: number;
+  currentPage: number;
 }
 
 const settings = {
   swipeThreshold: 0.5,
   rotationFactor: 10,
 };
+
 const physics = {
   touchResponsive: { friction: 50, tension: 2000 },
   animateBack: { friction: 10, tension: 200 }
 };
 
-// First modify FlashcardDeck.tsx interface to accept props
-interface FlashcardDeckProps {
-  roomId: string;
-}
-interface DoctorsOfficeResponse {
-  id: string;
-  questionContent: string;
-  questionOptions: string;
-}
-
-
-const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId }) => {
+const FlashcardStack: React.FC = () => {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -126,35 +50,11 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId }) => {
 
   const flashcardsRef = useRef<Flashcard[]>([]);
   const currentCardIndexRef = useRef<number>(0);
+  
 
   useEffect(() => {
     fetchFlashcards(1);
   }, []);
-
-  interface QuestionDictionary {
-    [key: string]: DoctorsOfficeQuestionData;
-  }
-  
-  const parseApiResponse = (apiResponse: { questions: DoctorsOfficeQuestionData[] }): QuestionDictionary => {
-    const questionDict: QuestionDictionary = {};
-    
-    apiResponse.questions.forEach((question) => {
-      try {
-        // Parse the questionOptions string into an array
-        const options = JSON.parse(question.questionOptions);
-        
-        questionDict[question.id] = {
-          id: question.id,
-          options: question.questionContent,
-          options: options
-        };
-      } catch (error) {
-        console.error(`Error parsing question ${question.id}:`, error);
-      }
-    });
-  
-    return questionDict;
-  };
 
   const fetchFlashcards = async (page: number) => {
     setIsLoading(true);
@@ -164,18 +64,17 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId }) => {
       const response = await fetch(`/api/flashcard?page=${page}&pageSize=10&subjects=${subjectsParam}`);
       const data: ApiResponse = await response.json();
 
-      console.log('Response:', response);
-      console.log('Fetched data:', data);
-
-      updateFlashcardsFromData({ data.flashcards }, setFlashcards);
-
+      console.log('Fetched flashcards:', data.flashcards);
+      setFlashcards(prevCards => [...prevCards, ...data.flashcards]);
+      setTotalPages(data.totalPages);
+      setCurrentPage(data.currentPage);
       setIsLoading(false);
-
     } catch (error) {
       console.error('Error fetching flashcards:', error);
       setIsLoading(false);
     }
   };
+
   
   const handleLinkClick = useCallback((href: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent the click from bubbling up to the card
@@ -468,32 +367,23 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId }) => {
         <>
           <div className="relative w-[75%] h-80 mb-5 mt-7">
             {/* Background cards */}
-            <div 
-                className="absolute inset-0 bg-white bg-opacity-100 rounded-lg shadow-md transform -translate-x-4 translate-y-6 border-blue-400 border-2" 
-                style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}
-            ></div>
-            <div 
-                className="absolute inset-0 bg-white bg-opacity-100 rounded-lg shadow-md transform -translate-x-2 translate-y-3 border-blue-400 border-2 bg-cover bg-blend-soft-light bg-opacity-30" 
-                style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}
-            ></div>
-
+            <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-4 translate-y-6 border-blue-400 border-2" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
+            <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-2 translate-y-3 border-blue-400 border-2 bg-[url('/circuitpattern2.png')] bg-cover bg-blend-overlay" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
+            
             {/* Next card (always visible) */}
-            <div 
-                className="absolute inset-0 bg-white bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 border-blue-400 border-2 bg-cover bg-blend-soft-light bg-opacity-30 overflow-hidden" 
-                style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}
-            >
-                <div className="w-full h-full mb-2 overflow-y-auto flex flex-col justify-center items-center">
-                    <ContentRenderer 
-                        content={getNextCardContent()} 
-                        onLinkClick={(href: string, event: React.MouseEvent<Element, MouseEvent>) => handleLinkClick(href, event as React.MouseEvent)} 
-                    />
-                </div>
+            <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay overflow-hidden" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}>
+              <div className="w-full h-full mb-2 overflow-y-auto flex flex-col justify-center items-center">
+              <ContentRenderer 
+                content={getNextCardContent()} 
+                onLinkClick={(href: string, event: React.MouseEvent<Element, MouseEvent>) => handleLinkClick(href, event as React.MouseEvent)} 
+              />
+              </div>
             </div>
             
             {/* Current card */}
             <animated.div
               {...bind()} 
-              className="absolute inset-0 bg-white bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 cursor-pointer border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-soft-light overflow-hidden"
+              className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 cursor-pointer border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay overflow-hidden"
               style={{
                 x,
                 y,
@@ -544,4 +434,4 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId }) => {
   );
 };
 
-export default FlashcardDeck;
+export default FlashcardStack;

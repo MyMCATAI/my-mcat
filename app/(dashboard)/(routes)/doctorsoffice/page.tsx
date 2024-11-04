@@ -448,8 +448,7 @@ const toggleGroup = async (groupName: string) => {
                 // ref={flashcardsDialogRef}
                 isOpen={isFlashcardsOpen}
                 onOpenChange={setIsFlashcardsOpen}
-                roomId={flashcardRoomId}
-              />
+                roomId={flashcardRoomId} buttonContent={undefined}              />
             </div>
           </div>
         </div>
