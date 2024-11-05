@@ -282,6 +282,9 @@ async function generateStudySchedule(
     selectedContent = selectContent(categoryAllocations, contentItems);
   }
 
+//update
+// update
+
   // Iterate through each day until the exam date
   for (let i = 0; i < totalDays; i++) {
     const dayOfWeek = currentDate.getDay();

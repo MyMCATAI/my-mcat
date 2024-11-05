@@ -89,6 +89,7 @@ export async function GET(req: Request) {
         lastAttemptAt: profile?.lastAttemptAt || null
       };
     });
+    // update
 
     const totalQuestions = questions.length;
     const result = {
