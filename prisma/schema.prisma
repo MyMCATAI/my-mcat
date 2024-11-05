@@ -186,6 +186,7 @@ model CalendarActivity {
   studyPlan     StudyPlan @relation(fields: [studyPlanId], references: [id])
   category      Category? @relation(fields: [categoryId], references: [id])
   content       Content?  @relation(fields: [contentId], references: [id])
+  tasks         Json?     @default("[]") // Array of task objects
 
   @@index([userId])
   @@index([studyPlanId])
