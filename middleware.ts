@@ -31,15 +31,21 @@ const allowedAdminUserIds = [
 ];
 
 export default clerkMiddleware((auth, request) => {
-  // Allow search engines to crawl public routes
-  const userAgent = request.headers.get('user-agent') || '';
-  const isCrawler = /bot|crawler|spider|crawling/i.test(userAgent);
+  const userAgent = request.headers.get('user-agent') || ''
+  const isCrawler = /bot|crawler|spider|crawling|googlebot|bingbot|duckduckbot/i.test(userAgent);
   
-  if (isCrawler && isPublicRoute(request)) {
+  // More permissive crawler access
+  if (isCrawler) {
     return NextResponse.next();
   }
 
   if (!isPublicRoute(request)) {
+    // Redirect unauthenticated users to sign-in
+    if (!auth().userId) {
+      const signInUrl = new URL('/sign-in', request.url);
+      signInUrl.searchParams.set('redirect_url', request.url);
+      return NextResponse.redirect(signInUrl);
+    }
     auth().protect();
   }
 
