@@ -83,7 +83,7 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick 
           return <div className="my-2" {...props}>{children}</div>
         }
       }}
-      className="text-lg text-left text-white space-y-2"
+      className="text-lg text-left text-[--theme-text-color] space-y-2"
     >
       {sanitizedContent}
     </ReactMarkdown>
