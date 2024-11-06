@@ -66,7 +66,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
   const buttonPositions: ButtonPosition[] = [
     { top: 0, left: 0, tab: "Schedule", icon: "/calendar.svg" },
     { top: 0, left: 0, tab: "doctorsoffice", icon: "/gamecontroller.svg" },
-    { top: 0, left: 0, tab: "test", icon: "/book.svg" },
+    { top: 0, left: 0, tab: "CARS", icon: "/book.svg" },
     { top: 0, left: 0, tab: "KnowledgeProfile", icon: "/graduationcap.svg" },
   ];
 
@@ -78,8 +78,9 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
 
   const handleButtonClick = (tab: string) => {
     if (tab === 'KnowledgeProfile') {
-      setShowTutoringMessage(true);
-      setTimeout(() => setShowTutoringMessage(false), 3000); // Hide message after 3 seconds
+      // setShowTutoringMessage(true);
+      // setTimeout(() => setShowTutoringMessage(false), 3000); // Hide message after 3 seconds
+      router.push('/doctorsoffice');
     } else if (tab === 'doctorsoffice') {
       if (currentPage === 'home') {
         router.push('/doctorsoffice');
@@ -99,7 +100,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
   const labelTexts: Record<string, string> = {
     "Schedule": "Dashboard",
     "doctorsoffice": "The Anki Clinic",
-    "test": "Daily CARs Suite",
+    "CARS": "Daily CARs Suite",
     "KnowledgeProfile": "Tutoring Suite",
   };
 

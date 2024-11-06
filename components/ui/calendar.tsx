@@ -9,9 +9,6 @@ export default function Calendar() {
   }, []);
 
   const tomorrow = addDays(currentDate, 1);
-  const dayAfterTomorrow = addDays(currentDate, 2);
-  const threeDaysAfter = addDays(currentDate, 3);
-  const fourDaysAfter = addDays(currentDate, 4);
 
   return (
     <div className="bg-[#0E2247] text-white p-4 rounded-lg shadow-md mt-4">

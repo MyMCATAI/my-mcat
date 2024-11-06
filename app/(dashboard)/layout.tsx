@@ -9,7 +9,7 @@ import Script from 'next/script';
 const checkSubscription = async (): Promise<boolean> => {
   // Implement your subscription check logic here
   // For now, we'll return a mock value
-  return Promise.resolve(false);
+  return true; // return Promise.resolve(false); MANUAL EDIT ETHAN DO NOT LEAVE LIKE THIS
 };
 
 const DashboardLayoutContent = ({

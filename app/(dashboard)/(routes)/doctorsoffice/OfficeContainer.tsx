@@ -30,6 +30,41 @@ interface GridImage {
   opacity?: number;
 }
 
+// Map of images to be used for QuestionPromptSprite
+export const roomToSubjectMap: Record<string, string[]> = {
+  'WaitingRoom1': ['Sociology'],
+  'ExaminationRoom1': ['Psychology'],
+  'ExaminationRoom2': ['Psychology'],
+  'DoctorsOffice1': ['Sociology'],
+  'Bathroom1': [''], // Empty array since it has no content
+  'Lab1': ['Biology','Biochemistry'],
+  'HighCare1': ['Biology'],
+  'HighCare2': ['Biology','Biochemistry'],
+  'OperatingRoom1': ['Biochemistry'],
+  'MedicalCloset1': ['Biochemistry'],
+  'MRIMachine1': ['Chemistry','Physics'],
+  'MRIMachine2': ['Physics','Chemistry'],
+  'CATScan1': ['Physics'],
+  'CATScan2': ['Physics'],
+};
+
+export const roomToContentMap: Record<string, string[]> = {
+  'WaitingRoom1': ['8A', '8B', '8C'],
+  'ExaminationRoom1': ['6A', '6B', '6C'],
+  'ExaminationRoom2': ['7A', '7B', '7C'],
+  'DoctorsOffice1': ['9A', '9B', '10A'],
+  'Bathroom1': [],  // Empty array since it has no content
+  'Lab1': ['2A', '2B', '2C', '1C'],
+  'HighCare1': ['3A', '3B'],
+  'HighCare2': ['1A', '1B', '5E'],
+  'OperatingRoom1': ['1D'],
+  'MedicalCloset1': ['5C', '5D'],
+  'MRIMachine1': ['4E', '5A', '5B'],
+  'MRIMachine2': ['4C', '4D'],
+  'CATScan1': ['4B'],
+  'CATScan2': ['4A']
+};
+
 // Define constants outside the component
 const tileWidth = 128;
 const tileHeight = 64;
@@ -220,7 +255,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
     { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
     { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.3, width: 306, height: 275, zIndex: 12},
-    { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.92, y: 4.25, width: 306, height: 274, zIndex: 12},
+    { id: 'Lab1', src: '/game-components/Lab1.png', x: 5.92, y: 4.25, width: 306, height: 274, zIndex: 12},
     { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 12},
     { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 12, opacity: 1.0},
     { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 274, height: 268, zIndex: 12, opacity: 1.0},
@@ -237,7 +272,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     3: { scale: 1.3, offsetX: 150, offsetY: 0 }, // Changed to match level 2
     4: { scale: 1.1, offsetX: 150, offsetY: 50 },
     5: { scale: 1.0, offsetX: 50, offsetY: 50 },
-    6: { scale: 1.0, offsetX: 0, offsetY: 0 },
+    6: { scale: 1.0, offsetX: 0, offsetY: 90 },
   };
 
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -413,16 +448,17 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
           alpha={img.opacity !== undefined ? img.opacity : 1}
           zIndex={img.zIndex}
         />
+        
         <QuestionPromptSprite
-          src="/game-components/questionPopUp.png"
-          x={posX + img.width / 2} // Adjust to the center of the room  - img.width / 2
-          y={posY + img.height / 3} // Adjust to the center of the room  - img.height / 2
+          src={`/game-components/questionPopup${roomToSubjectMap[img.id][0]}.png`}
+          x={posX + img.width / 2}
+          y={posY + img.height / 5}
           scaleConstant={4}  
-          zIndex={img.zIndex} // Slightly higher zIndex
+          zIndex={img.zIndex}
           roomId={img.id}
           onClick={() => {
-            setFlashcardRoomId(img.id); // Update the state
-            console.log('Current flashcardRoomId:', img.id); // Log the new state
+            setFlashcardRoomId(img.id);
+            console.log('Current flashcardRoomId:', img.id);
           }}
         />
       </>
@@ -454,8 +490,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
         { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 274, height: 268, zIndex: 12, opacity: 1.0},
         { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 11},
         { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 11, opacity: 1.0},
-        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.3, width: 300, height: 275, zIndex: 9},
-        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.92, y: 4.25, width: 320, height: 262, zIndex: 10},
+        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.98, y: 3.97, width: 299, height: 278, zIndex: 9},
+        { id: 'Lab1', src: '/game-components/Lab1.png', x: 5.95, y: 4, width: 292, height: 270, zIndex: 10},
         { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
         { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
         { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 12},
@@ -467,8 +503,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
         { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 274, height: 268, zIndex: 12, opacity: 1.0},
       { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 11},
       { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 11, opacity: 1.0},
-      { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.3, width: 300, height: 275, zIndex: 9},
-      { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.92, y: 4.25, width: 320, height: 262, zIndex: 10},
+      { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.98, y: 3.97, width: 299, height: 278, zIndex: 9},
+      { id: 'Lab1', src: '/game-components/Lab1.png', x: 5.95, y: 4, width: 292, height: 270, zIndex: 10},
       { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
       { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
       { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 12},
@@ -480,8 +516,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
         { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.0, width: 284, height: 272, zIndex: 12, opacity: 1.0},
         { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 10},
         { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 10, opacity: 1.0},
-        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.27, width: 288, height: 268, zIndex: 9},
-        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.9, y: 4.2, width: 294, height: 262, zIndex: 9},
+        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.98, y: 3.97, width: 296, height: 278, zIndex: 9},
+        { id: 'Lab1', src: '/game-components/Lab1.png', x: 5.95, y: 4, width: 285, height: 273, zIndex: 9},
         { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 8},
         { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
         { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
@@ -496,8 +532,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
         { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 274, height: 268, zIndex: 12, opacity: 1.0},
         { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 11},
         { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 11, opacity: 1.0},
-        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.27, width: 288, height: 268, zIndex: 10},
-        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.9, y: 4.2, width: 294, height: 262, zIndex: 10},
+        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.98, y: 3.97, width: 296, height: 278, zIndex: 10},
+        { id: 'Lab1', src: '/game-components/Lab1.png', x: 5.95, y: 4, width: 285, height: 273, zIndex: 10},
         { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 8},
         { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
         { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
@@ -512,8 +548,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
       rooms: [
         { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 260, zIndex: 11},
         { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 262, zIndex: 11, opacity: 1.0},
-        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.27, width: 288, height: 268, zIndex: 10},
-        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 6.0, y: 4.2, width: 294, height: 257, zIndex: 10},
+        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.98, y: 4.02, width: 294, height: 278, zIndex: 10},
+        { id: 'Lab1', src: '/game-components/Lab1.png', x: 5.98, y: 4, width: 285, height: 263, zIndex: 10},
         { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 290, zIndex: 8},
         { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
         { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },

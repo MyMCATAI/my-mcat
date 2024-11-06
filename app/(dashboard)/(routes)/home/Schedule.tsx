@@ -56,8 +56,10 @@ ChartJS.register(
 interface ScheduleProps {
   activities: FetchedActivity[];
   onShowDiagnosticTest: () => void;
+  onStudyPlanSaved?: () => void;
   handleSetTab: (tab: string) => void;
   isActive: boolean;
+  onActivitiesUpdate?: () => void;
 }
 
 type Section =
@@ -68,8 +70,10 @@ type Section =
 const Schedule: React.FC<ScheduleProps> = ({
   activities,
   onShowDiagnosticTest,
+  onStudyPlanSaved,
   handleSetTab,
   isActive,
+  onActivitiesUpdate,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
@@ -373,8 +377,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...newActivity,
-          userId: user?.id,
-          studyPlanId: "placeholder-study-plan-id", // Replace with actual study plan ID
         }),
       });
 
@@ -424,7 +426,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const handleButtonClick = (section: string) => {
     switch (section) {
       case "DailyCARsSuite":
-        handleSetTab("test");
+        handleSetTab("CARS");
         break;
       case "MCATGameAnkiClinic":
         router.push("/doctorsoffice");
@@ -458,10 +460,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const handleActivateTutorial = (step: number) => {
     setTutorialStep(step);
     setRunTutorialPart1(true);
-  };
-
-  const handleAAMCClick = () => {
-    router.push("/integrations");
   };
 
   // Add this function to reset the local storage variables
@@ -641,7 +639,8 @@ const Schedule: React.FC<ScheduleProps> = ({
                 onShowDiagnosticTest={onShowDiagnosticTest}
                 onStudyPlanSaved={handleStudyPlanSaved}
                 onToggleCalendarView={handleToggleView}
-                onClose={toggleSettings} // Pass the function
+                onClose={toggleSettings}
+                onActivitiesUpdate={onActivitiesUpdate}
               />
             </motion.div>
           )}
@@ -649,7 +648,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
         {/* Schedule Display */}
         <div
-          className="flex-grow h-[calc(100vh-8.3rem)] rounded-[10px] p-4 flex flex-col relative overflow-hidden schedule-content"
+          className="flex-grow h-[calc(100vh-8.0rem)] rounded-[10px] p-4 flex flex-col relative overflow-hidden schedule-content"
           style={
             {
               backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
@@ -665,7 +664,7 @@ const Schedule: React.FC<ScheduleProps> = ({
           {showAnalytics ? (
             <>
               <pre
-                className="pt-5 font-mono text-m leading-[24px] tracking-[0.4px] whitespace-pre-wrap mt-2 ml-2"
+                className="pt-5 text-m leading-[1.5rem] tracking-[0.025rem] whitespace-pre-wrap mt-2 ml-2"
                 style={{ color: "var(--theme-text-color)" }}
               >
                 {runTutorialPart1 ? tutorialText : typedText}
@@ -685,12 +684,6 @@ const Schedule: React.FC<ScheduleProps> = ({
                       className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
                     >
                       &gt; calendar
-                    </button>
-                    <button
-                      onClick={handleAAMCClick}
-                      className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
-                    >
-                      AAMC
                     </button>
                   </div>
 
@@ -787,10 +780,10 @@ const Schedule: React.FC<ScheduleProps> = ({
                   getActivitiesForDate={getActivitiesForDate}
                   onInteraction={() => {}}
                   setRunTutorialPart2={setRunTutorialPart2}
-                  setRunTutorialPart3={setRunTutorialPart3} // Pass the function
+                  setRunTutorialPart3={setRunTutorialPart3}
                 />
               </div>
-              <div className="h-32 flex justify-end items-start px-4 pt-4">
+              <div className="h-32 flex justify-between items-start px-4 pt-4">
                 <button
                   onClick={handleToggleView}
                   className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"

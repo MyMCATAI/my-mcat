@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -435,3 +437,4 @@ const FlashcardStack: React.FC = () => {
 };
 
 export default FlashcardStack;
+>>>>>>> origin/main
