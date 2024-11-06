@@ -41,6 +41,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { CheckCircle } from "lucide-react"; // Add this import
 import Tutorial from "./Tutorial";
+import Statistics from "@/components/Statistics";
 
 ChartJS.register(
   CategoryScale,
@@ -103,6 +104,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [hasUpdatedStudyPlan, setHasUpdatedStudyPlan] = useState(false);
   const [showCalendarTutorial, setShowCalendarTutorial] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [statistics, setStatistics] = useState<any>(null);
 
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
@@ -113,30 +115,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   });
 
   const { user } = useUser();
-
-  // Dummy data for charts
-  const barChartData = {
-    labels: ["Biology", "Chemistry", "Physics", "CARS"],
-    datasets: [
-      {
-        label: "Hours Studied",
-        data: [12, 19, 3, 5],
-        backgroundColor: "rgba(75, 192, 192, 0.6)",
-      },
-    ],
-  };
-
-  const lineChartData = {
-    labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-    datasets: [
-      {
-        label: "Practice Test Scores",
-        data: [495, 501, 508, 512],
-        borderColor: "rgb(75, 192, 192)",
-        tension: 0.1,
-      },
-    ],
-  };
 
   const [checklists, setChecklists] = useState<
     Record<Section, { id: number; text: string; checked: boolean }[]>
@@ -490,6 +468,22 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   }, [isActive]);
 
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const response = await fetch("/api/user-statistics");
+        if (response.ok) {
+          const data = await response.json();
+          setStatistics(data);
+        }
+      } catch (error) {
+        console.error("Error fetching statistics:", error);
+      }
+    };
+
+    fetchStatistics();
+  }, []);
+
   return (
     <div className="flex h-full relative">
       {/* Left Sidebar */}
@@ -695,70 +689,11 @@ const Schedule: React.FC<ScheduleProps> = ({
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <div className="grid grid-cols-2 gap-4">
-                          <motion.div
-                            className={`bg-white p-4 rounded-lg shadow cursor-pointer ${
-                              expandedGraph === "studyTime" ? "col-span-2" : ""
-                            }`}
-                            onClick={() => toggleGraphExpansion("studyTime")}
-                            layout
-                          >
-                            <h3 className="text-lg font-semibold mb-2">
-                              Study Time by Subject
-                            </h3>
-                            <AnimatePresence>
-                              {expandedGraph === "studyTime" ? (
-                                <motion.div
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  exit={{ opacity: 0 }}
-                                >
-                                  <Bar
-                                    data={barChartData}
-                                    options={{
-                                      responsive: true,
-                                      maintainAspectRatio: false,
-                                    }}
-                                  />
-                                </motion.div>
-                              ) : (
-                                <Bar data={barChartData} />
-                              )}
-                            </AnimatePresence>
-                          </motion.div>
-                          <motion.div
-                            className={`bg-white p-4 rounded-lg shadow cursor-pointer ${
-                              expandedGraph === "practiceTest"
-                                ? "col-span-2"
-                                : ""
-                            }`}
-                            onClick={() => toggleGraphExpansion("practiceTest")}
-                            layout
-                          >
-                            <h3 className="text-lg font-semibold mb-2">
-                              Practice Test Progress
-                            </h3>
-                            <AnimatePresence>
-                              {expandedGraph === "practiceTest" ? (
-                                <motion.div
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  exit={{ opacity: 0 }}
-                                >
-                                  <Line
-                                    data={lineChartData}
-                                    options={{
-                                      responsive: true,
-                                      maintainAspectRatio: false,
-                                    }}
-                                  />
-                                </motion.div>
-                              ) : (
-                                <Line data={lineChartData} />
-                              )}
-                            </AnimatePresence>
-                          </motion.div>
-                        </div>
+                        <Statistics
+                          statistics={statistics}
+                          expandedGraph={expandedGraph}
+                          toggleGraphExpansion={toggleGraphExpansion}
+                        />
                       </motion.div>
                     )}
                   </AnimatePresence>
