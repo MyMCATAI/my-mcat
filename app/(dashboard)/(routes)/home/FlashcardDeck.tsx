@@ -59,9 +59,8 @@ const FlashcardStack: React.FC = () => {
   const fetchFlashcards = async (page: number) => {
     setIsLoading(true);
     try {
-      const subjects = ["Biochemistry", "Chemistry"];
-      const subjectsParam = subjects.join(',');
-      const response = await fetch(`/api/flashcard?page=${page}&pageSize=10&subjects=${subjectsParam}`);
+      const response = await fetch(`/api/question?types=flashcard&page=${1}&pageSize=${10}`);
+
       const data: ApiResponse = await response.json();
 
       console.log('Fetched flashcards:', data.flashcards);
