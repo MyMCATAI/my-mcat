@@ -606,18 +606,18 @@ const Schedule: React.FC<ScheduleProps> = ({
               <Image
                 src="/game-components/PixelCupcake.png"
                 alt="Coins"
-                width={32}
-                height={32}
-                className="mr-2"
+                width={48}
+                height={48}
+                className="mr-4"
               />
-              <span className="font-bold truncate text-xl">{userScore}</span>
-              <span className="ml-1">coins</span>
+              <span className="font-bold truncate text-2xl">{userScore}</span>
+              <span className="ml-1 text-2xl">coins</span>
             </div>
 
             <div className="flex items-center">
-              <FaFire className="text-[--theme-text-color] mr-2 text-4xl" />
-              <span className="font-bold text-lg">{statistics?.streak || 0}</span>
-              <span className="ml-1">days</span>
+              <FaFire className="text-[--theme-text-color] ml-1 mr-2 text-5xl" />
+              <span className="font-bold text-lg ml-3">{statistics?.streak || 0}</span>
+              <span className="ml-1 text-2xl">days</span>
             </div>
           </div>
         )}
