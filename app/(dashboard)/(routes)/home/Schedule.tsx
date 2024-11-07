@@ -105,6 +105,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showCalendarTutorial, setShowCalendarTutorial] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [statistics, setStatistics] = useState<any>(null);
+  const [arrowDirection, setArrowDirection] = useState(">");
 
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
@@ -484,6 +485,11 @@ const Schedule: React.FC<ScheduleProps> = ({
     fetchStatistics();
   }, []);
 
+  const handleProgressClick = () => {
+    setShowGraphs(!showGraphs);
+    setArrowDirection(showGraphs ? ">" : "v");
+  };
+
   return (
     <div className="flex h-full relative">
       {/* Left Sidebar */}
@@ -668,10 +674,10 @@ const Schedule: React.FC<ScheduleProps> = ({
                 <div className="flex-grow overflow-auto mt-6">
                   <div className="flex space-x-4 mb-4">
                     <button
-                      onClick={() => setShowGraphs(!showGraphs)}
+                      onClick={handleProgressClick}
                       className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
                     >
-                      &gt; progress
+                      {arrowDirection} progress
                     </button>
                     <button
                       onClick={handleToggleView}
