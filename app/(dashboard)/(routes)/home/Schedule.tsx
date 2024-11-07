@@ -25,7 +25,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Bar, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -108,6 +107,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [isResetting, setIsResetting] = useState(false);
   const [statistics, setStatistics] = useState<any>(null);
   const [userScore, setUserScore] = useState(0);
+  const [arrowDirection, setArrowDirection] = useState(">");
 
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
@@ -502,6 +502,11 @@ const Schedule: React.FC<ScheduleProps> = ({
     fetchUserScore();
   }, []);
 
+  const handleProgressClick = () => {
+    setShowGraphs(!showGraphs);
+    setArrowDirection(showGraphs ? ">" : "v");
+  };
+
   return (
     <div className="flex h-full relative">
       {/* Left Sidebar */}
@@ -596,25 +601,27 @@ const Schedule: React.FC<ScheduleProps> = ({
       {/* Right Content */}
       <div className="w-3/4 p-2.5 flex flex-col relative">
         {/* Stats Box - Vertical stack */}
-        <div className="absolute top-6 text-[--theme-text-color] left-8 flex flex-col bg-transparent rounded-lg p-2 z-10 space-y-3">
-          <div className="flex items-center min-w-[6rem]">
-            <Image
-              src="/game-components/PixelCupcake.png"
-              alt="Coins"
-              width={32}
-              height={32}
-              className="mr-2"
-            />
-            <span className="font-bold truncate text-xl">{userScore}</span>
-            <span className="ml-1">coins</span>
-          </div>
+        {showAnalytics && !showGraphs && (
+          <div className="absolute top-6 text-[--theme-text-color] left-8 flex flex-col bg-transparent rounded-lg p-2 z-10 space-y-3">
+            <div className="flex items-center min-w-[6rem]">
+              <Image
+                src="/game-components/PixelCupcake.png"
+                alt="Coins"
+                width={32}
+                height={32}
+                className="mr-2"
+              />
+              <span className="font-bold truncate text-xl">{userScore}</span>
+              <span className="ml-1">coins</span>
+            </div>
 
-          <div className="flex items-center">
-            <FaFire className="text-[--theme-text-color] mr-2 text-4xl" />
-            <span className="font-bold text-lg">{statistics?.streak || 0}</span>
-            <span className="ml-1">days</span>
+            <div className="flex items-center">
+              <FaFire className="text-[--theme-text-color] mr-2 text-4xl" />
+              <span className="font-bold text-lg">{statistics?.streak || 0}</span>
+              <span className="ml-1">days</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Settings Button */}
         <div className="absolute top-4 right-4 z-20">
@@ -713,24 +720,17 @@ const Schedule: React.FC<ScheduleProps> = ({
                     ) : (
                       <motion.div
                         key="statistics"
-                        className="mt-4"
+                        className="h-full"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <div className="flex justify-end mb-4">
-                          <button
-                            onClick={() => setShowGraphs(false)}
-                            className="bg-[--theme-leaguecard-color] text-sm border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
-                          >
-                            &lt; Return to Overview
-                          </button>
-                        </div>
                         <Statistics
                           statistics={statistics}
                           expandedGraph={expandedGraph}
                           toggleGraphExpansion={toggleGraphExpansion}
+                          onReturn={() => setShowGraphs(false)}
                         />
                       </motion.div>
                     )}
@@ -756,60 +756,76 @@ const Schedule: React.FC<ScheduleProps> = ({
                   setRunTutorialPart3={setRunTutorialPart3}
                 />
               </div>
-              <div className="h-32 flex justify-between items-start px-4 pt-4">
+              <div className="h-32 flex justify-end items-start px-4 pt-4">
                 <button
                   onClick={handleToggleView}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+                  className="w-36 py-3 px-2 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
                 >
-                  Back to Overview
+                  <svg
+                    className="w-6 h-6 rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                  <span>Overview</span>
                 </button>
               </div>
             </div>
           )}
 
           {/* Navigation Buttons */}
-          <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
-            <button
-              onClick={() => router.push('/integrations')}
-              className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
-            >
-              <span>AAMC</span>
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+          {showAnalytics && !showGraphs && (
+            <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
+              <button
+                onClick={() => router.push('/integrations')}
+                className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={handleToggleView}
-              className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
-            >
-              <span>Calendar</span>
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+                <span>AAMC</span>
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={handleToggleView}
+                className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          </div>
+                <span>Calendar</span>
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Dialogs */}
