@@ -174,8 +174,9 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
               />
             </div>
             <div className="flex flex-col gap-[0.25vh]">
-              <p className="text-[3vh] text-[--theme-text-color]">5 points away</p>
-              <p className="text-[3vh] text-[--theme-border-color]">23 days left</p>
+              <p className="text-[2vh] text-[--theme-hover-color]">12 points gained</p>
+              <p className="text-[2vh] text-[--theme-text-color]">5 points away</p>
+              <p className="text-[2vh] text-[--theme-text-color]">23 days left</p>
             </div>
           </>
         )}
