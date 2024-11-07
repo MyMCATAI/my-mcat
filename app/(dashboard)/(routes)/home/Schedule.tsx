@@ -24,7 +24,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Bar, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -40,6 +39,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { CheckCircle } from "lucide-react"; // Add this import
 import Tutorial from "./Tutorial";
+import Statistics from "@/components/Statistics";
+import DonutChart from "./DonutChart"; // Add this import
+import { FaFire } from "react-icons/fa";
 
 ChartJS.register(
   CategoryScale,
@@ -102,6 +104,9 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [hasUpdatedStudyPlan, setHasUpdatedStudyPlan] = useState(false);
   const [showCalendarTutorial, setShowCalendarTutorial] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [statistics, setStatistics] = useState<any>(null);
+  const [userScore, setUserScore] = useState(0);
+  const [arrowDirection, setArrowDirection] = useState(">");
 
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
@@ -112,30 +117,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   });
 
   const { user } = useUser();
-
-  // Dummy data for charts
-  const barChartData = {
-    labels: ["Biology", "Chemistry", "Physics", "CARS"],
-    datasets: [
-      {
-        label: "Hours Studied",
-        data: [12, 19, 3, 5],
-        backgroundColor: "rgba(75, 192, 192, 0.6)",
-      },
-    ],
-  };
-
-  const lineChartData = {
-    labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-    datasets: [
-      {
-        label: "Practice Test Scores",
-        data: [495, 501, 508, 512],
-        borderColor: "rgb(75, 192, 192)",
-        tension: 0.1,
-      },
-    ],
-  };
 
   const [checklists, setChecklists] = useState<
     Record<Section, { id: number; text: string; checked: boolean }[]>
@@ -440,21 +421,20 @@ const Schedule: React.FC<ScheduleProps> = ({
   };
 
   useEffect(() => {
-    // Fetch initial user coin count when component mounts
+    const fetchUserCoinCount = async () => {
+      try {
+        const response = await fetch("/api/user-info");
+        if (response.ok) {
+          const data = await response.json();
+          setUserCoinCount(data.coinCount);
+        }
+      } catch (error) {
+        console.error("Error fetching user coin count:", error);
+      }
+    };
+
     fetchUserCoinCount();
   }, []);
-
-  const fetchUserCoinCount = async () => {
-    try {
-      const response = await fetch("/api/user-info");
-      if (response.ok) {
-        const data = await response.json();
-        setUserCoinCount(data.coinCount);
-      }
-    } catch (error) {
-      console.error("Error fetching user coin count:", error);
-    }
-  };
 
   const handleActivateTutorial = (step: number) => {
     setTutorialStep(step);
@@ -489,41 +469,42 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   }, [isActive]);
 
-  // const handleTestEmail = async () => {
-  //   try {
-  //     if (!user?.emailAddresses[0]?.emailAddress) {
-  //       console.error('No email address found for user');
-  //       return;
-  //     }
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const response = await fetch("/api/user-statistics");
+        if (response.ok) {
+          const data = await response.json();
+          setStatistics(data);
+        }
+      } catch (error) {
+        console.error("Error fetching statistics:", error);
+      }
+    };
 
-  //     const response = await fetch('/api/send-email', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         email: user.emailAddresses[0].emailAddress,
-  //         template: 'welcome',
-  //         data: {
-  //           name: user.firstName || 'there'
-  //         }
-  //       })
-  //     });
+    fetchStatistics();
+  }, []);
 
-  //     if (!response.ok) {
-  //       const errorData = await response.json();
-  //       throw new Error(errorData.error || 'Failed to send email');
-  //     }
+  useEffect(() => {
+    const fetchUserScore = async () => {
+      try {
+        const response = await fetch("/api/user-info");
+        if (response.ok) {
+          const data = await response.json();
+          setUserScore(data.score);
+        }
+      } catch (error) {
+        console.error("Error fetching user score:", error);
+      }
+    };
 
-  //     // Add user feedback
-  //     alert('Test email sent successfully! Please check your inbox.');
-  //     console.log('Test email sent successfully');
-  //   } catch (error) {
-  //     // Add user feedback
-  //     alert('Failed to send test email. Please try again.');
-  //     console.error('Error sending test email:', error);
-  //   }
-  // };
+    fetchUserScore();
+  }, []);
+
+  const handleProgressClick = () => {
+    setShowGraphs(!showGraphs);
+    setArrowDirection(showGraphs ? ">" : "v");
+  };
 
   return (
     <div className="flex h-full relative">
@@ -617,7 +598,30 @@ const Schedule: React.FC<ScheduleProps> = ({
       </div>
 
       {/* Right Content */}
-      <div className="w-3/4 p-2.5 bg-[--theme-gray-100] flex flex-col relative">
+      <div className="w-3/4 p-2.5 flex flex-col relative">
+        {/* Stats Box - Vertical stack */}
+        {showAnalytics && !showGraphs && (
+          <div className="absolute top-6 text-[--theme-text-color] left-8 flex flex-col bg-transparent rounded-lg p-2 z-10 space-y-3">
+            <div className="flex items-center min-w-[6rem]">
+              <Image
+                src="/game-components/PixelCupcake.png"
+                alt="Coins"
+                width={32}
+                height={32}
+                className="mr-2"
+              />
+              <span className="font-bold truncate text-xl">{userScore}</span>
+              <span className="ml-1">coins</span>
+            </div>
+
+            <div className="flex items-center">
+              <FaFire className="text-[--theme-text-color] mr-2 text-4xl" />
+              <span className="font-bold text-lg">{statistics?.streak || 0}</span>
+              <span className="ml-1">days</span>
+            </div>
+          </div>
+        )}
+
         {/* Settings Button */}
         <div className="absolute top-4 right-4 z-20">
           <TooltipProvider>
@@ -683,7 +687,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
         {/* Schedule Display */}
         <div
-          className="flex-grow h-[calc(100vh-8.0rem)] rounded-[10px] p-4 flex flex-col relative overflow-hidden schedule-content"
+          className="flex-grow h-[calc(100vh-8rem)] rounded-[10px] p-4 flex flex-col relative overflow-hidden schedule-content"
           style={
             {
               backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
@@ -698,102 +702,35 @@ const Schedule: React.FC<ScheduleProps> = ({
         >
           {showAnalytics ? (
             <>
-              <pre
-                className="pt-5 text-m leading-[1.5rem] tracking-[0.025rem] whitespace-pre-wrap mt-2 ml-2"
-                style={{ color: "var(--theme-text-color)" }}
-              >
-                {runTutorialPart1 ? tutorialText : typedText}
-              </pre>
-
               {(isTypingComplete || isTutorialTypingComplete) && (
-                <div className="flex-grow overflow-auto mt-6">
-                  <div className="flex space-x-4 mb-4">
-                    <button
-                      onClick={() => setShowGraphs(!showGraphs)}
-                      className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
-                    >
-                      &gt; progress
-                    </button>
-                    <button
-                      onClick={handleToggleView}
-                      className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition"
-                    >
-                      &gt; calendar
-                    </button>
-                  </div>
-
-                  <AnimatePresence>
-                    {showGraphs && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
+                <div className="flex-grow overflow-auto flex flex-col justify-center">
+                  <AnimatePresence mode="wait">
+                    {!showGraphs ? (
+                      <motion.div 
+                        key="donut"
+                        className="flex justify-center items-center min-h-[32rem]"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <div className="grid grid-cols-2 gap-4">
-                          <motion.div
-                            className={`bg-white p-4 rounded-lg shadow cursor-pointer ${
-                              expandedGraph === "studyTime" ? "col-span-2" : ""
-                            }`}
-                            onClick={() => toggleGraphExpansion("studyTime")}
-                            layout
-                          >
-                            <h3 className="text-lg font-semibold mb-2">
-                              Study Time by Subject
-                            </h3>
-                            <AnimatePresence>
-                              {expandedGraph === "studyTime" ? (
-                                <motion.div
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  exit={{ opacity: 0 }}
-                                >
-                                  <Bar
-                                    data={barChartData}
-                                    options={{
-                                      responsive: true,
-                                      maintainAspectRatio: false,
-                                    }}
-                                  />
-                                </motion.div>
-                              ) : (
-                                <Bar data={barChartData} />
-                              )}
-                            </AnimatePresence>
-                          </motion.div>
-                          <motion.div
-                            className={`bg-white p-4 rounded-lg shadow cursor-pointer ${
-                              expandedGraph === "practiceTest"
-                                ? "col-span-2"
-                                : ""
-                            }`}
-                            onClick={() => toggleGraphExpansion("practiceTest")}
-                            layout
-                          >
-                            <h3 className="text-lg font-semibold mb-2">
-                              Practice Test Progress
-                            </h3>
-                            <AnimatePresence>
-                              {expandedGraph === "practiceTest" ? (
-                                <motion.div
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  exit={{ opacity: 0 }}
-                                >
-                                  <Line
-                                    data={lineChartData}
-                                    options={{
-                                      responsive: true,
-                                      maintainAspectRatio: false,
-                                    }}
-                                  />
-                                </motion.div>
-                              ) : (
-                                <Line data={lineChartData} />
-                              )}
-                            </AnimatePresence>
-                          </motion.div>
-                        </div>
+                        <DonutChart onProgressClick={() => setShowGraphs(true)} />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="statistics"
+                        className="h-full"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Statistics
+                          statistics={statistics}
+                          expandedGraph={expandedGraph}
+                          toggleGraphExpansion={toggleGraphExpansion}
+                          onReturn={() => setShowGraphs(false)}
+                        />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -818,45 +755,76 @@ const Schedule: React.FC<ScheduleProps> = ({
                   setRunTutorialPart3={setRunTutorialPart3}
                 />
               </div>
-              <div className="h-32 flex justify-between items-start px-4 pt-4">
+              <div className="h-32 flex justify-end items-start px-4 pt-4">
                 <button
                   onClick={handleToggleView}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition text-sm"
+                  className="w-36 py-3 px-2 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
                 >
-                  Back to Overview
+                  <svg
+                    className="w-6 h-6 rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                  <span>Overview</span>
                 </button>
               </div>
             </div>
           )}
 
-          {/* Tutorial Buttons */}
-          <div className="absolute bottom-4 right-4">
-            <motion.div
-              className="absolute bottom-4 right-4"
-              initial={false}
-              animate={isResetting ? { scale: 1.1 } : { scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <motion.button
-                onClick={resetTutorials}
-                className="bg-[--theme-leaguecard-color] text-lg border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] hover:text-[--theme-hover-text] font-semibold py-2 px-4 rounded transition text-sm opacity-80 relative overflow-hidden"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                disabled={isResetting}
+          {/* Navigation Buttons */}
+          {showAnalytics && !showGraphs && (
+            <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
+              <button
+                onClick={() => router.push('/integrations')}
+                className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
               >
-                Reset Tutorials
-                {isResetting && (
-                  <motion.div
-                    className="absolute inset-0 bg-white opacity-30"
-                    initial={{ scale: 0, x: "-50%", y: "-50%" }}
-                    animate={{ scale: 4 }}
-                    transition={{ duration: 0.5 }}
-                    style={{ borderRadius: "100%", left: "50%", top: "50%" }}
+                <span>AAMC</span>
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
                   />
-                )}
-              </motion.button>
-            </motion.div>
-          </div>
+                </svg>
+              </button>
+              <button
+                onClick={handleToggleView}
+                className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
+              >
+                <span>Calendar</span>
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Dialogs */}
