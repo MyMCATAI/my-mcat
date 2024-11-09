@@ -373,6 +373,9 @@ export async function GET(req: Request) {
     const testsCompletedToday = await prisma.userTest.count({
       where: {
         userId: userId,
+        passageId: {
+          not: null
+        },
         finishedAt: {
           gte: startOfDay(today),
           lte: endOfDay(today),

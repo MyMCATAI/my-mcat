@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "30");
+  const limit = parseInt(searchParams.get("limit") || "10");
   const skip = (page - 1) * limit;
 
   try {
@@ -83,33 +83,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    const { testId } = await req.json();
+  console.log("req:", req);
 
-    if (!testId) {
-      return NextResponse.json(
-        { error: "Test ID is required" },
-        { status: 400 }
-      );
+  try {
+    let body = {};
+    try {
+      body = await req.json();
+    } catch {
+      console.log("Error parsing userTest post body");      
     }
 
-    // Fetch the test to get the passageId
-    const test = await prisma.test.findUnique({
-      where: { id: testId },
-      select: { passageId: true },
-    });
-
-    if (!test) {
-      return NextResponse.json({ error: "Test not found" }, { status: 404 });
+    // Create a data object with only the required userId
+    const data: { userId: string; testId?: string; passageId?: string } = {
+      userId,
+    };
+    // Only add testId and passageId if they are provided
+    if (body && typeof body === 'object') {
+      if ('testId' in body && typeof body.testId === 'string') data.testId = body.testId;
+      if ('passageId' in body && typeof body.passageId === 'string') data.passageId = body.passageId;
     }
 
     const userTest = await prisma.userTest.create({
-      data: {
-        userId,
-        testId,
-        passageId: test.passageId, // Add the passageId to the userTest
-      },
+      data,
     });
+
+    console.log("userTest created:", userTest);
 
     return NextResponse.json(userTest, { status: 201 });
   } catch (error) {
