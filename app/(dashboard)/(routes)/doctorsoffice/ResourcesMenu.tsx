@@ -113,8 +113,8 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({ reportData, userRooms, to
         <div className="w-full max-w-md space-y-4 mt-6">
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
+              <TooltipTrigger>
+                <div className="w-full">
                   <StatBar
                     label="Patients Per Day"
                     value={patientsPerDay}
@@ -128,8 +128,8 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({ reportData, userRooms, to
             </Tooltip>
 
             <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
+              <TooltipTrigger>
+                <div className="w-full">
                   <StatBar
                     label="Quality of Care (QC)"
                     value={displayQC}
@@ -144,8 +144,8 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({ reportData, userRooms, to
             </Tooltip>
 
             <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
+              <TooltipTrigger>
+                <div className="w-full">
                   <StatBar
                     label="Clinic Cost Per Day"
                     value={clinicCostPerDay}

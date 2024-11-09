@@ -1,20 +1,9 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo, use } from 'react';
 import { Stage, Container, Graphics, Sprite } from '@pixi/react';
 import { Texture, Graphics as PIXIGraphics, utils as PIXIUtils, BaseTexture, Rectangle } from 'pixi.js';
 import { ImageGroup } from './ShoppingDialog';
 import { Button } from '@/components/ui/button';
 import QuestionPromptSprite from './QuestionPromptSprite';
-import axios from 'axios';
-import { toast } from 'react-hot-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import AfterTestFeed from './AfterTestFeed';
 
 
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
@@ -29,6 +18,41 @@ interface GridImage {
   zIndex: number;
   opacity?: number;
 }
+
+// Map of images to be used for QuestionPromptSprite
+export const roomToSubjectMap: Record<string, string[]> = {
+  'WaitingRoom1': ['Sociology'],
+  'ExaminationRoom1': ['Psychology'],
+  'ExaminationRoom2': ['Psychology'],
+  'DoctorsOffice1': ['Sociology'],
+  'Bathroom1': [''], // Empty array since it has no content
+  'Lab1': ['Biology','Biochemistry'],
+  'HighCare1': ['Biology'],
+  'HighCare2': ['Biology','Biochemistry'],
+  'OperatingRoom1': ['Biochemistry'],
+  'MedicalCloset1': ['Biochemistry'],
+  'MRIMachine1': ['Chemistry','Physics'],
+  'MRIMachine2': ['Physics','Chemistry'],
+  'CATScan1': ['Physics'],
+  'CATScan2': ['Physics'],
+};
+
+export const roomToContentMap: Record<string, string[]> = {
+  'WaitingRoom1': ['8A', '8B', '8C'],
+  'ExaminationRoom1': ['6A', '6B', '6C'],
+  'ExaminationRoom2': ['7A', '7B', '7C'],
+  'DoctorsOffice1': ['9A', '9B', '10A'],
+  'Bathroom1': [],  // Empty array since it has no content
+  'Lab1': ['2A', '2B', '2C', '1C'],
+  'HighCare1': ['3A', '3B'],
+  'HighCare2': ['1A', '1B', '5E'],
+  'OperatingRoom1': ['1D'],
+  'MedicalCloset1': ['5C', '5D'],
+  'MRIMachine1': ['4E', '5A', '5B'],
+  'MRIMachine2': ['4C', '4D'],
+  'CATScan1': ['4B'],
+  'CATScan2': ['4A']
+};
 
 // Define constants outside the component
 const tileWidth = 128;
@@ -170,6 +194,44 @@ const AnimatedSpriteWalking: React.FC<{
   );
 };
 
+const TimerDisplay: React.FC<{ timer: number, showChallengeButton: boolean }> = ({ timer, showChallengeButton }) => {
+  const minutes = Math.floor(timer / 60);
+  const seconds = timer % 60;
+  const formatNumber = (num: number) => num.toString().padStart(2, '0');
+  const isLowTime = timer <= 30;
+  const showRedShift = isLowTime && !showChallengeButton;
+
+  return (
+    <div className="absolute top-4 left-4 z-50">
+      <div className={`
+        p-1 rounded-xl shadow-lg
+        ${showRedShift 
+          ? 'bg-gradient-to-r from-red-600 to-red-700 animate-pulse' 
+          : 'bg-gradient-to-r from-indigo-500 to-purple-600'
+        }
+      `}>
+        <div className={`
+          px-6 py-3 rounded-lg
+          ${showRedShift 
+            ? 'bg-black bg-opacity-75' 
+            : 'bg-black bg-opacity-75'
+          }
+        `}>
+          <span className={`
+            font-mono text-2xl font-bold
+            ${showRedShift 
+              ? 'text-red-500' 
+              : 'text-white'
+            }
+          `}>
+            {formatNumber(minutes)}min {formatNumber(seconds)}sec
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface OfficeContainerProps {
   visibleImages: Set<string>;
   clinicName: string | null;
@@ -182,6 +244,13 @@ interface OfficeContainerProps {
   onUpdateUserScore: (newScore: number) => void;
   setUserRooms: React.Dispatch<React.SetStateAction<string[]>>;
   updateVisibleImages: (newVisibleImages: Set<string>) => void;
+  activeRooms: Set<string>;
+  setActiveRooms: React.Dispatch<React.SetStateAction<Set<string>>>;
+  timer: number;
+  setTimer: React.Dispatch<React.SetStateAction<number>>;
+  showChallengeButton: boolean;
+  isFlashcardsOpen: boolean;
+  setIsFlashcardsOpen: (open: boolean) => void;
 }
 
 // Define a type for sprite positions with an index signature
@@ -197,18 +266,68 @@ type SpritePositions = {
   [key: string]: SpritePosition;
 };
 
+// Move RoomSprite outside as a separate component
+const RoomSprite: React.FC<{ 
+  img: GridImage; 
+  setFlashcardRoomId: (id: string) => void;
+  activeRooms: Set<string>;
+  setActiveRooms: React.Dispatch<React.SetStateAction<Set<string>>>;
+  isFlashcardsOpen: boolean;
+  setIsFlashcardsOpen: (open: boolean) => void;
+}> = ({ img, setFlashcardRoomId, activeRooms, setActiveRooms, isFlashcardsOpen, setIsFlashcardsOpen }) => {
+  const texture = Texture.from(img.src);  
+  const posX = screenX(img.x, img.y) - img.width / 4;
+  const posY = screenY(img.x, img.y) - img.height / 2;
+
+  return (
+    <>
+      <Sprite
+        texture={texture}
+        x={posX}
+        y={posY}
+        width={img.width}
+        height={img.height}
+        alpha={activeRooms.has(img.id) ? 1 : 0.7} // Dim if not active
+        zIndex={img.zIndex}
+      />
+      
+      {activeRooms.has(img.id) && roomToSubjectMap[img.id][0] && (
+        <QuestionPromptSprite
+          src={`/game-components/questionPopup${roomToSubjectMap[img.id][0]}.png`}
+          x={posX + img.width / 2}
+          y={posY + img.height / 5}
+          scaleConstant={4}  
+          zIndex={img.zIndex+100}
+          roomId={img.id}
+          onClick={() => {
+            setFlashcardRoomId(img.id);
+            setIsFlashcardsOpen(true);
+          }}
+        />
+      )}
+    </>
+  );
+};
+
 const OfficeContainer: React.FC<OfficeContainerProps> = ({
   visibleImages,
   clinicName,
   userScore,
   userRooms,
   imageGroups,
-  flashcardRoomId, 
+  flashcardRoomId,
   setFlashcardRoomId,
   toggleGroup,
   onUpdateUserScore,
   setUserRooms,
   updateVisibleImages,
+  activeRooms,
+  setActiveRooms,
+  timer,
+  setTimer,
+  showChallengeButton,
+  isFlashcardsOpen,
+  setIsFlashcardsOpen,
 }) => {
   const [images] = useState<GridImage[]>([
     { id: 'OperatingRoom1', src: '/game-components/OperatingRoom1.png', x: 0.04, y: 2, width: 268, height: 256, zIndex: 2 },
@@ -220,7 +339,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
     { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
     { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.3, width: 306, height: 275, zIndex: 12},
-    { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.92, y: 4.25, width: 306, height: 274, zIndex: 12},
+    { id: 'Lab1', src: '/game-components/Lab1.png', x: 5.92, y: 4.25, width: 306, height: 274, zIndex: 12},
     { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 12},
     { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 12, opacity: 1.0},
     { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 274, height: 268, zIndex: 12, opacity: 1.0},
@@ -228,6 +347,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   ]);
 
   const [currentLevel, setCurrentLevel] = useState(1);
+  const lastProcessedTimer = useRef(0);
 
   // Define zoom levels for each test level
   const zoomLevels: Record<number, { scale: number, offsetX: number, offsetY: number }> = {
@@ -237,7 +357,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     3: { scale: 1.3, offsetX: 150, offsetY: 0 }, // Changed to match level 2
     4: { scale: 1.1, offsetX: 150, offsetY: 50 },
     5: { scale: 1.0, offsetX: 50, offsetY: 50 },
-    6: { scale: 1.0, offsetX: 0, offsetY: 0 },
+    6: { scale: 1.0, offsetX: 0, offsetY: 90 },
   };
 
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -293,6 +413,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
 
     return () => window.removeEventListener('resize', handleResize);
   }, [calculateScale]);
+
 
   const [currentWaypoints, setCurrentWaypoints] = useState(spriteWaypoints[1]);
 
@@ -397,38 +518,6 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     return <Graphics draw={drawGrid} />;
   }, [getAccentColor, currentLevel]);
 
-  const RoomSprite = useCallback(({ img }: { img: GridImage }) => {
-    const texture = Texture.from(img.src);
-    const posX = screenX(img.x, img.y) - img.width / 4;
-    const posY = screenY(img.x, img.y) - img.height / 2;
-
-    return (
-      <>
-        <Sprite
-          texture={texture}
-          x={posX}
-          y={posY}
-          width={img.width}
-          height={img.height}
-          alpha={img.opacity !== undefined ? img.opacity : 1}
-          zIndex={img.zIndex}
-        />
-        <QuestionPromptSprite
-          src="/game-components/questionPopUp.png"
-          x={posX + img.width / 2} // Adjust to the center of the room  - img.width / 2
-          y={posY + img.height / 3} // Adjust to the center of the room  - img.height / 2
-          scaleConstant={4}  
-          zIndex={img.zIndex} // Slightly higher zIndex
-          roomId={img.id}
-          onClick={() => {
-            setFlashcardRoomId(img.id); // Update the state
-            console.log('Current flashcardRoomId:', img.id); // Log the new state
-          }}
-        />
-      </>
-    );
-  }, []);
-
   const levelConfigurations: Record<number, {
     canvasSize: { width: number, height: number },
     rooms: GridImage[]
@@ -454,8 +543,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
         { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 274, height: 268, zIndex: 12, opacity: 1.0},
         { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 11},
         { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 11, opacity: 1.0},
-        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.3, width: 300, height: 275, zIndex: 9},
-        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.92, y: 4.25, width: 320, height: 262, zIndex: 10},
+        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.98, y: 3.97, width: 299, height: 278, zIndex: 9},
+        { id: 'Lab1', src: '/game-components/Lab1.png', x: 5.95, y: 4, width: 292, height: 270, zIndex: 10},
         { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
         { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
         { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 12},
@@ -467,8 +556,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
         { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 274, height: 268, zIndex: 12, opacity: 1.0},
       { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 11},
       { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 11, opacity: 1.0},
-      { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.3, width: 300, height: 275, zIndex: 9},
-      { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.92, y: 4.25, width: 320, height: 262, zIndex: 10},
+      { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.98, y: 3.97, width: 299, height: 278, zIndex: 9},
+      { id: 'Lab1', src: '/game-components/Lab1.png', x: 5.95, y: 4, width: 292, height: 270, zIndex: 10},
       { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
       { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
       { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 12},
@@ -480,8 +569,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
         { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.0, width: 284, height: 272, zIndex: 12, opacity: 1.0},
         { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 10},
         { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 10, opacity: 1.0},
-        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.27, width: 288, height: 268, zIndex: 9},
-        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.9, y: 4.2, width: 294, height: 262, zIndex: 9},
+        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.98, y: 3.97, width: 296, height: 278, zIndex: 9},
+        { id: 'Lab1', src: '/game-components/Lab1.png', x: 5.95, y: 4, width: 285, height: 273, zIndex: 9},
         { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 8},
         { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
         { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
@@ -496,8 +585,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
         { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.05, width: 274, height: 268, zIndex: 12, opacity: 1.0},
         { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 264, zIndex: 11},
         { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 268, zIndex: 11, opacity: 1.0},
-        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.27, width: 288, height: 268, zIndex: 10},
-        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 5.9, y: 4.2, width: 294, height: 262, zIndex: 10},
+        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.98, y: 3.97, width: 296, height: 278, zIndex: 10},
+        { id: 'Lab1', src: '/game-components/Lab1.png', x: 5.95, y: 4, width: 285, height: 273, zIndex: 10},
         { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 294, zIndex: 8},
         { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
         { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
@@ -512,8 +601,8 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
       rooms: [
         { id: 'ExaminationRoom1', src: '/game-components/ExaminationRoom1.png', x: 4, y: 6.1, width: 290, height: 260, zIndex: 11},
         { id: 'ExaminationRoom2', src: '/game-components/ExaminationRoom1.png', x: 6, y: 6.00, width: 292, height: 262, zIndex: 11, opacity: 1.0},
-        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.96, y: 4.27, width: 288, height: 268, zIndex: 10},
-        { id: 'Bathroom2', src: '/game-components/Bathroom1.png', x: 6.0, y: 4.2, width: 294, height: 257, zIndex: 10},
+        { id: 'Bathroom1', src: '/game-components/Bathroom1.png', x: 3.98, y: 4.02, width: 294, height: 278, zIndex: 10},
+        { id: 'Lab1', src: '/game-components/Lab1.png', x: 5.98, y: 4, width: 285, height: 263, zIndex: 10},
         { id: 'DoctorsOffice1', src: '/game-components/DoctorsOffice1.png', x: 0.1, y: 7.94, width: 290, height: 290, zIndex: 8},
         { id: 'HighCare1', src: '/game-components/HighCare1.png', x: 0.06, y: 4, width: 276, height: 260, zIndex: 6 },
         { id: 'HighCare2', src: '/game-components/HighCare1.png', x: 0.1, y: 6, width: 275, height: 265, zIndex: 7 },
@@ -566,19 +655,40 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     updateVisibleImages(newVisibleImages);
   }, [currentLevel, updateVisibleImages]);
 
+  // Update the timer effect that adds rooms to activeRooms
+  useEffect(() => {
+    if (timer > 0 && timer % 1 === 0 && lastProcessedTimer.current !== timer && !showChallengeButton) {
+      lastProcessedTimer.current = timer;
+
+      // Filter out completed rooms from available rooms
+      const availableRooms = currentLevelConfig.rooms
+        .map(room => room.id)
+        .filter(roomId => !activeRooms.has(roomId));
+
+      if (availableRooms.length > 0) {
+        const randomIndex = Math.floor(Math.random() * availableRooms.length);
+        const roomToActivate = availableRooms[randomIndex];
+
+        setActiveRooms(prev => {
+          const newSet = new Set(prev);
+          newSet.add(roomToActivate);
+          return newSet;
+        });
+      }
+    }
+  }, [timer, currentLevelConfig.rooms, setActiveRooms]);
+
   // Update the offset based on the current test level
   const offset = useMemo(() => ({
     x: ((gridWidth + gridHeight) * (tileWidth / 3) + zoomLevels[currentLevel].offsetX),
     y: ((gridHeight * tileHeight) / 4 + zoomLevels[currentLevel].offsetY)
   }), [currentLevel]);
 
-  // Add this constant for base scale
-  const BASE_ZOOM_LEVEL = zoomLevels[1].scale; // Using level 1 as our base
-
   const [isLargeDialogOpen, setIsLargeDialogOpen] = useState(false);
 
   return (
     <div className="flex flex-col w-full h-full relative overflow-hidden">
+      <TimerDisplay timer={timer} showChallengeButton={showChallengeButton} />
       {/* Pixi.js stage container */}
       <div className="absolute inset-0 z-20 flex justify-center items-center">
         <Stage
@@ -596,6 +706,11 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
               <RoomSprite 
                 key={img.id} 
                 img={img}
+                setFlashcardRoomId={setFlashcardRoomId}
+                activeRooms={activeRooms}
+                setActiveRooms={setActiveRooms}
+                isFlashcardsOpen={isFlashcardsOpen}
+                setIsFlashcardsOpen={setIsFlashcardsOpen}
               />
             ))}
             {Object.values(spritePositions).map(sprite => (
@@ -603,7 +718,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
                 key={sprite.id}
                 position={{ x: sprite.x, y: sprite.y }}
                 direction={sprite.direction}
-                scale={1} // We're not using this for sizing anymore, but keep it for consistency
+                scale={1} 
               />
             ))}
           </Container>
@@ -616,30 +731,6 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
           {clinicName && `${clinicName} Medical Center`}
         </div>
       </div>
-      {/* New Dialog Button */}
-      <Button
-        className="absolute bottom-4 right-40 z-50"
-        onClick={() => setIsLargeDialogOpen(true)}
-      >
-        Open Large Dialog
-      </Button>
-
-      <AfterTestFeed
-        open={isLargeDialogOpen}
-        onOpenChange={setIsLargeDialogOpen}
-      >
-        <div className="bg-[--theme-gradient-end] p-4 rounded-lg shadow-lg mb-6">
-          <h2 className="text-xl font-semibold text-[--theme-text-color] mb-2">Section Title:</h2>
-          <p className="text-[--theme-text-color]">
-            This is a large dialog box with custom content. You can add any components or information you want here.
-          </p>
-        </div>
-        <div className="text-[--theme-text-color]">
-          <p className="text-lg mb-4">You can add multiple sections, images, or any other content here.</p>
-          <p className="text-lg">This dialog box is scrollable if the content exceeds the height.</p>
-        </div>
-        {/* Add more content as needed */}
-      </AfterTestFeed>
     </div>
   );
 };

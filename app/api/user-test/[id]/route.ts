@@ -13,6 +13,8 @@ export async function GET(
   }
 
   const { id } = params;
+  const { searchParams } = new URL(req.url);
+  const includeQuestionInfo = searchParams.get('includeQuestionInfo') === 'true';
 
   try {
     const userTest = await prisma.userTest.findUnique({
@@ -22,16 +24,24 @@ export async function GET(
           select: {
             title: true,
             description: true,
-            questions: {
+            questions: includeQuestionInfo ? {
               include: {
-                question: true,
+                question: {
+                  include: {
+                    category: true  // Include category info when question info is requested
+                  }
+                },
               },
-            },
+            } : false,
           },
         },
         responses: {
           include: {
-            question: true,
+            question: includeQuestionInfo ? {
+              include: {
+                category: true  // Include category info when question info is requested
+              }
+            } : false,
           },
         },
       },
