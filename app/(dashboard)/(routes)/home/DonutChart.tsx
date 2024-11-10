@@ -1,9 +1,16 @@
 import React from "react";
 import { Doughnut } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  ChartData,
+  ChartOptions
+} from "chart.js";
 import { useTheme } from "@/contexts/ThemeContext";
 
-ChartJS.register(ArcElement, Tooltip);
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface DonutChartProps {
   onProgressClick: () => void;
@@ -52,7 +59,14 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
     ],
   };
 
-  const options = {
+  // Define the options type
+  type DonutChartOptions = ChartOptions<'doughnut'> & {
+    onHover?: (event: any, elements: any[]) => void;
+    onClick?: (event: any, elements: any[]) => void;
+  };
+
+  // Create the options object with proper typing
+  const options: DonutChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     cutout: "60%",
@@ -69,23 +83,20 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
         display: false,
       },
       tooltip: {
-        enabled: false, // Disable tooltips
+        enabled: false,
       },
-      datalabels: {
-        display: false, // Disable data labels
-      },
+      
     },
     hover: {
-      mode: 'index',
-      intersect: true,
-      animationDuration: 300,
+      mode: 'nearest' as const, // Type assertion to ensure correct mode value
+      intersect: true
     },
     animation: {
       animateScale: true,
       animateRotate: true,
-      duration: 1000,
+      duration: 1000
     },
-    onHover: (event: any, elements: any[]) => {
+    onHover(event, elements) {
       if (elements.length > 0) {
         setHoveredSegment(elements[0].index);
         event.native.target.style.cursor = elements[0].index === 0 ? 'pointer' : 'default';
@@ -94,9 +105,10 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
         event.native.target.style.cursor = 'default';
       }
     },
-    onClick: (event, elements) => {
+    onClick(event, elements) {
       if (elements.length > 0 && elements[0].index === 0) {
         onProgressClick();
+        // only works with first one right now (Cars)
       }
     }
   };

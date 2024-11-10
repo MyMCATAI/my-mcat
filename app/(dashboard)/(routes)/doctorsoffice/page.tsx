@@ -13,6 +13,10 @@ import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCos
 import axios from 'axios';
 import WelcomeDialog from './WelcomeDialog';
 import FlashcardsDialog from './FlashcardsDialog';
+import StartChallengeComponent from './StartChallengeComponent';
+import AfterTestFeed from './AfterTestFeed';
+import type { UserResponse } from '@prisma/client';
+
 
 const DoctorsOfficePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('doctorsoffice');
@@ -23,12 +27,149 @@ const DoctorsOfficePage: React.FC = () => {
   const [userRooms, setUserRooms] = useState<string[]>([]);
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
   const [totalPatients, setTotalPatients] = useState(0);
+  const [isAfterTestDialogOpen, setIsAfterTestDialogOpen] = useState(false);
+  const [largeDialogQuit, setLargeDialogQuit] = useState(false);
   
   // Flashcards Dialog
   const [isFlashcardsOpen, setIsFlashcardsOpen] = useState(false);
   const flashcardsDialogRef = useRef<{ open: () => void } | null>(null);
   const [flashcardRoomId, setFlashcardRoomId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  // Add this useEffect
   
+  // Game functionality
+  const [showChallengeButton, setShowChallengeButton] = useState(true);  
+  const [activeRooms, setActiveRooms] = useState<Set<string>>(() => new Set());
+  const [timer, setTimer] = useState<number>(60);
+  const [currentUserTestId, setCurrentUserTestId] = useState<string | null>(null);
+  
+
+  // User Responses
+  const [userResponses, setUserResponses] = useState<UserResponse[]>([]);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [wrongCount, setWrongCount] = useState(0);
+  const [testScore, setTestScore] = useState(0);
+
+  const fetchUserResponses = useCallback(async (testId: string) => {
+    try {
+      const response = await fetch(`/api/user-test/${testId}?includeQuestionInfo=true`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user responses');
+      }
+      const data = await response.json();
+      const responses = data.responses || [];
+      setUserResponses(responses);
+
+      // Calculate correct and wrong counts
+      const correct = responses?.filter((response: UserResponse) => response.isCorrect)?.length || 0;
+      const wrong = responses?.filter((response: UserResponse) => !response.isCorrect)?.length || 0;
+      
+      setCorrectCount(correct);
+      setWrongCount(wrong);
+      console.log("fetched user responses",responses);
+    } catch (error) {
+      console.error('Error fetching user responses:', error);
+      toast.error('Failed to load test responses');
+    }
+  }, []);
+  
+  // Add this effect after your other useEffects
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (!showChallengeButton && timer >= 0 && !isLoading) {
+      interval = setInterval(() => {
+        setTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            // Fetch user responses
+            if (currentUserTestId) {
+              fetchUserResponses(currentUserTestId);
+            }
+
+            // Dummy scoring logic
+            const correctQuestionWeight = 1;
+            const incorrectQuestionWeight = -0.5;
+            const testScore = (correctCount * correctQuestionWeight) + (wrongCount * incorrectQuestionWeight);
+            setTestScore(testScore);
+
+            // Update the UserTest with score when timer ends
+            if (currentUserTestId) {
+              fetch(`/api/user-test/${currentUserTestId}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  score: testScore, // Scoring logic to be added here
+                  finishedAt: new Date().toISOString(),
+                }),
+              }).catch(console.error);
+            }
+            if (!isFlashcardsOpen && !largeDialogQuit) {
+              setIsAfterTestDialogOpen(true);
+            }
+            setActiveRooms(new Set());
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+  
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [
+    showChallengeButton,
+    timer,
+    currentUserTestId,
+    activeRooms.size,
+    isFlashcardsOpen,
+    fetchUserResponses,
+    correctCount,
+    wrongCount,
+    testScore,
+    isLoading,
+    largeDialogQuit
+  ]); // Organized dependency array
+
+  useEffect(() => {
+    console.log("showChallengeButton changed in page:", showChallengeButton);
+  }, [showChallengeButton]);
+
+
+  const createNewUserTest = async () => {
+    try {
+      const response = await fetch('/api/user-test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to create user test');
+      }
+  
+      const data = await response.json();
+      setCurrentUserTestId(data.id);
+      return data.id;
+    } catch (error) {
+      console.error('Error creating user test:', error);
+      toast.error('Failed to start challenge');
+      return null;
+    }
+  };
+  
+  const handleStartChallenge = async () => {
+    const userTestId = await createNewUserTest();
+    if (userTestId) {
+      setShowChallengeButton(false);
+    }
+  };
   // Marketplace Dialog
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const marketplaceDialogRef = useRef<{ open: () => void } | null>(null);
@@ -47,7 +188,6 @@ const DoctorsOfficePage: React.FC = () => {
 
   // Add this new state for streak days
   const [streakDays, setStreakDays] = useState(0);
-
   // Marketplace State
   const imageGroups= [
     {
@@ -155,7 +295,7 @@ const DoctorsOfficePage: React.FC = () => {
     },
   ]
 
-const fetchData = async () => {
+  const fetchData = async () => {
       try {
         const [reportResponse, clinicResponse] = await Promise.all([
           fetch('/api/user-report'),
@@ -168,7 +308,6 @@ const fetchData = async () => {
         
         const reportData: DoctorOfficeStats = await reportResponse.json();
         const clinicData = await clinicResponse.json();
-        console.log("reportData",reportData);
         setReportData(reportData);
         setUserRooms(clinicData.rooms);
         setUserScore(clinicData.score);
@@ -178,13 +317,9 @@ const fetchData = async () => {
 
         // Calculate and set player level, patients per day, and clinic cost
         const playerLevel = calculatePlayerLevel(clinicData.rooms);
-        console.log("playerLevel",playerLevel);
         const levelNumber = getLevelNumber(playerLevel);
-        console.log("levelNumber",levelNumber);
         const patientsPerDay = getPatientsPerDay(levelNumber);
-        console.log("patientsPerDay",patientsPerDay);
         const clinicCostPerDay = getClinicCostPerDay(levelNumber);
-        console.log("clinicCostPerDay",clinicCostPerDay);
         
         setUserLevel(playerLevel);
         setPatientsPerDay(patientsPerDay);
@@ -220,6 +355,14 @@ const fetchData = async () => {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Restart Challenge
+  useEffect(() => {
+    if (!isAfterTestDialogOpen && !showChallengeButton) {
+      setShowChallengeButton(true);
+      setTimer(60); // Reset timer to default value
+    }
+  }, [isAfterTestDialogOpen]);
 
   const performDailyCalculations = async () => {
     if (isCalculating) return;
@@ -387,6 +530,18 @@ const toggleGroup = async (groupName: string) => {
           />
                   </div>
         <div className="w-3/4 font-krungthep relative rounded-r-lg">
+
+          {showChallengeButton && (
+          <div className="absolute inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="transform scale-150">
+              <StartChallengeComponent 
+                onClick={handleStartChallenge} 
+                timer={timer}        // Make sure these match
+                setTimer={setTimer} // the interface exactly
+              />
+            </div>
+          </div>
+          )}
           <OfficeContainer 
             visibleImages={visibleImages}
             clinicName={clinicName}
@@ -399,6 +554,13 @@ const toggleGroup = async (groupName: string) => {
             onUpdateUserScore={handleUpdateUserScore}
             setUserRooms={setUserRooms}
             updateVisibleImages={updateVisibleImages}  // Add this line
+            activeRooms={activeRooms}
+            setActiveRooms={setActiveRooms}
+            timer={timer}
+            setTimer={setTimer}
+            showChallengeButton={showChallengeButton}
+            isFlashcardsOpen={isFlashcardsOpen}
+            setIsFlashcardsOpen={setIsFlashcardsOpen}
           />
           {/* Fellowship Level button with coins and patients */}
           <div className="absolute top-4 right-4 z-50 flex items-center">
@@ -435,6 +597,25 @@ const toggleGroup = async (groupName: string) => {
                     </a>
                   }
                 />
+                <FlashcardsDialog
+                  ref={flashcardsDialogRef}
+                  isOpen={isFlashcardsOpen}
+                  onOpenChange={setIsFlashcardsOpen}
+                  roomId={flashcardRoomId}
+                  activeRooms={activeRooms}
+                  setActiveRooms={setActiveRooms}
+                  buttonContent={
+                    <a href="#" className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                      </svg>
+                      Flashcards
+                    </a>
+                  }
+                  currentUserTestId={currentUserTestId}
+                  isLoading={isLoading}
+                  setIsLoading={setIsLoading}
+                />
                 <a href="#" className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -443,16 +624,20 @@ const toggleGroup = async (groupName: string) => {
                 </a>
               </div>
             </div>
-            <div >
-              <FlashcardsDialog
-                // ref={flashcardsDialogRef}
-                isOpen={isFlashcardsOpen}
-                onOpenChange={setIsFlashcardsOpen}
-                roomId={flashcardRoomId} buttonContent={undefined}              />
-            </div>
           </div>
         </div>
       </div>
+      <AfterTestFeed
+        open={isAfterTestDialogOpen}
+        onOpenChange={setIsAfterTestDialogOpen}
+        userResponses={userResponses}
+        correctCount={correctCount}
+        wrongCount={wrongCount}
+        testScore={testScore}
+        largeDialogQuit={largeDialogQuit}
+        setLargeDialogQuit={setLargeDialogQuit}
+      >
+      </AfterTestFeed>
       <div className="absolute bottom-4 right-4">
         <FloatingButton
           onTabChange={handleTabChange}

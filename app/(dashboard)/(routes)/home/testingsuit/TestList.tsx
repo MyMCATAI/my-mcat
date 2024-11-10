@@ -11,7 +11,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Search } from "lucide-react";
 
 interface TestListProps {
   items: (Test | UserTest)[];
@@ -52,8 +51,11 @@ const TestList: React.FC<TestListProps> = ({
   const filteredItems = items.filter((item) => {
     const title =
       type === "past" && "test" in item && isUserTest(item)
-        ? (item as UserTest).test.title
+        ? (item as UserTest).test?.title
         : (item as Test).title;
+    
+    if (!title) return false;
+    
     return title.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
@@ -139,7 +141,7 @@ const TestList: React.FC<TestListProps> = ({
                         </div>
                         <h2 className="text-sm xl:text-base font-normal group-hover:[color:var(--theme-hover-text)] truncate">
                           {type === "past" && "test" in item
-                            ? item.test.title
+                            ? item.test?.title
                             : "title" in item
                             ? item.title
                             : "Untitled"}
