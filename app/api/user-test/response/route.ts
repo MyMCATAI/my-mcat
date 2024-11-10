@@ -1,5 +1,4 @@
 // File: app/api/user-test/response/route.ts
-
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
@@ -51,37 +50,36 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes } = body;
 
-    // Validate required fields
-    const missingFields = [];
-    if (!userTestId) missingFields.push('userTestId');
-    if (!questionId) missingFields.push('questionId');
-
-    if (missingFields.length > 0) {
-      console.log(`Missing required fields: ${missingFields.join(', ')}`);
-      return NextResponse.json({ error: `Missing required fields: ${missingFields.join(', ')}` }, { status: 400 });
+    // Only validate questionId as required
+    if (!questionId) {
+      console.log("Missing required field: questionId");
+      return NextResponse.json({ error: "Missing required field: questionId" }, { status: 400 });
     }
 
-    // Check if a response for this question already exists
+    // Truncate values to prevent exceeding column limits
+    const truncatedUserAnswer = userAnswer?.substring(0, 200) || '';
+    const truncatedUserNotes = userNotes?.substring(0, 750) || '';
+
+    // Check for existing response
     const existingResponse = await prisma.userResponse.findFirst({
       where: {
-        userTestId,
+        userId,
         questionId,
-        userId, // Add this to ensure we only find the current user's response
+        ...(userTestId && { userTestId }),
       },
     });
 
     if (existingResponse) {
-      // If response exists, update it (similar to PUT logic)
       const timestamp = new Date().toISOString();
-      const formattedNote = `[${timestamp}] - ${userNotes}`;
+      const formattedNote = `[${timestamp}] - ${truncatedUserNotes}`;
       const updatedUserNotes = existingResponse.userNotes
-        ? `${existingResponse.userNotes}\n${formattedNote}`
+        ? `${existingResponse.userNotes}\n${formattedNote}`.substring(0, 1000)
         : formattedNote;
 
       const updatedResponse = await prisma.userResponse.update({
         where: { id: existingResponse.id },
         data: {
-          userAnswer: userAnswer || existingResponse.userAnswer,
+          userAnswer: truncatedUserAnswer || existingResponse.userAnswer,
           isCorrect: isCorrect !== undefined ? isCorrect : existingResponse.isCorrect,
           timeSpent: timeSpent || existingResponse.timeSpent,
           userNotes: updatedUserNotes,
@@ -95,16 +93,15 @@ export async function POST(req: Request) {
 
       return NextResponse.json(updatedResponse);
     } else {
-      // If response doesn't exist, create a new one
       const newResponse = await prisma.userResponse.create({
         data: {
-          userId, // Ensure we're setting the userId
-          userTestId,
+          userId,
+          ...(userTestId && { userTestId }),
           questionId,
-          userAnswer: userAnswer || '',
+          userAnswer: truncatedUserAnswer,
           isCorrect: isCorrect || false,
           timeSpent: timeSpent || 0,
-          userNotes: userNotes ? `[${new Date().toISOString()}] - ${userNotes}` : '',
+          userNotes: truncatedUserNotes ? `[${new Date().toISOString()}] - ${truncatedUserNotes}` : '',
         },
         include: {
           question: true,

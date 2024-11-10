@@ -24,8 +24,7 @@ import { DialogOverlay } from "@radix-ui/react-dialog";
 import { checkProStatus } from "@/lib/utils";
 import WelcomePopUp from "@/components/home/WelcomePopUp";
 import UpdateNotificationPopup from "@/components/home/UpdateNotificationPopup";
-
-const FlashcardDeck = dynamic(() => import("./FlashcardDeck"), { ssr: false });
+import FlashcardDeck from "./FlashcardDeck";
 
 interface HandleShowDiagnosticTestParams {
   reset?: boolean;

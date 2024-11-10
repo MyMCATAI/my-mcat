@@ -12,8 +12,38 @@ import {
 } from "recharts";
 import { useTheme } from '@/contexts/ThemeContext';
 
+interface Profile {
+  categoryName: string;
+  subjectCategory: string;
+  conceptMastery: number;
+}
+
+interface TestScore {
+  date: string;
+  finishedAt: string | null;
+  score: number;
+}
+
+interface StatisticsData {
+  conceptMastery: Record<string, number>;
+  knowledgeProfiles: Profile[];
+  testScores: TestScore[];
+  streak: number;
+  averageCorrect: number;
+  testsCompleted: number;
+  totalTestsTaken: number;
+  averageTestScore: number;
+  totalQuestionsAnswered: number;
+  averageTimePerQuestion: number;
+  averageTimePerTest: number;
+  completedTasks: number;
+  totalTasks: number;
+  topProfiles: Profile[];
+  bottomProfiles: Profile[];
+}
+
 interface StatisticsProps {
-  statistics: any;
+  statistics: StatisticsData;
   expandedGraph: string | null;
   toggleGraphExpansion: (graphId: string) => void;
   onReturn: () => void;
@@ -34,20 +64,12 @@ const Statistics = ({
   const subjectCategoryData = useMemo(() => {
     if (!statistics?.knowledgeProfiles) return {};
 
-    return statistics.knowledgeProfiles.reduce(
-      (
-        acc: any,
-        profile: {
-          subjectCategory: string | number;
-          categoryName: string | number;
-          conceptMastery: any;
-        }
-      ) => {
+    return statistics.knowledgeProfiles.reduce<Record<string, Record<string, number>>>(
+      (acc, profile) => {
         if (!acc[profile.subjectCategory]) {
           acc[profile.subjectCategory] = {};
         }
-        acc[profile.subjectCategory][profile.categoryName] =
-          profile.conceptMastery;
+        acc[profile.subjectCategory][profile.categoryName] = profile.conceptMastery;
         return acc;
       },
       {}
@@ -115,7 +137,9 @@ const Statistics = ({
         beginAtZero: true,
         max: 1,
         ticks: {
-          callback: (value: number) => `${(value * 100).toFixed(0)}%`,
+          callback: function(this: any, value: number | string) {
+            return `${(Number(value) * 100).toFixed(0)}%`;
+          },
           color: chartColors.text,
         },
         grid: {
@@ -147,11 +171,13 @@ const Statistics = ({
         borderColor: chartColors.secondary,
         borderWidth: 1,
         callbacks: {
-          label: (context: any) => `Mastery: ${(context.parsed.y * 100).toFixed(1)}%`,
+          label: function(context: any) {
+            return `Mastery: ${(context.parsed.y * 100).toFixed(1)}%`;
+          },
         },
       },
     },
-  };
+  } as const;
 
   return (
     <div className="h-full w-full relative flex flex-col">
@@ -411,7 +437,7 @@ const Statistics = ({
               <h4 className="text-sm font-semibold mb-2 text-[--theme-text-color]">
                 Strongest Categories
               </h4>
-              {statistics?.topProfiles?.map((profile, index) => (
+              {statistics?.topProfiles?.map((profile: Profile, index: number) => (
                 <div
                   key={String(profile.categoryName)}
                   className="bg-[--theme-leaguecard-color] p-3 rounded-lg shadow-md border-l-4 border-[--theme-hover-color]"
@@ -439,61 +465,29 @@ const Statistics = ({
             {/* Bottom Profiles */}
             <div className="space-y-2">
               <h4 className="text-sm font-semibold mb-2 text-[--theme-text-color]">Needs Improvement</h4>
-              {statistics?.bottomProfiles?.map(
-                (
-                  profile: {
-                    categoryName:
-                      | boolean
-                      | React.ReactElement<
-                          any,
-                          string | React.JSXElementConstructor<any>
-                        >
-                      | Iterable<React.ReactNode>
-                      | Promise<React.AwaitedReactNode>
-                      | React.Key
-                      | null
-                      | undefined;
-                    subjectCategory:
-                      | string
-                      | number
-                      | bigint
-                      | boolean
-                      | React.ReactElement<
-                          any,
-                          string | React.JSXElementConstructor<any>
-                        >
-                      | Iterable<React.ReactNode>
-                      | React.ReactPortal
-                      | Promise<React.AwaitedReactNode>
-                      | null
-                      | undefined;
-                    conceptMastery: number;
-                  },
-                  index: number
-                ) => (
-                  <div
-                    key={String(profile.categoryName)}
-                    className="bg-[--theme-leaguecard-color] p-3 rounded-lg shadow-md border-l-4 border-[--theme-hover-color]"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-[--theme-hover-color]">
-                        #{statistics?.bottomProfiles?.length - index}
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-base font-semibold text-[--theme-text-color]">
-                          {profile.categoryName}
-                        </p>
-                        <p className="text-xs text-[--theme-text-color] opacity-80">
-                          {profile.subjectCategory}
-                        </p>
-                      </div>
-                      <p className="text-sm font-semibold text-[--theme-hover-color]">
-                        {(profile.conceptMastery * 100).toFixed(1)}%
+              {statistics?.bottomProfiles?.map((profile: Profile, index: number) => (
+                <div
+                  key={String(profile.categoryName)}
+                  className="bg-[--theme-leaguecard-color] p-3 rounded-lg shadow-md border-l-4 border-[--theme-hover-color]"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold text-[--theme-hover-color]">
+                      #{statistics?.bottomProfiles?.length - index}
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-base font-semibold text-[--theme-text-color]">
+                        {profile.categoryName}
+                      </p>
+                      <p className="text-xs text-[--theme-text-color] opacity-80">
+                        {profile.subjectCategory}
                       </p>
                     </div>
+                    <p className="text-sm font-semibold text-[--theme-hover-color]">
+                      {(profile.conceptMastery * 100).toFixed(1)}%
+                    </p>
                   </div>
-                )
-              )}
+                </div>
+              ))}
             </div>
           </div>
 

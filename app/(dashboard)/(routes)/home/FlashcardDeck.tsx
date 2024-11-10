@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Check, X, Undo2, Skull, Dumbbell } from 'lucide-react';
 import { useSpring, animated } from '@react-spring/web'
@@ -50,7 +48,7 @@ const FlashcardStack: React.FC = () => {
 
   const flashcardsRef = useRef<Flashcard[]>([]);
   const currentCardIndexRef = useRef<number>(0);
-  
+
 
   useEffect(() => {
     fetchFlashcards(1);
@@ -75,7 +73,7 @@ const FlashcardStack: React.FC = () => {
     }
   };
 
-  
+
   const handleLinkClick = useCallback((href: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent the click from bubbling up to the card
     console.log(href);
@@ -90,7 +88,7 @@ const FlashcardStack: React.FC = () => {
   useEffect(() => {
     flashcardsRef.current = flashcards;
   }, [flashcards]);
-  
+
   useEffect(() => {
     currentCardIndexRef.current = currentCardIndex;
   }, [currentCardIndex]);
@@ -182,11 +180,11 @@ const FlashcardStack: React.FC = () => {
       incorrectSoundRef.current.play();
     }
   };
-  
+
   const handleSwipe = (direction: string) => {
     setIsAnimatingOut(true);
     setIsRevealed(false);
-    
+
     api.start({
       x: direction === 'left' ? -500 : direction === 'right' ? 500 : 0,
       y: direction === 'up' ? -500 : direction === 'down' ? 500 : 0,
@@ -247,7 +245,7 @@ const FlashcardStack: React.FC = () => {
   const bind = useDrag(({ active, movement: [mx, my], velocity: [vx, vy], event, type }) => {
     const dir = getSwipeDirection(mx, my);
     const trigger = dir !== 'none';
-    
+
     if (active) {
       if (clickTimeout) {
         clearTimeout(clickTimeout);
@@ -263,7 +261,7 @@ const FlashcardStack: React.FC = () => {
         setClickTimeout(timeout);
       }
     }
-    
+
     api.start({
       x: active ? mx : 0,
       y: active ? my : 0,
@@ -369,7 +367,7 @@ const FlashcardStack: React.FC = () => {
             {/* Background cards */}
             <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-4 translate-y-6 border-blue-400 border-2" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
             <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md transform -translate-x-2 translate-y-3 border-blue-400 border-2 bg-[url('/circuitpattern2.png')] bg-cover bg-blend-overlay" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}></div>
-            
+
             {/* Next card (always visible) */}
             <div className="absolute inset-0 bg-[#001226] bg-opacity-100 rounded-lg shadow-md flex justify-center items-center p-6 border-blue-400 border-2 bg-[url('/circuitpatternblue.png')] bg-cover bg-blend-overlay overflow-hidden" style={{ boxShadow: '0 0 5px 3px rgba(0, 123, 255, 0.5)' }}>
               <div className="w-full h-full mb-2 overflow-y-auto flex flex-col justify-center items-center">
@@ -379,7 +377,7 @@ const FlashcardStack: React.FC = () => {
               />
               </div>
             </div>
-            
+
             {/* Current card */}
             <animated.div
               {...bind()} 
@@ -412,7 +410,7 @@ const FlashcardStack: React.FC = () => {
         <p className="text-gray-500">↑ Swipe up (or W) for weakness</p>
         <p className="text-gray-500"> Swipe down (or S) for strength ↓</p>
       </div>
-    
+
       <div className="flex justify-center space-x-6 mt-4">
         <button className="p-2 bg-red-500 text-white rounded-full" onClick={() => handleButtonAction('incorrect')}>
          <X size={24} />

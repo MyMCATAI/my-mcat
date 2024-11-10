@@ -41,11 +41,11 @@ const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({
     let time = 0;
 
     ticker.add(() => {
-      time += 0.05;
+      time += 0.10;
       // Create a subtle floating/pulsing effect
-
+      
       if (!isHovered) {
-        setScale(0.1 + scaleConstant * Math.abs(Math.sin(time) * 0.03)); // Subtle pulse between 0.97 and 1.03
+        setScale(0.15 + scaleConstant * Math.abs(Math.sin(time) * 0.005)); // Subtle pulse between 0.97 and 1.03
       }
     });
 
@@ -60,13 +60,13 @@ const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({
   // Interaction handlers
   const handlePointerOver = useCallback(() => {
     setIsHovered(true);
-    setScale((0.1 + scaleConstant * 1 * 0.05)); // Scale up on hover
+    setScale((0.1 + scaleConstant * 1 * 0.03)); // Scale up on hover
     document.body.style.cursor = 'pointer';
   }, []);
 
   const handlePointerOut = useCallback(() => {
     setIsHovered(false);
-    setScale((0.1 + scaleConstant * 1 * 0.05));
+    setScale((0.1 + scaleConstant * 1 * 0.02));
     document.body.style.cursor = 'default';
   }, []);
 
@@ -79,10 +79,10 @@ const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({
   }, [onClick]);
 
   const glowFilter = new GlowFilter({
-    distance: 15,
+    distance: 2,
     outerStrength: 1,
     innerStrength: 0,
-    color: 0xff0000,
+    color: 0xffffff,
     quality: 0.5,
   });
 
