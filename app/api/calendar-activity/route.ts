@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
+import { Prisma } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
 
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { categoryId, activityText, activityTitle, hours, activityType, link, scheduledDate } = body;
+    const { categoryId, activityText, activityTitle, hours, activityType, link, scheduledDate, tasks } = body;
 
     const missingFields = [];
     if (!activityText) missingFields.push("activityText");
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
         link,
         status: "Not Started",
         scheduledDate: new Date(scheduledDate),
+        tasks: tasks || [],
       },
     });
 
@@ -78,6 +80,7 @@ export async function GET(req: NextRequest) {
         status: true,
         link: true,
         activityType: true,
+        tasks: true,
       },
     });
 
@@ -97,14 +100,14 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, scheduledDate, activityTitle, activityText, hours, status, activityType, link } = body;
+    const { id, scheduledDate, activityTitle, activityText, hours, status, activityType, link, tasks } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Missing activity id" }, { status: 400 });
     }
 
-    // Prepare update data
-    const updateData: any = {};
+    // Prepare update data with proper type casting for tasks
+    const updateData: Prisma.CalendarActivityUpdateInput = {};
     
     if (scheduledDate) updateData.scheduledDate = new Date(scheduledDate);
     if (activityTitle) updateData.activityTitle = activityTitle;
@@ -113,11 +116,7 @@ export async function PUT(req: NextRequest) {
     if (status) updateData.status = status;
     if (activityType) updateData.activityType = activityType;
     if (link) updateData.link = link;
-
-    // Check if we have any data to update
-    if (Object.keys(updateData).length === 0) {
-      return NextResponse.json({ error: "No fields to update" }, { status: 400 });
-    }
+    if (tasks) updateData.tasks = tasks as Prisma.InputJsonValue;
 
     const updatedActivity = await prisma.calendarActivity.update({
       where: { id: id, userId: userId },

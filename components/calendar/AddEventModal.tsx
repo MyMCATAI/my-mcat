@@ -64,11 +64,11 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onSubmit
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col overflow-hidden px-3">
         <DialogHeader>
           <DialogTitle className="text-gray-900">Add New Event</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 text-gray-800">
+        <form onSubmit={handleSubmit} className="space-y-4 text-gray-800 flex-1 overflow-y-auto px-1">
           <div className="space-y-2">
             <Label htmlFor="activityTitle" className="text-gray-900">Event Title</Label>
             <Input
