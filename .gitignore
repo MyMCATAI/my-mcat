@@ -40,3 +40,7 @@ next-env.d.ts
 # database
 /prisma/prisma-query-runner.tsx
 /prisma/QueryOutputs
+
+# tmp file
+/app/api/event-task/taskMapping.json
+/app/api/delete-all-calendar-events/route.ts

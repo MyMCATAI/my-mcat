@@ -39,6 +39,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { CheckCircle } from "lucide-react"; // Add this import
 import Tutorial from "./Tutorial";
+import { Checkbox } from "@/components/ui/checkbox"; // Add this import
 import Statistics from "@/components/Statistics";
 import DonutChart from "./DonutChart"; // Add this import
 import { FaFire } from "react-icons/fa";
@@ -54,13 +55,29 @@ ChartJS.register(
   Legend
 );
 
+interface Task {
+  text: string;
+  completed: boolean;
+}
+
+interface Activity {
+  id: string;
+  scheduledDate: string;
+  activityTitle: string;
+  activityText: string;
+  hours: number;
+  activityType: string;
+  link?: string | null;
+  tasks?: Task[];
+}
+
 interface ScheduleProps {
-  activities: FetchedActivity[];
+  activities: Activity[];
   onShowDiagnosticTest: () => void;
   onStudyPlanSaved?: () => void;
   handleSetTab: (tab: string) => void;
   isActive: boolean;
-  onActivitiesUpdate?: () => void;
+  onActivitiesUpdate: () => void;
 }
 
 type Section =
@@ -120,27 +137,46 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   const [checklists, setChecklists] = useState<
     Record<Section, { id: number; text: string; checked: boolean }[]>
-  >({
-    AdaptiveTutoringSuite: [
-      { id: 1, text: "Complete daily adaptive quiz", checked: false },
-      { id: 2, text: "Review personalized study plan", checked: false },
-      { id: 3, text: "Schedule tutoring session", checked: false },
-    ],
-    MCATGameAnkiClinic: [
-      { id: 1, text: "Play MCAT Game for 30 minutes", checked: false },
-      { id: 2, text: "Review Anki flashcards", checked: false },
-      { id: 3, text: "Create new Anki cards", checked: false },
-    ],
-    DailyCARsSuite: [
-      { id: 1, text: "Complete daily CARS passage", checked: false },
-      { id: 2, text: "Review CARS strategies", checked: false },
-      { id: 3, text: "Practice timing for CARS", checked: false },
-    ],
+  >(() => {
+    // Try to load saved state from localStorage
+    const savedChecklists = localStorage.getItem('dailyChecklists');
+    const today = new Date().toDateString();
+    const savedDate = localStorage.getItem('checklistsDate');
+    
+    if (savedChecklists && savedDate === today) {
+      return JSON.parse(savedChecklists);
+    }
+    
+    // Return default state if no saved state or if it's a new day
+    return {
+      AdaptiveTutoringSuite: [
+        { id: 1, text: "Complete daily adaptive quiz", checked: false },
+        { id: 2, text: "Review personalized study plan", checked: false },
+        { id: 3, text: "Schedule tutoring session", checked: false },
+      ],
+      MCATGameAnkiClinic: [
+        { id: 1, text: "Play MCAT Game for 30 minutes", checked: false },
+        { id: 2, text: "Review Anki flashcards", checked: false },
+        { id: 3, text: "Create new Anki cards", checked: false },
+      ],
+      DailyCARsSuite: [
+        { id: 1, text: "Complete daily CARS passage", checked: false },
+        { id: 2, text: "Review CARS strategies", checked: false },
+        { id: 3, text: "Practice timing for CARS", checked: false },
+      ],
+    };
   });
 
+  useEffect(() => {
+    localStorage.setItem('dailyChecklists', JSON.stringify(checklists));
+    localStorage.setItem('checklistsDate', new Date().toDateString());
+  }, [checklists]);
+
+  // Should be consistent with calendar events
+  // If table has the column "eventType", then we can use it to determine the section
   const buttonLabels: Record<Section, string> = {
-    AdaptiveTutoringSuite: "Tutoring Suite",
-    MCATGameAnkiClinic: "The Anki Clinic",
+    AdaptiveTutoringSuite: "Adaptive Tutoring Suite",
+    MCATGameAnkiClinic: "Anki Clinic",
     DailyCARsSuite: "Daily CARs",
   };
 
@@ -405,16 +441,19 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   const handleButtonClick = (section: string) => {
     switch (section) {
-      case "DailyCARsSuite":
+      case "MyMCAT Daily CARs":
         handleSetTab("CARS");
         break;
-      case "MCATGameAnkiClinic":
+      case "Anki Clinic":
         router.push("/doctorsoffice");
         break;
-      case "AdaptiveTutoringSuite":
+      case "Adaptive Tutoring Suite":
         handleSetTab("KnowledgeProfile");
         break;
-      // Add more cases if needed
+      case "AAMC Materials":
+        break;
+      case "UWorld":
+        break;
       default:
         break;
     }
@@ -506,6 +545,98 @@ const Schedule: React.FC<ScheduleProps> = ({
     setArrowDirection(showGraphs ? ">" : "v");
   };
 
+  const [todayActivities, setTodayActivities] = useState<Activity[]>([]);
+
+  // Fetch tasks for each activity that doesn't have tasks
+  useEffect(() => {
+    const fetchTasksForToday = async () => {
+      const todaysActivities = activities.filter((activity) =>
+        isToday(new Date(activity.scheduledDate))
+      );
+
+      const activitiesWithTasks = await Promise.all(
+        todaysActivities.map(async (activity) => {
+          if (!Array.isArray(activity.tasks) || activity.tasks.length === 0) {
+            try {
+              const tasks = await fetch(`/api/event-task?eventTitle=${activity.activityTitle}`).then(res => res.json());
+              return {
+                ...activity,
+                tasks: tasks
+              };
+            } catch (error) {
+              console.error('Error fetching tasks for activity:', error);
+              return activity;
+            }
+          }
+          return activity;
+        })
+      );
+
+      setTodayActivities(activitiesWithTasks);
+    };
+
+    fetchTasksForToday();
+  }, [activities]);
+
+  const handleTaskCompletion = async (activityId: string, taskIndex: number, completed: boolean) => {
+    try {
+      const activity = todayActivities.find(a => a.id === activityId);
+      if (!activity || !activity.tasks) return;
+
+      const updatedTasks = activity.tasks.map((task, index) =>
+        index === taskIndex ? { ...task, completed } : task
+      );
+
+      // Update in backend
+      const response = await fetch(`/api/calendar-activity`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: activityId,
+          tasks: updatedTasks
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to update task');
+
+      // Update local state
+      setTodayActivities(current =>
+        current.map(a =>
+          a.id === activityId
+            ? { ...a, tasks: updatedTasks }
+            : a
+        )
+      );
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
+  };
+
+  const handleTasksUpdate = (eventId: string, updatedTasks: Task[]) => {
+    // Update local state
+    setTodayActivities(current =>
+      current.map(activity =>
+        activity.id === eventId
+          ? { ...activity, tasks: updatedTasks }
+          : activity
+      )
+    );
+  };
+
+  const updateTodaySchedule = () => {
+    fetchActivitiesForToday();
+  };
+
+  const fetchActivitiesForToday = async () => {
+    const response = await fetch("/api/calendar-activity");
+    const activities = await response.json();
+    const todaysScheduleActivities = activities.filter((activity: any) =>
+      isToday(new Date(activity.scheduledDate))
+    );
+    console.log('Updating today schedule activities');
+    setTodayActivities(todaysScheduleActivities);
+  };
+
   return (
     <div className="flex h-full relative">
       {/* Left Sidebar */}
@@ -532,7 +663,68 @@ const Schedule: React.FC<ScheduleProps> = ({
               display: none;
             }
           `}</style>
-          {(
+          {/* Today's Activities Section */}
+          <div className="space-y-6">
+            {todayActivities.map((activity) => (
+              <div key={activity.id} className="mb-6">
+                <button
+                  className="w-full py-3 px-4 
+                    bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                    border-2 border-[--theme-border-color]
+                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
+                    font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
+                    text-md"
+                  onClick={() => handleButtonClick(activity.activityTitle)}
+                >
+                  <span>{activity.activityTitle}</span>
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+                
+                <div className="bg-[--theme-leaguecard-color] shadow-md p-4 mt-2 space-y-2 rounded-lg">
+                  {activity.tasks && activity.tasks.length > 0 ? (
+                    activity.tasks.map((task, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`task-${activity.id}-${index}`}
+                          checked={task.completed}
+                          onCheckedChange={(checked) => 
+                            handleTaskCompletion(activity.id, index, checked as boolean)
+                          }
+                        />
+                        <label
+                          htmlFor={`task-${activity.id}-${index}`}
+                          className="text-sm leading-tight cursor-pointer flex-grow"
+                        >
+                          {task.text}
+                        </label>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm italic">No tasks for this activity</p>
+                  )}
+                </div>
+              </div>
+            ))}
+            
+            {todayActivities.length === 0 && (
+              <p className="text-center italic">No activities scheduled for today</p>
+            )}
+          </div>
+
+          {/* {(
             Object.entries(checklists) as [
               Section,
               { id: number; text: string; checked: boolean }[]
@@ -551,7 +743,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                   text-md`} // Changed from text-lg to match progress buttons
                 onClick={() => handleButtonClick(section)}
               >
-                <span>{buttonLabels[section]}</span>
+                <span>{buttonLabels[section as Section]}</span>
                 {completedSections.includes(section) ? (
                   <CheckCircle className="w-6 h-6 text-white" />
                 ) : (
@@ -593,7 +785,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                 ))}
               </div>
             </div>
-          ))}
+          ))} */}
         </div>
       </div>
 
@@ -753,6 +945,9 @@ const Schedule: React.FC<ScheduleProps> = ({
                   onInteraction={() => {}}
                   setRunTutorialPart2={setRunTutorialPart2}
                   setRunTutorialPart3={setRunTutorialPart3}
+                  handleSetTab={handleSetTab}
+                  onTasksUpdate={handleTasksUpdate}
+                  updateTodaySchedule={updateTodaySchedule}
                 />
               </div>
               <div className="h-32 flex justify-end items-start px-4 pt-4">
