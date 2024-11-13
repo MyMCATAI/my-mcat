@@ -1,10 +1,9 @@
 // File: lib/question.ts
 
-import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prismadb from "@/lib/prismadb";
 import { Question, KnowledgeProfile, UserResponse } from '@prisma/client'; // Import types from Prisma
-import * as dfd from "danfojs-node";
+// import * as dfd from "danfojs-node";
 
 export interface FlattenedQuestionResponse extends Question {  
   // Category fields (prefixed with category_)
@@ -218,7 +217,7 @@ export const getQuestions = async (params: {
 
     // Scoring function for probabilistic question selection
     const questionScoringFunction = (questions: FlattenedQuestionResponse[]) => {      
-      
+      /* Commenting out dfd-based scoring
       // Helper function to safely normalize a Series
       const safeNormalize = (series: any) => {
         const maxVal = series.max();
@@ -258,11 +257,15 @@ export const getQuestions = async (params: {
         .add(normalizedContentMasteryScores.mul(conceptContentMasteryProbWeight/2))
         .add(normalizedDesiredDifficultyScores.mul(desiredDifficultyProbWeight))
         .add(normalizedtestFrequencyScores.mul(testFrequencyProbWeight));
+      */
+      
+      // Temporary simplified scoring
+      return questions.map(() => 1); // Equal weights for all questions
     }
     
     // Randomly select questions based on weights
     const probabilityWeights = questionScoringFunction(hardFilteredQuestions);
-    console.log('Probability weights:', dfd.toJSON(probabilityWeights));
+    // console.log('Probability weights:', dfd.toJSON(probabilityWeights)); // Comment out dfd.toJSON
     const selectRandomQuestions = (questions: FlattenedQuestionResponse[], weights: any, count: number) => {
       const selected = new Set();
       const totalWeight = weights.values.reduce((a: number, b: number) => a + b, 0);
