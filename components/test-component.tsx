@@ -89,6 +89,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   useEffect(() => {
     fetchTest();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testId]);
 
   useEffect(() => {
@@ -113,6 +114,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       testHeaderRef.current?.resetQuestionTimer();
       testHeaderRef.current?.startQuestionTimer();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, test, hasAnsweredFirstQuestion]);
 
   useEffect(() => {
@@ -716,6 +718,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         handleHighlight();
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCmdIEnabled]);
 
   // New function to fetch definition and add to vocab list

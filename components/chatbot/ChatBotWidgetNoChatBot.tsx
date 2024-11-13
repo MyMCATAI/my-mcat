@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ReportData } from "@/types";
+import Image from 'next/image';
 
 interface KalypsoData {
   averageTestScore: number;
@@ -119,10 +120,13 @@ const ChatBotWidgetNoChatBot: React.FC<ChatBotWidgetNoChatBotProps> = ({
         }}
         disabled={isLoading}
       >
-        <img
+        <Image
           src={kalypsoSrc}
           alt="Kalypso"
-          className="w-full h-full object-cover transform scale-[1.8] translate-y-[40%]"
+          width={128}
+          height={128}
+          className="object-cover transform scale-[1.8] translate-y-[40%]"
+          priority
         />
       </button>
     </div>

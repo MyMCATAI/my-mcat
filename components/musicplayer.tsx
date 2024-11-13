@@ -53,6 +53,7 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
   const [shuffledPlaylist, setShuffledPlaylist] = useState<Song[]>([]);
   const songIndexMap = useRef<Record<string, number>>({});
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const playlist = playlists[theme] || [];
 
   const shufflePlaylist = useCallback(() => {
