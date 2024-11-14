@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { emailService } from '@/services/email/EmailService';
 import { auth } from "@clerk/nextjs/server";
+import { UserService } from '@/services/user/UserService';
 
+/* 
+This route is used to send an email to the user.
+*/
 
 export async function POST(req: Request) {
   try {
@@ -10,18 +14,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { email, template, data } = body;
+    const userEmail = await UserService.getUserEmail();
+    if (!userEmail) {
+      return NextResponse.json({ error: "User email not found" }, { status: 404 });
+    }
 
-    if (!email || !template) {
+    const body = await req.json();
+    const { template, data } = body;
+
+    if (!template) {
       return NextResponse.json(
-        { error: 'Email and template are required' },
+        { error: 'Template is required' },
         { status: 400 }
       );
     }
 
     const result = await emailService.sendEmail({
-      to: email,
+      to: userEmail,
       template: template,
       data: data
     });

@@ -172,6 +172,23 @@ const Schedule: React.FC<ScheduleProps> = ({
     localStorage.setItem('checklistsDate', new Date().toDateString());
   }, [checklists]);
 
+  // Initial check to see if any sections are completed, runs on initial render
+  useEffect(() => {
+    setCompletedSections(() => {
+      const newCompletedSections: Section[] = [];
+      
+      // Check each section in the checklists
+      Object.entries(checklists).forEach(([section, items]) => {
+        const allChecked = items.every(item => item.checked);
+        if (allChecked) {
+          newCompletedSections.push(section as Section);
+        }
+      });
+  
+      return newCompletedSections;
+    });
+  }, []);
+
   // Should be consistent with calendar events
   // If table has the column "eventType", then we can use it to determine the section
   const buttonLabels: Record<Section, string> = {
@@ -205,39 +222,81 @@ const Schedule: React.FC<ScheduleProps> = ({
         item.id === id ? { ...item, checked: !item.checked } : item
       );
 
-      const allChecked = updatedSection.every(
-        (item: { checked: boolean }) => item.checked
-      );
-      if (
-        allChecked &&
-        !prevChecklists[section].every(
-          (item: { checked: boolean }) => item.checked
-        )
-      ) {
-        setShowRewardDialog(true);
-        setRewardSection(section);
-
-        const newCompletedSections = [...completedSections, section];
-        setCompletedSections(newCompletedSections);
-
-        // Play the appropriate sound
-        if (newCompletedSections.length === 3) {
-          if (fanfareRef.current) {
-            fanfareRef.current.play();
-          }
-        } else if (audioRef.current) {
-          audioRef.current.play();
-        }
-
-        // Update user's coin count
-        updateUserCoinCount();
-      }
-
-      return {
+      // Create new checklists state with the updated section
+      const newChecklists = {
         ...prevChecklists,
         [section]: updatedSection,
       };
+
+      // Count total unchecked boxes across all sections
+      const totalUnchecked = Object.values(newChecklists).reduce((total, sectionItems) => {
+        return total + sectionItems.filter(item => !item.checked).length;
+      }, 0);
+      
+      console.log(`Total unchecked boxes remaining: ${totalUnchecked}`);
+
+      // Check if the current section is fully checked
+      const allChecked = updatedSection.every(item => item.checked);
+      
+      // Update completedSections based on the new state
+      setCompletedSections(prev => {
+        const newCompletedSections = [...prev];
+        
+        if (allChecked && !prev.includes(section)) {
+          // Add section if all checked and not already in completedSections
+          newCompletedSections.push(section);
+          
+          // Show reward dialog and play sound
+          setShowRewardDialog(true);
+          setRewardSection(section);
+          
+          if (newCompletedSections.length === 3) {
+            if (fanfareRef.current) {
+              fanfareRef.current.play();
+            }
+          } else if (audioRef.current) {
+            audioRef.current.play();
+          }
+
+          // Update user's coin count
+          updateUserCoinCount();
+        } else if (!allChecked && prev.includes(section)) {
+          // Remove section if not all checked but was in completedSections
+          const index = newCompletedSections.indexOf(section);
+          newCompletedSections.splice(index, 1);
+        }
+
+        // Send email notification only if all checkboxes across all sections are checked
+        if (totalUnchecked === 0) {
+          sendCompletionEmail();
+        }
+
+        return newCompletedSections;
+      });
+
+      return newChecklists;
     });
+  };
+
+  const sendCompletionEmail = async () => {
+    try {
+      const response = await fetch('/api/send-email/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          template: 'daily-goal-achievement',
+          data: { name: user?.firstName || 'User' }
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to send completion email');
+      } else {
+        console.log('Completion email sent successfully');
+      }
+    } catch (error) {
+      console.error('Error sending completion email:', error);
+    }
   };
 
   const updateUserCoinCount = async () => {
@@ -738,7 +797,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             )}
           </div>
 
-          {/* {(
+          {(
             Object.entries(checklists) as [
               Section,
               { id: number; text: string; checked: boolean }[]
@@ -799,7 +858,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                 ))}
               </div>
             </div>
-          ))} */}
+          ))}
         </div>
       </div>
 
