@@ -724,7 +724,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             )}
           </div>
 
-          {/* {(
+          {(
             Object.entries(checklists) as [
               Section,
               { id: number; text: string; checked: boolean }[]
@@ -785,7 +785,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                 ))}
               </div>
             </div>
-          ))} */}
+          ))}
         </div>
       </div>
 
