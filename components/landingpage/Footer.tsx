@@ -1,7 +1,7 @@
 'use client';
 
 import React from "react";
-import logo from "../../public/cupcakelearninglogo.png";
+import logo from "../../public/studyverselogo.png";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -129,7 +129,7 @@ const Footer = () => {
           <span className="text-md text-gray-400 sm:text-center">
             © 2024{" "}
             <a href="#" className="hover:underline ">
-              Cupcake, The Sweeter Study Company
+              Studyverse
             </a>
             . All Rights Reserved.
           </span>

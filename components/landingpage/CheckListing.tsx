@@ -5,12 +5,12 @@ import icon from '../../public/checkicon.png';
 
 const CheckListing = () => {
     const items = [
-        { heading: "Data-Driven Strategy Insights", text: "We study your performance and provide insights to inform your strategy — such as 'you perform better when you highlight more.'", icon: icon },
-        { heading: "Content Learning Suite", text: `We're beta-testing this feature at Rice and Princeton: learning Chemistry, Physics, Biology, and Psychology content.`, icon: icon },
-        { heading: "Flashcard Integration", text: `Anki is boring. We plan on integrating flashcards seamlessly with content and prep — and making it FUN!`, icon: icon },
-        { heading: "Practice Tests & Section Based Practice", text: `Our first practice test is being ruthelessly tested and modified to keep up with the AAMC's changing guidelines.`, icon: icon },
-        { heading: "Cupcake Ecosystem", text: 'We are serious about making learning fun and plan on a cupcake ecosystem with competitve learning challenges and rewards.', icon: icon },
-        { heading: "An Competitive Polyverse", text: `We'd like to create a competitive polyverse where you can go head-to-head with your friends and classmates.`, icon: icon },
+        { heading: "Study With Friends", text: "Compete in the Anki Clinic with your friends, study content together, post on a forum, hire a tutor, get help for any and all questions.'", icon: icon },
+        { heading: "AAMC Full Lengths Made Easy", text: `Get the most out of your AAMC resources with a step-by-step review of an AAMC FL.`, icon: icon },
+        { heading: "Strategy Made Easy", text: `Analyze your performance on practice passages and compare you to a 528 scorer, to tweak your strategy`, icon: icon },
+        { heading: "Better Than UWorld QPack ", text: `We're working on analyzing AAMC passages and creating a QPack that is better and more accurate than UWorld.`, icon: icon },
+        { heading: "Diagnostic Tests", text: 'We are working on creating a diagnostic test that is more accurate than anything on the market.', icon: icon },
+        { heading: "And So Much More", text: `We are smart as hell and love what we do. You can expect a lot more amazing features to enhance your MCAT prep.`, icon: icon },
     ];
 
     React.useEffect(() => {
@@ -59,11 +59,11 @@ const CheckListing = () => {
                 {/* Updated layout for sign-up section */}
                 <div className="mt-20 flex flex-col md:flex-row items-center justify-between">
                     <div className="w-full md:w-1/2 mb-8 md:mb-0">
-                        <h2 className="text-3xl font-bold text-white mb-4 font-krungthep">
+                        <h2 className="text-5xl font-bold text-white mb-4 font-krungthep">
                             Sign Up
                         </h2>
                         <p className="text-blue-300 text-lg">
-                            We are closed for the moment for only invited users.
+                            Geez, what are you waiting for?
                         </p>
                     </div>
                     <div className="w-full md:w-1/2 bg-[#001226] p-6 rounded-lg" 

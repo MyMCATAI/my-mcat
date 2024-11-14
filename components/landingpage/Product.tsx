@@ -155,7 +155,7 @@ const Product = () => {
             className="copy absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-screen-xl"
           >
             <h1 className="text-2xl md:text-2xl font-bold mb-8 text-center text-white font-krungthep">
-              The Anti-Test Prep Software
+              The Only MCAT Prep Software
             </h1>
             <div
               ref={video}
