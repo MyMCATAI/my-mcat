@@ -205,6 +205,19 @@ const Schedule: React.FC<ScheduleProps> = ({
         item.id === id ? { ...item, checked: !item.checked } : item
       );
 
+      // Create new checklists state with the updated section
+      const newChecklists = {
+        ...prevChecklists,
+        [section]: updatedSection,
+      };
+
+      // Count total unchecked boxes across all sections
+      const totalUnchecked = Object.values(newChecklists).reduce((total, sectionItems) => {
+        return total + sectionItems.filter(item => !item.checked).length;
+      }, 0);
+      
+      console.log(`Total unchecked boxes remaining: ${totalUnchecked}`);
+
       const allChecked = updatedSection.every(
         (item: { checked: boolean }) => item.checked
       );
@@ -233,10 +246,7 @@ const Schedule: React.FC<ScheduleProps> = ({
         updateUserCoinCount();
       }
 
-      return {
-        ...prevChecklists,
-        [section]: updatedSection,
-      };
+      return newChecklists;
     });
   };
 
@@ -724,7 +734,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             )}
           </div>
 
-          {/* {(
+          {(
             Object.entries(checklists) as [
               Section,
               { id: number; text: string; checked: boolean }[]
@@ -785,7 +795,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                 ))}
               </div>
             </div>
-          ))} */}
+          ))}
         </div>
       </div>
 
