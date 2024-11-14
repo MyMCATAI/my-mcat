@@ -57,7 +57,13 @@ const SettingContent: React.FC<SettingContentProps> = ({
 }) => {
   const [activeOption, setActiveOption] = useState<string | null>(null);
   const [calendarValue, setCalendarValue] = useState<Value>(new Date());
-  const [hoursPerDay, setHoursPerDay] = useState<Record<string, string>>({});
+  const [hoursPerDay, setHoursPerDay] = useState<Record<string, string>>(() => {
+    // Initialize with 3 hours for each day
+    return days.reduce((acc, day) => ({
+      ...acc,
+      [day]: "3"
+    }), {});
+  });
   const [selectedResources, setSelectedResources] = useState<
     Record<string, boolean>
   >({});
