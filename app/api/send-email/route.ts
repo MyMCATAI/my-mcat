@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sendEmail } from '@/utils/email-service';
+import { emailService } from '@/services/email/EmailService';
 import { auth } from "@clerk/nextjs/server";
 
 
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const result = await sendEmail({
+    const result = await emailService.sendEmail({
       to: email,
       template: template,
       data: data
