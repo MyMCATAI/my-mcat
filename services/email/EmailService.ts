@@ -1,5 +1,5 @@
 import sgMail from '@sendgrid/mail';
-import { templates } from './templates';
+import { templates } from './templates/index';
 import { EmailTemplate, SendEmailProps, EmailResponse } from './types/index';
 if (!process.env.SENDGRID_API_KEY) {
   throw new Error('SENDGRID_API_KEY is not defined in environment variables');
@@ -19,6 +19,9 @@ export class EmailService {
 
   async sendEmail({ to, template, data = {} }: SendEmailProps): Promise<EmailResponse> {
     try {
+      console.log('Template requested:', template);
+      console.log('Available templates:', Object.keys(templates));
+
       const templateConfig = templates[template](data);
       
       const msg = {

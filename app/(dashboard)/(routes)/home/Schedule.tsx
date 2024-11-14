@@ -244,10 +244,36 @@ const Schedule: React.FC<ScheduleProps> = ({
 
         // Update user's coin count
         updateUserCoinCount();
+
+        // Send email notification only if all checkboxes are checked
+        if (totalUnchecked === 0) {
+          sendCompletionEmail();
+        }
       }
 
       return newChecklists;
     });
+  };
+
+  const sendCompletionEmail = async () => {
+    try {
+      const response = await fetch('/api/send-email/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          template: 'daily-goal-achievement',
+          data: { name: user?.firstName || 'User' }
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to send completion email');
+      } else {
+        console.log('Completion email sent successfully');
+      }
+    } catch (error) {
+      console.error('Error sending completion email:', error);
+    }
   };
 
   const updateUserCoinCount = async () => {

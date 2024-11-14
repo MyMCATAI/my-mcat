@@ -1,4 +1,6 @@
-export const welcomeTemplate = (data: any) => ({
+import { TemplateConfig } from '../types';
+
+export const welcomeTemplate = (data: any): TemplateConfig => ({
     subject: 'Welcome to MCAT Study Platform!',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
