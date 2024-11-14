@@ -15,13 +15,13 @@ const Faqs = () => {
 
     const items = [
         { heading: "Why did you start this company?", text: 'Because our founder loves his students and wants to see them succeed, and thinks test prep companies are getting it wrong.', icon: icon },
-        { heading: "Who are your founders?", text: `Prynce is a 523 scorer and our product architect, designer, and CEO. Josh is a computer science and AI wizard that helped bring Kalypso to life. Both of them work together with the hopes of changing education for the better`, icon: icon },
-        { heading: "How can I get access to the full MyMCAT", text: `We’re doing limited releases at select universities and cannot accept new students at the moment; however, our software is constantly growing and improving.`, icon: icon },
-        { heading: "Can I integrate MyMCAT’s tutoring into my AAMC and UWorld Prep?", text: `Yes, we're beta-testing an adaptive schedule that will plan your prep around your life. `, icon: icon },
-        { heading: "How does Kalypso differ from ChatGPT?", text: 'Kalypso is trained on the MCAT with dozens of textbooks and fine-tuned over hundreds of hours. They’re trained on the latest in ITS research and programmed to be interesting and engaging. Who doesn’t love cats?', icon: icon },
-        { heading: "How can I trust that your content is good?", text: `Prynce has written content for multiple test prep companies. Our feedback system is constantly modifying our content based upon YOUR feedback to make it as close to AAMC-level as possible.`, icon: icon },
-        { heading: "Is this really free? No strings attached?", text: `Yes, with caveats. A social business puts mission first over profit, but we still need to make a profit to hire good people and create great services. While we don't pursue profit for profit's sake, we do pursue profit to fund our mission.`, icon: icon },
-        { heading: "Okay, is it MyMCAT or Cupcake?", text: `MyMCAT is a service we offer. Cupcake is our parent company. MCAT Prep is only the first step of our journey, but an important one. We hope to create an outstanding product with users whose data will inform our approach to medical education and beyond. `, icon: icon },
+        { heading: "Who are your founders?", text: `Prynce is a 523 scorer and our product architect, front end engineer, AI wizard, and CEO. Josh is CTO, a computer science and tech genius who makes this crap actually work. Both of them work together with the hopes of changing education for the better`, icon: icon },
+        { heading: "If werewolves exist, then might there theoretically exist whenwolves?", text: `Bro, what?`, icon: icon },
+        { heading: "What if I do not like your app and think it's mediocre product?", text: `No one on our team is allowed to have high self esteem. Therefore, we welcome ANY and ALL criticism and will pay you for the privilege. `, icon: icon },
+        { heading: "How does Kalypso differ from ChatGPT?", text: 'Kalypso is trained on the MCAT with dozens of textbooks and fine-tuned over hundreds of hours. He is trained on the latest in ITS research and programmed to be interesting and engaging. Who doesn’t love cats?', icon: icon },
+        { heading: "How can I trust that your content is good?", text: `Prynce has written content for multiple test prep companies. We actually listen to feedback and modify our content to make it as close to AAMC-level as possible.`, icon: icon },
+        { heading: "Will you ever be free?", text: `Hell nah.`, icon: icon },
+        { heading: "What the heck is Studyverse?", text: `MyMCAT is a product offered by Studyverse. You are pilgrims for our future ambitions: a metaverse for studying for ALL students — from MCAT students to SAT students to college kids preparing for exams. Yes, we are that crazy.`, icon: icon },
     ];
 
     return (

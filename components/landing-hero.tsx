@@ -100,7 +100,7 @@ const LandingHero = () => {
                 </span>
               </h1>
               <p className="text-2xl md:text-3xl text-white my-8">
-                The next big thing in MCAT education, with Kalypso.
+             Our AI-tutoring platform makes dream scores a reality.
               </p>
               <div className="flex justify-center">
                 <Link href="/intro">
