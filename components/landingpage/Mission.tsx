@@ -87,24 +87,20 @@ const MethodologyAndTestimonials = () => {
 
   const productFeatures = [
     {
-      title: "Comprehensive Hint System & Vocabulary Builder",
-      description: ["For students who need a tiny nudge, you can press ", "hint", " to reveal questions that you got wrong. For ", "vocabulary", " you can use cmd+i and it defines a word for you and sends it to your vocab bank."],
-      videoSrc: "https://my-mcat.s3.us-east-2.amazonaws.com/public/hintandvocab.mp4",
+      title: "Struggle with fitting MCAT prep into your busy life?",
+      description: ["We created an adaptive calendar that automatically adjusts to your schedule so ", "you never have to worry about when to study", ""],
+      videoSrc: "https://my-mcat.s3.us-east-2.amazonaws.com/public/Schedule.mp4",
     },
     {
-      title: "Tutoring Assistant Programmed By a 132-Scorer",
+      title: "Confused about where to begin?",
       description: [
-        `Real-time AI that you can talk to that helps you discern between answers and review your tests. It learns from you and `,
-        `adapts your strategy`,
-        ` to what's most effective for you! `,
-        `Press play`,
-        ` on the video!`,
+        "All of the content you will ever need is curated in one place. Our intelligent superkitty Kalypso learns your weaknesses and assigns you only the most relevant content. ","Never worry about what to study next again!",
       ],
-      videoSrc: "https://my-mcat.s3.us-east-2.amazonaws.com/public/aitutoringreview.mp4",
+      videoSrc: "https://my-mcat.s3.us-east-2.amazonaws.com/public/ATS.mp4",
     },
     {
-      title: "Competition & Reward System",
-      description: ["Engage in friendly competition with peers and earn cupcakes that allow you to ", "fight for your school's ranking", " in The League, a competitive leaderboard for every school that has students enrolled in our program."],
+      title: "Lacking motivation to study?",
+      description: ["We have a comprehensive accountability system that lets you win coins, get reminders, and compete with fellow students."," We WILL keep you on track!"],
       videoSrc: "https://my-mcat.s3.us-east-2.amazonaws.com/public/competitionrewards.mp4",
     },
   ];
@@ -164,45 +160,34 @@ const MethodologyAndTestimonials = () => {
         <div className="container-fluid relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
             <div className="mt-6 md:mt-0 relative">
-              <div className='flex justify-center items-center relative' style={{ width: "100%", height: "600px" }}>
+              <div className='flex justify-center items-center relative aspect-square' style={{ width: "100%", maxHeight: "600px" }}>
                 <World globeConfig={globeConfig} data={globeData} />
               </div>
             </div>
             <div className="mx-4">
-              <h1 className="text-4xl md:text-4xl font-bold text-green-500 text-left font-krungthep mb-6">
-                A Public Benefit Corporation.
+              <h1 className="text-4xl md:text-4xl font-bold text-left font-krungthep mb-6">
+                A World Of Your Own
               </h1>
               <div className="mt-8 bg-black p-6 rounded-lg w-full md:w-auto lg:mr-[8vw] xl:mr-[12vw]" style={{ boxShadow: '0px 0px 5px 0px rgba(35,185,97,255)' }} ref={textBoxRef}>
-                <p className="text-white text-lg mb-2">
-                  {"We are a PBC, which means we're legally required to benefit society — and we do so proudly. As long as test prep is unaffordable, our healthcare system will continue to be stratified with rich doctors serving mostly rich communities. And as long as test prep is boring, students will be diiscouraged to try and break this paradigm."}
-                </p>
-                <p className="text-white text-lg mb-2">
-                  {"Because test prep is expensive and boring, we proudly proclaim ourselves as 'anti test prep': affordable and engaging. We're releasing our CARs suite first so you can get a head start and compete with peers nationwide for recognition and rewards."}
-                </p>
-                <p className="text-white text-lg mb-2">
-                  {"Our first beta results speak volumes: students averaged a 516, with a remarkable 15-point improvement — significantly outperforming traditional methods at a fraction of the cost. But we're not satisfied until every one of our students can earn a 520+."}
-                </p>
-                <p className="text-white text-lg mb-2">
-                  {"Most companies want you to believe that you can purchase success. We firmly believe it's earned."}
-                </p>
-                <p className="text-white text-lg mb-6">
-                  <strong>{"Let us empower you to earn the score of your dreams."}</strong>
-                </p>
-                <div className="flex justify-center space-x-4">
-                  <button 
-                    onClick={openTallyPopup}
-                    className="inline-block bg-[#091f33] text-white border border-green-400 py-2 px-6 rounded-full text-lg font-semibold transition duration-300 hover:bg-white hover:text-black"
-                  >
-                    Register for Early Access
-                  </button>
-                  <a 
-                    href="https://www.law.cornell.edu/wex/public_benefit_corporation"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block bg-[#091f33] text-white border border-green-400 py-2 px-6 rounded-full text-lg font-semibold transition duration-300 hover:bg-white hover:text-black"
-                  >
-                    Learn More About PBCs
-                  </a>
+                <div className="flex flex-col items-center">
+                  <Image 
+                    src="/landingpage/pile.png" 
+                    alt="Resource pile" 
+                    width={600} 
+                    height={400} 
+                    className="mb-6"
+                  />
+                  <p className="text-white text-xl">
+                  Our software <strong>integrates with every essential resource </strong>so that your prep is highly organized and customized. Although we are not affiliated with any of the above organizations, we help you get the most out of them.
+                  </p>
+                  <div className="flex justify-center">
+                    <button 
+                      onClick={openTallyPopup}
+                      className="inline-block bg-[#091f33] text-white border border-white py-2 px-6 rounded-full text-xl font-semibold transition duration-300 hover:bg-white hover:text-black mt-7"
+                    >
+                      Click here to register!
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -214,38 +199,13 @@ const MethodologyAndTestimonials = () => {
       <section className="bg-[#00101e] py-8 relative" id="how-it-works">
         <div className="container mx-auto px-4">
           <h2 className="text-5xl font-bold text-white text-center mb-16 font-krungthep">
-            The Daily CARs Suite
+            Your Problems & Our Solutions
           </h2>
-          <div className="flex justify-center mb-24">
-            <Image src="/softwarehomepage.png" alt="Software Homepage" width={800} height={450} className="rounded-lg shadow-lg" />
-          </div>
-          <ul className="text-white text-xl mb-32 list-none pl-0 max-w-2xl mx-auto font-krungthep space-y-8">
-            <li className="mb-4 flex items-start">
-              <span className="text-green-500 mr-2">1.</span>
-              <span className="lowercase">stats monitored by your friend Kalypso</span>
-            </li>
-            <li className="mb-4 flex items-start">
-              <span className="text-green-500 mr-2">2.</span>
-              <span className="lowercase">cars passage in our adaptive testing suite</span>
-            </li>
-            <li className="mb-4 flex items-start">
-              <span className="text-green-500 mr-2">3.</span>
-              <span className="lowercase">previous and upcoming exams</span>
-            </li>
-            <li className="mb-4 flex items-start">
-              <span className="text-green-500 mr-2">4.</span>
-              <span className="lowercase">button to switch to content learning suite (selected testers @ rice and princeton only for now)</span>
-            </li>
-            <li className="mb-4 flex items-start">
-              <span className="text-green-500 mr-2">5.</span>
-              <span className="lowercase">personalized videos and a lens into the premed forum</span>
-            </li>
-          </ul>
           {productFeatures.map((feature, index) => (
-            <div key={index} className={`flex flex-col md:flex-row items-center mb-40 ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
+            <div key={index} className={`flex flex-col md:flex-row items-center mb-20 ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
               <div className={`w-full md:w-1/2 ${index % 2 === 0 ? 'md:pr-8' : 'md:pl-8'}`}>
-                <h3 className="text-3xl font-semibold text-green-500 mb-4 font-krungthep">{feature.title}</h3>
-                <p className="text-white text-xl mb-6">
+                <h3 className="text-4xl mx-4 font-semibold text-green-500 mb-4 font-krungthep">{feature.title}</h3>
+                <p className="text-white text-3xl mx-4 mb-6">
                   {feature.description.map((text, index) => 
                     index % 2 === 0 ? text : <span key={index} className="text-red-500">{text}</span>
                   )}
@@ -254,12 +214,10 @@ const MethodologyAndTestimonials = () => {
               <div className="w-full md:w-1/2 mt-8 md:mt-0">
                 <video
                   className="w-full rounded-lg shadow-lg"
-                  autoPlay={index !== 1}
-                  muted={index !== 1}
-                  loop={index !== 1}
+                  autoPlay
+                  muted
+                  loop
                   playsInline
-                  controls={index === 1}
-                 //  poster={`/video-thumbnails/${feature.title.toLowerCase().replace(/ /g, '-')}.jpg`}
                 >
                   <source src={feature.videoSrc} type="video/mp4" />
                   Your browser does not support the video tag.
@@ -274,10 +232,10 @@ const MethodologyAndTestimonials = () => {
       <section className="bg-[#00101e] py-8 relative" id="hardcore-gaming">
         <div className="container mx-auto px-4">
           <h2 className="text-5xl font-bold text-green-500 text-center mb-10 font-krungthep">
-            Hardcore Gaming Meets Test Prep
+           Our MCAT prep is fun!
           </h2>
           <p className="text-white text-2xl mb-10 text-center max-w-2xl mx-auto">
-            Your performance in the suite directly leads to patient outcomes. Study for the MCAT and win coins to build and upgrade your clinic so you can treat patients, with motivating rewards and risks!
+            We made Anki flashcards a fun, addictive experience with cards, multiple choice questions, patient questions, and a clinic to run!
           </p>
           <div className="flex justify-center mb-24">
             <video
@@ -370,23 +328,23 @@ const MethodologyAndTestimonials = () => {
             </Swiper>
           </div>
           <div className="mt-32 text-center">
-            <h3 className="text-3xl font-semibold text-white mb-24 font-krungthep">
+            <h3 className="text-3xl font-semibold text-white mb-12 font-krungthep">
               Our pricing, as the ONLY software solution in MCAT Prep:
             </h3>
             <p className="text-green-400 text-6xl font-bold mb-4">
-              $0/mo
+              $19.99
             </p>
             <p className="text-white text-3xl mb-16">
-              w/ rate limits
+              for a 10 coin pack
             </p>
             <p className="text-green-400 text-6xl font-bold mb-4">
-              ???/mo
+              $34.99
             </p>
             <p className="text-white text-3xl mb-16">
-              w/ unlimited access
+              for a 25 coin pack
             </p>
             <p className="text-white font-krungthep text-2xl mt-16">
-              The community will decide the fair price of unlimited software access.
+              We use a microtransaction coin system that rewards consistency and punishes slacking.
             </p>
           </div>
         </div>

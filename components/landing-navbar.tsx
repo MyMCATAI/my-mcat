@@ -85,7 +85,7 @@ export const LandingNavbar = () => {
               {/* <Image src={logo} alt="Logo" width={48} height={48} /> */}
             </div>
             <div className="flex flex-col">
-              <span className="text-white text-2xl">MyMCAT.ai</span>
+              <span className="text-white text-3xl">MyMCAT.ai</span>
             </div>
           </div>
         </Link>
