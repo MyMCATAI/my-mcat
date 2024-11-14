@@ -3,25 +3,23 @@ import path from 'path';
 import { NextResponse } from 'next/server';
 import { parseDefaultTasks, TaskMapping } from '@/lib/utils';
 
-const MAPPING_FILE_PATH = path.join(process.cwd(), 'app', 'api', 'event-task', 'taskMapping.json');
+// Create an in-memory store
+let inMemoryTaskMapping: TaskMapping | null = null;
 
-// Add function to read/write mapping
 async function getStoredMapping(): Promise<TaskMapping> {
-  try {
-    const content = await fs.readFile(MAPPING_FILE_PATH, 'utf8');
-    return JSON.parse(content);
-  } catch {
-    // If file doesn't exist, create new mapping
-    const csvPath = path.join(process.cwd(), 'app', 'api', 'event-task', 'taskList.csv');
-    const csvContent = await fs.readFile(csvPath, 'utf8');
-    const mapping = parseDefaultTasks(csvContent);
-    await fs.writeFile(MAPPING_FILE_PATH, JSON.stringify(mapping, null, 2));
-    return mapping;
+  if (inMemoryTaskMapping) {
+    return inMemoryTaskMapping;
   }
+
+  // Initialize from CSV only on first access
+  const csvPath = path.join(process.cwd(), 'app', 'api', 'event-task', 'taskList.csv');
+  const csvContent = await fs.readFile(csvPath, 'utf8');
+  inMemoryTaskMapping = parseDefaultTasks(csvContent);
+  return inMemoryTaskMapping;
 }
 
 async function updateStoredMapping(mapping: TaskMapping): Promise<void> {
-  await fs.writeFile(MAPPING_FILE_PATH, JSON.stringify(mapping, null, 2));
+  inMemoryTaskMapping = mapping;
 }
 
 export async function GET(request: Request) {
