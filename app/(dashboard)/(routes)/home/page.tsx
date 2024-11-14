@@ -354,7 +354,10 @@ const Page = () => {
             onShowDiagnosticTest={handleShowDiagnosticTest}
             handleSetTab={handleTabChange}
             isActive={activeTab === "Schedule"}
-            onActivitiesUpdate={fetchActivities}
+            onActivitiesUpdate={() => {
+              console.log("update activities");
+              fetchActivities();
+            }}
           />
         );
         break;
@@ -523,7 +526,10 @@ const Page = () => {
           <div className="w-3/4 relative overflow-visible">
             <div className="flex justify-between items-center"> {/* Add margin-bottom */}
               <div className="flex items-center gap-4">
-                <h2 className="text-white text-2xl ml-3 font-thin leading-normal shadow-text">
+                <h2 
+                  className="text-white text-2xl ml-3 font-thin leading-normal shadow-text cursor-pointer" 
+                  onClick={() => window.location.href = '/home'}
+                >
                   {activeTab === "Schedule"
                     ? "Dashboard"
                     : activeTab === "KnowledgeProfile"

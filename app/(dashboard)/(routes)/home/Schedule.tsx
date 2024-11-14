@@ -587,13 +587,24 @@ const Schedule: React.FC<ScheduleProps> = ({
         index === taskIndex ? { ...task, completed } : task
       );
 
+      // Determine new status based on task completion
+      let newStatus = "Not Started";
+      const completedTaskCount = updatedTasks.filter(task => task.completed).length;
+      
+      if (completedTaskCount === updatedTasks.length) {
+        newStatus = "Complete";
+      } else if (completedTaskCount > 0) {
+        newStatus = "In Progress";
+      }
+
       // Update in backend
       const response = await fetch(`/api/calendar-activity`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: activityId,
-          tasks: updatedTasks
+          tasks: updatedTasks,
+          status: newStatus
         })
       });
 
@@ -603,10 +614,13 @@ const Schedule: React.FC<ScheduleProps> = ({
       setTodayActivities(current =>
         current.map(a =>
           a.id === activityId
-            ? { ...a, tasks: updatedTasks }
+            ? { ...a, tasks: updatedTasks, status: newStatus }
             : a
         )
       );
+
+      onActivitiesUpdate?.();
+      
     } catch (error) {
       console.error('Error updating task:', error);
     }
@@ -979,7 +993,7 @@ const Schedule: React.FC<ScheduleProps> = ({
           {showAnalytics && !showGraphs && (
             <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
               <button
-                onClick={() => router.push('/integrations')}
+               // onClick={() => router.push('/integrations')}
                 className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
               >
                 <span>AAMC</span>
