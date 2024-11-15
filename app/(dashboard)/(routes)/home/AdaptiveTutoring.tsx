@@ -34,7 +34,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { useMessages, RcbPostInjectMessageEvent, useFlow, useTextArea } from "react-chatbotify";
+import {
+  useMessages,
+  RcbPostInjectMessageEvent,
+  useFlow,
+  useTextArea,
+} from "react-chatbotify";
 import { getRelevantTranscript } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -96,14 +101,14 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   const [checkedCategories, setCheckedCategories] = useState<Category[]>([]);
-    const [playedSeconds, setPlayedSeconds] = useState<number>(0);
+  const [playedSeconds, setPlayedSeconds] = useState<number>(0);
 
-    const formatTime = (seconds: number): string => {
-      const minutes = Math.floor(seconds / 60);
-      const remainingSeconds = Math.floor(seconds % 60);
-      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-    };
-    
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  };
+
   const [initialCategories, setInitialCategories] = useState<Category[]>([]);
 
   // Fetch categories and set initial category
@@ -113,6 +118,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         const categoriesData = await fetchCategories(true);
         setCategories(categoriesData);
         setInitialCategories(categoriesData);
+        setCheckedCategories(categoriesData);
         if (categoriesData.length > 0) {
           const initialCategory = categoriesData[0].conceptCategory;
           setSelectedCategory(initialCategory);
@@ -162,12 +168,15 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       setIsPlaying(false);
     }
   }, [currentContentId, content]);
-    
+
   // Update chatbot context when current content changes
   useEffect(() => {
     const currentContent = content.find((item) => item.id === currentContentId);
     if (currentContent && currentContent.transcript) {
-      const relevantTranscript = getRelevantTranscript(currentContent.transcript, playedSeconds);
+      const relevantTranscript = getRelevantTranscript(
+        currentContent.transcript,
+        playedSeconds
+      );
       setChatbotContext({
         contentTitle: currentContent.title || "Untitled",
         context: `Here's a transcript of the ${currentContent.type} I'm looking at: ${relevantTranscript}. Refer to this as context if I ask a question directly about what I'm studying`,
@@ -181,26 +190,38 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     if (!currentContent?.transcript) return;
 
     // Initial context setup for any content type
-    const initialTranscript = getRelevantTranscript(currentContent.transcript, playedSeconds);
+    const initialTranscript = getRelevantTranscript(
+      currentContent.transcript,
+      playedSeconds
+    );
     setChatbotContext({
       contentTitle: currentContent.title || "Untitled",
-      context: `I'm currently at timestamp ${formatTime(playedSeconds)} in the ${currentContent.type}. Here's a transcript of what I'm looking at: ${initialTranscript}. Refer to this as context if I ask a question directly about what I'm studying`,
+      context: `I'm currently at timestamp ${formatTime(
+        playedSeconds
+      )} in the ${
+        currentContent.type
+      }. Here's a transcript of what I'm looking at: ${initialTranscript}. Refer to this as context if I ask a question directly about what I'm studying`,
     });
 
     // Only set up interval for videos
     if (currentContent.type === "video" && isPlaying) {
-      let lastPosition = Math.floor(playedSeconds / 30); 
+      let lastPosition = Math.floor(playedSeconds / 30);
 
       const interval = setInterval(() => {
         const currentPosition = Math.floor(playedSeconds / 30);
-        
+
         if (currentPosition !== lastPosition) {
           lastPosition = currentPosition;
-          const relevantTranscript = getRelevantTranscript(currentContent.transcript!, playedSeconds);
-          
+          const relevantTranscript = getRelevantTranscript(
+            currentContent.transcript!,
+            playedSeconds
+          );
+
           setChatbotContext({
             contentTitle: currentContent.title || "Untitled",
-            context: `I'm currently at timestamp ${formatTime(playedSeconds)} in the video. Here's the recent transcript: ${relevantTranscript}`
+            context: `I'm currently at timestamp ${formatTime(
+              playedSeconds
+            )} in the video. Here's the recent transcript: ${relevantTranscript}`,
           });
         }
       }, 5000); // Check every 5 seconds
@@ -209,9 +230,12 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     }
   }, [currentContentId, content, isPlaying, playedSeconds]);
 
-  const updateContentVisibility = useCallback((fetchedContent: ContentItem[]) => {
-    const hasVideos = fetchedContent.some((item) => item.type === "video");
-    const hasReadings = fetchedContent.some((item) => item.type === "reading");
+  const updateContentVisibility = useCallback(
+    (fetchedContent: ContentItem[]) => {
+      const hasVideos = fetchedContent.some((item) => item.type === "video");
+      const hasReadings = fetchedContent.some(
+        (item) => item.type === "reading"
+      );
 
       if (hasVideos) {
         setContentType("video");
@@ -263,7 +287,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       setChatbotContext({
         contentTitle: clickedContent.title,
         context: clickedContent.transcript
-          ? "Here's a transcript of the " + clickedContent.type + " that I'm currently looking at: " +
+          ? "Here's a transcript of the " +
+            clickedContent.type +
+            " that I'm currently looking at: " +
             clickedContent.transcript +
             " Only refer to this if I ask a question directly about what I'm studying"
           : "",
@@ -293,13 +319,33 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         `/api/question?conceptCategory=${conceptCategory.replace(
           / /g,
           "_"
-        )}&page=1&pageSize=10`
+        )}&page=1&pageSize=10&simple=true`
       );
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
       const data = await response.json();
-      return data.category.questions;
+      console.log("API Response:", data); // Debug log
+
+      const transformedQuestions = data.items.map((question: any) => {
+        console.log("Processing question:", question); // Debug log
+        return {
+          id: question.id,
+          categoryId: question.categoryId,
+          contentCategory: question.contentCategory,
+          questionContent: question.questionContent,
+          questionID: question.questionID,
+          questionOptions: Array.isArray(question.questionOptions)
+            ? question.questionOptions
+            : JSON.parse(question.questionOptions),
+          questionAnswerNotes: question.questionAnswerNotes,
+          passage: question.passage,
+          passageId: question.passageId,
+        };
+      });
+
+      console.log("Transformed questions:", transformedQuestions); // Debug log
+      return transformedQuestions;
     } catch (error) {
       console.error("Error fetching questions:", error);
       return [];
@@ -432,23 +478,81 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     }
   };
 
-  const handleQuizTabClick = () => {
-    setContentType("quiz");
-    setCurrentContentId(null);
+  const handleQuizTabClick = async () => {
+    if (!selectedCategory) {
+      toast({
+        title: "No Category Selected",
+        description:
+          "Please select a category first to view its quiz questions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const questionsData = await fetchQuestions(selectedCategory);
+
+      if (questionsData && questionsData.length > 0) {
+        setQuestions(questionsData);
+        setContentType("quiz");
+        setCurrentContentId(null);
+        setContent([]);
+      } else {
+        toast({
+          title: "No Questions Available",
+          description: "No quiz questions found for this category.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load quiz questions. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggleSearch = () => {
     setShowSearch((prev) => !prev);
   };
 
-  const handleCardClick = (index: number) => {
-    const categoriesToUse =
-      checkedCategories.length > 0 ? checkedCategories : categories;
+  const handleCardClick = async (index: number) => {
+    const selectedCategoryItem = checkedCategories[index];
+
+    if (!selectedCategoryItem) {
+      console.error("Category not found at index:", index);
+      return;
+    }
+
     setSelectedCard(index);
-    const selectedCategory = categoriesToUse[index].conceptCategory;
+    const selectedCategory = selectedCategoryItem.conceptCategory;
     setSelectedCategory(selectedCategory);
-    fetchContent(selectedCategory);
-    fetchQuestions(selectedCategory);
+
+    try {
+      setIsLoading(true);
+      const [contentData, questionsData] = await Promise.all([
+        fetchContent(selectedCategory),
+        fetchQuestions(selectedCategory),
+      ]);
+
+      setContent(contentData);
+      setQuestions(questionsData);
+      updateContentVisibility(contentData);
+    } catch (error) {
+      console.error("Error loading content:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load content. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const currentContent = content.find((item) => item.id === currentContentId);
@@ -508,15 +612,18 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   };
 
   const handleCatClick = (type: "explain" | "question") => {
-    const message = type === "explain" ? "I'm confused about this topic. Can you explain it to me?" : "Can you ask me a conceptual multiple choice question to test my understanding?";
-    
+    const message =
+      type === "explain"
+        ? "I'm confused about this topic. Can you explain it to me?"
+        : "Can you ask me a conceptual multiple choice question to test my understanding?";
+
     if (chatbotRef.current?.sendMessage) {
       chatbotRef.current.sendMessage(message);
     } else {
       console.warn("ChatBot ref not ready");
     }
   };
-  
+
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
       <div className="flex items-stretch w-full mb-3">
@@ -536,28 +643,25 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                 ).map((theme, index) => (
                   <ThemedSkeleton key={index} theme={theme} />
                 ))
-              : categories?.slice(0, 7).map((category, index) => (
+              : checkedCategories?.slice(0, 7).map((category, index) => (
                   <div
-                    key={index}
+                    key={category.id}
                     className="relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all flex flex-col justify-between items-center"
                     style={{
                       backgroundColor: "var(--theme-adaptive-tutoring-color)",
                       boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
-                      transition:
-                        "box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out",
-                      isolation: "isolate", // This creates a new stacking context
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.boxShadow =
-                        "var(--theme-adaptive-tutoring-boxShadow-hover)";
+                        "var(--theme-hover-boxShadow)";
                       e.currentTarget.style.transform = "scale(1.05)";
-                      e.currentTarget.style.zIndex = "30"; // Increase z-index on hover
+                      e.currentTarget.style.zIndex = "30";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.boxShadow =
                         "var(--theme-adaptive-tutoring-boxShadow)";
                       e.currentTarget.style.transform = "scale(1)";
-                      e.currentTarget.style.zIndex = "10"; // Reset z-index
+                      e.currentTarget.style.zIndex = "10";
                     }}
                     onClick={() => handleCardClick(index)}
                   >
@@ -664,9 +768,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               </button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button
-                    className="p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
-                  >
+                  <button className="p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200">
                     <div className="w-7 h-7 relative theme-box">
                       <Image
                         src="/cat.svg"
@@ -697,7 +799,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                   {contentType === "video" &&
                     currentContent &&
                     currentContent.type === "video" && (
-
                       <div className="h-[calc(100vh-23rem)]">
                         <ReactPlayer
                           className="w-full h-full"
@@ -706,7 +807,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                           muted
                           width="100%"
                           height="100%"
-                          onProgress={({ playedSeconds }) => setPlayedSeconds(playedSeconds)}
+                          onProgress={({ playedSeconds }) =>
+                            setPlayedSeconds(playedSeconds)
+                          }
                           onEnded={() => setIsPlaying(false)}
                           controls={true}
                         />
@@ -750,12 +853,18 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                           className="relative"
                           style={{ height: "calc(100% - 2.5rem)" }}
                         >
-                          <Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
+                          <Dialog
+                            open={isFullScreen}
+                            onOpenChange={setIsFullScreen}
+                          >
                             <DialogTrigger asChild>
                               <button
                                 onClick={toggleFullScreen}
                                 className="absolute top-3 right-4 z-10 p-1.5 bg-[--theme-adaptive-tutoring-color] border border-[--theme-border-color] rounded-lg text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors duration-200"
-                                style={{ width: "3.2rem", height: "3.2rem" }}
+                                style={{
+                                  width: "3.2rem",
+                                  height: "3.2rem",
+                                }}
                               >
                                 <div className="flex items-center justify-center">
                                   <Maximize2 size={20} />
@@ -828,9 +937,11 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                       </div>
                     )}
 
-                  {contentType === "quiz" && (
-                    <Quiz questions={questions} shuffle={true} />
-                  )}
+                  {contentType === "quiz" &&
+                    questions &&
+                    questions.length > 0 && (
+                      <Quiz questions={questions} shuffle={true} />
+                    )}
                 </>
               )}
             </div>
