@@ -62,6 +62,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
   const [limitMessage, setLimitMessage] = useState<string | null>(null);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   // useEffect(() => {
   //   const fetchData = async () => {
@@ -103,6 +104,10 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
     fetchCategories(searchQuery, selectedSubject, currentPage);
   }, [selectedSubject, currentPage]);
 
+  // useEffect(() => {
+  //   fetchCategories(searchQuery, selectedSubject, currentPage);
+  // }, [selectedSubject, currentPage]);
+
   const fetchCategories = async (
     searchQuery: string,
     subject: string,
@@ -119,7 +124,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
         url.searchParams.append("searchQuery", searchQuery);
       }
 
-      if (subject) {
+      if (subject && subject !== "") {
         url.searchParams.append("subject", subject);
       }
 
@@ -128,7 +133,19 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
         throw new Error("Network response was not ok");
       }
       const data = await response.json();
-      setCategories(data.items);
+
+      // Use totalPages directly from the API response
+      setTotalPages(data.totalPages);
+
+      // Preserve checked status when setting new categories
+      const newCategories = data.items.map((category: Category) => ({
+        ...category,
+        isChecked: checkedCategories.some(
+          (checked) => checked.id === category.id
+        ),
+      }));
+
+      setCategories(newCategories);
     } catch (error) {
       console.error("Error fetching categories:", error);
     } finally {
@@ -203,11 +220,8 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
-                          fetchCategories(
-                            searchQuery,
-                            selectedSubject,
-                            currentPage
-                          );
+                          setCurrentPage(1);
+                          fetchCategories(searchQuery, selectedSubject, 1);
                         }
                       }}
                       onClick={() => setShowSearchResults(true)}
@@ -221,9 +235,13 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
                     />
                     <FilterButton
                       subjects={Object.keys(subjectFocus)}
+                      selectedValue={selectedSubject}
                       onFilterChange={(subject) => {
-                        setSelectedSubject(subject);
+                        const newSubject =
+                          subject === "all subjects" ? "" : subject;
+                        setSelectedSubject(newSubject);
                         setCurrentPage(1);
+                        fetchCategories(searchQuery, newSubject, 1);
                       }}
                     />
                   </div>
@@ -262,7 +280,10 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
                   )}
 
                   <button
-                    onClick={() => setCheckedCategories([])}
+                    onClick={() => {
+                      setCheckedCategories([]);
+                      // setCategories([]); // Also clear the displayed categories
+                    }}
                     className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
                       bg-transparent text-[--theme-text-color]
                       hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
@@ -270,7 +291,49 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
                   >
                     <span>Reset Checked Categories</span>
                   </button>
-                  <button
+
+                  <div className="flex justify-between mt-4">
+                    <button
+                      onClick={() => {
+                        setCurrentPage((prev) => Math.max(1, prev - 1));
+                        fetchCategories(
+                          searchQuery,
+                          selectedSubject,
+                          Math.max(1, currentPage - 1)
+                        );
+                      }}
+                      disabled={currentPage === 1}
+                      className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
+      bg-transparent text-[--theme-text-color]
+      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+      transition duration-200 ${
+        currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+      }`}
+                    >
+                      {currentPage - 1}/{totalPages} Previous
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setCurrentPage((prev) => prev + 1);
+                        fetchCategories(
+                          searchQuery,
+                          selectedSubject,
+                          currentPage + 1
+                        );
+                      }}
+                      disabled={currentPage === totalPages}
+                      className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
+      bg-transparent text-[--theme-text-color]
+      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+      transition duration-200 ${
+        currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
+      }`}
+                    >
+                      Next {currentPage + 1}/{totalPages}
+                    </button>
+                  </div>
+                  {/* <button
                     onClick={() => setCurrentPage((prev) => prev + 1)}
                     className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
                       bg-transparent text-[--theme-text-color]
@@ -279,7 +342,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
                   >
                     <RefreshCw size={16} />
                     <span>Next Page of Categories</span>
-                  </button>
+                  </button> */}
                 </>
               )}
             </div>

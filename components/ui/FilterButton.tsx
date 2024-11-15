@@ -1,31 +1,31 @@
-import React, { useState } from "react";
+import React from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface FilterButtonProps {
   subjects: string[];
   onFilterChange: (subject: string) => void;
+  selectedValue: string;
 }
 
 const FilterButton: React.FC<FilterButtonProps> = ({
   subjects,
   onFilterChange,
+  selectedValue,
 }) => {
-  const [selectedSubject, setSelectedSubject] = useState<string>("");
   const { theme } = useTheme();
 
   const handleSubjectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const subject = event.target.value;
-    setSelectedSubject(subject);
     onFilterChange(subject);
   };
 
   return (
     <select
-      value={selectedSubject}
+      value={selectedValue}
       onChange={handleSubjectChange}
       className={`border rounded-md p-2 bg-[--theme-background-color] text-[--theme-text-color] border-[--theme-border-color]`}
       style={{
-        color: "var(--theme-text-color)", // Ensure text color is set
+        color: "var(--theme-text-color)",
       }}
     >
       <option value="">All Subjects</option>
