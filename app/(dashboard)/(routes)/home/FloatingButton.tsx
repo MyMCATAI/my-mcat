@@ -77,10 +77,14 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
   ];
 
   const handleButtonClick = (tab: string) => {
+
+    console.log(tab)
     if (tab === 'KnowledgeProfile') {
-      // setShowTutoringMessage(true);
-      // setTimeout(() => setShowTutoringMessage(false), 3000); // Hide message after 3 seconds
-      router.push('/doctorsoffice');
+      router.push('/home');
+      router.push(`/home?tab=${tab}`);
+      setActiveTab(tab);
+      onTabChange(tab);
+  
     } else if (tab === 'doctorsoffice') {
       if (currentPage === 'home') {
         router.push('/doctorsoffice');

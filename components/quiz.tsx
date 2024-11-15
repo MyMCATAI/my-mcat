@@ -24,6 +24,8 @@ const Quiz: React.FC<QuizProps> = ({ questions, shuffle = false }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [shuffledQuestions, setShuffledQuestions] = useState<QuizQuestion[]>([]);
 
+
+  // TODO fetch questions here insteda of in parent
   useEffect(() => {
     if (shuffle) {
       setShuffledQuestions([...questions].sort(() => Math.random() - 0.5));
