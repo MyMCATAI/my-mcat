@@ -36,27 +36,6 @@ export async function GET(req: Request) {
         include: { category: true },
       });
 
-      // const exclusionCriteria = excludeSubjects.map((subject) => {
-      //   switch (subject) {
-      //     case "Biochemistry":
-      //       return { subjectCategory: { not: "Biochemistry" } };
-      //     case "Biology":
-      //       return { subjectCategory: { not: "Biology" } };
-      //     case "GenChem":
-      //       return { contentCategory: { notIn: ["4E", "5A", "5B", "5E"] } };
-      //     case "OChem":
-      //       return { contentCategory: { notIn: ["5C", "5D"] } };
-      //     case "Physics":
-      //       return { subjectCategory: { not: "Physics" } };
-      //     case "Psychology":
-      //       return { subjectCategory: { not: "Psychology" } };
-      //     case "Sociology":
-      //       return { subjectCategory: { not: "Sociology" } };
-      //     default:
-      //       return {};
-      //   }
-      // });
-
       // console.log("Exclusion Criteria:", exclusionCriteria);
 
       let allCategories = await prisma.category.findMany({
@@ -75,9 +54,9 @@ export async function GET(req: Request) {
                 }
               : {},
             includeCARS ? {} : { subjectCategory: { not: "CARs" } },
-            selectedSubject
-              ? { subjectCategory: { equals: selectedSubject } }
-              : {},
+            ...(selectedSubject
+              ? [{ subjectCategory: { equals: selectedSubject } }]
+              : []),
           ],
         },
       });
