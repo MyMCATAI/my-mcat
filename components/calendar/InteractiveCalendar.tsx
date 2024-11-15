@@ -121,7 +121,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
 
   useEffect(() => {
     fetchActivities();
-  }, [user]);
+  }, [user,activities]);
 
   useEffect(() => {
     const tutorialPart2Played = localStorage.getItem("tutorialPart2Played");
@@ -140,10 +140,6 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     if (!user?.id) return;
 
     try {
-      const response = await fetch(`/api/calendar-activity?userId=${user.id}`);
-      if (!response.ok) throw new Error("Failed to fetch activities");
-      const activities: FetchedActivity[] = await response.json();
-
       const formattedEvents: CalendarEvent[] = activities.map((activity) => ({
         id: activity.id,
         start: new Date(activity.scheduledDate),
@@ -485,8 +481,8 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         className="custom-calendar"
         date={date}
         onNavigate={handleNavigate}
-        view={view}
-        onView={onView}
+        view="month"
+        views={['month']}
         events={events}
         localizer={localizer}
         onEventDrop={onEventDrop}
@@ -498,8 +494,6 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         style={{ height: "100%" }}
         eventPropGetter={eventStyleGetter}
         length={daysInMonth}
-        // Test whether study plan removes future activities
-        // getNow={() => HARDCODED_TODAY}
         endAccessor={(event) => {
           const eventEnd = moment(event.end);
           const monthEnd = moment(date).endOf('month');
