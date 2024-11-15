@@ -12,6 +12,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "react-hot-toast";
 import "./style.css";
+import { showLoadingToast } from "@/components/calendar/loading-toast";
 
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
@@ -24,7 +25,7 @@ interface Option {
 const options: Option[] = [
   { id: "option1", label: "When is your test?" },
   { id: "option2", label: "When can you take full lengths?" },
-  { id: "option3", label: "How many hours each day?" },
+  { id: "option3", label: "How many hours each day? (Recommend at least 4 hours for each study day)" },
   { id: "option4", label: "What resources do you want to use?" },
 ];
 
@@ -55,8 +56,12 @@ const SettingContent: React.FC<SettingContentProps> = ({
   onClose,
   onActivitiesUpdate,
 }) => {
+  // default date is 3 months from now
+  const defaultDate = new Date();
+  defaultDate.setMonth(defaultDate.getMonth() + 3);
+  
   const [activeOption, setActiveOption] = useState<string | null>(null);
-  const [calendarValue, setCalendarValue] = useState<Value>(new Date());
+  const [calendarValue, setCalendarValue] = useState<Value>(defaultDate);
   const [hoursPerDay, setHoursPerDay] = useState<Record<string, string>>(() => {
     // Initialize with 3 hours for each day
     return days.reduce((acc, day) => ({
@@ -225,6 +230,16 @@ const SettingContent: React.FC<SettingContentProps> = ({
 
   const handleGenerateStudyPlan = async () => {
     setIsGenerating(true);
+    
+    if (calendarValue && calendarValue < new Date()) {
+      toast.error("Exam date cannot be in the past");
+      setIsGenerating(false);
+      return;
+    }
+    
+    // Show the loading toast and store its ID
+    const loadingToastId = showLoadingToast();
+    
     const studyPlanData = {
       examDate: calendarValue,
       resources: {
@@ -249,8 +264,14 @@ const SettingContent: React.FC<SettingContentProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(studyPlanData),
       });
-      console.log("response", response);
+      
+      // Dismiss the loading toast
+      toast.dismiss(loadingToastId);
+      
       if (response.ok) {
+        // Add a 2-second delay before showing success message and running callbacks
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
         toast.success("Study plan generated successfully!");
         if (onStudyPlanSaved) onStudyPlanSaved();
         if (onActivitiesUpdate) onActivitiesUpdate();
@@ -259,6 +280,8 @@ const SettingContent: React.FC<SettingContentProps> = ({
         toast.error(errorData.error || "Failed to generate study plan");
       }
     } catch (error) {
+      // Dismiss the loading toast
+      toast.dismiss(loadingToastId);
       console.error('Error generating study plan:', error);
       toast.error("An error occurred while generating the study plan");
     } finally {
@@ -488,23 +511,38 @@ const SettingContent: React.FC<SettingContentProps> = ({
         <div className="p-4">
           {existingStudyPlan ? (
             <Button
-              className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200"
+              className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200 flex items-center justify-center gap-2"
               onClick={() => {
                 handleSave();
                 handleGenerateStudyPlan();
               }}
               disabled={isSaving}
             >
+              {isSaving && (
+                <div className="h-4 w-4 border-2 border-t-transparent rounded-full animate-spin" />
+              )}
               {isSaving ? "Saving..." : "Update Study Plan"}
             </Button>
           ) : (
-            <Button
-              className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200"
-              onClick={handleGenerateStudyPlan}
-              disabled={isGenerating}
-            >
-              {isGenerating ? 'Generating...' : 'Generate Study Plan'}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200 flex items-center justify-center gap-2"
+                    onClick={handleGenerateStudyPlan}
+                    disabled={isGenerating}
+                  >
+                    {isGenerating && (
+                      <div className="h-4 w-4 border-2 border-t-transparent rounded-full animate-spin" />
+                    )}
+                    {isGenerating ? 'Generating...' : 'Generate Study Plan'}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-gray-800 text-white p-2 rounded">
+                  <p>Generation may take a few minutes. Please wait while we create your personalized study plan.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       </div>

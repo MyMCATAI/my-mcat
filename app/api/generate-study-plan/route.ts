@@ -7,7 +7,8 @@ import { Prisma } from '@prisma/client';
 import { GET as getEventTasks } from '../event-task/route';
 
 // Define task categories with their properties
-const TASK_CATEGORIES = [
+// keep word consistent
+const EVENT_CATEGORIES = [
   {
     name: 'MyMCAT Daily CARs',
     optional: true,
@@ -146,23 +147,6 @@ interface SelectedContentItem extends ContentItem {
   category: Category;
 }
 
-// Test whether study plan removes future activities
-// const HARDCODED_TODAY = new Date('2024-10-30');
-// HARDCODED_TODAY.setHours(0, 0, 0, 0);
-
-// Add this helper function
-// async function getDefaultTasksForActivity(activityTitle: string) {
-//   try {
-//     const filePath = path.join(process.cwd(), 'app', 'api', 'event-task', 'taskList.csv');
-//     const csvContent = await fs.readFile(filePath, 'utf8');
-//     const taskMapping = parseDefaultTasks(csvContent);
-//     return taskMapping[activityTitle] || [];
-//   } catch (error) {
-//     console.error('Error loading default tasks:', error);
-//     return [];
-//   }
-// }
-
 // Handler for generating the study plan
 export async function POST(req: Request) {
   const { userId } = auth();
@@ -188,8 +172,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Test whether study plan removes future activities
-    // const today = HARDCODED_TODAY;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -287,6 +269,11 @@ export async function POST(req: Request) {
 }
 
 // Function to generate the study schedule
+// 1. Create exam schedule
+// 2. Create AAMC CARS schedule
+// 3. loop through each days from current to exam date
+// 4. if user can take FL exam today, schedule it
+// 5. else fill up the day with tasks(check if there's available hours left, if not, move on to next day); use loop to keep track of available hours
 async function generateStudySchedule(
   studyPlan: StudyPlan,
   resources: Resources,
@@ -335,18 +322,20 @@ async function generateStudySchedule(
   let currentExamDate = new Date(examDate);
   currentExamDate.setDate(currentExamDate.getDate() - daysBeforeLastExam);
   
-  for (let i = availableExams.length - 1; i >= 0; i--) {
-    // Find the next available full length day
-    while (!fullLengthDays.includes(daysOfWeek[currentExamDate.getDay()])) {
-      currentExamDate.setDate(currentExamDate.getDate() - 1);
+  if (fullLengthDays.length > 0) {
+    for (let i = availableExams.length - 1; i >= 0; i--) {
+      // Find the next available full length day
+      while (!fullLengthDays.includes(daysOfWeek[currentExamDate.getDay()])) {
+        currentExamDate.setDate(currentExamDate.getDate() - 1);
+      }
+      
+      examSchedule.unshift({
+        date: new Date(currentExamDate),
+        examName: availableExams[i]
+      });
+      
+      currentExamDate.setDate(currentExamDate.getDate() - examInterval);
     }
-    
-    examSchedule.unshift({
-      date: new Date(currentExamDate),
-      examName: availableExams[i]
-    });
-    
-    currentExamDate.setDate(currentExamDate.getDate() - examInterval);
   }
 
   // Handle CARs schedule
@@ -367,23 +356,59 @@ async function generateStudySchedule(
     tempDate.setDate(tempDate.getDate() + 1);
   }
 
-  // Generate weights for each available day
-  const weights = availableDays.map((_, index) => 
-    Math.pow(index + 1, CARS_EXPONENT)
-  );
-  const totalWeight = weights.reduce((a, b) => a + b, 0);
-  const probabilities = weights.map(w => 
-    Number((w / totalWeight).toFixed(3))
-  );
 
-  // Select days for AAMC CARS
-  const aamcCarsDays = new Set<number>();
-  while (aamcCarsDays.size < NUM_AAMC_CARS && availableDays.length > aamcCarsDays.size) {
-    const selectedIndex = weightedRandomChoice(probabilities);
-    aamcCarsDays.add(selectedIndex);
+  const n = availableDays.length;
+
+  // For x^4: sum = (n(n+1)(2n+1)(3n^2 + 3n - 1))/30
+  const totalWeight = (n * (n + 1) * (2 * n + 1) * (3 * n * n + 3 * n - 1)) / 30;
+
+  const cumulativeProbabilities = new Array(n);
+  let cumSum = 0;
+  for (let i = 0; i < n; i++) {
+    cumSum += Math.pow(i + 1, CARS_EXPONENT) / totalWeight;
+    cumulativeProbabilities[i] = Number(cumSum.toFixed(3));
   }
 
-  // Store the selected days for use in determineMainTask
+  const aamcCarsDays = new Set<number>();
+  const availableIndices = new Set(Array.from({ length: n }, (_, i) => i));
+
+  // Select NUM_AAMC_CARS days using optimized binary search
+  while (aamcCarsDays.size < NUM_AAMC_CARS && availableIndices.size > 0) {
+    // Skew probability distribution towards 1
+    const r = Math.pow(Math.random(), 2/CARS_EXPONENT);
+    
+    let left = 0;
+    let right = n - 1;
+    let selectedIdx = right;
+    
+    if (r <= cumulativeProbabilities[0]) {
+      selectedIdx = 0;
+    } else if (r >= cumulativeProbabilities[right]) {
+      selectedIdx = right;
+    } else {
+      while (right - left > 1) {
+        const mid = (left + right) >> 1;
+        if (cumulativeProbabilities[mid] > r) {
+          right = mid;
+        } else {
+          left = mid;
+        }
+      }
+      selectedIdx = right;
+    }
+    
+    // Find next available index if current is used
+    while (!availableIndices.has(selectedIdx) && selectedIdx < n) {
+      selectedIdx++;
+    }
+    if (selectedIdx >= n) {
+      selectedIdx = Math.max(...Array.from(availableIndices));
+    }
+    
+    aamcCarsDays.add(selectedIdx);
+    availableIndices.delete(selectedIdx);
+  }
+
   const aamcCarsSchedule = new Set(
     Array.from(aamcCarsDays).map(index => availableDays[index].getTime())
   );
@@ -394,16 +419,12 @@ async function generateStudySchedule(
   const ratioChangePerDay = (0.8 - 0.2) / totalDays; // Linear progression from 80/20 to 20/80
 
   let currentDate = new Date(startDate);
+
   while (currentDate < examDate) {
     const dayOfWeek = currentDate.getDay();
     const dayName = daysOfWeek[dayOfWeek];
     const availableHours = parseInt(hoursPerDay[dayName]) || 0;
     
-    if (availableHours === 0) {
-      currentDate.setDate(currentDate.getDate() + 1);
-      continue;
-    }
-
     const scheduledTasksForDay = new Set<string>();
 
     // Check if there's a scheduled exam for this day
@@ -425,9 +446,12 @@ async function generateStudySchedule(
       // Schedule take-up exam for the following days
       await scheduleTakeUpExam(activities, studyPlan, currentDate, hoursPerDay);
     } else {
-      // Regular study day
-      let remainingHours = availableHours;
+      if (availableHours === 0) {
+        currentDate.setDate(currentDate.getDate() + 1);
+        continue;
+      }
 
+      let remainingHours = availableHours;
       let activityScheduled = false;
 
       if (includeSpecificContent && selectedContent.length > 0) {
@@ -444,8 +468,8 @@ async function generateStudySchedule(
         isStudySession = !isStudySession;
       }
 
-      // Get main tasks for the day
-      const mainTasks = determineMainTask(
+      // Get available tasks for the day(either review or practice)
+      const dayTasks = getAvailableTasks(
         resources,
         currentReviewRatio,
         scheduledTasksForDay,
@@ -455,9 +479,9 @@ async function generateStudySchedule(
         currentDate
       );
 
-      // Schedule each task
-      for (const taskName of mainTasks) {
-        const task = TASK_CATEGORIES.find(t => t.name === taskName);
+      // Schedule each task according to available hours
+      for (const taskName of dayTasks) {
+        const task = EVENT_CATEGORIES.find(t => t.name === taskName);
         if (task && typeof task.duration === 'number' && remainingHours >= task.duration) {
           const activity = createActivity(
             studyPlan,
@@ -477,19 +501,9 @@ async function generateStudySchedule(
     currentReviewRatio -= ratioChangePerDay;
     currentDate.setDate(currentDate.getDate() + 1);
   }
+  console.log("Finished generating study schedule");
 
   return activities;
-}
-
-// Helper function for weighted random selection
-function weightedRandomChoice(probabilities: number[]): number {
-  const r = Math.random();
-  let sum = 0;
-  for (let i = 0; i < probabilities.length; i++) {
-    sum += probabilities[i];
-    if (r <= sum) return i;
-  }
-  return probabilities.length - 1;
 }
 
 // Function to calculate total available study hours
@@ -625,7 +639,7 @@ async function scheduleTakeUpExam(
 }
 
 // Function to determine the main task based on contentReviewRatio and available resources
-function determineMainTask(
+function getAvailableTasks(
   resources: Resources, 
   contentReviewRatio: number,
   scheduledTasksForDay: Set<string>,
@@ -646,7 +660,6 @@ function determineMainTask(
     tasks.push(useAAMCCars ? 'Daily CARs' : 'MyMCAT Daily CARs');
   }
 
-  // Always add core daily tasks if not already scheduled
   if (!scheduledTasksForDay.has('Adaptive Tutoring Suite')) {
     tasks.push('Adaptive Tutoring Suite');
   }
@@ -684,7 +697,7 @@ function createActivity(
   duration: number,
   date: Date
 ): CalendarActivity {
-  const taskCategory = TASK_CATEGORIES.find(t => t.name === name);
+  const taskCategory = EVENT_CATEGORIES.find(t => t.name === name);
   const scheduledDate = new Date(date);
   scheduledDate.setHours(0, 0, 0, 0);
   
