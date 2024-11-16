@@ -164,7 +164,7 @@ const Product = () => {
             >
               <div
                 className="video-wrapper border-4 border-white rounded-lg overflow-hidden shadow-1xl mx-auto"
-                style={{ maxWidth: "80vw", width: "100%" }}
+                style={{ maxWidth: "70vw", width: "100%" }}
               >
                 <video controls className="w-full aspect-video">
                   <source
@@ -179,7 +179,7 @@ const Product = () => {
         </div>
       </div>
       {/* Add a spacer div to ensure scrolling works correctly */}
-      <div style={{ height: "200px" }}></div>
+      <div style={{ height: "50px" }}></div>
     </div>
   );
 };
