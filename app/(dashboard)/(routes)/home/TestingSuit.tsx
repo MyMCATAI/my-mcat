@@ -1,18 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Test } from "@/types";
 import Exams from "./testingsuit/Exams";
+import { toast } from "@/components/ui/use-toast";
 
-interface TestListingProps {
-  tests: Test[];
-  testsCompletedToday: number;
-}
 
-const TestingSuit: React.FC<TestListingProps> = ({ tests, testsCompletedToday }) => {
+const TestingSuit: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
   const [isOverlayVisible, setIsOverlayVisible] = useState<boolean>(false);
   const [dismissAnimation, setDismissAnimation] = useState<(() => void) | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const [tests, setTests] = useState<Test[]>([]);
+  const [testsCompletedToday, setTestsCompletedToday] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const handleAssistantResponse = (message: string, dismissFunc: () => void) => {
     setAssistantMessage(message);
@@ -44,8 +45,62 @@ const TestingSuit: React.FC<TestListingProps> = ({ tests, testsCompletedToday })
     };
   }, [isOverlayVisible]);
 
+  const fetchTests = async (
+    ordered: boolean = false,
+    page: number = 1,
+    pageSize: number = 10
+  ) => {
+    try {
+      setIsLoading(true);
+
+      const queryParams = new URLSearchParams({
+        ordered: ordered.toString(),
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        CARSonly: "true",
+      });
+
+      const response = await fetch(`/api/test?${queryParams}`);
+
+      if (!response.ok) throw new Error("Failed to fetch tests");
+
+      const data = await response.json();
+      setTests(data.tests);
+      setTestsCompletedToday(data.testsCompletedToday);
+    } catch (error) {
+      console.error("Error fetching tests:", error);
+      setError(error instanceof Error ? error.message : "An unknown error occurred");
+      toast({
+        title: "Error",
+        description: "Failed to fetch tests. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTests(true);
+  }, []);
+
   const tabs = [
-    { label: "Exams", content: <Exams tests={tests} onAssistantResponse={handleAssistantResponse} testsCompletedToday={testsCompletedToday}/> },
+    { 
+      label: "Exams", 
+      content: (
+        isLoading ? (
+          <div className="flex justify-center items-center h-full">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-sky-500"></div>
+          </div>
+        ) : (
+          <Exams 
+            tests={tests} 
+            onAssistantResponse={handleAssistantResponse} 
+            testsCompletedToday={testsCompletedToday}
+          />
+        )
+      ) 
+    },
   ];
 
   return (
