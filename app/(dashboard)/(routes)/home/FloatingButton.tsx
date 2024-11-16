@@ -77,23 +77,29 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
   ];
 
   const handleButtonClick = (tab: string) => {
-    if (tab === 'KnowledgeProfile') {
-      // setShowTutoringMessage(true);
-      // setTimeout(() => setShowTutoringMessage(false), 3000); // Hide message after 3 seconds
-      router.push('/doctorsoffice');
-    } else if (tab === 'doctorsoffice') {
-      if (currentPage === 'home') {
-        router.push('/doctorsoffice');
-      } else {
+    // Define tab behaviors
+    const tabActions = {
+      KnowledgeProfile: () => {
         router.push('/home');
+        setActiveTab(tab);
+        onTabChange(tab);
+      },
+      doctorsoffice: () => {
+        const targetPath = currentPage === 'home' ? '/doctorsoffice' : '/home';
+        router.push(targetPath);
+      },
+      default: () => {
+        if (currentPage === 'doctorsoffice') {
+          router.push('/home');
+        }
+        setActiveTab(tab);
+        onTabChange(tab);
       }
-    } else {
-      if (currentPage === 'doctorsoffice') {
-        router.push('/home');
-      }
-      setActiveTab(tab);
-      onTabChange(tab);
-    }
+    };
+
+    // Execute the appropriate action
+    const action = tabActions[tab as keyof typeof tabActions] || tabActions.default;
+    action();
   };
 
   // Mapping of tab names to descriptive texts
