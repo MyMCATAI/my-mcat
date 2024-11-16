@@ -19,7 +19,8 @@ const publicRoutes = [
   "/colleges/(.*)",
   "/game-components/(.*)",
   "/icons/(.*)",
-  "/landingpage/(.*)"
+  "/landingpage/(.*)",
+  "/blog(.*)"
 ];
 
 const isPublicRoute = createRouteMatcher(publicRoutes);
