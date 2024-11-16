@@ -23,7 +23,7 @@ import AddEventModal from "./AddEventModal";
 import EditEventModal from "./EditEventModal";
 import ErrorModal from "@/components/calendar/ErrorModal";
 import ConfirmModal from "@/components/calendar/ConfirmModal";
-import { isSameDay } from "date-fns";
+import { isSameDay, isToday } from "date-fns";
 
 // Assuming you have a types file with this interface
 interface FetchedActivity {
@@ -186,6 +186,14 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
           )
         );
         await updateEventInBackend(updatedEvent);
+        
+        // Check if event was moved to/from today and update the schedule
+        const wasToday = isToday(event.start);
+        const isMovedToToday = isToday(start);
+        if (wasToday || isMovedToToday) {
+          updateTodaySchedule();
+        }
+        
         onInteraction();
       } catch (error) {
         console.error("Error updating event:", error);
@@ -212,6 +220,12 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
           )
         );
         await updateEventInBackend(updatedEvent);
+        
+        // Check if event was resized on today's date
+        if (isToday(start) || isToday(event.start)) {
+          updateTodaySchedule();
+        }
+        
         onInteraction();
       } catch (error) {
         console.error("Error updating event:", error);
