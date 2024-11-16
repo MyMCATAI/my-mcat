@@ -39,8 +39,6 @@ const Page = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const scrollPosition = 7.125;
-  const [tests, setTests] = useState<Test[]>([]);
-  const [testsCompletedToday, setTestsCompletedToday] = useState(0);
   const [showScorePopup, setShowScorePopup] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
@@ -69,7 +67,6 @@ const Page = () => {
   useEffect(() => {
     const initializePage = async () => {
       await fetchActivities();
-      fetchTests(true);
       const proStatus = await checkProStatus();
       setIsPro(proStatus);
       await fetchUserInfo();
@@ -78,7 +75,7 @@ const Page = () => {
       // setShowWelcomePopup(true);
 
       // Show update notification
-      setShowUpdateNotification(true);
+      // setShowUpdateNotification(true);
     };
 
     initializePage();
@@ -191,39 +188,6 @@ const Page = () => {
         variant: "destructive",
         duration: 3000,
       });
-    }
-  };
-
-  const fetchTests = async (
-    ordered: boolean = false,
-    page: number = 1,
-    pageSize: number = 10
-  ) => {
-    try {
-      setIsLoading(true);
-
-      const queryParams = new URLSearchParams({
-        ordered: ordered.toString(),
-        page: page.toString(),
-        pageSize: pageSize.toString(),
-        CARSonly: "true",
-      });
-
-      const response = await fetch(`/api/test?${queryParams}`);
-
-      if (!response.ok) throw new Error("Failed to fetch tests");
-
-      const data = await response.json();
-
-      setTests(data.tests);
-      setTestsCompletedToday(data.testsCompletedToday);
-    } catch (error) {
-      console.error("Error fetching tests:", error);
-      setError(
-        error instanceof Error ? error.message : "An unknown error occurred"
-      );
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -377,10 +341,7 @@ const Page = () => {
         break;
       case "CARS":
         content = (
-          <TestingSuit
-            tests={tests}
-            testsCompletedToday={testsCompletedToday}
-          />
+          <TestingSuit />
         );
         break;
       case "flashcards":
