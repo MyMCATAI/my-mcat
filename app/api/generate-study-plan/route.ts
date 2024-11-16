@@ -242,24 +242,34 @@ export async function POST(req: Request) {
       includeSpecificContent,
       today
     );
+    console.log("Finished generating study schedule");
+    console.log("There are ", calendarActivities.length, " activities");
 
-    // When creating activities, add default tasks
-    for (const activity of calendarActivities) {
-      const mockRequest = new Request(
-        `${process.env.NEXT_PUBLIC_APP_URL}/api/event-task?eventTitle=${encodeURIComponent(activity.activityTitle)}`
-      );
-      
-      const tasksResponse = await getEventTasks(mockRequest);
-      const defaultTasks = await tasksResponse.json();
-      
-      // Create the activity in the database with tasks
-      await prisma.calendarActivity.create({
-        data: {
+    const startTime = new Date();
+    const activitiesWithTasks = await Promise.all(
+      calendarActivities.map(async (activity) => {
+        const mockRequest = new Request(
+          `${process.env.NEXT_PUBLIC_APP_URL}/api/event-task?eventTitle=${encodeURIComponent(activity.activityTitle)}`
+        );
+        
+        const tasksResponse = await getEventTasks(mockRequest);
+        const defaultTasks = await tasksResponse.json();
+        
+        return {
           ...activity,
-          tasks: defaultTasks ? JSON.parse(JSON.stringify(defaultTasks)) : [] // Provide empty array as fallback
-        }
-      });
-    }
+          tasks: defaultTasks ? JSON.parse(JSON.stringify(defaultTasks)) : []
+        };
+      })
+    );
+
+    // Use createMany for bulk insertion
+    await prisma.calendarActivity.createMany({
+      data: activitiesWithTasks
+    });
+    console.log("Finished adding activities to database");
+    const endTime = new Date();
+    const duration = endTime.getTime() - startTime.getTime();
+    console.log(`Time taken: ${duration / 1000} seconds`);
 
     return NextResponse.json({ message: "Study plan generated successfully" }, { status: 201 });
   } catch (error) {
@@ -501,7 +511,6 @@ async function generateStudySchedule(
     currentReviewRatio -= ratioChangePerDay;
     currentDate.setDate(currentDate.getDate() + 1);
   }
-  console.log("Finished generating study schedule");
 
   return activities;
 }
