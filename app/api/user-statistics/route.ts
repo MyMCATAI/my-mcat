@@ -10,7 +10,8 @@ interface CategoryMastery {
 
 export async function GET(req: NextRequest) {
   const { userId } = auth();
-  console.log("Current User ID:", userId);
+  const requestTime = new Date().toISOString();
+  console.log(`Route: /api/user-statistics, Request Time: ${requestTime}`);
 
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -39,13 +40,6 @@ export async function GET(req: NextRequest) {
         },
       },
     });
-
-    console.log(
-      "Knowledge Profiles raw data:",
-      JSON.stringify(knowledgeProfiles, null, 2)
-    );
-
-    console.log("Fetched Knowledge Profiles:", knowledgeProfiles);
 
     // Update userTests fetch to match user-report
     const userTests = await prisma.userTest.findMany({
@@ -116,29 +110,14 @@ export async function GET(req: NextRequest) {
     const streakBrokenRecently =
       previousStreakLength > 0 && currentStreakLength < previousStreakLength;
 
-    // After fetching knowledge profiles
-    console.log("Raw Knowledge Profiles:", knowledgeProfiles);
-
     const categoryMasteryData: CategoryMastery = {};
 
     for (const profile of knowledgeProfiles) {
-      console.log("Profile data:", {
-        categoryId: profile.categoryId,
-        conceptMastery: profile.conceptMastery,
-        category: profile.category,
-      });
-
       if (profile.category && profile.conceptMastery !== null) {
         const categoryName = profile.category.conceptCategory;
         categoryMasteryData[categoryName] = profile.conceptMastery;
-        console.log(
-          `Added mastery for ${categoryName}:`,
-          profile.conceptMastery
-        );
       }
     }
-
-    console.log("Final categoryMasteryData:", categoryMasteryData);
 
     const testScores = userTests.map((test) => ({
       date: test.startedAt,
@@ -290,33 +269,6 @@ export async function GET(req: NextRequest) {
         conceptMastery: profile.conceptMastery || 0,
       })),
     };
-
-    console.log("API Response - Full Statistics:", statisticsData);
-    console.log("Study Hours by Subject:", statisticsData.studyHoursBySubject);
-    console.log("Category Accuracy:", statisticsData.categoryAccuracy);
-    console.log("Subject Mastery:", statisticsData.conceptMastery);
-    console.log("Test Scores:", statisticsData.testScores);
-    console.log("Time Metrics:", {
-      averageTimePerQuestion: statisticsData.averageTimePerQuestion,
-      averageTimePerTest: statisticsData.averageTimePerTest,
-    });
-    console.log("Performance Metrics:", {
-      totalQuestionsAnswered: statisticsData.totalQuestionsAnswered,
-      averageCorrect: statisticsData.averageCorrect,
-      totalTestsTaken: statisticsData.totalTestsTaken,
-      testsCompleted: statisticsData.testsCompleted,
-      completionRate: statisticsData.completionRate,
-      averageTestScore: statisticsData.averageTestScore,
-    });
-    console.log("Streak Information:", {
-      currentStreak: statisticsData.streak,
-      previousStreak: statisticsData.previousStreak,
-      streakBrokenRecently: statisticsData.streakBrokenRecently,
-    });
-    console.log("Calendar Activity Statistics:", {
-      totalTasks: statisticsData.totalTasks,
-      completedTasks: statisticsData.completedTasks,
-    });
 
     return NextResponse.json(statisticsData);
   } catch (error) {

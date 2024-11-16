@@ -53,7 +53,7 @@ model Question {
   difficulty          Float          @default(1)
   links               String?        @db.Text
   tags                String?        @db.Text
-  types               String?        @db.Text
+  types               String?        @db.Text // flashcard, normal, patient, (typicall null = normal) 
   states              String?        @db.Text
   contentId           String?
   passage             Passage?       @relation(fields: [passageId], references: [id])
