@@ -18,6 +18,7 @@ export interface Category {
   generalWeight: number;
   color: string;
   icon: IconName;
+  podcastLinks: string;
 }
 
 export interface TestQuestion {

@@ -111,6 +111,7 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
   useEffect(() => {
     setVideos([...shuffleVideos(videoCategories[selectedCategory])]);
     setCurrentVideoIndex(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory]);
 
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
