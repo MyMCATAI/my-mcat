@@ -13,7 +13,7 @@ const inter = Inter({ subsets: ['latin'] })
 const robotoSlab = Roboto_Slab({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://mymcat.ai'),
+  metadataBase: new URL('https://www.mymcat.ai'),
   title: 'My MCAT - Beat The Competition',
   description: 'Interactive learning platform with AI-powered study tools, practice tests, and personalized feedback.',
   keywords: 'MCAT prep, medical school admission, interactive learning, study tools, MCAT practice tests, MyMCAT, AI MCAT Prep, MCAT study platform',
@@ -46,8 +46,11 @@ export const metadata: Metadata = {
     description: 'Transform your MCAT study experience with My MCAT. Engaging, effective, and tailored for success.',
     images: ['/knowledge.png'],
   },
+  verification: {
+    google: 'F6e4Rh-tPmtWbb_Ij-lgHvb2cXGQjy_h-UNxh9E-9Xc',
+  },
   alternates: {
-    canonical: 'https://mymcat.ai',
+    canonical: 'https://www.mymcat.ai',
   },
 }
 
