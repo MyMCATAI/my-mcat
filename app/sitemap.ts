@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://mymcat.ai'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.mymcat.ai/'
   
   return [
     {
