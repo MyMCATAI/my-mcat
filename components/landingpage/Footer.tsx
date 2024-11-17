@@ -24,7 +24,7 @@ const Footer = () => {
         { href: "/privacypolicy", text: "Privacy Policy" },
         { href: "/termsandconditions", text: "Terms & Conditions" },
         { href: "/acceptableuse", text: "Acceptable Use" },
-        { href: "https://app.termly.io/policy-viewer/policy.html?policyUUID=db28699d-6ab1-478a-810e-eff7605c7808", text: "Cookie Policy" },
+        { href: "https://app.termly.io/policy-viewer/policy.html?policyUUID=be6601a9-d045-4aee-b088-07144de2d7a0", text: "Cookie Policy" },
         { href: "https://app.termly.io/policy-viewer/policy.html?policyUUID=bbaa0360-e283-49d9-b273-19f54d765254", text: "Disclaimer" },
       ],
     },
