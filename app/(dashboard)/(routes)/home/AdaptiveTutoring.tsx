@@ -84,8 +84,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const [content, setContent] = useState<ContentItem[]>([]);
   const [currentContentId, setCurrentContentId] = useState<string | null>(null);
 
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-
   const [isPlaying, setIsPlaying] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -272,6 +270,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const handleContentClick = (contentId: string) => {
     setCurrentContentId(contentId);
     const clickedContent = content.find((item) => item.id === contentId);
+    console.log("Clicked Content:", clickedContent);
     if (clickedContent) {
       setContentType(clickedContent.type);
 
@@ -313,55 +312,14 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     }
   }, []);
 
-  const fetchQuestions = useCallback(async (conceptCategory: string) => {
-    try {
-      const response = await fetch(
-        `/api/question?conceptCategory=${conceptCategory.replace(
-          / /g,
-          "_"
-        )}&page=1&pageSize=10&simple=true`
-      );
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      console.log("API Response:", data); // Debug log
-
-      const transformedQuestions = data.items.map((question: any) => {
-        console.log("Processing question:", question); // Debug log
-        return {
-          id: question.id,
-          categoryId: question.categoryId,
-          contentCategory: question.contentCategory,
-          questionContent: question.questionContent,
-          questionID: question.questionID,
-          questionOptions: Array.isArray(question.questionOptions)
-            ? question.questionOptions
-            : JSON.parse(question.questionOptions),
-          questionAnswerNotes: question.questionAnswerNotes,
-          passage: question.passage,
-          passageId: question.passageId,
-        };
-      });
-
-      console.log("Transformed questions:", transformedQuestions); // Debug log
-      return transformedQuestions;
-    } catch (error) {
-      console.error("Error fetching questions:", error);
-      return [];
-    }
-  }, []);
-
   const fetchContentAndQuestions = useCallback(
     async (category: string) => {
       setIsLoading(true);
       try {
-        const [contentData, questionsData] = await Promise.all([
+        const [contentData] = await Promise.all([
           fetchContent(category),
-          fetchQuestions(category),
         ]);
         setContent(contentData);
-        setQuestions(questionsData);
         updateContentVisibility(contentData);
       } catch (error) {
         console.error("Error fetching content and questions:", error);
@@ -369,7 +327,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         setIsLoading(false);
       }
     },
-    [fetchContent, fetchQuestions]
+    [fetchContent]
   );
 
   // Fetch content and questions when selected category changes
@@ -478,43 +436,20 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     }
   };
 
-  const handleQuizTabClick = async () => {
+  const handleQuizTabClick = () => {
+    setContentType("quiz");
+
     if (!selectedCategory) {
       toast({
         title: "No Category Selected",
-        description:
-          "Please select a category first to view its quiz questions.",
+        description: "Please select a category first to view its quiz questions.",
         variant: "destructive",
       });
       return;
     }
-
-    try {
-      setIsLoading(true);
-      const questionsData = await fetchQuestions(selectedCategory);
-
-      if (questionsData && questionsData.length > 0) {
-        setQuestions(questionsData);
-        setContentType("quiz");
-        setCurrentContentId(null);
-        setContent([]);
-      } else {
-        toast({
-          title: "No Questions Available",
-          description: "No quiz questions found for this category.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching questions:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load quiz questions. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    
+    setCurrentContentId(null);
+    setContent([]);
   };
 
   const toggleSearch = () => {
@@ -535,13 +470,11 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
     try {
       setIsLoading(true);
-      const [contentData, questionsData] = await Promise.all([
+      const [contentData] = await Promise.all([
         fetchContent(selectedCategory),
-        fetchQuestions(selectedCategory),
       ]);
 
       setContent(contentData);
-      setQuestions(questionsData);
       updateContentVisibility(contentData);
     } catch (error) {
       console.error("Error loading content:", error);
@@ -937,11 +870,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                       </div>
                     )}
 
-                  {contentType === "quiz" &&
-                    questions &&
-                    questions.length > 0 && (
-                      <Quiz questions={questions} shuffle={true} />
-                    )}
+                  {contentType === "quiz" && selectedCategory && (
+                    <Quiz category={selectedCategory} shuffle={true} />
+                  )}
                 </>
               )}
             </div>

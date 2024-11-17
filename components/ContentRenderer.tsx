@@ -19,9 +19,10 @@ SyntaxHighlighter.registerLanguage('python', python);
 interface ContentRendererProps {
   content: string;
   onLinkClick?: (href: string, event: React.MouseEvent) => void;
+  imageWidth?: string;
 }
 
-const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick }) => {
+const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick, imageWidth = '100%' }) => {
   const sanitizedContent = DOMPurify.sanitize(content);
 
   const generateAwsS3Url = (imageName: string): string => {
@@ -68,7 +69,13 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick 
         },
         img({node, alt, src, ...props}: any) {
           const awsImageUrl = generateAwsS3Url(src);
-          return <img src={awsImageUrl} alt={alt} className="max-w-full h-auto my-2" {...props} />
+          return <img 
+            src={awsImageUrl} 
+            alt={alt} 
+            className="h-auto my-2" 
+            style={{ maxWidth: imageWidth }}
+            {...props} 
+          />
         },
         em({node, children, ...props}: any) {
           return <em className="italic" {...props}>{children}</em>
