@@ -992,7 +992,9 @@ const Schedule: React.FC<ScheduleProps> = ({
           {/* Navigation Buttons */}
           {showAnalytics && !showGraphs && (
             <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
-              <button
+            
+            {/* commented out until we setup AAMC integration */}
+              {/* <button
                // onClick={() => router.push('/integrations')}
                 className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
               >
@@ -1011,7 +1013,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                     d="M9 5l7 7-7 7"
                   />
                 </svg>
-              </button>
+              </button> */}
               <button
                 onClick={handleToggleView}
                 className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"

@@ -195,7 +195,7 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false }) => {
         <h2 className="text-xl font-semi-bold text-[--theme-text-color] drop-shadow-lg">
           Question {currentQuestionIndex + 1}
         </h2>
-        <span className="text-sm text-white drop-shadow-lg">
+        <span className="text-sm text-[--theme-text-color] drop-shadow-lg">
           {currentQuestionIndex + 1} of {questions.length}
         </span>
       </div>
