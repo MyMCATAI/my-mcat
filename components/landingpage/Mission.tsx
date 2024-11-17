@@ -171,10 +171,10 @@ const MethodologyAndTestimonials = () => {
                 Our system functions like this:
               </p>
               <ul className="list-disc list-inside text-3xl space-y-4">
-                <li className="text-green-400">Take a practice test to assess your knowledge</li>
-                <li className="text-green-400">Assigns targeted content that you need</li>
-                <li className="text-green-400">Provides focused practice until mastery</li>
-                <li className="text-green-400">Reassess with more practice tests and repeat</li>
+                <li className="text-green-400">Take a diagnostic test.</li>
+                <li className="text-green-400">Assign targeted content.</li>
+                <li className="text-green-400">Provide focused practice.</li>
+                <li className="text-green-400">Take tests &amp; repeat cycle.</li>
               </ul>
             </div>
 
