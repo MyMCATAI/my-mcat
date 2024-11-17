@@ -42,7 +42,7 @@ import Tutorial from "./Tutorial";
 import { Checkbox } from "@/components/ui/checkbox"; // Add this import
 import Statistics from "@/components/Statistics";
 import DonutChart from "./DonutChart"; // Add this import
-import { FaFire } from "react-icons/fa";
+import { FaFire } from "react-icons/fa"
 
 ChartJS.register(
   CategoryScale,
