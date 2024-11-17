@@ -1,15 +1,57 @@
 ---
-title: 'Psychological Science Behind MyMCAT'
-date: '2024-01-01'
-description: 'Description of first post'
-author: 'Your Name'
+title: 'Optimizing Student Scores on the Medical College Admissions Test'
+description: 'Understanding the cognitive science and learning principles that power MyMCAT'
 ---
+## Preface
 
-# Main Title
+MyMCAT, developed by Studyverse, represents an innovative approach to MCAT preparation through intelligent tutoring software (ITS) architecture. By gamifying the study process, the platform creates a personalized and adaptive learning experience. This analysis explores the psychological foundations underlying MyMCAT's design, which implements a cyclical process of diagnostic testing, adaptive scheduling, content delivery, and targeted practice to optimize student learning outcomes and enhance knowledge retention.
 
-This is your blog post content. You can use **markdown** formatting.
+## Traditional Methods
 
-## Subheading
+The Medical College Admission Test (MCAT) serves as a critical gateway to medical school, evaluating both foundational knowledge and critical thinking skills across four comprehensive sections. While students frequently rely on community-sourced study strategies from online forums and tutors, these approaches often yield inconsistent and sometimes contradictory advice. More concerning is that these commonly accepted study methods frequently conflict with evidence-based learning principles established in educational research. The typical MCAT preparation approach follows this general sequence:
 
-- List item 1
-- List item 2 
+- Initial Content Review (2 months)
+  - Purchase and study comprehensive book sets (Kaplan/TPR)
+- Practice Application
+  - Utilize question banks (e.g., UWorld)
+- Ongoing Review
+  - Maintain spaced repetition through flashcard systems
+- Final Preparation (1 month)
+  - Complete AAMC Full-Length (FL) practice tests
+
+This conventional methodology, while widespread, often proves time-consuming, expensive, and inefficient. According to Brown et al. (2014), effective learning should incorporate three key elements: retrieval practice, spaced repetition, and varied learning approaches. Therefore, the typical sequence fails to account for these factors and often can seem very passive. For example, students read the books but fail to practice them so they forget what they read. Students go through flashcards, again and again, but soon memorize the cards rather than authentically retrieve the content. Students go through practice problems but lack a content basis to truly "test" themselves appropriately. And all of this is capped off by being extraordinarily boring: studying for this test, therefore, is often considered a grueling and miserable experience according to a semantic analysis of r/MCAT. 
+
+## MyMCAT's Philosophy As An ITS
+
+An ITS is described as a computer-based system designed to provide personalized instruction and feedback, simulating the role of a human tutor. One of the key features is the creation of a comprehensive, real-time representation of the learner's knowledge, skills, and misconceptions known as a knowledge profile. The goal of the student's knowledge profile is to predict the student's needs, tailor the instructional content, and address specific weaknesses. It is a key element in personalizing the learning experience.
+
+The MCAT is divided into 30 content categories from 1A to 10A. We've further stratified these content categories (KCs) into 101 concept categories (CCs) and those CCs down into topics, creating a granular vectorization of all concepts on the MCAT.
+
+Within the MyMCAT philosophy, we centralize the testing effect. Rather than having a content period, a practice period, and a testing period, we use tests to constantly reassess the student and update their knowledge profile; along with machine learning algorithms that help identify weaknesses to fill. Here's how it works for us:
+
+1. Students take a diagnostic test.
+2. We identify weaknesses in KCs and CCs.
+3. Assign content for those KCs and CCs.
+4. Quiz the student and update their knowledge profile.
+5. Re-test the student yet again.
+
+This cyclic process involves content like videos (Khan Academy, AK Lectures, Chad's Prep) as well as readings (LibreText, OpenStax) that allow students to experience varied content. Rather than flashcards by themselves, we actually have a game called Anki Clinic that presents topics as flashcards, multiple choice questions, or even patient-based questions. This aligns with the multi-modal model of learning being effective, as seen in Alomar's study in 2022 that showed students undergoing multi-modal learning scored higher on OSCE exams than a control group. Students benefit from the testing effect as it requires them to invest substantial mental effort in recalling material. MyMCAT receives more and more accurate information on a student as they go through the cycles of studying. However, one of the biggest issues that exists for modern ITSes, and teaching in general, is lack of student engagement. Recently, innovations (primarily in the mobile gaming industry) has brought great insights into keeping people engaged with learning through gamification.
+
+## Gamification
+
+Gamification—the use of game design elements in non-game contexts—has been successfully employed across various sectors, including education, healthcare, marketing, workplace productivity, and environmental initiatives. The approach has shown a lot of promise in enhancing user engagement and motivation. However, our take on gamifying educational software pushes these boundaries further than what's typically seen
+
+We've developed a coin-based reward system based on a fixed ratio schedule, a concept borrowed from behavioral psychology and popularized in game design (Hamari et al., 2014). Students earn coins for completing daily CARS practice or sticking to their assigned tasks, providing a consistent positive reinforcement loop. The flip side of the system introduces a mild penalty for inconsistency: students lose coins if they skip days, creating a response cost that subtly discourages undesirable behaviors.
+
+The coin system also supports our monetization strategy. Students can earn coins through studying or opt to purchase additional coins, tapping into the same microtransaction mechanics common in the gaming industry. While this may seem unconventional for an educational product, the underlying idea is to increase user investment and make the study experience more dynamic and interactive.
+
+One of our most "ballsy" innovations is the comprehensive transformation of traditional spaced repetition tools like Anki. While retaining the core principles of spaced repetition, we've reimagined the experience by introducing a clinic-themed environment where students engage with flashcard questions to earn or lose coins based on their performance. This approach not only gamifies the learning process but also leverages the testing effect, enhancing long-term retention through active recall. By integrating these elements, we aim to create a more immersive and motivating study experience that encourages consistent engagement and reinforces knowledge acquisition.
+
+## Preliminary Results
+Over the past two years, we have implemented this system with 25 students from various institutions, utilizing a Google Sheet for tracking which you can access and use for free [here](https://docs.google.com/spreadsheets/d/1UT2BEbeON-6henio23oLeKXvMGfQPvrjPIISPRtm6zc/edit?gid=1459696965#gid=1459696965). The results have been promising, with an average MCAT score increase of 14.3 points, an average MCAT score of 513, and some students achieved improvements exceeding 30 points. Notably, every participant experienced a score enhancement using this methodology.
+Despite these encouraging outcomes, certain challenges have emerged:
+- Underperformance on the Actual MCAT: Some students did not perform as well on the official exam as anticipated.
+- Declining Motivation: A subset of students exhibited reduced engagement over time.
+
+To address these issues, we have enhanced our weakness identification algorithms to provide more precise assessments. Additionally, we have developed an integrated email and coin-based reward system to incentivize sustained participation and motivation.
+Over the next few months, as we gear up for expansion into medical education, we will be testing and iterating our platform to create the greatest study resource, the first ITS, and the only MCAT software to enable students to crush the test and deliver to their fullest potential.
