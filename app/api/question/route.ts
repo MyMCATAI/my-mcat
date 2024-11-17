@@ -43,8 +43,13 @@ export async function GET(req: Request) {
         userId,
         page: parseInt(searchParams.get('page') || '1'),
         pageSize: parseInt(searchParams.get('pageSize') || '10'),
+        types: searchParams.getAll('types')
+          .map(type => type.trim())
+          .filter(type => type.length > 0) // Remove any empty strings
+          || [],
       });
 
+      console.log("result", result)
       return NextResponse.json(result);
     }
 

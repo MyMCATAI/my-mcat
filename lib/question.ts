@@ -385,17 +385,24 @@ export const getQuestionsSimple = async (params: {
   userId: string;
   page?: number;
   pageSize?: number;
+  types?: string[];
 }) => {
   const { 
     contentCategory, 
     conceptCategory, 
     subjectCategory,
+    types,
     page = 1,
     pageSize = 10
   } = params;
 
   console.log("simple questions query")
   const where: any = {
+    ...(types?.length && { 
+      types: {
+        in: types
+      }
+    }),
     category: {
       ...(contentCategory?.length && { 
         contentCategory: { in: contentCategory } 
@@ -417,21 +424,23 @@ export const getQuestionsSimple = async (params: {
       include: {
         category: true,
       },
+      orderBy: {
+        // Randomize the order of questions
+        id: 'asc'
+      }
     });
+
+    // Shuffle the questions array to add randomness
+    for (let i = questions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [questions[i], questions[j]] = [questions[j], questions[i]];
+    }
 
     const totalQuestions = await prismadb.question.count({ where });
     const totalPages = Math.ceil(totalQuestions / pageSize);
 
     return {
-      questions: questions.map(q => ({
-        id: q.id,
-        questionContent: q.questionContent,
-        questionOptions: q.questionOptions.split('|'),
-        questionAnswerNotes: q.questionAnswerNotes,
-        context: q.context,
-        difficulty: q.difficulty,
-        category: q.category
-      })),
+      questions,
       totalPages,
       currentPage: page,
     };

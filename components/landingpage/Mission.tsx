@@ -140,17 +140,17 @@ const MethodologyAndTestimonials = () => {
                 <p 
                   className="text-white text-3xl leading-relaxed mb-8"
                 >
-                  Studying for the MCAT, and studying as a whole, is <span className="text-green-400 font-semibold">a cyclic process.</span>
+                  {"Studying for the MCAT, and studying as a whole, is "}<span className="text-green-400 font-semibold">{"a cyclic process."}</span>
                 </p>
                 <p 
                   className="text-white text-3xl leading-relaxed mb-8"
                 >
-                  A common mistake is having a &quot;content review&quot; phase followed by a &quot;practice&quot; phase. This linear approach is ineffective.
+                  {"A common mistake is having a \"content review\" phase followed by a \"practice\" phase. This linear approach is ineffective."}
                 </p>
                 <p 
                   className="text-white text-3xl leading-relaxed"
                 >
-                  Our methodology follows a proven cycle, modeled by the diagram to the right.
+                  {"Our methodology follows a proven cycle, modeled by the diagram to the right."}
                 </p>
               </div>
               <div
