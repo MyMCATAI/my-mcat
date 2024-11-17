@@ -20,7 +20,8 @@ const publicRoutes = [
   "/game-components/(.*)",
   "/icons/(.*)",
   "/landingpage/(.*)",
-  "/blog(.*)"
+  "/blog(.*)",
+  "/Wallpaperwire.jpg",
 ];
 
 const isPublicRoute = createRouteMatcher(publicRoutes);
