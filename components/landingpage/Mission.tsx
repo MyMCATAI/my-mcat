@@ -128,27 +128,27 @@ const MethodologyAndTestimonials = () => {
           zIndex: 2
         }}
       >
-        <div className="container mx-auto px-4 max-w-7xl">
-          <div className="bg-[#021629] rounded-2xl p-8 mb-12 shadow-lg">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="bg-[#021629] rounded-3xl p-6 mb-6 shadow-lg">
             <h2 
-              className="text-4xl font-bold text-white text-center mb-12 font-krungthep"
+              className="text-4xl font-bold text-white text-center mb-6 font-krungthep"
             >
               Most People Study Wrong.
             </h2>
-            <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
+            <div className="grid md:grid-cols-2 gap-8 items-center mb-4">
               <div>
                 <p 
-                  className="text-white text-3xl leading-relaxed mb-8"
+                  className="text-white text-2xl leading-relaxed mb-4"
                 >
                   {"Studying for the MCAT, and studying as a whole, is "}<span className="text-green-400 font-semibold">{"a cyclic process."}</span>
                 </p>
                 <p 
-                  className="text-white text-3xl leading-relaxed mb-8"
+                  className="text-white text-2xl leading-relaxed mb-4"
                 >
                   {"A common mistake is having a \"content review\" phase followed by a \"practice\" phase. This linear approach is ineffective."}
                 </p>
                 <p 
-                  className="text-white text-3xl leading-relaxed"
+                  className="text-white text-2xl leading-relaxed"
                 >
                   {"Our methodology follows a proven cycle, modeled by the diagram to the right."}
                 </p>
@@ -159,18 +159,18 @@ const MethodologyAndTestimonials = () => {
                 <Image 
                   src="/landingpage/cyclehowtostudy.png" 
                   alt="Cycle How to Study" 
-                  width={600} 
-                  height={400} 
+                  width={400} 
+                  height={300} 
                   className="rounded-2xl shadow-lg transform hover:scale-105 transition-transform duration-300"
                 />
               </div>
             </div>
             
-            <div className="bg-[#091f33] rounded-2xl p-8 mb-12">
-              <p className="text-white text-3xl leading-relaxed mb-4">
+            <div className="bg-[#091f33] rounded-2xl p-6 mb-6">
+              <p className="text-white text-2xl leading-relaxed mb-4">
                 Our system functions like this:
               </p>
-              <ul className="list-disc list-inside text-3xl space-y-4">
+              <ul className="list-disc list-inside text-2xl space-y-4">
                 <li className="text-green-400">Take a diagnostic test.</li>
                 <li className="text-green-400">Assign targeted content.</li>
                 <li className="text-green-400">Provide focused practice.</li>

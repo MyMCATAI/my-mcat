@@ -4,7 +4,7 @@ import { Metadata } from 'next'
 // This would normally come from your database/CMS
 const blogPosts = [
   { id: 1, title: 'Optimizing Student Scores on the Medical College Admissions Test', slug: 'first-post', description: 'The scientific basis for MyMCAT.' },
-  { id: 2, title: 'Resource List for the MCAT', slug: 'second-post', description: 'Useful resources for the MCAT.' },
+  { id: 2, title: 'Tier List for the MCAT', slug: 'second-post', description: 'Useful resources for the MCAT.' },
 ]
 
 // Add metadata
@@ -77,6 +77,13 @@ export default function BlogLayout({
                   ))}
                 </ul>
               </nav>
+              
+              <Link 
+                href="/"
+                className="mt-8 block w-full text-center py-2 px-4 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200"
+              >
+                Return Home
+              </Link>
             </div>
           </aside>
         </div>
