@@ -22,8 +22,8 @@ interface FlashcardsDialogProps {
   onOpenChange: (open: boolean) => void;
   roomId: string;
   buttonContent: React.ReactNode;
-  activeRooms: Set<string>;  // Add this
-  setActiveRooms: React.Dispatch<React.SetStateAction<Set<string>>>;  // Add this
+  activeRooms: Set<string>; 
+  setActiveRooms: React.Dispatch<React.SetStateAction<Set<string>>>; 
   currentUserTestId: string | null;
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -34,8 +34,8 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
   onOpenChange,
   roomId,
   buttonContent,
-  activeRooms,  // Add this
-  setActiveRooms ,  // Add this
+  activeRooms,  
+  setActiveRooms , 
   currentUserTestId,
   isLoading,
   setIsLoading,
@@ -46,7 +46,6 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
   const [streak, setStreak] = useState(0);
   const [encouragement, setEncouragement] = useState('');
   const [showInterruption, setShowInterruption] = useState(false);
-  const [typedText, setTypedText] = useState("");
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 

@@ -396,13 +396,7 @@ export const getQuestionsSimple = async (params: {
     pageSize = 10
   } = params;
 
-  console.log("simple questions query")
   const where: any = {
-    ...(types?.length && { 
-      types: {
-        in: types
-      }
-    }),
     category: {
       ...(contentCategory?.length && { 
         contentCategory: { in: contentCategory } 
@@ -414,6 +408,11 @@ export const getQuestionsSimple = async (params: {
         subjectCategory: { in: subjectCategory } 
       }),
     },
+    ...(types?.length && { 
+      types: {
+        in: types.flatMap(type => type.split(','))
+      }
+    }),
   };
 
   try {
@@ -425,12 +424,11 @@ export const getQuestionsSimple = async (params: {
         category: true,
       },
       orderBy: {
-        // Randomize the order of questions
         id: 'asc'
       }
     });
 
-    // Shuffle the questions array to add randomness
+    // Shuffle the questions array
     for (let i = questions.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [questions[i], questions[j]] = [questions[j], questions[i]];
@@ -445,7 +443,6 @@ export const getQuestionsSimple = async (params: {
       currentPage: page,
     };
   } catch (error) {
-    console.error('Error in getQuestionsSimple:', error);
     throw error;
   }
 };

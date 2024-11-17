@@ -71,7 +71,7 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
         </div>
         <div className="flex items-center h-full">
           <div className="flex items-center space-x-4 mr-4">
-            <UserButton afterSignOutUrl="/" />
+            <UserButton />
           </div>
           <span
             ref={ballerSectionRef}

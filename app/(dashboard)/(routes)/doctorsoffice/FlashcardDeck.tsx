@@ -10,15 +10,17 @@ import { roomToSubjectMap } from './OfficeContainer';
 import { roomToContentMap } from './OfficeContainer';
 
 interface Flashcard {
+  questionType: string;
   id: string;
   questionContent: string;
   questionOptions: string[];
-  categoryId: string;  // Add this line
+  categoryId: string;
   category: {
     subjectCategory: string;
     conceptCategory: string;
   };
   userResponses: Array<{ isCorrect: boolean; timeSpent: number }>;
+  questionAnswerNotes?: string;
 }
 
 interface FlashcardDeckProps {
@@ -48,6 +50,21 @@ export const cleanQuestion = (text: string): string => {
   return finalAnswer;
 };
 
+// Add the interface for our extended array type
+interface OptionsArray extends Array<string> {
+  correctIndex?: number;
+}
+
+// Add the shuffle function at the top of the file with other utility functions
+const shuffleArray = (array: string[]): OptionsArray => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray as OptionsArray;
+};
+
 const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   roomId, 
   onWrongAnswer, 
@@ -63,8 +80,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [cardStartTime, setCardStartTime] = useState<number>(Date.now());
   const [isRevealed, setIsRevealed] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [clickTimeout, setClickTimeout] = useState<NodeJS.Timeout | null>(null);
   const correctSound = useRef<HTMLAudioElement | null>(null);
   const whooshSound = useRef<HTMLAudioElement | null>(null);
@@ -73,6 +88,8 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   const flashcardsRef = useRef<Flashcard[]>([]);
   const currentCardIndexRef = useRef<number>(0);
   
+  const [shuffledOptions, setShuffledOptions] = useState<{ options: string[], correctIndex: number }>({ options: [], correctIndex: -1 });
+
   useEffect(() => {
     correctSound.current = new Audio('/correct.mp3');
     whooshSound.current = new Audio('/whoosh.mp3');
@@ -104,7 +121,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   const fetchFlashcards = async () => {
     setIsLoading(true);
     try {
-      // Your existing flashcard fetching code
       const subjects = Array.isArray(roomToSubjectMap[roomId]) 
         ? roomToSubjectMap[roomId] 
         : roomToSubjectMap[roomId] || [];
@@ -121,37 +137,41 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
 
       const pageNumber = 1;
       const pageSize = 10;
-      const response = await fetch(`/api/question?${subjectParams}&${contentParams}&types=flashcard&page=${pageNumber}&pageSize=${pageSize}`);
+      const response = await fetch(`/api/question?${subjectParams}&${contentParams}&types=flashcard,normal&page=${pageNumber}&pageSize=${pageSize}`);
       
       const data = await response.json();
+      console.log("data",data)
       setCardStartTime(Date.now());
 
-      const transformedFlashcards = data.questions.map((question: FlattenedQuestionResponse) => ({
-        id: question.id,
-        questionContent: question.questionContent,
-        questionOptions: question.questionOptions || '',
-        categoryId: question.categoryId,  // Add this line
-        category: {
-          subjectCategory: question.category_subjectCategory,
-          conceptCategory: question.category_conceptCategory,
-        },
-        difficulty: question.difficulty || 1,
-        tags: question.tags || [],
-      }));
+      const transformedFlashcards = data.questions.map((question: FlattenedQuestionResponse) => {
+        let options: string[] = [];
+        if (question.types === 'normal' && question.questionOptions) {
+          try {
+            options = JSON.parse(question.questionOptions);
+          } catch (e) {
+            console.error('Error parsing question options:', e);
+            options = [];
+          }
+        }
 
-      console.log('Flashcards:', transformedFlashcards);
+        return {
+          id: question.id,
+          questionContent: question.questionContent,
+          questionOptions: options,
+          questionType: question.types || 'normal',
+          categoryId: question.categoryId,
+          category: {
+            subjectCategory: question.category_subjectCategory,
+            conceptCategory: question.category_conceptCategory,
+          },
+          difficulty: question.difficulty || 1,
+          tags: question.tags || [],
+          questionAnswerNotes: question.questionAnswerNotes,
+        };
+      });
 
       setFlashcards(transformedFlashcards);
       setIsLoading(false);    
-      // Add this to see what's happening next
-      setTimeout(() => {
-        console.log('Current state:', {
-          isLoading: false,
-          flashcardsLength: transformedFlashcards.length,
-          currentCardIndex,
-          isRevealed
-        });
-      }, 0);
     } catch (error) {
       console.error('Error fetching flashcards:', error);
       setIsLoading(false);
@@ -193,6 +213,13 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     currentCardIndexRef.current = currentCardIndex;
   }, [currentCardIndex]);
 
+  useEffect(() => {
+    if (flashcards[currentCardIndex]?.questionType === 'normal' && 
+        flashcards[currentCardIndex]?.questionOptions?.length > 0) {
+      setShuffledOptions(getShuffledOptions(flashcards[currentCardIndex].questionOptions));
+    }
+  }, [currentCardIndex, flashcards]);
+
   const getQuestionContent = () => {
     if (flashcards.length === 0 || currentCardIndex >= flashcards.length) {
       return '';
@@ -218,7 +245,17 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     if (flashcards.length === 0 || currentCardIndex >= flashcards.length) {
       return '';
     }
-    return cleanAnswer(flashcards[currentCardIndex].questionContent);
+    
+    const currentCard = flashcards[currentCardIndex];
+    
+    // For normal (multiple choice) questions
+    if (currentCard.questionType === 'normal' && currentCard.questionOptions?.length > 0) {
+      const correctOption = currentCard.questionOptions[0];
+      return `Correct Answer: ${correctOption}`;
+    }
+    
+    // For flashcard questions
+    return cleanAnswer(currentCard.questionContent);
   };
 
   const handleUserResponse = useCallback(async (action: 'correct' | 'incorrect' | 'weakness' | 'strength') => {
@@ -382,6 +419,16 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     };
   }, [clickTimeout]);
 
+  // Add this new function to handle option shuffling at render time
+  const getShuffledOptions = (options: string[]) => {
+    const shuffledOptions = shuffleArray([...options]);
+    const correctAnswer = options[0]; // First option is always correct
+    return {
+      options: shuffledOptions,
+      correctIndex: shuffledOptions.indexOf(correctAnswer)
+    };
+  };
+
   return (
     <div className="flex flex-col items-center justify-center w-full h-full">
       {isLoading && flashcards.length === 0 ? (
@@ -417,6 +464,25 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
                     content={getQuestionContent()} 
                     onLinkClick={handleLinkClick} 
                   />
+                  
+                  {/* Add options display for normal questions */}
+                  {flashcards[currentCardIndex]?.questionType === 'normal' && 
+                   flashcards[currentCardIndex]?.questionOptions?.length > 0 && (
+                    <div className="w-full mt-4 space-y-2">
+                      {shuffledOptions.options.map((option: string, index: number) => (
+                        <div 
+                          key={index}
+                          className={`p-3 rounded-lg border ${
+                            isRevealed && index === shuffledOptions.correctIndex
+                              ? 'border-green-500 bg-green-50'
+                              : 'border-gray-200'
+                          }`}
+                        >
+                          {option}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -427,10 +493,31 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
               <div className={`w-full transition-opacity duration-300 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
                 <div className="w-full overflow-y-auto flex flex-col justify-center items-center">
                   {isRevealed && (
-                    <ContentRenderer 
-                      content={getAnswerContent()} 
-                      onLinkClick={handleLinkClick} 
-                    />
+                    <>
+                      <div className="text-lg font-semibold mb-2 text-green-600">
+                        {flashcards[currentCardIndex]?.questionType === 'normal' ? 'Correct Answer:' : 'Answer:'}
+                      </div>
+                      <ContentRenderer 
+                        content={getAnswerContent()} 
+                        onLinkClick={handleLinkClick} 
+                      />
+                      {flashcards[currentCardIndex]?.questionType === 'normal' && 
+                       flashcards[currentCardIndex]?.questionOptions?.length > 0 && (
+                        <div className="mt-4 text-gray-600">
+                          <p className="text-sm">Explanation:</p>
+                          <p>
+                            {(() => {
+                              try {
+                                const notes = JSON.parse(flashcards[currentCardIndex].questionAnswerNotes || '[]');
+                                return Array.isArray(notes) && notes.length > 0 ? notes[0] : 'No additional explanation available.';
+                              } catch (e) {
+                                return 'No additional explanation available.';
+                              }
+                            })()}
+                          </p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
