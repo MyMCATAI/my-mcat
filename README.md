@@ -58,14 +58,14 @@ npm i @prisma/client
 npx prisma init
 ```
 
-pushing changes
+pushing changes (talk to josh before trying to push anything)
 
 ```
 npx prisma db push
 npx prisma generate
 ```
 
-See data
+See data (this is mostly safe, and will allow you to view and update records one at a time if you like)
 
 ```npx prisma studio```
 

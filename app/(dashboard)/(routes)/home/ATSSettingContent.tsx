@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RefreshCw } from "lucide-react";
 import { Category } from "@/types";
 import { useTheme } from "@/contexts/ThemeContext";
 // import { StrikethroughCheckbox } from "@/components/ui/StrikethroughCheckbox";
@@ -38,19 +31,20 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
 }) => {
   const { theme } = useTheme();
   const [activeOption, setActiveOption] = useState<string | null>(null);
-  const [contentPreferences, setContentPreferences] = useState({
-    videos: true,
-    readings: true,
-    quizzes: true,
-  });
-  const [quizDifficulty, setQuizDifficulty] = useState<string>("medium");
-  const [isSaving, setIsSaving] = useState<boolean>(false);
+  // const [contentPreferences, setContentPreferences] = useState({
+  //   videos: true,
+  //   readings: true,
+  //   quizzes: true,
+  // });
+  // // const [quizDifficulty, setQuizDifficulty] = useState<string>("medium");
+  // const [isSaving, setIsSaving] = useState<boolean>(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subjectFocus, setSubjectFocus] = useState({
     Biochemistry: false,
     Biology: false,
-    GenChem: false,
-    OChem: false,
+    // GenChem: false,
+    // OChem: false,
+    // TODO ^ add these back in with right filtering?
     Physics: false,
     Psychology: false,
     Sociology: false,
@@ -118,7 +112,6 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
       const url = new URL("/api/category-search", window.location.origin);
       url.searchParams.append("page", page.toString());
       url.searchParams.append("pageSize", "7");
-      url.searchParams.append("useKnowledgeProfiles", "true");
 
       if (searchQuery) {
         url.searchParams.append("searchQuery", searchQuery);

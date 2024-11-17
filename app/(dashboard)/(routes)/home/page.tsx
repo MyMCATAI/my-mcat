@@ -36,8 +36,6 @@ const Page = () => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isPro, setIsPro] = useState(false);
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const scrollPosition = 7.125;
   const [showScorePopup, setShowScorePopup] = useState(false);
   const [testScore, setTestScore] = useState(0);
