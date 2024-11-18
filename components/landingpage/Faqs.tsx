@@ -20,7 +20,7 @@ const Faqs = () => {
         { heading: "What if I do not like your app and think it's mediocre product?", text: `No one on our team is allowed to have high self esteem. Therefore, we welcome ANY and ALL criticism and will pay you for the privilege. `, icon: icon },
         { heading: "How does Kalypso differ from ChatGPT?", text: 'Kalypso is trained on the MCAT with dozens of textbooks and fine-tuned over hundreds of hours. He is trained on the latest in ITS research and programmed to be interesting and engaging. Who doesn’t love cats?', icon: icon },
         { heading: "How can I trust that your content is good?", text: `Prynce has written content for multiple test prep companies. We actually listen to feedback and modify our content to make it as close to AAMC-level as possible.`, icon: icon },
-        { heading: "Will you ever be free?", text: `Hell nah.`, icon: icon },
+        { heading: "I don't understand your financial model.", text: `It's a coin system. You buy coins to access features. Overtime, you can earn coins and access more features. However, if you slack off, you lose coins. We force you to be accountable!`, icon: icon },
         { heading: "What the heck is Studyverse?", text: `MyMCAT is a product offered by Studyverse. You are pilgrims for our future ambitions: a metaverse for studying for ALL students — from MCAT students to SAT students to college kids preparing for exams. Yes, we are that crazy.`, icon: icon },
     ];
 
