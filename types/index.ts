@@ -167,3 +167,12 @@ export interface CalendarActivity {
   status: string;
   contentId: string | null;
 }
+
+export interface MedicalSchool {
+  name: string;
+  state: string;
+  degreeType: string;
+  averageGPA: string;
+  averageMCAT: string;
+  description: string;
+}

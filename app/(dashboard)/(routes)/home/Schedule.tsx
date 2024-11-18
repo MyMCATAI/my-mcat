@@ -43,6 +43,7 @@ import { Checkbox } from "@/components/ui/checkbox"; // Add this import
 import Statistics from "@/components/Statistics";
 import DonutChart from "./DonutChart"; // Add this import
 import { FaFire } from "react-icons/fa"
+import { PurchaseButton } from "@/components/purchase-button";
 
 ChartJS.register(
   CategoryScale,
@@ -808,17 +809,19 @@ const Schedule: React.FC<ScheduleProps> = ({
         {/* Stats Box - Vertical stack */}
         {showAnalytics && !showGraphs && (
           <div className="absolute top-6 text-[--theme-text-color] left-8 flex flex-col bg-transparent rounded-lg p-2 z-10 space-y-3">
-            <div className="flex items-center min-w-[6rem]">
-              <Image
-                src="/game-components/PixelCupcake.png"
-                alt="Coins"
-                width={48}
-                height={48}
-                className="mr-4"
-              />
-              <span className="font-bold truncate text-2xl">{userScore}</span>
-              <span className="ml-1 text-2xl">coins</span>
-            </div>
+            <PurchaseButton tooltipText="Click to purchase more coins!">
+              <div className="flex items-center min-w-[6rem]">
+                <Image
+                  src="/game-components/PixelCupcake.png"
+                  alt="Coins"
+                  width={48}
+                  height={48}
+                  className="mr-4"
+                />
+                <span className="font-bold truncate text-2xl">{userScore}</span>
+                <span className="ml-1 text-2xl">coins</span>
+              </div>
+            </PurchaseButton>
 
             <div className="flex items-center">
               <FaFire className="text-[--theme-text-color] ml-1 mr-2 text-5xl" />
