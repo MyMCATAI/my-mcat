@@ -39,9 +39,10 @@
 }
 
 .rbc-btn-group button {
-  background-color: #3c1361;
-  color: white;
+  background-color: color-mix(in srgb, var(--theme-hover-color) 20%, transparent);
+  color: var(--theme-text-color);
   border: none;
+  padding: 0.375rem 0.5rem; /* 6px 8px in rem */
   padding: 6px 8px; /* Reduce padding */
   margin: 0 1px; /* Reduce margin */
   cursor: pointer;
@@ -51,11 +52,13 @@
 }
 
 .rbc-btn-group button:hover {
-  background-color: #5c2085;
+  background-color: var(--theme-hover-color);
+  color: var(--theme-hover-text);
 }
 
 .rbc-btn-group button.rbc-active {
-  background-color: #ff6b6b;
+  background-color: var(--theme-hover-color);
+  color: var(--theme-hover-text);
 }
 
 /* Ensure consistent width for navigation buttons */
@@ -92,7 +95,8 @@
 
 /* Highlight today's date */
 .rbc-today {
-  background-color: #ff6b6b !important;
+  background-color: var(--theme-hover-color) !important;
+  opacity: 0.3 !important;
 }
 
 /* Ensure text is readable on the highlighted background */
@@ -113,4 +117,40 @@
 
 .calendar-controls button {
   margin-top: 5px;
+}
+
+/* Style for events in the calendar */
+.rbc-event {
+  background-color: var(--theme-calendar-color) !important;
+  border: none !important;
+}
+
+.rbc-event-content {
+  color: black !important; /* Ensure text is readable on the colored background */
+  font-weight: 500;
+}
+
+/* Style for selected events */
+.rbc-selected {
+  background-color: var(--theme-calendar-color) !important;
+  opacity: 0.8;
+}
+
+/* Style for dates from other months */
+.rbc-off-range {
+  color: var(--theme-hover-color) !important;
+  opacity: 0.4 !important;
+}
+
+.rbc-off-range-bg {
+  background-color: var(--theme-hover-color) !important;
+  opacity: 0.2 !important;
+}
+
+/* Remove or override the white background for selected buttons */
+.rbc-btn-group button:active,
+.rbc-btn-group button:focus {
+  background-color: var(--theme-hover-color);
+  color: var(--theme-hover-text);
+  outline: none;
 }

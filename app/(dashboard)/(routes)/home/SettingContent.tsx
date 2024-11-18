@@ -23,9 +23,9 @@ interface Option {
 }
 
 const options: Option[] = [
-  { id: "option1", label: "When is your test?" },
-  { id: "option2", label: "When can you take full lengths?" },
-  { id: "option3", label: "How many hours each day? (Recommend at least 4 hours for each study day)" },
+  { id: "option1", label: "How many hours can you study each day? (Recommend at least 4 hours for each study day)" },
+  { id: "option2", label: "Which days do you have 8 hours for full-length exams?" },
+  { id: "option3", label: "When is your test?" },
   { id: "option4", label: "What resources do you want to use?" },
 ];
 
@@ -39,7 +39,40 @@ const days: string[] = [
   "Sunday",
 ];
 
-const resources: string[] = ["UWorld", "AAMC", "Kaplan Books", "3rd Party FLs"];
+const resources: string[] = ["UWorld", "AAMC", "3rd Party FLs"];
+
+const TEST_DATES = [
+  "January 10", 
+  "January 11", 
+  "January 16", 
+  "January 24", 
+  "March 8", 
+  "March 21", 
+  "April 4", 
+  "April 5", 
+  "April 25", 
+  "April 26", 
+  "May 3", 
+  "May 9", 
+  "May 10", 
+  "May 15", 
+  "May 23", 
+  "May 31", 
+  "June 13", 
+  "June 14", 
+  "June 27", 
+  "June 28", 
+  "July 12", 
+  "July 25", 
+  "August 1", 
+  "August 16", 
+  "August 22", 
+  "August 23", 
+  "September 4", 
+  "September 5", 
+  "September 12", 
+  "September 13"
+];
 
 interface SettingContentProps {
   onShowDiagnosticTest?: () => void;
@@ -60,7 +93,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
   const defaultDate = new Date();
   defaultDate.setMonth(defaultDate.getMonth() + 3);
   
-  const [activeOption, setActiveOption] = useState<string | null>(null);
+  const [activeOptions, setActiveOptions] = useState<string[]>([]);
   const [calendarValue, setCalendarValue] = useState<Value>(defaultDate);
   const [hoursPerDay, setHoursPerDay] = useState<Record<string, string>>(() => {
     // Initialize with 3 hours for each day
@@ -92,7 +125,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
     useState<number>(50);
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState(0);
-  const [isNotSureDate, setIsNotSureDate] = useState<boolean>(false);
+  const [isRecommending, setIsRecommending] = useState(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
   useEffect(() => {
@@ -124,7 +157,6 @@ const SettingContent: React.FC<SettingContentProps> = ({
           setSelectedResources({
             'UWorld': resources.hasUWorld,
             'AAMC': resources.hasAAMC,
-            'Kaplan Books': resources.hasKaplanBooks || false,
             '3rd Party FLs': resources.hasThirdPartyFLs || false,
           });
           
@@ -145,7 +177,11 @@ const SettingContent: React.FC<SettingContentProps> = ({
   };
 
   const handleOptionClick = (optionId: string) => {
-    setActiveOption(activeOption === optionId ? null : optionId);
+    setActiveOptions(prev => 
+      prev.includes(optionId)
+        ? prev.filter(id => id !== optionId)
+        : [...prev, optionId]
+    );
   };
 
   const formatDate = (date: Date | null): string => {
@@ -303,39 +339,80 @@ const SettingContent: React.FC<SettingContentProps> = ({
     setTooltipPosition(position);
   };
 
-  const renderOptionContent = () => {
-    switch (activeOption) {
+  const handleRecommendTestDate = () => {
+    const totalHoursPerWeek = Object.values(hoursPerDay)
+      .reduce((sum, hours) => sum + Number(hours), 0);
+
+    if (totalHoursPerWeek === 0) {
+      toast.error("Please set your study hours first");
+      return;
+    }
+
+    // Get today's date
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    
+    // Create dates for both current and next year
+    const possibleDates = TEST_DATES.flatMap(dateStr => [
+      new Date(`${dateStr}, ${currentYear}`),
+      new Date(`${dateStr}, ${currentYear + 1}`)
+    ]).filter(date => date > today);
+
+    if (possibleDates.length === 0) {
+      toast.error("No future test dates available. Please check back later.");
+      return;
+    }
+
+    // Calculate target weeks (aiming for ~250 hours)
+    const weeksNeeded = Math.ceil(250 / totalHoursPerWeek);
+    const targetDate = new Date();
+    targetDate.setDate(today.getDate() + (weeksNeeded * 7));
+
+    // Find the closest future date to our target
+    let closestDate = possibleDates[0];
+    let smallestDiff = Math.abs(targetDate.getTime() - closestDate.getTime());
+    
+    possibleDates.forEach(date => {
+      const diff = Math.abs(targetDate.getTime() - date.getTime());
+      if (diff < smallestDiff) {
+        smallestDiff = diff;
+        closestDate = date;
+      }
+    });
+
+    setCalendarValue(closestDate);
+    
+    const weeksBetween = Math.round((closestDate.getTime() - today.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    const totalHours = weeksBetween * totalHoursPerWeek;
+    
+    toast.success(
+      `Based on your ${totalHoursPerWeek} hours per week, ` +
+      `we recommend taking the test on ${formatDate(closestDate)}. ` +
+      `This gives you ${weeksBetween} weeks (approximately ${totalHours} total study hours)`
+    );
+  };
+
+  const renderOptionContent = (optionId: string) => {
+    switch (optionId) {
       case "option1":
         return (
-          <div className="flex flex-col items-center p-2 rounded-lg shadow-md">
-            {!isNotSureDate && (
-              <Calendar
-                onChange={setCalendarValue}
-                value={calendarValue}
-                className="text-black bg-white mb-2"
-                formatMonthYear={(locale, date) => {
-                  return date.toLocaleString('default', { month: 'long' });
-                }}
-              />
-            )}
-            <div className="flex items-center">
-              <Checkbox
-                id="notSureDate"
-                checked={isNotSureDate}
-                onCheckedChange={(checked) => {
-                  setIsNotSureDate(checked as boolean);
-                  if (checked) {
-                    setCalendarValue(null);
-                  }
-                }}
-              />
-              <label
-                htmlFor="notSureDate"
-                className="ml-2 text-[--theme-text-color]"
-              >
-                Not sure
-              </label>
-            </div>
+          <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-md">
+            {days.map((day) => (
+              <div key={day} className="flex items-center justify-between mb-2">
+                <span className="text-[--theme-text-color]">{day}</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="24"
+                  value={hoursPerDay[day] || "3"}
+                  onChange={(e) => {
+                    const value = Math.min(24, Math.max(0, Number(e.target.value)));
+                    setHoursPerDay({ ...hoursPerDay, [day]: value.toString() });
+                  }}
+                  className="w-16 p-1 border rounded text-[--theme-text-color] bg-[--theme-leaguecard-color]"
+                />
+              </div>
+            ))}
           </div>
         );
       case "option2":
@@ -360,23 +437,23 @@ const SettingContent: React.FC<SettingContentProps> = ({
         );
       case "option3":
         return (
-          <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-md">
-            {days.map((day) => (
-              <div key={day} className="flex items-center justify-between mb-2">
-                <span className="text-[--theme-text-color]">{day}</span>
-                <input
-                  type="number"
-                  min="0"
-                  max="24"
-                  value={hoursPerDay[day] || "3"}
-                  onChange={(e) => {
-                    const value = Math.min(24, Math.max(0, Number(e.target.value)));
-                    setHoursPerDay({ ...hoursPerDay, [day]: value.toString() });
-                  }}
-                  className="w-16 p-1 border rounded text-[--theme-text-color] bg-[--theme-leaguecard-color]"
-                />
-              </div>
-            ))}
+          <div className="flex flex-col items-center p-2 rounded-lg shadow-md">
+            <Calendar
+              onChange={setCalendarValue}
+              value={calendarValue}
+              className="text-black bg-white mb-2"
+              formatMonthYear={(locale, date) => {
+                return date.toLocaleString('default', { month: 'long' });
+              }}
+            />
+            <div className="flex items-center mt-4 w-full">
+              <Button
+                onClick={handleRecommendTestDate}
+                className="w-full text-[--theme-text-color] border-[--theme-border-color] bg-transparent border-2 hover:bg-[--theme-hover-color] py-2 px-4 rounded-lg transition duration-200"
+              >
+                Recommend me a test date
+              </Button>
+            </div>
           </div>
         );
       case "option4":
@@ -433,14 +510,14 @@ const SettingContent: React.FC<SettingContentProps> = ({
   };
 
   return (
-    <div className="bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg relative w-full max-w-md mx-auto h-[34rem]">
+    <div className="bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg absolute right-[2rem] w-[36rem] h-[36rem] -top-[2rem]">
       <div className="bg-[--theme-leaguecard-color] rounded-lg overflow-hidden h-full flex flex-col">
         <div className="p-4 space-y-4 flex-grow overflow-y-auto">
           {options.map((option) => (
             <div key={option.id} className="relative">
               <button
                 className={`w-full text-left p-3 rounded-lg transition-colors duration-200 ${
-                  activeOption === option.id
+                  activeOptions.includes(option.id)
                     ? "bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] font-mono"
                     : "bg-transparent text-[--theme-text-color] font-mono hover:bg-[--theme-doctorsoffice-accent]"
                 }`}
@@ -448,20 +525,16 @@ const SettingContent: React.FC<SettingContentProps> = ({
               >
                 <div className="flex justify-between items-center">
                   <span>{option.label}</span>
-                  {option.id === "option1" && (
+                  {option.id === "option3" && calendarValue instanceof Date && (
                     <span className="text-sm font-medium">
-                      {isNotSureDate
-                        ? "Not sure"
-                        : calendarValue instanceof Date
-                        ? formatDate(calendarValue)
-                        : ""}
+                      {formatDate(calendarValue)}
                     </span>
                   )}
                 </div>
               </button>
-              {activeOption === option.id && (
+              {activeOptions.includes(option.id) && (
                 <div className="mt-2 bg-[--theme-leaguecard-color] p-3 rounded-lg shadow-md">
-                  {renderOptionContent()}
+                  {renderOptionContent(option.id)}
                 </div>
               )}
             </div>

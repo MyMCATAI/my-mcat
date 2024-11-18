@@ -198,6 +198,7 @@ body.theme-sunsetCity * {
     --theme-adaptive-tutoring-color: #001226;
     --theme-adaptive-tutoring-boxShadow: 0 0 8px 2px rgba(0, 123, 255, 0.5);
     --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 4px rgba(0, 123, 255, 0.8);
+    --theme-calendar-color: #87f8a0; /* Bright cyber green to contrast with blue */
   }
 
 }
@@ -304,7 +305,7 @@ body.theme-sunsetCity * {
   --theme-gradient-endstreak: #b479ab;
   --theme-text-color: #4a0e37; /* Darker pink for better contrast */
   --theme-svg-color: #4a0e37; /* Matching text color */
-  --theme-hover-color: #b85475; /* Pale violet red */
+  --theme-hover-color: #c17891; /* Pale violet red */
   --theme-botchatbox-color: #dcdcdc; /* Transparent pale violet red */
   --theme-hover-text: #ffffff;
   --theme-border-color: #ff0080; /* Pale violet red */
@@ -318,6 +319,7 @@ body.theme-sunsetCity * {
   --theme-adaptive-tutoring-color: #faeef4;
   --theme-adaptive-tutoring-boxShadow: 0 0 5px 2px rgba(255, 0, 89, 0.5);
   --theme-adaptive-tutoring-boxShadow-hover: 0 0 10px 4px rgba(255, 0, 89, 0.8);
+  --theme-calendar-color: #df9ab4; /* Vibrant pink to contrast with soft pink */
 }
 
 /* Add theme-specific gradients */
@@ -352,6 +354,7 @@ body.theme-sunsetCity * {
   --theme-adaptive-tutoring-color: #001226;
   --theme-adaptive-tutoring-boxShadow: 0 0 10px 1px rgba(255, 99, 71, 0.5);
   --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 5px rgba(255, 99, 71, 0.8);
+  --theme-calendar-color: #ffeef6; /* Golden yellow to contrast with purple */
 }
 
 .theme-sunsetCity .gradientbg {
@@ -649,6 +652,7 @@ body {
   --theme-adaptive-tutoring-color: #f0f9fc;
   --theme-adaptive-tutoring-boxShadow: 0 0 8px 3px rgba(63, 194, 255, 0.5);
   --theme-adaptive-tutoring-boxShadow-hover: 0 0 11px 5px rgba(76, 181, 230, 0.8);
+  --theme-calendar-color: #B2E0D0; /* Warm orange to contrast with blue */
 }
 
 .theme-mykonosBlue .gradientbg {
