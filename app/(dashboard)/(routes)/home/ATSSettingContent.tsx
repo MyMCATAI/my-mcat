@@ -127,11 +127,12 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
       }
       const data = await response.json();
 
+      console.log("data",data)
       // Use totalPages directly from the API response
       setTotalPages(data.totalPages);
 
       // Preserve checked status when setting new categories
-      const newCategories = data.items.map((category: Category) => ({
+      const newCategories = data.categories.map((category: Category) => ({
         ...category,
         isChecked: checkedCategories.some(
           (checked) => checked.id === category.id
@@ -148,36 +149,6 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
 
   const handleOptionClick = (optionId: string) => {
     setActiveOption(activeOption === optionId ? null : optionId);
-  };
-
-  const randomizeCategories = async () => {
-    try {
-      setIsLoading(true);
-      const url = new URL("/api/category-search", window.location.origin);
-      url.searchParams.append("page", "1");
-      url.searchParams.append("pageSize", "7");
-      url.searchParams.append("useKnowledgeProfiles", "true");
-      url.searchParams.append("random", "true");
-
-      // const excludeSubjects = Object.entries(subjectFocus)
-      //   .filter(([_, isChecked]) => isChecked)
-      //   .map(([subject]) => subject);
-
-      // if (excludeSubjects.length > 0) {
-      //   url.searchParams.append("excludeSubjects", excludeSubjects.join(","));
-      // }
-
-      const response = await fetch(url.toString());
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      setCategories(data.items);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const handleDone = () => {

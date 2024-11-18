@@ -1,8 +1,10 @@
 import { Passage } from "@/types";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import ContentRenderer from "./ContentRenderer";
 import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import QuizSummary from './QuizSummary';
+import Timer, { TimerRef } from './Timer';
 
 export interface QuizQuestion {
   categoryId: string;
@@ -19,6 +21,7 @@ export interface QuizQuestion {
 interface QuizProps {
   category: string;
   shuffle?: boolean;
+  setChatbotContext?: (context: { contentTitle: string; context: string }) => void;
 }
 
 // Add interface for user response
@@ -39,7 +42,14 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return shuffled;
 };
 
-const Quiz: React.FC<QuizProps> = ({ category, shuffle = false }) => {
+interface AnswerSummary {
+  questionContent: string;
+  userAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+}
+
+const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContext }) => {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -48,13 +58,19 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false }) => {
   const [userResponses, setUserResponses] = useState<Record<string, QuestionResponse>>({});
   const [shuffledOptions, setShuffledOptions] = useState<Record<string, string[]>>({});
   const [currentUserTestId, setCurrentUserTestId] = useState<string | null>(null);
+  const [showSummary, setShowSummary] = useState(false);
+  const [answerSummaries, setAnswerSummaries] = useState<AnswerSummary[]>([]);
+  const [testStartTime] = useState<Date>(new Date());
+  const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] = useState(false);
+  const questionTimerRef = useRef<TimerRef>(null);
+  const totalTimerRef = useRef<TimerRef>(null);
 
   const fetchQuestions = useCallback(async () => {
     if (!category) return;
     
     try {
       setIsLoading(true);
-      const types = ["normal", "patient"];
+      const types = ["normal"];
       
       console.log("fetching questions")
       const response = await fetch(
@@ -173,6 +189,10 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false }) => {
       if (!response.ok) throw new Error('Failed to create user test');
       const data = await response.json();
       setCurrentUserTestId(data.id);
+      toast({
+        title: "Quiz Started",
+        variant: "default",
+      });
     } catch (err) {
       console.error('Error creating user test:', err);
       toast({
@@ -184,16 +204,15 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false }) => {
   };
 
   // Simplified handleSaveResponse
-  const handleSaveResponse = async (questionId: string, userAnswer: string) => {
+  const handleSaveResponse = async (questionId: string, userAnswer: string, timeSpent: number) => {
     const currentQuestion = questions[currentQuestionIndex];
     const correctAnswer = currentQuestion.questionOptions[0];
     const isCorrect = userAnswer === correctAnswer;
-    const timeSpent = 0;
 
     // Create user test if it doesn't exist
     if (!currentUserTestId) {
       await createUserTest();
-      if (!currentUserTestId) return; // Exit if test creation failed
+      if (!currentUserTestId) return;
     }
     
     try {
@@ -201,13 +220,12 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userTestId: currentUserTestId,
           questionId,
-          categoryId: currentQuestion.categoryId,
           userAnswer,
           isCorrect,
           timeSpent,
           userNotes: 'From Quiz Component',
-          userTestId: currentUserTestId,
         }),
       });
 
@@ -224,28 +242,97 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false }) => {
     }
   };
 
-  // Modify handleAnswerSelect to save response
+  // Update handleAnswerSelect to include timing
   const handleAnswerSelect = (answer: string) => {
+    if (!hasAnsweredFirstQuestion) {
+      setHasAnsweredFirstQuestion(true);
+      questionTimerRef.current?.startTimer();
+      totalTimerRef.current?.startTimer();
+    }
+
     setSelectedAnswer(answer);
     if (currentQuestion) {
       const isCorrect = answer === currentQuestion.questionOptions[0];
-      console.log(`Answer is ${isCorrect ? 'correct! ✅' : 'incorrect ❌'}`);
-      handleSaveResponse(currentQuestion.id, answer);
+      const timeSpent = questionTimerRef.current?.getElapsedTime() || 0;
+      
+      setAnswerSummaries(prev => [...prev, {
+        questionContent: currentQuestion.questionContent,
+        userAnswer: answer,
+        correctAnswer: currentQuestion.questionOptions[0],
+        isCorrect,
+        timeSpent
+      }]);
+
+      handleSaveResponse(currentQuestion.id, answer, timeSpent);
     }
   };
 
+  // Update handleNextQuestion to reset question timer
   const handleNextQuestion = () => {
     setSelectedAnswer(null);
-    setCurrentQuestionIndex((prevIndex) =>
-      prevIndex < questions.length - 1 ? prevIndex + 1 : prevIndex
-    );
+    if (currentQuestionIndex === questions.length - 1) {
+      const totalTime = totalTimerRef.current?.getElapsedTime() || 0;
+      handleFinishQuiz(totalTime);
+    } else {
+      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+      questionTimerRef.current?.resetTimer();
+      if (hasAnsweredFirstQuestion) {
+        questionTimerRef.current?.startTimer();
+      }
+    }
   };
-
-  const handlePrevQuestion = () => {
-    setSelectedAnswer(null);
-    setCurrentQuestionIndex((prevIndex) =>
+    const handlePrevQuestion = () => {
+      if(currentQuestionIndex ===0) return
+      setCurrentQuestionIndex((prevIndex) =>
       prevIndex > 0 ? prevIndex - 1 : prevIndex
     );
+    };
+
+  // Add reset quiz function
+  const handleResetQuiz = async () => {
+    setShowSummary(false);
+    setCurrentQuestionIndex(0);
+    setSelectedAnswer(null);
+    setAnswerSummaries([]);
+    setCurrentUserTestId(null);
+    setHasAnsweredFirstQuestion(false); // Reset the first question flag
+    
+    // Reset timers
+    questionTimerRef.current?.resetTimer();
+    totalTimerRef.current?.resetTimer();
+    
+    // Fetch new questions
+    await fetchQuestions();
+  };
+
+  // Add new handleFinishQuiz function
+  const handleFinishQuiz = async (totalTimeInSeconds: number) => {
+    if (!currentUserTestId) return;
+    
+    try {
+      const response = await fetch(`/api/user-test/${currentUserTestId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          score: (answerSummaries.filter(s => s.isCorrect).length / questions.length) * 100,
+          finishedAt: new Date().toISOString(),
+          totalTime: totalTimeInSeconds
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update test completion');
+      }
+      
+      setShowSummary(true);
+    } catch (error) {
+      console.error('Error finishing quiz:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save quiz results. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Render logic for options
@@ -278,6 +365,26 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false }) => {
       );
     });
   };
+
+  // Add new effect to update chatbot context when question changes
+  useEffect(() => {
+    if (!currentQuestion || !setChatbotContext) return;
+
+    const correctAnswer = currentQuestion.questionOptions[0];
+    const displayedOptions = shuffledOptions[currentQuestion.id] || [];
+    
+    setChatbotContext({
+      contentTitle: "Quiz Question",
+      context: `I'm currently taking a quiz on ${category}. Here's the current question I'm looking at:
+Question: ${currentQuestion.questionContent}
+Available options as shown to me:
+${displayedOptions.map((opt, idx) => `${String.fromCharCode(65 + idx)}. ${opt}`).join('\n')}
+
+The correct answer is: "${correctAnswer}" (but this might appear in any position in my shuffled options)
+
+Please act as a tutor - help me understand the concept and provide hints if I ask, but don't directly tell me the answer. If I seem stuck, guide me through the thinking process. Remember not to reference the correct answer's position in the list, as the options are shuffled.`
+    });
+  }, [currentQuestion, category, shuffledOptions, setChatbotContext]);
 
   if (isLoading) {
     return (
@@ -319,8 +426,19 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false }) => {
     );
   }
 
+  if (showSummary) {
+    return (
+      <div className="h-[calc(100vh-200px)] max-h-[800px]">
+        <QuizSummary summaries={answerSummaries} onReset={handleResetQuiz} />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-transparent text-black px-6 rounded-lg mx-auto">
+      <Timer ref={questionTimerRef} />
+      <Timer ref={totalTimerRef} />
+      
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-xl font-semi-bold text-[--theme-text-color] drop-shadow-lg">
           Question {currentQuestionIndex + 1}
@@ -361,7 +479,7 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false }) => {
         </button>
         <button
           onClick={handleNextQuestion}
-          disabled={currentQuestionIndex === questions.length - 1}
+          disabled={currentQuestionIndex === questions.length}
           className="px-4 py-2 bg-[#0e2247] text-white rounded disabled:opacity-50"
         >
           Next
