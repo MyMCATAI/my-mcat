@@ -8,7 +8,6 @@ import AdaptiveTutoring from "./AdaptiveTutoring";
 import FloatingButton from "./FloatingButton";
 import { FetchedActivity, Test } from "@/types";
 import TestingSuit from "./TestingSuit";
-import { toast } from "@/components/ui/use-toast";
 import ThemeSwitcher from "@/components/home/ThemeSwitcher";
 import { useSearchParams } from "next/navigation";
 import {
@@ -25,12 +24,15 @@ import { checkProStatus } from "@/lib/utils";
 import WelcomePopUp from "@/components/home/WelcomePopUp";
 import UpdateNotificationPopup from "@/components/home/UpdateNotificationPopup";
 import FlashcardDeck from "./FlashcardDeck";
+import { toast } from 'react-hot-toast';
+import PurchaseCoinsModal from "@/components/PurchaseCoinsModal";
 
 interface HandleShowDiagnosticTestParams {
   reset?: boolean;
 }
 
 const Page = () => {
+  
   const searchParams = useSearchParams();
   const initialTab = searchParams?.get("tab") || "Schedule";
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -53,14 +55,26 @@ const Page = () => {
     context: string;
   } | null>(null);
   const [userInfo, setUserInfo] = useState<any>(null);
-  const [showMessageForm, setShowMessageForm] = useState(false);
-  const [message, setMessage] = useState("");
+
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [showUpdateNotification, setShowUpdateNotification] = useState(false);
   const [currentPage, setCurrentPage] = useState("Schedule");
   const chatbotRef = useRef<{ sendMessage: (message: string) => void; }>({
     sendMessage: () => {}
   });
+  const paymentStatus = searchParams?.get("payment");
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+
+  useEffect(() => {    
+    // if returning from stripe, show toast depending on payment
+    if (!paymentStatus) return;
+
+    if (paymentStatus === "success") {
+      toast.success("Payment Successful! Your coins have been added to your account."); // todo handle different purchases
+    } else if (paymentStatus === "cancelled") {
+      toast.error("Payment Cancelled. Your payment was cancelled.");
+    }
+  }, [paymentStatus]);
 
   useEffect(() => {
     const initializePage = async () => {
@@ -115,22 +129,13 @@ const Page = () => {
         throw new Error("Failed to update knowledge profile");
       }
 
-      toast({
-        title: "Success",
-        description: "Knowledge profile updated successfully!",
-        duration: 3000,
-      });
+      toast.success("Knowledge profile updated successfully!");
 
       // Generate and fetch new activities
       await generateAndFetchActivities();
     } catch (error) {
       console.error("Error updating knowledge profile:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update knowledge profile. Please try again.",
-        variant: "destructive",
-        duration: 3000,
-      });
+      toast.error("Failed to update knowledge profile. Please try again.");
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -148,22 +153,13 @@ const Page = () => {
         throw new Error("Failed to generate new activities");
       }
 
-      toast({
-        title: "Success",
-        description: "New study plan generated successfully!",
-        duration: 3000,
-      });
+      toast.success("New study plan generated successfully!");
 
       // Fetch the newly generated activities
       await fetchActivities();
     } catch (error) {
       console.error("Error generating or fetching activities:", error);
-      toast({
-        title: "Error",
-        description: "Failed to generate new study plan. Please try again.",
-        variant: "destructive",
-        duration: 3000,
-      });
+      toast.error("Failed to generate new study plan. Please try again.");
     } finally {
       setIsGeneratingActivities(false);
     }
@@ -180,12 +176,7 @@ const Page = () => {
       updateCalendarChatContext(activities);
     } catch (error) {
       console.error("Error fetching activities:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch activities. Please try again.",
-        variant: "destructive",
-        duration: 3000,
-      });
+      toast.error("Failed to fetch activities. Please try again.");
     }
   };
 
@@ -225,23 +216,9 @@ const Page = () => {
     try {
       const response = await fetch("/api/user-info");
       if (response.status === 404) {
-        // User info not found, create a new one
-        const currentDate = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
-        const createResponse = await fetch("/api/user-info", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            bio: `I love the MCAT and started my learning journey on ${currentDate}`,
-          }),
-        });
-        if (createResponse.ok) {
-          const newUserInfo = await createResponse.json();
-          setUserInfo(newUserInfo);
-        } else {
-          throw new Error("Failed to create user info");
-        }
+        // Show purchase coins modal if user has no coins (and does not exist)
+        setShowPurchaseModal(true);
+        return;
       } else if (response.ok) {
         const userInfo = await response.json();
         setUserInfo(userInfo);
@@ -249,45 +226,8 @@ const Page = () => {
         throw new Error("Failed to fetch user info");
       }
     } catch (error) {
-      console.error("Error fetching/creating user info:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch or create user info. Please try again.",
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  };
-
-  const handleSendMessage = async () => {
-    try {
-      const response = await fetch("/api/send-message", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message }),
-      });
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Message sent successfully!",
-          duration: 3000,
-        });
-        setShowMessageForm(false);
-        setMessage("");
-      } else {
-        throw new Error("Failed to send message");
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-        duration: 3000,
-      });
+      console.error("Error fetching user info:", error);
+      toast.error("Failed to fetch user info. Please try again.");
     }
   };
 
@@ -483,7 +423,7 @@ const Page = () => {
       <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
         <div className="text-white flex gap-[1.5rem] overflow-visible">
           <div className="w-3/4 relative overflow-visible">
-            <div className="flex justify-between items-center"> {/* Add margin-bottom */}
+            <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
                 <h2 
                   className="text-white text-2xl ml-3 font-thin leading-normal shadow-text cursor-pointer" 
@@ -593,6 +533,11 @@ const Page = () => {
         <UpdateNotificationPopup
           open={showUpdateNotification && haveAllTutorialsPlayed()}
           onOpenChange={handleCloseUpdateNotification}
+        />
+
+        <PurchaseCoinsModal 
+          open={showPurchaseModal} 
+          onOpenChange={setShowPurchaseModal}
         />
       </div>
   );

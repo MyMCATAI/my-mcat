@@ -103,7 +103,7 @@ const LandingHero = () => {
              Our AI-tutoring platform makes dream scores a reality.
               </p>
               <div className="flex justify-center">
-                <Link href="/intro">
+                <Link href="/sign-up">
                   <button className="bg-[#ffffff] text-[#0e2247] py-4 text-xl md:text-2xl px-10 rounded-[20px]">
                     Register
                   </button>
