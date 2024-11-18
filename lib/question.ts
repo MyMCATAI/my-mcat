@@ -392,6 +392,7 @@ export const getQuestionsSimple = async (params: {
     conceptCategory, 
     subjectCategory,
     types,
+    userId,
     page = 1,
     pageSize = 10
   } = params;
@@ -422,17 +423,22 @@ export const getQuestionsSimple = async (params: {
       skip: (page - 1) * pageSize,
       include: {
         category: true,
+        userResponses: {
+          where: { userId },
+          take: 1,
+        },
       },
-      orderBy: {
-        id: 'asc'
-      }
+      orderBy: [
+        {
+          userResponses: {
+            _count: 'asc'  // Questions with no responses first
+          }
+        },
+        {
+          id: 'asc'  // Consistent ordering as tiebreaker
+        }
+      ],
     });
-
-    // Shuffle the questions array
-    for (let i = questions.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [questions[i], questions[j]] = [questions[j], questions[i]];
-    }
 
     const totalQuestions = await prismadb.question.count({ where });
     const totalPages = Math.ceil(totalQuestions / pageSize);
