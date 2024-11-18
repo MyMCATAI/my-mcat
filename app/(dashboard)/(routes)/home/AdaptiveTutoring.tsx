@@ -68,6 +68,14 @@ interface AdaptiveTutoringProps {
   }>;
 }
 
+type PlatformType = 'spotify' | 'apple' | 'mymcat';
+
+const platformText: Record<PlatformType, string> = {
+  spotify: 'Spotify',
+  apple: 'Apple Music',
+  mymcat: 'MyMCAT'
+};
+
 const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   toggleChatBot,
   setChatbotContext,
@@ -413,10 +421,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     setShowSettings((prev) => !prev);
   };
 
-  const toggleLink = () => {
-    setShowLink((prev) => !prev);
-  };
-
   const handleCameraClick = () => {
     setContentType("video");
 
@@ -450,10 +454,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     
     setCurrentContentId(null);
     setContent([]);
-  };
-
-  const toggleSearch = () => {
-    setShowSearch((prev) => !prev);
   };
 
   const handleCardClick = async (index: number) => {
@@ -555,6 +555,19 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     } else {
       console.warn("ChatBot ref not ready");
     }
+  };
+
+  const platformIcons: Record<PlatformType, any> = {
+    spotify: FaSpotify,
+    apple: FaApple,
+    mymcat: FaHeadphones
+  };
+
+  const getPodcastPlatform = (link: string): PlatformType | null => {
+    if (link.includes('spotify.com')) return 'spotify';
+    if (link.includes('apple.com')) return 'apple';
+    if (link.includes('/podcast/')) return 'mymcat';
+    return null;
   };
 
   return (
@@ -949,24 +962,34 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                   </div>
                 )}
                 <div className="relative">
-                  <button
-                    ref={podcastButtonRef}
-                    className={`w-full h-[3.5rem] rounded-lg mt-2 flex items-center justify-center cursor-pointer relative z-30 transition-colors duration-300 ${
-                      isPodcastHovered
-                        ? "bg-[--theme-hover-color]"
-                        : "bg-[--theme-leaguecard-color]"
-                    }`}
-                    onMouseEnter={handlePodcastMouseEnter}
-                    onMouseLeave={handlePodcastMouseLeave}
-                  >
-                    <Podcast
-                      className={`w-8 h-8 transition-colors duration-300 ${
-                        isPodcastHovered
-                          ? "text-[--theme-hover-text]"
-                          : "text-[--theme-text-color]"
-                      }`}
-                    />
-                  </button>
+                  {/* Only show podcast button if category has valid podcast links */}
+                  {(() => {
+                    const currentCategory = categories.find(cat => cat.conceptCategory === selectedCategory);
+                    const hasPodcastLinks = currentCategory?.podcastLinks && 
+                      currentCategory.podcastLinks !== "" && 
+                      currentCategory.podcastLinks !== "[]";
+
+                    return hasPodcastLinks ? (
+                      <button
+                        ref={podcastButtonRef}
+                        className={`w-full h-[3.5rem] rounded-lg mt-2 flex items-center justify-center cursor-pointer relative z-30 transition-colors duration-300 ${
+                          isPodcastHovered
+                            ? "bg-[--theme-hover-color]"
+                            : "bg-[--theme-leaguecard-color]"
+                        }`}
+                        onMouseEnter={handlePodcastMouseEnter}
+                        onMouseLeave={handlePodcastMouseLeave}
+                      >
+                        <Podcast
+                          className={`w-8 h-8 transition-colors duration-300 ${
+                            isPodcastHovered
+                              ? "text-[--theme-hover-text]"
+                              : "text-[--theme-text-color]"
+                          }`}
+                        />
+                      </button>
+                    ) : null;
+                  })()}
                 </div>
               </>
             )}
@@ -984,7 +1007,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               transition={{ duration: 0.2 }}
               className="fixed w-56 rounded-lg p-3 shadow-lg z-[35] bg-[--theme-hover-color]"
               style={{
-                top: `${podcastPosition.top}rem`,
+                top: `${podcastPosition.top - 5}rem`,
                 left: `${podcastPosition.left - 15}rem`,
               }}
               onMouseEnter={() => setIsPodcastHovered(true)}
@@ -994,34 +1017,38 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                 MyMCAT Podcast
               </h3>
               <hr className="border-[--theme-hover-text] opacity-30 mb-2" />
-              {[
-                {
-                  icon: FaSpotify,
-                  text: "Listen on Spotify",
-                  link: "https://open.spotify.com/show/yourmcatpodcast",
-                },
-                {
-                  icon: FaApple,
-                  text: "Listen on Apple",
-                  link: "https://podcasts.apple.com/us/podcast/yourmcatpodcast",
-                },
-                {
-                  icon: FaHeadphones,
-                  text: "Listen on MyMCAT",
-                  link: "/podcast/mymcat",
-                },
-              ].map((option, index) => (
-                <a
-                  key={index}
-                  href={option.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center space-x-2 w-full p-2 rounded transition-all duration-300 text-[--theme-hover-text] hover:bg-[rgba(255,255,255,0.1)]"
-                >
-                  <option.icon className="w-5 h-5" />
-                  <span className="text-sm">{option.text}</span>
-                </a>
-              ))}
+              {(() => {
+                const currentCategory = categories.find(cat => cat.conceptCategory === selectedCategory);
+                if (!currentCategory?.podcastLinks) return null;
+                
+                let links: string[] = [];
+                try {
+                  links = JSON.parse(currentCategory.podcastLinks);
+                } catch (e) {
+                  console.error('Error parsing podcast links:', e);
+                  return null;
+                }
+
+                return links.map((link, index) => {
+                  const platform = getPodcastPlatform(link);
+                  if (!platform || !platformIcons[platform]) return null;
+
+                  const Icon = platformIcons[platform];
+                  
+                  return (
+                    <a
+                      key={index}
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center space-x-2 w-full p-2 rounded transition-all duration-300 text-[--theme-hover-text] hover:bg-[rgba(255,255,255,0.1)]"
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="text-sm">{platformText[platform]}</span>
+                    </a>
+                  );
+                });
+              })()}
             </motion.div>
           )}
         </AnimatePresence>,

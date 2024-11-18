@@ -76,6 +76,7 @@ model Category {
   section            String
   color              String             @default("")
   icon               String             @default("")
+  podcastLinks       String             @default("")
   questions          Question[]
   calendarActivities CalendarActivity[]
   contents           Content[]
@@ -199,11 +200,11 @@ model Content {
   title              String             @default("")
   categoryId         String
   link               String             @default("")
-  audioLink               String             @default("")
+  audioLink          String             @default("") // faux json array of strings
   type               String             @default("")
   total_timing       Float              @default(0)
   minutes_estimate   Float              @default(0)
-    transcript         String?            @db.LongText
+  transcript         String?              @db.LongText
   summary            String?            @db.Text
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
