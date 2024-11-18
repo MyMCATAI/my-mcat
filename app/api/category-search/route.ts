@@ -23,7 +23,6 @@ export async function GET(req: Request) {
     // const excludeSubjects =
     //   searchParams.get("excludeSubjects")?.split(",") || [];
 
-    // console.log("Exclude Subjects:", excludeSubjects);
     const selectedSubject = searchParams.get("subject");
 
     let result;
@@ -35,8 +34,6 @@ export async function GET(req: Request) {
         orderBy: { conceptMastery: "asc" },
         include: { category: true },
       });
-
-      // console.log("Exclusion Criteria:", exclusionCriteria);
 
       let allCategories = await prisma.category.findMany({
         where: {
@@ -99,6 +96,7 @@ export async function GET(req: Request) {
       result = await getCategories({ page, pageSize });
     }
 
+    console.log(NextResponse.json(result))
     return NextResponse.json(result);
   } catch (error) {
     console.log("[CATEGORIES_GET]", error);

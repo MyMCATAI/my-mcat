@@ -83,8 +83,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  console.log("req:", req);
-
   try {
     let body = {};
     try {
@@ -106,8 +104,6 @@ export async function POST(req: NextRequest) {
     const userTest = await prisma.userTest.create({
       data,
     });
-
-    console.log("userTest created:", userTest);
 
     return NextResponse.json(userTest, { status: 201 });
   } catch (error) {
