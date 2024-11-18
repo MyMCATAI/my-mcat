@@ -38,7 +38,6 @@ export async function GET(req: Request) {
   }
 }
 
-// Modify the existing POST route
 export async function POST(req: Request) {
   const { userId } = auth();
   if (!userId) {
