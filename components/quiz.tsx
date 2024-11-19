@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import QuizSummary from './QuizSummary';
 import Timer, { TimerRef } from './Timer';
+import { ThumbsDown } from "lucide-react";
 
 export interface QuizQuestion {
   categoryId: string;
@@ -64,6 +65,7 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
   const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] = useState(false);
   const questionTimerRef = useRef<TimerRef>(null);
   const totalTimerRef = useRef<TimerRef>(null);
+  const [downvotedQuestions, setDownvotedQuestions] = useState<Set<string>>(new Set());
 
   const fetchQuestions = useCallback(async () => {
     if (!category) return;
@@ -440,9 +442,24 @@ Please act as a tutor - help me understand the concept and provide hints if I as
       <Timer ref={totalTimerRef} />
       
       <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-xl font-semi-bold text-[--theme-text-color] drop-shadow-lg">
-          Question {currentQuestionIndex + 1}
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-semi-bold text-[--theme-text-color] drop-shadow-lg">
+            Question {currentQuestionIndex + 1}
+          </h2>
+          <button
+            onClick={() => currentQuestion && setDownvotedQuestions(prev => new Set([...prev, currentQuestion.id]))}
+            disabled={currentQuestion && downvotedQuestions.has(currentQuestion.id)}
+            className="group relative p-1 rounded-full hover:bg-[--theme-hover-color] transition-colors"
+          >
+            <ThumbsDown 
+              size={16} 
+              className={currentQuestion && downvotedQuestions.has(currentQuestion.id) 
+                ? 'text-[--theme-hover-color]' 
+                : 'text-gray-500'
+              } 
+            />
+          </button>
+        </div>
         <span className="text-sm text-[--theme-text-color] drop-shadow-lg">
           {currentQuestionIndex + 1} of {questions.length}
         </span>

@@ -599,7 +599,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.boxShadow =
-                        "var(--theme-hover-boxShadow)";
+                        "var(--theme-adaptive-tutoring-boxShadow-hover)";
                       e.currentTarget.style.transform = "scale(1.05)";
                       e.currentTarget.style.zIndex = "30";
                     }}
