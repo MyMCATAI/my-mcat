@@ -27,13 +27,19 @@ export default function MobileRedirect() {
   const pathname = usePathname()
 
   useEffect(() => {
-    if (isMobileButNotIpad() && pathname !== '/' && pathname !== '/intro') {
+    if (isMobileButNotIpad() && 
+        pathname !== '/' && 
+        pathname !== '/intro' && 
+        !pathname.startsWith('/blog')) {
       router.replace('/redirect')  // Redirect to the /redirect page
     }
   }, [pathname, router])
 
   // Prevent content flash on restricted pages
-  if (isMobileButNotIpad() && pathname !== '/' && pathname !== '/intro') {
+  if (isMobileButNotIpad() && 
+      pathname !== '/' && 
+      pathname !== '/intro' && 
+      !pathname.startsWith('/blog')) {
     return null
   }
 
