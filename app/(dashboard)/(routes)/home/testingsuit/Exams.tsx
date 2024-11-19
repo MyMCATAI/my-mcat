@@ -282,14 +282,14 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
               </div>
             </div>
             <div className="flex flex-col">
-              <pre
-                className="text-m leading-[1.5rem] tracking-[0.025rem] whitespace-pre-wrap flex-1 mt-4 ml-2"
+              <div
+                className="text-lg leading-[1.5rem] tracking-[0.025rem] flex-1 mt-4 ml-2"
                 style={{ color: "var(--theme-text-color)" }}
               >
                 {welcomeAndTestMessage}
-              </pre>
+              </div>
               {welcomeComplete && testsCompletedToday < MAX_TESTS_PER_DAY && tests.length > 0 && (
-                <div className="flex items-center mt-6 ml-2">
+                <div className="flex items-center mt-12 ml-2">
                   <Link
                     href={`/test/testquestions?id=${tests[0].id}`}
                     className="text-blue-500 transition-colors duration-200 flex items-center"
@@ -306,7 +306,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                       </div>
                     </div>
                     <span
-                      className="animate-pulse"
+                      className="animate-pulse text-xl"
                       style={{
                         color: "var(--theme-text-color)",
                         transition: "color 0.2s",
@@ -327,25 +327,6 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                   </Link>
                 </div>
               )}
-              <div className="absolute bottom-4 right-4">
-                <Link href="/doctorsoffice">
-                  <span
-                    className="animate-pulse text-lg cursor-pointer"
-                    style={{
-                      color: "var(--theme-text-color)",
-                      transition: "color 0.2s",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.color = "var(--theme-hover-color)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.color = "var(--theme-text-color)")
-                    }
-                  >
-                    Doctor&apos;s Office -&gt;
-                  </span>
-                </Link>
-              </div>
             </div>
           </div>
         </div>

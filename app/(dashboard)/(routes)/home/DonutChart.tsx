@@ -122,9 +122,9 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
   const getGradeInfo = (segmentIndex: number | null) => {
     const grades = [
       { grade: 'C', color: '#4CAF50', trend: 'up' },    // CARs - Green
-      { grade: 'B', color: '#9C27B0', trend: 'down' },  // PS - Purple
-      { grade: 'A', color: '#b3bc00', trend: 'flat' },  // CP - Yellow
-      { grade: 'A', color: '#2196F3', trend: 'up' }     // BB - Blue
+      { grade: 'TBD', color: '#9C27B0', trend: 'down' },  // PS - Purple
+      { grade: 'TBD', color: '#b3bc00', trend: 'flat' },  // CP - Yellow
+      { grade: 'TBD', color: '#2196F3', trend: 'up' }     // BB - Blue
     ];
     return segmentIndex !== null ? grades[segmentIndex] : null;
   };
