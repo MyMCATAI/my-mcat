@@ -166,7 +166,12 @@ const Product = () => {
                 className="video-wrapper border-4 border-white rounded-lg overflow-hidden shadow-1xl mx-auto"
                 style={{ maxWidth: "70vw", width: "100%" }}
               >
-                <video controls className="w-full aspect-video">
+                <video 
+                  controls 
+                  className="w-full aspect-video"
+                  playsInline 
+                  preload="metadata"
+                >
                   <source
                     src="https://my-mcat.s3.us-east-2.amazonaws.com/public/mymcat.mp4"
                     type="video/mp4"

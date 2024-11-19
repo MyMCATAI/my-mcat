@@ -99,6 +99,11 @@ const MethodologyAndTestimonials = () => {
       videoSrc: "https://my-mcat.s3.us-east-2.amazonaws.com/public/ATS.mp4",
     },
     {
+      title: "Struggling with the CARs Section?",
+      description: ["We have an adaptive daily CARs suite with fun passages, that show you passages at your level, ", "with AI-assisted review and AAMC-level questions and design.", ""],
+      videoSrc: "https://my-mcat.s3.us-east-2.amazonaws.com/public/CARsTracker.mp4",
+    },
+    {
       title: "Lacking motivation to study?",
       description: ["We have a comprehensive accountability system that lets you win coins, get reminders, and compete with fellow students."," We WILL keep you on track!"],
       videoSrc: "https://my-mcat.s3.us-east-2.amazonaws.com/public/competitionrewards.mp4",
@@ -286,7 +291,7 @@ const MethodologyAndTestimonials = () => {
       <section className="bg-[#00101e] py-8 relative" id="hardcore-gaming">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-green-500 text-center mb-10 font-krungthep">
-           Our MCAT prep is fun!
+            Bored of Anki?
           </h2>
           <p className="text-white text-3xl mb-10 text-center max-w-3xl mx-auto">
             We made Anki flashcards a fun, addictive experience with cards, multiple choice questions, patient questions, and a clinic to run!
@@ -298,7 +303,7 @@ const MethodologyAndTestimonials = () => {
               muted
               loop
               playsInline
-              src="https://my-mcat.s3.us-east-2.amazonaws.com/public/GamificationVideo.mp4"
+              src="https://my-mcat.s3.us-east-2.amazonaws.com/public/GamePortion.mp4"
             >
               Your browser does not support the video tag.
             </video>
