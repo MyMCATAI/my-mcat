@@ -1,6 +1,10 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
- 
+import { emailService } from '@/services/email/EmailService';
+import { UserService } from '@/services/user/UserService';
+import prisma from "@/lib/prismadb";
+import { EmailTemplate } from "@/services/email/types";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -130,3 +134,23 @@ export const parseDefaultTasks = (csvContent: string): TaskMapping => {
   
   return mapping;
 };
+
+export async function checkAllActivitiesComplete(userId: string): Promise<boolean> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const todaysActivities = await prisma.calendarActivity.findMany({
+    where: {
+      userId,
+      scheduledDate: {
+        gte: today,
+        lt: tomorrow,
+      },
+    },
+  });
+
+  return todaysActivities.length > 0 && 
+    todaysActivities.every(activity => activity.status === "Complete");
+}
