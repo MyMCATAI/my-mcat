@@ -19,6 +19,7 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     )
   } catch (error: any) {
+    console.error("Webhook signature verification failed:", error.message)
     return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 })
   }
 
@@ -88,18 +89,26 @@ export async function POST(req: Request) {
     
     case "checkout.session.completed":
       const session = event.data.object as Stripe.Checkout.Session;
-      const clientReferenceId = session.client_reference_id;
-      const customerIdSession = session.customer as string;
-
-      if(!customerIdSession || !clientReferenceId) {
-        return new NextResponse("Missing customer id or client reference id", { status: 400 });
+      const userId = session.metadata?.userId;
+            
+      if (userId) {
+        try {
+          // Update the user's score
+          await prismadb.userInfo.update({
+            where: { userId },
+            data: { 
+              score: {
+                increment: 10
+              }
+            },
+          });
+        } catch (error) {
+          console.error("Error updating user score:", error);
+        }
       }
+      break;
 
-      await upsertUserSubscription({
-        userId: clientReferenceId,
-        stripeCustomerId: customerIdSession,
-        stripeSubscriptionId: session.subscription as string,
-      });
+    case "payment_intent.succeeded":
       break;
 
     default:
