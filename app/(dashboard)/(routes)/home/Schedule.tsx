@@ -172,6 +172,7 @@ const Schedule: React.FC<ScheduleProps> = ({
     localStorage.setItem('checklistsDate', new Date().toDateString());
   }, [checklists]);
 
+  // Initial check to see if any sections are completed, runs on initial render
   useEffect(() => {
     setCompletedSections(() => {
       const newCompletedSections: Section[] = [];
