@@ -172,6 +172,22 @@ const Schedule: React.FC<ScheduleProps> = ({
     localStorage.setItem('checklistsDate', new Date().toDateString());
   }, [checklists]);
 
+  useEffect(() => {
+    setCompletedSections(() => {
+      const newCompletedSections: Section[] = [];
+      
+      // Check each section in the checklists
+      Object.entries(checklists).forEach(([section, items]) => {
+        const allChecked = items.every(item => item.checked);
+        if (allChecked) {
+          newCompletedSections.push(section as Section);
+        }
+      });
+  
+      return newCompletedSections;
+    });
+  }, []);
+
   // Should be consistent with calendar events
   // If table has the column "eventType", then we can use it to determine the section
   const buttonLabels: Record<Section, string> = {
@@ -218,38 +234,44 @@ const Schedule: React.FC<ScheduleProps> = ({
       
       console.log(`Total unchecked boxes remaining: ${totalUnchecked}`);
 
-      const allChecked = updatedSection.every(
-        (item: { checked: boolean }) => item.checked
-      );
-      if (
-        allChecked &&
-        !prevChecklists[section].every(
-          (item: { checked: boolean }) => item.checked
-        )
-      ) {
-        setShowRewardDialog(true);
-        setRewardSection(section);
-
-        const newCompletedSections = [...completedSections, section];
-        setCompletedSections(newCompletedSections);
-
-        // Play the appropriate sound
-        if (newCompletedSections.length === 3) {
-          if (fanfareRef.current) {
-            fanfareRef.current.play();
+      // Check if the current section is fully checked
+      const allChecked = updatedSection.every(item => item.checked);
+      
+      // Update completedSections based on the new state
+      setCompletedSections(prev => {
+        const newCompletedSections = [...prev];
+        
+        if (allChecked && !prev.includes(section)) {
+          // Add section if all checked and not already in completedSections
+          newCompletedSections.push(section);
+          
+          // Show reward dialog and play sound
+          setShowRewardDialog(true);
+          setRewardSection(section);
+          
+          if (newCompletedSections.length === 3) {
+            if (fanfareRef.current) {
+              fanfareRef.current.play();
+            }
+          } else if (audioRef.current) {
+            audioRef.current.play();
           }
-        } else if (audioRef.current) {
-          audioRef.current.play();
+
+          // Update user's coin count
+          updateUserCoinCount();
+        } else if (!allChecked && prev.includes(section)) {
+          // Remove section if not all checked but was in completedSections
+          const index = newCompletedSections.indexOf(section);
+          newCompletedSections.splice(index, 1);
         }
 
-        // Update user's coin count
-        updateUserCoinCount();
-
-        // Send email notification only if all checkboxes are checked
+        // Send email notification only if all checkboxes across all sections are checked
         if (totalUnchecked === 0) {
           sendCompletionEmail();
         }
-      }
+
+        return newCompletedSections;
+      });
 
       return newChecklists;
     });
