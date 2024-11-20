@@ -30,7 +30,7 @@ export default function MobileRedirect() {
     if (isMobileButNotIpad() && 
         pathname !== '/' && 
         pathname !== '/intro' && 
-        !pathname.startsWith('/blog')) {
+        !pathname?.startsWith('/blog')) {
       router.replace('/redirect')  // Redirect to the /redirect page
     }
   }, [pathname, router])
@@ -39,7 +39,7 @@ export default function MobileRedirect() {
   if (isMobileButNotIpad() && 
       pathname !== '/' && 
       pathname !== '/intro' && 
-      !pathname.startsWith('/blog')) {
+      !pathname?.startsWith('/blog')) {
     return null
   }
 

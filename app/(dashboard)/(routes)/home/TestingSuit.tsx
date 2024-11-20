@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Test } from "@/types";
 import Exams from "./testingsuit/Exams";
 import { toast } from "@/components/ui/use-toast";
+import CARsTutorial from "./testingsuit/CARsTutorial";
 
 
 const TestingSuit: React.FC = () => {
@@ -14,11 +15,17 @@ const TestingSuit: React.FC = () => {
   const [testsCompletedToday, setTestsCompletedToday] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCARsTutorial, setShowCARsTutorial] = useState(true);
+  const [kalypsoInteracted, setKalypsoInteracted] = useState(false);
 
-  const handleAssistantResponse = (message: string, dismissFunc: () => void) => {
+  useEffect(() => {
+    console.log("Tutorial state:", showCARsTutorial);
+  }, [showCARsTutorial]);
+
+  const handleAssistantResponse = (message: string) => {
     setAssistantMessage(message);
     setIsOverlayVisible(true);
-    setDismissAnimation(() => dismissFunc);
+    setKalypsoInteracted(true);
   };
 
   const closeOverlay = () => {
@@ -84,6 +91,19 @@ const TestingSuit: React.FC = () => {
     fetchTests(true);
   }, []);
 
+  useEffect(() => {
+    if (!showCARsTutorial) {
+      localStorage.setItem("hasSeenCARsTutorial", "true");
+    }
+  }, [showCARsTutorial]);
+
+  const handleKalypsoInteraction = () => {
+    setKalypsoInteracted(true);
+    if (!localStorage.getItem("carsTutorialPlayed")) {
+      localStorage.setItem("carsTutorialPlayed", "true");
+    }
+  };
+
   const tabs = [
     { 
       label: "Exams", 
@@ -113,7 +133,7 @@ const TestingSuit: React.FC = () => {
       {isOverlayVisible && assistantMessage && (
         <div 
           ref={overlayRef} 
-          className="absolute left-[10rem] top-[4rem] z-50 bg-[--theme-hover-color] text-[--theme-hover-text] rounded-lg p-3 animate-fadeIn max-w-[20rem] max-h-[70vh] overflow-y-auto"
+          className="absolute left-[10rem] top-[4rem] z-50 bg-[--theme-userchatbox-color] text-white rounded-lg p-3 animate-fadeIn max-w-[20rem] max-h-[70vh] overflow-y-auto"
         >
           <div className="whitespace-pre-wrap break-words text-sm">{assistantMessage}</div>
           <button
@@ -126,6 +146,17 @@ const TestingSuit: React.FC = () => {
           <div className="absolute left-0 top-4 transform -translate-x-1/2 w-0 h-0 border-t-8 border-r-8 border-b-8 border-transparent"></div>
         </div>
       )}
+      <CARsTutorial 
+        runTutorial={showCARsTutorial}
+        setRunTutorial={setShowCARsTutorial}
+        kalypsoInteracted={kalypsoInteracted}
+      />
+      <button 
+        onClick={() => setShowCARsTutorial(true)}
+        className="fixed bottom-4 right-4 bg-blue-500 text-white p-2 rounded"
+      >
+        Show Tutorial
+      </button>
     </div>
   );
 };
