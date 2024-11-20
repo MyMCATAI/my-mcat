@@ -37,7 +37,6 @@ import {
 } from "chart.js";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { CheckCircle } from "lucide-react"; // Add this import
 import Tutorial from "./Tutorial";
 import { Checkbox } from "@/components/ui/checkbox"; // Add this import
 import Statistics from "@/components/Statistics";
@@ -342,13 +341,24 @@ const Schedule: React.FC<ScheduleProps> = ({
     setShowAnalytics(false); // Switch to calendar mode
     setHasUpdatedStudyPlan(true);
 
-    // // Delay before starting Tutorial Part 2
-    // setTimeout(() => {
-    //   // Start Tutorial Part 2
-    //   setTutorialStep(1);
-    //   setRunTutorialPart2(true);
-    // }, 5000);
+    // Add this to ensure Part 2 plays
+    setTimeout(() => {
+      setRunTutorialPart2(true);
+      localStorage.setItem("tutorialPart2Played", "true");
+    }, 1000); // Short delay after settings close
   }, []);
+
+  // Add this new effect to handle the transition from Part 2 to Part 3
+  useEffect(() => {
+    if (runTutorialPart2 === false && localStorage.getItem("tutorialPart2Played") === "true" && 
+        (!localStorage.getItem("tutorialPart3Played") || localStorage.getItem("tutorialPart3Played") === "false")) {
+      // Part 2 just finished, start Part 3
+      setTimeout(() => {
+        setRunTutorialPart3(true);
+        localStorage.setItem("tutorialPart3Played", "true");
+      }, 2000); // Delay after Part 2 ends
+    }
+  }, [runTutorialPart2]);
 
   const handleCalendarModified = useCallback(() => {
     // Start Tutorial Part 3
@@ -650,6 +660,25 @@ const Schedule: React.FC<ScheduleProps> = ({
     );
     console.log('Updating today schedule activities');
     setTodayActivities(todaysScheduleActivities);
+  };
+
+  const handleResetTutorial = () => {
+    // Reset localStorage values
+    localStorage.setItem("tutorialPart1Played", "false");
+    localStorage.setItem("tutorialPart2Played", "false");
+    localStorage.setItem("tutorialPart3Played", "false");
+    localStorage.setItem("tutorialPart4Played", "false");
+    
+    // Reset tutorial states
+    setRunTutorialPart1(true);
+    setRunTutorialPart2(false);
+    setRunTutorialPart3(false);
+    setRunTutorialPart4(false);
+    
+    // Play notification sound
+    if (audioRef.current) {
+      audioRef.current.play().catch((error) => console.error("Audio playback failed:", error));
+    }
   };
 
   return (
@@ -1182,6 +1211,29 @@ const Schedule: React.FC<ScheduleProps> = ({
         runPart4={runTutorialPart4}
         setRunPart4={setRunTutorialPart4}
       />
+
+      <div className="absolute bottom-4 left-4">
+        <button
+          onClick={handleResetTutorial}
+          className="py-2 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition text-sm flex items-center gap-2"
+        >
+          <svg 
+            className="w-4 h-4" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
+            />
+          </svg>
+          Reset Tutorial
+        </button>
+      </div>
     </div>
   );
 };

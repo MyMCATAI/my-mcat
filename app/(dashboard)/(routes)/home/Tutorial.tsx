@@ -34,16 +34,17 @@ const Tutorial: React.FC<TutorialProps> = ({
   };
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status, type } = data;
+    const { status, type, action } = data;
+    
     if (type === EVENTS.TOUR_START) {
       playNotification();
     }
-    if (
-      status === STATUS.FINISHED ||
-      status === STATUS.SKIPPED ||
-      type === EVENTS.TOUR_END
-    ) {
-      endAllTutorials();
+
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      if (runPart1) setRunPart1(false);
+      if (runPart2) setRunPart2(false);
+      if (runPart3) setRunPart3(false);
+      if (runPart4) setRunPart4(false);
     }
   };
 
@@ -54,10 +55,10 @@ const Tutorial: React.FC<TutorialProps> = ({
   }, [runPart1, runPart2, runPart3, runPart4]);
 
   const endAllTutorials = () => {
-    setRunPart1(false);
-    setRunPart2(false);
-    setRunPart3(false);
-    setRunPart4(false);
+    if (runPart1) setRunPart1(false);
+    if (runPart2) setRunPart2(false);
+    if (runPart3) setRunPart3(false);
+    if (runPart4) setRunPart4(false);
   };
 
   useEffect(() => {
@@ -136,7 +137,7 @@ const Tutorial: React.FC<TutorialProps> = ({
   );
 
   const tutorialPart2Content = (
-    <div className="space-y-6 text-black">
+    <div className="space-y-6 text-black w-full">
       <h1 className="text-3xl font-bold text-center mb-4">
         Customize Your Schedule
       </h1>
@@ -146,7 +147,15 @@ const Tutorial: React.FC<TutorialProps> = ({
           We calculate the best time to take FLs, do AAMC, and use 3rd party
           resources.
         </p>
-        <div className="mb-4">[INSERT GIF HERE]</div>
+        <div className="mb-4 max-w-[35rem] mx-auto">
+          <video 
+            src="https://my-mcat.s3.us-east-2.amazonaws.com/public/CalendarReview.mp4"
+            autoPlay
+            loop
+            muted
+            className="w-full rounded-lg"
+          />
+        </div>
         <p className="text-lg mt-6">You can modify the calendar as well.</p>
       </div>
     </div>
@@ -214,6 +223,11 @@ const Tutorial: React.FC<TutorialProps> = ({
       content: tutorialPart2Content,
       placement: "center",
       disableBeacon: true,
+      styles: {
+        options: {
+          width: 700,
+        },
+      },
     },
     {
       target: ".schedule-content",
@@ -281,7 +295,7 @@ const Tutorial: React.FC<TutorialProps> = ({
         spotlightClicks={true}
         styles={{
           options: {
-            backgroundColor: "#DBEAFE",
+            backgroundColor: "#ffffff",
             textColor: "black",
             primaryColor: "var(--theme-border-color)",
             overlayColor: "rgba(0, 0, 0, 0.5)",
@@ -301,8 +315,8 @@ const Tutorial: React.FC<TutorialProps> = ({
         spotlightClicks={true}
         styles={{
           options: {
-            backgroundColor: "#DBEAFE",
-            textColor: "black",
+            backgroundColor: "#ffffff",
+            textColor: "#000000",
             primaryColor: "var(--theme-border-color)",
             overlayColor: "rgba(0, 0, 0, 0.5)",
             zIndex: 1000,
@@ -321,7 +335,7 @@ const Tutorial: React.FC<TutorialProps> = ({
         spotlightClicks={true}
         styles={{
           options: {
-            backgroundColor: "#DBEAFE",
+            backgroundColor: "#ffffff",
             textColor: "black",
             primaryColor: "var(--theme-border-color)",
             overlayColor: "rgba(0, 0, 0, 0.5)",
@@ -341,7 +355,7 @@ const Tutorial: React.FC<TutorialProps> = ({
         spotlightClicks={true}
         styles={{
           options: {
-            backgroundColor: "#DBEAFE",
+            backgroundColor: "#ffffff",
             textColor: "black",
             primaryColor: "var(--theme-border-color)",
             overlayColor: "rgba(0, 0, 0, 0.5)",

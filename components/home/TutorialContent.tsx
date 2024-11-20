@@ -14,6 +14,11 @@ const TutorialContent: React.FC = () => {
     setIsTutorialDialogOpen(true);
   };
 
+  const openTutorial = (type: string) => {
+    // Handle tutorial opening logic here
+    console.log(`Opening ${type} tutorial`);
+  };
+
   return (
     <ScrollArea className="h-full">
       <Card>
@@ -34,28 +39,50 @@ const TutorialContent: React.FC = () => {
               2. CARs Strategies
             </a>
 
-            <a 
-              href="/blog"
+            <button 
               className="flex flex-col text-sm items-center bg-[--theme-mainbox-color] bg-opacity-75 text-[--theme-text-color] p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+              onClick={() => window.location.href = '/blog'}
             >
-              <Image
-                src="/StudyverseFavicon.png"
-                alt="Blog"
+              3. The Clinic
+            </button>
+            <button
+              onClick={() => openTutorial('premium')}
+              className="block w-full text-left px-4 py-2 bg-transparent rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+            >
+              4. MD Features
+            </button>
+            <button
+              onClick={() => openTutorial('beta')}
+              className="block w-full text-left px-4 py-2 bg-transparent rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+            >
+              5. Early Access Information
+            </button>
+          </div>
+          <div className="flex justify-center gap-x-32 mt-12 mb-8">
+            <a 
+              href="https://discord.gg/yourdiscordlink" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex flex-col items-center hover:opacity-80 transition-opacity"
+            >
+              <FaDiscord className="w-12 h-12 mb-4" />
+              <span className="text-base font-semibold">JOIN OUR</span>
+              <span className="text-base font-semibold">DISCORD</span>
+            </a>
+            
+            <a 
+              href="/blog" 
+              className="flex flex-col items-center hover:opacity-80 transition-opacity"
+            >
+              <Image 
+                src="/StudyVerseFavicon.png" 
+                alt="Blog" 
+                className="w-12 h-12 mb-4"
                 width={48}
                 height={48}
-                className="mb-3"
               />
-              <span className="text-[0.9rem]">Check out our blog to learn more about MCAT Prep and applying to medical school!</span>
-            </a>
-
-            <a 
-              href="https://discord.gg/mXVkbzFq"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-col text-sm bg-[--theme-mainbox-color] text-[--theme-text-color] bg-opacity-75 items-center p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
-            >
-              <FaDiscord className="text-[3rem] mb-3" />
-              <span className="text-[0.9rem]">Join our discord if want a study buddy!</span>
+              <span className="text-base font-semibold">READ OUR</span>
+              <span className="text-base font-semibold">BLOG</span>
             </a>
           </div>
         </CardContent>
