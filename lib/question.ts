@@ -398,6 +398,9 @@ export const getQuestionsSimple = async (params: {
   } = params;
 
   const where: any = {
+    questionOptions: {
+      not: '[]',
+    },
     category: {
       ...(contentCategory?.length && { 
         contentCategory: { in: contentCategory } 
