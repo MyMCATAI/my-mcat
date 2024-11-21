@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Joyride, { CallBackProps, STATUS, Step, EVENTS } from "react-joyride";
+import Joyride, { CallBackProps, STATUS, Step, EVENTS, Status } from "react-joyride";
 import { toast } from "react-hot-toast";
 
 interface CARsTutorialProps {
@@ -18,7 +18,7 @@ const CARsTutorial: React.FC<CARsTutorialProps> = ({
   const handleJoyrideCallback = (data: CallBackProps) => {
     console.log("Joyride callback:", data);
     const { status, type } = data;
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       setRunTutorial(false);
     }
   };
@@ -143,7 +143,7 @@ const CARsTutorial: React.FC<CARsTutorialProps> = ({
         disableOverlayClose
         hideBackButton
         spotlightClicks
-        callback={(data) => {
+        callback={(data: CallBackProps) => {
           const { status } = data;
           if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
             setShowAlgorithmStep(false);
@@ -162,4 +162,4 @@ const CARsTutorial: React.FC<CARsTutorialProps> = ({
   );
 };
 
-export default CARsTutorial; 
+export default CARsTutorial;
