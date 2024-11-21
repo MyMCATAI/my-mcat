@@ -42,6 +42,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
   const [welcomeComplete, setWelcomeComplete] = useState(false);
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
   const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
+  const [kalypsoInteracted, setKalypsoInteracted] = useState(false);
 
   const openTutorialDialog = (videoUrl: string) => {
     setTutorialVideoUrl(videoUrl);
@@ -158,6 +159,14 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
     return message;
   };
 
+  const handleKalypsoInteraction = () => {
+    setKalypsoInteracted(true);
+    // Only trigger if this tutorial hasn't been played yet
+    if (!localStorage.getItem("carsTutorialPlayed")) {
+      localStorage.setItem("carsTutorialPlayed", "true");
+    }
+  };
+
   return (
     <div
       className="h-full flex flex-col p-3"
@@ -166,7 +175,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
       <div className="flex-grow grid grid-cols-1 md:grid-cols-7 gap-4">
         <div className="md:col-span-5 mr mb-4">
           <div
-            className="h-[calc(100vh-7.6rem)] rounded-[10px] p-4 flex flex-col relative"
+            className="h-[calc(100vh-8.3rem)] rounded-[10px] p-4 flex flex-col relative cars-overview"
             style={{
               backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
               backgroundSize: "cover",
@@ -178,7 +187,10 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
             }}
           >
             <div className="flex mb-4">
-              <div className="w-[8rem] h-[8rem] bg-transparent border-2 border-[--theme-border-color] rounded-lg mr-4 flex-shrink-0 overflow-hidden relative">
+              <div 
+                className="kalypso-portrait w-[8rem] h-[8rem] bg-transparent border-2 border-[--theme-border-color] rounded-lg mr-4 flex-shrink-0 overflow-hidden relative"
+                onClick={handleKalypsoInteraction}
+              >
                 <ChatBotWidgetNoChatBot
                   reportData={reportData}
                   onResponse={handleAssistantResponse}
@@ -187,7 +199,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
               {assistantMessage && (
                 <div className="ml-4 max-w-xs bg-blue-500 text-white rounded-lg p-3 relative animate-fadeIn">
                   <div className="typing-animation">{assistantMessage}</div>
-                  <div className="absolute left-0 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-0 h-0 border-t-8 border-r-8 border-b-8 border-transparent border-r-blue-500"></div>
+                  <div className="absolute left-0 top-1/2 transform -translate-x-1/2 -tran  slate-y-1/2 w-0 h-0 border-t-8 border-r-8 border-b-8 border-transparent border-r-blue-500"></div>
                   <button
                     onClick={closeOverlay}
                     className="absolute top-1 right-1 text-white hover:text-gray-200"
@@ -213,7 +225,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                     )
                   }
                 />
-                <div className="flex justify-between items-center h-full px-2 sm:px-4 md:px-6 lg:px-8 xl:px-16">
+                <div className="flex justify-between items-center h-full px-2 sm:px-4 md:px-6 lg:px-8 xl:px-16 cars-stats">
                   <div className="flex flex-col items-center w-1/4">
                     <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
                       <Image
@@ -332,7 +344,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
         </div>
         <div className="md:col-span-2">
           <div
-            className="h-[calc(100vh-7.6rem)] overflow-y-auto rounded-lg p-4 bg-[#001226] relative"
+            className="h-[calc(100vh-8.3rem)] overflow-y-auto rounded-lg p-4 bg-[#001226] relative"
             style={{
               backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
               backgroundSize: "cover",
