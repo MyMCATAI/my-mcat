@@ -57,57 +57,56 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
   // const isPro = subscription !== "free";
 
   return (
-    <> 
-      <nav className="flex items-center justify-between bg-transparent shadow-sm h-24 px-4">
-        <div className="flex items-center space-x-4">
-          <Link href="/home" className="flex items-center">
-            <div className="flex flex-col">
-              <span className="text-xl text-white">MyMCAT.ai</span>
-            </div>
-          </Link>
-          <div className="w-48">
-            <MusicPlayer theme={theme} />
+    <nav className="flex items-center justify-between bg-transparent shadow-sm h-24">
+      <div className="flex items-center space-x-4 px-4">
+        <Link href="/home" className="flex items-center">
+          <div className="flex flex-col">
+            <span className="text-xl text-white">MyMCAT.ai</span>
           </div>
+        </Link>
+        <div className="w-48">
+          <MusicPlayer theme={theme} />
         </div>
-        <div className="flex items-center h-full">
-          <div className="flex items-center space-x-4 mr-4">
+      </div>
+      <div className="flex items-center h-full">
+        <div className="flex items-center space-x-4 mr-5 mb-3">
+          <div className="scale-150">
             <UserButton />
           </div>
-          <span
-            ref={ballerSectionRef}
-            className="flex items-start h-full gradientbg"
-            style={{
-              clipPath: "polygon(100% 0%, 100% 51%, 100% 73%, 18% 72%, 11% 48%, 0 0)",
-              opacity: 1,
-              transform: "translateY(3px)",
-            }}
-          >
-            <p className="ms-12 mt-5 pr-1 text-xs" style={{ color: 'var(--theme-text-color)' }}>
-              designed by <br />&nbsp;&nbsp;&nbsp;&nbsp;a certified baller
-            </p>
-            <div className="mt-6 mx-3">
-              <FaLinkedin 
-                size={25} 
+        </div>
+        <span
+          ref={ballerSectionRef}
+          className="flex items-start h-full gradientbg mr-[-1px]"
+          style={{
+            clipPath: "polygon(100% 0%, 100% 51%, 100% 73%, 18% 72%, 11% 48%, 0 0)",
+            opacity: 1,
+          }}
+        >
+          <p className="ms-12 mt-5 pr-1 text-xs" style={{ color: 'var(--theme-text-color)' }}>
+            designed by <br />&nbsp;&nbsp;&nbsp;&nbsp;a certified baller
+          </p>
+          <div className="mt-6 mx-3">
+            <FaLinkedin 
+              size={25} 
+              className="transition-colors duration-200 hover:fill-[var(--theme-hover-color)]"
+              style={{
+                color: 'var(--theme-text-color)',
+              }}
+            />
+          </div>
+          <div className="mt-5 mx-2">
+            <Link href="https://www.instagram.com/an0thermanicmonday/" target="_blank" rel="noopener noreferrer">
+              <FaInstagram 
+                size={30} 
                 className="transition-colors duration-200 hover:fill-[var(--theme-hover-color)]"
                 style={{
                   color: 'var(--theme-text-color)',
                 }}
               />
-            </div>
-            <div className="mt-5 mx-2">
-              <Link href="https://www.instagram.com/an0thermanicmonday/" target="_blank" rel="noopener noreferrer">
-                <FaInstagram 
-                  size={30} 
-                  className="transition-colors duration-200 hover:fill-[var(--theme-hover-color)]"
-                  style={{
-                    color: 'var(--theme-text-color)',
-                  }}
-                />
-              </Link>
-            </div>
-          </span>
-        </div>
-      </nav>
-    </>
+            </Link>
+          </div>
+        </span>
+      </div>
+    </nav>
   );
 };
