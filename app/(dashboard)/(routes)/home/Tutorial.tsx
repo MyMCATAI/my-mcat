@@ -101,6 +101,20 @@ const Tutorial: React.FC<TutorialProps> = ({
         <p className="mb-4">
           The MCAT is a beast of a test that requires your best.
         </p>
+
+        <details className="mb-4">
+          <summary className="cursor-pointer text-blue-600 hover:text-blue-700 font-medium">
+            Watch Video Overview ▶️
+          </summary>
+          <div className="mt-4">
+            <video
+              src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/MyMCATVideo.mp4"
+              controls
+              className="w-full rounded-lg"
+            />
+          </div>
+        </details>
+
         <p className="mb-4">
           To beat your competition, some of the brightest students in the world, you must answer these three questions:
         </p>
