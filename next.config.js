@@ -1,5 +1,13 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+const withMDX = require('@next/mdx')({
+  extension: /\.mdx?$/,
+  options: {
+    remarkPlugins: [],
+    rehypePlugins: [],
+  },
+})
+
+module.exports = withMDX({
+  pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   images: {
     domains: ['b.thumbs.redditmedia.com', 'img.youtube.com', 'my-mcat.s3.us-east-2.amazonaws.com'],
     remotePatterns: [
@@ -31,6 +39,4 @@ const nextConfig = {
       },
     ];
   },
-};
-
-module.exports = nextConfig;
+});
