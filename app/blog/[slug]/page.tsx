@@ -1,8 +1,13 @@
 import { getAllPosts, getPostBySlug } from '../../../lib/blogapi'
 import { MDXRemote } from 'next-mdx-remote/rsc'
+import HighlightableText from '../components/HighlightableText'
 import { FaLinkedin, FaInstagram } from 'react-icons/fa'
 import { BiSolidError } from "react-icons/bi"
 import Link from 'next/link'
+
+const components = {
+  HighlightableText
+}
 
 export async function generateStaticParams() {
   const posts = getAllPosts()
@@ -17,9 +22,9 @@ export default function Post({ params }: { params: { slug: string } }) {
   return (
     <article className="prose prose-invert max-w-none relative mx-4">
       <h1 className="text-center">{post.title}</h1>
-      <div className="flex flex-col items-center justify-center gap-2rem text-lg text-gray-400">
+      <div className="flex flex-col items-center justify-center gap-2rem text-lg text-black">
         <time dateTime={post.date}>{post.date}</time>
-        <span className="flex items-center gap-2rem mt-">
+        <span className="flex items-center gap-2rem">
           By Prynce Karki 
           <Link href="https://www.linkedin.com/in/your-linkedin" target="_blank" rel="noopener noreferrer" className="ml-2rem">
             <FaLinkedin 
@@ -41,7 +46,10 @@ export default function Post({ params }: { params: { slug: string } }) {
           </div>
         )}
       </div>
-      <MDXRemote source={post.content} />
+      <MDXRemote 
+        source={post.content} 
+        components={components}
+      />
     </article>
   )
 } 
