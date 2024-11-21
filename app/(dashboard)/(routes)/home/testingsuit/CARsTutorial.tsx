@@ -18,7 +18,7 @@ const CARsTutorial: React.FC<CARsTutorialProps> = ({
   const handleJoyrideCallback = (data: CallBackProps) => {
     console.log("Joyride callback:", data);
     const { status, type } = data;
-    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
       setRunTutorial(false);
     }
   };
@@ -40,23 +40,26 @@ const CARsTutorial: React.FC<CARsTutorialProps> = ({
       target: "body",
       content: (
         <div className="space-y-6 text-black">
-          <h1 className="text-3xl font-bold text-center mb-4">
-            {"Welcome to the Daily CARs suite!"}
+          <h1 className="text-2xl font-bold text-center mb-4">
+            Welcome to the Daily CARs suite!
           </h1>
-          <div className="flex justify-center">
+          <div className="w-full max-w-[32rem] mx-auto">
             <video 
-              src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/CARsTests.mp4"
-              autoPlay 
-              loop 
-              muted 
-              playsInline
-              className="rounded-lg max-w-[22rem]"
+              src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/DailyCARs.mp4"
+              controls 
+              className="rounded-lg w-full"
             />
           </div>
         </div>
       ),
       placement: "center",
       disableBeacon: true,
+      styles: {
+        tooltip: {
+          maxWidth: '90vw',
+          width: 'auto'
+        }
+      }
     },
     {
       target: ".cars-overview",
