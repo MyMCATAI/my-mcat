@@ -6,6 +6,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import QuizSummary from './QuizSummary';
 import Timer, { TimerRef } from './Timer';
 import { ThumbsDown } from "lucide-react";
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog"
+import QuizProgress from './QuizProgress';
 
 export interface QuizQuestion {
   categoryId: string;
@@ -13,7 +23,7 @@ export interface QuizQuestion {
   id: string;
   passage: Passage | null;
   passageId: string | null;
-  questionAnswerNotes: string | null;
+  questionAnswerNotes: string[] | null;
   questionContent: string;
   questionID: string;
   questionOptions: string[];
@@ -43,11 +53,15 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return shuffled;
 };
 
+// Update AnswerSummary interface
 interface AnswerSummary {
   questionContent: string;
   userAnswer: string;
   correctAnswer: string;
   isCorrect: boolean;
+  timeSpent: number; // Add timeSpent
+  questionNumber: number; // Add question number
+  explanation: string; // Add explanation field
 }
 
 const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContext }) => {
@@ -56,43 +70,46 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
   const { toast } = useToast();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [userResponses, setUserResponses] = useState<Record<string, QuestionResponse>>({});
   const [shuffledOptions, setShuffledOptions] = useState<Record<string, string[]>>({});
   const [currentUserTestId, setCurrentUserTestId] = useState<string | null>(null);
-  const [showSummary, setShowSummary] = useState(false);
   const [answerSummaries, setAnswerSummaries] = useState<AnswerSummary[]>([]);
-  const [testStartTime] = useState<Date>(new Date());
   const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] = useState(false);
   const questionTimerRef = useRef<TimerRef>(null);
   const totalTimerRef = useRef<TimerRef>(null);
-  const [downvotedQuestions, setDownvotedQuestions] = useState<Set<string>>(new Set());
+  const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const fetchQuestions = useCallback(async () => {
+  const fetchQuestions = useCallback(async (page: number = 1) => {
     if (!category) return;
     
     try {
-      setIsLoading(true);
-      const types = ["normal"];
+      if (page === 1) {
+        setIsLoading(true);
+      } else {
+        setIsLoadingMore(true);
+      }
       
-      console.log("fetching questions")
+      const types = ["normal"];
       const response = await fetch(
         `/api/question?conceptCategory=${encodeURIComponent(category.replace(
           / /g,
           "_"
-        ))}&page=1&pageSize=10&simple=true&types=${types.join("&types=")}`,
+        ))}&page=${page}&pageSize=10&simple=true&types=${types.join("&types=")}`,
       );
 
       if (!response.ok) throw new Error("Failed to fetch questions");
       
       const data = await response.json();
-      console.log(data)
-      // console.log("data", data.questions[0])
+      
       if (!data.questions || data.questions.length === 0) {
-        toast({
-          title: "No Questions Available",
-          description: "No quiz questions found for this category.",
-          variant: "destructive",
-        });
+        if (page === 1) {
+          toast({
+            title: "No Questions Available",
+            description: "No quiz questions found for this category.",
+            variant: "destructive",
+          });
+        }
         return;
       }
 
@@ -151,9 +168,11 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
         return questionWithOriginalOptions;
       });
 
-      setQuestions(shuffle 
-        ? [...formattedQuestions].sort(() => Math.random() - 0.5)
-        : formattedQuestions
+      // Update questions state based on page
+      setQuestions(prevQuestions => 
+        page === 1 
+          ? (shuffle ? shuffleArray(formattedQuestions) : formattedQuestions)
+          : [...prevQuestions, ...(shuffle ? shuffleArray(formattedQuestions) : formattedQuestions)]
       );
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -166,6 +185,7 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
       }
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   }, [category, shuffle, toast]);
 
@@ -244,43 +264,54 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
     }
   };
 
-  // Update handleAnswerSelect to include timing
+  // Update handleAnswerSelect
   const handleAnswerSelect = (answer: string) => {
+    if (answeredQuestions.has(currentQuestion.id)) return;
+    
     if (!hasAnsweredFirstQuestion) {
       setHasAnsweredFirstQuestion(true);
       questionTimerRef.current?.startTimer();
       totalTimerRef.current?.startTimer();
     }
 
+    const timeSpent = questionTimerRef.current?.getElapsedTime() || 0;
+    const isCorrect = answer === currentQuestion.questionOptions[0];
+    
     setSelectedAnswer(answer);
+    setAnsweredQuestions(prev => new Set([...prev, currentQuestion.id]));
+    
     if (currentQuestion) {
-      const isCorrect = answer === currentQuestion.questionOptions[0];
-      const timeSpent = questionTimerRef.current?.getElapsedTime() || 0;
-      
+      // Get the explanation for the correct answer (first note in the array)
+      const explanation = currentQuestion.questionAnswerNotes?.[0] || '';
+
       setAnswerSummaries(prev => [...prev, {
         questionContent: currentQuestion.questionContent,
         userAnswer: answer,
         correctAnswer: currentQuestion.questionOptions[0],
         isCorrect,
-        timeSpent
+        timeSpent,
+        questionNumber: currentQuestionIndex + 1,
+        explanation
       }]);
 
       handleSaveResponse(currentQuestion.id, answer, timeSpent);
     }
   };
 
-  // Update handleNextQuestion to reset question timer
+  // Update handleNextQuestion to fetch more questions when needed
   const handleNextQuestion = () => {
     setSelectedAnswer(null);
-    if (currentQuestionIndex === questions.length - 1) {
-      const totalTime = totalTimerRef.current?.getElapsedTime() || 0;
-      handleFinishQuiz(totalTime);
-    } else {
-      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
-      questionTimerRef.current?.resetTimer();
-      if (hasAnsweredFirstQuestion) {
-        questionTimerRef.current?.startTimer();
-      }
+    
+    // Check if we need to fetch more questions
+    if (currentQuestionIndex === questions.length - 3) { // Start fetching when 3 questions remain
+      setCurrentPage(prev => prev + 1);
+      fetchQuestions(currentPage + 1);
+    }
+    
+    setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+    questionTimerRef.current?.resetTimer();
+    if (hasAnsweredFirstQuestion) {
+      questionTimerRef.current?.startTimer();
     }
   };
     const handlePrevQuestion = () => {
@@ -290,77 +321,37 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
     );
     };
 
-  // Add reset quiz function
-  const handleResetQuiz = async () => {
-    setShowSummary(false);
-    setCurrentQuestionIndex(0);
-    setSelectedAnswer(null);
-    setAnswerSummaries([]);
-    setCurrentUserTestId(null);
-    setHasAnsweredFirstQuestion(false); // Reset the first question flag
-    
-    // Reset timers
-    questionTimerRef.current?.resetTimer();
-    totalTimerRef.current?.resetTimer();
-    
-    // Fetch new questions
-    await fetchQuestions();
-  };
-
-  // Add new handleFinishQuiz function
-  const handleFinishQuiz = async (totalTimeInSeconds: number) => {
-    if (!currentUserTestId) return;
-    
-    try {
-      const response = await fetch(`/api/user-test/${currentUserTestId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          score: (answerSummaries.filter(s => s.isCorrect).length / questions.length) * 100,
-          finishedAt: new Date().toISOString(),
-          totalTime: totalTimeInSeconds
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update test completion');
-      }
-      
-      setShowSummary(true);
-    } catch (error) {
-      console.error('Error finishing quiz:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save quiz results. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Render logic for options
+  // Update renderOptions
   const renderOptions = (question: QuizQuestion) => {
+    console.log("question", question)
     const options = shuffledOptions[question.id] || [];
+    const hasAnswered = answeredQuestions.has(question.id);
+    const correctAnswer = question.questionOptions[0];
     
     return options.map((option, index) => {
       const isSelected = selectedAnswer === option;
-      const previousResponse = userResponses[question.id];
-      const wasSelectedPreviously = previousResponse?.userAnswer === option;
-      const showResult = previousResponse && wasSelectedPreviously;
-      const isCorrectAnswer = option === question.questionOptions[0];
+      const isCorrectAnswer = option === correctAnswer;
+      
+      let buttonClass = 'w-full text-left p-2 rounded ';
+      
+      if (hasAnswered) {
+        if (isSelected) {
+          buttonClass += isCorrectAnswer ? 'bg-green-500 text-white' : 'bg-red-500 text-white';
+        } else if (isCorrectAnswer) {
+          buttonClass += 'bg-green-500 text-white';
+        } else {
+          buttonClass += 'bg-gray-100';
+        }
+      } else {
+        buttonClass += 'bg-gray-100 hover:bg-gray-200';
+      }
 
       return (
         <button
           key={index}
           onClick={() => handleAnswerSelect(option)}
-          className={`w-full text-left p-2 rounded ${
-            isSelected || wasSelectedPreviously
-              ? showResult
-                ? isCorrectAnswer
-                  ? "bg-green-500 text-white"
-                  : "bg-red-500 text-white"
-                : "bg-[#0e2247] text-white"
-              : "bg-gray-100 hover:bg-gray-200"
-          }`}
+          disabled={hasAnswered}
+          className={buttonClass}
         >
           {String.fromCharCode(65 + index)}. {option}
         </button>
@@ -390,7 +381,7 @@ Please act as a tutor - help me understand the concept and provide hints if I as
 
   if (isLoading) {
     return (
-      <div className="bg-transparent text-black px-6 rounded-lg mx-auto">
+      <div className="h-full bg-transparent text-black px-6 rounded-lg mx-auto">
         <div className="mb-4 flex justify-between items-center">
           <Skeleton className="h-7 w-32" />
           <Skeleton className="h-5 w-20" />
@@ -428,65 +419,59 @@ Please act as a tutor - help me understand the concept and provide hints if I as
     );
   }
 
-  if (showSummary) {
-    return (
-      <div className="h-[calc(100vh-200px)] max-h-[800px]">
-        <QuizSummary summaries={answerSummaries} onReset={handleResetQuiz} />
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-transparent text-black px-6 rounded-lg mx-auto">
-      <Timer ref={questionTimerRef} />
-      <Timer ref={totalTimerRef} />
-      
-      <div className="mb-4 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semi-bold text-[--theme-text-color] drop-shadow-lg">
-            Question {currentQuestionIndex + 1}
-          </h2>
-          <button
-            onClick={() => currentQuestion && setDownvotedQuestions(prev => new Set([...prev, currentQuestion.id]))}
-            disabled={currentQuestion && downvotedQuestions.has(currentQuestion.id)}
-            className="group relative p-1 rounded-full hover:bg-[--theme-hover-color] transition-colors"
-          >
-            <ThumbsDown 
-              size={16} 
-              className={currentQuestion && downvotedQuestions.has(currentQuestion.id) 
-                ? 'text-[--theme-hover-color]' 
-                : 'text-gray-500'
-              } 
-            />
-          </button>
+    <div className="h-full flex flex-col bg-transparent text-black px-6 rounded-lg mx-auto">
+      {/* Timer and Question Header */}
+      <div className="flex-none">
+        <Timer ref={questionTimerRef} />
+        <Timer ref={totalTimerRef} />
+        
+        <div className="mb-4 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-semi-bold text-[--theme-text-color] drop-shadow-lg">
+              Question {currentQuestionIndex + 1}
+            </h2>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">View Progress</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto !bg-[--theme-adaptive-tutoring-color] border border-blue-900 text-white">
+                <DialogHeader>
+                  <DialogTitle className="text-[--theme-text-color]">Quiz Progress</DialogTitle>
+                  <DialogClose className="absolute right-4 top-4 text-white opacity-70 hover:opacity-100" />
+                </DialogHeader>
+                <div className="!bg-[--theme-adaptive-tutoring-color]">
+                  <QuizProgress 
+                    summaries={answerSummaries}
+                    totalQuestions={questions.length}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
-        <span className="text-sm text-[--theme-text-color] drop-shadow-lg">
-          {currentQuestionIndex + 1} of {questions.length}
-        </span>
       </div>
-      <div className="mb-2 max-h-[60vh] overflow-y-auto">
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto min-h-0"> {/* min-h-0 is crucial for nested flex scrolling */}
         <div className="text-lg mb-4 text-white drop-shadow-lg">
           <ContentRenderer
             content={currentQuestion.questionContent}
             imageWidth="70%"
           />
         </div>
-        {/* {currentQuestion.passage && (
-          <div className="mb-4 p-4 bg-gray-100 rounded">
-            <div className="text-sm text-black">
-              <ContentRenderer
-                content={currentQuestion.passage.text}
-                imageWidth="70%"
-              />
-            </div>
-          </div>
-        )} */}
         <div className="space-y-2">
           {currentQuestion && renderOptions(currentQuestion)}
         </div>
+        {isLoadingMore && (
+          <div className="mt-4 text-center text-white">
+            Loading more questions...
+          </div>
+        )}
       </div>
 
-      <div className="flex justify-between">
+      {/* Navigation Buttons */}
+      <div className="flex-none mt-4 flex justify-between"> {/* Prevent shrinking */}
         <button
           onClick={handlePrevQuestion}
           disabled={currentQuestionIndex === 0}
@@ -496,7 +481,7 @@ Please act as a tutor - help me understand the concept and provide hints if I as
         </button>
         <button
           onClick={handleNextQuestion}
-          disabled={currentQuestionIndex === questions.length}
+          disabled={isLoadingMore}
           className="px-4 py-2 bg-[#0e2247] text-white rounded disabled:opacity-50"
         >
           Next

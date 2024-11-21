@@ -884,11 +884,13 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                     )}
 
                   {contentType === "quiz" && selectedCategory && (
-                    <Quiz 
-                      category={selectedCategory} 
-                      shuffle={true} 
-                      setChatbotContext={setChatbotContext}
-                    />
+                    <div className="h-[calc(100vh-23rem)]">
+                      <Quiz 
+                        category={selectedCategory} 
+                        shuffle={true} 
+                        setChatbotContext={setChatbotContext}
+                      />
+                    </div>
                   )}
                 </>
               )}
