@@ -47,6 +47,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import DiagnosticDialog from './DiagnosticDialog';
+import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
+import ATSTutorial from "./ATSTutorial";
 
 interface ContentItem {
   id: string;
@@ -66,6 +69,7 @@ interface AdaptiveTutoringProps {
   chatbotRef: React.MutableRefObject<{
     sendMessage: (message: string) => void;
   }>;
+  isFirstVisit?: boolean;
 }
 
 type PlatformType = 'spotify' | 'apple' | 'mymcat';
@@ -80,6 +84,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   toggleChatBot,
   setChatbotContext,
   chatbotRef,
+  isFirstVisit = true,
 }) => {
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -116,6 +121,21 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   };
 
   const [initialCategories, setInitialCategories] = useState<Category[]>([]);
+
+  const [showDiagnosticDialog, setShowDiagnosticDialog] = useState(true);
+  const [runTutorialPart1, setRunTutorialPart1] = useState(false);
+  const [runTutorialPart2, setRunTutorialPart2] = useState(false);
+  const [runTutorialPart3, setRunTutorialPart3] = useState(false);
+  const [runTutorialPart4, setRunTutorialPart4] = useState(false);
+
+  const [catIconInteracted, setCatIconInteracted] = useState(false);
+
+  const handleDiagnosticSubmit = (scores: any) => {
+    setShowDiagnosticDialog(false);
+    // Immediately start the tutorial
+    setRunTutorialPart1(true);
+    localStorage.setItem("atsTutorialPlayed", "true");
+  };
 
   // Fetch categories and set initial category
   useEffect(() => {
@@ -552,6 +572,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
     if (chatbotRef.current?.sendMessage) {
       chatbotRef.current.sendMessage(message);
+      setCatIconInteracted(true);
     } else {
       console.warn("ChatBot ref not ready");
     }
@@ -570,11 +591,19 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     return null;
   };
 
+  const handleKalypsoInteraction = () => {
+    // Only trigger if this tutorial hasn't been played yet
+    if (!localStorage.getItem("atsTutorialPart4Played")) {
+      const event = new Event("startATSTutorialPart4");
+      window.dispatchEvent(event);
+    }
+  };
+
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
       <div className="flex items-stretch w-full mb-3">
         <div className="flex-grow mr-2.5 ml-2">
-          <div className="grid grid-cols-7 gap-3">
+          <div className="grid grid-cols-7 gap-3 ats-topic-icons">
             {isLoading
               ? (
                   [
@@ -592,7 +621,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               : checkedCategories?.slice(0, 7).map((category, index) => (
                   <div
                     key={category.id}
-                    className="relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all flex flex-col justify-between items-center"
+                    className={`relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all flex flex-col justify-between items-center ${index === 1 ? 'specific-topic-icon' : ''}`}
                     style={{
                       backgroundColor: "var(--theme-adaptive-tutoring-color)",
                       boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
@@ -636,20 +665,18 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                 <TooltipTrigger>
                   <button
                     onClick={toggleSettings}
-                    className={`settings-button tutorial-settings-button p-2 rounded-full shadow-md ${
-                      showSettings ? "bg-[--theme-hover-color]" : "bg-white"
-                    }`}
+                    className="ats-settings-button p-2 rounded-full shadow-md bg-white"
                   >
                     <svg
                       width="16"
                       height="16"
                       viewBox="0 0 24 24"
-                      fill={showSettings ? "white" : "#333"}
+                      fill="#333"
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
                         d="M9.25,22l-.4-3.2c-.216-.084-.42-.184-.612-.3c-.192-.117-.38-.242-.563-.375L4.7,19.375L1.95,14.625L4.525,12.675c-.016-.117-.024-.23-.024-.338V11.662c0-.108.008-.221.025-.337L1.95,9.375L4.7,4.625L7.675,5.875c.183-.134.375-.259.575-.375c.2-.117.4-.217.6-.3l.4-3.2H14.75l.4,3.2c.216.084.42.184.612.3c.192.117.38.242.563.375l2.975-.75l2.75,4.75l-2.575,1.95c.016.117.024.23.024.338v.675c0,.108-.008.221-.025.337l2.575,1.95l-2.75,4.75l-2.95-.75c-.183.133-.375.258-.575.375c-.2.117-.4.217-.6.3l-.4,3.2H9.25zM12.05,15.5c.966,0,1.791-.342,2.475-1.025c.683-.683,1.025-1.508,1.025-2.475c0-.966-.342-1.791-1.025-2.475c-.683-.683-1.508-1.025-2.475-1.025c-0.984,0-1.813,.342-2.488,1.025c-0.675,.683-1.012,1.508-1.012,2.475c0,.966,.337,1.791,1.012,2.475c.675,.683,1.504,1.025,2.488,1.025z"
-                        fill={showSettings ? "white" : "#333"}
+                        fill="#333"
                       />
                     </svg>
                   </button>
@@ -671,7 +698,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
             <div className="py-2 flex items-center justify-center gap-4 mt-2 ml-2 mr-2">
               <button
                 onClick={handleCameraClick}
-                className="p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
+                className="camera-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
               >
                 <div className="w-6 h-6 relative theme-box">
                   <Image
@@ -685,7 +712,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               </button>
               <button
                 onClick={handleBookClick}
-                className="p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
+                className="book-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
               >
                 <div className="w-6 h-6 relative theme-box">
                   <Image
@@ -700,7 +727,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               <p className="text-m px-10">{selectedCategory || ""}</p>
               <button
                 onClick={handleQuizTabClick}
-                className="p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
+                className="quiz-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
               >
                 <div className="w-7 h-7 relative theme-box">
                   <Image
@@ -718,20 +745,20 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                     <div className="w-7 h-7 relative theme-box">
                       <Image
                         src="/cat.svg"
-                        layout="fill"
-                        objectFit="contain"
-                        alt="cat assistant"
-                        className="theme-svg"
+                        alt="AI Chat"
+                        width={24}
+                        height={24}
+                        className="theme-svg w-6 h-6"
                       />
                     </div>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={() => handleCatClick("explain")}>
-                    Explain
+                    Explain This
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleCatClick("question")}>
-                    Question
+                    Question Me
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -759,35 +786,46 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                           onEnded={() => setIsPlaying(false)}
                           controls={true}
                         />
-                        <Collapsible className="mt-4" open={isSummaryOpen}>
-                          <CollapsibleTrigger
-                            className="flex items-center text-sm text-[--theme-hover-color] cursor-pointer"
-                            onClick={() => setIsSummaryOpen(!isSummaryOpen)}
+                        <div className="mt-4 flex justify-between items-center">
+                          <Collapsible open={isSummaryOpen}>
+                            <CollapsibleTrigger
+                              className="flex items-center text-sm text-[--theme-hover-color] cursor-pointer"
+                              onClick={() => setIsSummaryOpen(!isSummaryOpen)}
+                            >
+                              {isSummaryOpen ? (
+                                <>
+                                  <ChevronUp className="w-4 h-4 ml-0 xl:ml-0 lg:ml-4 md:ml-4 mr-1" />
+                                  Hide Summary
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="w-4 h-4 ml-0 xl:ml-0 lg:ml-4 md:ml-4 mr-1" />
+                                  Show Summary
+                                </>
+                              )}
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="text-sm text-[--theme-text-color] mt-2 pl-2 border-l border-gray-700">
+                              {currentContent && currentContent.summary ? (
+                                <div className="summary-content">
+                                  <ReactMarkdown className="markdown-content">
+                                    {formatSummary(currentContent.summary)}
+                                  </ReactMarkdown>
+                                </div>
+                              ) : (
+                                "No summary available."
+                              )}
+                            </CollapsibleContent>
+                          </Collapsible>
+                          
+                          <a 
+                            href="https://app.termly.io/policy-viewer/policy.html?policyUUID=bbaa0360-e283-49d9-b273-19f54d765254" 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-[--theme-hover-color] hover:underline"
                           >
-                            {isSummaryOpen ? (
-                              <>
-                                <ChevronUp className="w-4 h-4 ml-0 xl:ml-0 lg:ml-4 md:ml-4 mr-1" />
-                                Hide Summary
-                              </>
-                            ) : (
-                              <>
-                                <ChevronDown className="w-4 h-4 ml-0 xl:ml-0 lg:ml-4 md:ml-4 mr-1" />
-                                Show Summary
-                              </>
-                            )}
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="text-sm text-[--theme-text-color] mt-2 pl-2 border-l border-gray-700">
-                            {currentContent && currentContent.summary ? (
-                              <div className="summary-content">
-                                <ReactMarkdown className="markdown-content">
-                                  {formatSummary(currentContent.summary)}
-                                </ReactMarkdown>
-                              </div>
-                            ) : (
-                              "No summary available."
-                            )}
-                          </CollapsibleContent>
-                        </Collapsible>
+                            Disclaimer
+                          </a>
+                        </div>
                       </div>
                     )}
 
@@ -851,35 +889,46 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                             allow="autoplay"
                           ></iframe>
                         </div>
-                        <Collapsible className="mt-4" open={isSummaryOpen}>
-                          <CollapsibleTrigger
-                            className="flex items-center text-sm text-[--theme-hover-color] cursor-pointer"
-                            onClick={() => setIsSummaryOpen(!isSummaryOpen)}
+                        <div className="mt-4 flex justify-between items-center">
+                          <Collapsible open={isSummaryOpen}>
+                            <CollapsibleTrigger
+                              className="flex items-center text-sm text-[--theme-hover-color] cursor-pointer"
+                              onClick={() => setIsSummaryOpen(!isSummaryOpen)}
+                            >
+                              {isSummaryOpen ? (
+                                <>
+                                  <ChevronUp className="w-4 h-4 ml-0 xl:ml-0 lg:ml-4 md:ml-4 mr-1" />
+                                  Hide Summary
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="w-4 h-4 ml-0 xl:ml-0 lg:ml-4 md:ml-4 mr-1" />
+                                  Show Summary
+                                </>
+                              )}
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="text-sm text-[--theme-text-color] mt-2 pl-2 border-l border-gray-700">
+                              {currentContent && currentContent.summary ? (
+                                <div className="summary-content">
+                                  <ReactMarkdown className="markdown-content">
+                                    {formatSummary(currentContent.summary)}
+                                  </ReactMarkdown>
+                                </div>
+                              ) : (
+                                "No summary available."
+                              )}
+                            </CollapsibleContent>
+                          </Collapsible>
+                          
+                          <a 
+                            href="https://app.termly.io/policy-viewer/policy.html?policyUUID=bbaa0360-e283-49d9-b273-19f54d765254" 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-[--theme-hover-color] hover:underline"
                           >
-                            {isSummaryOpen ? (
-                              <>
-                                <ChevronUp className="w-4 h-4 ml-0 xl:ml-0 lg:ml-4 md:ml-4 mr-1" />
-                                Hide Summary
-                              </>
-                            ) : (
-                              <>
-                                <ChevronDown className="w-4 h-4 ml-0 xl:ml-0 lg:ml-4 md:ml-4 mr-1" />
-                                Show Summary
-                              </>
-                            )}
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="text-sm text-[--theme-text-color] mt-2 pl-2 border-l border-gray-700">
-                            {currentContent && currentContent.summary ? (
-                              <div className="summary-content">
-                                <ReactMarkdown className="markdown-content">
-                                  {formatSummary(currentContent.summary)}
-                                </ReactMarkdown>
-                              </div>
-                            ) : (
-                              "No summary available."
-                            )}
-                          </CollapsibleContent>
-                        </Collapsible>
+                            Disclaimer
+                          </a>
+                        </div>
                       </div>
                     )}
 
@@ -1091,6 +1140,23 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <DiagnosticDialog
+        isOpen={showDiagnosticDialog}
+        onSubmit={handleDiagnosticSubmit}
+      />
+      
+      <ATSTutorial
+        runPart1={runTutorialPart1}
+        setRunPart1={setRunTutorialPart1}
+        runPart2={runTutorialPart2}
+        setRunPart2={setRunTutorialPart2}
+        runPart3={runTutorialPart3}
+        setRunPart3={setRunTutorialPart3}
+        runPart4={runTutorialPart4}
+        setRunPart4={setRunTutorialPart4}
+        catIconInteracted={catIconInteracted}
+      />
     </div>
   );
 };

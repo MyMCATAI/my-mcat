@@ -136,6 +136,20 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     }
   }, []);
 
+  useEffect(() => {
+    const tutorialPart3Played = localStorage.getItem("tutorialPart3Played");
+    const tutorialPart2Played = localStorage.getItem("tutorialPart2Played");
+    
+    if (tutorialPart2Played === "true" && (!tutorialPart3Played || tutorialPart3Played === "false")) {
+      const timer = setTimeout(() => {
+        setRunTutorialPart3(true);
+        localStorage.setItem("tutorialPart3Played", "true");
+      }, 8000); // 8 seconds after Part 2
+
+      return () => clearTimeout(timer);
+    }
+  }, [setRunTutorialPart3]);
+
   const fetchActivities = async () => {
     if (!user?.id) return;
 
