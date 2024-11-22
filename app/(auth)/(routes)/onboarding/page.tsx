@@ -29,6 +29,11 @@ const Tooltip = ({ message, topPosition }: { message: string; topPosition?: numb
   </motion.div>
 );
 
+// Add this email validation function
+const isValidEmail = (email: string) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
 export default function OnboardingPage() {
   const { user } = useClerk();
   const router = useRouter();
@@ -213,7 +218,9 @@ export default function OnboardingPage() {
   const onPurchase = async () => {
     try {
       setLoading(true);
-      const response = await axios.post("/api/stripe/checkout");
+      const response = await axios.post("/api/stripe/checkout", {
+        priceType: isValidEmail(friendEmail) ? 'discount' : 'default'
+      });
       window.location.href = response.data.url;
     } catch (error) {
       console.error("Error:", error);
@@ -221,6 +228,8 @@ export default function OnboardingPage() {
       setLoading(false);
     }
   };
+
+  const emailIsValid = isValidEmail(friendEmail)
 
   return (
     <div className="flex items-center justify-center min-h-screen relative">
@@ -529,11 +538,23 @@ export default function OnboardingPage() {
         {step === 4 && !kalypsoMessage && (
           <div className="text-center">
             <h2 className="text-2xl font-bold text-white mb-6">Get Your Coins</h2>
-            <div className="bg-[#0A1A2F] p-6 rounded-lg mb-6">
-              <p className="text-3xl font-bold text-white">${friendEmail ? '9.99' : '19.99'}</p>
-              <p className="text-gray-400">10 Coins</p>
+            <div className="bg-[#0A1A2F] p-6 rounded-lg mb-6 relative">
+              {emailIsValid && (
+                <div className="absolute -top-3 right-3 bg-green-500 text-white text-sm px-3 py-1 rounded-full">
+                  50% OFF!
+                </div>
+              )}
+              <div className="flex justify-center items-center gap-3">
+                {emailIsValid && (
+                  <p className="text-3xl font-bold text-gray-400 line-through">$19.00</p>
+                )}
+                <p className="text-3xl font-bold text-white">${emailIsValid ? '9.50' : '19.00'}</p>
+              </div>
+              <div className="mt-2 flex items-center justify-center gap-2">
+                <p className="text-gray-400">10 Coins</p>
+                <span className="text-yellow-400">✨</span>
+              </div>
             </div>
-            
             <div className="space-y-4">
               <input
                 type="email"
@@ -544,7 +565,7 @@ export default function OnboardingPage() {
               />
               <button 
                 onClick={onPurchase}
-                disabled={loading}
+                disabled={loading || (friendEmail.length > 0 && !emailIsValid)}
                 className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
                 {loading ? "Loading..." : "Purchase Coins"}
