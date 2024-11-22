@@ -38,10 +38,19 @@ export default function HighlightableText({ children, presetHighlights = [] }: H
   }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (isHighlighting) {
-      e.preventDefault()
-      handleHighlight()
+    if (!isHighlighting) return
+
+    e.preventDefault()
+    const selection = window.getSelection()
+    
+    // If there's no selection or empty selection, disable highlighting mode
+    if (!selection || selection.toString().trim() === '') {
+      setIsHighlighting(false)
+      selection?.removeAllRanges()
+      return
     }
+
+    handleHighlight()
   }
 
   const clearHighlights = () => {
@@ -112,7 +121,7 @@ export default function HighlightableText({ children, presetHighlights = [] }: H
       
       <div 
         id={`highlightable-content-${uniqueId}`}
-        className={`mt-8 ${isHighlighting ? 'selection:bg-yellow-200 touch-action-none' : ''}`}
+        className={`mt-8 ${isHighlighting ? 'selection:bg-yellow-200' : ''}`}
         onMouseUp={() => {
           if (isHighlighting) {
             handleHighlight()
@@ -122,7 +131,7 @@ export default function HighlightableText({ children, presetHighlights = [] }: H
         style={{
           WebkitUserSelect: isHighlighting ? 'text' : 'none',
           userSelect: isHighlighting ? 'text' : 'none',
-          touchAction: isHighlighting ? 'none' : 'auto'
+          touchAction: 'auto'
         }}
       >
         {children}
