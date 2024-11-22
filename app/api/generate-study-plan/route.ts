@@ -12,53 +12,58 @@ const EVENT_CATEGORIES = [
   {
     name: 'MyMCAT Daily CARs',
     optional: true,
-    duration: 0.5,
-    priority: 2,
+    minDuration: 0.5,
+    maxDuration: 1,
+    priority: 3,
+    type: 'Practice',
     description: "Practice CARS passages to improve your critical analysis and reasoning skills. Focus on understanding complex arguments, identifying main ideas, and developing your reading speed and comprehension.",
   },
   {
     name: 'Daily CARs',
     optional: true,
-    duration: 1,
-    priority: 2,
+    minDuration: 0.5,
+    maxDuration: 1,
+    priority: 3,
+    type: 'Practice',
     description: "Practice CARS passages to improve your critical analysis and reasoning skills. Focus on understanding complex arguments, identifying main ideas, and developing your reading speed and comprehension.",
   },
   {
     name: 'Adaptive Tutoring Suite',
     optional: true,
-    duration: 3,
-    chunkable: true,
-    chunkSize: 1,
-    priority: 2,
-    type: 'Content',
+    minDuration: 1,
+    maxDuration: 3,
+    priority: 1,
+    type: 'Review',
     description: "Engage with personalized content tailored to your knowledge gaps. Review key concepts, practice problem-solving, and strengthen your understanding of challenging topics through interactive learning modules.",
   },
   {
     name: 'Anki Clinic',
     optional: true,
-    duration: 0.5,
+    minDuration: 0.5,
+    maxDuration: 1.5,
     priority: 2,
-    type: 'Content',
+    type: 'Review',
     description: "Review and reinforce key concepts using spaced repetition. Focus on high-yield facts, strengthen your recall ability, and maintain long-term retention of important MCAT content.",
   },
   {
     name: 'UWorld',
     duration: 2,
     priority: 3,
-    type: 'Review',
+    type: 'practice',
     description: "Complete UWorld question blocks focusing on identifying knowledge gaps and improving test-taking strategies. Review explanations thoroughly and create notes on commonly missed concepts.",
   },
   {
     name: 'AAMC Materials',
     duration: 2,
     priority: 3,
-    type: 'Review',
+    type: 'practice',
     description: "Work through official AAMC practice materials to familiarize yourself with actual MCAT-style questions. Focus on understanding the reasoning behind correct and incorrect answers to improve your test-taking approach.",
   },
   {
     name: 'Full-Length Exam',
     duration: 8,
     priority: 5,
+    type: 'Exam',
     description: "Complete a full-length practice exam under test-day conditions. Maintain strict timing, take appropriate breaks, and simulate the actual testing environment to build stamina and familiarity with the MCAT format.",
   },
   {
@@ -67,6 +72,7 @@ const EVENT_CATEGORIES = [
     chunkable: true,
     chunkSize: 1,
     priority: 4,
+    type: 'Review',
     description: "Review your full-length exam in detail. Analyze each question, understand the reasoning behind correct and incorrect answers, identify patterns in your mistakes, and create targeted study plans to address weak areas.",
   },
 ];
@@ -340,7 +346,11 @@ async function generateStudySchedule(
       }
       
       examSchedule.unshift({
-        date: new Date(currentExamDate),
+        date: (() => {
+          const date = new Date(currentExamDate);
+          date.setHours(0, 0, 0, 0);
+          return date;
+        })(),
         examName: availableExams[i]
       });
       
@@ -429,6 +439,7 @@ async function generateStudySchedule(
   const ratioChangePerDay = (0.8 - 0.2) / totalDays; // Linear progression from 80/20 to 20/80
 
   let currentDate = new Date(startDate);
+  let takeUpExamDate: Date | null = null;
 
   while (currentDate < examDate) {
     const dayOfWeek = currentDate.getDay();
@@ -438,9 +449,13 @@ async function generateStudySchedule(
     const scheduledTasksForDay = new Set<string>();
 
     // Check if there's a scheduled exam for this day
-    const scheduledExam = examSchedule.find(exam => 
-      exam.date.getTime() === currentDate.getTime()
-    );
+    const scheduledExam = examSchedule.find(exam => {
+      const examDate = new Date(exam.date);
+      examDate.setHours(0, 0, 0, 0);
+      const compareDate = new Date(currentDate);
+      compareDate.setHours(0, 0, 0, 0);
+      return examDate.getTime() === compareDate.getTime();
+    });
 
     if (scheduledExam) {
       // Schedule full length exam
@@ -454,7 +469,7 @@ async function generateStudySchedule(
       activities.push(examActivity);
 
       // Schedule take-up exam for the following days
-      await scheduleTakeUpExam(activities, studyPlan, currentDate, hoursPerDay);
+      takeUpExamDate = await scheduleTakeUpExam(activities, studyPlan, currentDate, hoursPerDay);
     } else {
       if (availableHours === 0) {
         currentDate.setDate(currentDate.getDate() + 1);
@@ -486,24 +501,22 @@ async function generateStudySchedule(
         totalAvailableHours,
         totalDays,
         aamcCarsSchedule,
-        currentDate
+        currentDate,
+        availableHours,
+        takeUpExamDate
       );
 
       // Schedule each task according to available hours
-      for (const taskName of dayTasks) {
-        const task = EVENT_CATEGORIES.find(t => t.name === taskName);
-        if (task && typeof task.duration === 'number' && remainingHours >= task.duration) {
-          const activity = createActivity(
-            studyPlan,
-            taskName,
-            task.type || 'Study',
-            task.duration,
-            currentDate
-          );
-          activities.push(activity);
-          scheduledTasksForDay.add(taskName);
-          remainingHours -= task.duration;
-        }
+      for (const task of dayTasks) {
+        const activity = createActivity(
+          studyPlan,
+          task.name,
+          task.type || 'Study',
+          task.duration,
+          currentDate
+        );
+        activities.push(activity);
+        scheduledTasksForDay.add(task.name);
       }
     }
 
@@ -614,37 +627,36 @@ function getNextContentActivity(
 }
 
 // Function to schedule Take Up Exam sessions
+// return the date of the take up exam
 async function scheduleTakeUpExam(
   activities: CalendarActivity[],
   studyPlan: StudyPlan,
   examDate: Date,
   hoursPerDay: { [key: string]: string }
 ) {
-  let remainingReviewHours = 5;
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   let currentDate = new Date(examDate);
   currentDate.setDate(currentDate.getDate() + 1);
-
-  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const finalExamDate = new Date(studyPlan.examDate);
+  let takeUpExamDate: Date | null = null;
 
-  while (remainingReviewHours > 0) {
-    if (currentDate >= finalExamDate) {
+  // Look for the next day with at least 4 hours available
+  while (currentDate < finalExamDate) {
+    const dayName = daysOfWeek[currentDate.getDay()];
+    const availableHours = parseInt(hoursPerDay[dayName]) || 0;
+
+    if (availableHours >= 4) {
+      const takeUpExamActivity = createActivity(studyPlan, 'Take Up Exam', 'Review', 4, currentDate);
+      activities.push(takeUpExamActivity);
+      takeUpExamDate = currentDate;
+      takeUpExamDate.setHours(0, 0, 0, 0);
       break;
     }
 
-    const dayOfWeek = currentDate.getDay();
-    const dayName = daysOfWeek[dayOfWeek];
-    const availableHours = parseInt(hoursPerDay[dayName]) || 0;
-
-    if (availableHours > 0) {
-      const reviewHours = Math.min(availableHours, remainingReviewHours);
-      const takeUpExamActivity = createActivity(studyPlan, 'Take Up Exam', 'Review', reviewHours, currentDate);
-      activities.push(takeUpExamActivity);
-      remainingReviewHours -= reviewHours;
+    currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
+  return takeUpExamDate;
 }
 
 // Function to determine the main task based on contentReviewRatio and available resources
@@ -655,47 +667,138 @@ function getAvailableTasks(
   hoursUntilExam: number,
   totalDays: number,
   aamcCarsSchedule: Set<number>,
-  currentDate: Date
-): string[] {
-  const tasks: string[] = [];
+  currentDate: Date,
+  availableHours: number,
+  takeUpExamDate: Date | null
+): { name: string; duration: number; type: string }[] {
+  const tasks: { name: string; duration: number; type: string }[] = [];
   const isReviewDay = Math.random() < contentReviewRatio;
+  const isNearExam = hoursUntilExam < 180;
+  let remainingHours = availableHours;
+  let takeUpExamTasks = 0;
+
+  let currentDateZeroHours = new Date(currentDate);
+  currentDateZeroHours.setHours(0, 0, 0, 0);
   
-  // Calculate CARS duration based on exam proximity
-  // More 30-min sessions early on, more 60-min sessions closer to exam
-
-  // Determine CARS type based on schedule
-  if (!scheduledTasksForDay.has('MyMCAT Daily CARs') && !scheduledTasksForDay.has('Daily CARs')) {
-    const useAAMCCars = aamcCarsSchedule.has(currentDate.getTime());
-    tasks.push(useAAMCCars ? 'Daily CARs' : 'MyMCAT Daily CARs');
+  if (takeUpExamDate && currentDateZeroHours.getTime() === takeUpExamDate.getTime()) {
+    takeUpExamTasks += 1;
+    remainingHours -= 4;
   }
 
-  if (!scheduledTasksForDay.has('Adaptive Tutoring Suite')) {
-    tasks.push('Adaptive Tutoring Suite');
-  }
-  
-  if (!scheduledTasksForDay.has('Anki Clinic')) {
-    tasks.push('Anki Clinic');
-  }
+  let ATS_max: number = EVENT_CATEGORIES[2].maxDuration;
+  let ATS_min: number  = EVENT_CATEGORIES[2].minDuration;
+  let ATS_type: string = EVENT_CATEGORIES[2].type;
+  let Anki_max: number = EVENT_CATEGORIES[3].maxDuration;
+  let Anki_min: number = EVENT_CATEGORIES[3].minDuration;
+  let Anki_type: string = EVENT_CATEGORIES[3].type;
+  let CARs_max: number = EVENT_CATEGORIES[1].maxDuration;
+  let CARs_min: number = EVENT_CATEGORIES[1].minDuration;
+  let CARs_type: string = EVENT_CATEGORIES[1].type;
+  let UWorld_type: string = EVENT_CATEGORIES[4].type;
+  let AAMC_type: string = EVENT_CATEGORIES[5].type;
 
-  // Handle review vs practice days
   if (isReviewDay) {
-    // Review day has ATS, Anki, and CARs
-    return tasks;
+    // Review day priority: ATS > Anki > CARs
+    if (remainingHours >= ATS_min) {
+      let atsDuration = remainingHours >= ATS_min ? 
+        Math.min(ATS_max, remainingHours - (Anki_min + CARs_min)) : 
+        0;
+      atsDuration = Math.max(ATS_min, atsDuration);
+      tasks.push({ name: 'Adaptive Tutoring Suite', duration: atsDuration, type: ATS_type });
+      remainingHours -= atsDuration;
+    }
+
+    if (remainingHours >= Anki_min) {
+      let ankiDuration = remainingHours >= Anki_min ? 
+        Math.min(Anki_max, remainingHours - CARs_min) : 
+        0;
+      ankiDuration = Math.max(Anki_min, ankiDuration);
+      tasks.push({ name: 'Anki Clinic', duration: ankiDuration, type: Anki_type });
+      remainingHours -= ankiDuration;
+    }
+
+    if (remainingHours >= CARs_min) {
+      // CARs last (30-60 min)
+      const carsDuration = Math.min(1, remainingHours);
+      const useAAMCCars = aamcCarsSchedule.has(currentDate.getTime());
+      tasks.push({ 
+        name: useAAMCCars ? 'Daily CARs' : 'MyMCAT Daily CARs', 
+        duration: carsDuration,
+        type: CARs_type
+      });
+    }
   } else {
-    // Practice day: Replace ATS and Anki with practice materials
-    // If less than 180 hours until exam and has AAMC materials, prioritize AAMC
-    if (hoursUntilExam < 180 && resources.hasAAMC && !scheduledTasksForDay.has('AAMC Materials')) {
-      return ['AAMC Materials', tasks[0]]; // Keep CARS, replace others with AAMC
+    // Practice day
+    // no UWorld or AAMC, priority: Anki > ATS > CARs
+    // With UWorld or AAMC, priority: UWorld > AAMC > Anki > CARs
+    if (resources.hasUWorld || resources.hasAAMC) {
+      if (remainingHours >= 2) {
+        if (resources.hasUWorld) {
+          tasks.push({ name: 'UWorld', duration: Math.min(2, remainingHours), type: UWorld_type });
+          remainingHours -= 2;
+        }
+      }
+      
+      if (remainingHours >= 2) {
+        if (isNearExam && resources.hasAAMC) {
+          // Prioritize AAMC near exam
+          tasks.push({ name: 'AAMC Materials', duration: Math.min(2, remainingHours), type: AAMC_type });
+          remainingHours -= 2;
+        }
+      }
+
+      if (remainingHours >= 0.5) {
+        tasks.push({ name: 'Anki Clinic', duration: Math.min(1, remainingHours), type: Anki_type });
+        remainingHours -= 1;
+      }
+
+      if (remainingHours >= 0.5) {
+        const useAAMCCars = aamcCarsSchedule.has(currentDate.getTime());
+        if (tasks.length + takeUpExamTasks <= 3) {
+          tasks.push({ 
+            name: useAAMCCars ? 'Daily CARs' : 'MyMCAT Daily CARs', 
+            duration: Math.min(1, remainingHours),
+            type: CARs_type
+          });
+        }
+      } 
+    } else {
+      // No UWorld or AAMC, priority: Anki > ATS > CARs
+      if (remainingHours >= Anki_min) {
+        let ankiDuration = remainingHours >= Anki_min ? 
+          Math.min(Anki_max, remainingHours - (ATS_min + CARs_min)) : 
+        0;
+      ankiDuration = Math.max(Anki_min, ankiDuration);
+        tasks.push({ name: 'Anki Clinic', duration: ankiDuration, type: Anki_type });
+        remainingHours -= ankiDuration;
+      }
+
+      if (remainingHours >= ATS_min) {
+        let atsDuration = remainingHours >= ATS_min ? 
+          Math.min(ATS_max, remainingHours - CARs_min) : 
+          0;
+        atsDuration = Math.max(ATS_min, atsDuration);
+        tasks.push({ name: 'Adaptive Tutoring Suite', duration: atsDuration, type: ATS_type });
+        remainingHours -= atsDuration;
+      }
+
+      if (remainingHours >= 0.5) {
+        // CARs last (30-60 min)
+        const carsDuration = Math.min(1, remainingHours);
+        const useAAMCCars = aamcCarsSchedule.has(currentDate.getTime());
+        
+        if (tasks.length + takeUpExamTasks <= 3) {
+          tasks.push({ 
+            name: useAAMCCars ? 'Daily CARs' : 'MyMCAT Daily CARs', 
+            duration: carsDuration,
+            type: CARs_type
+          });
+        }
+      }
     }
-    
-    // If has UWorld and not already scheduled
-    if (resources.hasUWorld && !scheduledTasksForDay.has('UWorld')) {
-      return ['UWorld', tasks[0]]; // Keep CARS, replace others with UWorld
-    }
-    
-    // If no practice materials available, keep the review day schedule
-    return tasks;
   }
+
+  return tasks;
 }
 
 // Function to create an activity object
