@@ -42,7 +42,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({ isOpen, onOpenChange }) =
             </video>
           </div>
           <p className="text-center mb-4">
-            We're still working on the Anki Clinic, a fun & competitive anki experience. Join our discord for updates!
+            We are still working on the Anki Clinic, a fun and competitive Anki experience. Join our discord for updates!
           </p>
           <div className="space-y-2">
             <a 
