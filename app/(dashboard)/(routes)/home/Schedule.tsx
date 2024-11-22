@@ -38,11 +38,12 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Tutorial from "./Tutorial";
-import { Checkbox } from "@/components/ui/checkbox"; // Add this import
+import { Checkbox } from "@/components/ui/checkbox"; 
 import Statistics from "@/components/Statistics";
-import DonutChart from "./DonutChart"; // Add this import
+import DonutChart from "./DonutChart"; 
 import { FaFire } from "react-icons/fa"
 import { PurchaseButton } from "@/components/purchase-button";
+import { toast } from "react-hot-toast";
 
 ChartJS.register(
   CategoryScale,
@@ -98,7 +99,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showNewActivityForm, setShowNewActivityForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showThankYouDialog, setShowThankYouDialog] = useState(false);
   const [typedText, setTypedText] = useState("");
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [expandedGraph, setExpandedGraph] = useState<string | null>(null);
@@ -119,11 +119,12 @@ const Schedule: React.FC<ScheduleProps> = ({
     useState(false);
   const [tutorialStep, setTutorialStep] = useState(1);
   const [hasUpdatedStudyPlan, setHasUpdatedStudyPlan] = useState(false);
-  const [showCalendarTutorial, setShowCalendarTutorial] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [statistics, setStatistics] = useState<any>(null);
   const [userScore, setUserScore] = useState(0);
   const [arrowDirection, setArrowDirection] = useState(">");
+  const [isEmailSending, setIsEmailSending] = useState(false);
+  const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
@@ -132,45 +133,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     activityType: "",
     scheduledDate: new Date().toISOString().split("T")[0],
   });
-
-  const { user } = useUser();
-
-  const [checklists, setChecklists] = useState<
-    Record<Section, { id: number; text: string; checked: boolean }[]>
-  >(() => {
-    // Try to load saved state from localStorage
-    const savedChecklists = localStorage.getItem('dailyChecklists');
-    const today = new Date().toDateString();
-    const savedDate = localStorage.getItem('checklistsDate');
-    
-    if (savedChecklists && savedDate === today) {
-      return JSON.parse(savedChecklists);
-    }
-    
-    // Return default state if no saved state or if it's a new day
-    return {
-      AdaptiveTutoringSuite: [
-        { id: 1, text: "Complete daily adaptive quiz", checked: false },
-        { id: 2, text: "Review personalized study plan", checked: false },
-        { id: 3, text: "Schedule tutoring session", checked: false },
-      ],
-      MCATGameAnkiClinic: [
-        { id: 1, text: "Play MCAT Game for 30 minutes", checked: false },
-        { id: 2, text: "Review Anki flashcards", checked: false },
-        { id: 3, text: "Create new Anki cards", checked: false },
-      ],
-      DailyCARsSuite: [
-        { id: 1, text: "Complete daily CARS passage", checked: false },
-        { id: 2, text: "Review CARS strategies", checked: false },
-        { id: 3, text: "Practice timing for CARS", checked: false },
-      ],
-    };
-  });
-
-  useEffect(() => {
-    localStorage.setItem('dailyChecklists', JSON.stringify(checklists));
-    localStorage.setItem('checklistsDate', new Date().toDateString());
-  }, [checklists]);
 
   // Should be consistent with calendar events
   // If table has the column "eventType", then we can use it to determine the section
@@ -199,46 +161,15 @@ const Schedule: React.FC<ScheduleProps> = ({
     };
   }, []);
 
-  const handleCheckboxChange = async (section: Section, id: number) => {
-    setChecklists((prevChecklists) => {
-      const updatedSection = prevChecklists[section].map((item) =>
-        item.id === id ? { ...item, checked: !item.checked } : item
-      );
-
-      const allChecked = updatedSection.every(
-        (item: { checked: boolean }) => item.checked
-      );
-      if (
-        allChecked &&
-        !prevChecklists[section].every(
-          (item: { checked: boolean }) => item.checked
-        )
-      ) {
-        setShowRewardDialog(true);
-        setRewardSection(section);
-
-        const newCompletedSections = [...completedSections, section];
-        setCompletedSections(newCompletedSections);
-
-        // Play the appropriate sound
-        if (newCompletedSections.length === 3) {
-          if (fanfareRef.current) {
-            fanfareRef.current.play();
-          }
-        } else if (audioRef.current) {
-          audioRef.current.play();
-        }
-
-        // Update user's coin count
-        updateUserCoinCount();
+  
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (emailTimeoutRef.current) {
+        clearTimeout(emailTimeoutRef.current);
       }
-
-      return {
-        ...prevChecklists,
-        [section]: updatedSection,
-      };
-    });
-  };
+    };
+  }, []);
 
   const updateUserCoinCount = async () => {
     try {
@@ -598,24 +529,13 @@ const Schedule: React.FC<ScheduleProps> = ({
         index === taskIndex ? { ...task, completed } : task
       );
 
-      // Determine new status based on task completion
-      let newStatus = "Not Started";
-      const completedTaskCount = updatedTasks.filter(task => task.completed).length;
-      
-      if (completedTaskCount === updatedTasks.length) {
-        newStatus = "Complete";
-      } else if (completedTaskCount > 0) {
-        newStatus = "In Progress";
-      }
-
       // Update in backend
       const response = await fetch(`/api/calendar-activity`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: activityId,
-          tasks: updatedTasks,
-          status: newStatus
+          tasks: updatedTasks
         })
       });
 
@@ -625,15 +545,41 @@ const Schedule: React.FC<ScheduleProps> = ({
       setTodayActivities(current =>
         current.map(a =>
           a.id === activityId
-            ? { ...a, tasks: updatedTasks, status: newStatus }
+            ? { ...a, tasks: updatedTasks }
             : a
         )
       );
 
-      onActivitiesUpdate?.();
-      
+      // Check if all tasks are completed for this activity
+      const allTasksCompleted = updatedTasks.every(task => task.completed);
+      if (allTasksCompleted) {
+        // Play success sound
+        if (audioRef.current) {
+          audioRef.current.play().catch(console.error);
+        }
+        
+        // Update coin count
+        await updateUserCoinCount();
+
+        // Show success toast
+        toast.success(`You've completed all tasks for ${activity.activityTitle}! You earned a coin!`)
+      }
+
+      // Check if ALL activities have ALL tasks completed
+      const allActivitiesCompleted = todayActivities.every(activity => 
+        activity.tasks?.every(task => task.completed)
+      );
+
+      if (allActivitiesCompleted && !isEmailSending) {        
+        // Play fanfare for completing everything
+        if (fanfareRef.current) {
+          fanfareRef.current.play().catch(console.error);
+        }
+      }
+
     } catch (error) {
       console.error('Error updating task:', error);
+      toast.error('Failed to update task');
     }
   };
 
@@ -767,69 +713,6 @@ const Schedule: React.FC<ScheduleProps> = ({
               <p className="text-center italic">No activities scheduled for today</p>
             )}
           </div>
-
-          {/* {(
-            Object.entries(checklists) as [
-              Section,
-              { id: number; text: string; checked: boolean }[]
-            ][]
-          ).map(([section, items]) => (
-            <div key={section} className="mb-6">
-              <button
-                className={`w-full py-3 px-4 
-                  ${
-                    completedSections.includes(section)
-                      ? "bg-green-500 text-white"
-                      : "bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color]"
-                  } 
-                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
-                  font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
-                  text-md`} // Changed from text-lg to match progress buttons
-                onClick={() => handleButtonClick(section)}
-              >
-                <span>{buttonLabels[section as Section]}</span>
-                {completedSections.includes(section) ? (
-                  <CheckCircle className="w-6 h-6 text-white" />
-                ) : (
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                )}
-              </button>
-              <div className="bg-[--theme-leaguecard-color] shadow-md p-4 mt-2 space-y-2 rounded-lg">
-                {items.map((item) => (
-                  <div key={item.id} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`checkbox-${section}-${item.id}`}
-                      checked={item.checked}
-                      onChange={() =>
-                        handleCheckboxChange(section as Section, item.id)
-                      }
-                      className="mr-3 h-5 w-5 text-blue-600"
-                    />
-                    <label
-                      htmlFor={`checkbox-${section}-${item.id}`}
-                      className="text-sm leading-tight cursor-pointer flex-grow"
-                    >
-                      {item.text}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))} */}
         </div>
       </div>
 
@@ -1024,10 +907,8 @@ const Schedule: React.FC<ScheduleProps> = ({
           {/* Navigation Buttons */}
           {showAnalytics && !showGraphs && (
             <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
-            
-            {/* commented out until we setup AAMC integration */}
-              {/* <button
-               // onClick={() => router.push('/integrations')}
+              <button
+                onClick={() => router.push('/integrations')}
                 className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
               >
                 <span>AAMC</span>
@@ -1045,7 +926,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                     d="M9 5l7 7-7 7"
                   />
                 </svg>
-              </button> */}
+              </button>
               <button
                 onClick={handleToggleView}
                 className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
@@ -1239,3 +1120,4 @@ const Schedule: React.FC<ScheduleProps> = ({
 };
 
 export default Schedule;
+

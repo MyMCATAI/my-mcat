@@ -3,17 +3,14 @@ import LandingHero from "@/components/landing-hero";
 import CheckListing from "../../components/landingpage/CheckListing";
 import Faqs from "../../components/landingpage/Faqs";
 import Mission from "../../components/landingpage/Mission";
-
-const Product = dynamic(() => import('@/components/landingpage/Product'), {
-  ssr: false,
-});
+import ProductWrapper from '@/components/ProductWrapper';
 
 const LandingPage = () => {
   return (
     <div className="w-full bg-[#12233c] relative">
       <LandingHero />
       <div className="relative z-10">
-        <Product />
+        <ProductWrapper />
       </div>
       <div id="mission" className="relative z-20">
         <Mission />
