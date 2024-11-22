@@ -8,7 +8,8 @@ import { stripe } from "@/lib/stripe"
 
 export async function POST(req: Request) {
   const body = await req.text()
-  const signature = headers().get("Stripe-Signature") as string
+  const headerPayload = await headers(); // Await the headers
+  const signature = headerPayload.get("Stripe-Signature") as string
 
   let event: Stripe.Event
 

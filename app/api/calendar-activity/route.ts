@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 import { Prisma } from '@prisma/client';
+import { checkAllActivitiesComplete } from "@/lib/utils";
+import { UserService } from '@/services/user/UserService';
+import { emailService } from '@/services/email/EmailService';
 
 export async function POST(req: NextRequest) {
 
@@ -116,12 +119,33 @@ export async function PUT(req: NextRequest) {
     if (status) updateData.status = status;
     if (activityType) updateData.activityType = activityType;
     if (link) updateData.link = link;
-    if (tasks) updateData.tasks = tasks as Prisma.InputJsonValue;
+    if (tasks) {
+      updateData.tasks = tasks as Prisma.InputJsonValue;
+      
+      // Check if there are tasks and all are completed
+      const allTasksCompleted = tasks.length > 0 && tasks.every((task: { completed: boolean; }) => task.completed);
+      if (allTasksCompleted) {
+        updateData.status = "Complete";
+      }
+    }
 
     const updatedActivity = await prisma.calendarActivity.update({
       where: { id: id, userId: userId },
       data: updateData,
     });
+
+    // Check if all activities are complete and send email
+    const allActivitiesComplete = await checkAllActivitiesComplete(userId);
+    if (allActivitiesComplete) {
+      const userEmail = await UserService.getUserEmail();
+      if (userEmail) {
+        await emailService.sendEmail({
+          to: userEmail,
+          template: 'daily-goal-achievement',
+          data: { name: (await UserService.getUserName()) || 'Future Doctor' }
+        });
+      }
+    }
 
     return NextResponse.json(updatedActivity);
   } catch (error) {
