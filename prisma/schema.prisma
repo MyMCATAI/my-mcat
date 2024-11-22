@@ -15,8 +15,10 @@ model UserInfo {
   updatedAt     DateTime       @updatedAt
   apiCount      Int            @default(0)
   createdAt     DateTime       @default(now())
-  score         Int            @default(0)
+  score         Int            @default(0) // coins
   clinicRooms   String         @default("") // array string
+  hasPaid       Boolean        @default(false) // set true as soon as payment is made
+  subscriptionType     String         @default("")
 }
 
 model UserSubscription {
@@ -246,4 +248,16 @@ model PatientRecord {
   lastUpdated     DateTime @updatedAt
 
   @@index([userId])
+}
+
+model Referral {
+  id            String   @id @default(cuid())
+  userId        String   // referrer's userId
+  referrerName  String   @default("")
+  referrerEmail String   @default("")
+  friendEmail   String   // friend's email who was referred
+  createdAt     DateTime @default(now())
+  
+  @@index([userId])
+  @@index([friendEmail])
 }

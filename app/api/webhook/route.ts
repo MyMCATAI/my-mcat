@@ -94,17 +94,19 @@ export async function POST(req: Request) {
             
       if (userId) {
         try {
-          // Update the user's score
+          // Update the user's score and hasPaid status
           await prismadb.userInfo.update({
             where: { userId },
             data: { 
               score: {
+                // Todo add handling for different price types
                 increment: 10
-              }
+              },
+              hasPaid: true
             },
           });
         } catch (error) {
-          console.error("Error updating user score:", error);
+          console.error("Error updating user score and payment status:", error);
         }
       }
       break;
