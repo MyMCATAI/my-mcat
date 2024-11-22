@@ -486,7 +486,8 @@ async function generateStudySchedule(
         totalAvailableHours,
         totalDays,
         aamcCarsSchedule,
-        currentDate
+        currentDate,
+        remainingHours
       );
 
       // Schedule each task according to available hours
@@ -655,45 +656,68 @@ function getAvailableTasks(
   hoursUntilExam: number,
   totalDays: number,
   aamcCarsSchedule: Set<number>,
-  currentDate: Date
+  currentDate: Date,
+  availableHours: number
 ): string[] {
   const tasks: string[] = [];
   const isReviewDay = Math.random() < contentReviewRatio;
+  let remainingHours = availableHours;
   
-  // Calculate CARS duration based on exam proximity
-  // More 30-min sessions early on, more 60-min sessions closer to exam
-
-  // Determine CARS type based on schedule
-  if (!scheduledTasksForDay.has('MyMCAT Daily CARs') && !scheduledTasksForDay.has('Daily CARs')) {
-    const useAAMCCars = aamcCarsSchedule.has(currentDate.getTime());
-    tasks.push(useAAMCCars ? 'Daily CARs' : 'MyMCAT Daily CARs');
-  }
-
-  if (!scheduledTasksForDay.has('Adaptive Tutoring Suite')) {
-    tasks.push('Adaptive Tutoring Suite');
-  }
-  
-  if (!scheduledTasksForDay.has('Anki Clinic')) {
-    tasks.push('Anki Clinic');
-  }
-
-  // Handle review vs practice days
   if (isReviewDay) {
-    // Review day has ATS, Anki, and CARs
+    // Review day: Optimize time allocation
+    if (!scheduledTasksForDay.has('Adaptive Tutoring Suite')) {
+      // Determine ATS hours based on available time
+      let atsHours;
+      if (remainingHours >= 5) {
+        atsHours = 3; // Full ATS session
+      } else if (remainingHours >= 3) {
+        atsHours = 2; // Medium ATS session
+      } else {
+        atsHours = 1; // Minimum ATS session
+      }
+      tasks.push({ name: 'Adaptive Tutoring Suite', hours: atsHours });
+      remainingHours -= atsHours;
+    }
+    
+    // Add Anki if there's at least 30 minutes
+    if (!scheduledTasksForDay.has('Anki Clinic') && remainingHours >= 0.5) {
+      tasks.push({ name: 'Anki Clinic', hours: 0.5 });
+      remainingHours -= 0.5;
+    }
+
+    // Add CARS if there's still time (at least 30 minutes)
+    if (!scheduledTasksForDay.has('MyMCAT Daily CARs') && 
+        !scheduledTasksForDay.has('Daily CARs') && 
+        remainingHours >= 0.5) {
+      const useAAMCCars = aamcCarsSchedule.has(currentDate.getTime());
+      tasks.push({ 
+        name: useAAMCCars ? 'Daily CARs' : 'MyMCAT Daily CARs',
+        hours: Math.min(remainingHours, useAAMCCars ? 1 : 0.5)
+      });
+    }
+
     return tasks;
   } else {
-    // Practice day: Replace ATS and Anki with practice materials
-    // If less than 180 hours until exam and has AAMC materials, prioritize AAMC
+    // Practice day logic
     if (hoursUntilExam < 180 && resources.hasAAMC && !scheduledTasksForDay.has('AAMC Materials')) {
-      return ['AAMC Materials', tasks[0]]; // Keep CARS, replace others with AAMC
+      tasks.push({ name: 'AAMC Materials', hours: 2 });
+      remainingHours -= 2;
     }
     
-    // If has UWorld and not already scheduled
-    if (resources.hasUWorld && !scheduledTasksForDay.has('UWorld')) {
-      return ['UWorld', tasks[0]]; // Keep CARS, replace others with UWorld
+    if (resources.hasUWorld && !scheduledTasksForDay.has('UWorld') && remainingHours >= 2) {
+      tasks.push({ name: 'UWorld', hours: 2 });
+      remainingHours -= 2;
     }
-    
-    // If no practice materials available, keep the review day schedule
+
+    // Add CARS if there's still time
+    if (!scheduledTasksForDay.has('MyMCAT Daily CARs') && !scheduledTasksForDay.has('Daily CARs') && remainingHours >= 0.5) {
+      const useAAMCCars = aamcCarsSchedule.has(currentDate.getTime());
+      tasks.push({ 
+        name: useAAMCCars ? 'Daily CARs' : 'MyMCAT Daily CARs',
+        hours: Math.min(remainingHours, useAAMCCars ? 1 : 0.5)
+      });
+    }
+
     return tasks;
   }
 }
