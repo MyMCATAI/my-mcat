@@ -14,11 +14,26 @@ export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders });
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const { userId } = auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // Get priceType from request body
+    const body = await request.json();
+    const { priceType = 'default' } = body;
+
+    // Determine which price ID to use
+    let priceId;
+    switch (priceType) {
+      case 'discount':
+        priceId = process.env.STRIPE_PRICE_ID_HALF_OFF_DISCOUNT!;
+        break;
+      default:
+        priceId = process.env.STRIPE_PRICE_ID!;
+        break;
     }
 
     // Create or ensure UserInfo exists
@@ -26,7 +41,7 @@ export async function POST() {
       where: { userId },
       create: { 
         userId,
-        bio: "Default bio" // Use your DEFAULT_BIO constant
+        bio: "Future doctor preparing to ace the MCAT! 🎯 Committed to learning and growing every day."
       },
       update: {}
     });
@@ -43,7 +58,7 @@ export async function POST() {
       },
       line_items: [
         {
-          price: process.env.STRIPE_PRICE_ID!,
+          price: priceId,
           quantity: 1
         }
       ],
