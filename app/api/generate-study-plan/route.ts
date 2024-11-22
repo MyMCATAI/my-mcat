@@ -63,9 +63,9 @@ const EVENT_CATEGORIES = [
   },
   {
     name: 'Take Up Exam',
-    totalDuration: 5,
+    totalDuration: 6,
     chunkable: true,
-    chunkSize: 1,
+    chunkSize: 2,
     priority: 4,
     description: "Review your full-length exam in detail. Analyze each question, understand the reasoning behind correct and incorrect answers, identify patterns in your mistakes, and create targeted study plans to address weak areas.",
   },
@@ -621,10 +621,9 @@ async function scheduleTakeUpExam(
   examDate: Date,
   hoursPerDay: { [key: string]: string }
 ) {
-  let remainingReviewHours = 5;
+  let remainingReviewHours = 6;
   let currentDate = new Date(examDate);
   currentDate.setDate(currentDate.getDate() + 1);
-
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const finalExamDate = new Date(studyPlan.examDate);
 
@@ -637,9 +636,21 @@ async function scheduleTakeUpExam(
     const dayName = daysOfWeek[dayOfWeek];
     const availableHours = parseInt(hoursPerDay[dayName]) || 0;
 
-    if (availableHours > 0) {
-      const reviewHours = Math.min(availableHours, remainingReviewHours);
-      const takeUpExamActivity = createActivity(studyPlan, 'Take Up Exam', 'Review', reviewHours, currentDate);
+    // If we have at least 2 hours available
+    if (availableHours >= 2) {
+      // Schedule as many hours as possible for this day (min 2, max remaining hours or available hours)
+      const reviewHours = Math.min(
+        Math.max(2, availableHours), // Take at least 2 hours, up to available hours
+        remainingReviewHours // But don't exceed remaining needed hours
+      );
+      
+      const takeUpExamActivity = createActivity(
+        studyPlan,
+        'Take Up Exam',
+        'Review',
+        reviewHours,
+        currentDate
+      );
       activities.push(takeUpExamActivity);
       remainingReviewHours -= reviewHours;
     }
