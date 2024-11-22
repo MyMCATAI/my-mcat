@@ -6,7 +6,6 @@ import { FaFire } from 'react-icons/fa';
 import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay, getLevelNumber } from '@/utils/calculateResourceTotals';
 import axios from 'axios';
 import { HelpCircle } from 'lucide-react'; // Add this import
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
 
 // Dynamic import for ChatBotWidgetNoChatBot
@@ -110,70 +109,40 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({ reportData, userRooms, to
 
         <DaysStreak days={reportData.streak} />
 
-        <div className="w-full max-w-md space-y-4 mt-6">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <div className="w-full">
-                  <StatBar
-                    label="Patients Per Day"
-                    value={patientsPerDay}
-                    max={30}
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                <p>The number of patients your clinic can treat each day. This increases as you upgrade your clinic and functions as a score for your clinic and affects your school&apos;s placement in The League.</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger>
-                <div className="w-full">
-                  <StatBar
-                    label="Quality of Care (QC)"
-                    value={displayQC}
-                    max={5}
-                    showDecimals={true}
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                <p>Represents the overall quality of care provided by your clinic. Higher QC leads to better patient satisfation. You get higher QC from leveling up your clinic and having a streak!</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger>
-                <div className="w-full">
-                  <StatBar
-                    label="Clinic Cost Per Day"
-                    value={clinicCostPerDay}
-                    max={3}
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                <p>The daily operating cost of your clinic. This increases as your clinic grows but you&apos;re more likely to get rewards from reviews.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
-        <div className="w-full max-w-md space-y-4 mt-6">
-          <h3 className="text-lg font-semibold">Average Star Rating</h3>
-          {reportData.averageStarRating ? (
-            <p>{reportData.averageStarRating.toFixed(1)} / 5.0</p>
-          ) : (
-            <p className="text-sm opacity-80">Not available</p>
-          )}
-        </div>
-
-        <div className="w-full max-w-md space-y-4 mt-6">
-          <h3 className="text-lg font-semibold">Total Coins</h3>
-          <p>{totalCoins}</p>
-          <h3 className="text-lg font-semibold">Total Patients Treated</h3>
-          <p>{totalPatients}</p>
+        <div className="w-full max-w-md mt-6">
+          <h3 className="text-lg font-semibold mb-4">Friend Leaderboard</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">1</div>
+                <span className="font-medium">Sarah Kim</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FaFire className="text-yellow-300" />
+                <span>15 days</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">2</div>
+                <span className="font-medium">John Doe</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FaFire className="text-yellow-300" />
+                <span>12 days</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">3</div>
+                <span className="font-medium">Alex Chen</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FaFire className="text-yellow-300" />
+                <span>8 days</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <TutorialVidDialog
