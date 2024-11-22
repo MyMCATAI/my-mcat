@@ -21,22 +21,28 @@ export async function POST(request: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Get request body
-    const body = await request.json();
-    const { priceType = 'default', friendEmail } = body;
+    // Make body parsing optional with default values
+    let priceType = 'default';
+    let friendEmail: string | undefined;
+    
+    try {
+      const body = await request.json();
+      if (body) {
+        priceType = body.priceType || 'default';
+        friendEmail = body.friendEmail || undefined;
+      }
+    } catch (error) {
+      // If JSON parsing fails, we'll just use the default values
+    }
 
-
-    // TODO later, set up an email automation to send outreach message to referal
-
-    // If this is a referral purchase, store the referral data
-    if (friendEmail) {
+    // Only process referral if friendEmail is provided and is a non-empty string
+    if (friendEmail?.trim()) {
       const user = await currentUser();
       if (!user) {
         return new NextResponse("User not found", { status: 404 });
       }
 
       try {
-        // Create referral record
         await prismadb.referral.create({
           data: {
             userId,
@@ -46,7 +52,6 @@ export async function POST(request: Request) {
           }
         });
       } catch (error) {
-        console.log("[REFERRAL_ERROR]", { error, friendEmail, userId });
         // Continue execution even if referral creation fails
       }
     }
@@ -92,7 +97,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: stripeSession.url }, { headers: corsHeaders });
   } catch (error) {
-    console.log("[STRIPE_ERROR]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
