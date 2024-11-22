@@ -326,7 +326,6 @@ const DoctorsOfficePage: React.FC = () => {
         setClinicCostPerDay(clinicCostPerDay);
         setTotalPatients(clinicData.totalPatientsTreated || 0);
 
-        // Update this part
         const newVisibleImages = new Set<string>();
         clinicData.rooms.forEach((roomName: string) => {
           const group = imageGroups.find(g => g.name === roomName);
@@ -336,8 +335,8 @@ const DoctorsOfficePage: React.FC = () => {
         });
         setVisibleImages(newVisibleImages);
 
-        // Show welcome dialog if user has no clinic rooms
-        setIsWelcomeDialogOpen(clinicData.rooms.length === 0);
+        // Always show the welcome dialog when entering the page
+        setIsWelcomeDialogOpen(true);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -638,7 +637,7 @@ const toggleGroup = async (groupName: string) => {
         setLargeDialogQuit={setLargeDialogQuit}
       >
       </AfterTestFeed>
-      <div className="absolute bottom-4 right-4">
+      <div className="absolute bottom-4 right-4 z-[100]">
         <FloatingButton
           onTabChange={handleTabChange}
           currentPage="doctorsoffice"
