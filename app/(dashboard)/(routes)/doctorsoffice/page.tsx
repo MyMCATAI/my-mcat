@@ -647,7 +647,6 @@ const toggleGroup = async (groupName: string) => {
       <WelcomeDialog 
           isOpen={isWelcomeDialogOpen} 
           onOpenChange={handleWelcomeDialogOpenChange}
-          onOpenMarketplace={handleOpenMarketplace}
         />
     </div>
   );
