@@ -525,8 +525,13 @@ const Schedule: React.FC<ScheduleProps> = ({
       const activity = todayActivities.find(a => a.id === activityId);
       if (!activity || !activity.tasks) return;
 
+      // If task is already completed, prevent unchecking
+      if (activity.tasks[taskIndex].completed) {
+        return;
+      }
+
       const updatedTasks = activity.tasks.map((task, index) =>
-        index === taskIndex ? { ...task, completed } : task
+        index === taskIndex ? { ...task, completed: true } : task
       );
 
       // Update in backend

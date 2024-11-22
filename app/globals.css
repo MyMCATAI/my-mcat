@@ -319,7 +319,7 @@ body.theme-sunsetCity * {
   --theme-adaptive-tutoring-color: #faeef4;
   --theme-adaptive-tutoring-boxShadow: 0 0 5px 2px rgba(255, 0, 89, 0.5);
   --theme-adaptive-tutoring-boxShadow-hover: 0 0 10px 4px rgba(255, 0, 89, 0.8);
-  --theme-calendar-color: #df9ab4; /* Vibrant pink to contrast with soft pink */
+  --theme-calendar-color: #FCB5AC; /* Vibrant pink to contrast with soft pink */
 }
 
 /* Add theme-specific gradients */
