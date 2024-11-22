@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Highlighter, Eye } from 'lucide-react'
+import { Highlighter } from 'lucide-react'
 import { useId } from 'react'
 
 interface HighlightableTextProps {
@@ -34,6 +34,13 @@ export default function HighlightableText({ children, presetHighlights = [] }: H
         newRange.surroundContents(span)
       }
       selection.removeAllRanges()
+    }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (isHighlighting) {
+      e.preventDefault()
+      handleHighlight()
     }
   }
 
@@ -105,11 +112,17 @@ export default function HighlightableText({ children, presetHighlights = [] }: H
       
       <div 
         id={`highlightable-content-${uniqueId}`}
-        className={`mt-8 ${isHighlighting ? 'selection:bg-yellow-200' : ''}`}
+        className={`mt-8 ${isHighlighting ? 'selection:bg-yellow-200 touch-action-none' : ''}`}
         onMouseUp={() => {
           if (isHighlighting) {
             handleHighlight()
           }
+        }}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          WebkitUserSelect: isHighlighting ? 'text' : 'none',
+          userSelect: isHighlighting ? 'text' : 'none',
+          touchAction: isHighlighting ? 'none' : 'auto'
         }}
       >
         {children}
