@@ -189,8 +189,8 @@ const Statistics = ({
       )}
       
       {/* Main Statistics Content */}
-      <div className="grid grid-cols-1 gap-4 p-4 h-full overflow-hidden">
-        {/* Mastery Chart */}
+      <div className="flex flex-col gap-4 p-4">
+        {/* Content Mastery Chart - Temporarily Hidden
         <motion.div
           className="bg-[--theme-leaguecard-color] p-4 rounded-lg cursor-pointer relative h-96"
           style={{ boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)' }}
@@ -198,76 +198,74 @@ const Statistics = ({
         >
           <h3 className="text-lg font-semibold text-[--theme-text-color]">Content Mastery</h3>
           <AnimatePresence>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="h-[calc(100%-2rem)]"
-              >
-                <div className="overflow-x-auto h-full">
-                  <div className="h-full" style={{ minWidth: `${stats?.categoriesWithMastery?.length * 100}px` }}>
-                    <Bar 
-                      data={masteryChartData} 
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                          y: {
-                            beginAtZero: true,
-                            max: 1,
-                            ticks: {
-                              callback: (value) => `${(Number(value) * 100).toFixed(0)}%`,
-                              color: chartColors.text,
-                            },
-                            grid: {
-                              display: false,
-                            },
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="h-[calc(100%-2rem)]"
+            >
+              <div className="overflow-x-auto h-full">
+                <div className="h-full" style={{ minWidth: `${stats?.categoriesWithMastery?.length * 100}px` }}>
+                  <Bar 
+                    data={masteryChartData} 
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          max: 1,
+                          ticks: {
+                            callback: (value) => `${(Number(value) * 100).toFixed(0)}%`,
+                            color: chartColors.text,
                           },
-                          x: {
-                            ticks: {
-                              color: chartColors.text,
-                              autoSkip: true,
-                              maxRotation: 30,
-                              minRotation: 20,
-                            },
-                            grid: {
-                              display: false,
-                            },
-                          },
-                        },
-                        plugins: {
-                          legend: {
+                          grid: {
                             display: false,
                           },
-                          tooltip: {
-                            titleColor: chartColors.text,
-                            bodyColor: chartColors.text,
-                            callbacks: {
-                              label: (context) => {
-                                const value = context.raw as number;
-                                return `Mastery: ${(value * 100).toFixed(1)}%`;
-                              },
-                              title: (tooltipItems) => {
-                                const index = tooltipItems[0].dataIndex;
-                                const category = stats?.categoriesWithMastery[index];
-                                return `${category?.name} (${category?.subject})`;
-                              }
+                        },
+                        x: {
+                          ticks: {
+                            color: chartColors.text,
+                            autoSkip: true,
+                            maxRotation: 30,
+                            minRotation: 20,
+                          },
+                          grid: {
+                            display: false,
+                          },
+                        },
+                      },
+                      plugins: {
+                        legend: {
+                          display: false,
+                        },
+                        tooltip: {
+                          titleColor: chartColors.text,
+                          bodyColor: chartColors.text,
+                          callbacks: {
+                            label: (context) => {
+                              const value = context.raw as number;
+                              return `Mastery: ${(value * 100).toFixed(1)}%`;
+                            },
+                            title: (tooltipItems) => {
+                              const index = tooltipItems[0].dataIndex;
+                              const category = stats?.categoriesWithMastery[index];
+                              return `${category?.name} (${category?.subject})`;
                             }
                           }
                         }
-                      }}
-                    />
-                  </div>
+                      }
+                    }}
+                  />
                 </div>
-              </motion.div>
-            
+              </div>
+            </motion.div>
           </AnimatePresence>
         </motion.div>
-
-      </div>
+        */}
 
         {/* Key Statistics */}
-        <div className="col-span-2 grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <StatCard
             title="Questions Answered"
             value={aggregateStats.totalQuestions}
@@ -281,6 +279,8 @@ const Statistics = ({
             value={`${Math.round(aggregateStats.averageTime)}s`}
           />
         </div>
+      </div>
+
       {/* Top Categories */ }
       {/* <div className="p-4">
         <h3 className="text-lg font-semibold text-[--theme-text-color]">
@@ -293,7 +293,7 @@ const Statistics = ({
 
       {/* Bottom Categories */}
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-[--theme-text-color]">
+        <h3 className="text-lg font-semibold mb-2 text-[--theme-text-color]">
           Focus Areas for Improvement
         </h3>
         
@@ -383,7 +383,7 @@ const Statistics = ({
 };
 
 const StatCard = ({ title, value }: { title: string; value: string | number }) => (
-  <div className="bg-[--theme-leaguecard-color] p-2 rounded-lg shadow-[var(--theme-adaptive-tutoring-boxShadow)] flex flex-col justify-center min-h-[5rem]">
+  <div className="bg-[--theme-leaguecard-color] p-3 rounded-lg [box-shadow:var(--theme-adaptive-tutoring-boxShadow)] flex flex-col justify-center min-h-[5rem]">
     <h4 className="text-sm font-semibold text-[--theme-text-color]">{title}</h4>
     <p className="text-4xl font-bold text-[--theme-text-color] text-center">{value}</p>
   </div>
