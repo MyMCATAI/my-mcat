@@ -56,10 +56,16 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/conversationreview', {
+      const response = await fetch('/api/conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, context, threadId, generateAudio: audioEnabled }),
+        body: JSON.stringify({ 
+          message, 
+          context, 
+          threadId, 
+          generateAudio: audioEnabled,
+          assistantId: 'asst_61EMvczy4MpaJqUObrWceV9V'
+        }),
       });
 
       if (!response.ok) {

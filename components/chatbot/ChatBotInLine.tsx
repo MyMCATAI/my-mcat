@@ -7,6 +7,7 @@ import VocabList from '@/components/VocabList';
 import DialogWrapper from './DialogWrapper';
 import { Question } from "@/types"; // Make sure to import the Question type
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 
 const ChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
 
@@ -20,7 +21,9 @@ interface MyChatBotProps {
   backgroundColor?: string;
   question: Question |null;
   handleShowHint?: (responseText: string) => void;
-
+  chatbotRef?: React.MutableRefObject<{
+    sendMessage: (message: string) => void;
+  }>;
 }
 
 const MyChatBot: React.FC<MyChatBotProps> = ({ 
@@ -29,7 +32,8 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   width = '100%',
   backgroundColor = 'white',
   question,
-  handleShowHint
+  handleShowHint,
+  chatbotRef,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +70,13 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       const response = await fetch('/api/conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, context, threadId, generateAudio: audioEnabled }),
+        body: JSON.stringify({ 
+          message, 
+          context, 
+          threadId, 
+          generateAudio: audioEnabled,
+          assistantId: 'asst_MogOSA1PMMeJQvdptoS1UKsz'
+        }),
       });
 
       if (!response.ok) {
@@ -154,10 +164,44 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
     setIsDialogOpen(false);
   };
 
+  const handleOptionClick = (type: "question" | "summary") => {
+    if (!chatbotRef?.current) return;
+    
+    const message = type === "question" 
+      ? "Help me with this question"
+      : "summarize this passage";
+
+    chatbotRef.current.sendMessage(message);
+  };
+
+  useEffect(() => {
+    if (chatbotRef) {
+      chatbotRef.current = {
+        sendMessage: (message: string) => {
+          const textarea = document.querySelector('textarea');
+          if (textarea) {
+            textarea.value = message;
+            const enterEvent = new KeyboardEvent('keydown', {
+              key: 'Enter',
+              code: 'Enter',
+              keyCode: 13,
+              which: 13,
+              bubbles: true
+            });
+            textarea.focus();
+            setTimeout(() => {
+              textarea.dispatchEvent(enterEvent);
+            }, 50);
+          }
+        }
+      };
+    }
+  }, [chatbotRef]);
+
   const helpOptions = ["Hint", "Vocab"];
   const flow = {
     start: {
-      message: `Meow there! Need help?`,
+      message: `Meow there! I can help you reason through questions or understand the passage!`,
      path: "loop"
     },
     loop: {
@@ -229,6 +273,18 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+            <button
+              onClick={() => handleOptionClick("question")}
+              className="px-2 text-sm bg-gray-200 text-black rounded hover:bg-blue-600 hover:text-white transition-colors"
+            >
+              Question Help
+            </button>
+            <button
+              onClick={() => handleOptionClick("summary")}
+              className="px-2 text-sm bg-gray-200 text-black rounded hover:bg-blue-600 hover:text-white transition-colors"
+            >
+              Passage Summary
+            </button>
             <button 
               onClick={toggleCmdI}
               className={`px-2 text-sm ${isCmdIEnabled ? 'bg-blue-500' : 'bg-gray-200'} text-black rounded hover:bg-blue-600 transition-colors`}
@@ -308,9 +364,8 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       flexDirection: 'column', 
       height: '100%', 
       position: 'relative',
-      border: '1px solid #ccc', // Add this line for a light gray border
-      borderRadius: '8px', // Optional: add rounded corners
-      padding: '10px', // Optional: add some padding
+      borderRadius: '8px',
+      padding: '10px',
     }}>
       <style jsx global>{`
         .rcb-chat-input::before {
@@ -371,7 +426,15 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   );
 };
 
-const App: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled, width, backgroundColor, question, handleShowHint }) => {
+const App: React.FC<MyChatBotProps> = ({ 
+  chatbotContext, 
+  isVoiceEnabled, 
+  width, 
+  backgroundColor, 
+  question, 
+  handleShowHint,
+  chatbotRef 
+}) => {
   return (
     <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
       <MyChatBot 
@@ -381,6 +444,7 @@ const App: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled, width, 
         backgroundColor={backgroundColor}
         question={question}
         handleShowHint={handleShowHint}
+        chatbotRef={chatbotRef}
       />
     </div>
   );
