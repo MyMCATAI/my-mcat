@@ -847,13 +847,14 @@ const Schedule: React.FC<ScheduleProps> = ({
                   updateTodaySchedule={updateTodaySchedule}
                 />
               </div>
-              <div className="h-32 flex justify-end items-start px-4 pt-4">
+              <div className="mt-auto pb-4 pr-4 flex justify-end">
                 <button
                   onClick={handleToggleView}
-                  className="w-36 py-3 px-2 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
+                  className="w-36 py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
                 >
+                  <span>Calendar</span>
                   <svg
-                    className="w-6 h-6 rotate-180"
+                    className="w-6 h-6"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -866,7 +867,6 @@ const Schedule: React.FC<ScheduleProps> = ({
                       d="M9 5l7 7-7 7"
                     />
                   </svg>
-                  <span>Overview</span>
                 </button>
               </div>
             </div>
