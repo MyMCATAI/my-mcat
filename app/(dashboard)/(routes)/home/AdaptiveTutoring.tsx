@@ -34,12 +34,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import {
-  useMessages,
-  RcbPostInjectMessageEvent,
-  useFlow,
-  useTextArea,
-} from "react-chatbotify";
+
 import { getRelevantTranscript } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -48,7 +43,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import DiagnosticDialog from './DiagnosticDialog';
-import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
 import ATSTutorial from "./ATSTutorial";
 
 interface ContentItem {
@@ -86,6 +80,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   chatbotRef,
   isFirstVisit = true,
 }) => {
+
+  
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [contentType, setContentType] = useState("video");
@@ -122,16 +118,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
   const [initialCategories, setInitialCategories] = useState<Category[]>([]);
 
-  const [showDiagnosticDialog, setShowDiagnosticDialog] = useState(() => {
-    const total = localStorage.getItem("diagnosticTotal");
-    const cp = localStorage.getItem("diagnosticCP");
-    const cars = localStorage.getItem("diagnosticCARS");
-    const bb = localStorage.getItem("diagnosticBB");
-    const ps = localStorage.getItem("diagnosticPS");
-
-    // Show dialog if any score is missing
-    return !total || !cp || !cars || !bb || !ps;
-  });
+  const [showDiagnosticDialog, setShowDiagnosticDialog] = useState(false);
   const [runTutorialPart1, setRunTutorialPart1] = useState(false);
   const [runTutorialPart2, setRunTutorialPart2] = useState(false);
   const [runTutorialPart3, setRunTutorialPart3] = useState(false);
@@ -145,39 +132,40 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     return localStorage.getItem("catIconInteracted") === "true";
   });
 
-  const handleDiagnosticSubmit = (scores: any) => {
-    // Save scores to localStorage
-    localStorage.setItem("diagnosticTotal", scores.total);
-    localStorage.setItem("diagnosticCP", scores.cp);
-    localStorage.setItem("diagnosticCARS", scores.cars);
-    localStorage.setItem("diagnosticBB", scores.bb);
-    localStorage.setItem("diagnosticPS", scores.ps);
-    
-    setShowDiagnosticDialog(false);
-    // Immediately start the tutorial
-    setRunTutorialPart1(true);
-  };
+  const fetchInitialData = useCallback(async (useKnowledgeProfiles: boolean = false) => {
+    setIsLoading(true);
+    try {
+      const categoriesData = await fetchCategories(useKnowledgeProfiles);
+      setCategories(categoriesData);
+      setInitialCategories(categoriesData);
+      setCheckedCategories(categoriesData);
 
-  // Fetch categories and set initial category
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const categoriesData = await fetchCategories(true);
-        setCategories(categoriesData);
-        setInitialCategories(categoriesData);
-        setCheckedCategories(categoriesData);
-        if (categoriesData.length > 0) {
-          const initialCategory = categoriesData[0].conceptCategory;
-          setSelectedCategory(initialCategory);
-          await fetchContentAndQuestions(initialCategory);
-        }
-      } catch (error) {
-        console.error("Error fetching initial data:", error);
+      if (categoriesData.length > 0) {
+        const initialCategory = categoriesData[0].conceptCategory;
+        setSelectedCategory(initialCategory);
+        await fetchContentAndQuestions(initialCategory);
       }
-    };
-
-    fetchInitialData();
+    } catch (error) {
+      console.error("Error fetching initial data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load initial data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchInitialData(true);
+  }, [fetchInitialData]);
+
+  const handleDiagnosticSubmit = async (scores: any) => {
+    setShowDiagnosticDialog(false);
+    localStorage.setItem("atsTutorialPlayed", "true");
+    await fetchInitialData(true);
+  };
 
   useEffect(() => {
     // Create a set of unique categories based on checkedCategories and initialCategories
@@ -406,6 +394,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         const url = new URL("/api/category", window.location.origin);
         url.searchParams.append("page", "1");
         url.searchParams.append("pageSize", "7");
+        url.searchParams.append("useDiagnostic", "true");
         if (useKnowledgeProfiles) {
           url.searchParams.append("useKnowledgeProfiles", "true");
         }
@@ -619,6 +608,31 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       window.dispatchEvent(event);
     }
   };
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch('/api/user-info');
+        if (!response.ok) throw new Error('Failed to fetch user info');
+        
+        const userInfo = await response.json();
+        
+        // Check if diagnostic scores exist and are not empty
+        const diagnosticScores = userInfo.diagnosticScores;
+        const hasCompletedDiagnostic = diagnosticScores && 
+          Object.values(diagnosticScores).some(score => score !== "");
+
+        // Only show diagnostic dialog if user hasn't completed it
+        setShowDiagnosticDialog(!hasCompletedDiagnostic);
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+        // If there's an error, we'll show the diagnostic dialog as a fallback
+        setShowDiagnosticDialog(true);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
 
   // Add this function to handle cat icon interaction
   const handleCatIconClick = () => {

@@ -8,6 +8,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 interface DiagnosticDialogProps {
   isOpen: boolean;
@@ -33,9 +35,24 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
   });
   const [noDiagnostic, setNoDiagnostic] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const isFormValid = () => {
+    if (noDiagnostic) return true;
+    return Object.values(scores).every(score => score !== '');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(scores);
+    try {
+      await axios.post("/api/diagnostic-scores", {
+        diagnosticScores: noDiagnostic ? null : scores
+      });
+      
+      toast.success("Diagnostic scores saved successfully!");
+      onSubmit(scores);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to save diagnostic scores. Please try again.");
+    }
   };
 
   return (
@@ -130,7 +147,11 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
                 {"I don't have a diagnostic score"}
               </label>
             </div>
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+            <Button 
+              type="submit" 
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              disabled={!isFormValid()}
+            >
               Next
             </Button>
           </form>

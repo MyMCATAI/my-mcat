@@ -19,6 +19,7 @@ model UserInfo {
   clinicRooms   String         @default("") // array string
   hasPaid       Boolean        @default(false) // set true as soon as payment is made
   subscriptionType     String         @default("")
+  diagnosticScores Json? @default("{\"total\":\"\",\"cp\":\"\",\"cars\":\"\",\"bb\":\"\",\"ps\":\"\"}")
 }
 
 model UserSubscription {
