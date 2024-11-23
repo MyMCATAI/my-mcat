@@ -95,10 +95,21 @@ export async function POST(req: NextRequest) {
     const data: { userId: string; testId?: string; passageId?: string } = {
       userId,
     };
-    // Only add testId and passageId if they are provided
-    if (body && typeof body === 'object') {
-      if ('testId' in body && typeof body.testId === 'string') data.testId = body.testId;
-      if ('passageId' in body && typeof body.passageId === 'string') data.passageId = body.passageId;
+
+    // If testId is provided, fetch the test to get its passageId
+    if (body && typeof body === 'object' && 'testId' in body && typeof body.testId === 'string') {
+      data.testId = body.testId;
+      
+      const test = await prisma.test.findUnique({
+        where: { id: body.testId },
+        select: { passageId: true }
+      });
+      
+      if (test?.passageId) {
+        data.passageId = test.passageId;
+      }
+    } else if (body && typeof body === 'object' && 'passageId' in body && typeof body.passageId === 'string') {
+      data.passageId = body.passageId;
     }
 
     const userTest = await prisma.userTest.create({

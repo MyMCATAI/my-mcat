@@ -37,11 +37,32 @@ export async function GET(
         },
         responses: {
           include: {
-            question: includeQuestionInfo ? {
-              include: {
-                category: true  // Include category info when question info is requested
+            question: {
+              select: {
+                id: true,
+                passageId: true,
+                ...(includeQuestionInfo ? {
+                  questionContent: true,
+                  questionOptions: true,
+                  questionAnswerNotes: true,
+                  context: true,
+                  categoryId: true,
+                  contentCategory: true,
+                  questionID: true,
+                  difficulty: true,
+                  links: true,
+                  tags: true,
+                  types: true,
+                  states: true,
+                  contentId: true,
+                  category: true
+                } : {
+                  category: false,
+                  questionOptions: false,
+                  questionAnswerNotes: false
+                })
               }
-            } : false,
+            },
           },
         },
       },
@@ -55,6 +76,7 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    console.log("userTest", userTest);
     return NextResponse.json(userTest);
   } catch (error) {
     console.error('Error fetching user test:', error);
