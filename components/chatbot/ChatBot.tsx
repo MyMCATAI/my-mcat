@@ -90,52 +90,55 @@ const ChatBot: React.FC<ChatBotProps> = ({
         );
       }, 1000);
 
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === 'Meta' || event.key === 'Control') {
-          if (!cmdPressedRef.current) {
-            cmdPressedRef.current = true;
-            cmdPressedTime.current = Date.now();
-            setCmdPressed(true);
-          }
-        } else {
-          cmdPressedRef.current = false;
-          cmdPressedTime.current = null;
-          setCmdPressed(false);
-          if (cmdReleaseTimer.current) {
-            clearTimeout(cmdReleaseTimer.current);
-          }
+      return () => clearTimeout(timer);
+    }
+  }, [isMounted]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Meta' || event.key === 'Control') {
+        if (!cmdPressedRef.current) {
+          cmdPressedRef.current = true;
+          cmdPressedTime.current = Date.now();
+          setCmdPressed(true);
         }
-      };
-
-      const handleKeyUp = (event: KeyboardEvent) => {
-        if (event.key === 'Meta' || event.key === 'Control') {
-          if (cmdPressedRef.current && cmdPressedTime.current) {
-            const pressDuration = Date.now() - cmdPressedTime.current;
-            if (pressDuration < 500) { // Only toggle if pressed for less than 500ms
-              cmdReleaseTimer.current = setTimeout(() => {
-                toggleAudio();
-              }, 50); // Small delay to ensure no other keys were pressed
-            }
-          }
-          cmdPressedRef.current = false;
-          cmdPressedTime.current = null;
-          setCmdPressed(false);
-        }
-      };
-
-      window.addEventListener('keydown', handleKeyDown);
-      window.addEventListener('keyup', handleKeyUp);
-
-      return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-        window.removeEventListener('keyup', handleKeyUp);
+      } else {
+        cmdPressedRef.current = false;
+        cmdPressedTime.current = null;
+        setCmdPressed(false);
         if (cmdReleaseTimer.current) {
           clearTimeout(cmdReleaseTimer.current);
         }
-        clearTimeout(timer);
-      };
-    }
-  }, [isMounted]);
+      }
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Meta' || event.key === 'Control') {
+        if (cmdPressedRef.current && cmdPressedTime.current) {
+          const pressDuration = Date.now() - cmdPressedTime.current;
+          if (pressDuration < 500) { // Only toggle if pressed for less than 500ms
+            cmdReleaseTimer.current = setTimeout(() => {
+              toggleAudio();
+            }, 50); // Small delay to ensure no other keys were pressed
+          }
+        }
+        cmdPressedRef.current = false;
+        cmdPressedTime.current = null;
+        setCmdPressed(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      if (cmdReleaseTimer.current) {
+        clearTimeout(cmdReleaseTimer.current);
+      }
+    };
+  }, []);
 
   const sendMessage = async (message: string) => {
 
@@ -239,7 +242,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
     start: {
       message: `Meow there! I'm Kalypso the cat, your MCAT assistant. ${
         contentTitle ? `I see you're looking at ${contentTitle}.` : ""
-      } How can I help you today?`,
+      } I can answer logistical MCAT questions, like when to schedule a test or what resources are good, or explain MCAT concepts!`,
       path: "loop",
     },
     loop: {
