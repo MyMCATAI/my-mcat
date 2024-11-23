@@ -1,4 +1,4 @@
-interface PerformanceMetrics {
+export interface PerformanceMetrics {
     questionsAnswered: number;
     accuracy: number; // Expected to be in percentage (0-100)
     averageTime: number; // In seconds
