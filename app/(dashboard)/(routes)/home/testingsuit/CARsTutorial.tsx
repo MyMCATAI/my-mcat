@@ -20,6 +20,7 @@ const CARsTutorial: React.FC<CARsTutorialProps> = ({
     const { status, type } = data;
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       setRunTutorial(false);
+      localStorage.setItem("carsTutorialPlayed", "true");
     }
   };
 
@@ -147,6 +148,7 @@ const CARsTutorial: React.FC<CARsTutorialProps> = ({
           const { status } = data;
           if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
             setShowAlgorithmStep(false);
+            localStorage.setItem("carsTutorialPlayed", "true");
           }
         }}
         styles={{
