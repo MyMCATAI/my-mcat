@@ -155,26 +155,25 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
   };
 
   const getCupcakeImage = (point: number) => {
-    if (point === 3) return "/threecupcakes.png";
-    if (point === 2) return "/twocupcakes.png";
-    return "/onecupcake.png";
+    if (point === 3) return "/onecupcake.png";
+    return null;
   };
 
   const getDialogContent = (point: number) => {
     if (point === 3) {
       return {
         title: "AMAZING!",
-        description: "You won three cupcakes!",
+        description: "You won a cupcake!",
       };
     } else if (point === 2) {
       return {
         title: "GOOD!",
-        description: "You got two cupcakes!",
+        description: "Keep practicing!",
       };
     } else {
       return {
         title: "DECENT!",
-        description: "You won one cupcake!",
+        description: "You'll get there!",
       };
     }
   };
@@ -224,13 +223,15 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-center mb-4">
-          <Image
-            src={getCupcakeImage(Math.max(Math.round((scoreStars + timingStars + techniqueStars) / 3), 1))}
-            alt="Cupcakes"
-            width={200}
-            height={200}
-            className="h-[20vh] w-auto"
-          />
+          {getCupcakeImage(Math.max(Math.round((scoreStars + timingStars + techniqueStars) / 3), 1)) && (
+            <Image
+              src={getCupcakeImage(Math.max(Math.round((scoreStars + timingStars + techniqueStars) / 3), 1))!}
+              alt="Cupcake"
+              width={200}
+              height={200}
+              className="h-[20vh] w-auto"
+            />
+          )}
         </div>
         <div className="grid grid-cols-3 gap-4 text-center mb-4">
           {/* Score Section */}
