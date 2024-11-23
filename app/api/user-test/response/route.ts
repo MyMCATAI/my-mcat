@@ -59,6 +59,16 @@ export async function POST(req: Request) {
     const truncatedUserAnswer = userAnswer?.substring(0, 200) || '';
     const truncatedUserNotes = userNotes?.substring(0, 750) || '';
 
+    // First, fetch the question to get its categoryId
+    const question = await prisma.question.findUnique({
+      where: { id: questionId },
+      select: { categoryId: true }
+    });
+
+    if (!question) {
+      return NextResponse.json({ error: "Question not found" }, { status: 404 });
+    }
+
     // Check for existing response
     const existingResponse = await prisma.userResponse.findFirst({
       where: {
@@ -97,6 +107,7 @@ export async function POST(req: Request) {
           userId,
           ...(userTestId && { userTestId }),
           questionId,
+          categoryId: question.categoryId,
           userAnswer: truncatedUserAnswer,
           isCorrect: isCorrect || false,
           timeSpent: timeSpent || 0,

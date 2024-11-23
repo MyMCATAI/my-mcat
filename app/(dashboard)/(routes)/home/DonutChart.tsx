@@ -5,7 +5,6 @@ import {
   ArcElement,
   Tooltip,
   Legend,
-  ChartData,
   ChartOptions
 } from "chart.js";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -13,7 +12,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface DonutChartProps {
-  onProgressClick: () => void;
+  onProgressClick: (label: string) => void;
 }
 
 const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
@@ -99,16 +98,16 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
     onHover(event, elements) {
       if (elements.length > 0) {
         setHoveredSegment(elements[0].index);
-        event.native.target.style.cursor = elements[0].index === 0 ? 'pointer' : 'default';
+        event.native.target.style.cursor = 'pointer';
       } else {
         setHoveredSegment(null);
         event.native.target.style.cursor = 'default';
       }
     },
     onClick(event, elements) {
-      if (elements.length > 0 && elements[0].index === 0) {
-        onProgressClick();
-        // only works with first one right now (Cars)
+      if (elements.length > 0) {
+        const selectedLabel = data.labels[elements[0].index];
+        onProgressClick(selectedLabel);
       }
     }
   };

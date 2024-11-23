@@ -102,7 +102,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [typedText, setTypedText] = useState("");
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [expandedGraph, setExpandedGraph] = useState<string | null>(null);
-  const [showGraphs, setShowGraphs] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(true);
   const [showRewardDialog, setShowRewardDialog] = useState(false);
   const [rewardSection, setRewardSection] = useState("");
@@ -120,12 +120,11 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [tutorialStep, setTutorialStep] = useState(1);
   const [hasUpdatedStudyPlan, setHasUpdatedStudyPlan] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  const [statistics, setStatistics] = useState<any>(null);
   const [userScore, setUserScore] = useState(0);
-  const [arrowDirection, setArrowDirection] = useState(">");
-  const [isEmailSending, setIsEmailSending] = useState(false);
   const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+
+  // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
     activityText: "",
@@ -291,12 +290,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   }, [runTutorialPart2]);
 
-  const handleCalendarModified = useCallback(() => {
-    // Start Tutorial Part 3
-    setTutorialStep(1);
-    setRunTutorialPart3(true);
-  }, []);
-
   // const handleTakeDiagnosticTest = () => {
   //   setShowThankYouDialog(false);
   //   onShowDiagnosticTest();
@@ -365,14 +358,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     return activities.filter((activity) =>
       isSameDay(new Date(activity.scheduledDate), date)
     );
-  };
-
-  const handleActionClick = () => {
-    handleSetTab("KnowledgeProfile");
-  };
-
-  const toggleGraphExpansion = (graphId: string) => {
-    setExpandedGraph(expandedGraph === graphId ? null : graphId);
   };
 
   const handleToggleView = () => {
@@ -451,22 +436,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   }, [isActive]);
 
   useEffect(() => {
-    const fetchStatistics = async () => {
-      try {
-        const response = await fetch("/api/user-statistics");
-        if (response.ok) {
-          const data = await response.json();
-          setStatistics(data);
-        }
-      } catch (error) {
-        console.error("Error fetching statistics:", error);
-      }
-    };
-
-    fetchStatistics();
-  }, []);
-
-  useEffect(() => {
     const fetchUserScore = async () => {
       try {
         const response = await fetch("/api/user-info");
@@ -481,11 +450,6 @@ const Schedule: React.FC<ScheduleProps> = ({
 
     fetchUserScore();
   }, []);
-
-  const handleProgressClick = () => {
-    setShowGraphs(!showGraphs);
-    setArrowDirection(showGraphs ? ">" : "v");
-  };
 
   const [todayActivities, setTodayActivities] = useState<Activity[]>([]);
 
@@ -570,7 +534,7 @@ const Schedule: React.FC<ScheduleProps> = ({
         activity.tasks?.every(task => task.completed)
       );
 
-      if (allActivitiesCompleted && !isEmailSending) {        
+      if (allActivitiesCompleted) {        
         // Play fanfare for completing everything
         if (fanfareRef.current) {
           fanfareRef.current.play().catch(console.error);
@@ -719,7 +683,7 @@ const Schedule: React.FC<ScheduleProps> = ({
       {/* Right Content */}
       <div className="w-3/4 p-2.5 flex flex-col relative">
         {/* Stats Box - Vertical stack */}
-        {showAnalytics && !showGraphs && (
+        {showAnalytics && !selectedSubject && (
           <div className="absolute top-6 text-[--theme-text-color] left-8 flex flex-col bg-transparent rounded-lg p-2 z-10 space-y-3">
             <PurchaseButton tooltipText="Click to purchase more coins!">
               <div className="flex items-center min-w-[6rem]">
@@ -737,7 +701,8 @@ const Schedule: React.FC<ScheduleProps> = ({
 
             <div className="flex items-center">
               <FaFire className="text-[--theme-text-color] ml-1 mr-2 text-5xl" />
-              <span className="font-bold text-lg ml-3">{statistics?.streak || 0}</span>
+              <span className="font-bold text-lg ml-3">{0}</span> 
+              {/* statistics?.streak */}
               <span className="ml-1 text-2xl">days</span>
             </div>
           </div>
@@ -826,7 +791,7 @@ const Schedule: React.FC<ScheduleProps> = ({
               {(isTypingComplete || isTutorialTypingComplete) && (
                 <div className="flex-grow overflow-auto flex flex-col justify-center">
                   <AnimatePresence mode="wait">
-                    {!showGraphs ? (
+                    {!selectedSubject ? (
                       <motion.div 
                         key="donut"
                         className="flex justify-center items-center min-h-[32rem]"
@@ -835,7 +800,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <DonutChart onProgressClick={() => setShowGraphs(true)} />
+                        <DonutChart onProgressClick={(label) => setSelectedSubject(label)} />
                       </motion.div>
                     ) : (
                       <motion.div
@@ -847,10 +812,8 @@ const Schedule: React.FC<ScheduleProps> = ({
                         transition={{ duration: 0.3 }}
                       >
                         <Statistics
-                          statistics={statistics}
-                          expandedGraph={expandedGraph}
-                          toggleGraphExpansion={toggleGraphExpansion}
-                          onReturn={() => setShowGraphs(false)}
+                          onReturn={() => setSelectedSubject(null)}
+                          subject={selectedSubject}
                         />
                       </motion.div>
                     )}
@@ -905,9 +868,9 @@ const Schedule: React.FC<ScheduleProps> = ({
           )}
 
           {/* Navigation Buttons */}
-          {showAnalytics && !showGraphs && (
+          {showAnalytics && !selectedSubject && (
             <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
-              <button
+              {/* <button
                 onClick={() => router.push('/integrations')}
                 className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
               >
@@ -926,7 +889,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                     d="M9 5l7 7-7 7"
                   />
                 </svg>
-              </button>
+              </button> */}
               <button
                 onClick={handleToggleView}
                 className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
@@ -950,30 +913,6 @@ const Schedule: React.FC<ScheduleProps> = ({
             </div>
           )}
         </div>
-
-        {/* Dialogs */}
-        {/* Comment out or remove the Thank You Dialog */}
-        {/*
-        <Dialog open={showThankYouDialog} onOpenChange={setShowThankYouDialog}>
-          <DialogOverlay className="fixed inset-0 bg-black bg-opacity-50 z-50" />
-          <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold mb-4 text-gray-800">Thank You!</DialogTitle>
-              <DialogDescription className="text-gray-600 mb-6">
-                Your study plan has been saved successfully. We recommend taking a diagnostic test to help us personalize your learning experience.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex justify-end space-x-4 mt-4">
-              <Button variant="outline" onClick={() => setShowThankYouDialog(false)} className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors">
-                Maybe Later
-              </Button>
-              <Button onClick={handleTakeDiagnosticTest} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                Take Diagnostic Test
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        */}
 
         {/* New Activity Form */}
         {showNewActivityForm && (
