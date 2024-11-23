@@ -26,33 +26,29 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  useEffect(() => {
-    if (catIconInteracted) {
-      console.log('Cat icon was interacted with, waiting 8 seconds...');
-      const timer = setTimeout(() => {
-        console.log('Starting part 4');
-        setRunPart4(true);
-      }, 8000); // 8 seconds
-
-      return () => clearTimeout(timer); // Cleanup timeout if component unmounts
-    }
-  }, [catIconInteracted, setRunPart4]);
-
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, type, index } = data;
     
-    console.log('Joyride callback:', { type, index, catIconInteracted });
+    console.log('Joyride callback:', { type, index });
 
-    if (index === 5 && type === EVENTS.STEP_AFTER) {
-      console.log('Video step completed, ending initial tutorial');
+    // For initialSteps tutorial
+    if (runPart1 && (status === STATUS.FINISHED || status === STATUS.SKIPPED)) {
       setRunPart1(false);
+      localStorage.setItem("initialTutorialPlayed", "true");
+      console.log("Initial tutorial completed, setting flag");
+      
+      // Immediately start atsIconStep tutorial if it hasn't been played
+      if (localStorage.getItem("atsIconTutorialPlayed") !== "true") {
+        console.log('Starting ATS icon tutorial immediately');
+        setRunPart4(true);
+      }
     }
 
-    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
-      if (runPart1) setRunPart1(false);
-      if (runPart2) setRunPart2(false);
-      if (runPart3) setRunPart3(false);
-      if (runPart4) setRunPart4(false);
+    // For atsIconStep tutorial
+    if (runPart4 && (status === STATUS.FINISHED || status === STATUS.SKIPPED)) {
+      setRunPart4(false);
+      localStorage.setItem("atsIconTutorialPlayed", "true");
+      console.log("ATS Icon tutorial completed, setting flag");
     }
   };
 
@@ -167,7 +163,7 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
       <audio ref={audioRef} src="/notification.mp3" />
       <Joyride
         steps={initialSteps}
-        run={runPart1}
+        run={runPart1 && localStorage.getItem("initialTutorialPlayed") !== "true"}
         continuous
         showProgress
         showSkipButton
@@ -175,7 +171,7 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
         styles={{
           options: {
             backgroundColor: '#ffffff',
-            textColor: '#000000',
+            textColor: '#000000', 
             primaryColor: 'var(--theme-border-color)',
             zIndex: 1000,
           },
@@ -183,7 +179,7 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
       />
       <Joyride
         steps={atsIconStep}
-        run={runPart4}
+        run={runPart4 && localStorage.getItem("atsIconTutorialPlayed") !== "true"}
         continuous
         showProgress
         showSkipButton

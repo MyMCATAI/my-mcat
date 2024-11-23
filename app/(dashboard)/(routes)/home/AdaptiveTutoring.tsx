@@ -122,19 +122,40 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
   const [initialCategories, setInitialCategories] = useState<Category[]>([]);
 
-  const [showDiagnosticDialog, setShowDiagnosticDialog] = useState(true);
+  const [showDiagnosticDialog, setShowDiagnosticDialog] = useState(() => {
+    const total = localStorage.getItem("diagnosticTotal");
+    const cp = localStorage.getItem("diagnosticCP");
+    const cars = localStorage.getItem("diagnosticCARS");
+    const bb = localStorage.getItem("diagnosticBB");
+    const ps = localStorage.getItem("diagnosticPS");
+
+    // Show dialog if any score is missing
+    return !total || !cp || !cars || !bb || !ps;
+  });
   const [runTutorialPart1, setRunTutorialPart1] = useState(false);
   const [runTutorialPart2, setRunTutorialPart2] = useState(false);
   const [runTutorialPart3, setRunTutorialPart3] = useState(false);
-  const [runTutorialPart4, setRunTutorialPart4] = useState(false);
+  const [runTutorialPart4, setRunTutorialPart4] = useState(() => {
+    const initialTutorialPlayed = localStorage.getItem("initialTutorialPlayed") === "true";
+    const atsIconTutorialPlayed = localStorage.getItem("atsIconTutorialPlayed") === "true";
+    return initialTutorialPlayed && !atsIconTutorialPlayed;
+  });
 
-  const [catIconInteracted, setCatIconInteracted] = useState(false);
+  const [catIconInteracted, setCatIconInteracted] = useState(() => {
+    return localStorage.getItem("catIconInteracted") === "true";
+  });
 
   const handleDiagnosticSubmit = (scores: any) => {
+    // Save scores to localStorage
+    localStorage.setItem("diagnosticTotal", scores.total);
+    localStorage.setItem("diagnosticCP", scores.cp);
+    localStorage.setItem("diagnosticCARS", scores.cars);
+    localStorage.setItem("diagnosticBB", scores.bb);
+    localStorage.setItem("diagnosticPS", scores.ps);
+    
     setShowDiagnosticDialog(false);
     // Immediately start the tutorial
     setRunTutorialPart1(true);
-    localStorage.setItem("atsTutorialPlayed", "true");
   };
 
   // Fetch categories and set initial category
@@ -597,6 +618,12 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       const event = new Event("startATSTutorialPart4");
       window.dispatchEvent(event);
     }
+  };
+
+  // Add this function to handle cat icon interaction
+  const handleCatIconClick = () => {
+    setCatIconInteracted(true);
+    localStorage.setItem("catIconInteracted", "true");
   };
 
   return (
