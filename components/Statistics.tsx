@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bar } from "react-chartjs-2";
 import {
@@ -12,69 +12,98 @@ import {
 } from "recharts";
 import { useTheme } from '@/contexts/ThemeContext';
 
-interface Profile {
-  categoryName: string;
+interface CategoryStats {
+  categoryId: string;
   subjectCategory: string;
-  conceptMastery: number;
+  conceptCategory: string;
+  totalQuestions: number;
+  correctAnswers: number;
+  accuracy: number;
+  averageTime: number;
+  mastery: number;
 }
 
-interface TestScore {
+interface SubjectStats {
+  totalQuestions: number;
+  correctAnswers: number;
+  averageTime: number;
+  averageMastery: number;
+  categories: CategoryStats[];
+  accuracy: number;
+}
+
+interface CategoryWithMastery {
+  categoryId: string;
+  name: string;
+  subject: string;
+  mastery: number;
+}
+
+interface StatsData {
+  categoryStats: Record<string, CategoryStats>;
+  subjectStats: Record<string, SubjectStats>;
+  dailyProgress: DailyProgress[];
+  overallStats: {
+    totalQuestions: number;
+    totalCorrect: number;
+    averageTime: number;
+    accuracy: number;
+  };
+  topCategories: CategoryStats[];
+  bottomCategories: CategoryStats[];
+  performanceOverTime: PerformanceOverTime[];
+  categoriesWithMastery: CategoryWithMastery[];
+}
+
+interface DailyProgress {
   date: string;
-  finishedAt: string | null;
-  score: number;
+  correct: number;
+  total: number;
+  accuracy: number;
 }
 
-interface StatisticsData {
-  conceptMastery: Record<string, number>;
-  knowledgeProfiles: Profile[];
-  testScores: TestScore[];
-  streak: number;
-  averageCorrect: number;
-  testsCompleted: number;
-  totalTestsTaken: number;
-  averageTestScore: number;
-  totalQuestionsAnswered: number;
-  averageTimePerQuestion: number;
-  averageTimePerTest: number;
-  completedTasks: number;
-  totalTasks: number;
-  topProfiles: Profile[];
-  bottomProfiles: Profile[];
+interface PerformanceOverTime {
+  date: string;
+  cumulativeCorrect: number;
+  cumulativeTotal: number;
+  accuracy: number;
+  averageTime: number;
 }
 
 interface StatisticsProps {
-  statistics: StatisticsData;
-  expandedGraph: string | null;
-  toggleGraphExpansion: (graphId: string) => void;
   onReturn: () => void;
+  subject: string;
 }
 
 const Statistics = ({
-  statistics,
-  expandedGraph,
-  toggleGraphExpansion,
   onReturn,
+  subject,
 }: StatisticsProps) => {
   const { theme } = useTheme();
-  console.log("Statistics prop:", statistics);
-  console.log("Concept Mastery data:", statistics?.conceptMastery);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<StatsData | null>(null);
 
-  const [selectedSubject, setSelectedSubject] = useState<string>("All");
+  // Fetch statistics when subject changes
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoading(true);
+      try {
+        const subjects = getSubjectsForSection(subject);
+        const queryParams = new URLSearchParams({
+          subjects: subjects.join(',')
+        });
+        const response = await fetch(`/api/user-statistics?${queryParams.toString()}`);
+        const data = await response.json();
+        console.log(data)
+        setStats(data);
+      } catch (error) {
+        console.error("Error fetching statistics:", error);
+      }
+      setLoading(false);
+    };
 
-  const subjectCategoryData = useMemo(() => {
-    if (!statistics?.knowledgeProfiles) return {};
-
-    return statistics.knowledgeProfiles.reduce<Record<string, Record<string, number>>>(
-      (acc, profile) => {
-        if (!acc[profile.subjectCategory]) {
-          acc[profile.subjectCategory] = {};
-        }
-        acc[profile.subjectCategory][profile.categoryName] = profile.conceptMastery;
-        return acc;
-      },
-      {}
-    );
-  }, [statistics?.knowledgeProfiles]);
+    fetchStats();
+  }, [subject]);
 
   const chartColors = {
     primary: 'var(--theme-hover-color)',
@@ -83,7 +112,6 @@ const Statistics = ({
     text: 'var(--theme-text-color)',
   };
 
-  // Get theme-specific color
   const getThemeColor = () => {
     const themeColors = {
       cyberSpace: '#3b82f6',
@@ -94,458 +122,251 @@ const Statistics = ({
     return themeColors[theme];
   };
 
-  const barChartData = useMemo(() => {
-    const selectedData =
-      selectedSubject === "All"
-        ? statistics?.conceptMastery
-        : subjectCategoryData[selectedSubject] || {};
-
-    const themeColor = getThemeColor();
+  // Update the mastery chart data formatting
+  const masteryChartData = useMemo(() => {
+    if (!stats?.categoriesWithMastery) return {
+      labels: [],
+      datasets: [{
+        label: "Concept Mastery",
+        data: [],
+        backgroundColor: getThemeColor(),
+        borderColor: getThemeColor(),
+        borderWidth: 1,
+        barThickness: 40,
+        barPercentage: 0.95,
+        categoryPercentage: 0.95,
+      }]
+    };
 
     return {
-      labels: Object.keys(selectedData),
-      datasets: [
-        {
-          label: "Concept Mastery",
-          data: Object.values(selectedData),
-          backgroundColor: themeColor,
-          borderColor: themeColor,
-          borderWidth: 1,
-          hoverBackgroundColor: themeColor,
-          hoverBorderColor: themeColor,
-        },
-      ],
-    };
-  }, [selectedSubject, statistics?.conceptMastery, subjectCategoryData, theme]);
-
-  console.log("Formatted bar chart data:", barChartData);
-
-  const formattedTestData = useMemo(() => {
-    return statistics?.testScores
-      ?.filter((score: any) => score.finishedAt !== null)
-      .map((score: any) => ({
-        date: new Date(score.date).toLocaleDateString(),
-        score: score.score,
-      })) || [];
-  }, [statistics?.testScores]);
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 1,
-        ticks: {
-          callback: function(this: any, value: number | string) {
-            return `${(Number(value) * 100).toFixed(0)}%`;
-          },
-          color: chartColors.text,
-        },
-        grid: {
-          color: `${chartColors.text}20`,
-        },
-      },
-      x: {
-        ticks: {
-          color: chartColors.text,
-          autoSkip: false,
-          maxRotation: 45,
-          minRotation: 45,
-        },
-        grid: {
-          color: `${chartColors.text}20`,
-        },
-      },
-    },
-    plugins: {
-      legend: {
-        labels: {
-          color: chartColors.text,
-        },
-      },
-      tooltip: {
-        backgroundColor: chartColors.background,
-        titleColor: chartColors.text,
-        bodyColor: chartColors.text,
-        borderColor: chartColors.secondary,
+      labels: stats.categoriesWithMastery.map(cat => cat.name),
+      datasets: [{
+        label: "Concept Mastery",
+        data: stats.categoriesWithMastery.map(cat => cat.mastery),
+        backgroundColor: getThemeColor(),
+        borderColor: getThemeColor(),
         borderWidth: 1,
-        callbacks: {
-          label: function(context: any) {
-            return `Mastery: ${(context.parsed.y * 100).toFixed(1)}%`;
-          },
-        },
-      },
-    },
-  } as const;
+        barThickness: 40,
+        barPercentage: 0.95,
+        categoryPercentage: 0.95,
+      }]
+    };
+  }, [stats?.categoriesWithMastery]);
+
+  // New State for Top and Bottom Categories
+  const topCategories = stats?.topCategories || [];
+  const bottomCategories = stats?.bottomCategories || [];
+
+  // Data for Performance Over Time Charts
+  const performanceAccuracyData = stats?.performanceOverTime.map(item => ({
+    date: item.date,
+    accuracy: item.accuracy,
+  })) || [];
+
+  const performanceTimeData = stats?.performanceOverTime.map(item => ({
+    date: item.date,
+    averageTime: item.averageTime,
+  })) || [];
+
+  if (loading) {
+    return <div>Loading statistics...</div>;
+  }
+
+  if (!stats) {
+    return <div>No statistics available</div>;
+  }
+
+  // Calculate aggregate statistics
+  const aggregateStats = stats?.overallStats
 
   return (
     <div className="h-full w-full relative flex flex-col">
-      {/* Main Statistics Content - Adjust container */}
-      <div className="grid grid-cols-2 gap-4 p-4 overflow-y-auto h-full">
-        {/* Subject Mastery Chart */}
+      {/* Subject Title */}
+      {subject && (
+        <h2 className="text-2xl font-bold text-[--theme-text-color] p-4 pb-0">
+          {subject} Statistics
+        </h2>
+      )}
+      
+      {/* Main Statistics Content */}
+      <div className="grid grid-cols-1 gap-4 p-4 h-full overflow-hidden">
+        {/* Mastery Chart */}
         <motion.div
-          className="bg-[--theme-leaguecard-color] p-4 rounded-lg cursor-pointer relative"
-          style={{
-            boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
-          }}
-          onClick={() => toggleGraphExpansion("studyTime")}
+          className="bg-[--theme-leaguecard-color] p-4 rounded-lg cursor-pointer relative h-96"
+          style={{ boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)' }}
           layout
         >
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-semibold text-[--theme-text-color]">Subject Mastery</h3>
-            <select
-              className="px-3 py-1 border border-[--theme-border-color] rounded-md text-sm bg-[--theme-leaguecard-color] text-[--theme-text-color]"
-              value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <option value="All">All Subjects</option>
-              {Object.keys(subjectCategoryData).map((subject) => (
-                <option key={subject} value={subject}>
-                  {subject}
-                </option>
-              ))}
-            </select>
-          </div>
+          <h3 className="text-lg font-semibold text-[--theme-text-color]">Content Mastery</h3>
           <AnimatePresence>
-            {expandedGraph === "studyTime" ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="h-[18.75rem]"
+                className="h-[calc(100%-2rem)]"
               >
-                <Bar
-                  data={barChartData}
-                  options={chartOptions}
-                />
-              </motion.div>
-            ) : (
-              <div className="h-[12.5rem]">
-                <Bar
-                  data={barChartData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        max: 1,
-                        ticks: {
-                          callback: (value) =>
-                            `${((value as number) * 100).toFixed(0)}%`,
+                <div className="overflow-x-auto h-full">
+                  <div className="h-full" style={{ minWidth: `${stats?.categoriesWithMastery?.length * 100}px` }}>
+                    <Bar 
+                      data={masteryChartData} 
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: {
+                              callback: (value) => `${(Number(value) * 100).toFixed(0)}%`,
+                              color: chartColors.text,
+                            },
+                            grid: {
+                              display: false,
+                            },
+                          },
+                          x: {
+                            ticks: {
+                              color: chartColors.text,
+                              autoSkip: true,
+                              maxRotation: 30,
+                              minRotation: 20,
+                            },
+                            grid: {
+                              display: false,
+                            },
+                          },
                         },
-                      },
-                    },
-                  }}
-                />
-              </div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* Test Scores Chart - Adjust height classes */}
-        <motion.div
-          className="bg-[--theme-leaguecard-color] p-4 rounded-lg cursor-pointer relative"
-          style={{
-            boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
-          }}
-          onClick={() => toggleGraphExpansion("practiceTest")}
-          layout
-        >
-          <h3 className="text-lg font-semibold mb-2 text-[--theme-text-color]">Test Progress</h3>
-          <AnimatePresence>
-            {expandedGraph === "practiceTest" ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="h-[18.75rem]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={formattedTestData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fill: "var(--theme-text-color)" }}
-                    />
-                    <YAxis
-                      tick={{ fill: "var(--theme-text-color)" }}
-                      domain={[0, 100]}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "var(--theme-secondary-background)",
-                        border: "1px solid var(--theme-border-color)",
-                        color: "var(--theme-text-color)",
+                        plugins: {
+                          legend: {
+                            display: false,
+                          },
+                          tooltip: {
+                            titleColor: chartColors.text,
+                            bodyColor: chartColors.text,
+                            callbacks: {
+                              label: (context) => {
+                                const value = context.raw as number;
+                                return `Mastery: ${(value * 100).toFixed(1)}%`;
+                              },
+                              title: (tooltipItems) => {
+                                const index = tooltipItems[0].dataIndex;
+                                const category = stats?.categoriesWithMastery[index];
+                                return `${category?.name} (${category?.subject})`;
+                              }
+                            }
+                          }
+                        }
                       }}
                     />
-                    <Line
-                      type="monotone"
-                      dataKey="score"
-                      stroke={getThemeColor()}
-                      dot={{
-                        r: 4,
-                        fill: getThemeColor(),
-                        stroke: getThemeColor(),
-                      }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                  </div>
+                </div>
               </motion.div>
-            ) : (
-              <div className="h-[12.5rem]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={formattedTestData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="score"
-                      stroke={getThemeColor()}
-                      dot={{
-                        r: 4,
-                        fill: getThemeColor(),
-                        stroke: getThemeColor(),
-                      }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+            
           </AnimatePresence>
         </motion.div>
 
-        {/* Statistics Summary */}
+      </div>
+
+        {/* Key Statistics */}
         <div className="col-span-2 grid grid-cols-3 gap-4">
-          {/* Test Performance */}
-          <div 
-            className="bg-[--theme-leaguecard-color] p-4 rounded-lg"
-            style={{
-              boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
-            }}
-          >
-            <h4 className="text-sm font-semibold mb-1 text-[--theme-text-color]">Current Streak</h4>
-            <p className="text-2xl font-bold text-[--theme-text-color]">{statistics?.streak || 0} days</p>
-          </div>
+          <StatCard
+            title="Questions Answered"
+            value={aggregateStats.totalQuestions}
+          />
+          <StatCard
+            title="Accuracy"
+            value={`${Math.round(aggregateStats.accuracy)}%`}
+          />
+          <StatCard
+            title="Avg. Time per Question"
+            value={`${Math.round(aggregateStats.averageTime)}s`}
+          />
+        </div>
+      {/* Top Categories */ }
+      {/* <div className="p-4">
+        <h3 className="text-lg font-semibold text-[--theme-text-color]">
+          Top Performing Categories
+        </h3>
+        <CategoryTable 
+          categories={topCategories.filter(cat => cat.totalQuestions > 0)} 
+        />
+      </div> */}
 
-          <div 
-            className="bg-[--theme-leaguecard-color] p-4 rounded-lg"
-            style={{
-              boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
-            }}
-          >
-            <h4 className="text-sm font-semibold mb-1 text-[--theme-text-color]">Avg. Correct</h4>
-            <p className="text-2xl font-bold text-[--theme-text-color]">
-              {Math.round(statistics?.averageCorrect || 0)}%
+      {/* Bottom Categories */}
+      <div className="p-4">
+        <h3 className="text-lg font-semibold text-[--theme-text-color]">
+          Focus Areas for Improvement
+        </h3>
+        
+        {bottomCategories.length > 0 ? (
+          <>
+            <p className="text-[--theme-text-color] mb-4">
+              {`Based on your performance, ${bottomCategories.slice(0, 3).map(cat => cat.conceptCategory).join(', ')} ${bottomCategories.length <= 3 ? 'are' : 'are among'} your most challenging areas. 
+              These categories show an average accuracy of ${(bottomCategories.slice(0, 3).reduce((acc, cat) => acc + cat.accuracy, 0) / Math.min(bottomCategories.length, 3)).toFixed(1)}% 
+              and an average response time of ${(bottomCategories.slice(0, 3).reduce((acc, cat) => acc + cat.averageTime, 0) / Math.min(bottomCategories.length, 3)).toFixed(1)} seconds. 
+              I recommend dedicating extra study time to these topics, focusing on understanding core concepts and practicing with varied question types. Remember, it's normal to have areas that need more attention - let's work on turning these into your strengths!`}
             </p>
-          </div>
+            <CategoryTable 
+              categories={bottomCategories.filter(cat => cat.totalQuestions > 0)} 
+            />
+          </>
+        ) : (
+          <p className="text-[--theme-text-color] py-4">Keep practicing to identify areas for improvement!</p>
+        )}
+      </div>
+      <h3 className="text-lg font-semibold text-[--theme-text-color] p-4 pb-0">Daily Progress</h3>
 
-          <div 
-            className="bg-[--theme-leaguecard-color] p-4 rounded-lg"
-            style={{
-              boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
-            }}
-          >
-            <h4 className="text-sm font-semibold mb-1 text-[--theme-text-color]">Tests Completed</h4>
-            <p className="text-2xl font-bold text-[--theme-text-color]">
-              {statistics?.testsCompleted || 0}/
-              {statistics?.totalTestsTaken || 0}
-            </p>
-          </div>
+      {/* Performance Over Time Charts */}
+      <div className="grid grid-cols-2 gap-4 p-4">
+        {/* Accuracy Over Time */}
+        <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg">
+          <h3 className="text-lg font-semibold text-[--theme-text-color]">Question Accuracy</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={performanceAccuracyData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="accuracy"
+                stroke={getThemeColor()}
+                dot={{ r: 4, fill: getThemeColor(), stroke: getThemeColor() }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
 
-          {/* Test Statistics */}
-          {/* <div className="bg-white p-4 rounded-lg shadow">
-            <h4 className="text-sm font-semibold mb-1">Tests Completed</h4>
-            <p className="text-2xl font-bold">
-              {statistics?.testsCompleted || 0}
-            </p>
-          </div> */}
-          {/* <div className="bg-white p-4 rounded-lg shadow">
-            <h4 className="text-sm font-semibold mb-1">Completion Rate</h4>
-            <p className="text-2xl font-bold">
-              {Math.round(statistics?.completionRate || 0)}%
-            </p>
-          </div> */}
-          <div 
-            className="bg-[--theme-leaguecard-color] p-4 rounded-lg"
-            style={{
-              boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
-            }}
-          >
-            <h4 className="text-sm font-semibold mb-1 text-[--theme-text-color]">Avg. Test Score</h4>
-            <p className="text-2xl font-bold text-[--theme-text-color]">
-              {Math.round(statistics?.averageTestScore || 0)}
-            </p>
-          </div>
-
-          <div 
-            className="bg-[--theme-leaguecard-color] p-4 rounded-lg"
-            style={{
-              boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
-            }}
-          >
-            <h4 className="text-sm font-semibold mb-1 text-[--theme-text-color]">Questions Answered</h4>
-            <p className="text-2xl font-bold text-[--theme-text-color]">
-              {statistics?.totalQuestionsAnswered || 0}
-            </p>
-          </div>
-
-          {/* Time Metrics */}
-          <div 
-            className="bg-[--theme-leaguecard-color] p-4 rounded-lg"
-            style={{
-              boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
-            }}
-          >
-            <h4 className="text-sm font-semibold mb-1 text-[--theme-text-color]">
-              Avg. Time per Question
-            </h4>
-            <p className="text-2xl font-bold text-[--theme-text-color]">
-              {Math.round(statistics?.averageTimePerQuestion || 0)}s
-            </p>
-          </div>
-          <div 
-            className="bg-[--theme-leaguecard-color] p-4 rounded-lg"
-            style={{
-              boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
-            }}
-          >
-            <h4 className="text-sm font-semibold mb-1 text-[--theme-text-color]">Avg. Time per Test</h4>
-            <p className="text-2xl font-bold text-[--theme-text-color]">
-              {(statistics?.averageTimePerTest || 0).toFixed(1)}m
-            </p>
-          </div>
-          <div 
-            className="bg-[--theme-leaguecard-color] p-4 rounded-lg"
-            style={{
-              boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
-            }}
-          >
-            <h4 className="text-sm font-semibold mb-1 text-[--theme-text-color]">Tasks Completed</h4>
-            <p className="text-2xl font-bold text-[--theme-text-color]">
-              {statistics?.completedTasks || 0}/{statistics?.totalTasks || 0}
-            </p>
-          </div>
-
-          <div className="col-span-2 grid grid-cols-2 gap-4">
-            {/* Top Profiles */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold mb-2 text-[--theme-text-color]">
-                Strongest Categories
-              </h4>
-              {statistics?.topProfiles?.map((profile: Profile, index: number) => (
-                <div
-                  key={String(profile.categoryName)}
-                  className="bg-[--theme-leaguecard-color] p-3 rounded-lg shadow-md border-l-4 border-[--theme-hover-color]"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-[--theme-hover-color]">
-                      #{index + 1}
-                    </span>
-                    <div className="flex-1">
-                      <p className="text-base font-semibold text-[--theme-text-color]">
-                        {profile.categoryName}
-                      </p>
-                      <p className="text-xs text-[--theme-text-color] opacity-80">
-                        {profile.subjectCategory}
-                      </p>
-                    </div>
-                    <p className="text-sm font-semibold text-[--theme-hover-color]">
-                      {(profile.conceptMastery * 100).toFixed(1)}%
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Bottom Profiles */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold mb-2 text-[--theme-text-color]">Needs Improvement</h4>
-              {statistics?.bottomProfiles?.map((profile: Profile, index: number) => (
-                <div
-                  key={String(profile.categoryName)}
-                  className="bg-[--theme-leaguecard-color] p-3 rounded-lg shadow-md border-l-4 border-[--theme-hover-color]"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-[--theme-hover-color]">
-                      #{statistics?.bottomProfiles?.length - index}
-                    </span>
-                    <div className="flex-1">
-                      <p className="text-base font-semibold text-[--theme-text-color]">
-                        {profile.categoryName}
-                      </p>
-                      <p className="text-xs text-[--theme-text-color] opacity-80">
-                        {profile.subjectCategory}
-                      </p>
-                    </div>
-                    <p className="text-sm font-semibold text-[--theme-hover-color]">
-                      {(profile.conceptMastery * 100).toFixed(1)}%
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* <div className="bg-white p-4 rounded-lg shadow">
-            <h4 className="text-sm font-semibold mb-1">Total Score</h4>
-            <p className="text-2xl font-bold">{statistics?.userScore || 0}</p>
-          </div> */}
-
-          {/* Study Progress */}
-          {/* <div className="col-span-3 bg-white p-4 rounded-lg shadow">
-            <h4 className="text-sm font-semibold mb-3">
-              Study Hours by Subject
-            </h4>
-            <div className="grid grid-cols-4 gap-4">
-              {Object.entries(statistics?.studyHoursBySubject || {}).map(
-                ([subject, hours]) => (
-                  <div key={subject} className="text-center">
-                    <p className="text-lg font-bold">
-                      {Math.round(hours as number)}h
-                    </p>
-                    <p className="text-xs text-gray-600">{subject}</p>
-                  </div>
-                )
-              )}
-            </div>
-          </div> */}
-
-          {/* Category Accuracy */}
-          {/* <div className="col-span-3 bg-white p-4 rounded-lg shadow">
-            <h4 className="text-sm font-semibold mb-3">Category Accuracy</h4>
-            <div className="grid grid-cols-4 gap-4">
-              {Object.entries(statistics?.categoryAccuracy || {}).map(
-                ([category, accuracy]) => (
-                  <div key={category} className="text-center">
-                    <p className="text-lg font-bold">
-                      {Math.round(accuracy as number)}%
-                    </p>
-                    <p className="text-xs text-gray-600">{category}</p>
-                  </div>
-                )
-              )}
-            </div>
-          </div> */}
+        {/* Average Time Over Time */}
+        <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg">
+          <h3 className="text-lg font-semibold text-[--theme-text-color]">Average Time to Answer</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={performanceTimeData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="averageTime"
+                stroke={getThemeColor()}
+                dot={{ r: 4, fill: getThemeColor(), stroke: getThemeColor() }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Return Button - Adjust positioning */}
-      <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
+      {/* Return Button */}
+      <div className="absolute bottom-4 right-4">
         <button
           onClick={onReturn}
-          className="w-full py-3 px-2 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
+          className="py-3 px-2 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold rounded-lg transition flex items-center gap-2"
         >
           <svg
             className="w-6 h-6 rotate-180"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
           >
             <path
               strokeLinecap="round"
@@ -560,5 +381,56 @@ const Statistics = ({
     </div>
   );
 };
+
+const StatCard = ({ title, value }: { title: string; value: string | number }) => (
+  <div className="bg-[--theme-leaguecard-color] p-2 rounded-lg shadow-[var(--theme-adaptive-tutoring-boxShadow)] flex flex-col justify-center min-h-[5rem]">
+    <h4 className="text-sm font-semibold text-[--theme-text-color]">{title}</h4>
+    <p className="text-4xl font-bold text-[--theme-text-color] text-center">{value}</p>
+  </div>
+);
+const getSubjectsForSection = (section: string): string[] => {
+  switch (section) {
+    case "CARs":
+      return ["CARs"];
+    case "Psych/Soc":
+      return ["Psychology", "Sociology"];
+    case "Chem/Phys":
+      return ["Chemistry", "Physics"];
+    case "Bio/Biochem":
+      return ["Biology", "Biochemistry"];
+    default:
+      return [];
+  }
+};
+
+// CategoryTable Component
+const CategoryTable = ({ categories }: { categories: CategoryStats[] }) => (
+  <div className="overflow-x-auto">
+    {categories.length > 0 ? (
+      <table className="min-w-full bg-[--theme-leaguecard-color] text-[--theme-text-color]">
+        <thead>
+          <tr>
+            <th className="px-4 py-2">Category</th>
+            <th className="px-4 py-2">Accuracy</th>
+            <th className="px-4 py-2">Questions Answered</th>
+            <th className="px-4 py-2">Avg. Time (s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {categories.map(category => (
+            <tr key={category.categoryId}>
+              <td className="border px-4 py-2">{category.conceptCategory}</td>
+              <td className="border px-4 py-2">{category.accuracy.toFixed(2)}%</td>
+              <td className="border px-4 py-2">{category.totalQuestions}</td>
+              <td className="border px-4 py-2">{category.averageTime.toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : (
+      <p className="text-[--theme-text-color] py-4">No data available yet</p>
+    )}
+  </div>
+);
 
 export default Statistics;

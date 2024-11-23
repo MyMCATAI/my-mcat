@@ -29,7 +29,8 @@
     "upload-content-2": "ts-node --project tsconfig.server.json scripts/uploadNewContent.ts",
     "delete-content": "ts-node --project tsconfig.server.json scripts/deleteContent.ts",
     "update-questions": "ts-node --project tsconfig.server.json scripts/updateQuestionCategories.ts",
-    "delete-study-plan": "ts-node --project tsconfig.server.json scripts/deleteStudyPlan.ts"
+    "delete-study-plan": "ts-node --project tsconfig.server.json scripts/deleteStudyPlan.ts",
+    "update-user-response-categories": "ts-node --project tsconfig.server.json scripts/updateUserResponseCategories.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.633.0",
