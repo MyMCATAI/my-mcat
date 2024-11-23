@@ -57,9 +57,10 @@ export default function UserTestReviewPage() {
 
   const fetchUserTest = async (testId: string) => {
     try {
-      const response = await fetch(`/api/user-test/${testId}`);
+      const response = await fetch(`/api/user-test/${testId}?includeQuestionInfo=true`);
       if (!response.ok) throw new Error('Failed to fetch user test');
       const data = await response.json();
+      console.log("data", data);
       setUserTest(data);
     } catch (err) {
       setError('Error fetching user test');

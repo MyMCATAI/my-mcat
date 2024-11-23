@@ -137,7 +137,8 @@ export async function PUT(req: Request) {
   try {
     const body = await req.json();
     const { id, userTestId, questionId, ...updateData } = body;
-
+    console.log("body PUT response");
+    console.log(body);
     if (!id) {
       return NextResponse.json({ error: "Missing required field: id" }, { status: 400 });
     }
