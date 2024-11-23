@@ -87,6 +87,10 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const [showMessageForm, setShowMessageForm] = useState(false);
   const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] = useState(false);
 
+  const chatbotRef = useRef<{
+    sendMessage: (message: string) => void;
+  }>({ sendMessage: () => {} });
+
   useEffect(() => {
     fetchTest();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -411,39 +415,24 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         throw new Error('Failed to update test');
       }
   
-      // Determine the number of cupcakes (points) earned
+      // Award 1 coin only for perfect score within 10 minutes
       let cupcakesEarned = 0;
-
-      // Should be consistent with getStartCount, getTimingStars, and getTechniqueStars
-      // Points are ratings in total
-      let point = 0
-
-      if (score === 100) point += 3;
-      else if (score >= 80) point += 2;
-      else if (score >= 60) point += 1;
-
-      if (averageTimePerQuestion != undefined) {
-        if (averageTimePerQuestion < 9 * 60 / 5) point += 3;
-        else if (averageTimePerQuestion < 10 * 60 / 5) point += 2;
-        else if (averageTimePerQuestion < 12 * 60 / 5) point += 1;
-        else point += 0;
-      }
-
-      point += technique;
-      cupcakesEarned = Math.max(Math.round(point / 3), 1);
-  
-      // Update the user's score
-      const scoreResponse = await fetch('/api/user-info/', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: cupcakesEarned }),
-      });
-  
-      if (!scoreResponse.ok) {
-        throw new Error('Failed to update user score');
+      if (score === 100 && totalTimeInSeconds <= 600) { // 600 seconds = 10 minutes
+        cupcakesEarned = 1;
       }
   
-      const updatedUserInfo = await scoreResponse.json();
+      // Only make the API call if a coin was earned
+      if (cupcakesEarned > 0) {
+        const scoreResponse = await fetch('/api/user-info/', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: cupcakesEarned }),
+        });
+  
+        if (!scoreResponse.ok) {
+          throw new Error('Failed to update user score');
+        }
+      }
   
       setShowScorePopup(true);
       onTestComplete && onTestComplete(score);
@@ -975,11 +964,9 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
             <div className="rounded-lg mx-4 flex-shrink-0">
               <ChatBotInLine
                 chatbotContext={chatbotContext}
-                isVoiceEnabled={false}
-                width="100%"
-                backgroundColor="white"
-                handleShowHint={handleShowHint}
+                chatbotRef={chatbotRef}
                 question={currentQuestion}
+                handleShowHint={handleShowHint}
               />
             </div>
           )}

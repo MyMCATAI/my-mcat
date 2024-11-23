@@ -11,11 +11,6 @@ const elevenlabs = new ElevenLabsClient({
   apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
 });
 
-const assistantId: string = process.env.ASSISTANT_ID || "";
-if (!assistantId) {
-  throw new Error("Assistant ID not configured in .env file");
-}
-
 // In-memory store for thread IDs (replace with a database in production)
 const userThreads = new Map<string, string>();
 
@@ -59,7 +54,7 @@ export async function POST(req: Request) {
   try {
     const { userId } = auth();
     const body = await req.json();
-    const { message, context, threadId, generateAudio } = body;
+    const { message, context, threadId, generateAudio, assistantId } = body;
 
     console.log('Received message:');
     console.log('Generate audio:', generateAudio);
@@ -100,9 +95,12 @@ export async function POST(req: Request) {
       content: fullMessage
     });
 
+    // Use provided assistantId or fall back to default
+    const currentAssistantId = assistantId || "";
+
     // Run the assistant
     const run = await openai.beta.threads.runs.create(currentThreadId, {
-      assistant_id: assistantId,
+      assistant_id: currentAssistantId,
     });
 
     // Wait for the run to complete
