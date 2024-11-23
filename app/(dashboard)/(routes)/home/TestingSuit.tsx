@@ -15,7 +15,9 @@ const TestingSuit: React.FC = () => {
   const [testsCompletedToday, setTestsCompletedToday] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showCARsTutorial, setShowCARsTutorial] = useState(true);
+  const [showCARsTutorial, setShowCARsTutorial] = useState(() => {
+    return localStorage.getItem("carsTutorialPlayed") !== "true";
+  });
   const [kalypsoInteracted, setKalypsoInteracted] = useState(false);
 
   useEffect(() => {
@@ -26,6 +28,7 @@ const TestingSuit: React.FC = () => {
     setAssistantMessage(message);
     setIsOverlayVisible(true);
     setKalypsoInteracted(true);
+    localStorage.setItem("carsTutorialPlayed", "true");
   };
 
   const closeOverlay = () => {
@@ -91,12 +94,6 @@ const TestingSuit: React.FC = () => {
     fetchTests(true);
   }, []);
 
-  useEffect(() => {
-    if (!showCARsTutorial) {
-      localStorage.setItem("hasSeenCARsTutorial", "true");
-    }
-  }, [showCARsTutorial]);
-
   const handleKalypsoInteraction = () => {
     setKalypsoInteracted(true);
     if (!localStorage.getItem("carsTutorialPlayed")) {
@@ -152,7 +149,10 @@ const TestingSuit: React.FC = () => {
         kalypsoInteracted={kalypsoInteracted}
       />
       <button 
-        onClick={() => setShowCARsTutorial(true)}
+        onClick={() => {
+          setShowCARsTutorial(true);
+          localStorage.setItem("carsTutorialPlayed", "false");
+        }}
         className="fixed bottom-4 right-4 bg-blue-500 text-white p-2 rounded"
       >
         Show Tutorial
