@@ -370,18 +370,33 @@ export async function GET(req: Request) {
 
     // Get the number of tests completed today
     const today = new Date();
-    const testsCompletedToday = await prisma.userTest.count({
+    console.log('Checking tests completed for date:', today);
+
+    // First, let's check all tests for this user today without restrictions
+    const allUserTestsToday = await prisma.userTest.findMany({
       where: {
         userId: userId,
-        passageId: {
-          not: null
-        },
         finishedAt: {
           gte: startOfDay(today),
           lte: endOfDay(today),
         },
       },
     });
+
+    console.log('All user tests today:', allUserTestsToday);
+
+    // Then do our actual count
+    const testsCompletedToday = await prisma.userTest.count({
+      where: {
+        userId: userId,
+        finishedAt: {
+          gte: startOfDay(today),
+          lte: endOfDay(today),
+        },
+      },
+    });
+
+    console.log('Tests completed count:', testsCompletedToday);
 
     if (isDiagnostic) {
       return new NextResponse(

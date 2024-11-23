@@ -36,9 +36,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [welcomeAndTestMessage, setWelcomeAndTestMessage] = useState("");
   const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
-  const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(
-    null
-  );
+  const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(null);
   const [welcomeComplete, setWelcomeComplete] = useState(false);
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
   const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
@@ -166,6 +164,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
       localStorage.setItem("carsTutorialPlayed", "true");
     }
   };
+
 
   return (
     <div
@@ -379,7 +378,12 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                 <TestList items={userTests} type="past" loading={loading} />
               </TabsContent>
               <TabsContent value="upcoming">
-                <TestList items={tests} type="upcoming" loading={loading} testsCompletedToday={testsCompletedToday} />
+                <TestList 
+                  items={tests} 
+                  type="upcoming" 
+                  loading={loading} 
+                  testsAvailableToday={MAX_TESTS_PER_DAY} 
+                />
               </TabsContent>
             </Tabs>
           </div>
