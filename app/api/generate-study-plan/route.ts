@@ -685,14 +685,14 @@ function getAvailableTasks(
     remainingHours -= 4;
   }
 
-  let ATS_max: number = EVENT_CATEGORIES[2].maxDuration;
-  let ATS_min: number  = EVENT_CATEGORIES[2].minDuration;
+  let ATS_max: number = EVENT_CATEGORIES[2].maxDuration ?? 3;
+  let ATS_min: number = EVENT_CATEGORIES[2].minDuration ?? 1;
   let ATS_type: string = EVENT_CATEGORIES[2].type;
-  let Anki_max: number = EVENT_CATEGORIES[3].maxDuration;
-  let Anki_min: number = EVENT_CATEGORIES[3].minDuration;
+  let Anki_max: number = EVENT_CATEGORIES[3].maxDuration ?? 1.5;
+  let Anki_min: number = EVENT_CATEGORIES[3].minDuration ?? 0.5;
   let Anki_type: string = EVENT_CATEGORIES[3].type;
-  let CARs_max: number = EVENT_CATEGORIES[1].maxDuration;
-  let CARs_min: number = EVENT_CATEGORIES[1].minDuration;
+  let CARs_max: number = EVENT_CATEGORIES[1].maxDuration ?? 1;
+  let CARs_min: number = EVENT_CATEGORIES[1].minDuration ?? 0.5;
   let CARs_type: string = EVENT_CATEGORIES[1].type;
   let UWorld_type: string = EVENT_CATEGORIES[4].type;
   let AAMC_type: string = EVENT_CATEGORIES[5].type;
