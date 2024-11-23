@@ -153,6 +153,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
           context,
           threadId,
           generateAudio: audioEnabled,
+          assistantId: 'asst_7jwxyFZEYOYZlduxQrnFLZl8'
         }),
       });
 
