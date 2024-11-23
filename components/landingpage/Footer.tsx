@@ -100,7 +100,7 @@ const Footer = () => {
           <div className="mb-6 md:mb-0">
             <a href="#" className="flex flex-col items-center">
               <p className="text-white text-medium mb-4">MyMCAT is brought to you by:</p>
-              <div className="w-[15vh] sm:w-[18vh] md:w-[24vh] lg:w-[28vh] pl-6">
+              <div className="w-[12rem] sm:w-[14rem] md:w-[16rem] lg:w-[18rem] pl-6">
                 <Image src={logo} alt="Logo" className="w-full h-auto"/>
               </div>
             </a>
