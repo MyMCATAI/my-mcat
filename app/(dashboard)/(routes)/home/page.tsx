@@ -64,6 +64,7 @@ const Page = () => {
   });
   const paymentStatus = searchParams?.get("payment");
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [hasPaid, setHasPaid] = useState(false);
 
   useEffect(() => {    
     // if returning from stripe, show toast depending on payment
@@ -216,12 +217,17 @@ const Page = () => {
     try {
       const response = await fetch("/api/user-info");
       if (response.status === 404) {
-        // Show purchase coins modal if user has no coins (and does not exist)
         setShowPurchaseModal(true);
         return;
       } else if (response.ok) {
         const userInfo = await response.json();
         setUserInfo(userInfo);
+        setHasPaid(userInfo.hasPaid);
+        
+        // Show purchase modal if user hasn't paid
+        if (!userInfo.hasPaid) {
+          setShowPurchaseModal(true);
+        }
       } else {
         throw new Error("Failed to fetch user info");
       }
@@ -232,6 +238,24 @@ const Page = () => {
   };
 
   const renderContent = () => {
+    // First check if user hasn't paid
+    if (!hasPaid) {
+      return (
+        <div className="flex justify-center items-center h-full">
+          <div className="text-center">
+            <h2 className="text-2xl text-sky-300 mb-4">Welcome to MyMCAT!</h2>
+            <p className="text-gray-300 mb-4">Please purchase coins to access all features.</p>
+            <Button 
+              onClick={() => setShowPurchaseModal(true)}
+              className="bg-sky-500 hover:bg-sky-600"
+            >
+              Purchase Coins
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     if (isUpdatingProfile || isGeneratingActivities) {
       return (
         <div className="flex justify-center items-center h-full">
@@ -447,11 +471,14 @@ const Page = () => {
               <div className="p-3 gradientbg h-[calc(100vh-5rem)] rounded-lg">
                 {renderContent()}
               </div>
+
+              {hasPaid && 
               <FloatingButton
                 onTabChange={handleTabChange}
                 currentPage="home"
                 initialTab={activeTab}
               />
+            }
             </div>
           </div>
           <div className="w-1/4">
