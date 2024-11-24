@@ -4,6 +4,44 @@ import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 import { getCategories } from "@/lib/category";
 
+const getSectionSubjects = (section: string): string[] => {
+  switch (section) {
+    case "cars":
+      return ["CARs"];
+    case "ps":
+      return ["Psychology", "Sociology"];
+    case "cp":
+      return ["Chemistry", "Physics"];
+    case "bb":
+      return ["Biology", "Biochemistry"];
+    default:
+      return [];
+  }
+};
+
+const sortCategoriesByDiagnosticScores = (
+  categories: any[], 
+  diagnosticScores: any
+) => {
+  // Convert diagnostic scores to number and create a ranking
+  const scoreRanking = Object.entries(diagnosticScores)
+    .filter(([key]) => key !== 'total')
+    .sort(([, a], [, b]) => Number(a) - Number(b))
+    .reduce((acc, [section], index) => {
+      getSectionSubjects(section).forEach(subject => {
+        acc[subject] = index;
+      });
+      return acc;
+    }, {} as Record<string, number>);
+
+  // Sort categories based on their subject's ranking
+  return [...categories].sort((a, b) => {
+    const rankA = scoreRanking[a.subjectCategory] ?? 999;
+    const rankB = scoreRanking[b.subjectCategory] ?? 999;
+    return rankA - rankB;
+  });
+};
+
 export async function GET(req: Request) {
   try {
     const { userId } = auth();
@@ -18,15 +56,26 @@ export async function GET(req: Request) {
     const useKnowledgeProfiles = searchParams.get('useKnowledgeProfiles') === 'true';
     const includeCARS = searchParams.get('includeCARS') === 'true';
 
+
+    // TODO josh update this to use the new diagnostic scores
+
+
+    
     let result;
 
     if (useKnowledgeProfiles) {
       // Fetch all knowledge profiles for the user
-      const knowledgeProfiles = await prisma.knowledgeProfile.findMany({
-        where: { userId },
-        orderBy: { conceptMastery: 'asc' },
-        include: { category: true }
-      });
+      const [knowledgeProfiles, userInfo] = await Promise.all([
+        prisma.knowledgeProfile.findMany({
+          where: { userId },
+          orderBy: { conceptMastery: 'asc' },
+          include: { category: true }
+        }),
+        prisma.userInfo.findUnique({
+          where: { userId },
+          select: { diagnosticScores: true }
+        })
+      ]);
 
       // Fetch all categories
       let allCategories = await prisma.category.findMany();
@@ -37,7 +86,7 @@ export async function GET(req: Request) {
       }
 
       // Combine knowledge profiles with categories
-      const sortedCategories = allCategories.map(category => {
+      let sortedCategories = allCategories.map(category => {
         const profile = knowledgeProfiles.find(p => p.categoryId === category.id);
         return {
           ...category,
@@ -53,6 +102,16 @@ export async function GET(req: Request) {
         return a.conceptMastery - b.conceptMastery;
       });
 
+
+      if (userInfo?.diagnosticScores) {
+        console.log('User diagnostic scores:', userInfo.diagnosticScores);
+        // Sort the categories by diagnostic scores before pagination
+        sortedCategories = sortCategoriesByDiagnosticScores(
+          sortedCategories, 
+          userInfo.diagnosticScores
+        );
+      }
+
       // Paginate the results
       const startIndex = (page - 1) * pageSize;
       const paginatedCategories = sortedCategories.slice(startIndex, startIndex + pageSize);
@@ -64,7 +123,10 @@ export async function GET(req: Request) {
       };
     } else {
       // Use the existing getCategories function for normal fetching
-      result = await getCategories({ page, pageSize });
+      result = await getCategories({ 
+        page, 
+        pageSize, 
+      });
     }
 
     return NextResponse.json(result);
