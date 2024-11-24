@@ -1,10 +1,9 @@
-import { Waitlist } from "@clerk/nextjs";
+import { SignUp } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 
 export default function Page() {
   return (
-    <Waitlist
-      afterJoinWaitlistUrl="https://discord.gg/c8VjPeKc"
+    <SignUp
       appearance={{
         baseTheme: dark,
         variables: {
