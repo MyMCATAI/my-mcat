@@ -4,12 +4,12 @@ import { Metadata } from 'next';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
-  title: 'My MCAT',
+  title: 'MyMCAT',
   description: 'Discover how My MCAT can revolutionize your MCAT preparation experience.',
-  keywords: 'MCAT prep, landing page, interactive learning, study platform, medical school admission',
+  keywords: 'MCAT prep, MCAT AI, free MCAT course, MCAT practice questions, UWorld MCAT, MyMCAT',
   openGraph: {
-    title: 'My MCAT - Transform Your MCAT Prep',
-    description: 'Experience a new way of MCAT preparation with My MCAT. Engaging, effective, and tailored for your success.',
+    title: 'For MCAT Prep, You\'re Better With Us',
+    description: 'No more boring, no more guessing, no more wasting time. Join MyMCAT and transform your study experience.',
     images: [
       {
         url: '/landing-preview.png',
