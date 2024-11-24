@@ -98,10 +98,6 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
     fetchCategories(searchQuery, selectedSubject, currentPage);
   }, [selectedSubject, currentPage]);
 
-  // useEffect(() => {
-  //   fetchCategories(searchQuery, selectedSubject, currentPage);
-  // }, [selectedSubject, currentPage]);
-
   const fetchCategories = async (
     searchQuery: string,
     subject: string,
@@ -132,7 +128,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
       setTotalPages(data.totalPages);
 
       // Preserve checked status when setting new categories
-      const newCategories = data.categories.map((category: Category) => ({
+      const newCategories = data.items.map((category: Category) => ({
         ...category,
         isChecked: checkedCategories.some(
           (checked) => checked.id === category.id
