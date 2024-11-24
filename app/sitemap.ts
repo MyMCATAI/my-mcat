@@ -13,18 +13,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}colleges`,
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}disclaimer`,
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}cookiepolicy`,
-      priority: 0.5,
-    },
-    {
       url: `${baseUrl}acceptableuse`,
       priority: 0.5,
     },
