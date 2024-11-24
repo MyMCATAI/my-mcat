@@ -2,6 +2,7 @@
 import React from 'react';
 import Image from 'next/image';
 import icon from '../../public/checkicon.png';
+import { FaDiscord } from "react-icons/fa";
 
 const CheckListing = () => {
     const items = [
@@ -12,23 +13,6 @@ const CheckListing = () => {
         { heading: "Diagnostic Tests", text: 'We are working on creating a diagnostic test that is more accurate than anything on the market.', icon: icon },
         { heading: "And So Much More", text: `We are smart as hell and love what we do. You can expect a lot more amazing features to enhance your MCAT prep.`, icon: icon },
     ];
-
-    React.useEffect(() => {
-        // Load Tally script
-        const script = document.createElement('script');
-        script.src = "https://tally.so/widgets/embed.js";
-        script.async = true;
-        document.body.appendChild(script);
-
-        script.onload = () => {
-            // @ts-ignore
-            Tally.loadEmbeds();
-        };
-
-        return () => {
-            document.body.removeChild(script);
-        };
-    }, []);
 
     return (
         <section className='bg-[#091f33] py-16 mb-12' id='keypoints'>
@@ -56,30 +40,29 @@ const CheckListing = () => {
                     ))}
                 </ul>
 
-                {/* Updated layout for sign-up section */}
-                <div className="mt-20 flex flex-col md:flex-row items-center justify-between">
-                    <div className="w-full md:w-1/2 mb-8 md:mb-0">
-                        <h2 className="text-5xl font-bold text-white mb-4 font-krungthep">
-                            Sign Up
-                        </h2>
-                        <p className="text-blue-300 text-lg">
-                            Geez, what are you waiting for?
-                        </p>
-                    </div>
-                    <div className="w-full md:w-1/2 bg-[#001226] p-6 rounded-lg" 
-                         style={{
-                             boxShadow: '0 0 6px 2px rgba(0, 123, 255, 0.7), inset 0 2px 8px rgba(49, 49, 244, 0.8)'
-                         }}>
-                        <iframe 
-                            data-tally-src="https://tally.so/embed/31vBY4?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" 
-                            loading="lazy" 
-                            width="100%" 
-                            height="439" 
-                            frameBorder="0" 
-                            marginHeight={0} 
-                            marginWidth={0} 
-                            title="MyMCAT's Early Access Form">
-                        </iframe>
+                {/* Updated sign-up section with centered Discord link */}
+                <div className="mt-20 text-center">
+                    <h2 className="text-5xl font-bold text-white mb-8 font-krungthep">
+                        Join our Discord!
+                    </h2>
+                    <p className="text-blue-300 text-xl mb-12">
+                        Geez, what are you waiting for?
+                    </p>
+                    <div className="flex justify-center">
+                        <a 
+                            href="https://discord.gg/c8VjPeKc"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex flex-col items-center gap-4 bg-[#001226] rounded-xl px-16 py-8 hover:bg-[#0a1f33] transition-all duration-300"
+                            style={{
+                                boxShadow: '0 0 6px 2px rgba(0, 123, 255, 0.7), inset 0 2px 8px rgba(49, 49, 244, 0.8)',
+                                minWidth: '20rem'
+                            }}
+                        >
+                            <FaDiscord className="text-8xl text-[#5865F2] hover:text-[#4752C4] transition-all duration-300 hover:scale-110" />
+                            <span className="text-white text-xl font-semibold hover:text-blue-300 transition-colors duration-300">
+                            </span>
+                        </a>
                     </div>
                 </div>
             </div>
