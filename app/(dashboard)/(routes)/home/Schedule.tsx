@@ -454,6 +454,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [todayActivities, setTodayActivities] = useState<Activity[]>([]);
 
   // Fetch tasks for each activity that doesn't have tasks
+  // Reload the tasks for the UWorld activity
   useEffect(() => {
     const fetchTasksForToday = async () => {
       const todaysActivities = activities.filter((activity) =>
