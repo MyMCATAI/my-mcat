@@ -25,7 +25,7 @@ import WelcomePopUp from "@/components/home/WelcomePopUp";
 import UpdateNotificationPopup from "@/components/home/UpdateNotificationPopup";
 import FlashcardDeck from "./FlashcardDeck";
 import { toast } from 'react-hot-toast';
-import PurchaseCoinsModal from "@/components/PurchaseCoinsModal";
+import { PurchaseButton } from "@/components/purchase-button";
 
 interface HandleShowDiagnosticTestParams {
   reset?: boolean;
@@ -63,7 +63,6 @@ const Page = () => {
     sendMessage: () => {}
   });
   const paymentStatus = searchParams?.get("payment");
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [hasPaid, setHasPaid] = useState(false);
 
   useEffect(() => {    
@@ -217,17 +216,11 @@ const Page = () => {
     try {
       const response = await fetch("/api/user-info");
       if (response.status === 404) {
-        setShowPurchaseModal(true);
         return;
       } else if (response.ok) {
         const userInfo = await response.json();
         setUserInfo(userInfo);
         setHasPaid(userInfo.hasPaid);
-        
-        // Show purchase modal if user hasn't paid
-        if (!userInfo.hasPaid) {
-          setShowPurchaseModal(true);
-        }
       } else {
         throw new Error("Failed to fetch user info");
       }
@@ -242,15 +235,35 @@ const Page = () => {
     if (!hasPaid) {
       return (
         <div className="flex justify-center items-center h-full">
-          <div className="text-center">
-            <h2 className="text-2xl text-sky-300 mb-4">Welcome to MyMCAT!</h2>
-            <p className="text-gray-300 mb-4">Please purchase coins to access all features.</p>
-            <Button 
-              onClick={() => setShowPurchaseModal(true)}
-              className="bg-sky-500 hover:bg-sky-600"
-            >
-              Purchase Coins
-            </Button>
+          <div className="bg-[--theme-mainbox-color] rounded-lg p-[2rem] shadow-lg">
+            <div className="text-center max-w-[45rem] mx-auto">
+              <h2 className="text-6xl font-bold text-[--theme-text-color] mb-[3rem] animate-fade-in-up">
+                Welcome to MyMCAT!
+              </h2>
+              <img 
+                src="/Kalypsodiagnostic.png" 
+                alt="Kalypso" 
+                className="mx-auto mb-[3rem] max-w-[20rem]"
+              />
+              <div className="mb-[2rem]">
+                <p className="text-[--theme-text-color] text-lg leading-relaxed mb-[2rem]">
+                  With 10 coins, you can unlock the Adaptive Tutoring Suite, Calendar, and Daily CARs. 
+                  With hard work, you can earn coins and unlock more features without having to pay another cent. 
+                  Please purchase coins to begin your MCAT journey!
+                </p>
+                <PurchaseButton 
+                  text="Get Started with Coins"
+                  className="bg-[--theme-hover-color] !important
+                    px-[2rem] py-[0.75rem] text-lg 
+                    text-[--theme-hover-text] 
+                    transition-opacity duration-200
+                    rounded-lg
+                    hover:!bg-[--theme-hover-color]
+                    hover:opacity-80"
+                  tooltipText="Purchase coins to begin your MCAT journey"
+                />
+              </div>
+            </div>
           </div>
         </div>
       );
@@ -560,11 +573,6 @@ const Page = () => {
         <UpdateNotificationPopup
           open={showUpdateNotification && haveAllTutorialsPlayed()}
           onOpenChange={handleCloseUpdateNotification}
-        />
-
-        <PurchaseCoinsModal 
-          open={showPurchaseModal} 
-          onOpenChange={setShowPurchaseModal}
         />
       </div>
   );
