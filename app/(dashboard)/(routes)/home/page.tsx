@@ -241,7 +241,7 @@ const Page = () => {
                 Welcome to MyMCAT!
               </h2>
               <img 
-                src="/Kalypsodiagnostic.png" 
+                src="/kalypsodiagnostic.png" 
                 alt="Kalypso" 
                 className="mx-auto mb-[3rem] max-w-[20rem]"
               />
