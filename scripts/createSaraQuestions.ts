@@ -9,13 +9,23 @@ dotenv.config({ path: '.env' });
 
 const prisma = new PrismaClient();
 
-async function createQuestionsFromCSV() {
-  // Define the path to your CSV file
-  const csvFilePath = path.join(process.cwd(), 'data', 'SARASWATI-Qs.csv');
+async function createQuestionsFromCSV(dryRun: boolean = true) {
+  const csvFilePath = path.join(process.cwd(), 'data', 'Nov24Questions.csv');
   const fileContent = fs.readFileSync(csvFilePath, { encoding: 'utf-8' });
 
-  // Fetch all categories once to avoid multiple database queries
+  // Fetch all categories and existing questions' questionIDs
   const categories = await prisma.category.findMany();
+  const existingQuestions = await prisma.question.findMany({
+    select: { questionID: true, types: true }
+  });
+
+  // Create a map of existing questionIDs
+  const existingQuestionMap = new Set(
+    existingQuestions.map(q => q.questionID)
+  );
+
+  // Track missing categories
+  const missingCategories = new Set<string>();
 
   parse(fileContent, {
     columns: true,
@@ -26,38 +36,62 @@ async function createQuestionsFromCSV() {
       return;
     }
 
+    let questionsToAdd = 0;
+    let questionsSkipped = 0;
+
     for (const record of records) {
       try {
-        // Find the matching category
-
-        console.log(record['Kontent Category (K)']);
-        console.log(record['Concept Category (C)']);
         const category = categories.find(cat => 
           cat.contentCategory === record['Kontent Category (K)'] &&
           cat.conceptCategory === record['Concept Category (C)']
         );
 
         if (!category) {
+          const missingCategoryKey = `${record['Kontent Category (K)']} | ${record['Concept Category (C)']}`;
+          missingCategories.add(missingCategoryKey);
           console.error(`No matching category found for question ${record['Question ID']}`);
           continue;
         }
 
-        // Create flashcard question
-        await createQuestion(record, category.id, 'flashcard');
+        // Check each question type
+        const types: Array<'flashcard' | 'normal' | 'patient'> = ['flashcard', 'normal', 'patient'];
+        
+        for (const type of types) {
+          const questionId = `${record['Question ID']}-${type}`;
+          
+          if (existingQuestionMap.has(questionId)) {
+            console.log(`Skipping existing question: ${questionId}`);
+            questionsSkipped++;
+            continue;
+          }
 
-        // Create normal multiple choice question
-        await createQuestion(record, category.id, 'normal');
-
-        // Create patient multiple choice question
-        await createQuestion(record, category.id, 'patient');
+          if (dryRun) {
+            console.log(`Would create new ${type} question: ${questionId}`);
+            questionsToAdd++;
+          } else {
+            await createQuestion(record, category.id, type);
+            questionsToAdd++;
+          }
+        }
 
       } catch (error) {
-        console.error(`Error creating questions:`, error);
+        console.error(`Error processing question:`, error);
       }
     }
 
     await prisma.$disconnect();
-    console.log("Finished creating questions for the first 3 rows.");
+    console.log(`\nSummary:`);
+    console.log(`${questionsToAdd} questions would ${dryRun ? 'be' : 'were'} added`);
+    console.log(`${questionsSkipped} questions skipped (already exist)`);
+    
+    if (missingCategories.size > 0) {
+      console.log(`\nMissing Categories (${missingCategories.size}):`);
+      console.log('Content Category | Concept Category');
+      console.log('-'.repeat(50));
+      missingCategories.forEach(category => console.log(category));
+    }
+    
+    console.log(`\n${dryRun ? '*** This was a dry run ***' : '*** Questions were created in database ***'}`);
   });
 }
 
