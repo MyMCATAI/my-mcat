@@ -166,7 +166,6 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         tasks: activity.tasks,
       }));
 
-      console.log('formattedEvents are', formattedEvents);
       setEvents(formattedEvents);
     } catch (error) {
       console.error("Error fetching activities:", error);
