@@ -26,6 +26,7 @@ import UpdateNotificationPopup from "@/components/home/UpdateNotificationPopup";
 import FlashcardDeck from "./FlashcardDeck";
 import { toast } from 'react-hot-toast';
 import { PurchaseButton } from "@/components/purchase-button";
+import { isToday } from "date-fns";
 
 interface HandleShowDiagnosticTestParams {
   reset?: boolean;
@@ -172,8 +173,39 @@ const Page = () => {
         throw new Error("Failed to fetch activities");
       }
       const activities = await response.json();
-      setActivities(activities);
-      updateCalendarChatContext(activities);
+
+      const todaysActivities = activities.filter((activity: FetchedActivity) =>
+        isToday(new Date(activity.scheduledDate))
+      );
+
+      // get UWorld activity
+      const uworldActivities = todaysActivities.filter((activity: FetchedActivity) => activity.activityTitle === "UWorld");
+
+
+      const responseUWorld = await fetch("/api/uworld-update", {
+        method: "POST",
+        body: JSON.stringify({ todayUWorldActivity: uworldActivities }),
+      });
+    
+      const responseUWorldJson = await responseUWorld.json();
+      const uworldActivityTasks = responseUWorldJson.tasks;
+      let updatedActivities = [...activities];
+
+      if (uworldActivities.length > 0) {
+        // Replace today's UWorld activity with the updated tasks
+        updatedActivities = updatedActivities.map(activity => 
+          isToday(new Date(activity.scheduledDate)) && activity.activityTitle === "UWorld" 
+            ? { ...activity, tasks: uworldActivityTasks } 
+            : activity
+        );
+
+        let todaysActivitiesAfterUpdate = updatedActivities.filter((activity: FetchedActivity) =>
+          isToday(new Date(activity.scheduledDate))
+        );
+      }
+      
+      setActivities(updatedActivities);
+      updateCalendarChatContext(updatedActivities);
     } catch (error) {
       console.error("Error fetching activities:", error);
       toast.error("Failed to fetch activities. Please try again.");
