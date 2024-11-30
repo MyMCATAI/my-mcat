@@ -2,8 +2,10 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
-import { updateUserInfo, getUserInfo } from "@/lib/user-info";
+import { getUserInfo } from "@/lib/user-info";
 import { incrementUserScore } from "@/lib/user-info";
+import prismadb from "@/lib/prismadb";
+import { DEFAULT_BIO } from "@/constants";
 
 export async function GET() {
   try {
@@ -35,13 +37,37 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { bio } = body;
+    const { firstName, bio } = body;
 
-    const updatedInfo = await updateUserInfo({ bio });
+    // Create or update UserInfo matching our schema exactly
+    const userInfo = await prismadb.userInfo.upsert({
+      where: { userId },
+      create: {
+        userId,
+        bio: bio || DEFAULT_BIO,
+        firstName: firstName || "",
+        apiCount: 0,
+        score: 0,
+        clinicRooms: "",
+        hasPaid: false,
+        subscriptionType: "",
+        diagnosticScores: {
+          total: "",
+          cp: "",
+          cars: "",
+          bb: "",
+          ps: ""
+        }
+      },
+      update: {
+        firstName: firstName || "",
+        bio: bio || DEFAULT_BIO,
+      }
+    });
 
-    return NextResponse.json(updatedInfo);
+    return NextResponse.json(userInfo);
   } catch (error) {
-    console.log('[USER_INFO_POST]', error);
+    console.log('[USER_INFO_INITIALIZE_POST]', error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

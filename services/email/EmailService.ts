@@ -19,9 +19,7 @@ export class EmailService {
 
   async sendEmail({ to, template, data = {} }: SendEmailProps): Promise<EmailResponse> {
     try {
-      console.log('Template requested:', template);
-      console.log('Available templates:', Object.keys(templates));
-      console.log('Sending from:', this.fromEmail);
+      console.log('Sending:', this.fromEmail, template);
 
       const templateConfig = templates[template](data);
       
