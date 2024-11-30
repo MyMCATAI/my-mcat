@@ -20,9 +20,11 @@ interface ContentRendererProps {
   content: string;
   onLinkClick?: (href: string, event: React.MouseEvent) => void;
   imageWidth?: string;
+  className?: string;
+  isFullScreen?: boolean;
 }
 
-const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick, imageWidth = '100%' }) => {
+const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick, imageWidth = '100%', className, isFullScreen }) => {
   const sanitizedContent = DOMPurify.sanitize(content);
 
   const generateAwsS3Url = (imageName: string): string => {
@@ -90,7 +92,9 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick,
           return <div className="my-2" {...props}>{children}</div>
         }
       }}
-      className="text-lg text-left text-[--theme-text-color] space-y-2"
+      className={`text-lg text-left space-y-2 ${
+        isFullScreen ? 'text-black' : 'text-[--theme-text-color]'
+      }`}
     >
       {sanitizedContent}
     </ReactMarkdown>
