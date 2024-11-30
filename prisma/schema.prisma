@@ -12,6 +12,7 @@ model UserInfo {
   id            String         @id @default(cuid())
   userId        String         @unique
   bio           String
+  firstName     String?        @default("")
   updatedAt     DateTime       @updatedAt
   apiCount      Int            @default(0)
   createdAt     DateTime       @default(now())

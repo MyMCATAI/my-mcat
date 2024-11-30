@@ -171,8 +171,25 @@ export interface CalendarActivity {
 export interface MedicalSchool {
   name: string;
   state: string;
-  degreeType: string;
-  averageGPA: string;
   averageMCAT: string;
+  averageGPA: string;
   description: string;
+}
+
+export interface TooltipProps {
+  message: string;
+  topPosition?: number;
+}
+
+export interface OnboardingFormData {
+  firstName: string;
+  college: string;
+  isNonTraditional: boolean;
+  isCanadian: boolean;
+  gpa: string;
+  diagnosticScore: string;
+  hasNotTakenMCAT: boolean;
+  attemptNumber: string;
+  targetScore: string;
+  medicalSchool: MedicalSchool | null;
 }

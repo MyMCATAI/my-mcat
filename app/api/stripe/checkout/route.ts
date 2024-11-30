@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import prismadb from "@/lib/prismadb";
 import { absoluteUrl } from "@/lib/utils";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { sendReferralEmail } from "@/lib/server-utils";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,6 +43,17 @@ export async function POST(request: Request) {
         return new NextResponse("User not found", { status: 404 });
       }
 
+      if (user) {
+        // First try to get firstName from Clerk user, then fallback to UserInfo
+        let referrerName = user.firstName;
+        if (!referrerName) {
+          const userInfo = await prismadb.userInfo.findUnique({
+            where: { userId }
+          });
+          referrerName = userInfo?.firstName || 'A friend';
+        }
+        await sendReferralEmail(referrerName, friendEmail);
+      }
       try {
         await prismadb.referral.create({
           data: {

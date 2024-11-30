@@ -1,4 +1,4 @@
-export type EmailTemplate = 'welcome' | 'reset-password' | 'notification' | 'daily-goal-achievement'
+export type EmailTemplate = 'welcome' | 'reset-password' | 'notification' | 'daily-goal-achievement' | 'referral'
 
 export interface SendEmailProps {
   to: string;
