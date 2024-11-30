@@ -5,7 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import QuizSummary from './QuizSummary';
 import Timer, { TimerRef } from './Timer';
-import { ThumbsDown } from "lucide-react";
+import { ThumbsDown, BarChart2, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -16,6 +16,12 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import QuizProgress from './QuizProgress';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export interface QuizQuestion {
   categoryId: string;
@@ -79,6 +85,8 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   const fetchQuestions = useCallback(async (page: number = 1) => {
     if (!category) return;
@@ -379,6 +387,26 @@ Please act as a tutor - help me understand the concept and provide hints if I as
     });
   }, [currentQuestion, category, shuffledOptions, setChatbotContext]);
 
+  const handleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen();
+      setIsFullScreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullScreen(false);
+    }
+  };
+
+  // Add fullscreen change event listener
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="h-full bg-transparent text-black px-6 rounded-lg mx-auto">
@@ -420,58 +448,135 @@ Please act as a tutor - help me understand the concept and provide hints if I as
   }
 
   return (
-    <div className="h-full flex flex-col bg-transparent text-black px-6 rounded-lg mx-auto">
+    <div 
+      ref={containerRef} 
+      className={`h-full flex flex-col px-6 rounded-lg mx-auto ${
+        isFullScreen 
+          ? 'bg-white text-black h-screen'
+          : 'text-black'
+      }`}
+    >
       {/* Timer and Question Header */}
       <div className="flex-none">
         <Timer ref={questionTimerRef} />
         <Timer ref={totalTimerRef} />
         
-        <div className="mb-4 flex justify-between items-center">
+        <div className={`mb-4 flex justify-between items-center ${
+          isFullScreen 
+            ? 'text-black' 
+            : 'text-[--theme-text-color]'
+        }`}>
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-semi-bold text-[--theme-text-color] drop-shadow-lg">
+            <h2 className={`text-xl font-semi-bold ${
+              isFullScreen 
+                ? 'text-black' 
+                : 'text-[--theme-text-color]'
+            } drop-shadow-lg`}>
               Question {currentQuestionIndex + 1}
             </h2>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline">View Progress</Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto !bg-[--theme-adaptive-tutoring-color] border border-blue-900 text-white">
-                <DialogHeader>
-                  <DialogTitle className="text-[--theme-text-color]">Quiz Progress</DialogTitle>
-                  <DialogClose className="absolute right-4 top-4 text-white opacity-70 hover:opacity-100" />
-                </DialogHeader>
-                <div className="!bg-[--theme-adaptive-tutoring-color]">
-                  <QuizProgress 
-                    summaries={answerSummaries}
-                    totalQuestions={questions.length}
-                  />
-                </div>
-              </DialogContent>
-            </Dialog>
+            
+            {!isFullScreen && (
+              <div className="flex gap-2">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className={`hover:bg-transparent ${
+                        isFullScreen 
+                          ? 'text-black hover:text-gray-700' 
+                          : 'text-[--theme-text-color] hover:text-[--theme-hover-color]'
+                      } transition-colors`}
+                    >
+                      <BarChart2 className="h-5 w-5" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto !bg-[--theme-adaptive-tutoring-color] border border-blue-900 text-white">
+                    <DialogHeader>
+                      <DialogTitle className="text-[--theme-text-color]">Quiz Progress</DialogTitle>
+                      <DialogClose className="absolute right-4 top-4 text-white opacity-70 hover:opacity-100" />
+                    </DialogHeader>
+                    <div className="!bg-[--theme-adaptive-tutoring-color]">
+                      <QuizProgress 
+                        summaries={answerSummaries}
+                        totalQuestions={questions.length}
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="text-[--theme-text-color] hover:text-[--theme-hover-color] hover:bg-transparent transition-colors"
+                      >
+                        <ThumbsDown className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Report this question</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
           </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className={`hover:bg-transparent ${
+                    isFullScreen 
+                      ? 'text-black hover:text-gray-700' 
+                      : 'text-[--theme-text-color] hover:text-[--theme-hover-color]'
+                  } transition-colors`}
+                  onClick={() => handleFullScreen()}
+                >
+                  <Maximize2 className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Toggle fullscreen</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto min-h-0"> {/* min-h-0 is crucial for nested flex scrolling */}
-        <div className="text-lg mb-4 text-white drop-shadow-lg">
+      {/* Scrollable Content - adjust max-height */}
+      <div className="flex-1 overflow-y-auto min-h-0 mb-4"> {/* Add mb-4 for spacing */}
+        <div className={`mb-4 ${
+          isFullScreen 
+            ? 'text-black' 
+            : 'text-[--theme-text-color]'
+        } drop-shadow-lg`}>
           <ContentRenderer
             content={currentQuestion.questionContent}
-            imageWidth="70%"
+            imageWidth={isFullScreen ? "50%" : "70%"}
+            isFullScreen={isFullScreen}
           />
         </div>
         <div className="space-y-2">
           {currentQuestion && renderOptions(currentQuestion)}
         </div>
         {isLoadingMore && (
-          <div className="mt-4 text-center text-white">
+          <div className={`mt-4 text-center ${
+            isFullScreen ? 'text-black' : 'text-white'
+          }`}>
             Loading more questions...
           </div>
         )}
       </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex-none mt-4 flex justify-between"> {/* Prevent shrinking */}
+      {/* Navigation Buttons - ensure they stay at bottom */}
+      <div className={`flex-none mt-auto flex justify-between ${
+        isFullScreen ? 'mb-11' : ''
+      }`}>
         <button
           onClick={handlePrevQuestion}
           disabled={currentQuestionIndex === 0}
