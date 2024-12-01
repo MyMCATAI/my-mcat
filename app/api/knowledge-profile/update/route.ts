@@ -19,11 +19,16 @@ export async function POST(req: Request) {
         categoryId: { not: null }
       },
       include: {
-        Category: true
+        Category: {
+          select: {
+            id: true,
+            contentCategory: true
+          }
+        }
       }
     });
 
-    // Group responses by category
+    // Group responses by category (for concept mastery)
     const groupedResponses = userResponses.reduce((acc, response) => {
       if (!acc[response.categoryId!]) {
         acc[response.categoryId!] = [];
@@ -31,6 +36,25 @@ export async function POST(req: Request) {
       acc[response.categoryId!].push(response);
       return acc;
     }, {} as Record<string, typeof userResponses>);
+
+    // Group responses by content category
+    const contentGroupedResponses = userResponses.reduce((acc, response) => {
+      const contentCategory = response.Category!.contentCategory;
+      if (!acc[contentCategory]) {
+        acc[contentCategory] = [];
+      }
+      acc[contentCategory].push(response);
+      return acc;
+    }, {} as Record<string, typeof userResponses>);
+
+    // Calculate content masteries
+    const contentMasteries = Object.entries(contentGroupedResponses).reduce((acc, [contentCategory, responses]) => {
+      const numCorrects = responses.filter(r => r.isCorrect).length;
+      const numIncorrects = responses.length - numCorrects;
+      const contentMastery = (numCorrects + 1) / (numCorrects + 1 + numIncorrects + 1);
+      acc[contentCategory] = contentMastery;
+      return acc;
+    }, {} as Record<string, number>);
 
     // Update KnowledgeProfile for each category
     const updatePromises = Object.entries(groupedResponses).map(async ([categoryId, responses]) => {
@@ -41,6 +65,9 @@ export async function POST(req: Request) {
       const latestResponse = responses.reduce((latest, current) => 
         latest.answeredAt > current.answeredAt ? latest : current
       );
+
+      const contentCategory = responses[0].Category!.contentCategory;
+      const contentMastery = contentMasteries[contentCategory];
 
       return prisma.knowledgeProfile.upsert({
         where: {
@@ -54,6 +81,7 @@ export async function POST(req: Request) {
           totalAttempts: responses.length,
           lastAttemptAt: latestResponse.answeredAt,
           conceptMastery: conceptMastery,
+          contentMastery: contentMastery,
         },
         create: {
           userId: userId,
@@ -62,6 +90,7 @@ export async function POST(req: Request) {
           totalAttempts: responses.length,
           lastAttemptAt: latestResponse.answeredAt,
           conceptMastery: conceptMastery,
+          contentMastery: contentMastery,
         },
       });
     });

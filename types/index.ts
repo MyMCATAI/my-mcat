@@ -104,6 +104,11 @@ export interface NewActivity {
   scheduledDate: string;
 }
 
+export interface Task {
+  text: string;
+  completed: boolean;
+}
+
 export interface FetchedActivity {
   id: string;
   userId: string;
@@ -116,6 +121,7 @@ export interface FetchedActivity {
   link: string | null;
   status: string;
   scheduledDate: string;
+  tasks?: Task[];  
 }
 
 export interface Flashcard {
