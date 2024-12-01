@@ -65,6 +65,7 @@ const Page = () => {
   });
   const paymentStatus = searchParams?.get("payment");
   const [hasPaid, setHasPaid] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {    
     // if returning from stripe, show toast depending on payment
@@ -79,16 +80,15 @@ const Page = () => {
 
   useEffect(() => {
     const initializePage = async () => {
-      await fetchActivities();
-      const proStatus = await checkProStatus();
-      setIsPro(proStatus);
-      await fetchUserInfo();
-
-      // Show welcome popup
-      // setShowWelcomePopup(true);
-
-      // Show update notification
-      // setShowUpdateNotification(true);
+      setIsLoading(true);
+      try {
+        await fetchActivities();
+        const proStatus = await checkProStatus();
+        setIsPro(proStatus);
+        await fetchUserInfo();
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     initializePage();
@@ -264,6 +264,17 @@ const Page = () => {
   };
 
   const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center h-full">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4"></div>
+            <p className="text-sky-300 text-xl">Loading...</p>
+          </div>
+        </div>
+      );
+    }
+
     // First check if user hasn't paid
     if (!hasPaid) {
       return (
