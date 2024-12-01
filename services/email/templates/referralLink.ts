@@ -16,7 +16,7 @@ export const referralLinkTemplate = (data: any): TemplateConfig => ({
       <div style="text-align: center; margin: 30px 0;">
         <a href="https://mymcat.ai" style="display: inline-block; background-color: #4A90E2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 10px; font-weight: bold;">Visit MyMCAT.ai</a>
         
-        <a href="https://discord.gg/mXVkbzFq" style="display: inline-block; background-color: #5865F2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 10px; font-weight: bold;">Join our Discord</a>
+        <a href="https://discord.gg/rTxN7wkh6e" style="display: inline-block; background-color: #5865F2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 10px; font-weight: bold;">Join our Discord</a>
       </div>
 
       <p style="color: #888888; font-size: 12px; text-align: center; margin-top: 30px;">
