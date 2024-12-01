@@ -1,9 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { emailService } from '@/services/email/EmailService';
-import { UserService } from '@/services/user/UserService';
 import prisma from "@/lib/prismadb";
-import { EmailTemplate } from "@/services/email/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

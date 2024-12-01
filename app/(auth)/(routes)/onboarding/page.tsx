@@ -1,33 +1,14 @@
 'use client';
 
-import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
 import { searchUniversities } from '@/utils/universities';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useClerk } from '@clerk/nextjs';
 import axios from "axios";
+import { MedicalSchool } from '@/types';
+import { Tooltip } from './Tooltip';
 
-interface MedicalSchool {
-  name: string;
-  state: string;
-  averageMCAT: string;
-  averageGPA: string;
-  description: string;
-}
-
-const Tooltip = ({ message, topPosition }: { message: string; topPosition?: number }) => (
-  <motion.div
-    initial={{ opacity: 0, x: 10 }}
-    animate={{ opacity: 1, x: 0 }}
-    exit={{ opacity: 0, x: 10 }}
-    className="absolute bg-blue-500 text-white px-4 py-3 rounded-lg text-md w-[16rem] whitespace-normal"
-    style={{ top: topPosition ?? 0 }}
-  >
-    {message}
-  </motion.div>
-);
 
 // Add this email validation function
 const isValidEmail = (email: string) => {
@@ -36,7 +17,6 @@ const isValidEmail = (email: string) => {
 
 export default function OnboardingPage() {
   const { user } = useClerk();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isNonTraditional, setIsNonTraditional] = useState(false);
   const [collegeQuery, setCollegeQuery] = useState('');
@@ -48,13 +28,11 @@ export default function OnboardingPage() {
   const [attemptMessage, setAttemptMessage] = useState('');
   const [hasNotTakenMCAT, setHasNotTakenMCAT] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const [showMedSchoolSearch, setShowMedSchoolSearch] = useState(false);
   const [medSchoolQuery, setMedSchoolQuery] = useState('');
   const [medSchoolSuggestions, setMedSchoolSuggestions] = useState<MedicalSchool[]>([]);
   const [selectedSchool, setSelectedSchool] = useState<MedicalSchool | null>(null);
   const [isMedSchoolInputFocused, setIsMedSchoolInputFocused] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [showKalypso, setShowKalypso] = useState(false);
   const [kalypsoMessage, setKalypsoMessage] = useState('');
   const [friendEmail, setFriendEmail] = useState('');
   const [targetScore, setTargetScore] = useState<string>('');
@@ -63,6 +41,8 @@ export default function OnboardingPage() {
   const [gpaValue, setGpaValue] = useState<string>('');
   const [diagnosticValue, setDiagnosticValue] = useState<string>('');
   const [attemptValue, setAttemptValue] = useState<string>('');
+  const [firstName, setFirstName] = useState('');
+  const [motivation, setMotivation] = useState('');
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -100,13 +80,41 @@ export default function OnboardingPage() {
     return () => clearTimeout(debounceTimer);
   }, [medSchoolQuery]);
 
-  const handleNextStep = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleNextStep = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Only create user-info if we're on step 1
+    if (step === 1) {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/user-info', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            firstName,
+            bio: motivation
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create user info');
+        }
+      } catch (error) {
+        console.error('Error creating user info:', error);
+        return; // Don't proceed if there's an error
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // Clear messages and advance step
     setGpaMessage('');
     setScoreMessage('');
     setAttemptMessage('');
     setHighScoreMessage('');
-    setStep(2);
+    setStep(step + 1);
   };
 
   const handleOnboardingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -129,8 +137,7 @@ export default function OnboardingPage() {
       }
       
       setStep(3);
-      setShowKalypso(true);
-      setKalypsoMessage(`Hi, I'm Kalypso. I'm going to be your friend throughout your journey so we can get you that ${targetScore}.`);
+      setKalypsoMessage(`Hi ${firstName}, I'm Kalypso. I'm going to be your friend throughout your journey so we can get you that ${targetScore}.`);
     } catch (error) {
       console.error('Onboarding error:', error);
     } finally {
@@ -276,10 +283,88 @@ export default function OnboardingPage() {
         </div>
 
         {step === 1 && (
+          <div className="space-y-8">
+            <div className="text-center space-y-4">
+              <h1 className="text-3xl font-bold text-white">
+                {"Welcome to Your MCAT Journey! 🎉"}
+              </h1>
+              <div className="space-y-3">
+                <p className="text-gray-300 text-lg">
+                  {"Congratulations on taking the first step towards crushing the MCAT! You've just joined a community of of successful students who used MyMCAT to achieve their dream scores."}
+                </p>
+                <p className="text-gray-300">
+                  {"Before we customize your study experience, we'll need to know a bit about you."}
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleNextStep} className="space-y-6">
+              <div className="space-y-2">
+                <label className="block text-white text-sm font-medium">
+                  {"First, what should I call you?"}
+                </label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full px-4 py-3 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  placeholder="Enter your first name"
+                  required
+                />
+              </div>
+
+              {firstName.trim() && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-2"
+                >
+                  <label className="block text-white text-sm font-medium">
+                    {`Nice to meet you, ${firstName}!`}
+                  </label>
+                  <label className="block text-white text-sm font-medium">
+                    {`Now tell me, what brought you here today?`}
+                  </label>
+                  <textarea
+                    name="mcatMotivation"
+                    rows={4}
+                    value={motivation}
+                    onChange={(e) => setMotivation(e.target.value)}
+                    className="w-full px-4 py-3 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
+                    placeholder={"What inspired you to pursue medicine? What would achieving your target MCAT score mean for your dreams, your family, and your future patients? Your 'why' will be your strongest motivation on this journey."}
+                    required
+                  />
+                </motion.div>
+              )}
+
+              <button 
+                type="submit"
+                disabled={loading || !firstName.trim()}
+                className="w-full bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-lg font-medium"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    {"Processing..."}
+                  </span>
+                ) : (
+                  "Let's Begin!"
+                )}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {step === 2 && (
           <form onSubmit={handleNextStep} className="space-y-6">
             {/* College Selection */}
             <div className="space-y-2">
-              <label className="block text-white text-sm font-medium">What college do you attend?</label>
+              <label className="block text-white text-sm font-medium">
+                {`Great to have you here, ${firstName}! Let's talk about your college journey. What college do you attend?`}
+              </label>
               {!isNonTraditional && !isCanadian ? (
                 <div className="relative">
                   <input
@@ -366,7 +451,7 @@ export default function OnboardingPage() {
 
             {/* Diagnostic Score */}
             <div className="space-y-2 relative">
-              <label className="block text-white text-sm font-medium">{"What's your most recent score?"}</label>
+              <label className="block text-white text-sm font-medium">{"What's your most recent MCAT score?"}</label>
               <div className="relative">
                 <input
                   type="number"
@@ -422,7 +507,7 @@ export default function OnboardingPage() {
           </form>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <form onSubmit={handleOnboardingSubmit} className="space-y-6">
             {/* Medical School Search */}
             <div className="space-y-2">
