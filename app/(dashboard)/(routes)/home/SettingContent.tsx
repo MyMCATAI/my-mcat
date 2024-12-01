@@ -9,7 +9,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "react-hot-toast";
 import "./style.css";
 import { showLoadingToast } from "@/components/calendar/loading-toast";
@@ -75,7 +74,6 @@ const TEST_DATES = [
 ];
 
 interface SettingContentProps {
-  onShowDiagnosticTest?: () => void;
   onStudyPlanSaved?: () => void;
   onToggleCalendarView?: () => void;
   onClose?: () => void;
@@ -83,7 +81,6 @@ interface SettingContentProps {
 }
 
 const SettingContent: React.FC<SettingContentProps> = ({
-  onShowDiagnosticTest,
   onStudyPlanSaved,
   onToggleCalendarView,
   onClose,
@@ -251,7 +248,6 @@ const SettingContent: React.FC<SettingContentProps> = ({
           const newPlan = await response.json();
           setExistingStudyPlan(newPlan);
           if (onStudyPlanSaved) onStudyPlanSaved();
-          if (onShowDiagnosticTest) onShowDiagnosticTest();
           if (onToggleCalendarView) onToggleCalendarView();
           if (onClose) onClose(); // Close the settings window
         }

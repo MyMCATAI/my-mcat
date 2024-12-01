@@ -415,38 +415,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     []
   );
 
-  const handleUpdateKnowledgeProfile = async () => {
-    setIsUpdatingProfile(true);
-    try {
-      const response = await fetch("/api/knowledge-profile/update", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update knowledge profile");
-      }
-
-      toast({
-        title: "Success",
-        description: "Knowledge profile updated successfully!",
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error("Error updating knowledge profile:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update knowledge profile. Please try again.",
-        variant: "destructive",
-        duration: 3000,
-      });
-    } finally {
-      setIsUpdatingProfile(false);
-    }
-  };
-
   const toggleSettings = () => {
     setShowSettings((prev) => !prev);
   };

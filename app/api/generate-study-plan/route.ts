@@ -47,7 +47,7 @@ const EVENT_CATEGORIES = [
   },
   {
     name: 'UWorld',
-    duration: 2,
+    duration: 1,
     priority: 3,
     type: 'practice',
     description: "Complete UWorld question blocks focusing on identifying knowledge gaps and improving test-taking strategies. Review explanations thoroughly and create notes on commonly missed concepts.",
