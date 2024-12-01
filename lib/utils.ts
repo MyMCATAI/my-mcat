@@ -151,3 +151,20 @@ export async function checkAllActivitiesComplete(userId: string): Promise<boolea
   return todaysActivities.length > 0 && 
     todaysActivities.every(activity => activity.status === "Complete");
 }
+
+export const KNOWLEDGE_PROFILE_UPDATE_KEY = 'lastKnowledgeProfileUpdate';
+
+export const shouldUpdateKnowledgeProfiles = (): boolean => {
+  const lastUpdate = localStorage.getItem(KNOWLEDGE_PROFILE_UPDATE_KEY);
+  if (!lastUpdate) return true;
+
+  const lastUpdateDate = new Date(lastUpdate);
+  const currentDate = new Date();
+  
+  // Check if last update was on a different day
+  return lastUpdateDate.toDateString() !== currentDate.toDateString();
+};
+
+export const updateKnowledgeProfileTimestamp = (): void => {
+  localStorage.setItem(KNOWLEDGE_PROFILE_UPDATE_KEY, new Date().toISOString());
+};

@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import dynamic from "next/dynamic";
 import Schedule from "./Schedule";
 import SideBar from "./SideBar";
 import AdaptiveTutoring from "./AdaptiveTutoring";
 import FloatingButton from "./FloatingButton";
-import { FetchedActivity, Test } from "@/types";
+import { FetchedActivity } from "@/types";
 import TestingSuit from "./TestingSuit";
 import ThemeSwitcher from "@/components/home/ThemeSwitcher";
 import { useSearchParams } from "next/navigation";
@@ -18,8 +17,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import TestComponent from "@/components/test-component";
-import { DialogOverlay } from "@radix-ui/react-dialog";
 import { checkProStatus } from "@/lib/utils";
 import WelcomePopUp from "@/components/home/WelcomePopUp";
 import UpdateNotificationPopup from "@/components/home/UpdateNotificationPopup";
@@ -27,10 +24,8 @@ import FlashcardDeck from "./FlashcardDeck";
 import { toast } from 'react-hot-toast';
 import { PurchaseButton } from "@/components/purchase-button";
 import { isToday } from "date-fns";
+import { shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
 
-interface HandleShowDiagnosticTestParams {
-  reset?: boolean;
-}
 
 const Page = () => {
   
@@ -49,8 +44,6 @@ const Page = () => {
   >("wait");
   const kalypsoRef = useRef<HTMLImageElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [showDiagnosticTest, setShowDiagnosticTest] = useState(false);
-  const [diagnosticTestId, setDiagnosticTestId] = useState<string | null>(null);
   const [chatbotContext, setChatbotContext] = useState<{
     contentTitle: string;
     context: string;
@@ -77,7 +70,6 @@ const Page = () => {
       toast.error("Payment Cancelled. Your payment was cancelled.");
     }
   }, [paymentStatus]);
-
   useEffect(() => {
     const initializePage = async () => {
       setIsLoading(true);
@@ -86,6 +78,22 @@ const Page = () => {
         const proStatus = await checkProStatus();
         setIsPro(proStatus);
         await fetchUserInfo();
+
+        // Only update knowledge profiles if needed
+        if (typeof window !== 'undefined' && shouldUpdateKnowledgeProfiles()) {
+          const response = await fetch("/api/knowledge-profile/update", {
+            method: "POST",
+          });
+          
+          if (response.ok) {
+            updateKnowledgeProfileTimestamp();
+          }
+        }
+        
+        // Show welcome popup
+        // setShowWelcomePopup(true);
+      } catch (error) {
+        console.error("Error initializing page:", error);
       } finally {
         setIsLoading(false);
       }
@@ -110,63 +118,6 @@ const Page = () => {
     setShowWelcomePopup(false);
   };
 
-  // todo, what are we doing with diagnostic test?
-  const handleTestComplete = async (score: number) => {
-    setTestScore(score);
-    setShowScorePopup(true);
-    setShowDiagnosticTest(false);
-
-    // Update knowledge profile
-    setIsUpdatingProfile(true);
-    try {
-      const response = await fetch("/api/knowledge-profile/update", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ score }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update knowledge profile");
-      }
-
-      toast.success("Knowledge profile updated successfully!");
-
-      // Generate and fetch new activities
-      await generateAndFetchActivities();
-    } catch (error) {
-      console.error("Error updating knowledge profile:", error);
-      toast.error("Failed to update knowledge profile. Please try again.");
-    } finally {
-      setIsUpdatingProfile(false);
-    }
-  };
-
-  const generateAndFetchActivities = async () => {
-    setIsGeneratingActivities(true);
-    try {
-      // Generate new activities
-      const generateResponse = await fetch("/api/generate-study-plan", {
-        method: "POST",
-      });
-
-      if (!generateResponse.ok) {
-        throw new Error("Failed to generate new activities");
-      }
-
-      toast.success("New study plan generated successfully!");
-
-      // Fetch the newly generated activities
-      await fetchActivities();
-    } catch (error) {
-      console.error("Error generating or fetching activities:", error);
-      toast.error("Failed to generate new study plan. Please try again.");
-    } finally {
-      setIsGeneratingActivities(false);
-    }
-  };
-
   const fetchActivities = async () => {
     try {
       const response = await fetch("/api/calendar-activity");
@@ -179,29 +130,31 @@ const Page = () => {
         isToday(new Date(activity.scheduledDate))
       );
 
-      // get UWorld activity
-      const uworldActivities = todaysActivities.filter((activity: FetchedActivity) => activity.activityTitle === "UWorld");
+      // get UWorld activities that need task generation
+      const uworldActivities = todaysActivities.filter((activity: FetchedActivity) => 
+        activity.activityTitle === "UWorld" && 
+        (!activity.tasks || activity.tasks.length === 1)
+      );
 
-
-      const responseUWorld = await fetch("/api/uworld-update", {
-        method: "POST",
-        body: JSON.stringify({ todayUWorldActivity: uworldActivities }),
-      });
-    
-      const responseUWorldJson = await responseUWorld.json();
-      const uworldActivityTasks = responseUWorldJson.tasks;
       let updatedActivities = [...activities];
 
+      // Only fetch UWorld updates if there are UWorld activities that need tasks
       if (uworldActivities.length > 0) {
-        // Replace today's UWorld activity with the updated tasks
+        const responseUWorld = await fetch("/api/uworld-update", {
+          method: "POST",
+          body: JSON.stringify({ todayUWorldActivity: uworldActivities }),
+        });
+    
+        const responseUWorldJson = await responseUWorld.json();
+        const uworldActivityTasks = responseUWorldJson.tasks;
+        
+        // Update only the activities that needed new tasks
         updatedActivities = updatedActivities.map(activity => 
-          isToday(new Date(activity.scheduledDate)) && activity.activityTitle === "UWorld" 
+          isToday(new Date(activity.scheduledDate)) && 
+          activity.activityTitle === "UWorld" &&
+          (!activity.tasks || activity.tasks.length === 1)
             ? { ...activity, tasks: uworldActivityTasks } 
             : activity
-        );
-
-        let todaysActivitiesAfterUpdate = updatedActivities.filter((activity: FetchedActivity) =>
-          isToday(new Date(activity.scheduledDate))
         );
       }
       
@@ -210,38 +163,6 @@ const Page = () => {
     } catch (error) {
       console.error("Error fetching activities:", error);
       toast.error("Failed to fetch activities. Please try again.");
-    }
-  };
-
-  const handleShowDiagnosticTest = async ({
-    reset = true,
-  }: HandleShowDiagnosticTestParams = {}) => {
-    try {
-      if (reset) {
-        // Call the delete API to reset everything - BE CAREFUL about this
-        const resetResponse = await fetch("/api/knowledge-profile/reset", {
-          method: "DELETE",
-        });
-
-        if (!resetResponse.ok) {
-          throw new Error("Failed to reset user data");
-        }
-
-        console.log("User data reset successfully");
-      }
-
-      // Fetch the diagnostic test
-      const response = await fetch("/api/test?diagnostic=true");
-      if (response.ok) {
-        const { testId } = await response.json();
-        setDiagnosticTestId(testId);
-        setShowDiagnosticTest(true);
-      } else {
-        throw new Error("Failed to fetch diagnostic test");
-      }
-    } catch (error) {
-      console.error("Error in handleShowDiagnosticTest:", error);
-      // Handle the error appropriately (e.g., show an error message to the user)
     }
   };
 
@@ -334,7 +255,6 @@ const Page = () => {
         content = (
           <Schedule
             activities={activities}
-            onShowDiagnosticTest={handleShowDiagnosticTest}
             handleSetTab={handleTabChange}
             isActive={activeTab === "Schedule"}
             onActivitiesUpdate={() => {
@@ -553,26 +473,6 @@ const Page = () => {
             </div>
           </div>
         </div>
-        {/* Diagnostic Test Dialog */}
-        <Dialog open={showDiagnosticTest} onOpenChange={setShowDiagnosticTest}>
-          <DialogOverlay className="fixed inset-0 bg-black bg-opacity-80 z-50" />
-          <DialogContent className="max-w-4xl w-full max-h-[95vh] flex flex-col bg-[#001226] text-white border border-sky-500 rounded-lg">
-            <DialogHeader className="border-b border-sky-500 pb-4">
-              <DialogTitle className="text-2xl font-semibold text-gray-300">
-                Complete this test to help us understand your current knowledge
-                level.
-              </DialogTitle>
-            </DialogHeader>
-            <div className="flex-grow py-3">
-              {diagnosticTestId && (
-                <TestComponent
-                  testId={diagnosticTestId}
-                  onTestComplete={handleTestComplete}
-                />
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* Score Popup */}
         <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
