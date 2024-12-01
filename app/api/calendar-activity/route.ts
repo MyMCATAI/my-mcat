@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
         status: "Not Started",
         scheduledDate: new Date(scheduledDate),
         tasks: tasks || [],
+        source: "user",
       },
     });
 
