@@ -50,7 +50,7 @@ const CheckListing = () => {
                     </p>
                     <div className="flex justify-center">
                         <a 
-                            href="https://discord.gg/c8VjPeKc"
+                            href="https://discord.gg/rTxN7wkh6e"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex flex-col items-center gap-4 bg-[#001226] rounded-xl px-16 py-8 hover:bg-[#0a1f33] transition-all duration-300"

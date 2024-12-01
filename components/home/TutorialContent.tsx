@@ -49,7 +49,7 @@ const TutorialContent: React.FC = () => {
             </a>
 
             <a 
-              href="https://discord.gg/mXVkbzFq"
+              href="https://discord.gg/rTxN7wkh6e"
               target="_blank"
               rel="noopener noreferrer"
               className="flex flex-col text-sm bg-[--theme-mainbox-color] text-[--theme-text-color] bg-opacity-75 items-center p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
