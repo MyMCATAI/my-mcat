@@ -76,7 +76,6 @@ interface Activity {
 
 interface ScheduleProps {
   activities: Activity[];
-  onShowDiagnosticTest: () => void;
   onStudyPlanSaved?: () => void;
   handleSetTab: (tab: string) => void;
   isActive: boolean;
@@ -90,7 +89,6 @@ type Section =
 
 const Schedule: React.FC<ScheduleProps> = ({
   activities,
-  onShowDiagnosticTest,
   onStudyPlanSaved,
   handleSetTab,
   isActive,
@@ -103,7 +101,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [typedText, setTypedText] = useState("");
   const [isTypingComplete, setIsTypingComplete] = useState(false);
-  const [expandedGraph, setExpandedGraph] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(true);
   const [showRewardDialog, setShowRewardDialog] = useState(false);
@@ -111,7 +108,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [userCoinCount, setUserCoinCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const fanfareRef = useRef<HTMLAudioElement>(null);
-  const [completedSections, setCompletedSections] = useState<string[]>([]);
   const [runTutorialPart1, setRunTutorialPart1] = useState(false);
   const [runTutorialPart2, setRunTutorialPart2] = useState(false);
   const [runTutorialPart3, setRunTutorialPart3] = useState(false);
@@ -292,11 +288,6 @@ const Schedule: React.FC<ScheduleProps> = ({
       }, 2000); // Delay after Part 2 ends
     }
   }, [runTutorialPart2]);
-
-  // const handleTakeDiagnosticTest = () => {
-  //   setShowThankYouDialog(false);
-  //   onShowDiagnosticTest();
-  // };
 
   const toggleSettings = () => {
     setShowSettings((prev) => !prev);
@@ -602,7 +593,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   // Add this helper function near the top of the component
   const isActivityCompleted = (activity: Activity) => {
-    return activity.tasks?.length > 0 && activity.tasks.every(task => task.completed);
+    return activity.tasks && activity.tasks.length > 0 && activity.tasks.every(task => task.completed);
   };
 
   return (
@@ -784,7 +775,6 @@ const Schedule: React.FC<ScheduleProps> = ({
               className="absolute top-16 right-6 w-80 bg-white rounded-lg shadow-lg z-50"
             >
               <SettingContent
-                onShowDiagnosticTest={onShowDiagnosticTest}
                 onStudyPlanSaved={handleStudyPlanSaved}
                 onToggleCalendarView={handleToggleView}
                 onClose={toggleSettings}
@@ -895,7 +885,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                     onClick={handleToggleView}
                     className="w-36 py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
                   >
-                    <span>Calendar</span>
+                    <span>Home</span>
                     <CalendarIcon className="w-5 h-5" />
                   </button>
                 </div>
