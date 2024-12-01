@@ -433,7 +433,7 @@ ${displayedOptions.map((opt, idx) => `${String.fromCharCode(65 + idx)}. ${opt}`)
 
 The correct answer is: "${correctAnswer}" (but this might appear in any position in my shuffled options)
 
-Please act as a tutor - help me understand the concept and provide hints if I ask, but don't directly tell me the answer. If I seem stuck, guide me through the thinking process. Remember not to reference the correct answer's position in the list, as the options are shuffled.`
+Please act as a tutor and explain concepts in a straight-forward and beginner-friendly manner. Remember not to reference the correct answer's position in the list, as the options are shuffled.`
     });
   }, [currentQuestion, category, shuffledOptions, setChatbotContext]);
 
