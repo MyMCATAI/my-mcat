@@ -110,6 +110,7 @@ const Page = () => {
     setShowWelcomePopup(false);
   };
 
+  // todo, what are we doing with diagnostic test?
   const handleTestComplete = async (score: number) => {
     setTestScore(score);
     setShowScorePopup(true);

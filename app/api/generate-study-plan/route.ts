@@ -143,6 +143,7 @@ interface CalendarActivity {
   scheduledDate: Date;
   status: string;
   tasks: Task[];
+  source: string;
 }
 
 interface CategoryAllocation extends KnowledgeProfile {
@@ -179,6 +180,16 @@ export async function POST(req: Request) {
     }
 
     const today = new Date();
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(today.getFullYear() + 1);
+    
+    const selectedExamDate = new Date(examDate);
+    if (selectedExamDate > oneYearFromNow) {
+      return NextResponse.json({ 
+        error: "Exam date cannot be more than 1 year in the future" 
+      }, { status: 400 });
+    }
+
     today.setHours(0, 0, 0, 0);
 
     // Find existing study plan and activities for the user
@@ -619,6 +630,7 @@ function getNextContentActivity(
         scheduledDate: new Date(currentDate),
         status: "Not Started",
         tasks: [],
+        source: "generated",
       };
       return activity;
     }
@@ -826,6 +838,7 @@ function createActivity(
     scheduledDate,
     status: "Not Started",
     tasks: [], // Will be populated with default tasks
+    source: "generated",
   };
   return activity;
 }

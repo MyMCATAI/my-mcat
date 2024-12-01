@@ -23,7 +23,7 @@ interface Option {
 }
 
 const options: Option[] = [
-  { id: "option1", label: "How many hours can you study each day? (Recommend at least 4 hours for each study day)" },
+  { id: "option1", label: "How many hours can you study each day? (We recommend 2-4 hours for each study day)" },
   { id: "option2", label: "Which days do you have 8 hours for full-length exams?" },
   { id: "option3", label: "When is your test?" },
   { id: "option4", label: "What resources do you want to use?" },
@@ -267,8 +267,18 @@ const SettingContent: React.FC<SettingContentProps> = ({
   const handleGenerateStudyPlan = async () => {
     setIsGenerating(true);
     
-    if (calendarValue && calendarValue < new Date()) {
+    const today = new Date();
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(today.getFullYear() + 1);
+    
+    if (calendarValue && calendarValue < today) {
       toast.error("Exam date cannot be in the past");
+      setIsGenerating(false);
+      return;
+    }
+
+    if (calendarValue && calendarValue > oneYearFromNow) {
+      toast.error("Exam date cannot be more than 1 year in the future");
       setIsGenerating(false);
       return;
     }
@@ -445,6 +455,11 @@ const SettingContent: React.FC<SettingContentProps> = ({
               formatMonthYear={(locale, date) => {
                 return date.toLocaleString('default', { month: 'long' });
               }}
+              maxDate={(() => {
+                const oneYearFromNow = new Date();
+                oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+                return oneYearFromNow;
+              })()}
             />
             <div className="flex items-center mt-4 w-full">
               <Button
