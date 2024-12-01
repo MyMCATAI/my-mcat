@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Category } from "@/types";
 import { useTheme } from "@/contexts/ThemeContext";
-// import { StrikethroughCheckbox } from "@/components/ui/StrikethroughCheckbox";
-// import CategorySearchResults from "./CategorySearchResults";
 import FilterButton from "@/components/ui/FilterButton";
 
 interface Option {
@@ -14,8 +12,8 @@ interface Option {
 
 const options: Option[] = [
   { id: "option1", label: "Can Kalypso ask you questions?" },
-  // { id: "option3", label: "Want to ignore a specific subject?" },
   { id: "option2", label: "Want to change current categories?" },
+  { id: "option3", label: "Update Knowledge Profiles" },
 ];
 
 interface ATSSettingContentProps {
@@ -31,20 +29,10 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
 }) => {
   const { theme } = useTheme();
   const [activeOption, setActiveOption] = useState<string | null>(null);
-  // const [contentPreferences, setContentPreferences] = useState({
-  //   videos: true,
-  //   readings: true,
-  //   quizzes: true,
-  // });
-  // // const [quizDifficulty, setQuizDifficulty] = useState<string>("medium");
-  // const [isSaving, setIsSaving] = useState<boolean>(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subjectFocus, setSubjectFocus] = useState({
     Biochemistry: false,
     Biology: false,
-    // GenChem: false,
-    // OChem: false,
-    // TODO ^ add these back in with right filtering?
     Physics: false,
     Psychology: false,
     Sociology: false,
@@ -58,44 +46,12 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       const url = new URL("/api/category-search", window.location.origin);
-  //       url.searchParams.append("page", "1");
-  //       url.searchParams.append("pageSize", "7");
-  //       url.searchParams.append("useKnowledgeProfiles", "true");
-
-  //       // const excludeSubjects = Object.entries(subjectFocus)
-  //       //   .filter(([_, isChecked]) => isChecked)
-  //       //   .map(([subject]) => subject);
-
-  //       // console.log(excludeSubjects);
-
-  //       // if (excludeSubjects.length > 0) {
-  //       //   url.searchParams.append("excludeSubjects", excludeSubjects.join(","));
-  //       // }
-
-  //       const response = await fetch(url.toString());
-  //       if (!response.ok) {
-  //         throw new Error("Network response was not ok");
-  //       }
-  //       const data = await response.json();
-  //       setCategories(data.items);
-  //     } catch (error) {
-  //       console.error("Error fetching categories:", error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, [subjectFocus]);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isUpdatingProfiles, setIsUpdatingProfiles] = useState(false);
 
   useEffect(() => {
     fetchCategories(searchQuery, selectedSubject, currentPage);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSubject, currentPage]);
 
   const fetchCategories = async (
@@ -161,6 +117,26 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
     setCheckedCategories((prev) =>
       isChecked ? [category, ...prev] : prev.filter((c) => c.id !== category.id)
     );
+  };
+
+  const handleUpdateKnowledgeProfiles = async () => {
+    try {
+      setIsUpdatingProfiles(true);
+      const response = await fetch("/api/knowledge-profile/update", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update knowledge profiles");
+      }
+
+      // Show success message (you might want to add a toast notification here)
+      console.log("Knowledge profiles updated successfully");
+    } catch (error) {
+      console.error("Error updating knowledge profiles:", error);
+    } finally {
+      setIsUpdatingProfiles(false);
+    }
   };
 
   const renderOptionContent = () => {
@@ -293,50 +269,12 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
                       Next {currentPage + 1}/{totalPages}
                     </button>
                   </div>
-                  {/* <button
-                    onClick={() => setCurrentPage((prev) => prev + 1)}
-                    className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
-                      bg-transparent text-[--theme-text-color]
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      transition duration-200"
-                  >
-                    <RefreshCw size={16} />
-                    <span>Next Page of Categories</span>
-                  </button> */}
+                
                 </>
               )}
             </div>
           </div>
         );
-      // case "option3":
-      //   return (
-      //     <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md">
-      //       <div className="space-y-2">
-      //         {Object.entries(subjectFocus).map(([subject, isChecked]) => (
-      //           <div key={subject} className="flex items-center">
-      //             <Checkbox
-      //               id={subject}
-      //               checked={isChecked}
-      //               onCheckedChange={(checked) =>
-      //                 setSubjectFocus({
-      //                   ...subjectFocus,
-      //                   [subject]: checked as boolean,
-      //                 })
-      //               }
-      //             />
-      //             <label
-      //               htmlFor={subject}
-      //               className={`ml-2 capitalize ${
-      //                 isChecked ? "line-through" : ""
-      //               }`}
-      //             >
-      //               {subject.replace("_", " ")}
-      //             </label>
-      //           </div>
-      //         ))}
-      //       </div>
-      //     </div>
-      //   );
       case "option1":
         return (
           <div className="bg-[transparent] p-4 rounded-lg shadow-md">
@@ -355,6 +293,23 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
                 </button>
               ))}
             </div>
+          </div>
+        );
+
+      {/* Temp Test Update Knowledge Profiles */} 
+      case "option3":
+        return (
+          <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md">
+            <p className="mb-4">
+              {"Update your knowledge profiles based on your test responses"}
+            </p>
+            <Button
+              onClick={handleUpdateKnowledgeProfiles}
+              disabled={isUpdatingProfiles}
+              className="w-full bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+            >
+              {isUpdatingProfiles ? "Updating..." : "Update Profiles"}
+            </Button>
           </div>
         );
       default:
