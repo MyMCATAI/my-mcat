@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 // Add the interfaces needed
 interface AnswerSummary {
@@ -18,16 +18,39 @@ interface QuizProgressProps {
 const QuizProgress: React.FC<QuizProgressProps> = ({ summaries, totalQuestions }) => {
   const answeredQuestions = summaries.length;
   const correctAnswers = summaries.filter(s => s.isCorrect).length;
+  const percentage = Math.round((correctAnswers / answeredQuestions) * 100) || 0;
   const averageTime = summaries.length > 0 
     ? summaries.reduce((acc, curr) => acc + curr.timeSpent, 0) / summaries.length 
     : 0;
+
+  useEffect(() => {
+    // Only play sounds if we have answered questions
+    if (answeredQuestions > 0) {
+      let soundPath: string | undefined;
+      
+      if (percentage === 100) {
+        soundPath = '/fanfare.mp3';
+      } else if (percentage >= 80) {
+        soundPath = '/levelup.mp3';
+      }
+      
+      if (soundPath) {
+        const audio = new Audio(soundPath);
+        audio.play().catch(error => {
+          console.error('Error playing sound:', error);
+        });
+      }
+    }
+  }, [percentage, answeredQuestions]);
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="p-4 rounded-lg border border-[--theme-border-color] bg-[--theme-adaptive-tutoring-color]">
           <h3 className="font-semibold text-[--theme-text-color]">Correct Answers</h3>
-          <p className="text-[--theme-text-color]">{correctAnswers} of {answeredQuestions}</p>
+          <p className="text-[--theme-text-color]">
+            {correctAnswers} of {answeredQuestions} ({percentage}%)
+          </p>
         </div>
         <div className="p-4 rounded-lg border border-[--theme-border-color] bg-[--theme-adaptive-tutoring-color]">
           <h3 className="font-semibold text-[--theme-text-color]">Avg. Time per Question</h3>

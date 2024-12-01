@@ -87,6 +87,7 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
 
   const fetchQuestions = useCallback(async (page: number = 1) => {
     if (!category) return;
@@ -306,12 +307,32 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
     }
   };
 
-  // Update handleNextQuestion to fetch more questions when needed
+  // Add reset function
+  const handleReset = useCallback(() => {
+    setCurrentQuestionIndex(0);
+    setSelectedAnswer(null);
+    setAnswerSummaries([]);
+    setAnsweredQuestions(new Set());
+    setHasAnsweredFirstQuestion(false);
+    setShowSummary(false);
+    questionTimerRef.current?.resetTimer();
+    totalTimerRef.current?.resetTimer();
+    // Optionally fetch new questions
+    fetchQuestions(1);
+  }, [fetchQuestions]);
+
+  // Modify handleNextQuestion
   const handleNextQuestion = () => {
     setSelectedAnswer(null);
     
+    // Check if we've reached 15 questions
+    if (currentQuestionIndex === 14) {
+      setShowSummary(true);
+      return;
+    }
+    
     // Check if we need to fetch more questions
-    if (currentQuestionIndex === questions.length - 3) { // Start fetching when 3 questions remain
+    if (currentQuestionIndex === questions.length - 3) {
       setCurrentPage(prev => prev + 1);
       fetchQuestions(currentPage + 1);
     }
@@ -331,40 +352,69 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
 
   // Update renderOptions
   const renderOptions = (question: QuizQuestion) => {
-    console.log("question", question)
     const options = shuffledOptions[question.id] || [];
     const hasAnswered = answeredQuestions.has(question.id);
     const correctAnswer = question.questionOptions[0];
     
-    return options.map((option, index) => {
-      const isSelected = selectedAnswer === option;
-      const isCorrectAnswer = option === correctAnswer;
-      
-      let buttonClass = 'w-full text-left p-2 rounded ';
-      
-      if (hasAnswered) {
-        if (isSelected) {
-          buttonClass += isCorrectAnswer ? 'bg-green-500 text-white' : 'bg-red-500 text-white';
-        } else if (isCorrectAnswer) {
-          buttonClass += 'bg-green-500 text-white';
-        } else {
-          buttonClass += 'bg-gray-100';
-        }
-      } else {
-        buttonClass += 'bg-gray-100 hover:bg-gray-200';
+    // Parse the questionAnswerNotes if it's a string
+    let explanations = question.questionAnswerNotes;
+    if (typeof explanations === 'string') {
+      try {
+        explanations = JSON.parse(explanations);
+      } catch (e) {
+        console.error('Error parsing questionAnswerNotes:', e);
+        explanations = null;
       }
+    }
+    
+    return (
+      <div>
+        <div className="space-y-2">
+          {options.map((option, index) => {
+            const isSelected = selectedAnswer === option;
+            const isCorrectAnswer = option === correctAnswer;
+            
+            let buttonClass = 'w-full text-left p-2 rounded text-black ';
+            
+            if (hasAnswered) {
+              if (isSelected) {
+                buttonClass += isCorrectAnswer ? 'bg-green-500 text-white' : 'bg-red-500 text-white';
+              } else if (isCorrectAnswer) {
+                buttonClass += 'bg-green-500 text-white';
+              } else {
+                buttonClass += 'bg-gray-100';
+              }
+            } else {
+              buttonClass += 'bg-gray-100 hover:bg-gray-200';
+            }
 
-      return (
-        <button
-          key={index}
-          onClick={() => handleAnswerSelect(option)}
-          disabled={hasAnswered}
-          className={buttonClass}
-        >
-          {String.fromCharCode(65 + index)}. {option}
-        </button>
-      );
-    });
+            return (
+              <button
+                key={index}
+                onClick={() => handleAnswerSelect(option)}
+                disabled={hasAnswered}
+                className={buttonClass}
+              >
+                {String.fromCharCode(65 + index)}. {option}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Explanation Section */}
+        {hasAnswered && explanations && (
+          <div className="mt-6 p-4 bg-transparent rounded-lg border border-[--theme-hover-color]">
+            <h3 className="text-lg font-semibold text-[--theme-hover-color] mb-2">Explanation</h3>
+            <div className="text-[--theme-text-color]">
+              <ContentRenderer 
+                content={explanations[0] || ''} 
+                imageWidth="70%"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   // Add new effect to update chatbot context when question changes
@@ -439,39 +489,24 @@ Please act as a tutor - help me understand the concept and provide hints if I as
     );
   }
 
-  if (questions.length === 0) {
+  if (!questions.length || !currentQuestion) {
     return (
-      <div className="flex items-center justify-center h-full text-white">
+      <div className="flex items-center justify-center h-full text-[--theme-text-color]">
         No questions available for this category.
       </div>
     );
   }
 
   return (
-    <div 
-      ref={containerRef} 
-      className={`h-full flex flex-col px-6 rounded-lg mx-auto ${
-        isFullScreen 
-          ? 'bg-white text-black h-screen'
-          : 'text-black'
-      }`}
-    >
+    <div ref={containerRef} className="h-full flex flex-col px-6 rounded-lg mx-auto bg-[--theme-adaptive-tutoring-color]">
       {/* Timer and Question Header */}
       <div className="flex-none">
         <Timer ref={questionTimerRef} />
         <Timer ref={totalTimerRef} />
         
-        <div className={`mb-4 flex justify-between items-center ${
-          isFullScreen 
-            ? 'text-black' 
-            : 'text-[--theme-text-color]'
-        }`}>
+        <div className="mb-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <h2 className={`text-xl font-semi-bold ${
-              isFullScreen 
-                ? 'text-black' 
-                : 'text-[--theme-text-color]'
-            } drop-shadow-lg`}>
+            <h2 className="text-xl font-semi-bold text-[--theme-hover-color] drop-shadow-lg">
               Question {currentQuestionIndex + 1}
             </h2>
             
@@ -482,16 +517,12 @@ Please act as a tutor - help me understand the concept and provide hints if I as
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      className={`hover:bg-transparent ${
-                        isFullScreen 
-                          ? 'text-black hover:text-gray-700' 
-                          : 'text-[--theme-text-color] hover:text-[--theme-hover-color]'
-                      } transition-colors`}
+                      className="hover:bg-transparent text-[--theme-text-color] hover:text-[--theme-hover-color] transition-colors"
                     >
                       <BarChart2 className="h-5 w-5" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto !bg-[--theme-adaptive-tutoring-color] border border-blue-900 text-white">
+                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto !bg-[--theme-adaptive-tutoring-color] border-transparent text-[--theme-text-color]">
                     <DialogHeader>
                       <DialogTitle className="text-[--theme-text-color]">Quiz Progress</DialogTitle>
                       <DialogClose className="absolute right-4 top-4 text-white opacity-70 hover:opacity-100" />
@@ -524,66 +555,50 @@ Please act as a tutor - help me understand the concept and provide hints if I as
               </div>
             )}
           </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className={`hover:bg-transparent ${
-                    isFullScreen 
-                      ? 'text-black hover:text-gray-700' 
-                      : 'text-[--theme-text-color] hover:text-[--theme-hover-color]'
-                  } transition-colors`}
-                  onClick={() => handleFullScreen()}
-                >
-                  <Maximize2 className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Toggle fullscreen</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="hover:bg-transparent text-[--theme-text-color] hover:text-[--theme-hover-color] transition-colors mt-2"
+            onClick={() => handleFullScreen()}
+          >
+            <Maximize2 className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
       {/* Scrollable Content - adjust max-height */}
-      <div className="flex-1 overflow-y-auto min-h-0 mb-4"> {/* Add mb-4 for spacing */}
-        <div className={`mb-4 ${
-          isFullScreen 
-            ? 'text-black' 
-            : 'text-[--theme-text-color]'
-        } drop-shadow-lg`}>
-          <ContentRenderer
-            content={currentQuestion.questionContent}
-            imageWidth={isFullScreen ? "50%" : "70%"}
-            isFullScreen={isFullScreen}
-          />
+      <div className="flex-1 overflow-y-auto min-h-0 mb-4">
+        <div className="mb-4 text-[--theme-text-color] drop-shadow-lg">
+          {currentQuestion && (
+            <ContentRenderer
+              content={currentQuestion.questionContent}
+              imageWidth={isFullScreen ? "50%" : "70%"}
+              isFullScreen={isFullScreen}
+            />
+          )}
         </div>
         <div className="space-y-2">
           {currentQuestion && renderOptions(currentQuestion)}
         </div>
         {isLoadingMore && (
-          <div className={`mt-4 text-center ${
-            isFullScreen ? 'text-black' : 'text-white'
-          }`}>
+          <div className="mt-4 text-center text-[--theme-text-color]">
             Loading more questions...
           </div>
         )}
       </div>
 
       {/* Navigation Buttons - ensure they stay at bottom */}
-      <div className={`flex-none mt-auto flex justify-between ${
+      <div className={`flex-none mt-auto flex justify-between items-center ${
         isFullScreen ? 'mb-11' : ''
       }`}>
         <button
           onClick={handlePrevQuestion}
           disabled={currentQuestionIndex === 0}
-          className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+          className="px-4 py-2 bg-gray-300 text-black rounded disabled:opacity-50"
         >
           Previous
         </button>
+        
         <button
           onClick={handleNextQuestion}
           disabled={isLoadingMore}
@@ -592,6 +607,30 @@ Please act as a tutor - help me understand the concept and provide hints if I as
           Next
         </button>
       </div>
+
+      {/* Add Dialog for Quiz Summary */}
+      <Dialog open={showSummary} onOpenChange={setShowSummary}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto !bg-[--theme-adaptive-tutoring-color] border border-transparent">
+          <DialogHeader>
+            <DialogTitle className="text-[--theme-text-color]">Quiz Complete!</DialogTitle>
+            <DialogClose className="absolute right-4 top-4 text-white opacity-70 hover:opacity-100" />
+          </DialogHeader>
+          <div className="!bg-[--theme-adaptive-tutoring-color]">
+            <QuizProgress 
+              summaries={answerSummaries}
+              totalQuestions={15}
+            />
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={handleReset}
+                className="px-6 py-2 bg-[#0e2247] text-white rounded hover:bg-[#1a3a6d]"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
