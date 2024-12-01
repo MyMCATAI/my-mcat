@@ -92,9 +92,7 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick,
           return <div className="my-2" {...props}>{children}</div>
         }
       }}
-      className={`text-lg text-left space-y-2 ${
-        isFullScreen ? 'text-black' : 'text-[--theme-text-color]'
-      }`}
+      className="text-lg text-left space-y-2 text-[--theme-text-color]"
     >
       {sanitizedContent}
     </ReactMarkdown>
