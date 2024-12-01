@@ -44,8 +44,6 @@ import DonutChart from "./DonutChart";
 import { FaFire } from "react-icons/fa"
 import { PurchaseButton } from "@/components/purchase-button";
 import { toast } from "react-hot-toast";
-import { Calendar as CalendarIcon, BarChart as AnalyticsIcon } from "lucide-react";
-import { FaCheckCircle } from "react-icons/fa";
 
 ChartJS.register(
   CategoryScale,
@@ -124,7 +122,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [isResetting, setIsResetting] = useState(false);
   const [userScore, setUserScore] = useState(0);
   const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [showBreaksDialog, setShowBreaksDialog] = useState(false);
 
 
   // todo fetch total stats, include streak, coins, grades for each subject
@@ -600,9 +597,9 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   };
 
-  // Add this helper function near the top of the component
+  // Update the helper function to safely check tasks
   const isActivityCompleted = (activity: Activity) => {
-    return activity.tasks?.length > 0 && activity.tasks.every(task => task.completed);
+    return activity.tasks && activity.tasks.length > 0 && activity.tasks.every(task => task.completed);
   };
 
   return (
@@ -636,38 +633,29 @@ const Schedule: React.FC<ScheduleProps> = ({
             {todayActivities.map((activity) => (
               <div key={activity.id} className="mb-6">
                 <button
-                  className={`w-full py-3 px-4 
-                    ${isActivityCompleted(activity) 
-                      ? 'bg-[--theme-hover-color] text-[--theme-hover-text]' 
-                      : 'bg-[--theme-leaguecard-color] text-[--theme-text-color]'}
+                  className="w-full py-3 px-4 
+                    bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                     border-2 border-[--theme-border-color]
                     hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
                     font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
-                    text-md`}
+                    text-md"
                   onClick={() => handleButtonClick(activity.activityTitle)}
                 >
                   <span>{activity.activityTitle}</span>
-                  {isActivityCompleted(activity) ? (
-                    <FaCheckCircle 
-                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
-                      style={{ color: 'var(--theme-hover-text)' }}
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
                     />
-                  ) : (
-                    <svg
-                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  )}
+                  </svg>
                 </button>
                 
                 <div className="bg-[--theme-leaguecard-color] shadow-md p-4 mt-2 space-y-2 rounded-lg">
@@ -865,41 +853,28 @@ const Schedule: React.FC<ScheduleProps> = ({
                   updateTodaySchedule={updateTodaySchedule}
                 />
               </div>
-              {!showAnalytics ? (
-                <div className="mt-auto flex justify-between items-center">
-                  {/* Add Breaks button */}
-                  <button
-                    onClick={() => setShowBreaksDialog(true)}
-                    className="flex items-center gap-2 py-3 px-4
-                      bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                      border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      font-semibold shadow-md rounded-lg transition"
+              <div className="mt-auto pb-4 pr-4 flex justify-end">
+                <button
+                  onClick={handleToggleView}
+                  className="w-36 py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
+                >
+                  <span>Calendar</span>
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <span>Add Breaks</span>
-                    <span role="img" aria-label="palm tree">🌴</span>
-                  </button>
-
-                  {/* Existing Analytics button */}
-                  <button
-                    onClick={handleToggleView}
-                    className="w-36 py-3 px-4 mt-2 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
-                  >
-                    <span>Analytics</span>
-                    <AnalyticsIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              ) : (
-                <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
-                  <button
-                    onClick={handleToggleView}
-                    className="w-36 py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
-                  >
-                    <span>Calendar</span>
-                    <CalendarIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              )}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
           )}
 
@@ -928,10 +903,23 @@ const Schedule: React.FC<ScheduleProps> = ({
               </button> */}
               <button
                 onClick={handleToggleView}
-                className="w-36 py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
+                className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
               >
                 <span>Calendar</span>
-                <CalendarIcon className="w-5 h-5" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
               </button>
             </div>
           )}
@@ -1055,19 +1043,28 @@ const Schedule: React.FC<ScheduleProps> = ({
         setRunPart4={setRunTutorialPart4}
       />
 
-      <Dialog open={showBreaksDialog} onOpenChange={setShowBreaksDialog}>
-        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
-          <DialogHeader>
-            <DialogTitle className="text-center text-black">Coming Soon!</DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-center text-black">
-              This feature will be implemented later: you can toggle holidays, note difficult weeks, and just ask for a break.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <div className="absolute bottom-4 left-4">
+        <button
+          onClick={handleResetTutorial}
+          className="py-2 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition text-sm flex items-center gap-2"
+        >
+          <svg 
+            className="w-4 h-4" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
+            />
+          </svg>
+          Reset Tutorial
+        </button>
+      </div>
     </div>
   );
 };
