@@ -42,7 +42,6 @@ export default function OnboardingPage() {
   const [diagnosticValue, setDiagnosticValue] = useState<string>('');
   const [attemptValue, setAttemptValue] = useState<string>('');
   const [firstName, setFirstName] = useState('');
-  const [motivation, setMotivation] = useState('');
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -83,7 +82,6 @@ export default function OnboardingPage() {
   const handleNextStep = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Only create user-info if we're on step 1
     if (step === 1) {
       setLoading(true);
       try {
@@ -93,8 +91,7 @@ export default function OnboardingPage() {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({ 
-            firstName,
-            bio: motivation
+            firstName
           })
         });
         
@@ -103,13 +100,12 @@ export default function OnboardingPage() {
         }
       } catch (error) {
         console.error('Error creating user info:', error);
-        return; // Don't proceed if there's an error
+        return;
       } finally {
         setLoading(false);
       }
     }
 
-    // Clear messages and advance step
     setGpaMessage('');
     setScoreMessage('');
     setAttemptMessage('');
@@ -136,8 +132,8 @@ export default function OnboardingPage() {
         });
       }
       
-      setStep(3);
-      setKalypsoMessage(`Hi ${firstName}, I'm Kalypso. I'm going to be your friend throughout your journey so we can get you that ${targetScore}.`);
+      setStep(4);
+      setKalypsoMessage(`Hi-ya ${firstName}! I'm Kalypso. I'm your MCAT friend throughout your journey. And we'll get you that ${targetScore}!`);
     } catch (error) {
       console.error('Onboarding error:', error);
     } finally {
@@ -195,19 +191,16 @@ export default function OnboardingPage() {
   }, []);
 
   const handleKalypsoDialogue = useCallback(() => {
-    if (kalypsoMessage === '') {
-      setKalypsoMessage(`Hi-ya! I'm Kalypso. I'm your MCAT friend throughout your journey. Let's get you that ${targetScore}.`);
-    } else if (kalypsoMessage.includes("Hi, I'm Kalypso")) {
+    if (kalypsoMessage.includes("Hi")) {
       setKalypsoMessage("Kaplan charges $3000 for an MCAT journey. For how little they offer, that's way too much. We do more than they do, and we use a more equitable financial model: coins.");
     } else if (kalypsoMessage.includes("equitable financial model")) {
-      setKalypsoMessage("You buy coins to access features. Overtime, you can earn coins and access more features. However, if you slack off, you lose coins. We force you to be accountable!");
+      setKalypsoMessage("You buy coins to access features. Overtime, you can earn coins and access more features. However, if you slack off, you lose coins and have to buy more. We force you to be accountable!");
     } else if (kalypsoMessage.includes("slack off")) {
       setKalypsoMessage("Ten coins get you started. And I can get you a discount for half, but you gotta invite a friend! 🤝");
     } else {
-      setStep(4);
       setKalypsoMessage('');
     }
-  }, [kalypsoMessage, targetScore]);
+  }, [kalypsoMessage]);
 
   const handleTargetScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -241,12 +234,12 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen relative">
-      {(step === 3 || step === 4) && (
+      {(step === 4 && kalypsoMessage) && (
         <motion.div 
           initial={{ x: '100%' }}
           animate={{ x: '0%' }}
           transition={{ type: "spring", duration: 1 }}
-          className="fixed -bottom-24 right-10 translate-y-1/4 z-50"
+          className="fixed -bottom-24 -right-10 translate-y-1/4 z-50"
         >
           <div className="w-[48rem] h-[48rem] relative">
             <Image
@@ -312,30 +305,6 @@ export default function OnboardingPage() {
                   required
                 />
               </div>
-
-              {firstName.trim() && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-2"
-                >
-                  <label className="block text-white text-sm font-medium">
-                    {`Nice to meet you, ${firstName}!`}
-                  </label>
-                  <label className="block text-white text-sm font-medium">
-                    {`Now tell me, what brought you here today?`}
-                  </label>
-                  <textarea
-                    name="mcatMotivation"
-                    rows={4}
-                    value={motivation}
-                    onChange={(e) => setMotivation(e.target.value)}
-                    className="w-full px-4 py-3 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
-                    placeholder={"What inspired you to pursue medicine? What would achieving your target MCAT score mean for your dreams, your family, and your future patients? Your 'why' will be your strongest motivation on this journey."}
-                    required
-                  />
-                </motion.div>
-              )}
 
               <button 
                 type="submit"
@@ -603,7 +572,7 @@ export default function OnboardingPage() {
           </form>
         )}
 
-        {(step === 3 || step === 4) && kalypsoMessage && (
+        {(step === 4) && kalypsoMessage && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
