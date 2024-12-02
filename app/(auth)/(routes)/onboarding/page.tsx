@@ -223,6 +223,30 @@ export default function OnboardingPage() {
         ...(isValidEmail(friendEmail) && { friendEmail })
       });
       window.location.href = response.data.url;
+
+      // Fetch firstName from UserInfo table
+      let userFirstName = 'Your friend';
+      try {
+        const userInfoResponse = await fetch('/api/user-info');
+        if (userInfoResponse.ok) {
+          const userData = await userInfoResponse.json();
+          userFirstName = userData.firstName || 'Your friend';
+        }
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+      }
+
+      // send referral link email to friend
+      if (friendEmail.length > 0 && emailIsValid) {
+        await axios.post('/api/send-email', {
+          email: friendEmail,
+          template: 'referralLink',
+          data: {
+            referrerName: userFirstName
+          }
+        });
+      }
+
     } catch (error) {
       console.error("Error:", error);
     } finally {
@@ -230,7 +254,7 @@ export default function OnboardingPage() {
     }
   };
 
-  const emailIsValid = isValidEmail(friendEmail)
+  const emailIsValid = isValidEmail(friendEmail);
 
   return (
     <div className="flex items-center justify-center min-h-screen relative">
