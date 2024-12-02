@@ -9,6 +9,8 @@ import {
 } from "chart.js";
 import { useTheme } from "@/contexts/ThemeContext";
 import { calculateGrade, PerformanceMetrics } from "@/utils/gradeCalculator";
+import { useClerk } from '@clerk/nextjs';
+import { differenceInDays } from 'date-fns';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -17,13 +19,16 @@ interface DonutChartProps {
 }
 
 const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
+  const { user } = useClerk();
   const [hoveredSegment, setHoveredSegment] = React.useState<number | null>(null);
-  const [targetScore, setTargetScore] = React.useState(() =>
-    localStorage.getItem("targetScore") || "520"
-  );
+  const [targetScore, setTargetScore] = React.useState(() => {
+    return user?.unsafeMetadata?.targetScore?.toString() || "520";
+  });
+
   const [performanceMetrics, setPerformanceMetrics] =
     React.useState<{ [subject: string]: PerformanceMetrics }>({});
   const { theme } = useTheme();
+  const [daysUntilExam, setDaysUntilExam] = React.useState<number | null>(null);
 
   useEffect(() => {
     // Fetch performance metrics for all subjects
@@ -61,6 +66,30 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
     };
 
     fetchPerformanceMetrics();
+  }, []);
+
+  useEffect(() => {
+    const fetchExamDate = async () => {
+      try {
+        const response = await fetch('/api/study-plan?examDate=true');
+        if (!response.ok) {
+          console.error('Failed to fetch exam date');
+          return;
+        }
+
+        const data = await response.json();
+        if (data.examDate) {
+          const examDate = new Date(data.examDate);
+          const today = new Date();
+          const days = differenceInDays(examDate, today);
+          setDaysUntilExam(Math.max(0, days)); // Ensure we don't show negative days
+        }
+      } catch (error) {
+        console.error("Error fetching exam date:", error);
+      }
+    };
+
+    fetchExamDate();
   }, []);
 
   const getBorderColor = () => {
@@ -193,10 +222,21 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
     },
   };
 
-  const handleScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleScoreChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setTargetScore(value);
-    localStorage.setItem("targetScore", value);
+    
+    // Update the user metadata when target score changes
+    try {
+      await user?.update({
+        unsafeMetadata: {
+          ...user.unsafeMetadata,
+          targetScore: parseInt(value)
+        }
+      });
+    } catch (error) {
+      console.error("Error updating target score:", error);
+    }
   };
 
   const TrendIcon = ({
@@ -230,6 +270,17 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
     );
   };
 
+  // Calculate points away based on diagnostic score and target score
+  const getScoreMetrics = React.useMemo(() => {
+    const diagnosticScore = Number(user?.unsafeMetadata?.diagnosticScore) || 0;
+    const target = parseInt(targetScore);
+    
+    return {
+      pointsGained: 0, // We'll implement this later
+      pointsAway: target - diagnosticScore,
+    };
+  }, [targetScore, user?.unsafeMetadata?.diagnosticScore]);
+
   return (
     <div className="relative w-[70vh] h-[70vh] flex items-center justify-center">
       <Doughnut data={data} options={options} />
@@ -257,7 +308,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
           </div>
         ) : (
           <>
-            <h2 className="text-[3vh] font-medium">I Want A</h2>
+            <h2 className="text-[3vh] font-medium">{"I Want A"}</h2>
             <div className="flex items-center justify-center gap-[0.5vh] mb-[0.5vh]">
               <input
                 type="text"
@@ -269,14 +320,16 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
             </div>
             <div className="flex flex-col gap-[0.25vh]">
               <p className="text-[2vh] text-[--theme-hover-color]">
-                12 points gained
+                {getScoreMetrics.pointsGained} points gained
               </p>
               <p className="text-[2vh] text-[--theme-text-color]">
-                5 points away
+                {getScoreMetrics.pointsAway} points away
               </p>
-              <p className="text-[2vh] text-[--theme-text-color]">
-                23 days left
-              </p>
+              {daysUntilExam !== null && (
+                <p className="text-[2vh] text-[--theme-text-color]">
+                  {daysUntilExam} {daysUntilExam === 1 ? "day" : "days"} left
+                </p>
+              )}
             </div>
           </>
         )}
