@@ -86,13 +86,15 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
             designed by <br />&nbsp;&nbsp;&nbsp;&nbsp;a certified baller
           </p>
           <div className="mt-6 mx-3">
-            <FaLinkedin 
-              size={25} 
-              className="transition-colors duration-200 hover:fill-[var(--theme-hover-color)]"
-              style={{
-                color: 'var(--theme-text-color)',
-              }}
-            />
+            <Link href="https://www.linkedin.com/in/prynce-karki-272965164/" target="_blank" rel="noopener noreferrer">
+              <FaLinkedin 
+                size={25} 
+                className="transition-colors duration-200 hover:fill-[var(--theme-hover-color)]"
+                style={{
+                  color: 'var(--theme-text-color)',
+                }}
+              />
+            </Link>
           </div>
           <div className="mt-5 mx-2">
             <Link href="https://www.instagram.com/an0thermanicmonday/" target="_blank" rel="noopener noreferrer">
