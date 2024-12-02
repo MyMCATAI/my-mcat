@@ -26,7 +26,7 @@ export default function Post({ params }: { params: { slug: string } }) {
         <time dateTime={post.date}>{post.date}</time>
         <span className="flex items-center gap-2rem">
           By Prynce Karki 
-          <Link href="https://www.linkedin.com/in/your-linkedin" target="_blank" rel="noopener noreferrer" className="ml-2rem">
+          <Link href="https://www.linkedin.com/in/prynce-karki-272965164/" target="_blank" rel="noopener noreferrer" className="ml-2rem">
             <FaLinkedin 
               size={20} 
               className="transition-colors ml-3 duration-200 hover:text-blue-400"
