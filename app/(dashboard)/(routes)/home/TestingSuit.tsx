@@ -157,15 +157,6 @@ const TestingSuit: React.FC = () => {
         setRunTutorial={setShowCARsTutorial}
         kalypsoInteracted={kalypsoInteracted}
       />
-      <button 
-        onClick={() => {
-          setShowCARsTutorial(true);
-          localStorage.setItem("carsTutorialPlayed", "false");
-        }}
-        className="fixed bottom-4 right-4 bg-blue-500 text-white p-2 rounded"
-      >
-        Show Tutorial
-      </button>
     </div>
   );
 };
