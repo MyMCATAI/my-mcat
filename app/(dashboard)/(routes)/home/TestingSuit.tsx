@@ -25,13 +25,8 @@ const TestingSuit: React.FC = () => {
     const tutorialPlayed = localStorage.getItem("carsTutorialPlayed");
     if (tutorialPlayed === null) {
       setShowCARsTutorial(true);
-      console.log("Setting initial tutorial state to true");
     }
   }, []);
-
-  useEffect(() => {
-    console.log("Tutorial state:", showCARsTutorial);
-  }, [showCARsTutorial]);
 
   const handleAssistantResponse = (message: string) => {
     setAssistantMessage(message);

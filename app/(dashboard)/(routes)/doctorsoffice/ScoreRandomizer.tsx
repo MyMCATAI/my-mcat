@@ -63,9 +63,7 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
   const fetchReview = async (tier: number, rating: number): Promise<Review | null> => {
     try {
       const url = `/api/reviews?tier=${tier}&rating=${rating}&count=1`;
-      console.log(`Fetching review from: ${url}`);
       const response = await axios.get<Review[]>(url);
-      console.log('Response:', response.data);
       if (response.data && response.data.length > 0) {
         return response.data[0];
       } else {
@@ -238,12 +236,9 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
       const currentTier = getCurrentTier();
       const finalScores: number[] = [];
 
-      console.log(`Current tier: ${currentTier}`);
-
       for (let i = 0; i < 3; i++) {
         const score = await randomizeScore(i);
         finalScores.push(score);
-        console.log(`Review ${i + 1}: Score ${score}`);
         const review = await fetchReview(currentTier, score);
         if (review) {
           setReviews(prevReviews => [...prevReviews, review]);
@@ -311,7 +306,6 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
     try {
       const response = await axios.put('/api/user-info/', { amount });
       if (response.data) {
-        console.log('User score updated:', response.data.score);
         setCoinsEarned(amount);
       }
     } catch (error) {

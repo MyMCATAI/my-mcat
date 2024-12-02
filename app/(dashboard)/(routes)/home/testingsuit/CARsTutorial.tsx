@@ -16,7 +16,6 @@ const CARsTutorial: React.FC<CARsTutorialProps> = ({
   const [showAlgorithmStep, setShowAlgorithmStep] = useState(false);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    console.log("Joyride callback:", data);
     const { status, type } = data;
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       setRunTutorial(false);
@@ -26,9 +25,7 @@ const CARsTutorial: React.FC<CARsTutorialProps> = ({
 
   useEffect(() => {
     if (kalypsoInteracted) {
-      console.log("Kalypso was clicked, waiting 3 seconds...");
       const timer = setTimeout(() => {
-        console.log("Showing algorithm message");
         setShowAlgorithmStep(true);
       }, 3000);
 

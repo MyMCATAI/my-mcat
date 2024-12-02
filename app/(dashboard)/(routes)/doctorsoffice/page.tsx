@@ -66,7 +66,6 @@ const DoctorsOfficePage: React.FC = () => {
       
       setCorrectCount(correct);
       setWrongCount(wrong);
-      console.log("fetched user responses",responses);
     } catch (error) {
       console.error('Error fetching user responses:', error);
       toast.error('Failed to load test responses');
@@ -135,11 +134,6 @@ const DoctorsOfficePage: React.FC = () => {
     isLoading,
     largeDialogQuit
   ]); // Organized dependency array
-
-  useEffect(() => {
-    console.log("showChallengeButton changed in page:", showChallengeButton);
-  }, [showChallengeButton]);
-
 
   const createNewUserTest = async () => {
     try {

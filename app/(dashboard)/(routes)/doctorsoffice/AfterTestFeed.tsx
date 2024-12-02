@@ -166,10 +166,6 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
     }
   }, [open]);
 
-  useEffect(() => {
-    console.log('userResponses:', userResponses);
-  }, [userResponses]);
-
   const renderStars = () => {
     return (
       <div className="flex justify-center mb-4">
