@@ -2,7 +2,7 @@ import { toast } from "react-hot-toast";
 
 export const showLoadingToast = () => {
   return toast.loading(
-    "Generating your personalized study plan. This may take a few minutes...", 
+    "Generating your personalized study plan. This may take a minute...", 
     {
       duration: Infinity, // Toast will remain until manually dismissed
       position: "bottom-center",
