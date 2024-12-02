@@ -315,7 +315,7 @@ async function generateStudySchedule(
 ): Promise<CalendarActivity[]> {
   const activities: CalendarActivity[] = [];
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setHours(12, 0, 0, 0);
 
   const welcomeActivity = createWelcomeActivity(studyPlan, today);
   activities.push(welcomeActivity);
@@ -847,7 +847,8 @@ function createActivity(
 ): CalendarActivity {
   const taskCategory = EVENT_CATEGORIES.find(t => t.name === name);
   const scheduledDate = new Date(date);
-  scheduledDate.setHours(0, 0, 0, 0);
+  // Set the time to noon (12:00)
+  scheduledDate.setHours(12, 0, 0, 0);
   
   const activity = {
     userId: studyPlan.userId,
