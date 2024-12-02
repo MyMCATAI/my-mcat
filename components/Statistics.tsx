@@ -94,7 +94,6 @@ const Statistics = ({
         });
         const response = await fetch(`/api/user-statistics?${queryParams.toString()}`);
         const data = await response.json();
-        console.log(data)
         setStats(data);
       } catch (error) {
         console.error("Error fetching statistics:", error);

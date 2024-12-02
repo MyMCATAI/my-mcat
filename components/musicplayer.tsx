@@ -142,7 +142,6 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
         src={shuffledPlaylist[currentSongIndex]?.url}
         onEnded={playNextSong}
         onError={() => {
-          console.log("audio error")
           setIsPlaying(false);
         }}
       />

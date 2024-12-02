@@ -128,7 +128,6 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     if (!tutorialPart2Played || tutorialPart2Played === "false") {
       const timer = setTimeout(() => {
         setRunTutorialPart2(true);
-        console.log("tutorialPart2Played:", tutorialPart2Played); // Debugging line
         localStorage.setItem("tutorialPart2Played", "true");
       }, 6000); // Changed from 20000 to 6000 milliseconds
 
@@ -371,7 +370,6 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     if (!tutorialPart3Played || tutorialPart3Played === "false") {
       setTimeout(() => {
         setRunTutorialPart3(true);
-        console.log("tutorialPart3Played:", tutorialPart3Played); // Debugging line
         localStorage.setItem("tutorialPart3Played", "true");
       }, 10000);
     }
@@ -382,7 +380,6 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     handleModalSubmit(eventData);
     
     // You can still log the full event data if needed
-    console.log('Full event data:', eventData);
   };
 
   const handleEventClick = (event: CalendarEvent) => {

@@ -258,7 +258,6 @@ const Page = () => {
             handleSetTab={handleTabChange}
             isActive={activeTab === "Schedule"}
             onActivitiesUpdate={() => {
-              console.log("update activities");
               fetchActivities();
             }}
           />

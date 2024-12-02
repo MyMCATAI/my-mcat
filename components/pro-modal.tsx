@@ -15,7 +15,6 @@ const StripePricingTable = () => {
     script.async = true;
     document.body.appendChild(script);
 
-    console.log(userId)
     return () => {
       document.body.removeChild(script);
     };

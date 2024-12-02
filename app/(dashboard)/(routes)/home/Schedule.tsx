@@ -408,7 +408,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     localStorage.removeItem("tutorialPart2Played");
     localStorage.removeItem("tutorialPart3Played");
     localStorage.removeItem("tutorialPart4Played");
-    console.log("Tutorials reset");
     setRunTutorialPart1(false);
     setRunTutorialPart2(false);
     setRunTutorialPart3(false);
@@ -568,7 +567,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     const todaysScheduleActivities = activities.filter((activity: any) =>
       isToday(new Date(activity.scheduledDate))
     );
-    console.log('Updating today schedule activities');
     setTodayActivities(todaysScheduleActivities);
   };
 

@@ -134,7 +134,6 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   };
 
   const handleScreenshot = (blob: Blob) => {
-    console.log('Screenshot taken:', blob);
     // Add logic here to handle the screenshot
   };
 
