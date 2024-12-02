@@ -457,6 +457,39 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // Add this function near other handlers
+  const handleDownvote = async () => {
+    if (!currentQuestion) return;
+
+    try {
+      const response = await fetch('/api/send-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `Question Downvoted\n\nQuestion ID: ${currentQuestion.id}\nQuestion Content: ${currentQuestion.questionContent}\n\nThis question was automatically flagged for review through the downvote system.`
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send downvote message');
+      }
+
+      toast({
+        title: "Question reported!",
+        description: "Thank you for helping us improve.",
+        variant: "default",
+      });
+
+    } catch (error) {
+      console.error('Error sending downvote:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send feedback. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="h-full bg-transparent text-black px-6 rounded-lg mx-auto">
@@ -542,7 +575,8 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        className="text-[--theme-text-color] hover:text-[--theme-hover-color] hover:bg-transparent transition-colors"
+                        onClick={handleDownvote}
+                        className="hover:bg-transparent text-[--theme-text-color] hover:text-[--theme-hover-color] transition-colors"
                       >
                         <ThumbsDown className="h-5 w-5" />
                       </Button>
