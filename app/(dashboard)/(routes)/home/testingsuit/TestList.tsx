@@ -41,19 +41,23 @@ const TestList: React.FC<TestListProps> = ({
   testsCompletedToday: initialTestsCompleted = 0,
 }) => {
   const { theme } = useTheme();
-  const [currentTestsCompleted, setCurrentTestsCompleted] = useState(initialTestsCompleted);
+  const [currentTestsCompleted, setCurrentTestsCompleted] = useState(
+    initialTestsCompleted
+  );
   const noTestsAvailable = currentTestsCompleted >= testsAvailableToday;
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchTestsCompleted = async () => {
       try {
-        const response = await fetch('/api/test?page=1&pageSize=10&CARSonly=true');
-        if (!response.ok) throw new Error('Failed to fetch tests completed');
+        const response = await fetch(
+          "/api/test?page=1&pageSize=10&CARSonly=true"
+        );
+        if (!response.ok) throw new Error("Failed to fetch tests completed");
         const data = await response.json();
         setCurrentTestsCompleted(data.testsCompletedToday);
       } catch (err) {
-        console.error('Error fetching tests completed:', err);
+        console.error("Error fetching tests completed:", err);
       }
     };
 
@@ -66,18 +70,20 @@ const TestList: React.FC<TestListProps> = ({
     return "test" in item;
   };
 
-  const filteredItems = searchQuery.trim() === "" 
-    ? items 
-    : items.filter((item) => {
-        const title =
-          type === "past" && "test" in item && isUserTest(item)
-            ? (item as UserTest).test?.title
-            : (item as Test).title;
-        
-        if (!title) return false;
-        
-        return title.toLowerCase().includes(searchQuery.toLowerCase());
-      });
+  const getTestTitle = (item: Test | UserTest): string => {
+    if (type === "past" && "test" in item && isUserTest(item)) {
+      return item.test?.title?.trim() || "Untitled";
+    }
+    return ("title" in item ? item.title?.trim() : "") || "Untitled";
+  };
+
+  const filteredItems =
+    searchQuery.trim() === ""
+      ? items
+      : items.filter((item) => {
+          const title = getTestTitle(item);
+          return title.toLowerCase().includes(searchQuery.toLowerCase());
+        });
 
   if (loading) {
     return (
@@ -151,7 +157,9 @@ const TestList: React.FC<TestListProps> = ({
                         </div>
                         <div className="flex-shrink-0 ml-2">
                           <h2 className="text-sm xl:text-base font-medium whitespace-nowrap text-gray-500">
-                            {"difficulty" in item ? `Lvl ${item.difficulty}` : "N/A"}
+                            {"difficulty" in item
+                              ? `Lvl ${item.difficulty}`
+                              : "N/A"}
                           </h2>
                         </div>
                       </div>
@@ -186,11 +194,7 @@ const TestList: React.FC<TestListProps> = ({
                             />
                           </div>
                           <h2 className="text-sm xl:text-base font-normal group-hover:[color:var(--theme-hover-text)] truncate">
-                            {type === "past" && "test" in item
-                              ? item.test?.title
-                              : "title" in item
-                              ? item.title
-                              : "Untitled"}
+                            {getTestTitle(item)}
                           </h2>
                         </div>
                         <div className="flex-shrink-0 ml-2 flex items-center">
@@ -199,8 +203,10 @@ const TestList: React.FC<TestListProps> = ({
                               type === "past" && "score" in item
                                 ? getScoreColor(item.score)
                                 : "difficulty" in item
-                                ? getDifficultyColor(item.difficulty as number)
-                                : ""
+                                  ? getDifficultyColor(
+                                      item.difficulty as number
+                                    )
+                                  : ""
                             }`}
                           >
                             {type === "past" && "score" in item
@@ -208,8 +214,8 @@ const TestList: React.FC<TestListProps> = ({
                                 ? `${Math.round(item.score)}%`
                                 : "N/A"
                               : "difficulty" in item
-                              ? `Lvl ${item.difficulty}`
-                              : "N/A"}
+                                ? `Lvl ${item.difficulty}`
+                                : "N/A"}
                           </h2>
                           {type === "past" &&
                             "reviewedResponses" in item &&
@@ -226,13 +232,27 @@ const TestList: React.FC<TestListProps> = ({
                   {type === "past" && "score" in item ? (
                     <div>
                       <p>Taken: {new Date(item.startedAt).toLocaleString()}</p>
-                      <p>Score: {item.score !== null && item.score !== undefined ? `${Math.round(item.score)}%` : "N/A"}</p>
-                      <p>Questions Reviewed: {item.reviewedResponses || 0}/{item.totalResponses || 0}</p>
+                      <p>
+                        Score:{" "}
+                        {item.score !== null && item.score !== undefined
+                          ? `${Math.round(item.score)}%`
+                          : "N/A"}
+                      </p>
+                      <p>
+                        Questions Reviewed: {item.reviewedResponses || 0}/
+                        {item.totalResponses || 0}
+                      </p>
                     </div>
                   ) : type === "upcoming" && noTestsAvailable ? (
-                    <p>You have reached the daily test limit of {testsAvailableToday}. Check back tomorrow!</p>
+                    <p>
+                      You have reached the daily test limit of{" "}
+                      {testsAvailableToday}. Check back tomorrow!
+                    </p>
                   ) : (
-                    <p>Upcoming test ({currentTestsCompleted + 1}/{testsAvailableToday} for today)</p>
+                    <p>
+                      Upcoming test ({currentTestsCompleted + 1}/
+                      {testsAvailableToday} for today)
+                    </p>
                   )}
                 </TooltipContent>
               </Tooltip>
