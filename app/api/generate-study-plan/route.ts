@@ -314,6 +314,12 @@ async function generateStudySchedule(
   startDate: Date = new Date()
 ): Promise<CalendarActivity[]> {
   const activities: CalendarActivity[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const welcomeActivity = createWelcomeActivity(studyPlan, today);
+  activities.push(welcomeActivity);
+
   const examDate = new Date(studyPlan.examDate);
   const totalDays = Math.ceil((examDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -537,6 +543,24 @@ async function generateStudySchedule(
   }
 
   return activities;
+}
+
+function createWelcomeActivity(studyPlan: StudyPlan, date: Date): CalendarActivity {
+  return {
+    userId: studyPlan.userId,
+    studyPlanId: studyPlan.id,
+    categoryId: null,
+    contentId: null,
+    activityText: "Welcome to your study plan! Here are some initial tasks to get started.",
+    activityTitle: "Welcome!",
+    hours: 0.25, // No specific hours needed for this activity
+    activityType: "Special",
+    link: '',
+    scheduledDate: date,
+    status: "Not Started",
+    tasks: [],
+    source: "generated",
+  };
 }
 
 // Function to calculate total available study hours
