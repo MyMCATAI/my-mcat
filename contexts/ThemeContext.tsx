@@ -8,14 +8,14 @@ interface ThemeContextType {
 }
 
 const defaultTheme: ThemeContextType = {
-  theme: 'cyberSpace',
+  theme: 'mykonosBlue',
   setTheme: () => {},
 };
 
 const ThemeContext = createContext<ThemeContextType>(defaultTheme);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('cyberSpace');
+  const [theme, setTheme] = useState<Theme>('mykonosBlue');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as Theme | null;
