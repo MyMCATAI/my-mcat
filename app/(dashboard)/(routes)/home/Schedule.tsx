@@ -855,38 +855,44 @@ const Schedule: React.FC<ScheduleProps> = ({
                   updateTodaySchedule={updateTodaySchedule}
                 />
               </div>
+              {/* Button group at bottom */}
               {!showAnalytics ? (
-                <div className="mt-auto flex justify-between items-center">
+                <div className="mt-auto flex justify-end items-center gap-2">
                   {/* Add Breaks button */}
                   <button
                     onClick={() => setShowBreaksDialog(true)}
-                    className="flex items-center gap-2 py-3 px-4
+                    className="w-16 h-16 p-4
                       bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                       border-2 border-[--theme-border-color] 
                       hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      font-semibold shadow-md rounded-lg transition"
+                      shadow-md rounded-full transition flex items-center justify-center"
                   >
-                    <span>Add Breaks</span>
                     <span role="img" aria-label="palm tree">🌴</span>
                   </button>
 
-                  {/* Existing Analytics button */}
+                  {/* Analytics button */}
                   <button
                     onClick={handleToggleView}
-                    className="w-36 py-3 px-4 mt-2 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
+                    className="w-16 h-16 p-4
+                      bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                      border-2 border-[--theme-border-color] 
+                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                      shadow-md rounded-full transition flex items-center justify-center"
                   >
-                    <span>Analytics</span>
-                    <AnalyticsIcon className="w-5 h-5" />
+                    <AnalyticsIcon className="w-8 h-8" />
                   </button>
                 </div>
               ) : (
-                <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
+                <div className="mt-auto flex justify-end items-center">
                   <button
                     onClick={handleToggleView}
-                    className="w-36 py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
+                    className="w-16 h-16 p-4
+                      bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                      border-2 border-[--theme-border-color] 
+                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                      shadow-md rounded-full transition flex items-center justify-center"
                   >
-                    <span>Home</span>
-                    <CalendarIcon className="w-5 h-5" />
+                    <CalendarIcon className="w-8 h-8" />
                   </button>
                 </div>
               )}
@@ -896,32 +902,15 @@ const Schedule: React.FC<ScheduleProps> = ({
           {/* Navigation Buttons */}
           {showAnalytics && !selectedSubject && (
             <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
-              {/* <button
-                onClick={() => router.push('/integrations')}
-                className="w-full py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
-              >
-                <span>AAMC</span>
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button> */}
               <button
                 onClick={handleToggleView}
-                className="w-36 py-3 px-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md"
+                className="p-4 aspect-square
+                  bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                  border-2 border-[--theme-border-color] 
+                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                  shadow-md rounded-full transition flex items-center justify-center"
               >
-                <span>Calendar</span>
-                <CalendarIcon className="w-5 h-5" />
+                <CalendarIcon className="w-8 h-8" />
               </button>
             </div>
           )}
@@ -1049,11 +1038,11 @@ const Schedule: React.FC<ScheduleProps> = ({
         <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
         <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
           <DialogHeader>
-            <DialogTitle className="text-center text-black">Coming Soon!</DialogTitle>
+            <DialogTitle className="text-center text-black">Breaks Coming Soon!</DialogTitle>
           </DialogHeader>
           <div className="p-4">
             <p className="text-center text-black">
-              This feature will be implemented later: you can toggle holidays, note difficult weeks, and just ask for a break.
+              Toggle holidays. Add difficult weeks in school. Ask for a break. Your schedule will be updated automatically.
             </p>
           </div>
         </DialogContent>
