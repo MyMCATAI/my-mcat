@@ -285,8 +285,6 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       setAnsweredQuestions(prev => prev + 1);
     }
 
-    console.log("User Response:", userAnswer);
-    // console.log("Is Correct:", isCorrect);
     try {
       const response = await fetch('/api/user-test/response', {
         method: 'POST',

@@ -180,9 +180,6 @@ ${userMessage}
 
       const data = await response.json();
 
-      console.log('data', data);
-      console.log('Review completed, new score:', data.newScore);
-
       if (data.alreadyReviewed) {
         // If already reviewed, redirect to home page
         router.push('/home');

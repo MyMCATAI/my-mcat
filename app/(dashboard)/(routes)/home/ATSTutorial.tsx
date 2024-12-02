@@ -29,17 +29,13 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, type, index } = data;
     
-    console.log('Joyride callback:', { type, index });
-
     // For initialSteps tutorial
     if (runPart1 && (status === STATUS.FINISHED || status === STATUS.SKIPPED)) {
       setRunPart1(false);
       localStorage.setItem("initialTutorialPlayed", "true");
-      console.log("Initial tutorial completed, setting flag");
       
       // Immediately start atsIconStep tutorial if it hasn't been played
       if (localStorage.getItem("atsIconTutorialPlayed") !== "true") {
-        console.log('Starting ATS icon tutorial immediately');
         setRunPart4(true);
       }
     }
@@ -48,7 +44,6 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
     if (runPart4 && (status === STATUS.FINISHED || status === STATUS.SKIPPED)) {
       setRunPart4(false);
       localStorage.setItem("atsIconTutorialPlayed", "true");
-      console.log("ATS Icon tutorial completed, setting flag");
     }
   };
 

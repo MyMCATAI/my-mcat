@@ -75,7 +75,6 @@ export const VocabProvider: React.FC<VocabProviderProps> = ({ children }) => {
   const toggleCmdI = () => {
     setIsCmdIEnabled(prev => {
       const newValue = !prev;
-      console.log(`Command-I toggled to: ${newValue}`);
       return newValue;
     });
   };
@@ -84,7 +83,6 @@ export const VocabProvider: React.FC<VocabProviderProps> = ({ children }) => {
   const toggleAudio = () => {
     setAudioEnabled(prev => {
       const newValue = !prev;
-      console.log(`Audio toggled to: ${newValue}`);
       return newValue;
     });
   };

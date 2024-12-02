@@ -62,7 +62,6 @@ const FlashcardStack: React.FC = () => {
       const response = await fetch(`/api/flashcard?page=${page}&pageSize=10&subjects=${subjectsParam}`);
       const data: ApiResponse = await response.json();
 
-      console.log('Fetched flashcards:', data.flashcards);
       setFlashcards(prevCards => [...prevCards, ...data.flashcards]);
       setTotalPages(data.totalPages);
       setCurrentPage(data.currentPage);
@@ -76,7 +75,6 @@ const FlashcardStack: React.FC = () => {
 
   const handleLinkClick = useCallback((href: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent the click from bubbling up to the card
-    console.log(href);
     window.open(href, '_blank', 'noopener,noreferrer');
   }, []);
 
@@ -210,13 +208,11 @@ const FlashcardStack: React.FC = () => {
       case 'left':
       case 'up':
         playSound(false);
-        console.log('Incorrect');
         handleUserResponse(direction === 'up' ? 'weakness' : 'incorrect');
         break;
       case 'right':
       case 'down':
         playSound(true);
-        console.log('Correct');
         handleUserResponse(direction === 'down' ? 'strength' : 'correct');
         break;
     }
