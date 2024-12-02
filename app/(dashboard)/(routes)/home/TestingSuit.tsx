@@ -16,9 +16,18 @@ const TestingSuit: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCARsTutorial, setShowCARsTutorial] = useState(() => {
-    return localStorage.getItem("carsTutorialPlayed") !== "true";
+    const tutorialPlayed = localStorage.getItem("carsTutorialPlayed");
+    return tutorialPlayed === null || tutorialPlayed === "false";
   });
   const [kalypsoInteracted, setKalypsoInteracted] = useState(false);
+
+  useEffect(() => {
+    const tutorialPlayed = localStorage.getItem("carsTutorialPlayed");
+    if (tutorialPlayed === null) {
+      setShowCARsTutorial(true);
+      console.log("Setting initial tutorial state to true");
+    }
+  }, []);
 
   useEffect(() => {
     console.log("Tutorial state:", showCARsTutorial);
