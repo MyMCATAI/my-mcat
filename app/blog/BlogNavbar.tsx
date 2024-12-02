@@ -24,10 +24,12 @@ export const BlogNavbar = () => {
             designed by <br />&nbsp;&nbsp;&nbsp;&nbsp;a certified baller
           </p>
           <div className="mt-5 mx-3">
-            <FaLinkedin 
-              size={25} 
-              className="text-white transition-colors duration-200 hover:text-blue-400"
-            />
+            <Link href="https://www.linkedin.com/in/prynce-karki-272965164/" target="_blank" rel="noopener noreferrer">
+              <FaLinkedin 
+                size={25} 
+                className="text-white transition-colors duration-200 hover:text-blue-400"
+              />
+            </Link>
           </div>
           <div className="mt-4 mx-2">
             <Link href="https://www.instagram.com/an0thermanicmonday/" target="_blank" rel="noopener noreferrer">
