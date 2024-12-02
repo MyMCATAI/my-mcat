@@ -140,7 +140,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
       const response = await fetch(`/api/question?${subjectParams}&${contentParams}&types=flashcard,normal&page=${pageNumber}&pageSize=${pageSize}`);
       
       const data = await response.json();
-      console.log("data",data)
       setCardStartTime(Date.now());
 
       const transformedFlashcards = data.questions.map((question: FlattenedQuestionResponse) => {
@@ -180,7 +179,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   
   const handleLinkClick = useCallback((href: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent the click from bubbling up to the card
-    console.log(href);
     window.open(href, '_blank', 'noopener,noreferrer');
   }, []);
 
@@ -205,7 +203,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   }, []);
 
   useEffect(() => {
-    console.log("Flashcards updated:", flashcards.length);
     flashcardsRef.current = flashcards;
   }, [flashcards]);
   
@@ -331,7 +328,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
 
     // Check if we've gone through all cards
     if (currentCardIndex >= flashcardsRef.current.length) {
-      console.log("All cards viewed");
       return;
     }
 

@@ -162,7 +162,6 @@ const ChatBot: React.FC<ChatBotProps> = ({
       }
 
       const data = await response.json();
-      console.log("Received response:", data);
 
       if (data.threadId) {
         setThreadId(data.threadId);

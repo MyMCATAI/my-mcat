@@ -30,7 +30,6 @@ const SearchPage: React.FC<SearchPageProps> = ({ onAddNew }) => {
     setIsLoading(true);
     setError(null);
 
-    console.log("Searching for:", query);
     // TODO: Implement search functionality
     try {
       const response = await fetch(

@@ -79,7 +79,6 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
       }
       const data = await response.json();
 
-      console.log("data",data)
       // Use totalPages directly from the API response
       setTotalPages(data.totalPages);
 
@@ -130,8 +129,6 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
         throw new Error("Failed to update knowledge profiles");
       }
 
-      // Show success message (you might want to add a toast notification here)
-      console.log("Knowledge profiles updated successfully");
     } catch (error) {
       console.error("Error updating knowledge profiles:", error);
     } finally {

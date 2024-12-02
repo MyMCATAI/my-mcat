@@ -307,7 +307,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const handleContentClick = (contentId: string) => {
     setCurrentContentId(contentId);
     const clickedContent = content.find((item) => item.id === contentId);
-    console.log("Clicked Content:", clickedContent);
     if (clickedContent) {
       setContentType(clickedContent.type);
 
