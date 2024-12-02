@@ -3,7 +3,7 @@ import { stripe } from "@/lib/stripe";
 import prismadb from "@/lib/prismadb";
 import { absoluteUrl } from "@/lib/utils";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { sendReferralEmail } from "@/lib/server-utils";
+import { sendReferralEmail, sendWelcomeEmail } from "@/lib/server-utils";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,6 +43,9 @@ export async function POST(request: Request) {
         return new NextResponse("User not found", { status: 404 });
       }
 
+      // Get user's email
+      const userEmail = user.emailAddresses[0]?.emailAddress;
+      
       if (user) {
         // First try to get firstName from Clerk user, then fallback to UserInfo
         let referrerName = user.firstName;
@@ -52,14 +55,20 @@ export async function POST(request: Request) {
           });
           referrerName = userInfo?.firstName || 'A friend';
         }
-        await sendReferralEmail(referrerName, friendEmail);
+        
+        // Send both welcome and referral emails
+        await Promise.all([
+          sendWelcomeEmail(referrerName, userEmail),
+          sendReferralEmail(referrerName, friendEmail)
+        ]);
       }
+
       try {
         await prismadb.referral.create({
           data: {
             userId,
             referrerName: user.fullName ?? "Unknown",
-            referrerEmail: user.emailAddresses[0]?.emailAddress ?? "",
+            referrerEmail: userEmail ?? "",
             friendEmail,
           }
         });
