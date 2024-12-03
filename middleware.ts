@@ -22,6 +22,7 @@ const publicRoutes = [
   "/landingpage/(.*)",
   "/blog(.*)",
   "/Wallpaperwire.jpg",
+  "/kalypsotumble.gif",
 ];
 
 const isPublicRoute = createRouteMatcher(publicRoutes);
