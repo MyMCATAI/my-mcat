@@ -51,6 +51,7 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [feedbackType, setFeedbackType] = useState<'upvote' | 'downvote' | null>(null);
   const [complaintCategory, setComplaintCategory] = useState<string | null>(null);
+  const [clickedOptionIndex, setClickedOptionIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (question) {
@@ -229,6 +230,9 @@ ${userMessage}
   const correctAnswerIndex = 0;
 
   const getOptionClass = (index: number) => {
+    if (index === clickedOptionIndex) {
+      return 'bg-blue-500 text-white';
+    }
     if (index === correctAnswerIndex) {
       return 'bg-green-500 text-white';
     }
@@ -332,11 +336,18 @@ Help me understand this question so I can learn.`;
             <div className="mt-5">
               <TooltipProvider>
                 {options.map((option: string, index: number) => (
-                  <Tooltip key={index}>
+                  <Tooltip 
+                    key={index}
+                    open={clickedOptionIndex === index ? true : undefined}
+                  >
                     <TooltipTrigger asChild>
                       <div 
                         className={`p-3 mb-2 rounded ${getOptionClass(index)} text-sm cursor-pointer`}
                         onMouseEnter={() => handleOptionHover(index)}
+                        onClick={() => {
+                          setClickedOptionIndex(clickedOptionIndex === index ? null : index);
+                          handleOptionHover(index);
+                        }}
                       >
                         {option}
                       </div>
