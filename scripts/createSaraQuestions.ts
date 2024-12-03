@@ -125,6 +125,9 @@ async function createQuestion(record: any, categoryId: string, type: 'flashcard'
       record['Wrong 3 Explanation']
     ]);
 
+    // Log the correct explanation
+    console.log(`Correct explanation for ${record['Question ID']}-${type}:`, record['Correct Explanation']);
+
     // Handle image placement
     const relevantImage = record['Relevant Image'];
     if (record.Image === '1') {
@@ -158,4 +161,4 @@ async function createQuestion(record: any, categoryId: string, type: 'flashcard'
 
 // Update the script execution
 const contentCategory = process.argv[2]; // Get content category from command line argument
-createQuestionsFromCSV(true, contentCategory).catch(console.error);
+createQuestionsFromCSV(false, contentCategory).catch(console.error);

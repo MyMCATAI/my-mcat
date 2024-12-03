@@ -229,6 +229,7 @@ model KnowledgeProfile {
   lastAttemptAt  DateTime @default(now())
   conceptMastery Float?
   contentMastery Float?
+  completionPercentage Float @default(0)
   category       Category @relation(fields: [categoryId], references: [id])
 
   @@unique([userId, categoryId])
