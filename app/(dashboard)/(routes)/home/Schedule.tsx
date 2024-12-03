@@ -137,7 +137,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const buttonLabels: Record<Section, string> = {
     AdaptiveTutoringSuite: "Adaptive Tutoring Suite",
     MCATGameAnkiClinic: "Anki Clinic",
-    DailyCARsSuite: "Daily CARs",
+    DailyCARsSuite: "MyMCAT Daily CARs",
   };
 
   const handleStartTutorialPart4 = () => {
