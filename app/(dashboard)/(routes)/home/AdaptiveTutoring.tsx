@@ -138,6 +138,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const emptyButtonRef = useRef<HTMLDivElement>(null);
   const [emptyButtonPosition, setEmptyButtonPosition] = useState({ top: 0, left: 0 });
 
+  const [tutorialKey, setTutorialKey] = useState(0);
+
   const fetchInitialData = useCallback(async (useKnowledgeProfiles: boolean = false) => {
     setIsLoading(true);
     try {
@@ -646,6 +648,17 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [isEmptyButtonHovered]);
+
+  const handleResetTutorials = () => {
+    // Reset all tutorial states
+    setRunTutorialPart1(true);
+    setRunTutorialPart2(false);
+    setRunTutorialPart3(false);
+    setRunTutorialPart4(false);
+    setCatIconInteracted(false);
+    setShowHelp(false); // Close the help dialog
+    setTutorialKey(prev => prev + 1);
+  };
 
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
@@ -1255,6 +1268,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       />
       
       <ATSTutorial
+        key={tutorialKey}
         runPart1={runTutorialPart1}
         setRunPart1={setRunTutorialPart1}
         runPart2={runTutorialPart2}
@@ -1275,7 +1289,10 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-0 right-4 w-[26rem] bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg z-50 max-h-[80vh] flex flex-col"
           >
-            <HelpContent onClose={() => setShowHelp(false)} />
+            <HelpContent 
+              onClose={() => setShowHelp(false)} 
+              onResetTutorials={handleResetTutorials}
+            />
           </motion.div>
         )}
       </AnimatePresence>

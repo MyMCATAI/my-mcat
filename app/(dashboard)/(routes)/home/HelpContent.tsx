@@ -6,11 +6,23 @@ import { useOutsideClick } from '@/hooks/use-outside-click';
 
 interface HelpContentProps {
   onClose: () => void;
+  onResetTutorials: () => void;
 }
 
-const HelpContent: React.FC<HelpContentProps> = ({ onClose }) => {
+const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) => {
   const helpRef = useRef<HTMLDivElement>(null);
   useOutsideClick(helpRef, onClose);
+
+  const handleResetTutorials = () => {
+    // Remove all tutorial-related localStorage items
+    localStorage.removeItem("initialTutorialPlayed");
+    localStorage.removeItem("atsIconTutorialPlayed");
+    localStorage.removeItem("atsTutorialPart4Played");
+    localStorage.removeItem("catIconInteracted");
+    
+    // Call the callback to reset tutorial states
+    onResetTutorials();
+  };
 
   return (
     <div ref={helpRef} className="p-6 h-full overflow-y-auto relative">
@@ -31,9 +43,17 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose }) => {
       <div className="space-y-6 text-[--theme-text-color]">
         <section>
           <h3 className="text-lg font-semibold mb-2">Getting Started</h3>
-          <p className="text-sm leading-relaxed">
+          <p className="text-sm leading-relaxed mb-4">
             Welcome to the Adaptive Tutoring System! This platform helps you efficiently prepare for the MCAT by intelligently organizing essential study content and adapting to your learning progress.
           </p>
+          <div className="flex justify-center">
+            <button
+              onClick={handleResetTutorials}
+              className="px-4 py-2 text-sm border border-[--theme-border-color] bg-[--theme-bg-transparent] rounded-md hover:bg-[--theme-hover-color] transition-colors duration-200"
+            >
+              Reset Tutorials
+            </button>
+          </div>
         </section>
 
         <section>

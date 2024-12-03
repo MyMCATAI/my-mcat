@@ -5,7 +5,7 @@ import { Category } from "@/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import FilterButton from "@/components/ui/FilterButton";
 import Icon from "@/components/ui/icon";
-import { RotateCw, Construction } from 'lucide-react';
+import { RotateCw } from 'lucide-react';
 import ReactConfetti from 'react-confetti';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -411,48 +411,39 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
         </TabsList>
 
         <TabsContent value="progress" className="mt-0">
-          <div className="relative">
-            <div className="grid grid-cols-3 gap-4 opacity-50">
-              {subjects.map((subject) => (
-                <div 
-                  key={subject.name} 
-                  className="flex flex-col items-center p-2 rounded-lg bg-[--theme-leaguecard-color] min-h-[10rem]"
-                  style={{
-                    boxShadow: "0 0.125rem 0.25rem rgba(0, 0, 0, 0.1)",
-                  }}
-                >
-                  <div className="flex-1 flex items-center justify-center">
-                    <Icon
-                      name={subject.icon}
-                      className="w-12 h-12 transform scale-75"
-                      color={subject.color}
-                    />
-                  </div>
-                  <span 
-                    className="text-xs font-medium text-center block mb-4"
-                    style={{ color: subject.color }}
-                  >
-                    {subject.name}
-                  </span>
-                  <div className="w-full h-1 bg-[--theme-background-color] rounded-full overflow-hidden">
-                    <div 
-                      className="h-full transition-all duration-300"
-                      style={{ 
-                        width: `${subject.progress}%`,
-                        backgroundColor: subject.color
-                      }}
-                    />
-                  </div>
+          <div className="grid grid-cols-3 gap-4">
+            {subjects.map((subject) => (
+              <div 
+                key={subject.name} 
+                className="flex flex-col items-center p-2 rounded-lg bg-[--theme-leaguecard-color] min-h-[10rem]"
+                style={{
+                  boxShadow: "0 0.125rem 0.25rem rgba(0, 0, 0, 0.1)",
+                }}
+              >
+                <div className="flex-1 flex items-center justify-center">
+                  <Icon
+                    name={subject.icon}
+                    className="w-12 h-12 transform scale-75"
+                    color={subject.color}
+                  />
                 </div>
-              ))}
-            </div>
-            
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[--theme-background-color] bg-opacity-80 rounded-lg">
-              <Construction className="w-12 h-12 text-[--theme-text-color] mb-2" />
-              <p className="text-[--theme-text-color] text-lg font-medium">
-                This feature is still under construction
-              </p>
-            </div>
+                <span 
+                  className="text-xs font-medium text-center block mb-4"
+                  style={{ color: subject.color }}
+                >
+                  {subject.name}
+                </span>
+                <div className="w-full h-1 bg-[--theme-background-color] rounded-full overflow-hidden">
+                  <div 
+                    className="h-full transition-all duration-300"
+                    style={{ 
+                      width: `${subject.progress}%`,
+                      backgroundColor: subject.color
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </TabsContent>
 
