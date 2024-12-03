@@ -1,12 +1,21 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <!-- Uploaded to: SVG Repo, www.svgrepo.com, Transformed by: SVG Repo Mixer Tools -->
-<svg fill="currentColor" width="800px" height="800px" viewBox="0 0 24 24" id="mirror-5" data-name="Flat Line" xmlns="http://www.w3.org/2000/svg" class="icon flat-line">
-<g id="SVGRepo_bgCarrier" stroke-width="0"/>
-<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
-<g id="SVGRepo_iconCarrier">
-<ellipse id="secondary" cx="12" cy="10" rx="5" ry="7" style="fill: #acc7cf; stroke-width: 2;"/>
-<path id="primary" d="M20,21V11a1,1,0,0,0-1-1H17" style="fill: none; stroke: #efefef; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;"/>
-<path id="primary-2" data-name="primary" d="M7,10H5a1,1,0,0,0-1,1V21" style="fill: none; stroke: #efefef; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;"/>
-<path id="primary-3" data-name="primary" d="M3,21H21M12,3C9.24,3,7,6.13,7,10s2.24,7,5,7,5-3.13,5-7S14.76,3,12,3Z" style="fill: none; stroke: #efefef; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;"/>
-</g>
-</svg>
+<svg fill="currentColor" width="64px" height="64px" viewBox="0 0 24 24" id="mirror-5" data-name="Flat Line" xmlns="http://www.w3.org/2000/svg" class="icon flat-line">
+
+<g id="SVGRepo_bgCarrier" stroke-width="0"/>
+
+<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+
+<g id="SVGRepo_iconCarrier">
+
+<ellipse id="secondary" cx="12" cy="10" rx="5" ry="7" style="fill: currentColor; stroke-width: 2;"/>
+
+<path id="primary" d="M20,21V11a1,1,0,0,0-1-1H17" style="fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;"/>
+
+<path id="primary-2" data-name="primary" d="M7,10H5a1,1,0,0,0-1,1V21" style="fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;"/>
+
+<path id="primary-3" data-name="primary" d="M3,21H21M12,3C9.24,3,7,6.13,7,10s2.24,7,5,7,5-3.13,5-7S14.76,3,12,3Z" style="fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;"/>
+
+</g>
+
+</svg>
