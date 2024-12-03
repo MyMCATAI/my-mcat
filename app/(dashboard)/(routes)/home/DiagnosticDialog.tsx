@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import axios from "axios";
 import { toast } from "react-hot-toast";
 
 interface DiagnosticDialogProps {
@@ -27,26 +26,37 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
   onSubmit,
 }) => {
   const [scores, setScores] = useState({
-    total: '',
-    cp: '',
-    cars: '',
-    bb: '',
-    ps: ''
+    total: "",
+    cp: "",
+    cars: "",
+    bb: "",
+    ps: "",
   });
   const [noDiagnostic, setNoDiagnostic] = useState(false);
 
   const isFormValid = () => {
     if (noDiagnostic) return true;
-    return Object.values(scores).every(score => score !== '');
+    return Object.values(scores).every((score) => score !== "");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post("/api/diagnostic-scores", {
-        diagnosticScores: noDiagnostic ? null : scores
+      const response = await fetch("/api/diagnostic-scores", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          diagnosticScores: noDiagnostic ? null : scores,
+        }),
       });
-      
+
+      if (!response.ok) {
+        throw new Error("Failed to save diagnostic scores");
+      }
+
+      await response.json();
       toast.success("Diagnostic scores saved successfully!");
       onSubmit(scores);
     } catch (error) {
@@ -57,7 +67,10 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
 
   return (
     <Dialog open={isOpen} modal onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-[28rem] text-black" onPointerDownOutside={(e) => e.preventDefault()}>
+      <DialogContent
+        className="sm:max-w-[28rem] text-black"
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold mb-4">
             Welcome to the Adaptive Tutoring Suite
@@ -65,18 +78,23 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
         </DialogHeader>
         <div className="mt-4">
           <p className="text-center mb-6 text-lg">
-            Where you can get all of the content you need delivered to you. Please enter your diagnostic score!
+            Where you can get all of the content you need delivered to you.
+            Please enter your diagnostic score!
           </p>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-2">Total Score</label>
+                <label className="block text-sm font-medium mb-2">
+                  Total Score
+                </label>
                 <Input
                   type="number"
                   min="472"
                   max="528"
                   value={scores.total}
-                  onChange={(e) => setScores({ ...scores, total: e.target.value })}
+                  onChange={(e) =>
+                    setScores({ ...scores, total: e.target.value })
+                  }
                   disabled={noDiagnostic}
                   className="w-full bg-white"
                   placeholder="472-528"
@@ -90,7 +108,9 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
                     min="118"
                     max="132"
                     value={scores.cp}
-                    onChange={(e) => setScores({ ...scores, cp: e.target.value })}
+                    onChange={(e) =>
+                      setScores({ ...scores, cp: e.target.value })
+                    }
                     disabled={noDiagnostic}
                     className="bg-white"
                     placeholder="118-132"
@@ -103,7 +123,9 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
                     min="118"
                     max="132"
                     value={scores.cars}
-                    onChange={(e) => setScores({ ...scores, cars: e.target.value })}
+                    onChange={(e) =>
+                      setScores({ ...scores, cars: e.target.value })
+                    }
                     disabled={noDiagnostic}
                     className="bg-white"
                     placeholder="118-132"
@@ -116,7 +138,9 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
                     min="118"
                     max="132"
                     value={scores.bb}
-                    onChange={(e) => setScores({ ...scores, bb: e.target.value })}
+                    onChange={(e) =>
+                      setScores({ ...scores, bb: e.target.value })
+                    }
                     disabled={noDiagnostic}
                     className="bg-white"
                     placeholder="118-132"
@@ -129,7 +153,9 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
                     min="118"
                     max="132"
                     value={scores.ps}
-                    onChange={(e) => setScores({ ...scores, ps: e.target.value })}
+                    onChange={(e) =>
+                      setScores({ ...scores, ps: e.target.value })
+                    }
                     disabled={noDiagnostic}
                     className="bg-white"
                     placeholder="118-132"
@@ -141,14 +167,16 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
               <Checkbox
                 id="noDiagnostic"
                 checked={noDiagnostic}
-                onCheckedChange={(checked) => setNoDiagnostic(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setNoDiagnostic(checked as boolean)
+                }
               />
               <label htmlFor="noDiagnostic" className="text-sm">
                 {"I don't have a diagnostic score"}
               </label>
             </div>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700"
               disabled={!isFormValid()}
             >
@@ -161,4 +189,4 @@ const DiagnosticDialog: React.FC<DiagnosticDialogProps> = ({
   );
 };
 
-export default DiagnosticDialog; 
+export default DiagnosticDialog;

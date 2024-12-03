@@ -1,5 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import axios from "axios";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
@@ -11,19 +16,30 @@ interface PurchaseButtonProps {
   children?: React.ReactNode;
 }
 
-export function PurchaseButton({ 
-  text = "Purchase Coins", 
+export function PurchaseButton({
+  text = "Purchase Coins",
   className = "bg-blue-500 hover:bg-blue-600 text-white",
   tooltipText = "Purchase additional coins to access more features",
-  children
+  children,
 }: PurchaseButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePurchase = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.post("/api/stripe/checkout");
-      window.location.href = response.data.url;
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to initiate purchase");
+      }
+
+      const data = await response.json();
+      window.location.href = data.url;
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to initiate purchase. Please try again.");
@@ -33,11 +49,7 @@ export function PurchaseButton({
   };
 
   const content = children || (
-    <Button 
-      onClick={handlePurchase}
-      disabled={isLoading}
-      className={className}
-    >
+    <Button onClick={handlePurchase} disabled={isLoading} className={className}>
       {isLoading ? "Loading..." : text}
     </Button>
   );
@@ -47,7 +59,7 @@ export function PurchaseButton({
       <Tooltip>
         <TooltipTrigger asChild>
           {children ? (
-            <button 
+            <button
               onClick={handlePurchase}
               disabled={isLoading}
               className="hover:opacity-80 transition-opacity disabled:opacity-50"
