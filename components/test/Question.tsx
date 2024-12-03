@@ -6,7 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFromRaw, DraftHandleValue } from 'draft-js';
+import { Editor, EditorState, ContentState, RichUtils, convertToRaw, convertFromRaw, DraftHandleValue, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 
 interface QuestionsProps {
@@ -112,7 +112,15 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
   const testHeaderRef = useRef(null);
   
   useEffect(() => {
-    setStrikedOptions(new Set());
+    // Load striked options from localStorage
+
+    // todo, read this from the userReponse instead
+    const savedStrikedOptions = typeof window !== 'undefined' ? localStorage.getItem(`striked-options-${question.id}`) : null;
+    if (savedStrikedOptions) {
+      setStrikedOptions(new Set(JSON.parse(savedStrikedOptions)));
+    } else {
+      setStrikedOptions(new Set());
+    }
     const savedContent = typeof window !== 'undefined' ? localStorage.getItem(`question-${question.id}`) : null;
     if (savedContent) {
       const content = convertFromRaw(JSON.parse(savedContent));
@@ -135,6 +143,11 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
     const content = convertToRaw(editorState.getCurrentContent());
     localStorage.setItem(`question-${question.id}`, JSON.stringify(content));
   }, [editorState, question.id]);
+
+  useEffect(() => {
+    // Save striked options to localStorage
+    localStorage.setItem(`striked-options-${question.id}`, JSON.stringify(Array.from(strikedOptions)));
+  }, [strikedOptions, question.id]);
 
   const randomizedOptions = useMemo(() => {
     const seed = question.id.charCodeAt(question.id.length - 1);
@@ -179,6 +192,35 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
     return 'handled';
   };
 
+  const handleKeyCommand = (command: string): DraftHandleValue => {
+    if (command === "delete" || command === "backspace" || command === "split-block") {
+      return "handled";
+    }
+    if (command === "toggle-highlight") {
+      const newState = RichUtils.toggleInlineStyle(editorState, "HIGHLIGHT");
+      setEditorState(newState);
+      return "handled";
+    }
+    if (command === "toggle-strikethrough") {
+      const newState = RichUtils.toggleInlineStyle(editorState, "STRIKETHROUGH");
+      setEditorState(newState);
+      return "handled";
+    }
+    return "not-handled";
+  };
+
+  const keyBindingFn = (e: React.KeyboardEvent): string | null => {
+    if (KeyBindingUtil.hasCommandModifier(e) && e.shiftKey) {
+      if (e.key === "H" || e.key === "h") {
+        return "toggle-highlight";
+      }
+      if (e.key === "X" || e.key === "x") {
+        return "toggle-strikethrough";
+      }
+    }
+    return getDefaultKeyBinding(e);
+  };
+
   return (
     <div
       className="flex flex-col items-center px-6 font-serif text-black text-sm"
@@ -207,6 +249,8 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
               handleBeforeInput={handleBeforeInput}
               handlePastedText={handlePastedText}
               handleDrop={handleDrop}
+              handleKeyCommand={handleKeyCommand}
+              keyBindingFn={keyBindingFn}
             />
           </div>
           <RadioGroup
