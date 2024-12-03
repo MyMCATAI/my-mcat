@@ -94,19 +94,35 @@ export async function POST(req: Request) {
             
       if (userId) {
         try {
-          // Update the user's score and hasPaid status
-          await prismadb.userInfo.update({
-            where: { userId },
-            data: { 
-              score: {
-                // Todo add handling for different price types
-                increment: 10
-              },
-              hasPaid: true
-            },
+          // First check if user exists
+          const existingUser = await prismadb.userInfo.findUnique({
+            where: { userId }
           });
+
+          if (existingUser) {
+            // If exists, increment score
+            await prismadb.userInfo.update({
+              where: { userId },
+              data: { 
+                score: {
+                  increment: 10
+                },
+                hasPaid: true
+              }
+            });
+          } else {
+            // If doesn't exist, create new
+            await prismadb.userInfo.create({
+              data: { 
+                userId,
+                bio: "Future doctor preparing to ace the MCAT! 🎯 Committed to learning and growing every day.",
+                score: 10,
+                hasPaid: true
+              }
+            });
+          }
         } catch (error) {
-          console.error("Error updating user score and payment status:", error);
+          console.error("Error updating user info:", error);
         }
       }
       break;
