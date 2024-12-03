@@ -1,9 +1,9 @@
 // File: /components/chatbot/ChatBotWidgetNoChatBot.tsx
 
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { ReportData } from "@/types";
-import Image from 'next/image';
+import Image from "next/image";
 
 interface KalypsoData {
   averageTestScore: number;
@@ -17,41 +17,51 @@ interface KalypsoData {
 interface ChatBotWidgetNoChatBotProps {
   reportData: ReportData | null;
   onResponse?: (message: string, dismissFunc: () => void) => void;
-  initialState?: 'wait' | 'distressed';
+  initialState?: "wait" | "distressed";
 }
 
-type KalypsoState = 'wait' | 'talk' | 'end' | 'start';
+type KalypsoState = "wait" | "talk" | "end" | "start";
 
-const ChatBotWidgetNoChatBot: React.FC<ChatBotWidgetNoChatBotProps> = ({ 
-  reportData, 
+const ChatBotWidgetNoChatBot: React.FC<ChatBotWidgetNoChatBotProps> = ({
+  reportData,
   onResponse,
-  initialState = 'wait' 
+  initialState = "wait",
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [kalypsoState, setKalypsoState] = useState<KalypsoState>(initialState as KalypsoState);
+  const [kalypsoState, setKalypsoState] = useState<KalypsoState>(
+    initialState as KalypsoState
+  );
   const [kalypsoSrc, setKalypsoSrc] = useState(
-    initialState === 'distressed' ? '/kalypsodistressed.gif' : '/kalypsowait.gif'
+    initialState === "distressed"
+      ? "/kalypsodistressed.gif"
+      : "/kalypsowait.gif"
   );
   const [showDots, setShowDots] = useState(false);
 
   useEffect(() => {
-    setKalypsoSrc(initialState === 'distressed' ? '/kalypsodistressed.gif' : '/kalypsowait.gif');
+    setKalypsoSrc(
+      initialState === "distressed"
+        ? "/kalypsodistressed.gif"
+        : "/kalypsowait.gif"
+    );
     setKalypsoState(initialState as KalypsoState);
   }, [initialState]);
 
   const handleClick = async () => {
     if (isLoading) return;
-    
+
     setIsLoading(true);
-    setKalypsoState('talk');
-    setKalypsoSrc('/kalypsotalk.gif');
+    setKalypsoState("talk");
+    setKalypsoSrc("/kalypsotalk.gif");
     setShowDots(true);
 
     // Wait for 2 seconds (duration of kalypsotalk animation)
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     if (!reportData) {
-      handleResponse("Oops! I couldn't find your report data. Please make sure you're logged in and have completed some tests.");
+      handleResponse(
+        "Oops! I couldn't find your report data. Please make sure you're logged in and have completed some tests."
+      );
       return;
     }
 
@@ -64,12 +74,25 @@ const ChatBotWidgetNoChatBot: React.FC<ChatBotWidgetNoChatBotProps> = ({
         totalQuestionsAnswered: reportData.totalQuestionsAnswered,
         totalCupcakes: reportData.userScore || 0,
       };
-      const response = await axios.post('/api/kalypso', {
-        data: kalypsoData,
+
+      const response = await fetch("/api/kalypso", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: kalypsoData,
+        }),
       });
-      handleResponse(response.data.message);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      handleResponse(data.message);
     } catch (error: any) {
-      console.error('[ChatBotWidgetNoChatBot] Error:', error);
+      console.error("[ChatBotWidgetNoChatBot] Error:", error);
       handleResponse("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -78,21 +101,21 @@ const ChatBotWidgetNoChatBot: React.FC<ChatBotWidgetNoChatBotProps> = ({
   };
 
   const handleResponse = (responseMessage: string) => {
-    setKalypsoState('end');
-    setKalypsoSrc('/kalypsoend.gif');
-    if (typeof onResponse === 'function') {
+    setKalypsoState("end");
+    setKalypsoSrc("/kalypsoend.gif");
+    if (typeof onResponse === "function") {
       onResponse(responseMessage, handleMessageDismiss);
     }
   };
 
   const handleMessageDismiss = () => {
-    setKalypsoState('start');
-    setKalypsoSrc('/kalypsostart.gif');
-    
+    setKalypsoState("start");
+    setKalypsoSrc("/kalypsostart.gif");
+
     // After playing kalypsostart, return to wait state
     setTimeout(() => {
-      setKalypsoState('wait');
-      setKalypsoSrc('/kalypsowait.gif');
+      setKalypsoState("wait");
+      setKalypsoSrc("/kalypsowait.gif");
     }, 4900); // Adjust this timeout based on the duration of kalypsostart animation
   };
 
@@ -112,11 +135,11 @@ const ChatBotWidgetNoChatBot: React.FC<ChatBotWidgetNoChatBotProps> = ({
         onClick={handleClick}
         aria-label="Interact with Kalypso the Chatbot"
         style={{
-          width: '8rem',
-          height: '8rem',
-          overflow: 'hidden',
-          position: 'relative',
-          cursor: 'pointer',
+          width: "8rem",
+          height: "8rem",
+          overflow: "hidden",
+          position: "relative",
+          cursor: "pointer",
         }}
         disabled={isLoading}
       >
