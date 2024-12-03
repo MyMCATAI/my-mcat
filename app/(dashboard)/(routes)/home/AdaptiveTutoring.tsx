@@ -27,6 +27,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { FaSpotify, FaApple, FaHeadphones } from "react-icons/fa";
 import ATSSettingContent from "./ATSSettingContent";
+import HelpContent from "./HelpContent";
 import {
   TooltipProvider,
   Tooltip,
@@ -84,6 +85,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [contentType, setContentType] = useState("video");
   const [showSearch, setShowSearch] = useState(false);
   const [showLink, setShowLink] = useState(false);
@@ -131,6 +133,10 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const [catIconInteracted, setCatIconInteracted] = useState(() => {
     return localStorage.getItem("catIconInteracted") === "true";
   });
+
+  const [isEmptyButtonHovered, setIsEmptyButtonHovered] = useState(false);
+  const emptyButtonRef = useRef<HTMLDivElement>(null);
+  const [emptyButtonPosition, setEmptyButtonPosition] = useState({ top: 0, left: 0 });
 
   const fetchInitialData = useCallback(async (useKnowledgeProfiles: boolean = false) => {
     setIsLoading(true);
@@ -607,6 +613,40 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     localStorage.setItem("catIconInteracted", "true");
   };
 
+  const updateEmptyButtonPosition = useCallback(() => {
+    if (emptyButtonRef.current) {
+      const rect = emptyButtonRef.current.getBoundingClientRect();
+      const rootFontSize = parseFloat(
+        getComputedStyle(document.documentElement).fontSize
+      );
+      setEmptyButtonPosition({
+        top: rect.top / rootFontSize,
+        left: rect.left / rootFontSize,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    updateEmptyButtonPosition();
+    window.addEventListener("resize", updateEmptyButtonPosition);
+    return () => window.removeEventListener("resize", updateEmptyButtonPosition);
+  }, [updateEmptyButtonPosition]);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    if (isEmptyButtonHovered) {
+      setShowPodcast(false); // Hide podcast sidebar if it's showing
+    } else {
+      timeoutId = setTimeout(() => {
+        setIsEmptyButtonHovered(false);
+      }, 300); // Slight delay before hiding to prevent flickering
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isEmptyButtonHovered]);
+
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
       <div className="flex items-stretch w-full mb-3">
@@ -615,55 +655,91 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
             {isLoading
               ? (
                   [
-                    "cat",
+                    "empty",
                     "medicine",
                     "study",
                     "vaccine",
                     "science",
                     "education",
-                    "genetics",
+                    "cat",
                   ] as const
                 ).map((theme, index) => (
                   <ThemedSkeleton key={index} theme={theme} />
                 ))
-              : checkedCategories?.slice(0, 7).map((category, index) => (
-                  <div
-                    key={category.id}
-                    className={`relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all flex flex-col justify-between items-center ${index === 1 ? 'specific-topic-icon' : ''}`}
-                    style={{
-                      backgroundColor: "var(--theme-adaptive-tutoring-color)",
-                      boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow =
-                        "var(--theme-adaptive-tutoring-boxShadow-hover)";
-                      e.currentTarget.style.transform = "scale(1.05)";
-                      e.currentTarget.style.zIndex = "30";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow =
-                        "var(--theme-adaptive-tutoring-boxShadow)";
-                      e.currentTarget.style.transform = "scale(1)";
-                      e.currentTarget.style.zIndex = "10";
-                    }}
-                    onClick={() => handleCardClick(index)}
-                  >
-                    <div className="relative w-full h-full flex flex-col justify-center items-center">
-                      <div className="opacity-0 group-hover:opacity-100 absolute inset-0 gb-black bg-opacity-50 flex items-end transition-opacity duration-300">
-                        <p className="text-[--theme-text-color] text-xs p-1 mt-2 truncate w-full">
-                          {category?.conceptCategory || "No title"}
-                        </p>
-                      </div>
-                      <div className="m-auto transform scale-90">
-                        <Icon
-                          name={category.icon}
-                          className="w-6 h-6"
-                          color={category.color}
-                        />
+              : (
+                  <>
+                    <div
+                      ref={emptyButtonRef}
+                      className="relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all hover:bg-[--theme-hover-color]"
+                      style={{
+                        backgroundColor: "var(--theme-adaptive-tutoring-color)",
+                        boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                      }}
+                      onMouseEnter={() => {
+                        setIsEmptyButtonHovered(true);
+                        updateEmptyButtonPosition();
+                      }}
+                      onMouseLeave={() => setIsEmptyButtonHovered(false)}
+                    >
+                      <div className="relative w-full h-full flex flex-col justify-center items-center">
+                        <div className="settings-container flex-col">
+                          <svg
+                            className="settings-icon w-8 h-8"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M9.25,22l-.4-3.2c-.216-.084-.42-.184-.612-.3c-.192-.117-.38-.242-.563-.375L4.7,19.375L1.95,14.625L4.525,12.675c-.016-.117-.024-.23-.024-.338V11.662c0-.108.008-.221.025-.337L1.95,9.375L4.7,4.625L7.675,5.875c.183-.134.375-.259.575-.375c.2-.117.4-.217.6-.3l.4-3.2H14.75l.4,3.2c.216.084.42.184.612.3c.192.117.38.242.563.375l2.975-.75l2.75,4.75l-2.575,1.95c.016.117.024.23.024.338v.675c0,.108-.008.221-.025.337l2.575,1.95l-2.75,4.75l-2.95-.75c-.183.133-.375.258-.575.375c-.2.117-.4.217-.6.3l-.4,3.2H9.25zM12.05,15.5c.966,0,1.791-.342,2.475-1.025c.683-.683,1.025-1.508,1.025-2.475c0-.966-.342-1.791-1.025-2.475c-.683-.683-1.508-1.025-2.475-1.025c-0.984,0-1.813,.342-2.488,1.025c-0.675,.683-1.012,1.508-1.012,2.475c0,.966,.337,1.791,1.012,2.475c.675,.683,1.504,1.025,2.488,1.025z"
+                              className="text-[--theme-text-color]"
+                            />
+                          </svg>
+                          <span className="text-xs font-semibold text-[--theme-text-color]">
+                            SETTINGS
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                    {checkedCategories?.slice(0, 6).map((category, index) => (
+                      <div
+                        key={category.id}
+                        className={`relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all flex flex-col justify-between items-center ${index === 1 ? 'specific-topic-icon' : ''}`}
+                        style={{
+                          backgroundColor: "var(--theme-adaptive-tutoring-color)",
+                          boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.boxShadow =
+                            "var(--theme-adaptive-tutoring-boxShadow-hover)";
+                          e.currentTarget.style.transform = "scale(1.05)";
+                          e.currentTarget.style.zIndex = "30";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.boxShadow =
+                            "var(--theme-adaptive-tutoring-boxShadow)";
+                          e.currentTarget.style.transform = "scale(1)";
+                          e.currentTarget.style.zIndex = "10";
+                        }}
+                        onClick={() => handleCardClick(index)}
+                      >
+                        <div className="relative w-full h-full flex flex-col justify-center items-center">
+                          <div className="opacity-0 group-hover:opacity-100 absolute inset-0 gb-black bg-opacity-50 flex items-end transition-opacity duration-300">
+                            <p className="text-[--theme-text-color] text-xs p-1 mt-2 truncate w-full">
+                              {category?.conceptCategory || "No title"}
+                            </p>
+                          </div>
+                          <div className="m-auto transform scale-90">
+                            <Icon
+                              name={category.icon}
+                              className="w-6 h-6"
+                              color={category.color}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
           </div>
         </div>
         <div className="col-span-1">
@@ -672,24 +748,24 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               <Tooltip>
                 <TooltipTrigger>
                   <button
-                    onClick={toggleSettings}
-                    className="ats-settings-button p-2 rounded-full shadow-md bg-white"
+                    onClick={() => setShowHelp(true)}
+                    className="p-2 rounded-full shadow-md bg-white"
                   >
                     <svg
-                      width="16"
-                      height="16"
+                      width="20"
+                      height="20"
                       viewBox="0 0 24 24"
-                      fill="#333"
                       xmlns="http://www.w3.org/2000/svg"
                     >
+                      <circle cx="12" cy="12" r="10" fill="white" />
                       <path
-                        d="M9.25,22l-.4-3.2c-.216-.084-.42-.184-.612-.3c-.192-.117-.38-.242-.563-.375L4.7,19.375L1.95,14.625L4.525,12.675c-.016-.117-.024-.23-.024-.338V11.662c0-.108.008-.221.025-.337L1.95,9.375L4.7,4.625L7.675,5.875c.183-.134.375-.259.575-.375c.2-.117.4-.217.6-.3l.4-3.2H14.75l.4,3.2c.216.084.42.184.612.3c.192.117.38.242.563.375l2.975-.75l2.75,4.75l-2.575,1.95c.016.117.024.23.024.338v.675c0,.108-.008.221-.025.337l2.575,1.95l-2.75,4.75l-2.95-.75c-.183.133-.375.258-.575.375c-.2.117-.4.217-.6.3l-.4,3.2H9.25zM12.05,15.5c.966,0,1.791-.342,2.475-1.025c.683-.683,1.025-1.508,1.025-2.475c0-.966-.342-1.791-1.025-2.475c-.683-.683-1.508-1.025-2.475-1.025c-0.984,0-1.813,.342-2.488,1.025c-0.675,.683-1.012,1.508-1.012,2.475c0,.966,.337,1.791,1.012,2.475c.675,.683,1.504,1.025,2.488,1.025z"
+                        d="M12 6c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 .55-.22 1.05-.59 1.41l-1.24 1.26C11.45 13.4 11 14.4 11 15.5V16h2v-.5c0-1.5.45-2.1 1.17-2.83l.9-.92c.57-.57.93-1.37.93-2.25 0-2.21-1.79-4-4-4zM11 17h2v2h-2v-2z"
                         fill="#333"
                       />
                     </svg>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent>Settings</TooltipContent>
+                <TooltipContent>Help</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
@@ -1062,6 +1138,30 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
       {createPortal(
         <AnimatePresence>
+          {isEmptyButtonHovered && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+              className="fixed rounded-lg border-[--theme-border-color] border-2 shadow-lg z-[35] bg-[--theme-leaguecard-color] overflow-hidden"
+              style={{
+                top: `${emptyButtonPosition.top}rem`,
+                left: `${emptyButtonPosition.left + 8}rem`,
+                width: '40rem',
+                height: '80vh',
+                maxHeight: 'calc(100vh - 4rem)',
+              }}
+              onMouseEnter={() => setIsEmptyButtonHovered(true)}
+              onMouseLeave={() => setIsEmptyButtonHovered(false)}
+            >
+              <ATSSettingContent
+                onClose={() => setIsEmptyButtonHovered(false)}
+                checkedCategories={checkedCategories}
+                setCheckedCategories={setCheckedCategories}
+              />
+            </motion.div>
+          )}
           {showPodcast && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -1165,6 +1265,20 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         setRunPart4={setRunTutorialPart4}
         catIconInteracted={catIconInteracted}
       />
+
+      {/* Help Modal */}
+      <AnimatePresence>
+        {showHelp && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-0 right-4 w-[26rem] bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg z-50 max-h-[80vh] flex flex-col"
+          >
+            <HelpContent onClose={() => setShowHelp(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

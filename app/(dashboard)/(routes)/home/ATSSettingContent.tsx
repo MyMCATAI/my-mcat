@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Category } from "@/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import FilterButton from "@/components/ui/FilterButton";
+import Icon from "@/components/ui/icon";
+import { RotateCw, Construction } from 'lucide-react';
+import ReactConfetti from 'react-confetti';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Option {
   id: string;
@@ -11,9 +15,48 @@ interface Option {
 }
 
 const options: Option[] = [
-  { id: "option1", label: "Can Kalypso ask you questions?" },
-  { id: "option2", label: "Want to change current categories?" },
-  { id: "option3", label: "Update Knowledge Profiles" },
+  // { id: "option1", label: "Can Kalypso ask you questions?" },
+  // { id: "option2", label: "Want to change current categories?" },
+  // { id: "option3", label: "Update Knowledge Profiles" },
+];
+
+const subjects = [
+  { 
+    name: "Chemistry", 
+    icon: "atoms",
+    progress: 45, 
+    color: "#E6B800" 
+  },
+  { 
+    name: "Biology", 
+    icon: "evolution",
+    progress: 30, 
+    color: "#4CAF50" 
+  },
+  { 
+    name: "Biochemistry", 
+    icon: "dna_n_biotechnology",
+    progress: 60, 
+    color: "#2196F3" 
+  },
+  { 
+    name: "Psychology", 
+    icon: "cognition",
+    progress: 25, 
+    color: "#9C27B0" 
+  },
+  { 
+    name: "Physics", 
+    icon: "force",
+    progress: 75, 
+    color: "#800000" 
+  },
+  { 
+    name: "Sociology", 
+    icon: "soconcom",
+    progress: 40, 
+    color: "#FF5722" 
+  }
 ];
 
 interface ATSSettingContentProps {
@@ -48,11 +91,44 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isUpdatingProfiles, setIsUpdatingProfiles] = useState(false);
+  const [completedCategories, setCompletedCategories] = useState<Set<string>>(new Set());
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: 0,
+    height: 0
+  });
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [showSubjectFilter, setShowSubjectFilter] = useState(false);
+  const [selectedSubjectsForShuffle, setSelectedSubjectsForShuffle] = useState<Set<string>>(
+    new Set(subjects.map(subject => subject.name))
+  );
+
+  useEffect(() => {
+    audioRef.current = new Audio('/levelup.mp3');
+  }, []);
 
   useEffect(() => {
     fetchCategories(searchQuery, selectedSubject, currentPage);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSubject, currentPage]);
+
+  useEffect(() => {
+    // Set window size for confetti
+    setWindowSize({
+      width: window.innerWidth,
+      height: window.innerHeight
+    });
+
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchCategories = async (
     searchQuery: string,
@@ -107,15 +183,17 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
   };
 
   // Save checked categories to local storage whenever they change
-  const handleCategoryCheck = (category: Category, isChecked: boolean) => {
-    if (isChecked && checkedCategories.length >= 7) {
-      setLimitMessage("Maximum limit of 7 categories reached.");
-      return;
-    }
-    setLimitMessage(null);
-    setCheckedCategories((prev) =>
-      isChecked ? [category, ...prev] : prev.filter((c) => c.id !== category.id)
-    );
+  const handleCategoryCheck = (categoryId: string) => {
+    setCompletedCategories(prev => {
+      const newCompleted = new Set(prev);
+      if (!newCompleted.has(categoryId)) {
+        newCompleted.add(categoryId);
+        setShowConfetti(true);
+        audioRef.current?.play();
+        setTimeout(() => setShowConfetti(false), 3000);
+      }
+      return newCompleted;
+    });
   };
 
   const handleUpdateKnowledgeProfiles = async () => {
@@ -140,7 +218,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
     switch (activeOption) {
       case "option2":
         return (
-          <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md">
+          <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-2 rounded-lg shadow-md">
             <div className="space-y-2">
               {isLoading ? (
                 <div className="text-center py-2">Please wait...</div>
@@ -197,7 +275,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
                           (c) => c.id === category.id
                         )}
                         onCheckedChange={(isChecked) =>
-                          handleCategoryCheck(category, isChecked as boolean)
+                          handleCategoryCheck(category.id)
                         }
                       />
                       <span className="text-[--theme-text-color] text-md">
@@ -315,9 +393,198 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
   };
 
   return (
-    <>
+    <div className="max-h-[80vh] overflow-y-auto p-4">
+      {showConfetti && (
+        <ReactConfetti
+          width={windowSize.width}
+          height={windowSize.height}
+          recycle={false}
+          numberOfPieces={200}
+          gravity={0.2}
+        />
+      )}
+
+      <Tabs defaultValue="categories" className="w-full">
+        <TabsList className="w-full mb-4">
+          <TabsTrigger value="categories" className="flex-1">Current Categories</TabsTrigger>
+          <TabsTrigger value="progress" className="flex-1">Progress Tracking</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="progress" className="mt-0">
+          <div className="relative">
+            <div className="grid grid-cols-3 gap-4 opacity-50">
+              {subjects.map((subject) => (
+                <div 
+                  key={subject.name} 
+                  className="flex flex-col items-center p-2 rounded-lg bg-[--theme-leaguecard-color] min-h-[10rem]"
+                  style={{
+                    boxShadow: "0 0.125rem 0.25rem rgba(0, 0, 0, 0.1)",
+                  }}
+                >
+                  <div className="flex-1 flex items-center justify-center">
+                    <Icon
+                      name={subject.icon}
+                      className="w-12 h-12 transform scale-75"
+                      color={subject.color}
+                    />
+                  </div>
+                  <span 
+                    className="text-xs font-medium text-center block mb-4"
+                    style={{ color: subject.color }}
+                  >
+                    {subject.name}
+                  </span>
+                  <div className="w-full h-1 bg-[--theme-background-color] rounded-full overflow-hidden">
+                    <div 
+                      className="h-full transition-all duration-300"
+                      style={{ 
+                        width: `${subject.progress}%`,
+                        backgroundColor: subject.color
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[--theme-background-color] bg-opacity-80 rounded-lg">
+              <Construction className="w-12 h-12 text-[--theme-text-color] mb-2" />
+              <p className="text-[--theme-text-color] text-lg font-medium">
+                This feature is still under construction
+              </p>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="categories" className="mt-0">
+          {/* Checkable Categories List */}
+          <div className="space-y-2 bg-[--theme-leaguecard-color] p-4 rounded-lg">
+            {checkedCategories.slice(0, 6).map((category, index) => (
+              <div 
+                key={category.id}
+                className="flex items-center justify-between gap-2 p-2 rounded transition-colors"
+              >
+                <span className="text-sm font-medium text-[--theme-text-color]">
+                  {index + 1}. {category.conceptCategory}
+                </span>
+                <Checkbox
+                  checked={completedCategories.has(category.id)}
+                  onCheckedChange={() => handleCategoryCheck(category.id)}
+                  className="h-5 w-5 border-2 border-[--theme-border-color]"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-2 mt-4">
+            <button
+              onClick={() => {
+                setShowSubjectFilter(true);
+              }}
+              className="w-full py-2 px-4 rounded-lg 
+                bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                border-2 border-[--theme-border-color] 
+                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                shadow-md transition-colors duration-200"
+            >
+              Shuffle Categories
+            </button>
+
+            {showSubjectFilter && (
+              <div className="mt-4 p-4 rounded-lg bg-[--theme-leaguecard-color] border-2 border-[--theme-border-color]">
+                <h4 className="text-[--theme-text-color] text-base mb-4">
+                  Do you want to focus on specific subjects?
+                </h4>
+                
+                <div className="space-y-2 mb-4">
+                  {subjects.map((subject) => (
+                    <div 
+                      key={subject.name}
+                      className="flex items-center gap-2"
+                    >
+                      <Checkbox
+                        id={`shuffle-filter-${subject.name}`}
+                        checked={selectedSubjectsForShuffle.has(subject.name)}
+                        onCheckedChange={(checked) => {
+                          setSelectedSubjectsForShuffle(prev => {
+                            const newSet = new Set(prev);
+                            if (checked) {
+                              newSet.add(subject.name);
+                            } else {
+                              newSet.delete(subject.name);
+                            }
+                            return newSet;
+                          });
+                        }}
+                        className="h-4 w-4"
+                      />
+                      <label 
+                        htmlFor={`shuffle-filter-${subject.name}`}
+                        className="text-sm font-medium"
+                        style={{ color: subject.color }}
+                      >
+                        {subject.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+
+                <Button
+                  onClick={() => {
+                    const filteredCategories = selectedSubjectsForShuffle.size > 0
+                      ? checkedCategories.filter(cat => 
+                          Array.from(selectedSubjectsForShuffle).some(subject => 
+                            cat.subject === subject
+                          )
+                        )
+                      : checkedCategories;
+
+                    const shuffled = [...filteredCategories];
+                    for (let i = shuffled.length - 1; i > 0; i--) {
+                      const j = Math.floor(Math.random() * (i + 1));
+                      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                    }
+                    setCheckedCategories(shuffled);
+                    setShowSubjectFilter(false);
+                    setSelectedSubjectsForShuffle(new Set());
+                  }}
+                  className="w-full bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+                >
+                  Done
+                </Button>
+              </div>
+            )}
+
+            <button
+              onClick={() => setActiveOption("option2")}
+              className="w-full py-2 px-4 rounded-lg 
+                bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                border-2 border-[--theme-border-color] 
+                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                shadow-md transition-colors duration-200"
+            >
+              Search For A Specific Topic
+            </button>
+
+            <button
+              onClick={() => {
+                // Logic for suggesting subjects based on weaknesses
+              }}
+              className="w-full py-2 px-4 rounded-lg 
+                bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                border-2 border-[--theme-border-color] 
+                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                shadow-md transition-colors duration-200"
+            >
+              Suggest Me Subjects for My Weaknesses
+            </button>
+          </div>
+        </TabsContent>
+      </Tabs>
+
       <div className="p-4 space-y-4 flex-grow overflow-y-auto">
-        {options.map((option) => (
+        {/* {options.map((option) => (
           <div key={option.id} className="relative">
             <button
               className={`w-full text-left p-3 rounded-lg transition-colors duration-200 ${
@@ -330,23 +597,14 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
               <span>{option.label}</span>
             </button>
             {activeOption === option.id && (
-              <div className="mt-2">{renderOptionContent()}</div>
+              <div className="mt-2">
+                {renderOptionContent()}
+              </div>
             )}
           </div>
-        ))}
+        ))} */}
       </div>
-
-      <div className="p-4">
-        <Button
-          className="w-full text-[--theme-text-color] bg-transparent font-mono py-2 px-4 rounded-lg 
-            hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-            transition duration-200"
-          onClick={handleDone}
-        >
-          DONE
-        </Button>
-      </div>
-    </>
+    </div>
   );
 };
 

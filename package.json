@@ -106,6 +106,7 @@
     "react-chartjs-2": "^5.2.0",
     "react-chatbot-kit": "^2.2.2",
     "react-chatbotify": "^2.0.0-beta.4",
+    "react-confetti": "^6.1.0",
     "react-countup": "^6.5.3",
     "react-dom": "^18",
     "react-draggable": "^4.4.6",
