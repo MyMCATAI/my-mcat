@@ -47,13 +47,16 @@ export async function POST(request: Request) {
       const userEmail = user.emailAddresses[0]?.emailAddress;
       
       if (user) {
-        // First try to get firstName from Clerk user, then fallback to UserInfo
-        let referrerName = user.firstName;
+        // First try to get firstName from UserInfo, then fallback to Clerk user
+        let referrerName: string | undefined;
+        
+        const userInfo = await prismadb.userInfo.findUnique({
+          where: { userId }
+        });
+        referrerName = userInfo?.firstName ||undefined
+        
         if (!referrerName) {
-          const userInfo = await prismadb.userInfo.findUnique({
-            where: { userId }
-          });
-          referrerName = userInfo?.firstName || 'A friend';
+          referrerName = user.firstName || 'A friend';
         }
         
         // Send both welcome and referral emails
