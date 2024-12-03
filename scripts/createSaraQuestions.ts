@@ -9,8 +9,8 @@ dotenv.config({ path: '.env' });
 
 const prisma = new PrismaClient();
 
-async function createQuestionsFromCSV(dryRun: boolean = true) {
-  const csvFilePath = path.join(process.cwd(), 'data', 'Nov24Questions.csv');
+async function createQuestionsFromCSV(dryRun: boolean = true, contentCategory?: string) {
+  const csvFilePath = path.join(process.cwd(), 'data', 'Dec2Questions.csv');
   const fileContent = fs.readFileSync(csvFilePath, { encoding: 'utf-8' });
 
   // Fetch all categories and existing questions' questionIDs
@@ -38,9 +38,16 @@ async function createQuestionsFromCSV(dryRun: boolean = true) {
 
     let questionsToAdd = 0;
     let questionsSkipped = 0;
+    let questionsFiltered = 0;
 
     for (const record of records) {
       try {
+        // Skip if content category doesn't match filter
+        if (contentCategory && record['Kontent Category (K)'] !== contentCategory) {
+          questionsFiltered++;
+          continue;
+        }
+
         const category = categories.find(cat => 
           cat.contentCategory === record['Kontent Category (K)'] &&
           cat.conceptCategory === record['Concept Category (C)']
@@ -81,6 +88,10 @@ async function createQuestionsFromCSV(dryRun: boolean = true) {
 
     await prisma.$disconnect();
     console.log(`\nSummary:`);
+    if (contentCategory) {
+      console.log(`Filtering for content category: ${contentCategory}`);
+      console.log(`${questionsFiltered} questions filtered out`);
+    }
     console.log(`${questionsToAdd} questions would ${dryRun ? 'be' : 'were'} added`);
     console.log(`${questionsSkipped} questions skipped (already exist)`);
     
@@ -145,4 +156,6 @@ async function createQuestion(record: any, categoryId: string, type: 'flashcard'
   console.log(`Created ${type} question: ${question.questionID}`);
 }
 
-createQuestionsFromCSV().catch(console.error);
+// Update the script execution
+const contentCategory = process.argv[2]; // Get content category from command line argument
+createQuestionsFromCSV(true, contentCategory).catch(console.error);
