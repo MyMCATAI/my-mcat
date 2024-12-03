@@ -3,13 +3,28 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 import { Test } from "@/types";
-import { startOfDay, endOfDay } from 'date-fns';
+import { startOfDay, endOfDay } from "date-fns";
 
 type ConceptCategory = {
   name: string;
   averageScore: number;
   contentCategories: string[];
 };
+
+async function getRecentTestScores(userId: string) {
+  const recentTests = await prisma.userTest.findMany({
+    where: {
+      userId,
+      score: { not: null },
+      finishedAt: { not: null },
+    },
+    orderBy: { finishedAt: "desc" },
+    take: 3,
+    select: { score: true },
+  });
+
+  return recentTests.map((test) => test.score as number);
+}
 
 async function getOrderedTests(
   userId: string,
@@ -160,9 +175,11 @@ async function getOrderedTests(
       take: 25,
     }),
   ]);
-  const takenTestIds = new Set(userTests
-    .filter((test: any) => test.finishedAt !== null)
-    .map((test: any) => test.testId));
+  const takenTestIds = new Set(
+    userTests
+      .filter((test: any) => test.finishedAt !== null)
+      .map((test: any) => test.testId)
+  );
   console.log(`User has taken ${takenTestIds.size} tests`);
 
   const recentlyTakenPassageIds = new Set(
@@ -170,7 +187,9 @@ async function getOrderedTests(
   );
 
   // Filter tests that have not been taken yet
-  const filteredTests = allTests.filter((test: { id: unknown }) => !takenTestIds.has(test.id));
+  const filteredTests = allTests.filter(
+    (test: { id: unknown }) => !takenTestIds.has(test.id)
+  );
   console.log(`Number of tests not yet taken: ${filteredTests.length}`);
 
   // Further filter tests that have passages that have already been taken
@@ -260,13 +279,34 @@ async function getOrderedTests(
     }
   );
 
-  // Sort tests: untaken tests first (by relevance score), then taken tests (by relevance score)
+  // Add this before the testsWithRelevance mapping
+  const recentScores = await getRecentTestScores(userId);
+  const needsEasierTests =
+    recentScores.length === 3 && recentScores.every((score) => score < 60); // Using 60% as threshold
+
+  // Modify the sorting logic (around line 264)
   const sortedTests = testsWithRelevance.sort(
     (
-      a: { taken: any; relevanceScore: number },
-      b: { taken: any; relevanceScore: number }
+      a: { taken: any; relevanceScore: number; difficulty?: number },
+      b: { taken: any; relevanceScore: number; difficulty?: number }
     ) => {
-      if (!a.taken && !b.taken) return b.relevanceScore - a.relevanceScore;
+      if (needsEasierTests) {
+        // If user needs easier tests, prioritize level 1-2 tests
+        if (!a.taken && !b.taken) {
+          const aIsEasy = (a.difficulty || 0) <= 2;
+          const bIsEasy = (b.difficulty || 0) <= 2;
+
+          if (aIsEasy && !bIsEasy) return -1;
+          if (!aIsEasy && bIsEasy) return 1;
+
+          // If both tests are of same difficulty category, use relevance score
+          return b.relevanceScore - a.relevanceScore;
+        }
+      } else {
+        // Use original sorting logic
+        if (!a.taken && !b.taken) return b.relevanceScore - a.relevanceScore;
+      }
+
       if (!a.taken) return -1;
       if (!b.taken) return 1;
       return b.relevanceScore - a.relevanceScore;
@@ -370,7 +410,7 @@ export async function GET(req: Request) {
 
     // Get the number of tests completed today
     const today = new Date();
-    console.log('Checking tests completed for date:', today);
+    console.log("Checking tests completed for date:", today);
 
     // First, let's check all tests for this user today without restrictions
     const allUserTestsToday = await prisma.userTest.findMany({
@@ -383,7 +423,7 @@ export async function GET(req: Request) {
       },
     });
 
-    console.log('All user tests today:', allUserTestsToday);
+    console.log("All user tests today:", allUserTestsToday);
 
     // Then do our actual count
     const testsCompletedToday = await prisma.userTest.count({
@@ -396,7 +436,7 @@ export async function GET(req: Request) {
       },
     });
 
-    console.log('Tests completed count:', testsCompletedToday);
+    console.log("Tests completed count:", testsCompletedToday);
 
     if (isDiagnostic) {
       return new NextResponse(
@@ -446,10 +486,13 @@ export async function GET(req: Request) {
       console.log("Calling getOrderedTests");
       const testsData = await getOrderedTests(userId, page, pageSize, CARSonly);
 
-      return new NextResponse(JSON.stringify({ ...testsData, testsCompletedToday }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new NextResponse(
+        JSON.stringify({ ...testsData, testsCompletedToday }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
   } catch (error) {
     console.error("[TESTS_GET]", error);
