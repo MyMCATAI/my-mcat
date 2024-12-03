@@ -1,16 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import { DoctorOfficeStats, ReportData } from '@/types';
-import { Progress } from '@/components/ui/progress';
-import { FaFire } from 'react-icons/fa';
-import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, getClinicCostPerDay, getLevelNumber } from '@/utils/calculateResourceTotals';
-import axios from 'axios';
-import { HelpCircle } from 'lucide-react'; // Add this import
+import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+import { DoctorOfficeStats, ReportData } from "@/types";
+import { Progress } from "@/components/ui/progress";
+import { FaFire } from "react-icons/fa";
+import {
+  calculatePlayerLevel,
+  getPatientsPerDay,
+  calculateTotalQC,
+  getClinicCostPerDay,
+  getLevelNumber,
+} from "@/utils/calculateResourceTotals";
+import { HelpCircle } from "lucide-react"; // Add this import
 import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
 
 // Dynamic import for ChatBotWidgetNoChatBot
 const ChatBotWidgetNoChatBot = dynamic(
-  () => import('@/components/chatbot/ChatBotWidgetDoctorsOffice'),
+  () => import("@/components/chatbot/ChatBotWidgetDoctorsOffice"),
   {
     ssr: false,
     loading: () => <div>Loading...</div>,
@@ -18,7 +23,9 @@ const ChatBotWidgetNoChatBot = dynamic(
 );
 
 // Mapping function to convert DoctorOfficeStats to ReportData
-const mapDoctorOfficeStatsToReportData = (stats: DoctorOfficeStats): ReportData => {
+const mapDoctorOfficeStatsToReportData = (
+  stats: DoctorOfficeStats
+): ReportData => {
   return {
     userScore: stats.qualityOfCare * 50,
     totalTestsTaken: stats.patientsPerDay,
@@ -29,7 +36,7 @@ const mapDoctorOfficeStatsToReportData = (stats: DoctorOfficeStats): ReportData 
     averageTimePerQuestion: 5,
     averageTimePerTest: 50,
     categoryAccuracy: {},
-    streak: stats.streak
+    streak: stats.streak,
   };
 };
 
@@ -38,15 +45,26 @@ interface ResourcesMenuProps {
   userRooms: string[];
   totalCoins: number;
   totalPatients: number;
-  patientsPerDay:number;
+  patientsPerDay: number;
 }
-const ResourcesMenu: React.FC<ResourcesMenuProps> = ({ reportData, userRooms, totalCoins, totalPatients,patientsPerDay }) => {
+const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
+  reportData,
+  userRooms,
+  totalCoins,
+  totalPatients,
+  patientsPerDay,
+}) => {
   const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
-  const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(null);
+  const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(
+    null
+  );
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
   const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
 
-  const handleAssistantResponse = (message: string, dismissFunc: () => void) => {
+  const handleAssistantResponse = (
+    message: string,
+    dismissFunc: () => void
+  ) => {
     setAssistantMessage(message);
     setDismissMessage(() => dismissFunc);
   };
@@ -80,10 +98,14 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({ reportData, userRooms, to
   return (
     <div className="h-full">
       <div className="flex flex-col bg-[--theme-leaguecard-color] text-[--theme-text-color] items-center h-full rounded-lg p-4 overflow-auto relative">
-        <HelpCircle 
-          className="absolute top-2 right-2 text-[--theme-border-color] hover:text-gray-200 transition-colors duration-200 cursor-pointer z-10" 
+        <HelpCircle
+          className="absolute top-2 right-2 text-[--theme-border-color] hover:text-gray-200 transition-colors duration-200 cursor-pointer z-10"
           size={20}
-          onClick={() => openTutorialDialog("https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TutorialVid.mp4")}
+          onClick={() =>
+            openTutorialDialog(
+              "https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TutorialVid.mp4"
+            )
+          }
         />
         <div className="flex flex-col items-center mb-1 w-full">
           <div className="w-48 h-48 bg-[--theme-doctorsoffice-accent] border-2 border-[--theme-border-color] rounded-lg mb-4 overflow-hidden relative">
@@ -114,7 +136,9 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({ reportData, userRooms, to
           <div className="space-y-3">
             <div className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">1</div>
+                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
+                  1
+                </div>
                 <span className="font-medium">Sarah Kim</span>
               </div>
               <div className="flex items-center gap-2">
@@ -124,7 +148,9 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({ reportData, userRooms, to
             </div>
             <div className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">2</div>
+                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
+                  2
+                </div>
                 <span className="font-medium">John Doe</span>
               </div>
               <div className="flex items-center gap-2">
@@ -134,7 +160,9 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({ reportData, userRooms, to
             </div>
             <div className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">3</div>
+                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
+                  3
+                </div>
                 <span className="font-medium">Alex Chen</span>
               </div>
               <div className="flex items-center gap-2">
@@ -161,7 +189,12 @@ interface StatBarProps {
   showDecimals?: boolean;
 }
 
-const StatBar: React.FC<StatBarProps> = ({ label, value, max, showDecimals = false }) => {
+const StatBar: React.FC<StatBarProps> = ({
+  label,
+  value,
+  max,
+  showDecimals = false,
+}) => {
   const percentage = (value / max) * 100;
 
   return (
@@ -187,7 +220,7 @@ const DaysStreak: React.FC<DaysStreakProps> = ({ days }) => {
       className="w-full max-w-md rounded-lg p-4 mt-6 mb-2 text-white shadow-lg"
       style={{
         background:
-          'linear-gradient(to right, var(--theme-gradient-startstreak), var(--theme-gradient-endstreak))',
+          "linear-gradient(to right, var(--theme-gradient-startstreak), var(--theme-gradient-endstreak))",
       }}
     >
       <div className="flex items-center justify-between">
@@ -206,11 +239,11 @@ const DaysStreak: React.FC<DaysStreakProps> = ({ days }) => {
 };
 
 const getStreakMessage = (days: number): string => {
-  if (days < 3) return 'Great start! Keep the momentum going!';
+  if (days < 3) return "Great start! Keep the momentum going!";
   if (days < 7) return "Impressive! You're building a solid habit!";
   if (days < 14) return "Wow! Your dedication is paying off!";
   if (days < 30) return "Incredible streak! You're unstoppable!";
-  return 'Legendary! Your consistency is truly inspiring!';
+  return "Legendary! Your consistency is truly inspiring!";
 };
 
 export default ResourcesMenu;
