@@ -233,13 +233,13 @@ export default function OnboardingPage() {
   const emailIsValid = isValidEmail(friendEmail)
 
   return (
-    <div className="flex items-center justify-center min-h-screen relative">
+    <div className="flex items-center justify-center min-h-screen relative px-4 py-6 md:px-0">
       {(step === 4 && kalypsoMessage) && (
         <motion.div 
           initial={{ x: '100%' }}
           animate={{ x: '0%' }}
           transition={{ type: "spring", duration: 1 }}
-          className="fixed -bottom-24 -right-10 translate-y-1/4 z-50"
+          className="fixed -bottom-24 -right-10 translate-y-1/4 z-50 hidden md:block"
         >
           <div className="w-[48rem] h-[48rem] relative">
             <Image
@@ -256,12 +256,12 @@ export default function OnboardingPage() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="w-full max-w-2xl p-8 rounded-lg border border-[#5F7E92] bg-[#001226] relative"
+        className="w-full max-w-2xl p-4 md:p-8 rounded-lg border border-[#5F7E92] bg-[#001226] relative"
       >
-        <div className="absolute right-0 translate-x-[calc(100%+2rem)] h-full top-0">
+        <div className="md:absolute md:right-0 md:translate-x-[calc(100%+2rem)] h-full top-0 relative md:static">
           <AnimatePresence>
             {gpaMessage && (
-              <Tooltip message={gpaMessage} topPosition={160} />
+              <Tooltip message={gpaMessage} topPosition={160} className="md:static fixed bottom-4 left-4 right-4 z-50" />
             )}
             {scoreMessage && (
               <Tooltip message={scoreMessage} topPosition={252} />
@@ -276,13 +276,13 @@ export default function OnboardingPage() {
         </div>
 
         {step === 1 && (
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <h1 className="text-3xl font-bold text-white">
+          <div className="space-y-6 md:space-y-8">
+            <div className="text-center space-y-3 md:space-y-4">
+              <h1 className="text-2xl md:text-3xl font-bold text-white">
                 {"Welcome to Your MCAT Journey! 🎉"}
               </h1>
-              <div className="space-y-3">
-                <p className="text-gray-300 text-lg">
+              <div className="space-y-2 md:space-y-3">
+                <p className="text-gray-300 text-base md:text-lg">
                   {"Congratulations on taking the first step towards crushing the MCAT! You've just joined a community of of successful students who used MyMCAT to achieve their dream scores."}
                 </p>
                 <p className="text-gray-300">
@@ -529,10 +529,10 @@ export default function OnboardingPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-6 border border-[#5F7E92] rounded-lg bg-[#001226]/50 space-y-4"
+                className="p-4 md:p-6 border border-[#5F7E92] rounded-lg bg-[#001226]/50 space-y-3 md:space-y-4"
               >
-                <h3 className="text-lg font-semibold text-white">{selectedSchool.name}</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <h3 className="text-base md:text-lg font-semibold text-white">{selectedSchool.name}</h3>
+                <div className="grid grid-cols-2 gap-2 md:gap-4">
                   <div className="bg-[#0A1A2F] p-3 rounded-md">
                     <div className="text-xs text-gray-400 mb-1">Average MCAT</div>
                     <div className="text-white font-medium text-lg">{selectedSchool.averageMCAT}</div>
