@@ -309,7 +309,7 @@ body.theme-sunsetCity * {
   --theme-botchatbox-color: #dcdcdc; /* Transparent pale violet red */
   --theme-hover-text: #ffffff;
   --theme-border-color: #ff0080; /* Pale violet red */
-  --theme-leaguecard-color: #ffedf6e6; /* Matching mainbox-color */
+  --theme-leaguecard-color: #ffffffe6; /* Matching mainbox-color */
   --theme-navbutton-color: #9a2641; /* Pale violet red */
   --svg-invert: 0; /* Changed to 0 to keep original SVG colors */
   --theme-reddit-color: #ffc9fccd; /* Misty rose */

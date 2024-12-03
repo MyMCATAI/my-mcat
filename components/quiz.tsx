@@ -374,18 +374,18 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
             const isSelected = selectedAnswer === option;
             const isCorrectAnswer = option === correctAnswer;
             
-            let buttonClass = 'w-full text-left p-2 rounded text-black ';
+            let buttonClass = 'w-full text-left p-2 rounded text-[--theme-text-color] ';
             
             if (hasAnswered) {
               if (isSelected) {
-                buttonClass += isCorrectAnswer ? 'bg-green-500 text-white' : 'bg-red-500 text-white';
+                buttonClass += isCorrectAnswer ? 'bg-green-500' : 'bg-red-500';
               } else if (isCorrectAnswer) {
-                buttonClass += 'bg-green-500 text-white';
+                buttonClass += 'bg-green-500';
               } else {
-                buttonClass += 'bg-gray-100';
+                buttonClass += 'bg-[--theme-leaguecard-color]';
               }
             } else {
-              buttonClass += 'bg-gray-100 hover:bg-gray-200';
+              buttonClass += 'bg-[--theme-leaguecard-color] hover:bg-[--theme-hover-color]';
             }
 
             return (
