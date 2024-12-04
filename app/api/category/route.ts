@@ -56,80 +56,92 @@ export async function GET(req: Request) {
     const useKnowledgeProfiles = searchParams.get('useKnowledgeProfiles') === 'true';
     const includeCARS = searchParams.get('includeCARS') === 'true';
 
-
-    // TODO josh update this to use the new diagnostic scores
-
-
-    
-    let result;
-
     if (useKnowledgeProfiles) {
-      // Fetch all knowledge profiles for the user
-      const [knowledgeProfiles, userInfo] = await Promise.all([
-        prisma.knowledgeProfile.findMany({
-          where: { userId },
-          orderBy: { conceptMastery: 'asc' },
-          include: { category: true }
-        }),
-        prisma.userInfo.findUnique({
-          where: { userId },
-          select: { diagnosticScores: true }
-        })
-      ]);
-
-      // Fetch all categories
-      let allCategories = await prisma.category.findMany();
-
-      // If includeCARS is false, filter out categories with subjectCategory "CARs"
-      if (!includeCARS) {
-        allCategories = allCategories.filter(category => category.subjectCategory !== "CARs");
-      }
-
-      // Combine knowledge profiles with categories
-      let sortedCategories = allCategories.map(category => {
-        const profile = knowledgeProfiles.find(p => p.categoryId === category.id);
-        return {
-          ...category,
-          conceptMastery: profile ? profile.conceptMastery : null
-        };
+      // Get user info for diagnostic scores
+      const userInfo = await prisma.userInfo.findUnique({
+        where: { userId },
+        select: { diagnosticScores: true }
       });
 
-      // Sort categories: those with profiles first (by conceptMastery), then those without
+      // Fetch categories with knowledge profiles in a single query
+      let categories = await prisma.category.findMany({
+        where: includeCARS ? undefined : {
+          NOT: {
+            subjectCategory: "CARs"
+          }
+        },
+        include: {
+          knowledgeProfiles: {
+            where: { userId },
+            select: {
+              completedAt: true,
+              completionPercentage: true,
+              conceptMastery: true,
+              contentMastery: true
+            }
+          }
+        }
+      });
+
+      // Transform the data to flatten the structure
+      let sortedCategories = categories.map(category => ({
+        ...category,
+        completedAt: category.knowledgeProfiles[0]?.completedAt || null,
+        completionPercentage: category.knowledgeProfiles[0]?.completionPercentage || 0,
+        conceptMastery: category.knowledgeProfiles[0]?.conceptMastery || null,
+        contentMastery: category.knowledgeProfiles[0]?.contentMastery || null,
+        isCompleted: category.knowledgeProfiles[0]?.completedAt !== null,
+        knowledgeProfiles: undefined
+      }));
+
+      // Updated sorting logic: completed items last, then by concept mastery
       sortedCategories.sort((a, b) => {
-        if (a.conceptMastery === null && b.conceptMastery === null) return 0;
-        if (a.conceptMastery === null) return 1;
-        if (b.conceptMastery === null) return -1;
-        return a.conceptMastery - b.conceptMastery;
+        // First, sort by completion status
+        if (a.isCompleted !== b.isCompleted) {
+          return a.isCompleted ? 1 : -1;
+        }
+        
+        // Then sort by concept mastery for incomplete items
+        if (!a.isCompleted && !b.isCompleted) {
+          if (a.conceptMastery === null && b.conceptMastery === null) return 0;
+          if (a.conceptMastery === null) return 1;
+          if (b.conceptMastery === null) return -1;
+          return a.conceptMastery - b.conceptMastery;
+        }
+        
+        return 0;
       });
 
-
+      // Apply diagnostic score sorting only to incomplete items
       if (userInfo?.diagnosticScores) {
-        console.log('User diagnostic scores:', userInfo.diagnosticScores);
-        // Sort the categories by diagnostic scores before pagination
-        sortedCategories = sortCategoriesByDiagnosticScores(
-          sortedCategories, 
+        const incompleteCategories = sortedCategories.filter(cat => !cat.isCompleted);
+        const completedCategories = sortedCategories.filter(cat => cat.isCompleted);
+        
+        const sortedIncomplete = sortCategoriesByDiagnosticScores(
+          incompleteCategories,
           userInfo.diagnosticScores
         );
+        
+        sortedCategories = [...sortedIncomplete, ...completedCategories];
       }
 
-      // Paginate the results
+      // Paginate results
       const startIndex = (page - 1) * pageSize;
       const paginatedCategories = sortedCategories.slice(startIndex, startIndex + pageSize);
 
-      result = {
+      return NextResponse.json({
         items: paginatedCategories,
         totalPages: Math.ceil(sortedCategories.length / pageSize),
         currentPage: page
-      };
+      });
     } else {
       // Use the existing getCategories function for normal fetching
-      result = await getCategories({ 
+      const result = await getCategories({ 
         page, 
         pageSize, 
       });
+      return NextResponse.json(result);
     }
-
-    return NextResponse.json(result);
   } catch (error) {
     console.log('[CATEGORIES_GET]', error);
     return new NextResponse("Internal Error", { status: 500 });

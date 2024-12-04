@@ -112,7 +112,9 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEventStart, setNewEventStart] = useState<Date | null>(null);
   const [newEventEnd, setNewEventEnd] = useState<Date | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
+    null
+  );
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [date, setDate] = useState(currentDate);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -121,33 +123,21 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
 
   useEffect(() => {
     fetchActivities();
-  }, [user,activities]);
+  }, [user, activities]);
 
-  useEffect(() => {
-    const tutorialPart2Played = localStorage.getItem("tutorialPart2Played");
-    if (!tutorialPart2Played || tutorialPart2Played === "false") {
-      const timer = setTimeout(() => {
-        setRunTutorialPart2(true);
-        localStorage.setItem("tutorialPart2Played", "true");
-      }, 6000); // Changed from 20000 to 6000 milliseconds
+  // useEffect(() => {
+  //   const tutorialPart3Played = localStorage.getItem("tutorialPart3Played");
+  //   const tutorialPart2Played = localStorage.getItem("tutorialPart2Played");
 
-      return () => clearTimeout(timer);
-    }
-  }, []);
+  //   if (tutorialPart2Played === "true" && (!tutorialPart3Played || tutorialPart3Played === "false")) {
+  //     const timer = setTimeout(() => {
+  //       setRunTutorialPart3(true);
+  //       localStorage.setItem("tutorialPart3Played", "true");
+  //     }, 8000); // 8 seconds after Part 2
 
-  useEffect(() => {
-    const tutorialPart3Played = localStorage.getItem("tutorialPart3Played");
-    const tutorialPart2Played = localStorage.getItem("tutorialPart2Played");
-    
-    if (tutorialPart2Played === "true" && (!tutorialPart3Played || tutorialPart3Played === "false")) {
-      const timer = setTimeout(() => {
-        setRunTutorialPart3(true);
-        localStorage.setItem("tutorialPart3Played", "true");
-      }, 8000); // 8 seconds after Part 2
-
-      return () => clearTimeout(timer);
-    }
-  }, [setRunTutorialPart3]);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [setRunTutorialPart3]);
 
   const fetchActivities = async () => {
     if (!user?.id) return;
@@ -198,14 +188,14 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
           )
         );
         await updateEventInBackend(updatedEvent);
-        
+
         // Check if event was moved to/from today and update the schedule
         const wasToday = isToday(event.start);
         const isMovedToToday = isToday(start);
         if (wasToday || isMovedToToday) {
           updateTodaySchedule();
         }
-        
+
         onInteraction();
       } catch (error) {
         console.error("Error updating event:", error);
@@ -232,12 +222,12 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
           )
         );
         await updateEventInBackend(updatedEvent);
-        
+
         // Check if event was resized on today's date
         if (isToday(start) || isToday(event.start)) {
           updateTodaySchedule();
         }
-        
+
         onInteraction();
       } catch (error) {
         console.error("Error updating event:", error);
@@ -289,10 +279,12 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         // Fetch default tasks only for new events
         let tasks = [];
         try {
-          const defaultTasks = await fetch(`/api/event-task?eventTitle=${eventData.activityTitle}`).then(res => res.json());
+          const defaultTasks = await fetch(
+            `/api/event-task?eventTitle=${eventData.activityTitle}`
+          ).then((res) => res.json());
           tasks = defaultTasks;
         } catch (error) {
-          console.error('Error fetching default tasks:', error);
+          console.error("Error fetching default tasks:", error);
           tasks = [];
         }
 
@@ -319,14 +311,19 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
           throw new Error(errorData.error || "Failed to create activity");
         }
 
-        const createdActivity: CalendarActivityData & { id: string } = await response.json();
+        const createdActivity: CalendarActivityData & { id: string } =
+          await response.json();
         const calendarEvent = convertToCalendarEvent(createdActivity);
         setEvents((prevEvents) => [...prevEvents, calendarEvent]);
-        
+
         // Update today's schedule if the new event is for today
         const today = new Date();
         const eventDate = new Date(createdActivity.scheduledDate);
-        if (isSameDay(today, eventDate) && onTasksUpdate && updateTodaySchedule) {
+        if (
+          isSameDay(today, eventDate) &&
+          onTasksUpdate &&
+          updateTodaySchedule
+        ) {
           onTasksUpdate(createdActivity.id, tasks);
           updateTodaySchedule();
         }
@@ -344,7 +341,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     setView(newView);
     if (newView === "agenda") {
       // Get the first day of the current month
-      const start = moment(date).startOf('month').toDate();
+      const start = moment(date).startOf("month").toDate();
       setDate(start);
       onDateChange(start);
     }
@@ -365,20 +362,20 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     return { style };
   };
 
-  const handleCalendarClick = () => {
-    const tutorialPart3Played = localStorage.getItem("tutorialPart3Played");
-    if (!tutorialPart3Played || tutorialPart3Played === "false") {
-      setTimeout(() => {
-        setRunTutorialPart3(true);
-        localStorage.setItem("tutorialPart3Played", "true");
-      }, 10000);
-    }
-  };
+  // const handleCalendarClick = () => {
+  //   const tutorialPart3Played = localStorage.getItem("tutorialPart3Played");
+  //   if (!tutorialPart3Played || tutorialPart3Played === "false") {
+  //     setTimeout(() => {
+  //       setRunTutorialPart3(true);
+  //       localStorage.setItem("tutorialPart3Played", "true");
+  //     }, 10000);
+  //   }
+  // };
 
   const handleEventSubmit = (eventData: CalendarActivityData) => {
     // Call handleModalSubmit with the entire eventData object
     handleModalSubmit(eventData);
-    
+
     // You can still log the full event data if needed
   };
 
@@ -400,16 +397,21 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   const confirmDelete = async () => {
     if (eventToDelete) {
       try {
-        const response = await fetch(`/api/calendar-activity?id=${eventToDelete}`, {
-          method: 'DELETE',
-        });
+        const response = await fetch(
+          `/api/calendar-activity?id=${eventToDelete}`,
+          {
+            method: "DELETE",
+          }
+        );
 
         if (!response.ok) {
-          throw new Error('Failed to delete event');
+          throw new Error("Failed to delete event");
         }
 
-        setEvents((currentEvents) => currentEvents.filter((ev) => ev.id !== eventToDelete));
-        const deletedEvent = events.find(ev => ev.id === eventToDelete);
+        setEvents((currentEvents) =>
+          currentEvents.filter((ev) => ev.id !== eventToDelete)
+        );
+        const deletedEvent = events.find((ev) => ev.id === eventToDelete);
         if (deletedEvent && isSameDay(new Date(), deletedEvent.start)) {
           updateTodaySchedule();
         }
@@ -417,15 +419,17 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         onInteraction();
         handleEditModalClose();
       } catch (error) {
-        console.error('Error deleting event:', error);
-        setErrorMessage('Failed to delete event');
+        console.error("Error deleting event:", error);
+        setErrorMessage("Failed to delete event");
       }
     }
     setShowDeleteConfirm(false);
     setEventToDelete(null);
   };
 
-  const handleEditModalSubmit = async (updatedEventData: CalendarActivityData) => {
+  const handleEditModalSubmit = async (
+    updatedEventData: CalendarActivityData
+  ) => {
     if (selectedEvent) {
       try {
         // Create payload with existing tasks if not provided in update
@@ -433,23 +437,23 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
           ...updatedEventData,
           id: selectedEvent.id,
           scheduledDate: selectedEvent.start.toISOString(),
-          tasks: updatedEventData.tasks || selectedEvent.tasks
+          tasks: updatedEventData.tasks || selectedEvent.tasks,
         };
 
         const response = await fetch(`/api/calendar-activity`, {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
-          throw new Error('Failed to update event');
+          throw new Error("Failed to update event");
         }
 
         const updatedEventFromServer = await response.json();
-        
+
         // Update the events state with the new data
         setEvents((currentEvents) =>
           currentEvents.map((ev) =>
@@ -484,9 +488,13 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     }
   };
 
-  const handleNavigate = (newDate: Date, view: View, action: NavigateAction) => {
-    if (view === 'agenda') {
-      const start = moment(newDate).startOf('month').toDate();
+  const handleNavigate = (
+    newDate: Date,
+    view: View,
+    action: NavigateAction
+  ) => {
+    if (view === "agenda") {
+      const start = moment(newDate).startOf("month").toDate();
       setDate(start);
       onDateChange(start);
     } else {
@@ -500,13 +508,32 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   // HARDCODED_TODAY.setHours(0, 0, 0, 0);
 
   return (
-    <div className="custom-calendar" style={{ height: "100%", position: "relative" }}>
+    <div
+      className="custom-calendar"
+      style={{ height: "100%", position: "relative" }}
+      onClick={() => {
+        const tutorialPart2Played = localStorage.getItem("tutorialPart2Played");
+        const tutorialPart3Played = localStorage.getItem("tutorialPart3Played");
+
+        if (
+          tutorialPart2Played === "true" &&
+          (!tutorialPart3Played || tutorialPart3Played === "false") &&
+          !localStorage.getItem("tutorialPart3Started")
+        ) {
+          localStorage.setItem("tutorialPart3Started", "true");
+          setTimeout(() => {
+            setRunTutorialPart3(true);
+            localStorage.setItem("tutorialPart3Played", "true");
+          }, 10000);
+        }
+      }}
+    >
       <DnDCalendar
         className="custom-calendar"
         date={date}
         onNavigate={handleNavigate}
         view="month"
-        views={['month']}
+        views={["month"]}
         events={events}
         localizer={localizer}
         onEventDrop={onEventDrop}
@@ -520,7 +547,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         length={daysInMonth}
         endAccessor={(event) => {
           const eventEnd = moment(event.end);
-          const monthEnd = moment(date).endOf('month');
+          const monthEnd = moment(date).endOf("month");
           return eventEnd.isAfter(monthEnd) ? monthEnd.toDate() : event.end;
         }}
       />
@@ -539,9 +566,9 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         handleSetTab={handleSetTab}
         onTasksUpdate={onTasksUpdate}
       />
-      <ErrorModal 
+      <ErrorModal
         isOpen={errorMessage !== null}
-        message={errorMessage || ''}
+        message={errorMessage || ""}
         onClose={() => setErrorMessage(null)}
       />
       <ConfirmModal

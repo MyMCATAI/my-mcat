@@ -8,6 +8,7 @@ import Icon from "@/components/ui/icon";
 import { RotateCw } from 'lucide-react';
 import ReactConfetti from 'react-confetti';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Check } from "lucide-react";
 
 interface Option {
   id: string;
@@ -154,6 +155,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
         throw new Error("Network response was not ok");
       }
       const data = await response.json();
+      console.log(data);
 
       // Use totalPages directly from the API response
       setTotalPages(data.totalPages);
@@ -278,8 +280,11 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
                           handleCategoryCheck(category.id)
                         }
                       />
-                      <span className="text-[--theme-text-color] text-md">
+                      <span className="text-[--theme-text-color] text-md flex items-center gap-2">
                         {category.conceptCategory}
+                        {category.isCompleted && (
+                          <Check className="h-4 w-4 text-green-500" />
+                        )}
                       </span>
                     </div>
                   ))}
