@@ -580,6 +580,11 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
         </TabsContent>
 
         <TabsContent value="categories" className="mt-0">
+          {/* Informational text */}
+          <div className="text-center mb-4 text-sm text-[--theme-text-color] italic">
+            Checkmarking a topic means that you're done learning it.
+          </div>
+
           {/* Checkable Categories List */}
           <div className="space-y-2 bg-[--theme-leaguecard-color] p-4 rounded-lg">
             {checkedCategories.slice(0, 6).map((category, index) => (

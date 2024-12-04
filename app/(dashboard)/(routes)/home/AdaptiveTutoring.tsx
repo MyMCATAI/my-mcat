@@ -47,6 +47,7 @@ import {
 import DiagnosticDialog from './DiagnosticDialog';
 import ATSTutorial from "./ATSTutorial";
 import CompleteTopicButton from "@/components/CompleteTopicButton";
+import ReactConfetti from 'react-confetti';
 
 interface ContentItem {
   id: string;
@@ -141,6 +142,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const [emptyButtonPosition, setEmptyButtonPosition] = useState({ top: 0, left: 0 });
 
   const [tutorialKey, setTutorialKey] = useState(0);
+
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const fetchInitialData = useCallback(async (useKnowledgeProfiles: boolean = false) => {
     setIsLoading(true);
@@ -689,6 +692,15 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
+      {showConfetti && (
+        <ReactConfetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          recycle={false}
+          numberOfPieces={200}
+          gravity={0.2}
+        />
+      )}
       <div className="flex items-stretch w-full mb-3">
         <div className="flex-grow mr-2.5 ml-2">
           <div className="grid grid-cols-7 gap-3 ats-topic-icons">
@@ -869,10 +881,11 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                         Completed
                       </p>
                     ) : (
-                      <CompleteTopicButton 
-                        categoryId={categories.find(cat => cat.conceptCategory === selectedCategory)?.id || ''} 
+                      <CompleteTopicButton
+                        categoryId={categories.find(cat => cat.conceptCategory === selectedCategory)?.id || ''}
                         categoryName={selectedCategory}
-                        onComplete={()=>handleTopicComplete(categories.find(cat => cat.conceptCategory === selectedCategory)?.id || '')}
+                        onComplete={handleTopicComplete}
+                        setShowConfetti={setShowConfetti}
                       />
                     )}
                   </div>

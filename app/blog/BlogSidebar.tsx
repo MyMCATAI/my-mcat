@@ -21,7 +21,7 @@ const blogPosts: BlogPost[] = [
   { 
     id: 1, 
     title: 'Optimizing Student Scores on the Medical College Admissions Test', 
-    slug: 'first-post', 
+    slug: 'how-to-study-for-the-mcat', 
     description: 'The scientific basis for MyMCAT.',
     section: 'MCAT Prep'
   },
