@@ -19,12 +19,34 @@ export async function GET(req: Request) {
     const searchQuery = searchParams.get("searchQuery");
     const selectedSubject = searchParams.get("subject");
 
-    // Fetch knowledge profiles and user info in parallel
-    const [knowledgeProfiles, userInfo] = await Promise.all([
-      prisma.knowledgeProfile.findMany({
-        where: { userId },
-        orderBy: { conceptMastery: "asc" },
-        include: { category: true }
+    // Single query with join instead of separate queries
+    const [categories, userInfo] = await Promise.all([
+      prisma.category.findMany({
+        where: {
+          AND: [
+            searchQuery
+              ? {
+                  OR: [
+                    { subjectCategory: { contains: searchQuery.toLowerCase() } },
+                    { conceptCategory: { contains: searchQuery.toLowerCase() } },
+                  ],
+                }
+              : {},
+            includeCARS ? {} : { subjectCategory: { not: "CARs" } },
+            ...(selectedSubject ? [{ subjectCategory: { equals: selectedSubject } }] : []),
+          ],
+        },
+        include: {
+          knowledgeProfiles: {
+            where: { userId },
+            select: {
+              completedAt: true,
+              completionPercentage: true,
+              conceptMastery: true,
+              contentMastery: true
+            }
+          }
+        }
       }),
       prisma.userInfo.findUnique({
         where: { userId },
@@ -32,32 +54,16 @@ export async function GET(req: Request) {
       })
     ]);
 
-    // Fetch categories with filters
-    let allCategories = await prisma.category.findMany({
-      where: {
-        AND: [
-          searchQuery
-            ? {
-                OR: [
-                  { subjectCategory: { contains: searchQuery.toLowerCase() } },
-                  { conceptCategory: { contains: searchQuery.toLowerCase() } },
-                ],
-              }
-            : {},
-          includeCARS ? {} : { subjectCategory: { not: "CARs" } },
-          ...(selectedSubject ? [{ subjectCategory: { equals: selectedSubject } }] : []),
-        ],
-      },
-    });
-
-    // Combine categories with knowledge profiles
-    let sortedCategories = allCategories.map(category => {
-      const profile = knowledgeProfiles.find(p => p.categoryId === category.id);
-      return {
-        ...category,
-        conceptMastery: profile ? profile.conceptMastery : null
-      };
-    });
+    // Transform the data to flatten the structure
+    let sortedCategories = categories.map(category => ({
+      ...category,
+      completedAt: category.knowledgeProfiles[0]?.completedAt || null,
+      completionPercentage: category.knowledgeProfiles[0]?.completionPercentage || 0,
+      conceptMastery: category.knowledgeProfiles[0]?.conceptMastery || null,
+      contentMastery: category.knowledgeProfiles[0]?.contentMastery || null,
+      isCompleted: category.knowledgeProfiles[0]?.completedAt !== null,
+      knowledgeProfiles: undefined // Remove the nested array
+    }));
 
     // Sort by concept mastery
     sortedCategories.sort((a, b) => {
