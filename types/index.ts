@@ -19,6 +19,10 @@ export interface Category {
   color: string;
   icon: IconName;
   podcastLinks: string;
+  isCompleted?: boolean;
+  completedAt?: Date | null;
+  completionPercentage?: number;
+  conceptMastery?: number | null;
 }
 
 export interface TestQuestion {

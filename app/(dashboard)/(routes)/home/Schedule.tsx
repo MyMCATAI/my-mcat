@@ -38,13 +38,16 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Tutorial from "./Tutorial";
-import { Checkbox } from "@/components/ui/checkbox"; 
+import { Checkbox } from "@/components/ui/checkbox";
 import Statistics from "@/components/Statistics";
-import DonutChart from "./DonutChart"; 
-import { FaFire } from "react-icons/fa"
+import DonutChart from "./DonutChart";
+import { FaFire } from "react-icons/fa";
 import { PurchaseButton } from "@/components/purchase-button";
 import { toast } from "react-hot-toast";
-import { Calendar as CalendarIcon, BarChart as AnalyticsIcon } from "lucide-react";
+import {
+  Calendar as CalendarIcon,
+  BarChart as AnalyticsIcon,
+} from "lucide-react";
 import { FaCheckCircle } from "react-icons/fa";
 
 ChartJS.register(
@@ -122,7 +125,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showBreaksDialog, setShowBreaksDialog] = useState(false);
 
-
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
@@ -159,7 +161,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     };
   }, []);
 
-  
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -270,24 +271,32 @@ const Schedule: React.FC<ScheduleProps> = ({
     setShowAnalytics(false); // Switch to calendar mode
     setHasUpdatedStudyPlan(true);
 
-    // Add this to ensure Part 2 plays
-    setTimeout(() => {
-      setRunTutorialPart2(true);
-      localStorage.setItem("tutorialPart2Played", "true");
-    }, 1000); // Short delay after settings close
+    // Only start Part 2 if it hasn't been played yet
+    if (
+      !localStorage.getItem("tutorialPart2Played") ||
+      localStorage.getItem("tutorialPart2Played") === "false"
+    ) {
+      setTimeout(() => {
+        setRunTutorialPart2(true);
+        localStorage.setItem("tutorialPart2Played", "true");
+      }, 1000);
+    }
   }, []);
 
   // Add this new effect to handle the transition from Part 2 to Part 3
-  useEffect(() => {
-    if (runTutorialPart2 === false && localStorage.getItem("tutorialPart2Played") === "true" && 
-        (!localStorage.getItem("tutorialPart3Played") || localStorage.getItem("tutorialPart3Played") === "false")) {
-      // Part 2 just finished, start Part 3
-      setTimeout(() => {
-        setRunTutorialPart3(true);
-        localStorage.setItem("tutorialPart3Played", "true");
-      }, 2000); // Delay after Part 2 ends
-    }
-  }, [runTutorialPart2]);
+  // useEffect(() => {
+  //   if (
+  //     localStorage.getItem("tutorialPart2Played") === "true" &&
+  //     (!localStorage.getItem("tutorialPart3Played") ||
+  //       localStorage.getItem("tutorialPart3Played") === "false")
+  //   ) {
+  //     // Part 2 just finished, start Part 3
+  //     setTimeout(() => {
+  //       setRunTutorialPart3(true);
+  //       localStorage.setItem("tutorialPart3Played", "true");
+  //     }, 2000); // Delay after Part 2 ends
+  //   }
+  // }, [runTutorialPart2]);
 
   const toggleSettings = () => {
     setShowSettings((prev) => !prev);
@@ -458,13 +467,15 @@ const Schedule: React.FC<ScheduleProps> = ({
         todaysActivities.map(async (activity) => {
           if (!Array.isArray(activity.tasks) || activity.tasks.length === 0) {
             try {
-              const tasks = await fetch(`/api/event-task?eventTitle=${activity.activityTitle}`).then(res => res.json());
+              const tasks = await fetch(
+                `/api/event-task?eventTitle=${activity.activityTitle}`
+              ).then((res) => res.json());
               return {
                 ...activity,
-                tasks: tasks
+                tasks: tasks,
               };
             } catch (error) {
-              console.error('Error fetching tasks for activity:', error);
+              console.error("Error fetching tasks for activity:", error);
               return activity;
             }
           }
@@ -478,9 +489,13 @@ const Schedule: React.FC<ScheduleProps> = ({
     fetchTasksForToday();
   }, [activities]);
 
-  const handleTaskCompletion = async (activityId: string, taskIndex: number, completed: boolean) => {
+  const handleTaskCompletion = async (
+    activityId: string,
+    taskIndex: number,
+    completed: boolean
+  ) => {
     try {
-      const activity = todayActivities.find(a => a.id === activityId);
+      const activity = todayActivities.find((a) => a.id === activityId);
       if (!activity || !activity.tasks) return;
 
       // If task is already completed, prevent unchecking
@@ -494,62 +509,61 @@ const Schedule: React.FC<ScheduleProps> = ({
 
       // Update in backend
       const response = await fetch(`/api/calendar-activity`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: activityId,
-          tasks: updatedTasks
-        })
+          tasks: updatedTasks,
+        }),
       });
 
-      if (!response.ok) throw new Error('Failed to update task');
+      if (!response.ok) throw new Error("Failed to update task");
 
       // Update local state
-      setTodayActivities(current =>
-        current.map(a =>
-          a.id === activityId
-            ? { ...a, tasks: updatedTasks }
-            : a
+      setTodayActivities((current) =>
+        current.map((a) =>
+          a.id === activityId ? { ...a, tasks: updatedTasks } : a
         )
       );
 
       // Check if all tasks are completed for this activity
-      const allTasksCompleted = updatedTasks.every(task => task.completed);
+      const allTasksCompleted = updatedTasks.every((task) => task.completed);
       if (allTasksCompleted) {
         // Play success sound
         if (audioRef.current) {
           audioRef.current.play().catch(console.error);
         }
-        
+
         // Update coin count
         await updateUserCoinCount();
 
         // Show success toast
-        toast.success(`You've completed all tasks for ${activity.activityTitle}! You earned a coin!`)
+        toast.success(
+          `You've completed all tasks for ${activity.activityTitle}! You earned a coin!`
+        );
       }
 
       // Check if ALL activities have ALL tasks completed
-      const allActivitiesCompleted = todayActivities.every(activity => 
-        activity.tasks?.every(task => task.completed)
+      const allActivitiesCompleted = todayActivities.every((activity) =>
+        activity.tasks?.every((task) => task.completed)
       );
 
-      if (allActivitiesCompleted) {        
+      if (allActivitiesCompleted) {
         // Play fanfare for completing everything
         if (fanfareRef.current) {
           fanfareRef.current.play().catch(console.error);
         }
       }
-
     } catch (error) {
-      console.error('Error updating task:', error);
-      toast.error('Failed to update task');
+      console.error("Error updating task:", error);
+      toast.error("Failed to update task");
     }
   };
 
   const handleTasksUpdate = (eventId: string, updatedTasks: Task[]) => {
     // Update local state
-    setTodayActivities(current =>
-      current.map(activity =>
+    setTodayActivities((current) =>
+      current.map((activity) =>
         activity.id === eventId
           ? { ...activity, tasks: updatedTasks }
           : activity
@@ -576,22 +590,28 @@ const Schedule: React.FC<ScheduleProps> = ({
     localStorage.setItem("tutorialPart2Played", "false");
     localStorage.setItem("tutorialPart3Played", "false");
     localStorage.setItem("tutorialPart4Played", "false");
-    
+
     // Reset tutorial states
     setRunTutorialPart1(true);
     setRunTutorialPart2(false);
     setRunTutorialPart3(false);
     setRunTutorialPart4(false);
-    
+
     // Play notification sound
     if (audioRef.current) {
-      audioRef.current.play().catch((error) => console.error("Audio playback failed:", error));
+      audioRef.current
+        .play()
+        .catch((error) => console.error("Audio playback failed:", error));
     }
   };
 
   // Update the helper function to safely check tasks
   const isActivityCompleted = (activity: Activity) => {
-    return activity.tasks && activity.tasks.length > 0 && activity.tasks.every(task => task.completed);
+    return (
+      activity.tasks &&
+      activity.tasks.length > 0 &&
+      activity.tasks.every((task) => task.completed)
+    );
   };
 
   return (
@@ -626,9 +646,11 @@ const Schedule: React.FC<ScheduleProps> = ({
               <div key={activity.id} className="mb-6">
                 <button
                   className={`w-full py-3 px-4 
-                    ${isActivityCompleted(activity) 
-                      ? 'bg-[--theme-hover-color] text-[--theme-hover-text]' 
-                      : 'bg-[--theme-leaguecard-color] text-[--theme-text-color]'}
+                    ${
+                      isActivityCompleted(activity)
+                        ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
+                        : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
+                    }
                     border-2 border-[--theme-border-color]
                     hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
                     font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
@@ -637,9 +659,9 @@ const Schedule: React.FC<ScheduleProps> = ({
                 >
                   <span>{activity.activityTitle}</span>
                   {isActivityCompleted(activity) ? (
-                    <FaCheckCircle 
+                    <FaCheckCircle
                       className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
-                      style={{ color: 'var(--theme-hover-text)' }}
+                      style={{ color: "var(--theme-hover-text)" }}
                     />
                   ) : (
                     <svg
@@ -658,7 +680,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                     </svg>
                   )}
                 </button>
-                
+
                 <div className="bg-[--theme-leaguecard-color] shadow-md p-4 mt-2 space-y-2 rounded-lg">
                   {activity.tasks && activity.tasks.length > 0 ? (
                     activity.tasks.map((task, index) => (
@@ -666,8 +688,12 @@ const Schedule: React.FC<ScheduleProps> = ({
                         <Checkbox
                           id={`task-${activity.id}-${index}`}
                           checked={task.completed}
-                          onCheckedChange={(checked) => 
-                            handleTaskCompletion(activity.id, index, checked as boolean)
+                          onCheckedChange={(checked) =>
+                            handleTaskCompletion(
+                              activity.id,
+                              index,
+                              checked as boolean
+                            )
                           }
                         />
                         <label
@@ -684,9 +710,11 @@ const Schedule: React.FC<ScheduleProps> = ({
                 </div>
               </div>
             ))}
-            
+
             {todayActivities.length === 0 && (
-              <p className="text-center italic">No activities scheduled for today</p>
+              <p className="text-center italic">
+                No activities scheduled for today
+              </p>
             )}
           </div>
         </div>
@@ -713,7 +741,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
             <div className="flex items-center">
               <FaFire className="text-[--theme-text-color] ml-1 mr-2 text-5xl" />
-              <span className="font-bold text-lg ml-3">{0}</span> 
+              <span className="font-bold text-lg ml-3">{0}</span>
               {/* statistics?.streak */}
               <span className="ml-1 text-2xl">days</span>
             </div>
@@ -803,7 +831,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                 <div className="flex-grow overflow-auto flex flex-col justify-center">
                   <AnimatePresence mode="wait">
                     {!selectedSubject ? (
-                      <motion.div 
+                      <motion.div
                         key="donut"
                         className="flex justify-center items-center min-h-[32rem]"
                         initial={{ opacity: 0 }}
@@ -811,7 +839,9 @@ const Schedule: React.FC<ScheduleProps> = ({
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <DonutChart onProgressClick={(label) => setSelectedSubject(label)} />
+                        <DonutChart
+                          onProgressClick={(label) => setSelectedSubject(label)}
+                        />
                       </motion.div>
                     ) : (
                       <motion.div
@@ -865,7 +895,9 @@ const Schedule: React.FC<ScheduleProps> = ({
                       hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
                       shadow-md rounded-full transition flex items-center justify-center"
                   >
-                    <span role="img" aria-label="palm tree">🌴</span>
+                    <span role="img" aria-label="palm tree">
+                      🌴
+                    </span>
                   </button>
 
                   {/* Analytics button */}
@@ -1036,11 +1068,14 @@ const Schedule: React.FC<ScheduleProps> = ({
         <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
         <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
           <DialogHeader>
-            <DialogTitle className="text-center text-black">Breaks Coming Soon!</DialogTitle>
+            <DialogTitle className="text-center text-black">
+              Breaks Coming Soon!
+            </DialogTitle>
           </DialogHeader>
           <div className="p-4">
             <p className="text-center text-black">
-              Toggle holidays. Add difficult weeks in school. Ask for a break. Your schedule will be updated automatically.
+              Toggle holidays. Add difficult weeks in school. Ask for a break.
+              Your schedule will be updated automatically.
             </p>
           </div>
         </DialogContent>
@@ -1050,4 +1085,3 @@ const Schedule: React.FC<ScheduleProps> = ({
 };
 
 export default Schedule;
-

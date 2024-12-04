@@ -26,7 +26,7 @@
     "upload-reviews": "ts-node --project tsconfig.server.json scripts/uploadReviews.ts",
     "delete-non-cars-questions": "ts-node --project tsconfig.server.json scripts/deleteNonPassageQuestions.ts",
     "create-sara-questions": "ts-node --project tsconfig.server.json scripts/createSaraQuestions.ts",
-    "upload-content-2": "ts-node --project tsconfig.server.json scripts/uploadNewContent.ts",
+    "upload-content": "ts-node --project tsconfig.server.json scripts/uploadNewContent.ts",
     "delete-content": "ts-node --project tsconfig.server.json scripts/deleteContent.ts",
     "update-questions": "ts-node --project tsconfig.server.json scripts/updateQuestionCategories.ts",
     "delete-study-plan": "ts-node --project tsconfig.server.json scripts/deleteStudyPlan.ts",
