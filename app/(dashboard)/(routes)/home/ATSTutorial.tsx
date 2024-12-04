@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import Joyride, { CallBackProps, STATUS, Step, EVENTS } from "react-joyride";
 
 interface ATSTutorialProps {
@@ -25,9 +25,10 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
   catIconInteracted,
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [showSettingsSteps, setShowSettingsSteps] = useState(false);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status, type, index } = data;
+    const { status, type, action } = data;
     
     // For initialSteps tutorial
     if (runPart1 && (status === STATUS.FINISHED || status === STATUS.SKIPPED)) {
@@ -130,26 +131,60 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
     }
   ];
 
-  const atsIconStep: Step[] = [
+  const topicSelectionStep: Step[] = [
     {
       target: '.ats-topic-icons',
       content: (
         <div className="space-y-4 text-black">
           <h2 className="text-xl font-bold">{"Topic Selection"}</h2>
-          <p>{"Here, you have seven topics from the MCAT curated for you based upon your weaknesses. This is updated after tests and reviews as well as quiz results."}</p>
+          <p>{"Here you have six subjects selected for you based on your weaknesses. Press the question mark on the right for more help! Then over the settings button (left) for more!"}</p>
+        </div>
+      ),
+      placement: 'bottom',
+      spotlightClicks: true,
+    }
+  ];
+
+  const settingsSteps: Step[] = [
+    {
+      target: '.checkmark-button',
+      content: (
+        <div className="space-y-4 text-black">
+          <h2 className="text-xl font-bold">{"Track Your Progress"}</h2>
+          <p>{"You can checkmark off categories once you're done with them."}</p>
         </div>
       ),
       placement: 'bottom',
     },
     {
-      target: '.ats-settings-button',
+      target: '.shuffle-button',
       content: (
         <div className="space-y-4 text-black">
-          <h2 className="text-xl font-bold">{"Manual Selection"}</h2>
-          <p>{"Click here to go to settings and select topics manually if you prefer not to use our algorithm."}</p>
+          <h2 className="text-xl font-bold">{"Shuffle Subjects"}</h2>
+          <p>{"If you'd like to shuffle based upon subjects, we have a button for that."}</p>
         </div>
       ),
-      placement: 'left',
+      placement: 'bottom',
+    },
+    {
+      target: '.topic-search',
+      content: (
+        <div className="space-y-4 text-black">
+          <h2 className="text-xl font-bold">{"Find Specific Topics"}</h2>
+          <p>{"If you'd like a specific topic, you can search for it here."}</p>
+        </div>
+      ),
+      placement: 'bottom',
+    },
+    {
+      target: '.algorithm-button',
+      content: (
+        <div className="space-y-4 text-black">
+          <h2 className="text-xl font-bold">{"Smart Recommendations"}</h2>
+          <p>{"If you don't know what to study, we keep tab on the questions you've missed and can give you subjects to study!"}</p>
+        </div>
+      ),
+      placement: 'bottom',
     }
   ];
 
@@ -158,7 +193,7 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
       <audio ref={audioRef} src="/notification.mp3" />
       <Joyride
         steps={initialSteps}
-        run={runPart1 && localStorage.getItem("initialTutorialPlayed") !== "true"}
+        run={runPart1}
         continuous
         showProgress
         showSkipButton
@@ -166,15 +201,36 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
         styles={{
           options: {
             backgroundColor: '#ffffff',
-            textColor: '#000000', 
+            textColor: '#000000',
             primaryColor: 'var(--theme-border-color)',
             zIndex: 1000,
           },
         }}
       />
       <Joyride
-        steps={atsIconStep}
-        run={runPart4 && localStorage.getItem("atsIconTutorialPlayed") !== "true"}
+        steps={topicSelectionStep}
+        run={runPart4 && !showSettingsSteps}
+        continuous
+        showProgress
+        showSkipButton
+        callback={(data) => {
+          if (data.type === EVENTS.STEP_AFTER && data.index === 0) {
+            setShowSettingsSteps(true);
+          }
+          handleJoyrideCallback(data);
+        }}
+        styles={{
+          options: {
+            backgroundColor: '#ffffff',
+            textColor: '#000000',
+            primaryColor: 'var(--theme-border-color)',
+            zIndex: 1000,
+          },
+        }}
+      />
+      <Joyride
+        steps={settingsSteps}
+        run={showSettingsSteps}
         continuous
         showProgress
         showSkipButton
