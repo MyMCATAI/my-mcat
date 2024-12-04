@@ -5,6 +5,15 @@ export const getCategories = async (params: {
   page?: number;
   pageSize?: number;
 }) => {
+  const { userId } = auth();
+  if (!userId) {
+    return {
+      categories: [],
+      totalPages: 0,
+      currentPage: 1,
+    };
+  }
+
   const { page = 1, pageSize = 10 } = params;
   const skip = (page - 1) * pageSize;
 
@@ -18,14 +27,32 @@ export const getCategories = async (params: {
           questionID: true,
           questionContent: true,
         }
+      },
+      knowledgeProfiles: {
+        where: {
+          userId,
+        },
+        select: {
+          completedAt: true,
+          completionPercentage: true,
+          conceptMastery: true,
+        }
       }
     }
   });
 
+  const transformedCategories = categories.map(category => ({
+    ...category,
+    completedAt: category.knowledgeProfiles[0]?.completedAt || null,
+    completionPercentage: category.knowledgeProfiles[0]?.completionPercentage || 0,
+    conceptMastery: category.knowledgeProfiles[0]?.conceptMastery || null,
+    knowledgeProfiles: undefined,
+  }));
+
   const total = await prismadb.category.count();
 
   return {
-    categories,
+    categories: transformedCategories,
     totalPages: Math.ceil(total / pageSize),
     currentPage: page,
   };

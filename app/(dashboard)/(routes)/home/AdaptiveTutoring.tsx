@@ -17,6 +17,7 @@ import {
   Podcast,
   Maximize2,
   Minimize2,
+  Check,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,6 +45,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import DiagnosticDialog from './DiagnosticDialog';
 import ATSTutorial from "./ATSTutorial";
+import CompleteTopicButton from "@/components/CompleteTopicButton";
 
 interface ContentItem {
   id: string;
@@ -607,6 +609,22 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     localStorage.setItem("catIconInteracted", "true");
   };
 
+  const handleTopicComplete = (categoryId: string) => {
+    // Update categories state directly
+    setCategories(prevCategories => 
+      prevCategories.map(category => {
+        if (category.id === categoryId) {
+          return {
+            ...category,
+            isCompleted: true,
+            completedAt: new Date()
+          };
+        }
+        return category;
+      })
+    );
+  };
+
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
       <div className="flex items-stretch w-full mb-3">
@@ -732,7 +750,36 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                   />
                 </div>
               </button>
-              <p className="text-m px-10">{selectedCategory || ""}</p>
+              <div className="flex items-center relative group">
+                <div className="flex items-center transition-opacity duration-300 group-hover:opacity-0">
+                  <p className="text-m px-10 flex items-center">
+                    {selectedCategory && categories.find(cat => 
+                      cat.conceptCategory === selectedCategory && cat.isCompleted
+                    ) && (
+                      <span className="flex items-center text-green-500 mr-2">
+                        <Check className="w-4 h-4" />
+                      </span>
+                    )}
+                    {selectedCategory || ""}
+                  </p>
+                </div>
+                {selectedCategory && (
+                  <div className="absolute left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    {categories.find(cat => cat.conceptCategory === selectedCategory)?.isCompleted ? (
+                      <p className="text-green-500 flex items-center">
+                        <Check className="w-4 h-4 mr-1" />
+                        Completed
+                      </p>
+                    ) : (
+                      <CompleteTopicButton 
+                        categoryId={categories.find(cat => cat.conceptCategory === selectedCategory)?.id || ''} 
+                        categoryName={selectedCategory}
+                        onComplete={()=>handleTopicComplete(categories.find(cat => cat.conceptCategory === selectedCategory)?.id || '')}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={handleQuizTabClick}
                 className="quiz-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
@@ -1148,12 +1195,10 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-
       <DiagnosticDialog
         isOpen={showDiagnosticDialog}
         onSubmit={handleDiagnosticSubmit}
       />
-      
       <ATSTutorial
         runPart1={runTutorialPart1}
         setRunPart1={setRunTutorialPart1}

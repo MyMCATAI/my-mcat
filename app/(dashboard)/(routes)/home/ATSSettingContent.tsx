@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Category } from "@/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import FilterButton from "@/components/ui/FilterButton";
+import { Check } from "lucide-react";
 
 interface Option {
   id: string;
@@ -78,6 +79,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
         throw new Error("Network response was not ok");
       }
       const data = await response.json();
+      console.log(data);
 
       // Use totalPages directly from the API response
       setTotalPages(data.totalPages);
@@ -200,8 +202,11 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
                           handleCategoryCheck(category, isChecked as boolean)
                         }
                       />
-                      <span className="text-[--theme-text-color] text-md">
+                      <span className="text-[--theme-text-color] text-md flex items-center gap-2">
                         {category.conceptCategory}
+                        {category.isCompleted && (
+                          <Check className="h-4 w-4 text-green-500" />
+                        )}
                       </span>
                     </div>
                   ))}
