@@ -582,7 +582,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
         <TabsContent value="categories" className="mt-0">
           {/* Informational text */}
           <div className="text-center mb-4 text-sm text-[--theme-text-color] italic">
-            Checkmarking a topic means that you're done learning it.
+            {"Checkmarking a topic means that you're done learning it."}
           </div>
 
           {/* Checkable Categories List */}
@@ -663,7 +663,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
                     const filteredCategories = selectedSubjectsForShuffle.size > 0
                       ? checkedCategories.filter(cat => 
                           Array.from(selectedSubjectsForShuffle).some(subject => 
-                            cat.subject === subject
+                            cat.subjectCategory === subject
                           )
                         )
                       : checkedCategories;

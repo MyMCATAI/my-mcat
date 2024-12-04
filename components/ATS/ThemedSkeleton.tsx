@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Cat, Stethoscope, BookOpen, Syringe, Microscope, GraduationCap, Dna } from 'lucide-react';
 
 // Define the possible theme types
-type ThemeType = 'cat' | 'medicine' | 'study' | 'vaccine' | 'science' | 'education' | 'genetics';
+type ThemeType = 'empty' | 'cat' | 'medicine' | 'study' | 'vaccine' | 'science' | 'education' | 'genetics';
 
 // Create an interface for the ThemedSkeleton props
 interface ThemedSkeletonProps {
@@ -12,6 +12,7 @@ interface ThemedSkeletonProps {
 
 export const ThemedSkeleton: React.FC<ThemedSkeletonProps> = ({ theme }) => {
   const iconMap: Record<ThemeType, JSX.Element> = {
+    empty: <div className="w-6 h-6 bg-gray-300 rounded-full" />,
     cat: <Cat className="w-6 h-6 text-gray-300" />,
     medicine: <Stethoscope className="w-6 h-6 text-gray-300" />,
     study: <BookOpen className="w-6 h-6 text-gray-300" />,
