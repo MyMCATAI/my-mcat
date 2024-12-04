@@ -722,4 +722,41 @@ html::-webkit-scrollbar {
   background-color: #4cb5e6;
 }
 
+@keyframes pulse-subtle {
+  0% {
+    opacity: 0.85;
+    transform: scale(1);
+    color: var(--theme-text-color);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+    color: var(--theme-hover-color);
+  }
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+    color: var(--theme-text-color);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2.5s ease-in-out infinite;
+}
+
+.settings-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-icon {
+  transition: transform 0.3s ease;
+}
+
+.settings-container:hover .settings-icon,
+.settings-open .settings-icon {
+  transform: rotate(90deg);
+}
+
 
