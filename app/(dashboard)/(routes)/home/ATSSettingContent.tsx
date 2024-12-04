@@ -103,6 +103,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
   const [selectedSubjectsForShuffle, setSelectedSubjectsForShuffle] = useState<Set<string>>(
     new Set(subjects.map(subject => subject.name))
   );
+  const [showSearchModal, setShowSearchModal] = useState(false);
 
   useEffect(() => {
     audioRef.current = new Audio('/levelup.mp3');
@@ -376,7 +377,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
           </div>
         );
 
-      {/* Temp Test Update Knowledge Profiles */} 
+      // Temp Test Update Knowledge Profiles
       case "option3":
         return (
           <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md">
@@ -395,6 +396,132 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
       default:
         return null;
     }
+  };
+
+  // When user clicks "Search For A Specific Topic", show this content
+  const renderSearchContent = () => {
+    return (
+      <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg">
+        <div className="space-y-2">
+          {isLoading ? (
+            <div className="text-center py-2">Please wait...</div>
+          ) : (
+            <>
+              <div className="flex items-center justify-center mb-4">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      setCurrentPage(1);
+                      fetchCategories(searchQuery, selectedSubject, 1);
+                    }
+                  }}
+                  onClick={() => setShowSearchResults(true)}
+                  placeholder="Search categories..."
+                  className={`border rounded-md p-2 w-full theme-box theme-${theme}`}
+                  style={{
+                    backgroundColor: "var(--theme-background-color)",
+                    color: "var(--theme-text-color)",
+                    borderColor: "var(--theme-border-color)",
+                  }}
+                />
+                <FilterButton
+                  subjects={Object.keys(subjectFocus)}
+                  selectedValue={selectedSubject}
+                  onFilterChange={(subject) => {
+                    const newSubject = subject === "all subjects" ? "" : subject;
+                    setSelectedSubject(newSubject);
+                    setCurrentPage(1);
+                    fetchCategories(searchQuery, newSubject, 1);
+                  }}
+                />
+              </div>
+
+              {categories.map((category) => (
+                <div
+                  key={category.id}
+                  className="flex items-center gap-2 p-0.5"
+                >
+                  <Checkbox
+                    id={category.id}
+                    checked={checkedCategories.some(
+                      (c) => c.id === category.id
+                    )}
+                    onCheckedChange={(isChecked) =>
+                      handleCategoryCheck(category.id)
+                    }
+                  />
+                  <span className="text-[--theme-text-color] text-md flex items-center gap-2">
+                    {category.conceptCategory}
+                    {category.isCompleted && (
+                      <Check className="h-4 w-4 text-green-500" />
+                    )}
+                  </span>
+                </div>
+              ))}
+
+              {limitMessage && (
+                <div className="text-red-500 text-sm mt-2">
+                  {limitMessage}
+                </div>
+              )}
+
+              <div className="flex justify-between mt-4">
+                <button
+                  onClick={() => {
+                    setCurrentPage((prev) => Math.max(1, prev - 1));
+                    fetchCategories(
+                      searchQuery,
+                      selectedSubject,
+                      Math.max(1, currentPage - 1)
+                    );
+                  }}
+                  disabled={currentPage === 1}
+                  className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
+                    bg-transparent text-[--theme-text-color]
+                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                    transition duration-200 ${
+                      currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                >
+                  {currentPage - 1}/{totalPages} Previous
+                </button>
+
+                <button
+                  onClick={() => {
+                    setCurrentPage((prev) => prev + 1);
+                    fetchCategories(
+                      searchQuery,
+                      selectedSubject,
+                      currentPage + 1
+                    );
+                  }}
+                  disabled={currentPage === totalPages}
+                  className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
+                    bg-transparent text-[--theme-text-color]
+                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                    transition duration-200 ${
+                      currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                >
+                  Next {currentPage + 1}/{totalPages}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Add this function near your other handlers
+  const handleCloseSearchModal = () => {
+    setShowSearchModal(false);
+    // Optionally reset search state
+    setSearchQuery("");
+    setCurrentPage(1);
   };
 
   return (
@@ -553,7 +680,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
             )}
 
             <button
-              onClick={() => setActiveOption("option2")}
+              onClick={() => setShowSearchModal(true)}
               className="w-full py-2 px-4 rounded-lg 
                 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                 border-2 border-[--theme-border-color] 
@@ -600,6 +727,43 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
           </div>
         ))} */}
       </div>
+
+      {showSearchModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={(e) => {
+            // Close modal when clicking the backdrop
+            if (e.target === e.currentTarget) {
+              handleCloseSearchModal();
+            }
+          }}
+        >
+          <div className="bg-[--theme-background-color] rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div className="p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-[--theme-text-color]">Search Categories</h3>
+                <button 
+                  onClick={handleCloseSearchModal}
+                  className="text-[--theme-text-color] hover:text-[--theme-hover-text] p-2 rounded-lg hover:bg-[--theme-hover-color] transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+              {renderSearchContent()}
+              
+              {/* Add a Done/Close button at the bottom */}
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={handleCloseSearchModal}
+                  className="px-4 py-2 rounded-lg bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
