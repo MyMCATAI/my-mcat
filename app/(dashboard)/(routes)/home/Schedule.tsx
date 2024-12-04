@@ -49,6 +49,9 @@ import {
   BarChart as AnalyticsIcon,
 } from "lucide-react";
 import { FaCheckCircle } from "react-icons/fa";
+import HelpContentSchedule from './HelpContentSchedule';
+import { HelpCircle } from 'lucide-react';
+import { useOutsideClick } from '@/hooks/use-outside-click';
 
 ChartJS.register(
   CategoryScale,
@@ -124,6 +127,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [userScore, setUserScore] = useState(0);
   const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showBreaksDialog, setShowBreaksDialog] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -614,6 +618,19 @@ const Schedule: React.FC<ScheduleProps> = ({
     );
   };
 
+  const toggleHelp = () => {
+    setShowHelp((prev) => !prev);
+  };
+
+  const helpRef = useRef<HTMLDivElement>(null);
+
+  // Use the useOutsideClick hook to close the help modal when clicking outside
+  useOutsideClick(helpRef, () => {
+    if (showHelp) {
+      setShowHelp(false);
+    }
+  });
+
   return (
     <div className="flex h-full relative">
       {/* Left Sidebar */}
@@ -748,8 +765,8 @@ const Schedule: React.FC<ScheduleProps> = ({
           </div>
         )}
 
-        {/* Settings Button */}
-        <div className="absolute top-4 right-4 z-20">
+        {/* Settings and Help Buttons */}
+        <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
@@ -774,6 +791,26 @@ const Schedule: React.FC<ScheduleProps> = ({
                 </button>
               </TooltipTrigger>
               <TooltipContent>Settings</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <button
+                  onClick={toggleHelp}
+                  className={`help-button p-2 rounded-full shadow-md ${
+                    showHelp ? "bg-[--theme-hover-color]" : "bg-white"
+                  }`}
+                >
+                  <HelpCircle 
+                    className="w-4 h-4" 
+                    fill="none"
+                    stroke={showHelp ? "white" : "#333"}
+                  />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Help</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
@@ -807,6 +844,32 @@ const Schedule: React.FC<ScheduleProps> = ({
                 onActivitiesUpdate={onActivitiesUpdate}
               />
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Help Modal */}
+        <AnimatePresence>
+          {showHelp && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                onClick={toggleHelp}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="absolute top-0 right-4 w-[26rem] bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg z-50 max-h-[80vh] flex flex-col"
+              >
+                <HelpContentSchedule 
+                  onClose={toggleHelp}
+                  onResetTutorials={resetTutorials}
+                />
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
 

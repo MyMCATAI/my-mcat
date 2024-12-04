@@ -6,7 +6,7 @@ import MDXLayout from './mdx-provider'
 
 // This would normally come from your database/CMS
 const blogPosts = [
-  { id: 1, title: 'Optimizing Student Scores on the Medical College Admissions Test', slug: 'first-post', description: 'The scientific basis for MyMCAT.' },
+  { id: 1, title: 'Optimizing Student Scores on the Medical College Admissions Test', slug: 'how-to-study-for-the-mcat', description: 'The scientific basis for MyMCAT.' },
   { id: 2, title: 'Tier List for the MCAT', slug: 'second-post', description: 'Useful resources for the MCAT.' },
 ]
 
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     title: 'Blog | My MCAT',
     description: 'Learn about MCAT preparation strategies, study tips, and exam insights',
     type: 'website',
-    url: 'https://yourdomain.com/blog',
+    url: 'https://mymcat.ai/blog',
   },
   twitter: {
     card: 'summary_large_image',

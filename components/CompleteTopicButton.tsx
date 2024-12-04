@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Check } from 'lucide-react';
 import {
   Dialog,
@@ -15,17 +14,24 @@ import { useToast } from "@/components/ui/use-toast";
 interface CompleteTopicButtonProps {
   categoryId: string;
   categoryName: string;
-  onComplete?: () => void;
+  onComplete?: (categoryId: string) => void;
+  setShowConfetti?: (show: boolean) => void;
 }
 
 const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
   categoryId,
   categoryName,
   onComplete,
+  setShowConfetti,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    audioRef.current = new Audio('/levelup.mp3');
+  }, []);
 
   const handleComplete = async () => {
     try {
@@ -42,6 +48,15 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
         throw new Error('Failed to complete category');
       }
 
+      // Play sound
+      audioRef.current?.play();
+
+      // Show confetti
+      if (setShowConfetti) {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3000);
+      }
+
       toast({
         title: "Topic Completed! 🎉",
         description: `You've completed ${categoryName}. Great job!`,
@@ -49,8 +64,9 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
       
       setIsOpen(false);
       
+      // Call onComplete with the categoryId
       if (onComplete) {
-        onComplete();
+        onComplete(categoryId);
       }
     } catch (error) {
       toast({
@@ -106,4 +122,4 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
   );
 };
 
-export default CompleteTopicButton; 
+export default CompleteTopicButton;

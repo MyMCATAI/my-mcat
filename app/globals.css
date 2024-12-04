@@ -188,7 +188,7 @@ body.theme-sunsetCity * {
     --theme-hover-text: #ffffff;
     --theme-border-color: #0162ff; /* This is the default blue color */
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
-    --theme-leaguecard-color: #000000e6; /* Changed from #001226 to rgba */
+    --theme-leaguecard-color: #000e2de6; /* Changed from #001226 to rgba */
     --theme-navbutton-color: #001226;
     --svg-invert: 0;
     --theme-reddit-color: #082645;
@@ -344,7 +344,7 @@ body.theme-sunsetCity * {
   --theme-userchatbox-color: #007afc;
   --theme-hover-text: #2c1e4a;
   --theme-border-color: #ff6347;
-  --theme-leaguecard-color: #2c1e4a;
+  --theme-leaguecard-color: #291b40;
   --theme-navbutton-color: #49327c;
   --svg-invert: 0;
   --theme-reddit-color: #3a2963;
