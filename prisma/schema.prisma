@@ -221,16 +221,17 @@ model Content {
 }
 
 model KnowledgeProfile {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   userId         String
   categoryId     String
-  correctAnswers Int      @default(0)
-  totalAttempts  Int      @default(0)
-  lastAttemptAt  DateTime @default(now())
+  correctAnswers Int       @default(0)
+  totalAttempts  Int       @default(0)
+  lastAttemptAt  DateTime  @default(now())
+  completedAt    DateTime?
   conceptMastery Float?
   contentMastery Float?
   completionPercentage Float @default(0)
-  category       Category @relation(fields: [categoryId], references: [id])
+  category       Category  @relation(fields: [categoryId], references: [id])
 
   @@unique([userId, categoryId])
   @@index([userId])
