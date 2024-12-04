@@ -310,8 +310,17 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   );
 
   const extractVideoId = (url: string) => {
-    const urlParams = new URLSearchParams(new URL(url).search);
-    return urlParams.get("v");
+    try {
+      // Remove any playlist or additional parameters
+      const baseUrl = url.split('&')[0];
+      
+      // Try to match the video ID
+      const vMatch = baseUrl.match(/(?:v=|\/)([\w-]{11})(?:\?|&|\/|$)/);
+      return vMatch ? vMatch[1] : null;
+    } catch (error) {
+      console.error('Error extracting video ID:', error);
+      return null;
+    }
   };
 
   const handleContentClick = (contentId: string) => {
@@ -660,6 +669,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     setCatIconInteracted(false);
     setShowHelp(false); // Close the help dialog
     setTutorialKey(prev => prev + 1);
+  };
+
   const handleTopicComplete = (categoryId: string) => {
     // Update categories state directly
     setCategories(prevCategories => 
@@ -1090,7 +1101,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         </div>
 
         <div className="col-span-1">
-          <div className="h-[calc(100vh-18rem)] overflow-visible">
+          <div className="h-[calc(100vh-18rem)] overflow-y-auto">
             {isLoading ? (
               Array(5)
                 .fill(0)
