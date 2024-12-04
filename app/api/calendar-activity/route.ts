@@ -85,6 +85,7 @@ export async function GET(req: NextRequest) {
         link: true,
         activityType: true,
         tasks: true,
+        source: true,
       },
     });
 
