@@ -538,13 +538,37 @@ const Schedule: React.FC<ScheduleProps> = ({
           audioRef.current.play().catch(console.error);
         }
 
-        // Update coin count
-        await updateUserCoinCount();
+        // Use activity id to get activity from calendar-activity
+        const activityResponse = await fetch(`/api/calendar-activity`);
+        const activities = await activityResponse.json();
+        
+        const completedActivity = activities.find((a: FetchedActivity) => a.id === activityId);
+
+        if (completedActivity.source === "generated" && isToday(new Date(completedActivity.scheduledDate))) {
+          // Update coin count
+          await updateUserCoinCount();
+
+          try {
+            const response = await fetch("/api/user-info");
+            if (response.ok) {
+              const data = await response.json();
+              setUserScore(data.score);
+            }
+          } catch (error) {
+            console.error("Error fetching user score:", error);
+          }
+        }
 
         // Show success toast
-        toast.success(
-          `You've completed all tasks for ${activity.activityTitle}! You earned a coin!`
-        );
+        if (completedActivity.source === "generated") {
+          toast.success(
+            `You've completed all tasks for ${activity.activityTitle}! You earned a coin!`
+          );
+        } else {
+          toast.success(
+            `You've completed all tasks for ${activity.activityTitle}!`
+          );
+        }
       }
 
       // Check if ALL activities have ALL tasks completed
