@@ -218,11 +218,23 @@ export default function OnboardingPage() {
   const onPurchase = async () => {
     try {
       setLoading(true);
-      const response = await axios.post("/api/stripe/checkout", {
-        priceType: isValidEmail(friendEmail) ? 'discount' : 'default',
-        ...(isValidEmail(friendEmail) && { friendEmail })
+      const response = await fetch("/api/stripe/checkout", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          priceType: isValidEmail(friendEmail) ? 'discount' : 'default',
+          ...(isValidEmail(friendEmail) && { friendEmail })
+        })
       });
-      window.location.href = response.data.url;
+
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session');
+      }
+
+      const data = await response.json();
+      window.location.href = data.url;
     } catch (error) {
       console.error("Error:", error);
     } finally {
