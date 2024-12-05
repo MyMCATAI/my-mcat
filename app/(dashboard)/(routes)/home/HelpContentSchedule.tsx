@@ -2,6 +2,8 @@ import React, { useRef } from 'react';
 import { X } from 'lucide-react';
 import { FaDiscord } from 'react-icons/fa';
 import MessageButton from '@/components/MessageButton';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Calendar as CalendarIcon } from 'lucide-react';
 
 interface HelpContentScheduleProps {
   onClose: () => void;
@@ -25,7 +27,13 @@ const HelpContentSchedule: React.FC<HelpContentScheduleProps> = ({ onClose, onRe
   };
 
   return (
-    <div ref={helpRef} className="p-6 h-full overflow-y-auto relative bg-[--theme-mainbox-color] rounded-lg" onClick={(e) => e.stopPropagation()}>
+    <div 
+      ref={helpRef} 
+      className="p-6 h-full overflow-y-auto relative bg-[--theme-mainbox-color] rounded-lg w-[32rem] z-50 border-2 border-[--theme-border-color]" 
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
+    >
       {/* Close button */}
       <button
         onClick={onClose}
@@ -35,14 +43,13 @@ const HelpContentSchedule: React.FC<HelpContentScheduleProps> = ({ onClose, onRe
       </button>
 
       {/* Title */}
-      <h2 className="text-[--theme-text-color] text-2xl font-semibold mb-6">
-        Schedule Help & Information
+      <h2 className="text-[--theme-text-color] text-2xl font-semibold mb-2">
+        Schedule Information
       </h2>
 
       {/* Content Sections */}
       <div className="space-y-6 text-[--theme-text-color]">
-        <section>
-          <h3 className="text-lg font-semibold mb-2">Getting Started</h3>
+        <section className="py-2">
           <p className="text-sm leading-relaxed mb-4">
             Welcome to your MCAT study schedule! This dashboard helps you organize and track your daily study activities.
           </p>
@@ -56,47 +63,93 @@ const HelpContentSchedule: React.FC<HelpContentScheduleProps> = ({ onClose, onRe
           </div>
         </section>
 
-        <section>
-          <h3 className="text-lg font-semibold mb-2">Daily To-Do List</h3>
-          <ul className="text-sm space-y-2 list-disc pl-4">
-            <li>View your daily tasks in the left sidebar</li>
-            <li>Check off completed tasks to track progress</li>
-            <li>Earn coins for completing all tasks in an activity</li>
-            <li>Click activity titles to jump directly to that content</li>
+        <section className="py-2 border-t border-[--theme-doctorsoffice-accent] border-opacity-20">
+          <h3 className="text-lg font-semibold mb-2 text-center">Calendar View</h3>
+          <ul className="text-sm space-y-2 list-disc pl-4">           
+            <li>Click the settings icon above the help button to modify your schedule.</li>
+            <li>Read about our <a href="/blog/mcat-study-schedule" target="_blank" rel="noopener" className="text-[--theme-hover-color] hover:opacity-75 underline">algorithm on our blog</a>.</li>
+            <li>Click the calendar icon under analytics to go to your calendar.</li>
           </ul>
-        </section>
-
-        <section>
-          <h3 className="text-lg font-semibold mb-2">Calendar View</h3>
-          <ul className="text-sm space-y-2 list-disc pl-4">
-            <li>Switch between calendar and analytics views</li>
-            <li>Drag and drop activities to reschedule</li>
-            <li>Click on dates to view or add activities</li>
-            <li>Use the settings gear to customize your study plan</li>
-          </ul>
-        </section>
-
-        <section>
-          <h3 className="text-lg font-semibold mb-2">Analytics Dashboard</h3>
-          <ul className="text-sm space-y-2 list-disc pl-4">
-            <li>Track your performance across all MCAT subjects</li>
-            <li>View detailed statistics on questions answered and accuracy</li>
-            <li>Monitor your average response time per question</li>
-            <li>Identify focus areas that need improvement</li>
-            <li>See your progress over time with interactive charts</li>
-          </ul>
-          <div className="mt-4 p-4 bg-[--theme-leaguecard-color] rounded-lg">
-            <p className="text-sm text-[--theme-text-color] opacity-80">
-              Pro Tip: Use the analytics insights to adjust your study schedule and focus more time on challenging topics.
-            </p>
+          
+          {/* Add Calendar Button Sample */}
+          <div className="mt-4 flex justify-center">
+            <div className="w-16 h-16 p-4
+              bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+              border-2 border-[--theme-border-color] 
+              hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+              shadow-md rounded-full transition flex items-center justify-center cursor-default"
+            >
+              <CalendarIcon className="w-8 h-8" />
+            </div>
           </div>
         </section>
 
-        <section>
-          <h3 className="text-lg font-semibold mb-2">Managing Breaks</h3>
+        <section className="py-2 border-t border-[--theme-doctorsoffice-accent] border-opacity-20">
+          <h3 className="text-lg font-semibold mb-2 text-center">Daily To-Do List</h3>
+          <ul className="text-sm space-y-2 list-disc pl-4">
+            <li>Click titles to jump to linked tasks.</li>
+            <li>Check off tasks to win coins.</li>
+            <li>Gain a streak for logging in to study.</li>
+          </ul>
+          
+          <div className="mt-4 bg-[--theme-leaguecard-color] border border-[--theme-border-color] rounded-lg overflow-hidden">
+            {/* Sample Activity Button */}
+            <button className="w-full py-3 px-4 bg-[--theme-mainbox-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold shadow-md rounded-lg transition relative flex items-center justify-between text-md">
+              <span>Sample Activity</span>
+              <svg
+                className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+
+            {/* Sample Tasks */}
+            <div className="bg-[--theme-leaguecard-color] shadow-md p-4 mt-2 space-y-2 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="sample-task-1"
+                  checked={false}
+                  onCheckedChange={() => {}}
+                />
+                <label htmlFor="sample-task-1" className="text-sm leading-tight cursor-pointer flex-grow">
+                  Complete practice questions
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="sample-task-2"
+                  checked={true}
+                  onCheckedChange={() => {}}
+                />
+                <label htmlFor="sample-task-2" className="text-sm leading-tight cursor-pointer flex-grow">
+                  Review flashcards
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-2 border-t border-[--theme-doctorsoffice-accent] border-opacity-20">
+          <h3 className="text-lg font-semibold mb-2 text-center">Analytics Dashboard</h3>
+          <ul className="text-sm space-y-2 list-disc pl-4">
+            <li>Coming soon.</li>
+          </ul>
+        </section>
+
+        <section className="py-2 border-t border-[--theme-doctorsoffice-accent] border-opacity-20">
+          <h3 className="text-lg font-semibold mb-2 text-center">Our Methodology</h3>
           <div className="space-y-4">
             <a 
-              href="/blog/mcat-study-schedule"
+              href="/blog/how-to-study-for-the-mcat"
               target="_blank"
               rel="noopener noreferrer"
               className="block p-4 bg-[--theme-doctorsoffice-accent] rounded-lg shadow hover:shadow-lg hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 mt-4"
@@ -116,22 +169,22 @@ const HelpContentSchedule: React.FC<HelpContentScheduleProps> = ({ onClose, onRe
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
                     />
                   </svg>
-                  <h4 className="text-[--theme-text-color] font-medium">Effective Study Planning</h4>
+                  <h4 className="text-[--theme-text-color] font-medium">Optimizing Student MCAT Scores</h4>
                 </div>
                 <p className="text-sm text-[--theme-text-color] opacity-80">
-                  Learn how to balance your MCAT prep with other commitments and maintain a sustainable study schedule.
+                  Read about our ITS architecture and methology for optimizing student scores.
                 </p>
               </div>
             </a>
           </div>
         </section>
 
-        <section>
-          <h3 className="text-lg font-semibold mb-2">Need Help?</h3>
+        <section className="py-2 border-t border-[--theme-doctorsoffice-accent] border-opacity-20">
+          <h3 className="text-lg font-semibold mb-2 text-center">Need Help?</h3>
           <p className="text-sm leading-relaxed mb-4">
             Have questions about your schedule or need assistance? Our support team and community are here to help!
           </p>
-          <div className="flex ml-2 gap-2">
+          <div className="flex justify-center gap-2">
             <MessageButton />
             <a 
               href="https://discord.gg/rTxN7wkh6e"

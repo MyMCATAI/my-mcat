@@ -1,0 +1,59 @@
+---
+title: "Building a Study Plan for the MCAT"
+description: "A deep dive into MyMCAT's intelligent study plan generation algorithm"
+section: "MCAT Prep"
+---
+
+## The Science Behind Our Study Plans
+
+Creating an effective MCAT study plan isn't just about distributing hours across a calendar. It's about understanding learning science, cognitive load theory, and the specific demands of the MCAT. Our algorithm takes these factors into account to create personalized study schedules that maximize learning efficiency while preventing burnout. The algorithm begins by validating your exam date and calculating the total available study days. It ensures your plan doesn't exceed one year, as longer study periods often lead to knowledge decay rather than improvement.
+## Full-Length Exam Scheduling
+For optimal preparation, we schedule full-length exams backwards from your test date:
+- Maintains a 5-day buffer before your actual exam
+- Spaces exams evenly throughout your study period
+- Prioritizes AAMC materials in the final weeks
+- Schedules review sessions after each exam
+
+Our CARS scheduling uses a sophisticated probability distribution:
+- More frequent practice early in your study period
+- Gradually decreasing frequency as you approach the exam
+- Strategic placement of AAMC CARS materials
+- Daily practice sessions to build stamina and consistency
+
+For each day, the algorithm:
+1. Checks for scheduled full-length exams
+2. Determines available study hours
+3. Allocates time between review and practice based on your progress
+4. Distributes tasks according to priority and resource availability
+
+The schedule maintains a dynamic balance between content review and practice:
+- Starts with an 80/20 ratio favoring content review
+- Gradually shifts to 20/80 as you approach your exam date
+- Adjusts based on your performance and confidence levels
+
+## Optimization Principles
+
+Our algorithm incorporates several key learning principles:
+
+1. **Spaced Repetition**: Critical concepts are revisited at increasing intervals
+
+2. **Interleaved Practice**: Different subjects and question types are mixed to enhance learning transfer
+
+3. **Progressive Loading**: Difficulty and intensity increase gradually to prevent burnout
+
+4. **Strategic Breaks**: Rest days are scheduled to optimize retention and recovery
+
+## Customization Options
+
+While the algorithm provides an optimized baseline schedule, you can customize:
+- Study hours per day
+- Full-length exam days
+- Resource preferences
+- Content review vs. practice balance
+- Specific content focus areas
+
+## Conclusion
+
+Building an effective MCAT study plan requires balancing multiple variables while adhering to proven learning principles. Our algorithm at [mymcat.ai](https://mymcat.ai) takes the guesswork out of this process, providing you with a scientifically-based schedule that adapts to your needs and resources.
+
+Remember, while the algorithm provides an optimal framework, the key to success lies in consistent execution and active engagement with the material. Use this plan as your foundation, but don't hesitate to adjust it based on your progress and learning style. Message us at [kalypso@mymcat.ai](mailto:kalypso@mymcat.ai) if you have any questions or suggestions.

@@ -851,18 +851,19 @@ const Schedule: React.FC<ScheduleProps> = ({
         <AnimatePresence>
           {showHelp && (
             <>
+              {/* Add overlay */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                className="fixed inset-0 bg-black bg-opacity-70 z-40"
                 onClick={toggleHelp}
               />
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="absolute top-0 right-4 w-[26rem] bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg z-50 max-h-[80vh] flex flex-col"
+                className="absolute top-0 right-4 w-[32rem] z-50 max-h-[80vh] flex flex-col"
               >
                 <HelpContentSchedule 
                   onClose={toggleHelp}
