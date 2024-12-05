@@ -56,6 +56,20 @@ const blogPosts: BlogPost[] = [
       }
     ]
   },
+  {
+    id: 4,
+    title: 'Common MCAT Study Misconceptions',
+    slug: 'mcat-study-misconceptions',
+    description: 'Debunking popular myths about MCAT preparation',
+    section: 'MCAT Prep'
+  },
+  {
+    id: 5,
+    title: 'Building a Study Plan for the MCAT',
+    slug: 'building-a-study-plan-for-the-mcat',
+    description: 'A deep dive into MyMCAT\'s intelligent study plan generation algorithm',
+    section: 'MCAT Prep'
+  },
 ]
 
 export function BlogSidebar() {

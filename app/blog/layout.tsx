@@ -43,11 +43,9 @@ export default function BlogLayout({
               <div className="max-w-[60rem] mx-auto px-6 py-16">
                 <div className="prose max-w-none mx-auto
                   prose-h1:text-[3rem] prose-h1:font-bold prose-h1:mb-8 prose-h1:text-center prose-h1:text-gray-900
-                  prose-:where(h1):text-[3rem] prose-:where(h1):font-bold prose-:where(h1):mb-8 prose-:where(h1):text-center prose-:where(h1):text-gray-900
                   prose-h2:text-[1.5rem] prose-h2:font-bold prose-h2:mt-16 prose-h2:mb-2 prose-h2:text-center prose-h2:text-gray-900
-                  prose-:where(h2):text-[1.5rem] prose-:where(h2):font-bold prose-:where(h2):mt-16 prose-:where(h2):mb-2 prose-:where(h2):text-center prose-:where(h2):text-gray-900
-                  prose-strong:text-gray-600 prose-strong:font-normal prose-strong:text-[1.25rem] prose-strong:block prose-strong:text-center prose-strong:mb-8
-                  prose-p:text-gray-700 prose-p:leading-relaxed prose-p:text-[1.125rem] prose-p:mx-auto prose-p:max-w-[45rem] prose-p:mb-6
+                  prose-strong:text-gray-900 prose-strong:font-bold
+                  prose-p:text-gray-700 prose-p:leading-relaxed prose-p:text-[1.125rem] prose-p:mx-auto prose-p:max-w-[45rem] prose-p:mb-6 prose-p:first-line:indent-8
                   prose-li:text-gray-700 prose-li:leading-relaxed prose-li:text-[1.125rem] prose-li:mx-auto prose-li:max-w-[45rem]
                   prose-ul:mx-auto prose-ul:max-w-[45rem]
                   prose-a:text-blue-600 prose-a:no-underline hover:prose-a:text-blue-700
