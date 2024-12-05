@@ -145,21 +145,21 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
               {activeSection === 'video' && (
                 <div className="text-sm leading-relaxed">
                   Watch MCAT video lectures curated from YouTube with detailed summaries. Use Kalypso to get instant clarification on any concept while watching. 
-                  <strong> You don't have to do BOTH readings and videos. One will suffice.</strong>
+                  <strong> You don&apos;t have to do BOTH readings and videos. One will suffice.</strong>
                 </div>
               )}
               {activeSection === 'reading' && (
                 <div className="text-sm leading-relaxed">
                   Access detailed PDFs from LibreText or OpenStax that cover concepts comprehensively. 
-                  You can full screen. Kalypso can clarify anything you don't understand.
-                  <strong> You don't have to do BOTH readings and videos. One will suffice.</strong>
+                  You can full screen. Kalypso can clarify anything you don&apos;t understand.
+                  <strong> You don&apos;t have to do BOTH readings and videos. One will suffice.</strong>
                 </div>
               )}
               {activeSection === 'sample' && (
                 <>
                   <div className="">
                     <p className="text-sm mb-4">
-                      This is the content category (CC) that you're currently studying. Hover over it and press a button that looks like the below to complete the category:
+                      This is the content category (CC) that you&apos;re currently studying. Hover over it and press a button that looks like the below to complete the category:
                     </p>
                     <div className="flex justify-center flex-col items-center">
                       <button
@@ -178,9 +178,9 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
               )}
               {activeSection === 'quiz' && (
                 <div className="text-sm leading-relaxed">
-                  You can do practice questions and it's full screen. You can pay a coin to take a quiz. 
+                  You can do practice questions and it&apos;s full screen. You can pay a coin to take a quiz. 
                   If you get a 100, you can get your coin back. Your performance feeds your knowledge profile 
-                  and affects the ITS' understanding of your weaknesses. <strong>You can report unfair questions with the downvote and win two coins as compensation.</strong>
+                  and affects the ITS&apos; understanding of your weaknesses. <strong>You can report unfair questions with the downvote and win two coins as compensation.</strong>
                 </div>
               )}
               {activeSection === 'kalypso' && (
@@ -377,4 +377,4 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
   );
 };
 
-export default HelpContent; 
+export default HelpContent;
