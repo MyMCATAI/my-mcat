@@ -48,6 +48,7 @@ import DiagnosticDialog from './DiagnosticDialog';
 import ATSTutorial from "./ATSTutorial";
 import CompleteTopicButton from "@/components/CompleteTopicButton";
 import ReactConfetti from 'react-confetti';
+import { HelpCircle } from "lucide-react";
 
 interface ContentItem {
   id: string;
@@ -704,7 +705,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         />
       )}
       <div className="flex items-stretch w-full mb-3">
-        <div className="flex-grow mr-2.5 ml-2">
+        <div className="flex-grow mr-3 ml-2">
           <div className="grid grid-cols-7 gap-3 ats-topic-icons">
             {isLoading
               ? (
@@ -803,20 +804,15 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                 <TooltipTrigger>
                   <button
                     onClick={() => setShowHelp(true)}
-                    className="p-2 rounded-full shadow-md bg-white"
+                    className={`help-button p-2 rounded-full shadow-md ${
+                      showHelp ? "bg-[--theme-hover-color]" : "bg-white"
+                    }`}
                   >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <circle cx="12" cy="12" r="10" fill="white" />
-                      <path
-                        d="M12 6c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 .55-.22 1.05-.59 1.41l-1.24 1.26C11.45 13.4 11 14.4 11 15.5V16h2v-.5c0-1.5.45-2.1 1.17-2.83l.9-.92c.57-.57.93-1.37.93-2.25 0-2.21-1.79-4-4-4zM11 17h2v2h-2v-2z"
-                        fill="#333"
-                      />
-                    </svg>
+                    <HelpCircle 
+                      className="w-4 h-4" 
+                      fill="none"
+                      stroke={showHelp ? "white" : "#333"}
+                    />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>Help</TooltipContent>
@@ -1322,7 +1318,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-0 right-4 w-[26rem] bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg z-50 max-h-[80vh] flex flex-col"
+            className="absolute top-0 right-4 w-[32rem] bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg z-50 max-h-[80vh] flex flex-col"
           >
             <ATSSettingContent
               onClose={toggleSettings}
@@ -1352,17 +1348,27 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       {/* Help Modal */}
       <AnimatePresence>
         {showHelp && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-0 right-4 w-[26rem] bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg z-50 max-h-[80vh] flex flex-col"
-          >
-            <HelpContent 
-              onClose={() => setShowHelp(false)} 
-              onResetTutorials={handleResetTutorials}
+          <>
+            {/* Add overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-70 z-40"
+              onClick={() => setShowHelp(false)}
             />
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-0 right-4 w-[32rem] z-50 max-h-[80vh] flex flex-col"
+            >
+              <HelpContent 
+                onClose={() => setShowHelp(false)} 
+                onResetTutorials={handleResetTutorials}
+              />
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

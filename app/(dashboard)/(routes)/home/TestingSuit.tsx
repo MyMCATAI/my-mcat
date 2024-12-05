@@ -157,7 +157,7 @@ const TestingSuit: React.FC = () => {
           />
           <div
             ref={helpRef}
-            className="absolute top-0 right-4 w-[26rem] bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg z-50 max-h-[80vh] flex flex-col"
+            className="absolute top-6 right-8 max-h-[80vh] flex flex-col"
           >
             <HelpContentCARs 
               onClose={toggleHelp}
