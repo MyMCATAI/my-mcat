@@ -432,7 +432,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
             )}
             {totalWeeklyHours < 12 && (
               <div className="mt-1 text-red-500 text-sm text-center">
-                Don't do less than 12 hours if your test is less than 6 months away
+                Don&apos;t do less than 12 hours if your test is less than 6 months away
               </div>
             )}
           </div>
