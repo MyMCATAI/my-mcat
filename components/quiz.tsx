@@ -417,12 +417,13 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
     );
   };
 
-  // Add new effect to update chatbot context when question changes
+  // Update the useEffect for chatbot context
   useEffect(() => {
     if (!currentQuestion || !setChatbotContext) return;
 
     const correctAnswer = currentQuestion.questionOptions[0];
     const displayedOptions = shuffledOptions[currentQuestion.id] || [];
+    const explanation = currentQuestion.questionAnswerNotes?.[0] || '';
     
     setChatbotContext({
       contentTitle: "Quiz Question",
@@ -432,6 +433,9 @@ Available options as shown to me:
 ${displayedOptions.map((opt, idx) => `${String.fromCharCode(65 + idx)}. ${opt}`).join('\n')}
 
 The correct answer is: "${correctAnswer}" (but this might appear in any position in my shuffled options)
+
+Explanation for the correct answer:
+${explanation}
 
 Please act as a tutor and explain concepts in a straight-forward and beginner-friendly manner. Remember not to reference the correct answer's position in the list, as the options are shuffled.`
     });

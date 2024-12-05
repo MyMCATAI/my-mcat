@@ -22,7 +22,7 @@ interface Option {
 }
 
 const options: Option[] = [
-  { id: "option1", label: "How many hours can you study each day? (We recommend 2-4 hours for each study day with a day at 0)" },
+  { id: "option1", label: "How many hours can you study each day? (We recommend 2-6 hours for each study day with a day at 0)" },
   { id: "option2", label: "Which days do you have 8 hours for full-length exams?" },
   { id: "option3", label: "When is your test?" },
   { id: "option4", label: "What resources do you want to use?" },
@@ -401,6 +401,9 @@ const SettingContent: React.FC<SettingContentProps> = ({
   const renderOptionContent = (optionId: string) => {
     switch (optionId) {
       case "option1":
+        const totalWeeklyHours = Object.values(hoursPerDay)
+          .reduce((sum, hours) => sum + Number(hours), 0);
+        
         return (
           <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-md">
             {days.map((day) => (
@@ -419,6 +422,19 @@ const SettingContent: React.FC<SettingContentProps> = ({
                 />
               </div>
             ))}
+            <div className="mt-2 text-[--theme-text-color] text-sm text-center">
+              Total weekly hours: {totalWeeklyHours}
+            </div>
+            {totalWeeklyHours > 30 && (
+              <div className="mt-1 text-red-500 text-sm text-center">
+                Be realistic about the amount of hours you can study a week
+              </div>
+            )}
+            {totalWeeklyHours < 12 && (
+              <div className="mt-1 text-red-500 text-sm text-center">
+                Don't do less than 12 hours if your test is less than 6 months away
+              </div>
+            )}
           </div>
         );
       case "option2":
@@ -521,7 +537,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
   };
 
   return (
-    <div className="bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg absolute right-[2rem] w-[36rem] h-[36rem] -top-[2rem]">
+    <div className="bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg absolute right-[2rem] w-[36rem] h-[48rem] -top-[2rem]">
       <div className="bg-[--theme-leaguecard-color] rounded-lg overflow-hidden h-full flex flex-col">
         <div className="p-4 space-y-4 flex-grow overflow-y-auto">
           {options.map((option) => (
