@@ -84,25 +84,35 @@ export async function GET(req: Request) {
       });
 
       // Transform the data to flatten the structure
-      let sortedCategories = categories.map(category => ({
-        ...category,
-        completedAt: category.knowledgeProfiles[0]?.completedAt || null,
-        completionPercentage: category.knowledgeProfiles[0]?.completionPercentage || 0,
-        conceptMastery: category.knowledgeProfiles[0]?.conceptMastery || null,
-        contentMastery: category.knowledgeProfiles[0]?.contentMastery || null,
-        isCompleted: category.knowledgeProfiles[0]?.completedAt !== null,
-        knowledgeProfiles: undefined
-      }));
+      // Since we have a unique constraint, knowledgeProfiles will have either 0 or 1 item
+      let sortedCategories = categories.map(category => {
+        const profile = category.knowledgeProfiles[0];  // Will be undefined if no profile exists
+        return {
+          ...category,
+          hasProfile: !!profile,
+          completedAt: profile?.completedAt ?? null,
+          completionPercentage: profile?.completionPercentage ?? 0,
+          conceptMastery: profile?.conceptMastery ?? null,
+          contentMastery: profile?.contentMastery ?? null,
+          isCompleted: !!profile?.completedAt,
+          knowledgeProfiles: undefined // Remove the array since we've flattened it
+        };
+      });
 
-      // Updated sorting logic: completed items last, then by concept mastery
+      // Updated sorting logic: no profile first, then incomplete, then completed
       sortedCategories.sort((a, b) => {
-        // First, sort by completion status
+        // First, prioritize categories with no profile
+        if (a.hasProfile !== b.hasProfile) {
+          return a.hasProfile ? 1 : -1;
+        }
+
+        // Then, sort by completion status
         if (a.isCompleted !== b.isCompleted) {
           return a.isCompleted ? 1 : -1;
         }
         
-        // Then sort by concept mastery for incomplete items
-        if (!a.isCompleted && !b.isCompleted) {
+        // For items with profiles that are incomplete, sort by concept mastery
+        if (!a.isCompleted && !b.isCompleted && a.hasProfile && b.hasProfile) {
           if (a.conceptMastery === null && b.conceptMastery === null) return 0;
           if (a.conceptMastery === null) return 1;
           if (b.conceptMastery === null) return -1;
@@ -112,17 +122,18 @@ export async function GET(req: Request) {
         return 0;
       });
 
-      // Apply diagnostic score sorting only to incomplete items
+      // Apply diagnostic score sorting only to incomplete items with profiles
       if (userInfo?.diagnosticScores) {
-        const incompleteCategories = sortedCategories.filter(cat => !cat.isCompleted);
-        const completedCategories = sortedCategories.filter(cat => cat.isCompleted);
+        const noProfileCategories = sortedCategories.filter(cat => !cat.hasProfile);
+        const incompleteCategories = sortedCategories.filter(cat => cat.hasProfile && !cat.isCompleted);
+        const completedCategories = sortedCategories.filter(cat => cat.hasProfile && cat.isCompleted);
         
         const sortedIncomplete = sortCategoriesByDiagnosticScores(
           incompleteCategories,
           userInfo.diagnosticScores
         );
         
-        sortedCategories = [...sortedIncomplete, ...completedCategories];
+        sortedCategories = [...noProfileCategories, ...sortedIncomplete, ...completedCategories];
       }
 
       // Paginate results
