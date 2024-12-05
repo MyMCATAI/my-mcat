@@ -424,6 +424,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
+
         const data = await response.json();
         return data.items;
       } catch (error) {
@@ -673,23 +674,24 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     setShowHelp(false); // Close the help dialog
     setTutorialKey(prev => prev + 1);
   };
-
-  const handleTopicComplete = (categoryId: string) => {
-    // Update categories state directly
+  const handleTopicComplete = async (categoryId: string) => {
+    // Remove the completed category from both lists
     setCategories(prevCategories => 
-      prevCategories.map(category => {
-        if (category.id === categoryId) {
-          return {
-            ...category,
-            isCompleted: true,
-            completedAt: new Date()
-          };
-        }
-        return category;
-      })
+      prevCategories.filter(category => category.id !== categoryId)
     );
-  };
+    
+    setCheckedCategories(prevChecked => 
+      prevChecked.filter(category => category.id !== categoryId)
+    );
 
+    // Find the current category index before removal
+    const currentIndex = checkedCategories.findIndex(cat => cat.id === categoryId);
+    
+    // Find the next category (prioritize the next index, otherwise wrap to beginning)
+    const nextIndex = currentIndex < 5 ? currentIndex + 1 : 0;
+    handleCardClick(nextIndex);
+    
+  };
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
       {showConfetti && (
