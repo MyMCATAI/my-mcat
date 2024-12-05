@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import AnimatedStar from "./AnimatedStar";
-import axios from 'axios';
 import { useUser } from "@clerk/nextjs";
 
 interface ScoreRandomizerProps {
@@ -49,9 +48,9 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
       "FELLOWSHIP LEVEL",
       "ATTENDING LEVEL",
       "PHYSICIAN LEVEL",
-      "MEDICAL DIRECTOR LEVEL"
+      "MEDICAL DIRECTOR LEVEL",
     ];
-    
+
     for (let i = tierRooms.length - 1; i >= 0; i--) {
       if (purchasedRooms.includes(tierRooms[i])) {
         return i + 1;
@@ -60,20 +59,28 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
     return 1; // Default to tier 1 if no rooms are purchased
   };
 
-  const fetchReview = async (tier: number, rating: number): Promise<Review | null> => {
+  const fetchReview = async (
+    tier: number,
+    rating: number
+  ): Promise<Review | null> => {
     try {
       const url = `/api/reviews?tier=${tier}&rating=${rating}&count=1`;
-      const response = await axios.get<Review[]>(url);
-      if (response.data && response.data.length > 0) {
-        return response.data[0];
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data && data.length > 0) {
+        return data[0];
       } else {
         console.log(`No reviews found for tier ${tier} and rating ${rating}`);
       }
     } catch (error) {
-      console.error('Error fetching review:', error);
-      if (axios.isAxiosError(error) && error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
+      console.error("Error fetching review:", error);
+      if (error instanceof Error) {
+        console.error("Error message:", error.message);
       }
     }
     return null;
@@ -100,7 +107,7 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
       4: 1.3,
       5: 1.4,
       6: 1.5,
-      7: 2.0,  // Bigger jump at 7 days
+      7: 2.0, // Bigger jump at 7 days
       8: 2.1,
       9: 2.2,
       10: 2.3,
@@ -112,7 +119,8 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
 
     // Calculate Level QC and Streak Modifier
     const levelQC = levelQCValues[playerLevel] || 1.0;
-    const streakModifier = streakDays >= 14 ? 2.5 : (streakModifiers[streakDays] || 1.0);
+    const streakModifier =
+      streakDays >= 14 ? 2.5 : streakModifiers[streakDays] || 1.0;
 
     // Total QC is the product of Level QC and Streak Modifier
     const totalQC = levelQC * streakModifier;
@@ -120,11 +128,11 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
     // Base probabilities at minimum QC (1x), now including 0 stars
     const baseProbabilities: { [key: number]: number } = {
       0: 0.05,
-      1: 0.10,
+      1: 0.1,
       2: 0.13,
       3: 0.29,
       4: 0.28,
-      5: 0.15
+      5: 0.15,
     };
 
     // Adjust probabilities based on streak days
@@ -176,17 +184,25 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
 
     // Ensure probabilities are within 0% to 100%
     for (let i = 0; i <= 5; i++) {
-      adjustedProbabilities[i] = Math.max(0, Math.min(1, adjustedProbabilities[i]));
+      adjustedProbabilities[i] = Math.max(
+        0,
+        Math.min(1, adjustedProbabilities[i])
+      );
     }
 
     // Normalize probabilities to ensure they sum to 1
-    const totalProb = Object.values(adjustedProbabilities).reduce((sum, prob) => sum + prob, 0);
+    const totalProb = Object.values(adjustedProbabilities).reduce(
+      (sum, prob) => sum + prob,
+      0
+    );
     for (let i = 0; i <= 5; i++) {
       adjustedProbabilities[i] /= totalProb;
     }
 
     // Function to get a random star rating based on adjusted probabilities
-    const getRandomStarRating = (probabilities: { [key: number]: number }): number => {
+    const getRandomStarRating = (probabilities: {
+      [key: number]: number;
+    }): number => {
       const rand = Math.random();
       let cumulative = 0;
 
@@ -241,9 +257,11 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
         finalScores.push(score);
         const review = await fetchReview(currentTier, score);
         if (review) {
-          setReviews(prevReviews => [...prevReviews, review]);
+          setReviews((prevReviews) => [...prevReviews, review]);
         } else {
-          console.log(`No review fetched for tier ${currentTier} and rating ${score}`);
+          console.log(
+            `No review fetched for tier ${currentTier} and rating ${score}`
+          );
         }
       }
 
@@ -274,7 +292,15 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [playerLevel, streakDays, patientsPerDay, qualityOfCare, averageStarRating, clinicCostPerDay, purchasedRooms]);
+  }, [
+    playerLevel,
+    streakDays,
+    patientsPerDay,
+    qualityOfCare,
+    averageStarRating,
+    clinicCostPerDay,
+    purchasedRooms,
+  ]);
 
   // Function to render stars with animation (update to handle 0 stars)
   const renderStars = (score: number, reviewIndex: number) => {
@@ -304,18 +330,34 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
   // Add this function to update the user's score
   const updateUserScore = async (amount: number) => {
     try {
-      const response = await axios.put('/api/user-info/', { amount });
-      if (response.data) {
+      const response = await fetch("/api/user-info/", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ amount }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data) {
         setCoinsEarned(amount);
       }
     } catch (error) {
-      console.error('Error updating user score:', error);
+      console.error("Error updating user score:", error);
     }
   };
 
   // Update this function to capitalize the first letter of the user's name
   const replaceNameInReview = (review: string) => {
-    const userName = user ? (user.firstName ? user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1) : 'Doctor') : 'Doctor';
+    const userName = user
+      ? user.firstName
+        ? user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1)
+        : "Doctor"
+      : "Doctor";
     return review.replace(/\$NAME/g, userName);
   };
 
@@ -350,7 +392,9 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
               </p>
               {coinsEarned !== 0 && (
                 <p className="mt-2 text-lg font-semibold">
-                  {coinsEarned > 0 ? `You earned ${coinsEarned} coin${coinsEarned > 1 ? 's' : ''}!` : 'You lost 1 coin.'}
+                  {coinsEarned > 0
+                    ? `You earned ${coinsEarned} coin${coinsEarned > 1 ? "s" : ""}!`
+                    : "You lost 1 coin."}
                 </p>
               )}
             </div>
