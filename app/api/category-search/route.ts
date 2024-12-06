@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
-import { getCategories } from "@/lib/category";
 
 export async function GET(req: Request) {
   try {
@@ -17,7 +16,8 @@ export async function GET(req: Request) {
     const pageSize = parseInt(searchParams.get("pageSize") || "10");
     const includeCARS = searchParams.get("includeCARS") === "true";
     const searchQuery = searchParams.get("searchQuery");
-    const selectedSubject = searchParams.get("subject");
+    const selectedSubjects = searchParams.get("subjects")?.split(',').filter(Boolean);
+    const isRandom = searchParams.get("random") === "true";
 
     // Single query with join instead of separate queries
     const [categories, userInfo] = await Promise.all([
@@ -33,9 +33,21 @@ export async function GET(req: Request) {
                 }
               : {},
             includeCARS ? {} : { subjectCategory: { not: "CARs" } },
-            ...(selectedSubject ? [{ subjectCategory: { equals: selectedSubject } }] : []),
+            ...(selectedSubjects && selectedSubjects.length > 0
+              ? [{
+                  subjectCategory: {
+                    in: selectedSubjects
+                  }
+                }]
+              : []),
           ],
         },
+        ...(isRandom ? {
+          orderBy: {
+            id: 'asc'
+          },
+          take: 6
+        } : {}),
         include: {
           knowledgeProfiles: {
             where: { userId },
@@ -61,36 +73,54 @@ export async function GET(req: Request) {
       completionPercentage: category.knowledgeProfiles[0]?.completionPercentage || 0,
       conceptMastery: category.knowledgeProfiles[0]?.conceptMastery || null,
       contentMastery: category.knowledgeProfiles[0]?.contentMastery || null,
-      isCompleted: category.knowledgeProfiles[0]?.completedAt !== null,
-      knowledgeProfiles: undefined // Remove the nested array
+      isCompleted: category.knowledgeProfiles[0]?.completedAt ? true : false
     }));
 
-    // Sort by concept mastery
-    sortedCategories.sort((a, b) => {
-      if (a.conceptMastery === null && b.conceptMastery === null) return 0;
-      if (a.conceptMastery === null) return 1;
-      if (b.conceptMastery === null) return -1;
-      return a.conceptMastery - b.conceptMastery;
-    });
+    if (isRandom) {
+      sortedCategories = sortedCategories
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 5);
+    } else {
+      // First, separate incomplete and complete categories
+      const incompleteCategories = sortedCategories.filter(cat => !cat.isCompleted);
+      const completedCategories = sortedCategories.filter(cat => cat.isCompleted);
 
-    // Sort by diagnostic scores if available
-    if (userInfo?.diagnosticScores) {
-      const scoreRanking = Object.entries(userInfo.diagnosticScores)
-        .filter(([key]) => key !== 'total')
-        .sort(([, a], [, b]) => Number(a) - Number(b))
-        .reduce((acc, [section], index) => {
-          const subjects = getSectionSubjects(section);
-          subjects.forEach(subject => {
-            acc[subject] = index;
-          });
-          return acc;
-        }, {} as Record<string, number>);
+      // Sort each group separately by concept mastery
+      const sortByConceptMastery = (a: any, b: any) => {
+        if (a.conceptMastery === null && b.conceptMastery === null) return 0;
+        if (a.conceptMastery === null) return 1;
+        if (b.conceptMastery === null) return -1;
+        return a.conceptMastery - b.conceptMastery;
+      };
 
-      sortedCategories.sort((a, b) => {
-        const rankA = scoreRanking[a.subjectCategory] ?? 999;
-        const rankB = scoreRanking[b.subjectCategory] ?? 999;
-        return rankA - rankB;
-      });
+      incompleteCategories.sort(sortByConceptMastery);
+      completedCategories.sort(sortByConceptMastery);
+
+      // If diagnostic scores exist, sort within each group
+      if (userInfo?.diagnosticScores) {
+        const scoreRanking = Object.entries(userInfo.diagnosticScores)
+          .filter(([key]) => key !== 'total')
+          .sort(([, a], [, b]) => Number(a) - Number(b))
+          .reduce((acc, [section], index) => {
+            const subjects = getSectionSubjects(section);
+            subjects.forEach(subject => {
+              acc[subject] = index;
+            });
+            return acc;
+          }, {} as Record<string, number>);
+
+        const sortByDiagnostic = (a: any, b: any) => {
+          const rankA = scoreRanking[a.subjectCategory] ?? 999;
+          const rankB = scoreRanking[b.subjectCategory] ?? 999;
+          return rankA - rankB;
+        };
+
+        incompleteCategories.sort(sortByDiagnostic);
+        completedCategories.sort(sortByDiagnostic);
+      }
+
+      // Combine the groups, maintaining incomplete first
+      sortedCategories = [...incompleteCategories, ...completedCategories];
     }
 
     // Paginate results

@@ -23,7 +23,6 @@ import ReactMarkdown from "react-markdown";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSkeleton } from "./ATSSkeleton";
 import { ThemedSkeleton } from "@/components/ATS/ThemedSkeleton";
-import { useTheme } from "@/contexts/ThemeContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { FaSpotify, FaApple, FaHeadphones } from "react-icons/fa";
@@ -91,8 +90,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const [showSettings, setShowSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [contentType, setContentType] = useState("video");
-  const [showSearch, setShowSearch] = useState(false);
-  const [showLink, setShowLink] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
@@ -100,13 +97,11 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const [currentContentId, setCurrentContentId] = useState<string | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 
   const { toast } = useToast();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const { theme } = useTheme();
   const [showPodcast, setShowPodcast] = useState(false);
   const [podcastPosition, setPodcastPosition] = useState({ top: 0, left: 0 });
   const podcastButtonRef = useRef<HTMLButtonElement>(null);
@@ -437,10 +432,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     },
     []
   );
-
-  const toggleSettings = () => {
-    setShowSettings((prev) => !prev);
-  };
 
   const handleCameraClick = () => {
     setContentType("video");
@@ -1136,10 +1127,12 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                             onClick={() => handleContentClick(video.id)}
                             className="cursor-pointer mb-2"
                           >
-                            {videoId && (
                               <div>
                                 <Image
-                                  src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                                   src={videoId 
+                                    ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+                                    : '/knowledge.png'
+                                  }
                                   alt={`Thumbnail ${index}`}
                                   width={140}
                                   height={90}
@@ -1149,11 +1142,19 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                                       : ""
                                   }`}
                                 />
-                                <p className="text-xs mt-1 text-[--theme-text-color] truncate">
-                                  {video.title}
-                                </p>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <p className="text-xs mt-1 text-[--theme-text-color] truncate">
+                                        {video.title}
+                                      </p>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="text-xs">{video.title}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </div>
-                            )}
                           </div>
                         );
                       })}
@@ -1297,37 +1298,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         </AnimatePresence>,
         document.body
       )}
-
-      {/* Settings Button */}
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
-            onClick={toggleSettings}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Settings Modal */}
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-0 right-4 w-[32rem] bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg z-50 max-h-[80vh] flex flex-col"
-          >
-            <ATSSettingContent
-              onClose={toggleSettings}
-              checkedCategories={checkedCategories}
-              setCheckedCategories={setCheckedCategories}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
       <DiagnosticDialog
         isOpen={showDiagnosticDialog}
         onSubmit={handleDiagnosticSubmit}
