@@ -13,6 +13,7 @@ const publicRoutes = [
   "/privacypolicy",
   "/redirect",
   "/api/webhook",
+  "/api/cron",
   "/sitemap.xml",
   "/robots.txt",
   "/parallax/(.*)",
