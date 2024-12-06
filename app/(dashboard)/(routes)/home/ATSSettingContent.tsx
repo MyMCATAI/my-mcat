@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Category } from "@/types";
 import { useTheme } from "@/contexts/ThemeContext";
-import FilterButton from "@/components/ui/FilterButton";
 import { Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -132,71 +130,71 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
 
   const SettingsContent = () => {
     return (
-      <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md">
-        <div className="space-y-2">
-          <div className="flex items-center justify-center h-10">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setCurrentPage(1);
-                  fetchCategories(searchQuery, selectedSubject, 1, selectedSubjectsForShuffle);
-                }
-              }}
-              onClick={() => setShowSearchResults(true)}
-              placeholder="Search categories..."
-              className={`border rounded-md p-2 w-full theme-box theme-${theme}`}
-              style={{
-                backgroundColor: "var(--theme-background-color)",
-                color: "var(--theme-text-color)",
-                borderColor: "var(--theme-border-color)",
-              }}
-            />
-          </div>
+      <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md flex flex-col gap-2">
+        <div className="flex items-center justify-center h-10 flex-shrink-0">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setCurrentPage(1);
+                fetchCategories(searchQuery, selectedSubject, 1, selectedSubjectsForShuffle);
+              }
+            }}
+            onClick={() => setShowSearchResults(true)}
+            placeholder="Search categories..."
+            className={`border rounded-md p-2 w-full theme-box theme-${theme}`}
+            style={{
+              backgroundColor: "var(--theme-background-color)",
+              color: "var(--theme-text-color)",
+              borderColor: "var(--theme-border-color)",
+            }}
+          />
+        </div>
 
-          <div className="h-10">
-            <button onClick={handleRandomize} className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-transparent text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition duration-200">
-              <span>Shuffle</span>
-            </button>
-          </div>
+        <div className="h-10 flex-shrink-0">
+          <button onClick={handleRandomize} className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-transparent text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition duration-200">
+            <span>Shuffle</span>
+          </button>
+        </div>
 
-          <div className="h-[23rem] overflow-y-auto">
-            {isLoading ? (
-              <div className="space-y-2">
-                {[...Array(7)].map((_, index) => (
-                  <div key={index} className="flex items-center gap-2 h-8">
-                    <Skeleton className="w-4 h-4" />
-                    <Skeleton className="w-3/4 h-5" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {categories.map((category) => (
-                  <div key={category.id} className="flex items-center gap-2 h-8">
-                    <Checkbox
-                      id={category.id}
-                      checked={checkedCategories.some((c) => c.id === category.id)}
-                      onCheckedChange={(isChecked) =>
-                        handleCategoryCheck(category, isChecked as boolean)
-                      }
-                    />
-                    <span className="text-[--theme-text-color] text-md flex items-center justify-between">
-                      {category.conceptCategory}
-                      {category.isCompleted && (
-                        <span className="text-green-500 ml-2">
-                          <Check className="w-4 h-4" />
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        <div className="flex-grow overflow-y-auto min-h-[12rem]">
+          {isLoading ? (
+            <div className="space-y-2">
+              {[...Array(7)].map((_, index) => (
+                <div key={index} className="flex items-center gap-2 h-8">
+                  <Skeleton className="w-4 h-4" />
+                  <Skeleton className="w-3/4 h-5" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {categories.map((category) => (
+                <div key={category.id} className="flex items-center gap-2 h-8">
+                  <Checkbox
+                    id={category.id}
+                    checked={checkedCategories.some((c) => c.id === category.id)}
+                    onCheckedChange={(isChecked) =>
+                      handleCategoryCheck(category, isChecked as boolean)
+                    }
+                  />
+                  <span className="text-[--theme-text-color] text-md flex items-center justify-between">
+                    {category.conceptCategory}
+                    {category.isCompleted && (
+                      <span className="text-green-500 ml-2">
+                        <Check className="w-4 h-4" />
+                      </span>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
+        <div className="flex-shrink-0 space-y-2">
           <div className="h-10">
             <button
               onClick={() => setCheckedCategories([])}
@@ -258,8 +256,8 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
   };
 
   return (
-    <div className="p-4 space-y-4 flex-grow overflow-y-auto">
-      <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md">
+    <div className="h-full flex flex-col gap-4 overflow-y-auto p-4">
+      <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md flex-shrink-0">
         <h3 className="text-lg font-medium mb-2">Filter by Subjects</h3>
         <div className="max-h-[8rem] overflow-y-auto">
           <div className="grid grid-cols-2 gap-2">
@@ -297,7 +295,9 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
         </div>
       </div>
       
-      {SettingsContent()}
+      <div className="flex-grow overflow-y-auto">
+        {SettingsContent()}
+      </div>
     </div>
   );
 };
