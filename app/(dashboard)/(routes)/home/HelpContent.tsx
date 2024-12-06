@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { X, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Check, Podcast } from 'lucide-react';
 import { FaDiscord } from 'react-icons/fa';
 import MessageButton from '@/components/MessageButton';
 import { useOutsideClick } from '@/hooks/use-outside-click';
@@ -318,6 +318,32 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
               Click one of the icons above for an explanation of their purpose.
             </div>
           )}
+        </section>
+
+        <section className="py-2 border-t border-[--theme-doctorsoffice-accent]">
+          <h3 className="text-lg font-semibold mb-2 text-center">MyMCAT Podcast</h3>
+          <div className="w-full">
+            <iframe 
+              style={{ borderRadius: "0.75rem" }}
+              src="https://open.spotify.com/embed/artist/39hEmhoBLVCLVbKNgcCQpw?utm_source=generator" 
+              width="100%" 
+              height="152"
+              frameBorder="0" 
+              allowFullScreen 
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+              loading="lazy"
+            />
+          </div>
+          <p className="text-sm leading-relaxed mt-4 text-center">
+            We use NotebookLM to generate podcasts for you to listen to. Under the thumbnails, you can access a podcast for a category by clicking this icon:
+          </p>
+          <div className="flex justify-center mt-2">
+            <button
+              className="w-14 h-14 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-300 bg-[--theme-leaguecard-color] hover:bg-[--theme-hover-color] border border-[--theme-border-color]"
+            >
+              <Podcast className="w-8 h-8 transition-colors duration-300 text-[--theme-text-color] hover:text-[--theme-hover-text]" />
+            </button>
+          </div>
         </section>
 
         <section className="py-2 border-t border-[--theme-doctorsoffice-accent]">
