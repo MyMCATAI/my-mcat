@@ -13,7 +13,6 @@ interface Option {
 }
 
 interface ATSSettingContentProps {
-  onClose?: () => void;
   checkedCategories: Category[];
   setCheckedCategories: React.Dispatch<React.SetStateAction<Category[]>>;
 }
@@ -28,7 +27,6 @@ const subjects = [
 ];
 
 const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
-  onClose,
   checkedCategories,
   setCheckedCategories,
 }) => {
@@ -95,10 +93,6 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
     }
   };
 
-  const handleDone = () => {
-    if (onClose) onClose();
-  };
-
   const handleCategoryCheck = (category: Category, isChecked: boolean) => {
     if (isChecked) {
       if (checkedCategories.length >= 6) {
@@ -140,7 +134,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
     return (
       <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md">
         <div className="space-y-2">
-          <div className="flex items-center justify-center h-14">
+          <div className="flex items-center justify-center h-10">
             <input
               type="text"
               value={searchQuery}
@@ -162,13 +156,13 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
             />
           </div>
 
-          <div className="h-12">
+          <div className="h-10">
             <button onClick={handleRandomize} className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-transparent text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition duration-200">
               <span>Shuffle</span>
             </button>
           </div>
 
-          <div className="h-[300px] overflow-y-auto">
+          <div className="h-[23rem] overflow-y-auto">
             {isLoading ? (
               <div className="space-y-2">
                 {[...Array(7)].map((_, index) => (
@@ -203,7 +197,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
             )}
           </div>
 
-          <div className="h-12">
+          <div className="h-10">
             <button
               onClick={() => setCheckedCategories([])}
               className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
@@ -215,7 +209,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
             </button>
           </div>
 
-          <div className="h-12 flex justify-between">
+          <div className="h-10 flex justify-between">
             <button
               onClick={() => {
                 setCurrentPage((prev) => Math.max(1, prev - 1));
@@ -263,64 +257,48 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
     );
   };
 
-  const SubjectsList = () => {
-    return (
-      <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md mt-4">
-        <h3 className="text-lg font-medium mb-3">Filter by Subjects</h3>
-        <div className="grid grid-cols-2 gap-3">
-          {subjects.map((subject) => (
-            <div 
-              key={subject.name} 
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-[--theme-hover-color] transition-colors"
-            >
-              <Checkbox
-                id={`shuffle-filter-${subject.name}`}
-                checked={selectedSubjectsForShuffle.has(subject.name)}
-                onCheckedChange={(checked) => {
-                  setSelectedSubjectsForShuffle(prev => {
-                    const newSet = new Set(prev);
-                    if (checked) {
-                      newSet.add(subject.name);
-                    } else {
-                      newSet.delete(subject.name);
-                    }
-                    return newSet;
-                  });
-                }}
-                className="h-4 w-4"
-              />
-              <label 
-                htmlFor={`shuffle-filter-${subject.name}`}
-                className="text-sm font-medium flex items-center gap-2 cursor-pointer"
-                style={{ color: subject.color }}
+  return (
+    <div className="p-4 space-y-4 flex-grow overflow-y-auto">
+      <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md">
+        <h3 className="text-lg font-medium mb-2">Filter by Subjects</h3>
+        <div className="max-h-[8rem] overflow-y-auto">
+          <div className="grid grid-cols-2 gap-2">
+            {subjects.map((subject) => (
+              <div 
+                key={subject.name} 
+                className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[--theme-hover-color] transition-colors"
               >
-                {subject.name}
-              </label>
-            </div>
-          ))}
+                <Checkbox
+                  id={`shuffle-filter-${subject.name}`}
+                  checked={selectedSubjectsForShuffle.has(subject.name)}
+                  onCheckedChange={(checked) => {
+                    setSelectedSubjectsForShuffle(prev => {
+                      const newSet = new Set(prev);
+                      if (checked) {
+                        newSet.add(subject.name);
+                      } else {
+                        newSet.delete(subject.name);
+                      }
+                      return newSet;
+                    });
+                  }}
+                  className="h-4 w-4"
+                />
+                <label 
+                  htmlFor={`shuffle-filter-${subject.name}`}
+                  className="text-sm font-medium flex items-center gap-2 cursor-pointer"
+                  style={{ color: subject.color }}
+                >
+                  {subject.name}
+                </label>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-    );
-  };
-
-  return (
-    <>
-      <div className="p-4 space-y-4 flex-grow overflow-y-auto">
-        {SettingsContent()}
-        <SubjectsList />
-      </div>
-
-      <div className="p-4">
-        <Button
-          className="w-full text-[--theme-text-color] bg-transparent font-mono py-2 px-4 rounded-lg 
-            hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-            transition duration-200"
-          onClick={handleDone}
-        >
-          DONE
-        </Button>
-      </div>
-    </>
+      
+      {SettingsContent()}
+    </div>
   );
 };
 
