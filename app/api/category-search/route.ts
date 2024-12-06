@@ -79,7 +79,7 @@ export async function GET(req: Request) {
     if (isRandom) {
       sortedCategories = sortedCategories
         .sort(() => Math.random() - 0.5)
-        .slice(0, 5);
+        .slice(0, pageSize);
     } else {
       // First, separate incomplete and complete categories
       const incompleteCategories = sortedCategories.filter(cat => !cat.isCompleted);
