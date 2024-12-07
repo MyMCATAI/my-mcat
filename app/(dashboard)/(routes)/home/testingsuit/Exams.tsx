@@ -125,16 +125,6 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
     setDismissMessage(null);
   };
 
-
-  const getTimeOfDay = () => {
-    const hour = new Date().getHours();
-    if (hour < 5) return "night";
-    if (hour < 12) return "morning";
-    if (hour < 18) return "afternoon";
-    if (hour < 22) return "evening";
-    return "night";
-  };
-
   const getWelcomeMessage = (userName: string, streak: number, testsCompletedToday: number) => {
     let message = `Hey ${
       userName.charAt(0).toUpperCase() + userName.slice(1)
@@ -149,7 +139,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
     }
 
     if (testsCompletedToday >= MAX_TESTS_PER_DAY) {
-      message += `\n\nCongratulations on completing ${testsCompletedToday} tests today! Make sure to review your tests to improve your learning and come back tomorrow for the next 2 tests.`;
+      message += `\n\nCongratulations on completing ${testsCompletedToday} tests today! Make sure to review your tests to improve your learning and come back tomorrow for more.`;
     } else {
       message += "\n\n";
     }
