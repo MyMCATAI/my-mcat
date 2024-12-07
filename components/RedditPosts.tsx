@@ -38,8 +38,10 @@ const RedditPosts: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("CARS tips");
   const [sortOption, setSortOption] = useState<string>("month");
   const [selectedPost, setSelectedPost] = useState<RedditPost | null>(null);
+  const [expandedPosts, setExpandedPosts] = useState<{ [key: string]: boolean }>({});
 
   const cacheRef = useRef<{ [key: string]: RedditPost[] }>({});
+  const contentRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const debouncedSearchQuery = useDebounce(searchQuery, 1000);
 
@@ -105,6 +107,10 @@ const RedditPosts: React.FC = () => {
 
   const closeDialog = () => {
     setSelectedPost(null);
+  };
+
+  const isContentTruncated = (element: HTMLElement) => {
+    return element.scrollHeight > element.clientHeight;
   };
 
   return (
@@ -193,15 +199,32 @@ const RedditPosts: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Post Body */}
+                {/* Modified Post Body */}
                 {post.selftext && (
                   <div className="mt-4">
                     <div
-                      className={`text-xs xl:text-sm text-[--theme-text-color] reddit-content max-h-[10rem] overflow-hidden`}
+                      ref={(el: HTMLDivElement | null) => {
+                        contentRefs.current[index] = el;
+                      }}
+                      className={`text-xs xl:text-sm text-[--theme-text-color] reddit-content relative ${
+                        !expandedPosts[index] ? 'max-h-[10rem]' : ''
+                      } overflow-hidden`}
                       dangerouslySetInnerHTML={{
                         __html: formatContent(post.selftext),
                       }}
                     />
+                    {!expandedPosts[index] && contentRefs.current[index] && 
+                      isContentTruncated(contentRefs.current[index]) && (
+                      <>
+                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[--theme-reddit-color] to-transparent" />
+                        <button 
+                          className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-4 py-1 text-xs text-blue-500 hover:text-blue-600 transition-colors"
+                          onClick={() => openDialog(post)}
+                        >
+                          Read More
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

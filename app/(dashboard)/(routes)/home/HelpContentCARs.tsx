@@ -31,28 +31,31 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
       </button>
 
       {/* Title */}
-      <h2 className={"text-[--theme-text-color] text-2xl font-semibold mb-6"}>
-        {"CARS Help & Information"}
+      <h2 className="text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center">
+        CARS Help & Information
       </h2>
 
       {/* Content Sections */}
       <div className={"space-y-6 text-[--theme-text-color]"}>
         <section>
-          <p className={"text-sm leading-relaxed mb-4"}>
-            {"Welcome to the CARS practice section! Here you can practice CARS passages daily with high quality passages that feature AI help and feedback."}
-          </p>
-          <div className={"flex justify-center"}>
+          <div className="flex flex-col items-center gap-6">
+            <span className="text-base">Practice and learn CARs.</span>
             <button
               onClick={handleResetTutorials}
-              className={"px-4 py-2 text-sm border border-[--theme-border-color] bg-[--theme-bg-transparent] rounded-md hover:bg-[--theme-hover-color] transition-colors duration-200"}
+              className="flex items-center gap-2 px-4 py-2 rounded-md border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg text-sm"
             >
-              {"Reset Tutorial"}
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Reset Tutorials
             </button>
           </div>
         </section>
 
         <section className={"py-2 border-t border-[--theme-doctorsoffice-accent]"}>
-          <h3 className={"text-lg font-semibold mb-2 text-center"}>{"Key Metrics"}</h3>
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            Key Metrics
+          </h3>
           <div className={"flex justify-between items-center p-2 bg-transparent border-2 rounded-lg mb-6"}
                style={{ borderColor: "var(--theme-border-color)" }}>
             <div className={"flex flex-col items-center w-1/4"}>
@@ -102,39 +105,42 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
           </div>
           <div className={"mt-4 space-y-2.5 text-sm"}>
             <p>
-              <span className={"font-medium"}>Score:</span>
-              {" Your average score in the last ten passages."}
+              <span className="font-medium">Score:</span>
+              {"Averaged from last 10 passages"}
             </p>
             
             <p>
-              <span className={"font-medium"}>Time:</span>
-              {" Average time per passage. Aim for under 10 minutes."}
+              <span className="font-medium">Time:</span>
+              {" Target under 10 mins/passage"}
             </p>
             
             <p>
-              <span className={"font-medium"}>Coins:</span>
-              {" Costs 1 coin per passage. Score 80%+ to earn it back."}
+              <span className="font-medium">Coins:</span>
+              {" Pay a coin a passage, earn back at 80%+ score"}
             </p>
             
             <p>
-              <span className={"font-medium"}>Tests:</span>
-              {" Completed vs reviewed tests. Review for bonus coins."}
+              <span className="font-medium">Tests:</span>
+              {" Review for bonus coins"}
             </p>
           </div>
         </section>
         <section className={"py-2 border-t border-[--theme-doctorsoffice-accent]"}>
-          <h3 className={"text-lg font-semibold mb-2 text-center"}>{"System Design"}</h3>
-          <ul className={"text-sm space-y-2 list-disc pl-4"}>
-            <li>{"Each CARS passage costs 1 coin, but score 100% in good time to earn the coin back."}</li>
-            <li>{"Passages are rated Level 1-3. Your last three scores determine the difficulty."}</li>
-            <li>{"Review passages thoroughly to increase your chances of scoring well."}</li>
-            <li>{"Most passages have Part 2 available with new questions."}</li>
-            <li>{"Report bugs or mistakes - earn 2 coins if we validate your report."}</li>
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            System Design
+          </h3>
+          <ul className="text-sm space-y-2 list-disc pl-4">
+            <li><span className="font-medium">Cost:</span>{" 1 coin per passage"}</li>
+            <li><span className="font-medium">Difficulty:</span>{" Levels 1-3, based on recent scores"}</li>
+            <li><span className="font-medium">Part 2:</span>{" Most passages have bonus questions"}</li>
+            <li><span className="font-medium">Bugs:</span>{" Report for 2 coins if validated"}</li>
           </ul>
         </section>
 
         <section className={"py-2 border-t border-[--theme-doctorsoffice-accent]"}>
-          <h3 className={"text-lg font-semibold mb-2 text-center"}>{"CARS Strategies"}</h3>
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            CARS Strategies
+          </h3>
           <div className={"grid grid-cols-1 gap-4"}>
             <a 
               href={"/blog/best-cars-strategy"}
@@ -173,28 +179,31 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
             </a>
           </div>
 
-          <h3 className={"border-t border-[--theme-doctorsoffice-accent] pt-2 text-lg font-semibold mb-2 mt-6 text-center"}>{"Sidebar"}</h3>
+          <h3 className="border-t border-[--theme-doctorsoffice-accent] pt-2 text-xs mb-2 mt-6 text-center opacity-60 uppercase tracking-wide">
+            Sidebar
+          </h3>
           <ul className={"text-sm space-y-2 list-disc pl-4"}>
-            <li>{"Videos from YouTube are a collection of videos collected to help with CARs."}</li>
-            <li>{"Insights from r/MCAT sends a feed of Reddit content to you. You can search for content. You can press maximize in the top right to read a reddit post."}</li>
+            <li>{"Videos are collected from YouTube to help with CARs."}</li>
+            <li>{"Insights from r/MCAT sends a feed of Reddit content to you for you to search and review."}</li>
           </ul>
         </section>
 
         <section className={"py-2 border-t border-[--theme-doctorsoffice-accent]"}>
-          <h3 className={"text-lg font-semibold mb-2 text-center"}>{"Need Help?"}</h3>
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            Need Help?
+          </h3>
           <p className={"text-sm leading-relaxed mb-4"}>
             {"Have questions about CARS or need assistance? Our support team and community are here to help!"}
           </p>
-          <div className={"flex justify-center gap-2"}>
-            <MessageButton />
+          <div className="flex justify-center gap-4">
+            <MessageButton iconOnly withShadow />
             <a 
-              href={"https://discord.gg/rTxN7wkh6e"}
-              target={"_blank"}
-              rel={"noopener noreferrer"}
-              className={"flex items-center gap-2 px-6 py-2 bg-gray-600 text-white text-m rounded-md hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors duration-200"}
+              href="https://discord.gg/rTxN7wkh6e"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 flex items-center justify-center rounded-md border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg"
             >
-              <FaDiscord className={"h-4 w-4"} />
-              <span>{"Join Discord"}</span>
+              <FaDiscord className="h-5 w-5" />
             </a>
           </div>
         </section>

@@ -22,6 +22,13 @@ const ChatBotWidgetNoChatBot = dynamic(
 // Add this constant at the top of the file, after the imports
 const MAX_TESTS_PER_DAY = 2;
 
+// Add this helper function at the top of the file (after imports)
+const getDifficultyColor = (difficulty: number) => {
+  if (difficulty < 3) return "text-green-500";
+  if (difficulty >= 3 && difficulty < 4) return "text-yellow-500";
+  return "text-red-500";
+};
+
 interface TestListingProps {
   tests: Test[];
   testsCompletedToday: number;
@@ -206,70 +213,45 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                 }}
               >
                 <div className="flex justify-between items-center h-full px-2 sm:px-4 md:px-6 lg:px-8 xl:px-16 cars-stats">
-                  <div className="flex flex-col items-center w-1/4">
-                    <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
-                      <Image
-                        src="/game-components/PixelHeart.png"
-                        alt="Heart"
-                        layout="fill"
-                        objectFit="contain"
-                      />
+                  {[
+                    {
+                      icon: "/game-components/PixelHeart.png",
+                      value: reportData ? `${reportData.averageTestScore.toFixed(2)}%` : "N/A",
+                      label: "Score",
+                      alt: "Heart"
+                    },
+                    {
+                      icon: "/game-components/PixelWatch.png",
+                      value: reportData ? `${(reportData.averageTimePerTest / 60000).toFixed(2)} min` : "N/A",
+                      label: "Time",
+                      alt: "Watch"
+                    },
+                    {
+                      icon: "/game-components/PixelCupcake.png",
+                      value: reportData ? reportData.userScore : "N/A",
+                      label: "Coins",
+                      alt: "Diamond"
+                    },
+                    {
+                      icon: "/game-components/PixelBook.png",
+                      value: reportData ? `${reportData.testsCompleted}/${reportData.totalTestsTaken}` : "N/A",
+                      label: "Tests",
+                      alt: "Flex"
+                    }
+                  ].map((stat, index) => (
+                    <div key={index} className="flex flex-col items-center w-1/4 p-2 rounded-lg hover:bg-black/5 transition-all duration-200">
+                      <div className="w-[2.5rem] h-[2.5rem] relative mb-1">
+                        <Image
+                          src={stat.icon}
+                          alt={stat.alt}
+                          layout="fill"
+                          objectFit="contain"
+                        />
+                      </div>
+                      <span className="text-sm font-medium">{stat.value}</span>
+                      <span className="text-xs opacity-75">{stat.label}</span>
                     </div>
-                    <span className="text-[2vw] sm:text-xs mt-1">
-                      {reportData
-                        ? `${reportData.averageTestScore.toFixed(2)}%`
-                        : "N/A"}
-                    </span>
-                    <span className="text-[2vw] sm:text-xs">score</span>
-                  </div>
-                  <div className="flex flex-col items-center w-1/4">
-                    <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
-                      <Image
-                        src="/game-components/PixelWatch.png"
-                        alt="Watch"
-                        layout="fill"
-                        objectFit="contain"
-                      />
-                    </div>
-                    <span className="text-[2vw] sm:text-xs mt-1">
-                      {reportData
-                        ? `${(reportData.averageTimePerTest / 60000).toFixed(
-                            2
-                          )} min`
-                        : "N/A"}
-                    </span>
-                    <span className="text-[2vw] sm:text-xs">per passage</span>
-                  </div>
-                  <div className="flex flex-col items-center w-1/4">
-                    <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
-                      <Image
-                        src="/game-components/PixelCupcake.png"
-                        alt="Diamond"
-                        layout="fill"
-                        objectFit="contain"
-                      />
-                    </div>
-                    <span className="text-[2vw] sm:text-xs mt-1">
-                      {reportData ? reportData.userScore : "N/A"}
-                    </span>
-                    <span className="text-[2vw] sm:text-xs">coins</span>
-                  </div>
-                  <div className="flex flex-col items-center w-1/4">
-                    <div className="w-[5vw] h-[5vw] min-w-[30px] min-h-[30px] max-w-[2.5rem] max-h-[2.5rem] relative">
-                      <Image
-                        src="/game-components/PixelBook.png"
-                        alt="Flex"
-                        layout="fill"
-                        objectFit="contain"
-                      />
-                    </div>
-                    <span className="text-[2vw] sm:text-xs mt-1">
-                      {reportData
-                        ? `${reportData.testsCompleted}/${reportData.totalTestsTaken}`
-                        : "N/A"}
-                    </span>
-                    <span className="text-[2vw] sm:text-xs">tests</span>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -281,42 +263,51 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                 {welcomeAndTestMessage}
               </div>
               {welcomeComplete && testsCompletedToday < MAX_TESTS_PER_DAY && tests.length > 0 && (
-                <div className="flex items-center mt-12 ml-2">
-                  <Link
-                    href={`/test/testquestions?id=${tests[0].id}`}
-                    className="text-blue-500 transition-colors duration-200 flex items-center"
+                <div className="flex flex-col mt-12 ml-2">
+                  <div 
+                    className="flex items-center justify-between p-4 rounded-lg border-2 group theme-box hover:[background-color:var(--theme-hover-color)] transition-all duration-200"
+                    style={{
+                      borderColor: "var(--theme-border-color)",
+                      color: "var(--theme-text-color)",
+                    }}
                   >
-                    <div className="flex items-center mr-4">
-                      <div className="w-7 h-7 relative theme-box mr-1">
-                        <Image
-                          src="/computer.svg"
-                          layout="fill"
-                          objectFit="contain"
-                          alt="Computer icon"
-                          className="theme-svg"
-                        />
-                      </div>
-                    </div>
-                    <span
-                      className="animate-pulse text-xl"
-                      style={{
-                        color: "var(--theme-text-color)",
-                        transition: "color 0.2s",
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.color =
-                          "var(--theme-hover-color)")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.color =
-                          "var(--theme-text-color)")
-                      }
+                    <Link
+                      href={`/test/testquestions?id=${tests[0].id}`}
+                      className="flex-1"
                     >
-                      {tests && tests.length > 0
-                        ? tests[0].title + " - Lvl " + tests[0].difficulty
-                        : "Loading first test..."}
-                    </span>
-                  </Link>
+                      <div className="flex items-center gap-4">
+                        <div className="w-7 h-7 relative">
+                          <Image
+                            src="/computer.svg"
+                            layout="fill"
+                            objectFit="contain"
+                            alt="Computer icon"
+                            className="theme-svg"
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <span
+                            className="text-xl group-hover:text-white transition-colors duration-200"
+                          >
+                            {tests[0].title}
+                          </span>
+                          <span className={`text-sm ${getDifficultyColor(tests[0].difficulty)}`}>
+                            Level {tests[0].difficulty}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                    <div className="flex items-center">
+                      <span 
+                        className="text-sm px-2 py-1 rounded-full border group-hover:text-white transition-colors duration-200"
+                        style={{
+                          borderColor: "var(--theme-border-color)",
+                        }}
+                      >
+                        Current
+                      </span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

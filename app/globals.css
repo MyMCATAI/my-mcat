@@ -173,7 +173,7 @@ body.theme-sunsetCity * {
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
-    --theme-box-shadow: 0 0 6px 2px rgba(0, 123, 255, 0.7), inset 0 2px 13px rgba(49, 49, 244, 0.8);
+    --theme-box-shadow: 0 0 6px 2px rgba(0, 123, 255, 0.2), inset 0 2px 13px rgba(49, 49, 244, 0.2);
     --theme-mainbox-color: #001226;
     --theme-gradient-start: #000000e6;
     --theme-gradient-end: rgba(0, 18, 38, 0.9);
@@ -185,7 +185,7 @@ body.theme-sunsetCity * {
     --theme-userchatbox-color: #007afc;
     --theme-botchatbox-color: #262729;
     --theme-hover-text: #ffffff;
-    --theme-border-color: #0162ff; /* This is the default blue color */
+    --theme-border-color: rgba(59, 130, 246, 0.4); /* Subtle blue */
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
     --theme-leaguecard-color: #000e2de6; /* Changed from #001226 to rgba */
     --theme-navbutton-color: #001226;
@@ -295,7 +295,7 @@ body.theme-sunsetCity * {
 
 .theme-sakuraTrees {
   /* Sakura Trees theme variables */
-  --theme-box-shadow: 0 0 6px 2px rgba(255, 0, 89, 0.7), inset 0 2px 8px rgba(253, 57, 149, 0.8);
+  --theme-box-shadow: 0 0 6px 2px rgba(255, 0, 89, 0.2), inset 0 2px 8px rgba(253, 57, 149, 0.2);
   --theme-interface-image: url('/sakura-pattern.png');
   --theme-mainbox-color: #faeef4e6; /* Lighter, more transparent pink */
   --theme-gradient-start: #fff9ffcd;
@@ -307,7 +307,7 @@ body.theme-sunsetCity * {
   --theme-hover-color: #c17891; /* Pale violet red */
   --theme-botchatbox-color: #dcdcdc; /* Transparent pale violet red */
   --theme-hover-text: #ffffff;
-  --theme-border-color: #ff0080; /* Pale violet red */
+  --theme-border-color: rgba(184, 84, 117, 0.4); /* Subtle pink */
   --theme-leaguecard-color: #ffffffe6; /* Matching mainbox-color */
   --theme-navbutton-color: #9a2641; /* Pale violet red */
   --svg-invert: 0; /* Changed to 0 to keep original SVG colors */
@@ -329,7 +329,7 @@ body.theme-sunsetCity * {
 
 /* Sunset City theme */
 .theme-sunsetCity {
-  --theme-box-shadow: 0 0 10px 3px rgba(255, 99, 71, 0.5), inset 0 0 10px rgba(255, 99, 71, 0.3);
+  --theme-box-shadow: 0 0 10px 3px rgba(255, 99, 71, 0.2), inset 0 0 10px rgba(255, 99, 71, 0.2);
   --theme-mainbox-color: #2c1e4a;
   --theme-interface-image: none;
   --theme-gradient-start: rgba(44, 30, 74, 0.85);
@@ -342,7 +342,7 @@ body.theme-sunsetCity * {
   --theme-botchatbox-color: #323232;
   --theme-userchatbox-color: #007afc;
   --theme-hover-text: #2c1e4a;
-  --theme-border-color: #ff6347;
+  --theme-border-color: rgba(255, 99, 71, 0.4); /* Subtle tomato */
   --theme-leaguecard-color: #231639;
   --theme-navbutton-color: #49327c;
   --svg-invert: 0;
@@ -628,7 +628,7 @@ body {
     width: 50%;
 }
 .theme-mykonosBlue {
-  --theme-box-shadow: 0 0 6px 6px rgba(30, 129, 176, 0.3), inset 0 0 15px #1e81b04d;
+  --theme-box-shadow: 0 0 6px 6px rgba(30, 129, 176, 0.2), inset 0 0 15px rgba(30, 129, 176, 0.2);
   --theme-mainbox-color: #ffffff;
   --theme-gradient-start: #f0f8ff;
   --theme-gradient-end: #ffffff;
@@ -640,7 +640,7 @@ body {
   --theme-userchatbox-color: #0c85ff;
   --theme-botchatbox-color: #e8e9ea;
   --theme-hover-text: #ffffff;
-  --theme-border-color: #4cb5e6;
+  --theme-border-color: rgba(76, 181, 230, 0.4); /* Subtle blue */
   --theme-leaguecard-color: rgba(255, 255, 255, 0.9);
   --theme-navbutton-color: #1e81b0;
   --svg-invert: 0;

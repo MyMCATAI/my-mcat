@@ -655,6 +655,15 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   });
 
+  // Add this helper function near the top of the component
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
   return (
     <div className="grid grid-cols-[25%_75%] h-full relative w-full">
       {/* Left Sidebar */}
@@ -670,7 +679,9 @@ const Schedule: React.FC<ScheduleProps> = ({
           boxShadow: "var(--theme-box-shadow)",
         }}
       >
-        <h1 className="text-3xl font-bold text-center mb-4">TODAY</h1>
+        <h1 className="text-sm font-medium text-center mb-4 opacity-60">
+          {formatDate(new Date())}
+        </h1>
 
         <div
           className="flex-grow overflow-y-auto space-y-4 pr-2"
@@ -695,7 +706,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                     border-2 border-[--theme-border-color]
                     hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
                     font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
-                    text-md`}
+                    text-sm`}
                   onClick={() => handleButtonClick(activity.activityTitle)}
                 >
                   <span>{activity.activityTitle}</span>
@@ -765,18 +776,29 @@ const Schedule: React.FC<ScheduleProps> = ({
       <div className="p-2.5 flex flex-col relative" style={{ marginLeft: "1.5rem" }}>
         {/* Stats Box - Vertical stack */}
         {showAnalytics && !selectedSubject && (
-          <div className="absolute top-6 text-[--theme-text-color] left-8 flex flex-col bg-transparent rounded-lg p-2 z-10 space-y-3">
+          <div className="absolute top-6 left-8 z-10">
             <PurchaseButton tooltipText="Click to purchase more coins!">
-              <div className="flex items-center min-w-[6rem]">
-                <Image
-                  src="/game-components/PixelCupcake.png"
-                  alt="Coins"
-                  width={48}
-                  height={48}
-                  className="mr-4"
-                />
-                <span className="font-bold truncate text-2xl">{userScore}</span>
-                <span className="ml-1 text-2xl">coins</span>
+              <div 
+                className="flex items-center gap-2 rounded-2xl px-4 py-2 transition-all duration-200"
+                style={{
+                  backgroundColor: 'var(--theme-leaguecard-color)',
+                }}
+              >
+                <span 
+                  className="font-bold text-2xl"
+                  style={{ color: 'var(--theme-hover-color)' }}
+                >
+                  {userScore.toLocaleString()}
+                </span>
+                <div className="relative">
+                  <Image
+                    src="/game-components/PixelCupcake.png"
+                    alt="Coins"
+                    width={32}
+                    height={32}
+                    className="transform hover:scale-110 transition-transform duration-200"
+                  />
+                </div>
               </div>
             </PurchaseButton>
           </div>
