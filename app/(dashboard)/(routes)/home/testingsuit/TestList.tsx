@@ -16,8 +16,6 @@ interface TestListProps {
   items: (Test | UserTest)[];
   type: "upcoming" | "past";
   loading?: boolean;
-  testsAvailableToday?: number; // Changed to number
-  testsCompletedToday?: number;
 }
 
 const getDifficultyColor = (difficulty: number) => {
@@ -37,33 +35,26 @@ const TestList: React.FC<TestListProps> = ({
   items,
   type,
   loading = false,
-  testsAvailableToday = 2,
-  testsCompletedToday: initialTestsCompleted = 0,
 }) => {
   const { theme } = useTheme();
-  const [currentTestsCompleted, setCurrentTestsCompleted] = useState(
-    initialTestsCompleted
-  );
-  const noTestsAvailable = currentTestsCompleted >= testsAvailableToday;
+  const [userScore, setUserScore] = useState<number | null>(null);
+  const noTestsAvailable = userScore === 0;
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const fetchTestsCompleted = async () => {
+    const fetchUserScore = async () => {
       try {
-        const response = await fetch(
-          "/api/test?page=1&pageSize=10&CARSonly=true"
-        );
-        if (!response.ok) throw new Error("Failed to fetch tests completed");
-        const data = await response.json();
-        setCurrentTestsCompleted(data.testsCompletedToday);
+        const response = await fetch("/api/user-info");
+        if (response.ok) {
+          const data = await response.json();
+          setUserScore(data.score);
+        }
       } catch (err) {
-        console.error("Error fetching tests completed:", err);
+        console.error("Error fetching user score:", err);
       }
     };
 
-    fetchTestsCompleted();
-    const interval = setInterval(fetchTestsCompleted, 60000);
-    return () => clearInterval(interval);
+    fetchUserScore();
   }, []);
 
   const isUserTest = (item: Test | UserTest): item is UserTest => {
@@ -84,6 +75,13 @@ const TestList: React.FC<TestListProps> = ({
           const title = getTestTitle(item);
           return title.toLowerCase().includes(searchQuery.toLowerCase());
         });
+
+  const getNoTestsMessage = () => {
+    if (userScore === 0) {
+      return "You need coins to take tests. Visit the Doctor's Office to earn more coins!";
+    }
+    return `Check back tomorrow for more tests!`;
+  };
 
   if (loading) {
     return (
@@ -118,7 +116,7 @@ const TestList: React.FC<TestListProps> = ({
 
       {type === "upcoming" && noTestsAvailable && (
         <div className="text-center text-sm text-gray-500 mb-4">
-          {`You've completed ${currentTestsCompleted} out of ${testsAvailableToday} tests today. Check back tomorrow for more tests!`}
+          {getNoTestsMessage()}
         </div>
       )}
 
@@ -243,16 +241,10 @@ const TestList: React.FC<TestListProps> = ({
                         {item.totalResponses || 0}
                       </p>
                     </div>
-                  ) : type === "upcoming" && noTestsAvailable ? (
-                    <p>
-                      You have reached the daily test limit of{" "}
-                      {testsAvailableToday}. Check back tomorrow!
-                    </p>
+                  ) : type === "upcoming" ? (
+                    <p>Upcoming test for today</p>
                   ) : (
-                    <p>
-                      Upcoming test ({currentTestsCompleted + 1}/
-                      {testsAvailableToday} for today)
-                    </p>
+                    <p></p>
                   )}
                 </TooltipContent>
               </Tooltip>
