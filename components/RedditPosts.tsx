@@ -203,7 +203,9 @@ const RedditPosts: React.FC = () => {
                 {post.selftext && (
                   <div className="mt-4">
                     <div
-                      ref={el => contentRefs.current[index] = el}
+                      ref={(el: HTMLDivElement | null) => {
+                        contentRefs.current[index] = el;
+                      }}
                       className={`text-xs xl:text-sm text-[--theme-text-color] reddit-content relative ${
                         !expandedPosts[index] ? 'max-h-[10rem]' : ''
                       } overflow-hidden`}
