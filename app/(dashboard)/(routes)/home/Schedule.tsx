@@ -52,6 +52,13 @@ import { FaCheckCircle } from "react-icons/fa";
 import HelpContentSchedule from './HelpContentSchedule';
 import { HelpCircle, Bell } from 'lucide-react';
 import { useOutsideClick } from '@/hooks/use-outside-click';
+import UWorldPopup from '@/components/home/UWorldPopup';
+
+interface UWorldTask {
+  text: string;
+  completed: boolean;
+  subject: string;
+}
 import Link from 'next/link';
 
 ChartJS.register(
@@ -128,6 +135,19 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [userScore, setUserScore] = useState(0);
   const [showBreaksDialog, setShowBreaksDialog] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showUWorldPopup, setShowUWorldPopup] = useState(false);
+  const [currentUWorldTasks, setCurrentUWorldTasks] = useState<UWorldTask[]>([
+    {
+      subject: "Electricity & Magnetism",
+      text: "Complete practice questions",
+      completed: false
+    },
+    {
+      subject: "Amino Acids",
+      text: "Review and practice",
+      completed: false
+    }
+  ]);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -378,6 +398,7 @@ const Schedule: React.FC<ScheduleProps> = ({
       case "AAMC Materials":
         break;
       case "UWorld":
+        setShowUWorldPopup(true);
         break;
       default:
         break;
@@ -646,6 +667,12 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   });
 
+  const handleUWorldScoreSubmit = (scores: number[]) => {
+    // Here you can implement the logic to save the scores
+    console.log("UWorld scores:", scores);
+    // You might want to make an API call here to save the scores
+  };
+
   // Add this helper function near the top of the component
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { 
@@ -772,7 +799,7 @@ const Schedule: React.FC<ScheduleProps> = ({
       </div>
 
       {/* Right Content */}
-      <div className="p-2.5 flex flex-col relative" style={{ marginLeft: "1.5rem" }}>
+      <div className="p-2.5 flex flex-col relative" style={{ marginLeft: "1.25rem" }}>
         {/* Stats Box - Vertical stack */}
         {showAnalytics && !selectedSubject && (
           <div className="absolute top-6 left-8 z-10">
@@ -1186,6 +1213,13 @@ const Schedule: React.FC<ScheduleProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      <UWorldPopup
+        isOpen={showUWorldPopup}
+        onClose={() => setShowUWorldPopup(false)}
+        tasks={currentUWorldTasks}
+        onScoreSubmit={handleUWorldScoreSubmit}
+      />
     </div>
   );
 };
