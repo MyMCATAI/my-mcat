@@ -180,11 +180,32 @@ const Statistics = ({
 
   return (
     <div className="h-full w-full relative flex flex-col">
-      {/* Subject Title */}
+      {/* Return Button with Centered Subject Title */}
       {subject && (
-        <h2 className="text-2xl font-bold text-[--theme-text-color] p-4 pb-0">
-          {subject} Statistics
-        </h2>
+        <div className="flex items-center p-4 pb-0 relative mb-4">
+          <button
+            onClick={onReturn}
+            className="py-2 px-3 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold rounded-lg transition flex items-center gap-1"
+          >
+            <svg
+              className="w-4 h-4 rotate-180"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+            <span>Return</span>
+          </button>
+          <h2 className="absolute left-1/2 transform -translate-x-1/2 text-xl font-bold text-[--theme-text-color] opacity-80">
+            {subject}
+          </h2>
+        </div>
       )}
       
       {/* Main Statistics Content */}
@@ -353,29 +374,6 @@ const Statistics = ({
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
-
-      {/* Return Button */}
-      <div className="absolute bottom-4 right-4">
-        <button
-          onClick={onReturn}
-          className="py-3 px-2 bg-[--theme-leaguecard-color] text-[--theme-text-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] font-semibold rounded-lg transition flex items-center gap-2"
-        >
-          <svg
-            className="w-6 h-6 rotate-180"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-          <span>Overview</span>
-        </button>
       </div>
     </div>
   );
