@@ -168,3 +168,45 @@ export const shouldUpdateKnowledgeProfiles = (): boolean => {
 export const updateKnowledgeProfileTimestamp = (): void => {
   localStorage.setItem(KNOWLEDGE_PROFILE_UPDATE_KEY, new Date().toISOString());
 };
+
+export const fetchDefinitionAndAddToVocab = async (
+  word: string,
+  addVocabWord: (word: string, definition: string) => void
+) => {
+  try {
+    const response = await fetch(
+      `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`
+    );
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch definition');
+    }
+    
+    const data = await response.json();
+    const firstEntry = data[0];
+    
+    const uniqueDefinitions = firstEntry.meanings.reduce(
+      (acc: any[], meaning: any) => {
+        if (
+          !acc.some((def: any) => def.partOfSpeech === meaning.partOfSpeech)
+        ) {
+          acc.push({
+            partOfSpeech: meaning.partOfSpeech,
+            definition: meaning.definitions[0].definition,
+          });
+        }
+        return acc;
+      },
+      []
+    );
+
+    const allDefinitions = uniqueDefinitions
+      .map((def: any) => `(${def.partOfSpeech}) ${def.definition}`)
+      .join("; ");
+
+    addVocabWord(word, allDefinitions);
+  } catch (err) {
+    console.error("Error fetching definition:", err);
+    addVocabWord(word, ""); // Add word with empty definition if fetch fails
+  }
+};
