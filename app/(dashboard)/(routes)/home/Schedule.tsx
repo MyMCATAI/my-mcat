@@ -656,10 +656,10 @@ const Schedule: React.FC<ScheduleProps> = ({
   });
 
   return (
-    <div className="flex h-full relative">
+    <div className="grid grid-cols-[25%_75%] h-full relative w-full">
       {/* Left Sidebar */}
-      <div
-        className="w-1/4 p-5 flex flex-col ml-3 mt-2.5 mb-2.5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
+      <div 
+        className="w-full p-5 flex flex-col ml-2.5 mt-2.5 mb-2.5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
         style={{
           backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
           backgroundSize: "cover",
@@ -762,7 +762,7 @@ const Schedule: React.FC<ScheduleProps> = ({
       </div>
 
       {/* Right Content */}
-      <div className="w-3/4 p-2.5 flex flex-col relative">
+      <div className="p-2.5 flex flex-col relative" style={{ marginLeft: "1.5rem" }}>
         {/* Stats Box - Vertical stack */}
         {showAnalytics && !selectedSubject && (
           <div className="absolute top-6 text-[--theme-text-color] left-8 flex flex-col bg-transparent rounded-lg p-2 z-10 space-y-3">
@@ -850,7 +850,7 @@ const Schedule: React.FC<ScheduleProps> = ({
               onClick={toggleSettings}
             />
           )}
-        </AnimatePresence>
+        </AnimatePresence>  
 
         {/* Settings Modal */}
         <AnimatePresence>
@@ -900,7 +900,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
         {/* Schedule Display */}
         <div
-          className="flex-grow h-[calc(100vh-8rem)] rounded-[10px] p-4 flex flex-col relative overflow-hidden schedule-content"
+          className="flex-grow h-[calc(100vh-8rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden schedule-content"
           style={
             {
               backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
@@ -974,20 +974,30 @@ const Schedule: React.FC<ScheduleProps> = ({
               {/* Button group at bottom */}
               {!showAnalytics ? (
                 <div className="mt-auto flex justify-end items-center gap-2">
-                  {/* Add Breaks button */}
+                  {/* Take a Break button */}
+                                    {/* Schedule Practice Exam button */}
                   <button
                     onClick={() => setShowBreaksDialog(true)}
-                    className="w-16 h-16 p-4
+                    className="px-4 h-12
                       bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                       border-2 border-[--theme-border-color] 
                       hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-full transition flex items-center justify-center"
+                      shadow-md rounded-lg transition flex items-center justify-center
+                      text-sm font-medium"
                   >
-                    <span role="img" aria-label="palm tree">
-                      🌴
-                    </span>
+                    PRACTICE TESTS
                   </button>
-
+                  <button
+                    onClick={() => setShowBreaksDialog(true)}
+                    className="px-4 h-12
+                      bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                      border-2 border-[--theme-border-color] 
+                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                      shadow-md rounded-lg transition flex items-center justify-center
+                      text-sm font-medium"
+                  >
+                    TAKE A BREAK
+                  </button>
                   {/* Analytics button */}
                   <button
                     onClick={handleToggleView}

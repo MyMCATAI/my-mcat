@@ -1237,6 +1237,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               onMouseLeave={() => setIsEmptyButtonHovered(false)}
             >
               <ATSSettingContent
+                onClose={() => setIsEmptyButtonHovered(false)}
                 checkedCategories={checkedCategories}
                 setCheckedCategories={setCheckedCategories}
               />
