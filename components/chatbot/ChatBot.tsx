@@ -229,18 +229,9 @@ const ChatBot: React.FC<ChatBotProps> = ({
     setAudioEnabled((prev) => !prev);
   };
 
-  // initial context to provide to the LLM
-
-  const initialContext = "After introductions I will speak only in french so that you can learn mcat in french"
-  const hiddenContextMessage = {
-    type: "bot",
-    message: initialContext,
-    hidden: true,
-  };
-
   const flow = {
     start: {
-      message: "Meow there! I'm Kalypso. I can answer studying or content questions.",
+      message: "Meow there! I'm Kalypso. I can answer questions about your studying or content.",
       path: "loop",
     },
     loop: {
@@ -274,7 +265,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
     chatHistory: { 
       storageKey: "mcat_assistant_chat_history", 
       disabled: true,
-      initialMessages: context ? [hiddenContextMessage] : []
+      initialMessages: []
     },
     header: {
       showAvatar: false,

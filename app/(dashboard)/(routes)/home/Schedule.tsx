@@ -779,13 +779,6 @@ const Schedule: React.FC<ScheduleProps> = ({
                 <span className="ml-1 text-2xl">coins</span>
               </div>
             </PurchaseButton>
-
-            <div className="flex items-center">
-              <FaFire className="text-[--theme-text-color] ml-1 mr-2 text-5xl" />
-              <span className="font-bold text-lg ml-3">{0}</span>
-              {/* statistics?.streak */}
-              <span className="ml-1 text-2xl">days</span>
-            </div>
           </div>
         )}
 
@@ -912,12 +905,12 @@ const Schedule: React.FC<ScheduleProps> = ({
           }}
         >
           {/* Content Container */}
-          <div className="relative w-full h-full flex-grow">
+          <div className="relative w-full h-full flex-grow overflow-auto">
             {/* Analytics View */}
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
                 showAnalytics ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
-              } flex flex-col`}
+              } flex flex-col overflow-auto`}
             >
               {(isTypingComplete || isTutorialTypingComplete) && (
                 <div className="flex-grow flex flex-col">
@@ -954,7 +947,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
                 showAnalytics ? "opacity-0 pointer-events-none z-0" : "opacity-100 z-10"
-              } flex flex-col`}
+              } flex flex-col overflow-auto`}
             >
               <div className="flex-grow">
                 <InteractiveCalendar
@@ -976,15 +969,25 @@ const Schedule: React.FC<ScheduleProps> = ({
           {/* View Toggle Buttons */}
           {showAnalytics ? (
             <div className="absolute bottom-4 right-4 flex flex-col space-y-2 z-20">
-              <button
-                onClick={handleToggleView}
-                className="p-4 aspect-square bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                  border-2 border-[--theme-border-color] 
-                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                  shadow-md rounded-full transition flex items-center justify-center"
-              >
-                <CalendarIcon className="w-8 h-8" />
-              </button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={handleToggleView}
+                      className="group p-4 w-20 h-20 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                        border-2 border-[--theme-border-color] 
+                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                        shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
+                    >
+                      <CalendarIcon className="w-8 h-8" />
+                      <span className="text-xs font-medium">Calendar</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Switch to Calendar View</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           ) : (
             <div className="mt-auto flex justify-end items-center gap-2">
@@ -1008,15 +1011,26 @@ const Schedule: React.FC<ScheduleProps> = ({
               >
                 TAKE A BREAK
               </button>
-              <button
-                onClick={handleToggleView}
-                className="w-16 h-16 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                  border-2 border-[--theme-border-color] 
-                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                  shadow-md rounded-full transition flex items-center justify-center"
-              >
-                <AnalyticsIcon className="w-8 h-8" />
-              </button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={handleToggleView}
+                      className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                        border-2 border-[--theme-border-color] 
+                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                        shadow-md rounded-full transition flex flex-col items-center justify-center gap-1
+                        z-50"
+                    >
+                      <AnalyticsIcon className="w-8 h-8" />
+                      <span className="text-xs font-medium">Stats</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Switch to Analytics View</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           )}
         </div>
