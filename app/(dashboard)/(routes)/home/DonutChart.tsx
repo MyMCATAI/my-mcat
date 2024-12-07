@@ -282,7 +282,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
   }, [targetScore, user?.unsafeMetadata?.diagnosticScore]);
 
   return (
-    <div className="relative w-[70vh] h-[70vh] flex items-center justify-center">
+    <div className="relative w-[65vh] h-[65vh] flex items-center justify-center">
       <Doughnut data={data} options={options} />
       <div className="absolute text-center">
         {hoveredSegment !== null ? (

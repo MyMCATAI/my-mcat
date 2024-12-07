@@ -49,9 +49,9 @@ import {
   BarChart as AnalyticsIcon,
 } from "lucide-react";
 import { FaCheckCircle } from "react-icons/fa";
-import HelpContentSchedule from './HelpContentSchedule';
-import { HelpCircle } from 'lucide-react';
-import { useOutsideClick } from '@/hooks/use-outside-click';
+import HelpContentSchedule from "./HelpContentSchedule";
+import { HelpCircle } from "lucide-react";
+import { useOutsideClick } from "@/hooks/use-outside-click";
 
 ChartJS.register(
   CategoryScale,
@@ -128,8 +128,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showBreaksDialog, setShowBreaksDialog] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-
-  // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
     activityTitle: "",
     activityText: "",
@@ -138,58 +136,7 @@ const Schedule: React.FC<ScheduleProps> = ({
     scheduledDate: new Date().toISOString().split("T")[0],
   });
 
-  // Should be consistent with calendar events
-  // If table has the column "eventType", then we can use it to determine the section
-  const buttonLabels: Record<Section, string> = {
-    AdaptiveTutoringSuite: "Adaptive Tutoring Suite",
-    MCATGameAnkiClinic: "Anki Clinic",
-    DailyCARsSuite: "MyMCAT Daily CARs",
-  };
-
-  const handleStartTutorialPart4 = () => {
-    setRunTutorialPart4(true);
-    localStorage.setItem("tutorialPart4Played", "true");
-  };
-
-  useEffect(() => {
-    const eventListener = () => {
-      setTimeout(handleStartTutorialPart4, 10000); // Delay by 10 seconds
-    };
-
-    // Add the event listener when the component mounts
-    window.addEventListener("startTutorialPart4", eventListener);
-
-    // Cleanup function to remove the event listener when the component unmounts
-    return () => {
-      window.removeEventListener("startTutorialPart4", eventListener);
-    };
-  }, []);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (emailTimeoutRef.current) {
-        clearTimeout(emailTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const updateUserCoinCount = async () => {
-    try {
-      const response = await fetch("/api/user-info", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: 1 }),
-      });
-
-      if (response.ok) {
-        const updatedUserInfo = await response.json();
-        setUserCoinCount(updatedUserInfo.coinCount);
-      }
-    } catch (error) {
-      console.error("Error updating user coin count:", error);
-    }
-  };
+  const router = useRouter();
 
   const getActivitiesText = useMemo(() => {
     if (activities.length === 0) {
@@ -275,7 +222,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     setShowAnalytics(false); // Switch to calendar mode
     setHasUpdatedStudyPlan(true);
 
-    // Only start Part 2 if it hasn't been played yet
     if (
       !localStorage.getItem("tutorialPart2Played") ||
       localStorage.getItem("tutorialPart2Played") === "false"
@@ -286,21 +232,6 @@ const Schedule: React.FC<ScheduleProps> = ({
       }, 1000);
     }
   }, []);
-
-  // Add this new effect to handle the transition from Part 2 to Part 3
-  // useEffect(() => {
-  //   if (
-  //     localStorage.getItem("tutorialPart2Played") === "true" &&
-  //     (!localStorage.getItem("tutorialPart3Played") ||
-  //       localStorage.getItem("tutorialPart3Played") === "false")
-  //   ) {
-  //     // Part 2 just finished, start Part 3
-  //     setTimeout(() => {
-  //       setRunTutorialPart3(true);
-  //       localStorage.setItem("tutorialPart3Played", "true");
-  //     }, 2000); // Delay after Part 2 ends
-  //   }
-  // }, [runTutorialPart2]);
 
   const toggleSettings = () => {
     setShowSettings((prev) => !prev);
@@ -349,8 +280,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         activityType: "",
         scheduledDate: new Date().toISOString().split("T")[0],
       });
-      // TODO: Update activities list or refetch activities
-      // TODO: Show a success message to the user
     } catch (error) {
       console.error("Error creating activity:", error);
       setError(
@@ -371,8 +300,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     setShowAnalytics(!showAnalytics);
   };
 
-  const router = useRouter();
-
   const handleButtonClick = (section: string) => {
     switch (section) {
       case "MyMCAT Daily CARs":
@@ -383,10 +310,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         break;
       case "Adaptive Tutoring Suite":
         handleSetTab("KnowledgeProfile");
-        break;
-      case "AAMC Materials":
-        break;
-      case "UWorld":
         break;
       default:
         break;
@@ -400,6 +323,7 @@ const Schedule: React.FC<ScheduleProps> = ({
         if (response.ok) {
           const data = await response.json();
           setUserCoinCount(data.coinCount);
+          setUserScore(data.score);
         }
       } catch (error) {
         console.error("Error fetching user coin count:", error);
@@ -409,58 +333,122 @@ const Schedule: React.FC<ScheduleProps> = ({
     fetchUserCoinCount();
   }, []);
 
-  const handleActivateTutorial = (step: number) => {
-    setTutorialStep(step);
-    setRunTutorialPart1(true);
-  };
+  const handleTaskCompletion = async (
+    activityId: string,
+    taskIndex: number,
+    completed: boolean
+  ) => {
+    try {
+      const activity = todayActivities.find((a) => a.id === activityId);
+      if (!activity || !activity.tasks) return;
 
-  // Add this function to reset the local storage variables
-  const resetTutorials = () => {
-    setIsResetting(true);
-    localStorage.removeItem("tutorialPart1Played");
-    localStorage.removeItem("tutorialPart2Played");
-    localStorage.removeItem("tutorialPart3Played");
-    localStorage.removeItem("tutorialPart4Played");
-    setRunTutorialPart1(false);
-    setRunTutorialPart2(false);
-    setRunTutorialPart3(false);
-    setRunTutorialPart4(false);
-
-    // Set a timeout to start Tutorial Part 1 after 2 seconds
-    setTimeout(() => {
-      setRunTutorialPart1(true);
-      setTutorialStep(1);
-      localStorage.setItem("tutorialPart1Played", "true");
-      setIsResetting(false);
-    }, 2000);
-  };
-
-  useEffect(() => {
-    if (!isActive) {
-      setShowSettings(false);
-    }
-  }, [isActive]);
-
-  useEffect(() => {
-    const fetchUserScore = async () => {
-      try {
-        const response = await fetch("/api/user-info");
-        if (response.ok) {
-          const data = await response.json();
-          setUserScore(data.score);
-        }
-      } catch (error) {
-        console.error("Error fetching user score:", error);
+      if (activity.tasks[taskIndex].completed) {
+        return;
       }
-    };
 
-    fetchUserScore();
-  }, []);
+      const updatedTasks = activity.tasks.map((task, index) =>
+        index === taskIndex ? { ...task, completed: true } : task
+      );
+
+      const response = await fetch(`/api/calendar-activity`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: activityId,
+          tasks: updatedTasks,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update task");
+
+      setTodayActivities((current) =>
+        current.map((a) =>
+          a.id === activityId ? { ...a, tasks: updatedTasks } : a
+        )
+      );
+
+      const allTasksCompleted = updatedTasks.every((task) => task.completed);
+      if (allTasksCompleted) {
+        if (audioRef.current) {
+          audioRef.current.play().catch(console.error);
+        }
+
+        const activityResponse = await fetch(`/api/calendar-activity`);
+        const activitiesData = await activityResponse.json();
+
+        const completedActivity = activitiesData.find(
+          (a: FetchedActivity) => a.id === activityId
+        );
+
+        if (
+          completedActivity.source === "generated" &&
+          isToday(new Date(completedActivity.scheduledDate))
+        ) {
+          await updateUserCoinCount();
+          try {
+            const response = await fetch("/api/user-info");
+            if (response.ok) {
+              const data = await response.json();
+              setUserScore(data.score);
+            }
+          } catch (error) {
+            console.error("Error fetching user score:", error);
+          }
+        }
+
+        if (completedActivity.source === "generated") {
+          toast.success(
+            `You've completed all tasks for ${activity.activityTitle}! You earned a coin!`
+          );
+        } else {
+          toast.success(
+            `You've completed all tasks for ${activity.activityTitle}!`
+          );
+        }
+      }
+
+      const allActivitiesCompleted = todayActivities.every((activity) =>
+        activity.tasks?.every((task) => task.completed)
+      );
+
+      if (allActivitiesCompleted) {
+        if (fanfareRef.current) {
+          fanfareRef.current.play().catch(console.error);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating task:", error);
+      toast.error("Failed to update task");
+    }
+  };
+
+  const handleTasksUpdate = (eventId: string, updatedTasks: Task[]) => {
+    setTodayActivities((current) =>
+      current.map((activity) =>
+        activity.id === eventId ? { ...activity, tasks: updatedTasks } : activity
+      )
+    );
+  };
+
+  const updateUserCoinCount = async () => {
+    try {
+      const response = await fetch("/api/user-info", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: 1 }),
+      });
+
+      if (response.ok) {
+        const updatedUserInfo = await response.json();
+        setUserCoinCount(updatedUserInfo.coinCount);
+      }
+    } catch (error) {
+      console.error("Error updating user coin count:", error);
+    }
+  };
 
   const [todayActivities, setTodayActivities] = useState<Activity[]>([]);
 
-  // Fetch tasks for each activity that doesn't have tasks
-  // Reload the tasks for the UWorld activity
   useEffect(() => {
     const fetchTasksForToday = async () => {
       const todaysActivities = activities.filter((activity) =>
@@ -493,147 +481,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     fetchTasksForToday();
   }, [activities]);
 
-  const handleTaskCompletion = async (
-    activityId: string,
-    taskIndex: number,
-    completed: boolean
-  ) => {
-    try {
-      const activity = todayActivities.find((a) => a.id === activityId);
-      if (!activity || !activity.tasks) return;
-
-      // If task is already completed, prevent unchecking
-      if (activity.tasks[taskIndex].completed) {
-        return;
-      }
-
-      const updatedTasks = activity.tasks.map((task, index) =>
-        index === taskIndex ? { ...task, completed: true } : task
-      );
-
-      // Update in backend
-      const response = await fetch(`/api/calendar-activity`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: activityId,
-          tasks: updatedTasks,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update task");
-
-      // Update local state
-      setTodayActivities((current) =>
-        current.map((a) =>
-          a.id === activityId ? { ...a, tasks: updatedTasks } : a
-        )
-      );
-
-      // Check if all tasks are completed for this activity
-      const allTasksCompleted = updatedTasks.every((task) => task.completed);
-      if (allTasksCompleted) {
-        // Play success sound
-        if (audioRef.current) {
-          audioRef.current.play().catch(console.error);
-        }
-
-        // Use activity id to get activity from calendar-activity
-        const activityResponse = await fetch(`/api/calendar-activity`);
-        const activities = await activityResponse.json();
-        
-        const completedActivity = activities.find((a: FetchedActivity) => a.id === activityId);
-
-        if (completedActivity.source === "generated" && isToday(new Date(completedActivity.scheduledDate))) {
-          // Update coin count
-          await updateUserCoinCount();
-
-          try {
-            const response = await fetch("/api/user-info");
-            if (response.ok) {
-              const data = await response.json();
-              setUserScore(data.score);
-            }
-          } catch (error) {
-            console.error("Error fetching user score:", error);
-          }
-        }
-
-        // Show success toast
-        if (completedActivity.source === "generated") {
-          toast.success(
-            `You've completed all tasks for ${activity.activityTitle}! You earned a coin!`
-          );
-        } else {
-          toast.success(
-            `You've completed all tasks for ${activity.activityTitle}!`
-          );
-        }
-      }
-
-      // Check if ALL activities have ALL tasks completed
-      const allActivitiesCompleted = todayActivities.every((activity) =>
-        activity.tasks?.every((task) => task.completed)
-      );
-
-      if (allActivitiesCompleted) {
-        // Play fanfare for completing everything
-        if (fanfareRef.current) {
-          fanfareRef.current.play().catch(console.error);
-        }
-      }
-    } catch (error) {
-      console.error("Error updating task:", error);
-      toast.error("Failed to update task");
-    }
-  };
-
-  const handleTasksUpdate = (eventId: string, updatedTasks: Task[]) => {
-    // Update local state
-    setTodayActivities((current) =>
-      current.map((activity) =>
-        activity.id === eventId
-          ? { ...activity, tasks: updatedTasks }
-          : activity
-      )
-    );
-  };
-
-  const updateTodaySchedule = () => {
-    fetchActivitiesForToday();
-  };
-
-  const fetchActivitiesForToday = async () => {
-    const response = await fetch("/api/calendar-activity");
-    const activities = await response.json();
-    const todaysScheduleActivities = activities.filter((activity: any) =>
-      isToday(new Date(activity.scheduledDate))
-    );
-    setTodayActivities(todaysScheduleActivities);
-  };
-
-  const handleResetTutorial = () => {
-    // Reset localStorage values
-    localStorage.setItem("tutorialPart1Played", "false");
-    localStorage.setItem("tutorialPart2Played", "false");
-    localStorage.setItem("tutorialPart3Played", "false");
-    localStorage.setItem("tutorialPart4Played", "false");
-
-    // Reset tutorial states
-    setRunTutorialPart1(true);
-    setRunTutorialPart2(false);
-    setRunTutorialPart3(false);
-    setRunTutorialPart4(false);
-
-    // Play notification sound
-    if (audioRef.current) {
-      audioRef.current
-        .play()
-        .catch((error) => console.error("Audio playback failed:", error));
-    }
-  };
-
-  // Update the helper function to safely check tasks
   const isActivityCompleted = (activity: Activity) => {
     return (
       activity.tasks &&
@@ -647,18 +494,72 @@ const Schedule: React.FC<ScheduleProps> = ({
   };
 
   const helpRef = useRef<HTMLDivElement>(null);
-
-  // Use the useOutsideClick hook to close the help modal when clicking outside
   useOutsideClick(helpRef, () => {
     if (showHelp) {
       setShowHelp(false);
     }
   });
 
+  const updateTodaySchedule = () => {
+    fetchActivitiesForToday();
+  };
+
+  const fetchActivitiesForToday = async () => {
+    const response = await fetch("/api/calendar-activity");
+    const activitiesData = await response.json();
+    const todaysScheduleActivities = activitiesData.filter((activity: any) =>
+      isToday(new Date(activity.scheduledDate))
+    );
+    setTodayActivities(todaysScheduleActivities);
+  };
+
+  const resetTutorials = () => {
+    setIsResetting(true);
+    localStorage.removeItem("tutorialPart1Played");
+    localStorage.removeItem("tutorialPart2Played");
+    localStorage.removeItem("tutorialPart3Played");
+    localStorage.removeItem("tutorialPart4Played");
+    setRunTutorialPart1(false);
+    setRunTutorialPart2(false);
+    setRunTutorialPart3(false);
+    setRunTutorialPart4(false);
+
+    setTimeout(() => {
+      setRunTutorialPart1(true);
+      setTutorialStep(1);
+      localStorage.setItem("tutorialPart1Played", "true");
+      setIsResetting(false);
+    }, 2000);
+  };
+
+  useEffect(() => {
+    if (!isActive) {
+      setShowSettings(false);
+    }
+  }, [isActive]);
+
+  const handleResetTutorial = () => {
+    localStorage.setItem("tutorialPart1Played", "false");
+    localStorage.setItem("tutorialPart2Played", "false");
+    localStorage.setItem("tutorialPart3Played", "false");
+    localStorage.setItem("tutorialPart4Played", "false");
+
+    setRunTutorialPart1(true);
+    setRunTutorialPart2(false);
+    setRunTutorialPart3(false);
+    setRunTutorialPart4(false);
+
+    if (audioRef.current) {
+      audioRef.current
+        .play()
+        .catch((error) => console.error("Audio playback failed:", error));
+    }
+  };
+
   return (
     <div className="grid grid-cols-[25%_75%] h-full relative w-full">
       {/* Left Sidebar */}
-      <div 
+      <div
         className="w-full p-5 flex flex-col ml-2.5 mt-2.5 mb-2.5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
         style={{
           backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
@@ -681,7 +582,7 @@ const Schedule: React.FC<ScheduleProps> = ({
               display: none;
             }
           `}</style>
-          {/* Today's Activities Section */}
+          {/* Today's Activities */}
           <div className="space-y-6">
             {todayActivities.map((activity) => (
               <div key={activity.id} className="mb-6">
@@ -762,8 +663,11 @@ const Schedule: React.FC<ScheduleProps> = ({
       </div>
 
       {/* Right Content */}
-      <div className="p-2.5 flex flex-col relative" style={{ marginLeft: "1.5rem" }}>
-        {/* Stats Box - Vertical stack */}
+      <div
+        className="p-2.5 flex flex-col relative"
+        style={{ marginLeft: "1.5rem" }}
+      >
+        {/* Stats Box */}
         {showAnalytics && !selectedSubject && (
           <div className="absolute top-6 text-[--theme-text-color] left-8 flex flex-col bg-transparent rounded-lg p-2 z-10 space-y-3">
             <PurchaseButton tooltipText="Click to purchase more coins!">
@@ -783,7 +687,6 @@ const Schedule: React.FC<ScheduleProps> = ({
             <div className="flex items-center">
               <FaFire className="text-[--theme-text-color] ml-1 mr-2 text-5xl" />
               <span className="font-bold text-lg ml-3">{0}</span>
-              {/* statistics?.streak */}
               <span className="ml-1 text-2xl">days</span>
             </div>
           </div>
@@ -827,8 +730,8 @@ const Schedule: React.FC<ScheduleProps> = ({
                     showHelp ? "bg-[--theme-hover-color]" : "bg-white"
                   }`}
                 >
-                  <HelpCircle 
-                    className="w-4 h-4" 
+                  <HelpCircle
+                    className="w-4 h-4"
                     fill="none"
                     stroke={showHelp ? "white" : "#333"}
                   />
@@ -850,7 +753,7 @@ const Schedule: React.FC<ScheduleProps> = ({
               onClick={toggleSettings}
             />
           )}
-        </AnimatePresence>  
+        </AnimatePresence>
 
         {/* Settings Modal */}
         <AnimatePresence>
@@ -875,7 +778,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         <AnimatePresence>
           {showHelp && (
             <>
-              {/* Add overlay */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -889,75 +791,72 @@ const Schedule: React.FC<ScheduleProps> = ({
                 exit={{ opacity: 0, y: -20 }}
                 className="absolute top-0 right-4 w-[32rem] z-50 max-h-[80vh] flex flex-col"
               >
-                <HelpContentSchedule 
-                  onClose={toggleHelp}
-                  onResetTutorials={resetTutorials}
-                />
+                <HelpContentSchedule onClose={toggleHelp} onResetTutorials={resetTutorials} />
               </motion.div>
             </>
           )}
         </AnimatePresence>
 
-        {/* Schedule Display */}
+        {/* Main Container with fixed dimensions */}
         <div
-          className="flex-grow h-[calc(100vh-8rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden schedule-content"
-          style={
-            {
-              backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
-              backgroundSize: "cover",
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "center",
-              backgroundColor: "var(--theme-mainbox-color)",
-              color: "var(--theme-text-color)",
-              boxShadow: "var(--theme-box-shadow)",
-            } as React.CSSProperties
-          }
+          className="flex-grow w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
+          style={{
+            backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundColor: "var(--theme-mainbox-color)",
+            color: "var(--theme-text-color)",
+            boxShadow: "var(--theme-box-shadow)",
+            minHeight: "50rem",
+          }}
         >
-          {showAnalytics ? (
-            <>
+          {/* Content Container */}
+          <div className="relative w-full h-full flex-grow">
+            {/* Analytics View */}
+            <div
+              className={`absolute inset-0 transition-opacity duration-300 ${
+                showAnalytics ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
+              } flex flex-col`}
+            >
               {(isTypingComplete || isTutorialTypingComplete) && (
-                <div className="flex-grow overflow-auto flex flex-col justify-center">
+                <div className="flex-grow flex flex-col">
                   <AnimatePresence mode="wait">
                     {!selectedSubject ? (
                       <motion.div
                         key="donut"
-                        className="flex justify-center items-center min-h-[32rem]"
+                        className="flex-grow flex justify-center items-center"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <DonutChart
-                          onProgressClick={(label) => setSelectedSubject(label)}
-                        />
+                        <DonutChart onProgressClick={(label) => setSelectedSubject(label)} />
                       </motion.div>
                     ) : (
                       <motion.div
                         key="statistics"
-                        className="h-full"
+                        className="flex-grow"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <Statistics
-                          onReturn={() => setSelectedSubject(null)}
-                          subject={selectedSubject}
-                        />
+                        <Statistics onReturn={() => setSelectedSubject(null)} subject={selectedSubject} />
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
               )}
-            </>
-          ) : (
-            <div className="h-full w-full relative flex flex-col">
-              <div
-                className="flex-grow"
-                style={{
-                  maxHeight: "90%",
-                }}
-              >
+            </div>
+
+            {/* Calendar View */}
+            <div
+              className={`absolute inset-0 transition-opacity duration-300 ${
+                showAnalytics ? "opacity-0 pointer-events-none z-0" : "opacity-100 z-10"
+              } flex flex-col`}
+            >
+              <div className="flex-grow">
                 <InteractiveCalendar
                   currentDate={currentDate}
                   activities={activities}
@@ -971,69 +870,48 @@ const Schedule: React.FC<ScheduleProps> = ({
                   updateTodaySchedule={updateTodaySchedule}
                 />
               </div>
-              {/* Button group at bottom */}
-              {!showAnalytics ? (
-                <div className="mt-auto flex justify-end items-center gap-2">
-                  {/* Take a Break button */}
-                                    {/* Schedule Practice Exam button */}
-                  <button
-                    onClick={() => setShowBreaksDialog(true)}
-                    className="px-4 h-12
-                      bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                      border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-lg transition flex items-center justify-center
-                      text-sm font-medium"
-                  >
-                    PRACTICE TESTS
-                  </button>
-                  <button
-                    onClick={() => setShowBreaksDialog(true)}
-                    className="px-4 h-12
-                      bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                      border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-lg transition flex items-center justify-center
-                      text-sm font-medium"
-                  >
-                    TAKE A BREAK
-                  </button>
-                  {/* Analytics button */}
-                  <button
-                    onClick={handleToggleView}
-                    className="w-16 h-16 p-4
-                      bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                      border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-full transition flex items-center justify-center"
-                  >
-                    <AnalyticsIcon className="w-8 h-8" />
-                  </button>
-                </div>
-              ) : (
-                <div className="mt-auto flex justify-end items-center">
-                  <button
-                    onClick={handleToggleView}
-                    className="w-16 h-16 p-4
-                      bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                      border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-full transition flex items-center justify-center"
-                  >
-                    <CalendarIcon className="w-8 h-8" />
-                  </button>
-                </div>
-              )}
+              
+              {/* Calendar View Buttons */}
+              <div className="mt-auto flex justify-end items-center gap-2">
+                <button
+                  onClick={() => setShowBreaksDialog(true)}
+                  className="px-4 h-12 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                    border-2 border-[--theme-border-color] 
+                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                    shadow-md rounded-lg transition flex items-center justify-center
+                    text-sm font-medium"
+                >
+                  PRACTICE TESTS
+                </button>
+                <button
+                  onClick={() => setShowBreaksDialog(true)}
+                  className="px-4 h-12 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                    border-2 border-[--theme-border-color] 
+                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                    shadow-md rounded-lg transition flex items-center justify-center
+                    text-sm font-medium"
+                >
+                  TAKE A BREAK
+                </button>
+                <button
+                  onClick={handleToggleView}
+                  className="w-16 h-16 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                    border-2 border-[--theme-border-color] 
+                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                    shadow-md rounded-full transition flex items-center justify-center"
+                >
+                  <AnalyticsIcon className="w-8 h-8" />
+                </button>
+              </div>
             </div>
-          )}
+          </div>
 
-          {/* Navigation Buttons */}
+          {/* Analytics View Toggle Button */}
           {showAnalytics && !selectedSubject && (
-            <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
+            <div className="absolute bottom-4 right-4 flex flex-col space-y-2 z-20">
               <button
                 onClick={handleToggleView}
-                className="p-4 aspect-square
-                  bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                className="p-4 aspect-square bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                   border-2 border-[--theme-border-color] 
                   hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
                   shadow-md rounded-full transition flex items-center justify-center"
@@ -1044,7 +922,6 @@ const Schedule: React.FC<ScheduleProps> = ({
           )}
         </div>
 
-        {/* New Activity Form */}
         {showNewActivityForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl w-96">
@@ -1137,7 +1014,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             </div>
             <p className="text-center text-lg text-black">
               You&apos;ve completed all tasks in the{" "}
-              {rewardSection && buttonLabels[rewardSection as Section]}!
+              {rewardSection && rewardSection}!
             </p>
             <p className="text-center text-lg text-black">
               You&apos;ve earned{" "}
