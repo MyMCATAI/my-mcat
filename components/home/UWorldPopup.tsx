@@ -55,7 +55,7 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-2xl font-bold text-white">
-                UWorld Progress
+                UWorld
               </DialogTitle>
               <a 
                 href="https://www.uworld.com/app/index.html?srsltid=AfmBOooIWaD-Q3kqMxNO_ffk2cazgN6SHu5fMXnfyXFAOErFGxI5W9Lw#/login/"
