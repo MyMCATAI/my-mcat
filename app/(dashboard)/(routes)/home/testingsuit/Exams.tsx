@@ -345,7 +345,6 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                   items={tests} 
                   type="upcoming" 
                   loading={loading} 
-                  testsAvailableToday={MAX_TESTS_PER_DAY} 
                 />
               </TabsContent>
             </Tabs>
