@@ -1,18 +1,25 @@
-'use client'
+"use client";
 
-import React, { useEffect, useState, useRef, useCallback, useContext } from "react";
-import axios from 'axios';
-import toast from 'react-hot-toast';
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useContext,
+} from "react";
+import toast from "react-hot-toast";
 import PassageComponent from "@/components/test/Passage";
 import QuestionComponent from "@/components/test/Question";
 import { Test, TestQuestion, Passage, Question, UserResponse } from "@/types";
-import { Pencil, Highlighter, Flag, Cat, Mail } from 'lucide-react';
-import ChatBotInLine from '@/components/chatbot/ChatBotInLine';
-import ScoreDialog from '@/components/ScoreDialog';
-import TestHeader, { TestHeaderRef } from '@/components/test/TestHeader';
-import DictionaryLookup from './DictionaryLookup';
-import { VocabContext } from '@/contexts/VocabContext';
-import VocabList from '@/components/VocabList';
+import { Pencil, Highlighter, Flag, Cat, Mail } from "lucide-react";
+import ChatBotInLine from "@/components/chatbot/ChatBotInLine";
+import ScoreDialog from "@/components/ScoreDialog";
+import TestHeader, { TestHeaderRef } from "@/components/test/TestHeader";
+import DictionaryLookup from "./DictionaryLookup";
+import { VocabContext } from "@/contexts/VocabContext";
+import VocabList from "@/components/VocabList";
+import { fetchDefinitionAndAddToVocab } from "@/lib/utils";
+import { TestIntroModal } from "@/components/test/TestIntroModal";
 
 interface TestComponentProps {
   testId: string;
@@ -25,43 +32,55 @@ interface DictionaryPosition {
   left: number;
 }
 
-const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete }) => {
+const TestComponent: React.FC<TestComponentProps> = ({
+  testId,
+  onTestComplete,
+}) => {
   const [test, setTest] = useState<Test | null>(null);
   const [userTest, setUserTest] = useState<{ id: string } | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPassage, setCurrentPassage] = useState<Passage | null>(null);
-  const [userResponses, setUserResponses] = useState<Record<string, UserResponse>>({});
-  const [pendingResponses, setPendingResponses] = useState<Record<string, UserResponse>>({});
+  const [userResponses, setUserResponses] = useState<
+    Record<string, UserResponse>
+  >({});
+  const [pendingResponses, setPendingResponses] = useState<
+    Record<string, UserResponse>
+  >({});
   const passageCacheRef = useRef<Record<string, Passage>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [testCreated, setTestCreated] = useState(false);
   const [isCreatingTest, setIsCreatingTest] = useState(false);
-  const [questionIdToResponseId, setQuestionIdToResponseId] = useState<Record<string, string>>({});
+  const [questionIdToResponseId, setQuestionIdToResponseId] = useState<
+    Record<string, string>
+  >({});
   const [showScorePopup, setShowScorePopup] = useState(false);
 
   const [testStartTime, setTestStartTime] = useState<Date | null>(null);
 
-  const [finalScore, setFinalScore] = useState(0);
-
   const [numberOfPassageHighlights, setNumberOfPassageHighlights] = useState(0);
-  const [numberOfPassageStrikethroughs, setNumberOfPassageStrikethroughs] = useState(0);
+  const [numberOfPassageStrikethroughs, setNumberOfPassageStrikethroughs] =
+    useState(0);
   const [totalOptionsCrossedOut, setTotalOptionsCrossedOut] = useState(0);
-
 
   const [flashHighlight, setFlashHighlight] = useState(false);
   const [flashStrikethrough, setFlashStrikethrough] = useState(false);
   const [flashFlag, setFlashFlag] = useState(false);
   const [chatbotContext, setChatbotContext] = useState({
     contentTitle: "",
-    context: ""
+    context: "",
   });
   const [showChatbot, setShowChatbot] = useState(false);
-  const [highlightedStrings, setHighlightedStrings] = useState<string[]>([]);
-  const [tempHighlightedStrings, setTempHighlightedStrings] = useState<string[]>([]); // Temporary highlights
-  const passageRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
-  const questionRef = useRef<{ applyStyle: (style: string) => void } | null>(null);
+  const [tempHighlightedStrings, setTempHighlightedStrings] = useState<
+    string[]
+  >([]); // Temporary highlights
+  const passageRef = useRef<{ applyStyle: (style: string) => void } | null>(
+    null
+  );
+  const questionRef = useRef<{ applyStyle: (style: string) => void } | null>(
+    null
+  );
   const testHeaderRef = useRef<TestHeaderRef>(null);
   const wasQuestionTimerRunningRef = useRef(false);
   const wasTotalTimerRunningRef = useRef(false);
@@ -71,12 +90,21 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const [correctAnswer, setCorrectAnswer] = useState(0);
   const [technique, setTechnique] = useState(0);
   const [answeredQuestions, setAnsweredQuestions] = useState(0);
-  
+
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [showDefinition, setShowDefinition] = useState(false);
-  const [dictionaryPosition, setDictionaryPosition] = useState<DictionaryPosition>({ top: null, bottom: null, left: 0 });
+  const [dictionaryPosition, setDictionaryPosition] =
+    useState<DictionaryPosition>({ top: null, bottom: null, left: 0 });
 
-  const { isCmdIEnabled, toggleCmdI, addVocabWord, removeVocabWord, showVocabList, toggleVocabList, vocabList } = useContext(VocabContext);
+  const {
+    isCmdIEnabled,
+    toggleCmdI,
+    addVocabWord,
+    removeVocabWord,
+    showVocabList,
+    toggleVocabList,
+    vocabList,
+  } = useContext(VocabContext);
 
   const [shouldShowChatbot, setShouldShowChatbot] = useState(false);
 
@@ -85,15 +113,35 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [showMessageForm, setShowMessageForm] = useState(false);
-  const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] = useState(false);
+  const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] =
+    useState(false);
 
   const chatbotRef = useRef<{
     sendMessage: (message: string) => void;
   }>({ sendMessage: () => {} });
 
+  const [showIntroModal, setShowIntroModal] = useState(true);
+  const [userScore, setUserScore] = useState(0);
+
+  useEffect(() => {
+    const fetchUserScore = async () => {
+      try {
+        const response = await fetch("/api/user-info");
+        if (response.ok) {
+          const data = await response.json();
+          setUserScore(data.score);
+        }
+      } catch (error) {
+        console.error("Error fetching user score:", error);
+      }
+    };
+    
+    fetchUserScore();
+  }, []);
+
   useEffect(() => {
     fetchTest();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testId]);
 
   useEffect(() => {
@@ -118,14 +166,16 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       testHeaderRef.current?.resetQuestionTimer();
       testHeaderRef.current?.startQuestionTimer();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, test, hasAnsweredFirstQuestion]);
 
   useEffect(() => {
     if (testHeaderRef.current) {
       if (showChatbot) {
-        wasQuestionTimerRunningRef.current = testHeaderRef.current.isQuestionTimerRunning;
-        wasTotalTimerRunningRef.current = testHeaderRef.current.isTotalTimerRunning;
+        wasQuestionTimerRunningRef.current =
+          testHeaderRef.current.isQuestionTimerRunning;
+        wasTotalTimerRunningRef.current =
+          testHeaderRef.current.isTotalTimerRunning;
         testHeaderRef.current.pauseTimers();
       } else {
         testHeaderRef.current.resumeTimers(
@@ -139,13 +189,19 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
   useEffect(() => {
     const checkTimers = () => {
       if (testHeaderRef.current) {
-        const questionElapsedTime = testHeaderRef.current.getQuestionElapsedTime();
+        const questionElapsedTime =
+          testHeaderRef.current.getQuestionElapsedTime();
         const totalElapsedTime = testHeaderRef.current.getTotalElapsedTime();
-        const isQuestionTimerRunning = testHeaderRef.current.isQuestionTimerRunning;
+        const isQuestionTimerRunning =
+          testHeaderRef.current.isQuestionTimerRunning;
 
         if (questionElapsedTime >= 120 && !shouldShowChatbot) {
           setShouldShowChatbot(true);
-        } else if (totalElapsedTime >= 420 && !isQuestionTimerRunning && !shouldShowChatbot) {
+        } else if (
+          totalElapsedTime >= 420 &&
+          !isQuestionTimerRunning &&
+          !shouldShowChatbot
+        ) {
           // 420 seconds = 7 minutes
           setShouldShowChatbot(true);
         }
@@ -190,12 +246,12 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     try {
       const response = await fetch(`/api/test?id=${testId}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch test');
+        throw new Error("Failed to fetch test");
       }
 
       const data: Test = await response.json();
       setTest(data);
-      
+
       // Create user test immediately after fetching the test data
       const createdUserTest = await createUserTest(data.id);
       if (createdUserTest) {
@@ -222,25 +278,29 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         const encodedPassageId = encodeURIComponent(passageId);
         const response = await fetch(`/api/passage?id=${encodedPassageId}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch passage');
+          throw new Error("Failed to fetch passage");
         }
         const passageData: Passage = await response.json();
         passageCacheRef.current[passageId] = passageData;
         setCurrentPassage(passageData);
       } catch (err) {
-        console.error('Error fetching passage:', err);
+        console.error("Error fetching passage:", err);
         setCurrentPassage(null);
       }
     }
   };
 
-  const handleUserResponse = async (questionId: string, userAnswer: string, isCorrect: boolean) => {
+  const handleUserResponse = async (
+    questionId: string,
+    userAnswer: string,
+    isCorrect: boolean
+  ) => {
     if (!hasAnsweredFirstQuestion) {
       setHasAnsweredFirstQuestion(true);
       testHeaderRef.current?.startQuestionTimer();
     }
     if (!userTest) {
-      console.error('No valid user test available');
+      console.error("No valid user test available");
       return;
     }
 
@@ -252,7 +312,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     }
 
     const timestamp = new Date().toISOString();
-    const formattedAction = `[${timestamp}] - Answered: "${userAnswer}" (${isCorrect ? 'Correct' : 'Incorrect'})`;
+    const formattedAction = `[${timestamp}] - Answered: "${userAnswer}" (${isCorrect ? "Correct" : "Incorrect"})`;
 
     const existingResponse = getCurrentUserResponse(questionId);
     let updatedUserNotes = formattedAction;
@@ -271,24 +331,24 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       answeredAt: new Date(),
     };
 
-    setPendingResponses(prev => ({
+    setPendingResponses((prev) => ({
       ...prev,
-      [questionId]: optimisticResponse
+      [questionId]: optimisticResponse,
     }));
 
-    setQuestionIdToResponseId(prev => ({
+    setQuestionIdToResponseId((prev) => ({
       ...prev,
-      [questionId]: optimisticResponse.id
+      [questionId]: optimisticResponse.id,
     }));
 
     if (!getCurrentUserResponse(questionId)?.userAnswer) {
-      setAnsweredQuestions(prev => prev + 1);
+      setAnsweredQuestions((prev) => prev + 1);
     }
 
     try {
-      const response = await fetch('/api/user-test/response', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/user-test/response", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userTestId: userTest.id,
           questionId,
@@ -302,62 +362,65 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error response:', errorData);
-        throw new Error(`Failed to save user response: ${response.status} ${response.statusText}`);
+        console.error("Error response:", errorData);
+        throw new Error(
+          `Failed to save user response: ${response.status} ${response.statusText}`
+        );
       }
 
       const savedResponse: UserResponse = await response.json();
 
-      setUserResponses(prev => ({
+      setUserResponses((prev) => ({
         ...prev,
-        [savedResponse.id]: savedResponse
+        [savedResponse.id]: savedResponse,
       }));
 
-      setQuestionIdToResponseId(prev => ({
+      setQuestionIdToResponseId((prev) => ({
         ...prev,
-        [questionId]: savedResponse.id
+        [questionId]: savedResponse.id,
       }));
 
-      setPendingResponses(prev => {
+      setPendingResponses((prev) => {
         const { [questionId]: _, ...rest } = prev;
         return rest;
       });
 
       // Update chatbot context
-      setChatbotContext(prevContext => ({
+      setChatbotContext((prevContext) => ({
         ...prevContext,
-        context: `${prevContext.context}\n\nI just answered this question: "${currentQuestion.questionContent}"\nMy answer was: "${userAnswer}" (${isCorrect ? 'Correct' : 'Incorrect'})`
+        context: `${prevContext.context}\n\nI just answered this question: "${currentQuestion.questionContent}"\nMy answer was: "${userAnswer}" (${isCorrect ? "Correct" : "Incorrect"})`,
       }));
-
     } catch (err) {
-      console.error('Error saving user response:', err);
-      setPendingResponses(prev => {
+      console.error("Error saving user response:", err);
+      setPendingResponses((prev) => {
         const { [questionId]: _, ...rest } = prev;
         return rest;
       });
-      setQuestionIdToResponseId(prev => {
+      setQuestionIdToResponseId((prev) => {
         const { [questionId]: _, ...rest } = prev;
         return rest;
       });
     }
   };
 
-  const createUserTest = async (testId: string): Promise<{ id: string } | null> => {
+  const createUserTest = async (
+    testId: string
+  ): Promise<{ id: string } | null> => {
     if (!testId || testCreated) return null;
     setIsCreatingTest(true);
 
     try {
-      const response = await fetch('/api/user-test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/user-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ testId }),
       });
 
-      if (!response.ok) throw new Error('Failed to create user test');
+      if (!response.ok) throw new Error("Failed to create user test");
       const data = await response.json();
       return data;
     } catch (err) {
-      console.error('Error creating user test:', err);
+      console.error("Error creating user test:", err);
       return null;
     } finally {
       setIsCreatingTest(false);
@@ -366,77 +429,81 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   const calculateScore = (totalTimeInSeconds: number) => {
     if (!test) return { score: 0, correctAnswers: 0, technique: 0 };
-  
+
     const totalQuestions = test.questions.length;
     const responses = Object.values(userResponses);
-  
+
     // Calculate correct answers
-    const correctAnswers = responses.filter(r => r.isCorrect).length;
+    const correctAnswers = responses.filter((r) => r.isCorrect).length;
     const score = (correctAnswers / totalQuestions) * 100;
 
     const averageTimePerQuestion = totalTimeInSeconds / totalQuestions;
-  
+
     // Technique: highlight, passage strikethroughs, and crossed out options
     let technique = 0;
 
     if (numberOfPassageHighlights > 0) technique += 1;
     if (numberOfPassageStrikethroughs > 0) technique += 1;
     if (totalOptionsCrossedOut > 0) technique += 1;
-  
+
     return { score, correctAnswers, technique, averageTimePerQuestion };
   };
-
 
   const handleFinishTest = async () => {
     setIsSubmitting(true);
     if (!userTest || !testStartTime) return;
-  
+
     const testFinishTime = new Date();
-    const totalTimeInSeconds = testHeaderRef.current?.getTotalElapsedTime() || 0;
-  
-    const { score, correctAnswers, technique, averageTimePerQuestion } = calculateScore(totalTimeInSeconds);
-  
+    const totalTimeInSeconds =
+      testHeaderRef.current?.getTotalElapsedTime() || 0;
+
+    const { score, correctAnswers, technique, averageTimePerQuestion } =
+      calculateScore(totalTimeInSeconds);
+
     setScore(score);
     setCorrectAnswer(correctAnswers);
     setTiming(totalTimeInSeconds);
     setTechnique(technique);
-  
+
     try {
       // Update the user test record
       const response = await fetch(`/api/user-test/${userTest.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ score, finishedAt: testFinishTime.toISOString(), totalTime: totalTimeInSeconds }),
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          score,
+          finishedAt: testFinishTime.toISOString(),
+          totalTime: totalTimeInSeconds,
+        }),
       });
-  
+
       if (!response.ok) {
-        throw new Error('Failed to update test');
+        throw new Error("Failed to update test");
       }
-  
-      // Award 1 coin only for perfect score within 10 minutes
+
+      // Calculate cupcakes earned (perfect score within 10 minutes = +1)
       let cupcakesEarned = 0;
-      if (score === 100 && totalTimeInSeconds <= 600) { // 600 seconds = 10 minutes
+      if (score === 100 && totalTimeInSeconds <= 600) {
         cupcakesEarned = 1;
       }
-  
-      // Only make the API call if a coin was earned
-      if (cupcakesEarned > 0) {
-        const scoreResponse = await fetch('/api/user-info/', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: cupcakesEarned }),
-        });
-  
-        if (!scoreResponse.ok) {
-          throw new Error('Failed to update user score');
-        }
+
+      const scoreChange = cupcakesEarned
+
+      // Update user's score
+      const scoreResponse = await fetch("/api/user-info/", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: scoreChange }),
+      });
+
+      if (!scoreResponse.ok) {
+        throw new Error("Failed to update user score");
       }
-  
+
       setShowScorePopup(true);
       onTestComplete && onTestComplete(score);
-  
     } catch (err) {
-      console.error('Error finishing test:', err);
+      console.error("Error finishing test:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -448,12 +515,12 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   const getCurrentQuestion = (): Question | null => {
     const currentTestQuestion = getCurrentTestQuestion();
-    
+
     if (currentTestQuestion) {
-      const { question } = currentTestQuestion;      
+      const { question } = currentTestQuestion;
       return question;
     }
-  
+
     return null;
   };
 
@@ -471,18 +538,21 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     }
   };
 
-  const getCurrentUserResponse = useCallback((questionId: string): UserResponse | undefined => {
-    const responseId = questionIdToResponseId[questionId];
-    return userResponses[responseId] || pendingResponses[questionId];
-  }, [questionIdToResponseId, userResponses, pendingResponses]);
+  const getCurrentUserResponse = useCallback(
+    (questionId: string): UserResponse | undefined => {
+      const responseId = questionIdToResponseId[questionId];
+      return userResponses[responseId] || pendingResponses[questionId];
+    },
+    [questionIdToResponseId, userResponses, pendingResponses]
+  );
 
   useEffect(() => {
     if (currentPassage) {
       const currentQuestion = getCurrentQuestion();
-      setChatbotContext(prevContext => ({
+      setChatbotContext((prevContext) => ({
         ...prevContext,
         contentTitle: currentPassage.title || "Untitled Passage",
-        context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm looking at is: ${currentQuestion?.questionContent}\n\nThe question options are: ${currentQuestion?.questionOptions}`
+        context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm looking at is: ${currentQuestion?.questionContent}\n\nThe question options are: ${currentQuestion?.questionOptions}`,
       }));
     }
     testHeaderRef.current?.resetQuestionTimer(); // Reset question timer when question changes
@@ -491,36 +561,34 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
   const handleHighlight = () => {
     setFlashHighlight(true);
-    passageRef.current?.applyStyle('HIGHLIGHT');
-    questionRef.current?.applyStyle('HIGHLIGHT');
-    setNumberOfPassageHighlights(prev => prev + 1);
+    passageRef.current?.applyStyle("HIGHLIGHT");
+    questionRef.current?.applyStyle("HIGHLIGHT");
+    setNumberOfPassageHighlights((prev) => prev + 1);
     setTimeout(() => setFlashHighlight(false), 300);
   };
 
   const handleStrikethrough = () => {
     setFlashStrikethrough(true);
-    passageRef.current?.applyStyle('STRIKETHROUGH');
-    questionRef.current?.applyStyle('STRIKETHROUGH');
-    setNumberOfPassageStrikethroughs(prev => prev + 1);
+    passageRef.current?.applyStyle("STRIKETHROUGH");
+    questionRef.current?.applyStyle("STRIKETHROUGH");
+    setNumberOfPassageStrikethroughs((prev) => prev + 1);
     setTimeout(() => setFlashStrikethrough(false), 300);
   };
 
   const onOptionCrossedOut = (optionText: string) => {
     // Save a note in the userResponse
     saveNote(`crossed out option: ${optionText}`);
-  
+
     // Increment the total options crossed out counter
-    setTotalOptionsCrossedOut(prev => prev + 1);
+    setTotalOptionsCrossedOut((prev) => prev + 1);
   };
-  
-  
- 
+
   const saveNote = async (text: string) => {
-    let currentUserTest = userTest
+    let currentUserTest = userTest;
     if (!currentUserTest) {
-      currentUserTest = await createUserTest(test?.id || '');
+      currentUserTest = await createUserTest(test?.id || "");
       if (!currentUserTest) {
-        console.error('Failed to create user test');
+        console.error("Failed to create user test");
         return;
       }
       setUserTest(currentUserTest);
@@ -549,58 +617,64 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
 
     try {
       // First, try to fetch the existing response
-      const checkResponse = await fetch(`/api/user-test/response?userTestId=${currentUserTest.id}&questionId=${currentQuestion.id}`, {
-        method: 'GET',
-      });
+      const checkResponse = await fetch(
+        `/api/user-test/response?userTestId=${currentUserTest.id}&questionId=${currentQuestion.id}`,
+        {
+          method: "GET",
+        }
+      );
 
-      let method = 'PUT';
+      let method = "PUT";
       if (checkResponse.status === 404) {
-        method = 'POST';
+        method = "POST";
       } else if (!checkResponse.ok) {
-        throw new Error(`Failed to check existing response: ${checkResponse.status} ${checkResponse.statusText}`);
+        throw new Error(
+          `Failed to check existing response: ${checkResponse.status} ${checkResponse.statusText}`
+        );
       }
 
-      const response = await fetch('/api/user-test/response', {
+      const response = await fetch("/api/user-test/response", {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(responseData),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error response:', errorData);
-        throw new Error(`Failed to save user response: ${response.status} ${response.statusText}`);
+        console.error("Error response:", errorData);
+        throw new Error(
+          `Failed to save user response: ${response.status} ${response.statusText}`
+        );
       }
 
       const savedResponse: UserResponse = await response.json();
 
-      setUserResponses(prev => ({
+      setUserResponses((prev) => ({
         ...prev,
-        [savedResponse.id]: savedResponse
+        [savedResponse.id]: savedResponse,
       }));
 
-      setQuestionIdToResponseId(prev => ({
+      setQuestionIdToResponseId((prev) => ({
         ...prev,
-        [currentQuestion.id]: savedResponse.id
+        [currentQuestion.id]: savedResponse.id,
       }));
 
       // Update chatbot context
-      setChatbotContext(prevContext => ({
+      setChatbotContext((prevContext) => ({
         ...prevContext,
-        context: `${prevContext.context}\n\nHere's something I just noted about the passage\n${text}`
+        context: `${prevContext.context}\n\nHere's something I just noted about the passage\n${text}`,
       }));
-
     } catch (err) {
-      console.error('Error saving user response:', err);
+      console.error("Error saving user response:", err);
     }
   };
 
   const handleFlag = async () => {
     setFlashFlag(true);
-    
+
     const currentQuestion = getCurrentQuestion();
     if (!currentQuestion || !userTest) {
-      console.error('No current question or user test available');
+      console.error("No current question or user test available");
       setFlashFlag(false);
       return;
     }
@@ -609,36 +683,35 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     const responseId = questionIdToResponseId[currentQuestion.id];
 
     if (!existingResponse) {
-      console.error('No existing response found');
+      console.error("No existing response found");
       setFlashFlag(false);
       return;
     }
 
     try {
       const response = await fetch(`/api/user-test/response`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userTestId: userTest.id,
           questionId: currentQuestion.id,
-          flagged: !existingResponse.flagged
+          flagged: !existingResponse.flagged,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update flag status');
+        throw new Error("Failed to update flag status");
       }
 
       const savedResponse: UserResponse = await response.json();
 
-      setUserResponses(prev => ({
+      setUserResponses((prev) => ({
         ...prev,
-        [responseId]: savedResponse
+        [responseId]: savedResponse,
       }));
-
     } catch (err) {
-      console.error('Error updating question flag status:', err);
-    } 
+      console.error("Error updating question flag status:", err);
+    }
   };
 
   // Function to extract quoted strings from context text
@@ -662,160 +735,184 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
     }, 5000);
   };
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (event.metaKey) {
-      if (event.key === 'i') {
-        const selection = window.getSelection();
-        if (selection && selection.toString().trim() !== '') {
-          const word = selection.toString().trim();
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.metaKey) {
+        if (event.key === "i") {
+          const selection = window.getSelection();
+          if (selection && selection.toString().trim() !== "") {
+            const word = selection.toString().trim();
 
-          // Always fetch the definition and add to vocabList
-          fetchDefinitionAndAddToVocab(word);
+            // Pass addVocabWord as a callback
+            fetchDefinitionAndAddToVocab(word, addVocabWord);
 
-          // If Command-I is enabled, perform dictionary lookup
-          if (isCmdIEnabled) {
-            const range = selection.getRangeAt(0);
-            const rect = range.getBoundingClientRect();
+            // If Command-I is enabled, perform dictionary lookup
+            if (isCmdIEnabled) {
+              const range = selection.getRangeAt(0);
+              const rect = range.getBoundingClientRect();
 
-            const viewportHeight = window.innerHeight;
-            const viewportWidth = window.innerWidth;
+              const viewportHeight = window.innerHeight;
+              const viewportWidth = window.innerWidth;
 
-            const isBottomThird = rect.bottom > (viewportHeight * 2 / 3);
+              const isBottomThird = rect.bottom > (viewportHeight * 2) / 3;
 
-            const leftPosition = Math.min(rect.left + rect.width, viewportWidth - 300);
+              const leftPosition = Math.min(
+                rect.left + rect.width,
+                viewportWidth - 300
+              );
 
-            setDictionaryPosition({
-              top: isBottomThird ? null : rect.bottom + 10,
-              bottom: isBottomThird ? viewportHeight - rect.top + 10 : null,
-              left: leftPosition
-            });
+              setDictionaryPosition({
+                top: isBottomThird ? null : rect.bottom + 10,
+                bottom: isBottomThird ? viewportHeight - rect.top + 10 : null,
+                left: leftPosition,
+              });
 
-            setSelectedWord(word);
-            setShowDefinition(true);
+              setSelectedWord(word);
+              setShowDefinition(true);
+            }
           }
+        } else if (event.key === "a") {
+          event.preventDefault();
+          setShowChatbot((prev) => !prev);
+        } else if (event.key === "s") {
+          event.preventDefault();
+          handleStrikethrough();
+        } else if (event.key === "h") {
+          event.preventDefault();
+          handleHighlight();
         }
-      } else if (event.key === 'a') {
-        event.preventDefault();
-        setShowChatbot(prev => !prev);
-      } else if (event.key === 's') {
-        event.preventDefault();
-        handleStrikethrough();
-      } else if (event.key === 'h') {
-        event.preventDefault();
-        handleHighlight();
       }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCmdIEnabled]);
-
-  // New function to fetch definition and add to vocab list
-  const fetchDefinitionAndAddToVocab = async (word: string) => {
-    try {
-      const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
-      const data = response.data[0];
-      const uniqueDefinitions = data.meanings.reduce((acc: any[], meaning: any) => {
-        if (!acc.some((def: any) => def.partOfSpeech === meaning.partOfSpeech)) {
-          acc.push({
-            partOfSpeech: meaning.partOfSpeech,
-            definition: meaning.definitions[0].definition,
-          });
-        }
-        return acc;
-      }, []);
-
-      const allDefinitions = uniqueDefinitions.map((def: any) => 
-        `(${def.partOfSpeech}) ${def.definition}`
-      ).join('; ');
-
-      addVocabWord(word, allDefinitions);
-    } catch (err) {
-      console.error('Error fetching definition:', err);
-      addVocabWord(word, ''); // Add word with empty definition if fetch fails
-    }
-  };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [isCmdIEnabled, addVocabWord]
+  );
 
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleKeyDown]);
 
   const handleSendMessage = async (message: string) => {
     try {
-      const response = await fetch('/api/send-message', {
-        method: 'POST',
+      const response = await fetch("/api/send-message", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ message }),
       });
 
       if (response.ok) {
-        toast.success('Message sent successfully!');
+        toast.success("Message sent successfully!");
         setShowMessageForm(false);
       } else {
-        throw new Error('Failed to send message');
+        throw new Error("Failed to send message");
       }
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message. Please try again.');
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message. Please try again.");
     }
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p className="text-xl font-semibold text-gray-700">Loading...</p>
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-xl font-semibold text-gray-700">Loading...</p>
+        </div>
       </div>
-    </div>
-  );
-  
-  if (error) return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="text-center p-8 bg-white rounded-lg shadow-md">
-        <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
-        <p className="text-gray-600">{error}</p>
-      </div>
-    </div>
-  );
+    );
 
-  if (!test) return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="text-center p-8 bg-white rounded-lg shadow-md">
-        <svg className="w-16 h-16 text-yellow-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">No Test Found</h2>
-        <p className="text-gray-600">Unable to locate the requested test.</p>
+  if (error)
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-center p-8 bg-white rounded-lg shadow-md">
+          <svg
+            className="w-16 h-16 text-red-500 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
+          <p className="text-gray-600">{error}</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+
+  if (!test)
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-center p-8 bg-white rounded-lg shadow-md">
+          <svg
+            className="w-16 h-16 text-yellow-500 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            No Test Found
+          </h2>
+          <p className="text-gray-600">Unable to locate the requested test.</p>
+        </div>
+      </div>
+    );
 
   const currentTestQuestion = getCurrentTestQuestion();
   const currentQuestion = getCurrentQuestion();
- 
-  const userAnswer = currentQuestion?.id ? getCurrentUserResponse(currentQuestion?.id)?.userAnswer : undefined
+
+  const userAnswer = currentQuestion?.id
+    ? getCurrentUserResponse(currentQuestion?.id)?.userAnswer
+    : undefined;
 
   return (
     <div className="bg-white flex flex-col text-white overflow-hidden h-screen">
+      <TestIntroModal
+        isOpen={showIntroModal}
+        onClose={() => setShowIntroModal(false)}
+        testTitle={test?.title || ""}
+        testDescription={test?.description}
+        passageTitle={currentPassage?.title}
+        userScore={userScore}
+      />
+
       {showDefinition && selectedWord && (
-        <div 
+        <div
           style={{
-            position: 'fixed',
-            top: dictionaryPosition.top !== null ? `${dictionaryPosition.top}px` : 'auto',
-            bottom: dictionaryPosition.bottom !== null ? `${dictionaryPosition.bottom}px` : 'auto',
+            position: "fixed",
+            top:
+              dictionaryPosition.top !== null
+                ? `${dictionaryPosition.top}px`
+                : "auto",
+            bottom:
+              dictionaryPosition.bottom !== null
+                ? `${dictionaryPosition.bottom}px`
+                : "auto",
             left: `${dictionaryPosition.left}px`,
-            zIndex: 1000
+            zIndex: 1000,
           }}
         >
-          <DictionaryLookup 
-            word={selectedWord} 
-            onClose={() => setShowDefinition(false)} 
+          <DictionaryLookup
+            word={selectedWord}
+            onClose={() => setShowDefinition(false)}
           />
         </div>
       )}
@@ -833,8 +930,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           <button
             className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
               flashHighlight
-                ? 'bg-transparent text-yellow-300'
-                : 'bg-transparent text-white hover:bg-white/10'
+                ? "bg-transparent text-yellow-300"
+                : "bg-transparent text-white hover:bg-white/10"
             }`}
             onClick={handleHighlight}
             aria-label="Highlight (Cmd+H)"
@@ -846,8 +943,8 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           <button
             className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
               flashStrikethrough
-                ? 'bg-transparent text-yellow-300'
-                : 'bg-transparent text-white hover:bg-white/10'
+                ? "bg-transparent text-yellow-300"
+                : "bg-transparent text-white hover:bg-white/10"
             }`}
             onClick={handleStrikethrough}
             aria-label="Strikethrough (Cmd+S)"
@@ -861,23 +958,29 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           <button
             onClick={toggleVocabList}
             className={`rounded px-2 transition-colors duration-200 flex items-center ${
-              showVocabList ? 'bg-blue-500' : 'bg-transparent'
+              showVocabList ? "bg-blue-500" : "bg-transparent"
             } text-white hover:bg-blue-600`}
-            aria-label={showVocabList ? "Hide Vocabulary List" : "Show Vocabulary List"}
+            aria-label={
+              showVocabList ? "Hide Vocabulary List" : "Show Vocabulary List"
+            }
           >
             📚
           </button>
           <button
             className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
               flashFlag
-                ? 'bg-transparent text-yellow-300'
+                ? "bg-transparent text-yellow-300"
                 : currentQuestion && getCurrentUserResponse(currentQuestion.id)
-                ? 'bg-transparent text-white hover:bg-white/10'
-                : 'bg-transparent text-gray-400 cursor-not-allowed'
+                  ? "bg-transparent text-white hover:bg-white/10"
+                  : "bg-transparent text-gray-400 cursor-not-allowed"
             }`}
             onClick={handleFlag}
             aria-label="Flag for Review"
-            disabled={currentQuestion?.id ? !getCurrentUserResponse(currentQuestion?.id)?.userAnswer : true}
+            disabled={
+              currentQuestion?.id
+                ? !getCurrentUserResponse(currentQuestion?.id)?.userAnswer
+                : true
+            }
           >
             <Flag className="w-4 h-4 mr-2" />
             Flag for Review
@@ -886,7 +989,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       </div>
 
       <div className="h-7 bg-[#a6a6a6]"></div>
-     
+
       {/* Main content area */}
       <div className="flex relative flex-grow overflow-hidden text-base">
         {currentPassage && (
@@ -902,7 +1005,9 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
           </div>
         )}
 
-        <div className={`${currentPassage ? 'w-1/2' : 'w-full'} flex flex-col relative`}>
+        <div
+          className={`${currentPassage ? "w-1/2" : "w-full"} flex flex-col relative`}
+        >
           <div className="flex-grow overflow-auto standard-scrollbar">
             {currentQuestion && currentTestQuestion ? (
               <>
@@ -921,9 +1026,11 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                   className={`
                     absolute top-4 right-4 p-2 rounded-full shadow-lg
                     transition-colors duration-200
-                    ${showChatbot 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white'}
+                    ${
+                      showChatbot
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white"
+                    }
                   `}
                   onClick={() => setShowChatbot(!showChatbot)}
                   aria-label="Toggle Chatbot"
@@ -940,14 +1047,16 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
                   isFirst={currentQuestionIndex === 0}
                   isLast={currentQuestionIndex === test?.questions?.length - 1}
                   onAnswer={handleUserResponse}
-                  userAnswer={userAnswer} 
+                  userAnswer={userAnswer}
                   currentQuestionIndex={currentQuestionIndex}
                   totalQuestions={test?.questions?.length ?? 0}
                   onFinish={handleFinishTest}
                   isSubmitting={isSubmitting}
                   answeredQuestions={answeredQuestions}
                   onOptionCrossedOut={onOptionCrossedOut}
-                  onStartQuestionTimer={() => testHeaderRef.current?.startQuestionTimer()}
+                  onStartQuestionTimer={() =>
+                    testHeaderRef.current?.startQuestionTimer()
+                  }
                 />
               </>
             ) : (
@@ -956,7 +1065,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
               </div>
             )}
           </div>
-          
+
           {/* ChatBotInLine component */}
           {showChatbot && (
             <div className="rounded-lg mx-4 flex-shrink-0">
@@ -995,7 +1104,13 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
         technique={technique}
         totalQuestions={test?.questions?.length ?? 0}
         userTestId={userTest?.id}
-        totalTimeTaken={testStartTime ? Math.round((new Date().getTime() - testStartTime.getTime()) / 1000) : 0}
+        totalTimeTaken={
+          testStartTime
+            ? Math.round(
+                (new Date().getTime() - testStartTime.getTime()) / 1000
+              )
+            : 0
+        }
       />
       <audio ref={audioRef} src="/chatbot-open.mp3" />
 
@@ -1003,13 +1118,18 @@ const TestComponent: React.FC<TestComponentProps> = ({ testId, onTestComplete })
       {showMessageForm && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[60]">
           <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg shadow-lg w-96 max-w-[90%]">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Send us a message</h3>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const message = formData.get('message') as string;
-              handleSendMessage(message);
-            }} className="space-y-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
+              Send us a message
+            </h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const message = formData.get("message") as string;
+                handleSendMessage(message);
+              }}
+              className="space-y-4"
+            >
               <textarea
                 name="message"
                 placeholder="Your message"
