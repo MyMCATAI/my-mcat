@@ -346,7 +346,7 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
   const tabs: { id: string; label: string; content: TabContent }[] = [
     { id: "tab1", label: "Insights", content: { type: 'insights', videos: videos } },
     { id: "tab2", label: "Tutors", content: { type: 'tutors', schools: tutors } },
-    { id: "tab3", label: "Bulletin", content: { type: 'tutorial' } },
+    { id: "tab3", label: "Help", content: { type: 'tutorial' } },
   ];
 
   const AddTutorDialog = () => (
