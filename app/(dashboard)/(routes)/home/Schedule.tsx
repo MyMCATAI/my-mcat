@@ -859,7 +859,7 @@ const Schedule: React.FC<ScheduleProps> = ({
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="absolute top-16 right-6 w-80 bg-white rounded-lg shadow-lg z-50"
+              className="absolute top-8 right-2 w-80 bg-white rounded-lg shadow-lg z-50"
             >
               <SettingContent
                 onStudyPlanSaved={handleStudyPlanSaved}

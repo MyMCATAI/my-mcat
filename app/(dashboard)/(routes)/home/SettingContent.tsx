@@ -537,8 +537,8 @@ const SettingContent: React.FC<SettingContentProps> = ({
   };
 
   return (
-    <div className="bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg absolute right-[2rem] w-[36rem] h-[48rem] -top-[2rem]">
-      <div className="bg-[--theme-leaguecard-color] rounded-lg overflow-hidden h-full flex flex-col">
+    <div className="bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg absolute right-[2rem] w-[36rem]">
+      <div className="bg-[--theme-leaguecard-color] rounded-lg overflow-hidden flex flex-col max-h-[calc(100vh-10rem)]">
         <div className="p-4 space-y-4 flex-grow overflow-y-auto">
           {options.map((option) => (
             <div key={option.id} className="relative">
@@ -608,7 +608,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
           </TooltipProvider>
         </div>
 
-        <div className="p-4">
+        <div className="p-4 border-t border-[--theme-border-color]">
           {existingStudyPlan ? (
             <Button
               className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200 flex items-center justify-center gap-2"
