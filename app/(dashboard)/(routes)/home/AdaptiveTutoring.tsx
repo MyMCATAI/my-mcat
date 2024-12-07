@@ -696,7 +696,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         />
       )}
       <div className="flex items-stretch w-full mb-3">
-        <div className="flex-grow mr-3 ml-2">
+        <div className="flex-grow mr-0.5 ml-2">
           <div className="grid grid-cols-7 gap-3 ats-topic-icons">
             {isLoading
               ? (
