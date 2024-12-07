@@ -898,66 +898,65 @@ const Schedule: React.FC<ScheduleProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Schedule Display */}
+        {/* Main Container with fixed dimensions */}
         <div
-          className="flex-grow h-[calc(100vh-8rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden schedule-content"
-          style={
-            {
-              backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
-              backgroundSize: "cover",
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "center",
-              backgroundColor: "var(--theme-mainbox-color)",
-              color: "var(--theme-text-color)",
-              boxShadow: "var(--theme-box-shadow)",
-            } as React.CSSProperties
-          }
+          className="flex-grow h-[calc(100vh-8rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
+          style={{
+            backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundColor: "var(--theme-mainbox-color)",
+            color: "var(--theme-text-color)",
+            boxShadow: "var(--theme-box-shadow)",
+          }}
         >
-          {showAnalytics ? (
-            <>
+          {/* Content Container */}
+          <div className="relative w-full h-full flex-grow">
+            {/* Analytics View */}
+            <div
+              className={`absolute inset-0 transition-opacity duration-300 ${
+                showAnalytics ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
+              } flex flex-col`}
+            >
               {(isTypingComplete || isTutorialTypingComplete) && (
-                <div className="flex-grow overflow-auto flex flex-col justify-center">
+                <div className="flex-grow flex flex-col">
                   <AnimatePresence mode="wait">
                     {!selectedSubject ? (
                       <motion.div
                         key="donut"
-                        className="flex justify-center items-center min-h-[32rem]"
+                        className="flex-grow flex justify-center items-center"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <DonutChart
-                          onProgressClick={(label) => setSelectedSubject(label)}
-                        />
+                        <DonutChart onProgressClick={(label) => setSelectedSubject(label)} />
                       </motion.div>
                     ) : (
                       <motion.div
                         key="statistics"
-                        className="h-full"
+                        className="flex-grow"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <Statistics
-                          onReturn={() => setSelectedSubject(null)}
-                          subject={selectedSubject}
-                        />
+                        <Statistics onReturn={() => setSelectedSubject(null)} subject={selectedSubject} />
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
               )}
-            </>
-          ) : (
-            <div className="h-full w-full relative flex flex-col">
-              <div
-                className="flex-grow"
-                style={{
-                  maxHeight: "90%",
-                }}
-              >
+            </div>
+
+            {/* Calendar View */}
+            <div
+              className={`absolute inset-0 transition-opacity duration-300 ${
+                showAnalytics ? "opacity-0 pointer-events-none z-0" : "opacity-100 z-10"
+              } flex flex-col`}
+            >
+              <div className="flex-grow">
                 <InteractiveCalendar
                   currentDate={currentDate}
                   activities={activities}
@@ -971,74 +970,52 @@ const Schedule: React.FC<ScheduleProps> = ({
                   updateTodaySchedule={updateTodaySchedule}
                 />
               </div>
-              {/* Button group at bottom */}
-              {!showAnalytics ? (
-                <div className="mt-auto flex justify-end items-center gap-2">
-                  {/* Take a Break button */}
-                                    {/* Schedule Practice Exam button */}
-                  <button
-                    onClick={() => setShowBreaksDialog(true)}
-                    className="px-4 h-12
-                      bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                      border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-lg transition flex items-center justify-center
-                      text-sm font-medium"
-                  >
-                    PRACTICE TESTS
-                  </button>
-                  <button
-                    onClick={() => setShowBreaksDialog(true)}
-                    className="px-4 h-12
-                      bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                      border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-lg transition flex items-center justify-center
-                      text-sm font-medium"
-                  >
-                    TAKE A BREAK
-                  </button>
-                  {/* Analytics button */}
-                  <button
-                    onClick={handleToggleView}
-                    className="w-16 h-16 p-4
-                      bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                      border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-full transition flex items-center justify-center"
-                  >
-                    <AnalyticsIcon className="w-8 h-8" />
-                  </button>
-                </div>
-              ) : (
-                <div className="mt-auto flex justify-end items-center">
-                  <button
-                    onClick={handleToggleView}
-                    className="w-16 h-16 p-4
-                      bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                      border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-full transition flex items-center justify-center"
-                  >
-                    <CalendarIcon className="w-8 h-8" />
-                  </button>
-                </div>
-              )}
             </div>
-          )}
+          </div>
 
-          {/* Navigation Buttons */}
-          {showAnalytics && !selectedSubject && (
-            <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
+          {/* View Toggle Buttons */}
+          {showAnalytics ? (
+            <div className="absolute bottom-4 right-4 flex flex-col space-y-2 z-20">
               <button
                 onClick={handleToggleView}
-                className="p-4 aspect-square
-                  bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                className="p-4 aspect-square bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                   border-2 border-[--theme-border-color] 
                   hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
                   shadow-md rounded-full transition flex items-center justify-center"
               >
                 <CalendarIcon className="w-8 h-8" />
+              </button>
+            </div>
+          ) : (
+            <div className="mt-auto flex justify-end items-center gap-2">
+              <button
+                onClick={() => setShowBreaksDialog(true)}
+                className="px-4 h-12 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                  border-2 border-[--theme-border-color] 
+                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                  shadow-md rounded-lg transition flex items-center justify-center
+                  text-sm font-medium"
+              >
+                PRACTICE TESTS
+              </button>
+              <button
+                onClick={() => setShowBreaksDialog(true)}
+                className="px-4 h-12 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                  border-2 border-[--theme-border-color] 
+                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                  shadow-md rounded-lg transition flex items-center justify-center
+                  text-sm font-medium"
+              >
+                TAKE A BREAK
+              </button>
+              <button
+                onClick={handleToggleView}
+                className="w-16 h-16 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                  border-2 border-[--theme-border-color] 
+                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                  shadow-md rounded-full transition flex items-center justify-center"
+              >
+                <AnalyticsIcon className="w-8 h-8" />
               </button>
             </div>
           )}
