@@ -4,7 +4,12 @@ import { useState } from 'react';
 import { Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const MessageButton = () => {
+interface MessageButtonProps {
+  iconOnly?: boolean;
+  withShadow?: boolean;
+}
+
+const MessageButton: React.FC<MessageButtonProps> = ({ iconOnly = false, withShadow = false }) => {
   const [showForm, setShowForm] = useState(false);
 
   const handleSendMessage = async (message: string) => {
@@ -33,10 +38,16 @@ const MessageButton = () => {
     <>
       <button
         onClick={() => setShowForm(true)}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors duration-200"
+        className={`flex items-center justify-center ${
+          iconOnly 
+            ? "w-10 h-10 border border-[--theme-border-color]" 
+            : "gap-2 px-4 py-2 bg-gray-600"
+        } rounded-md hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 ${
+          withShadow ? "shadow-md hover:shadow-lg" : ""
+        }`}
       >
-        <Mail className="h-4 w-4" />
-        Send Message
+        <Mail className={iconOnly ? "h-5 w-5" : "h-4 w-4"} />
+        {!iconOnly && "Send Message"}
       </button>
 
       {showForm && (
