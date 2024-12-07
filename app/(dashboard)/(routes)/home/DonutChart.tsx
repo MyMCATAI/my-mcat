@@ -94,10 +94,10 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
 
   const getBorderColor = () => {
     const themeClasses = {
-      cyberSpace: "#0162ff",
-      sakuraTrees: "#ff0080",
-      sunsetCity: "#ff6347",
-      mykonosBlue: "#4cb5e6",
+      cyberSpace: "#0162ff70",
+      sakuraTrees: "#ff008080",
+      sunsetCity: "#ff634770",
+      mykonosBlue: "#4cb5e670",
     };
     return themeClasses[theme];
   };
@@ -113,8 +113,8 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
       hoverBackgroundColor: "rgba(186, 104, 200)", // Hover Purple
     },
     "Chem/Phys": {
-      backgroundColor: "rgba(255, 235, 59, 0.15)", // Yellow
-      hoverBackgroundColor: "rgba(255, 235, 59)", // Hover Yellow
+      backgroundColor: "rgba(255, 235, 59, 0.6)", // Yellow - increased opacity further
+      hoverBackgroundColor: "rgba(255, 235, 59, 1)", // Hover Yellow - full opacity
     },
     "Bio/Biochem": {
       backgroundColor: "rgba(33, 150, 243, 0.15)", // Blue

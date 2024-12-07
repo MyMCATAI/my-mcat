@@ -44,31 +44,34 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
         <X className="h-5 w-5 text-[--theme-text-color]" />
       </button>
 
-      <h2 className="text-[--theme-text-color] text-2xl font-semibold mb-6">
-        ATS Information
+      <h2 className="text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center">
+        Help & Information
       </h2>
 
-      <div className="space-y-6 text-[--theme-text-color]">
+      <div className="space-y-12 text-[--theme-text-color]">
         <section>
-          <p className="text-sm leading-relaxed mb-4">
-            Welcome to the Adaptive Tutoring System! This platform gives you all of the materials to learn MCAT content.
-          </p>
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-6">
+            <span className="text-base">Learn MCAT content.</span>
             <button
               onClick={handleResetTutorials}
-              className="px-4 py-2 text-sm border border-[--theme-border-color] bg-[--theme-bg-transparent] rounded-md hover:bg-[--theme-hover-color] transition-colors duration-200"
+              className="flex items-center gap-2 px-4 py-2 rounded-md border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg text-sm"
             >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
               Reset Tutorials
             </button>
           </div>
         </section>
 
-        <section className="py-2 border-t border-[--theme-doctorsoffice-accent]">
-          <h3 className="text-lg font-semibold mb-2 text-center">Learning Content</h3>
+        <section className="py-4 border-t border-[--theme-doctorsoffice-accent]">
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            Learning Content
+          </h3>
           <div className="flex items-center justify-center gap-4 bg-transparent p-4 rounded-lg">
             {/* Video Icon */}
             <div 
-              className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-2 rounded-md hover:bg-[--theme-hover-color] ${activeSection === 'video' ? 'scale-110' : 'hover:scale-105'}`}
+              className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-2 rounded-md hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg ${activeSection === 'video' ? 'scale-110' : 'hover:scale-105'}`}
               onClick={() => toggleSection('video')}
             >
               <div className="w-6 h-6 relative theme-box">
@@ -84,7 +87,7 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
 
             {/* Reading Icon */}
             <div 
-              className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-2 rounded-md hover:bg-[--theme-hover-color] ${activeSection === 'reading' ? 'scale-110' : 'hover:scale-105'}`}
+              className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-2 rounded-md hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg ${activeSection === 'reading' ? 'scale-110' : 'hover:scale-105'}`}
               onClick={() => toggleSection('reading')}
             >
               <div className="w-6 h-6 relative theme-box">
@@ -108,7 +111,7 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
 
             {/* Quiz Icon */}
             <div 
-              className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-2 rounded-md hover:bg-[--theme-hover-color] ${activeSection === 'quiz' ? 'scale-110' : 'hover:scale-105'}`}
+              className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-2 rounded-md hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg ${activeSection === 'quiz' ? 'scale-110' : 'hover:scale-105'}`}
               onClick={() => toggleSection('quiz')}
             >
               <div className="w-7 h-7 relative theme-box">
@@ -124,7 +127,7 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
 
             {/* Kalypso Icon */}
             <div 
-              className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-2 rounded-md hover:bg-[--theme-hover-color] ${activeSection === 'kalypso' ? 'scale-110' : 'hover:scale-105'}`}
+              className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-2 rounded-md hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg ${activeSection === 'kalypso' ? 'scale-110' : 'hover:scale-105'}`}
               onClick={() => toggleSection('kalypso')}
             >
               <div className="w-7 h-7 relative theme-box">
@@ -143,13 +146,13 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
           {activeSection ? (
             <div className="p-4 bg-transparent rounded-lg text-sm space-y-2 animate-fadeIn">
               {activeSection === 'video' && (
-                <div className="text-sm leading-relaxed">
+                <div className="text-xs leading-relaxed">
                   Watch MCAT video lectures curated from YouTube with detailed summaries. Use Kalypso to get instant clarification on any concept while watching. 
                   <strong> You don&apos;t have to do BOTH readings and videos. One will suffice.</strong>
                 </div>
               )}
               {activeSection === 'reading' && (
-                <div className="text-sm leading-relaxed">
+                <div className="text-xs leading-relaxed">
                   Access detailed PDFs from LibreText or OpenStax that cover concepts comprehensively. 
                   You can full screen. Kalypso can clarify anything you don&apos;t understand.
                   <strong> You don&apos;t have to do BOTH readings and videos. One will suffice.</strong>
@@ -158,7 +161,7 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
               {activeSection === 'sample' && (
                 <>
                   <div className="">
-                    <p className="text-sm mb-4">
+                    <p className="text-xs mb-4">
                       This is the content category (CC) that you&apos;re currently studying. Hover over it and press a button that looks like the below to complete the category:
                     </p>
                     <div className="flex justify-center flex-col items-center">
@@ -177,7 +180,7 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
                 </>
               )}
               {activeSection === 'quiz' && (
-                <div className="text-sm leading-relaxed">
+                <div className="text-xs leading-relaxed">
                   You can do practice questions and it&apos;s full screen. You can pay a coin to take a quiz. 
                   If you get a 100, you can get your coin back. Your performance feeds your knowledge profile 
                   and affects the ITS&apos; understanding of your weaknesses. <strong>You can report unfair questions with the downvote and win two coins as compensation.</strong>
@@ -185,7 +188,7 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
               )}
               {activeSection === 'kalypso' && (
                 <>
-                  <div className="text-sm leading-relaxed">
+                  <div className="text-xs leading-relaxed">
                     Ask Kalypso questions directly or use the button. <strong>Press cmd to toggle voice input (browser support varies).</strong>
                   </div>
                 </>
@@ -198,12 +201,14 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
           )}
         </section>
 
-        <section className="py-2 border-t border-[--theme-doctorsoffice-accent]">
-          <h3 className="text-lg font-semibold mb-2 text-center">Topic Selection</h3>
+        <section className="py-2 border-t border-[--theme-doctorsoffice-accent] mb-8">
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            Topic Selection
+          </h3>
           <div className="flex items-center justify-center gap-4">
             {/* Settings Icon */}
             <div 
-              className="relative z-10 rounded-lg text-center group min-h-[6.25rem] w-[6.25rem] cursor-pointer transition-all hover:bg-[--theme-hover-color]"
+              className="relative z-10 rounded-lg text-center group min-h-[6.25rem] w-[6.25rem] cursor-pointer transition-all hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg"
               style={{
                 backgroundColor: "var(--theme-adaptive-tutoring-color)",
                 boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
@@ -241,7 +246,7 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
 
             {/* Amino Acids Icon */}
             <div 
-              className="relative z-10 rounded-lg text-center group min-h-[6.25rem] w-[6.25rem] cursor-pointer transition-all hover:bg-[--theme-hover-color]"
+              className="relative z-10 rounded-lg text-center group min-h-[6.25rem] w-[6.25rem] cursor-pointer transition-all hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg"
               style={{
                 backgroundColor: "var(--theme-adaptive-tutoring-color)",
                 boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
@@ -271,7 +276,7 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
 
             {/* Fluids Icon */}
             <div 
-              className="relative z-10 rounded-lg text-center group min-h-[6.25rem] w-[6.25rem] cursor-pointer transition-all hover:bg-[--theme-hover-color]"
+              className="relative z-10 rounded-lg text-center group min-h-[6.25rem] w-[6.25rem] cursor-pointer transition-all hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg"
               style={{
                 backgroundColor: "var(--theme-adaptive-tutoring-color)",
                 boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
@@ -303,13 +308,13 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
           {/* Explanations */}
           {(activeSection === 'amino' || activeSection === 'fluids') ? (
             <div className="p-4 rounded-lg text-sm space-y-2 mt-2 animate-fadeIn">
-              <div className="text-sm leading-relaxed">
+              <div className="text-xs leading-relaxed">
                 At a time, you can have five topics active to choose from when studying. There are around a 100 topics. They are either curated for you using our algorithm or you can choose them. Switch between them by clicking a button.
               </div>
             </div>
           ) : activeSection === 'settings' ? (
             <div className="p-4 rounded-lg text-sm space-y-2 mt-2 animate-fadeIn">
-              <div className="text-sm leading-relaxed">
+              <div className="text-xs leading-relaxed">
                 The settings shows the current categories you have active. You can come here to shuffle them, change them, focus on a category, or have our algorithm find new weaknesses for you. Furthermore, you can check your progress.
               </div>
             </div>
@@ -321,7 +326,9 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
         </section>
 
         <section className="py-2 border-t border-[--theme-doctorsoffice-accent]">
-          <h3 className="text-lg font-semibold mb-2 text-center">MyMCAT Podcast</h3>
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            MyMCAT Podcast
+          </h3>
           <div className="w-full">
             <iframe 
               style={{ borderRadius: "0.75rem" }}
@@ -334,7 +341,7 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
               loading="lazy"
             />
           </div>
-          <p className="text-sm leading-relaxed mt-4 text-center">
+          <p className="text-xs leading-relaxed mt-4 text-center">
             We use NotebookLM to generate podcasts for you to listen to. Under the thumbnails, you can access a podcast for a category by clicking this icon:
           </p>
           <div className="flex justify-center mt-2">
@@ -347,7 +354,9 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
         </section>
 
         <section className="py-2 border-t border-[--theme-doctorsoffice-accent]">
-          <h3 className="text-lg font-semibold mb-2 text-center">Our Weakness Algorithm</h3>
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            Our Weakness Algorithm
+          </h3>
           <div className="space-y-4">
             <a 
               href="/blog/how-to-study-for-the-mcat"
@@ -370,9 +379,11 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
                     />
                   </svg>
-                  <h4 className="text-[--theme-text-color] font-medium">Optimizing Student Scores on the MCAT</h4>
+                  <h4 className="text-[--theme-text-color] text-xs opacity-70">
+                    Optimizing Student Scores on the MCAT
+                  </h4>
                 </div>
-                <p className="text-sm text-[--theme-text-color] opacity-80">
+                <p className="text-xs text-[--theme-text-color] opacity-80">
                   Learn how our ITS creates a comprehensive, real-time representation of your knowledge profile to personalize your learning experience.
                 </p>
               </div>
@@ -381,20 +392,21 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
         </section>
 
         <section className="py-2 border-t border-[--theme-doctorsoffice-accent]">
-          <h3 className="text-lg font-semibold mb-2 text-center">Need Help?</h3>
-          <p className="text-sm leading-relaxed mb-4">
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            Need Help?
+          </h3>
+          <p className="text-xs leading-relaxed mb-4">
             Contact our support team for additional assistance or specific questions about the platform. Our discord is also a good place to ask questions about the MCAT.
           </p>
-          <div className="flex justify-center gap-2">
-            <MessageButton />
+          <div className="flex justify-center gap-4">
+            <MessageButton iconOnly withShadow />
             <a 
               href="https://discord.gg/rTxN7wkh6e"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-6 py-2 bg-gray-600 text-white text-m rounded-md hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors duration-200"
+              className="w-10 h-10 flex items-center justify-center rounded-md border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg"
             >
-              <FaDiscord className="h-4 w-4" />
-              <span>Join Discord</span>
+              <FaDiscord className="h-5 w-5" />
             </a>
           </div>
         </section>

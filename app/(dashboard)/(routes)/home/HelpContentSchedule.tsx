@@ -43,29 +43,32 @@ const HelpContentSchedule: React.FC<HelpContentScheduleProps> = ({ onClose, onRe
       </button>
 
       {/* Title */}
-      <h2 className="text-[--theme-text-color] text-2xl font-semibold mb-2">
+      <h2 className="text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center">
         Schedule Information
       </h2>
 
       {/* Content Sections */}
       <div className="space-y-6 text-[--theme-text-color]">
-        <section className="py-2">
-          <p className="text-sm leading-relaxed mb-4">
-            Welcome to your MCAT study schedule! This dashboard helps you organize and track your daily study activities.
-          </p>
-          <div className="flex justify-center">
+        <section>
+          <div className="flex flex-col items-center gap-6">
+            <span className="text-base">Plan your study.</span>
             <button
               onClick={handleResetTutorials}
-              className="px-4 py-2 text-sm border border-[--theme-border-color] bg-[--theme-bg-transparent] rounded-md hover:bg-[--theme-hover-color] transition-colors duration-200"
+              className="flex items-center gap-2 px-4 py-2 rounded-md border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg text-sm"
             >
-              Reset Tutorial
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Reset Tutorials
             </button>
           </div>
         </section>
 
         <section className="py-2 border-t border-[--theme-doctorsoffice-accent] border-opacity-20">
-          <h3 className="text-lg font-semibold mb-2 text-center">Calendar View</h3>
-          <ul className="text-sm space-y-2 list-disc pl-4">           
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            Calendar View
+          </h3>
+          <ul className="text-xs space-y-2 list-disc pl-4">           
             <li>Click the settings icon above the help button to modify your schedule.</li>
             <li>Read about our <a href="/blog/mcat-study-schedule" target="_blank" rel="noopener" className="text-[--theme-hover-color] hover:opacity-75 underline">algorithm on our blog</a>.</li>
             <li>Click the calendar icon under analytics to go to your calendar.</li>
@@ -85,7 +88,9 @@ const HelpContentSchedule: React.FC<HelpContentScheduleProps> = ({ onClose, onRe
         </section>
 
         <section className="py-2 border-t border-[--theme-doctorsoffice-accent] border-opacity-20">
-          <h3 className="text-lg font-semibold mb-2 text-center">Daily To-Do List</h3>
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            Daily To-Do List
+          </h3>
           <ul className="text-sm space-y-2 list-disc pl-4">
             <li>Click titles to jump to linked tasks.</li>
             <li>Check off tasks to win coins.</li>
@@ -139,14 +144,18 @@ const HelpContentSchedule: React.FC<HelpContentScheduleProps> = ({ onClose, onRe
         </section>
 
         <section className="py-2 border-t border-[--theme-doctorsoffice-accent] border-opacity-20">
-          <h3 className="text-lg font-semibold mb-2 text-center">Analytics Dashboard</h3>
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            Analytics Dashboard
+          </h3>
           <ul className="text-sm space-y-2 list-disc pl-4">
             <li>Coming soon.</li>
           </ul>
         </section>
 
         <section className="py-2 border-t border-[--theme-doctorsoffice-accent] border-opacity-20">
-          <h3 className="text-lg font-semibold mb-2 text-center">Our Methodology</h3>
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            Our Methodology
+          </h3>
           <div className="space-y-4">
             <a 
               href="/blog/how-to-study-for-the-mcat"
@@ -180,20 +189,21 @@ const HelpContentSchedule: React.FC<HelpContentScheduleProps> = ({ onClose, onRe
         </section>
 
         <section className="py-2 border-t border-[--theme-doctorsoffice-accent] border-opacity-20">
-          <h3 className="text-lg font-semibold mb-2 text-center">Need Help?</h3>
-          <p className="text-sm leading-relaxed mb-4">
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            Need Help?
+          </h3>
+          <p className="text-xs leading-relaxed mb-4">
             Have questions about your schedule or need assistance? Our support team and community are here to help!
           </p>
-          <div className="flex justify-center gap-2">
-            <MessageButton />
+          <div className="flex justify-center gap-4">
+            <MessageButton iconOnly withShadow />
             <a 
               href="https://discord.gg/rTxN7wkh6e"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-6 py-2 bg-gray-600 text-white text-m rounded-md hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors duration-200"
+              className="w-10 h-10 flex items-center justify-center rounded-md border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg"
             >
-              <FaDiscord className="h-4 w-4" />
-              <span>Join Discord</span>
+              <FaDiscord className="h-5 w-5" />
             </a>
           </div>
         </section>
