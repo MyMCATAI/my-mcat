@@ -67,7 +67,14 @@ const blogPosts: BlogPost[] = [
     id: 5,
     title: 'Building a Study Plan for the MCAT',
     slug: 'building-a-study-plan-for-the-mcat',
-    description: 'A deep dive into MyMCAT\'s intelligent study plan generation algorithm',
+    description: 'Study plan generation algorithm',
+    section: 'MCAT Prep'
+  },
+  { 
+    id: 6, 
+    title: 'The Weakness Finding Algorithm', 
+    slug: 'weakness-finding-algorithm', 
+    description: 'Thompson sampling and multi-armed bandits',
     section: 'MCAT Prep'
   },
 ]
@@ -118,7 +125,9 @@ export function BlogSidebar() {
                 overflow-hidden transition-all duration-300 ease-in-out
                 ${expandedSection === section ? 'max-h-[31.25rem] opacity-100' : 'max-h-0 opacity-0'}
               `}>
-                <ul className="mt-4 ml-7 space-y-4">
+                <ul className={`mt-4 ml-7 space-y-4 ${
+                  section === 'MCAT Prep' ? 'max-h-[25rem] overflow-y-auto pr-4' : ''
+                }`}>
                   {blogPosts
                     .filter(post => post.section === section)
                     .map((post) => (
@@ -133,14 +142,14 @@ export function BlogSidebar() {
                           className="group block p-2"
                           title={post.description}
                         >
-                          <h3 className={`text-lg font-medium transition-colors duration-300 ${
+                          <h3 className={`text-m font-medium transition-colors duration-300 ${
                             currentSlug === post.slug 
                               ? 'text-blue-600'
                               : 'text-gray-900 group-hover:text-gray-700'
                           }`}>
                             {post.title}
                           </h3>
-                          <p className="text-sm text-gray-700 mt-1 group-hover:text-gray-800 transition-colors duration-300">
+                          <p className="text-xs text-gray-500 mt-1 group-hover:text-gray-600 transition-colors duration-300 whitespace-normal break-words">
                             {post.description}
                           </p>
                         </Link>
