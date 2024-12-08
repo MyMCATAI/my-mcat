@@ -1,6 +1,27 @@
 import { TemplateConfig } from '../types';
 
-export const weeklyReportTemplate = (data: any): TemplateConfig => ({
+interface DailyActivity {
+  name: string;
+  completed: boolean;
+}
+
+interface WeeklyReportData {
+  userName: string;
+  dailyActivity: DailyActivity[];
+  coinsEarned: number;
+  coinsLost: number;
+  coinsNet: number;
+  topicsCovered: string[];
+  practiceProblems: number;
+  flashcardsReviewed: number;
+  topicsReviewed: number;
+  improvements: string[];
+  focusAreas: string[];
+  dashboardUrl: string;
+  settingsUrl: string;
+}
+
+export const weeklyReportTemplate = (data: WeeklyReportData): TemplateConfig => ({
   subject: `Your Weekly MCAT Prep Summary 📊`,
   html: `
     <div style="font-family: Arial, sans-serif; max-width: 37.5rem; margin: 0 auto; padding: 1.25rem;">
@@ -15,7 +36,7 @@ export const weeklyReportTemplate = (data: any): TemplateConfig => ({
       <div style="background-color: #f7fafc; padding: 1.25rem; border-radius: 0.5rem; margin: 1.25rem 0;">
         <h2 style="color: #2d3748; margin-top: 0;">Weekly Activity 📅</h2>
         <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
-          ${data.dailyActivity.map(day => `
+          ${data.dailyActivity.map((day: DailyActivity) => `
             <div style="text-align: center; margin: 0.5rem;">
               <div style="${day.completed ? 'color: #48bb78' : 'color: #e53e3e'}">${day.name}</div>
               <div>${day.completed ? '✅' : '❌'}</div>
@@ -36,7 +57,7 @@ export const weeklyReportTemplate = (data: any): TemplateConfig => ({
       <div style="background-color: #f7fafc; padding: 1.25rem; border-radius: 0.5rem; margin: 1.25rem 0;">
         <h2 style="color: #2d3748; margin-top: 0;">Topics Covered 📚</h2>
         <ul style="color: #333333; padding-left: 1.25rem;">
-          ${data.topicsCovered.map(topic => `
+          ${data.topicsCovered.map((topic: string) => `
             <li style="margin: 0.5rem 0;">${topic}</li>
           `).join('')}
         </ul>
@@ -55,11 +76,11 @@ export const weeklyReportTemplate = (data: any): TemplateConfig => ({
       </div>
 
       <div style="background-color: #f7fafc; padding: 1.25rem; border-radius: 0.5rem; margin: 1.25rem 0;">
-        <h2 style="color: #2d3748; margin-top: 0;">Areas of Growth 🌱</h2>
+        <h2 style="color: #2d3748; margin-top: 0;">Areas of Growth ����</h2>
         <div style="margin-bottom: 1rem;">
           <h3 style="color: #2d3748; font-size: 1rem;">Improvements:</h3>
           <ul style="color: #333333; padding-left: 1.25rem;">
-            ${data.improvements.map(item => `
+            ${data.improvements.map((item: string) => `
               <li style="margin: 0.5rem 0;">${item}</li>
             `).join('')}
           </ul>
@@ -67,7 +88,7 @@ export const weeklyReportTemplate = (data: any): TemplateConfig => ({
         <div>
           <h3 style="color: #2d3748; font-size: 1rem;">Focus Areas:</h3>
           <ul style="color: #333333; padding-left: 1.25rem;">
-            ${data.focusAreas.map(item => `
+            ${data.focusAreas.map((item: string) => `
               <li style="margin: 0.5rem 0;">${item}</li>
             `).join('')}
           </ul>
