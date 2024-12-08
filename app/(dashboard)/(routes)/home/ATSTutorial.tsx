@@ -202,7 +202,7 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
           options: {
             backgroundColor: '#ffffff',
             textColor: '#000000',
-            primaryColor: 'var(--theme-border-color)',
+            primaryColor: 'var(--theme-hover-color)',
             zIndex: 1000,
           },
         }}
@@ -223,7 +223,7 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
           options: {
             backgroundColor: '#ffffff',
             textColor: '#000000',
-            primaryColor: 'var(--theme-border-color)',
+            primaryColor: 'var(--theme-hover-color)',
             zIndex: 1000,
           },
         }}
@@ -239,7 +239,7 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
           options: {
             backgroundColor: '#ffffff',
             textColor: '#000000',
-            primaryColor: 'var(--theme-border-color)',
+            primaryColor: 'var(--theme-hover-color)',
             zIndex: 1000,
           },
         }}
