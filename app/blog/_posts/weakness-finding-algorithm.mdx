@@ -1,0 +1,97 @@
+---
+title: 'The Weakness Finding Algorithm'
+description: 'How MyMCAT uses Thompson sampling and multi-armed bandits to find your weaknesses'
+---
+
+Imagine walking into a sprawling, luxurious casino with hundreds of slot machines—each representing a different topic or concept area you need to master for the MCAT. You have a fixed amount of time and mental energy, and your goal is to maximize your "winnings"—in this case, your knowledge and test readiness. How do you decide which machines to play? Some are flashier, producing quick but shallow wins (like Anki), others are more demanding but yield deeper insights (like UWorld or AAMC’s full-length exams). You know that not all machines pay out equally; some are more "valuable" than others, while some require more time and effort. The problem is figuring out which machines are "hot" and deserve more of your attention, and which are "cold" and should be avoided.
+
+In the world of data science and educational technology, this "casino problem" is a classic scenario known as the multi-armed bandit problem. Each slot machine is a "bandit arm," and each pull of the lever provides some kind of payoff—in our metaphor, a measure of how much your knowledge improves. The dilemma you face is the well-known "explore-exploit" trade-off. Should you try new machines (explore) to see if they pay out better, or should you stick with the ones you know provide decent returns (exploit)? Over time, as you gain more information about which arms are best, you can make better decisions.
+
+The Medical College Admission Test (MCAT) is a comprehensive, standardized exam designed to assess a student’s readiness for medical school. At its broadest level, it is divided into four sections—Chemical and Physical Foundations of Biological Systems (C/P), Critical Analysis and Reasoning Skills (CARS), Biological and Biochemical Foundations of Living Systems (B/B), and Psychological, Social, and Biological Foundations of Behavior (P/S). Within these four sections, the exam further breaks down into core subjects—chemistry, physics, biology, biochemistry, psychology, sociology—and each subject can be subdivided into more specific content categories, which we term "Kontent Categories" (KCs). For example, within the B/B section, you might have a KC such as "Amino Acids" or "Atoms." In the What’s on the MCAT doc, these are mapped out as 1A and 4E respectively. At MyMCAT, we unpack this into even more granular Concept Categories (CCs). This hierarchical structure is modeled in figure 1 below.
+
+<img 
+  src="https://my-mcat.s3.us-east-2.amazonaws.com/blog/Screenshot+2024-12-08+at+12.56.43%E2%80%AFAM.png" 
+  alt="MCAT Knowledge Hierarchy Pyramid"
+  className="mx-auto"
+/>
+
+<p className="text-center">Figure 1. A pyramid for a flashcard related to enzymes on MyMCAT.</p>
+
+A student’s baseline competency in these layers can vary widely. A physics major may enter MCAT prep with a strong grasp of C/P material but may need extra support in B/B topics that rely heavily on biological context. Conversely, a student with a biology background may excel in enzyme kinetics but struggle in areas related to physical chemistry. And a student might be VERY good at Biology, Amino Acids, but weak specifically in Enzymes. As a student taking this test, you don’t know what you don’t know—and understanding this is the difference between studying the right thing and the wrong thing.
+
+Enter Thompson sampling, a Bayesian approach often used in multi-armed bandit models. Over time, the algorithm naturally gravitates toward arms that show higher returns, while still occasionally testing less tried options to avoid getting stuck in a local maximum. Basically, we want to continuously explore new content categories to uncover weaknesses or untapped strengths, yet we must also exploit known weaknesses by focusing study time where it’s needed most. Every flashcard you do, every UWorld question you answer, every AAMC question you complete, is cataloged and tagged by our system, which then updates its understanding of you. 
+
+Over time, we learn what you’re good at, what you’re weak at, and then show you the relevant content. Let’s say after a day of doing 100 flashcards and 20 practice questions, you perform significantly worse on Electricity & Magnetism compared to other subjects. The system notes this and increases the chance that you’ll see more Electricity & Magnetism material, helping you shore up that weak area. Later, if a full-length exam shows you’ve improved substantially in that topic, the system adapts again, reducing that emphasis and moving on to your next weakest subject. In simple terms, we figure out what you know by math.
+
+## Identifying Weak KCs Using Thompson Sampling
+The underlying math isn’t just some abstract concept—it’s implemented through structured algorithms. One such approach, adapted from research in adaptive learning, models each Knowledge Profile as a "bandit arm" with a probability of producing a "reward" (i.e., you answering a question correctly). Initially, the system may have no idea which KCs or CCs you’re weak in. It begins by sampling each category a certain number of times, collecting enough data to form a baseline understanding.
+The algorithm then repeatedly selects which KC to probe next. It uses a Beta distribution for each KC, updating two parameters (α for successes and β for failures) every time you answer a question. If you get a question right, α increases, signaling greater mastery. If you get it wrong, β increases, signaling a weakness. Thompson sampling uses these distributions to pick which KC to show you next. When it samples from the Beta distributions, the KC with the "worst-luck draw" at that moment is likely to be shown to you—because it might represent a weak area needing further exploration.
+Consider a simplified version of the pseudocode drawn from research on weak KC identification:
+Start by sampling each KC a set number of times to get initial α and β parameters.
+At each step:
+1. Sample from the Beta distributions of all KCs.
+2. Select the KC that, in that random draw, shows the lowest "score" (i.e., the one most likely to be weak).
+3. Present a question from this KC.
+4. Update its α and β based on your answer (correct or incorrect).
+
+Over time, if a KC continues to appear weak (its distribution consistently suggests low mastery), you identify it as a weak KC and can concentrate remediation efforts there.
+This cyclical process continues until you’ve either identified a truly weak KC or confirmed that all are reasonably strong. Essentially, Thompson sampling automates the "let’s try another question from here" intuition. Instead of guessing randomly, it uses mathematical probability distributions to guide its choices. The process ensures minimal wasted effort: fewer questions asked overall, and a quicker identification of where you need improvement.
+By aligning with this probabilistic strategy, our MCAT study platform ensures that you don’t spend hours drilling random subjects aimlessly. Instead, it smartly guides you through your MCAT "casino," steering you toward the "slot machines" (KCs and CCs) where you’re most likely to gain a meaningful boost in understanding. In other words, it does the heavy lifting behind the scenes so that your study time is used efficiently, always honing in on what matters most for your success. 
+
+## The Closed Feedback Loop
+At the heart of this MCAT preparation platform lies a closed feedback loop. Student interactions with various resources—MyMCAT proprietary questions, granular flashcards, UWorld practice sets, and official AAMC full-length exams—are all data pulses that feed into a central knowledge model. The system ingests these data pulses, updates the student’s knowledge profile, and then uses that profile to determine what to serve next. It’s as if the platform is constantly adjusting the thermostat in a massive, multi-room mansion, where each room’s temperature represents a student’s understanding of a concept. Too cold? The system turns up the heat by assigning more targeted materials. Too hot? The system can let that area rest and focus on another room that’s lagging behind.
+This analogy is vital because it emphasizes the continuous, iterative process of refining understanding. The multi-armed bandit model guides the exploration and exploitation across different parts of the knowledge spectrum. Thompson sampling ensures the system remains open-minded, willing to test whether a previously neglected concept might need more attention. Over time, the system converges on a custom-tailored study trajectory for each student, ensuring that their precious study hours are spent in the most impactful ways.
+
+## Weighing the Data Sources
+Not all data pulses are created equal. Imagine three different slot machines in the MCAT casino:
+
+**1. Anki:** Easy and quick to play, these questions let you see a lot of concepts rapidly. However, their granularity is extremely high—they might test a single fact or a simple recall item. Because these questions are quick and often don’t mimic the complexity of MCAT reasoning, their influence on your knowledge profile should be more tentative. They represent a form of exploration: you quickly sample a wide range of concepts at low cost, but you don’t trust them as much for determining deep mastery. However, they are **VERY granular** — we have them tagged down to CC. If you recall from earlier, that’s the tippity-top of the pyramid.
+
+**2. UWorld:** These questions are more rigorous, often reflective of the complexity and style of MCAT questions. They are a step closer to the actual test environment. Their results carry more weight in the knowledge profile because they test not just recall, but comprehension, application, and reasoning skills. Answering a UWorld question correctly indicates a more robust understanding than a simple flashcard would.
+
+**3. AAMC:** Finally, AAMC’s official full-length exams represent the gold standard. These are the closest simulations of test-day conditions you can get. A correct answer here is like a jackpot spin—it strongly suggests the student has truly mastered that area. Conversely, a missed question on the official exam is a serious signal of weakness. Data pulses from AAMC exams carry the highest weighting and inform the algorithm most strongly.
+
+This weighting approach ensures that when the system updates knowledge profiles, it treats each data pulse according to its source and complexity. Over time, a picture emerges—student mastery estimates can be more accurate and trustworthy because the system isn’t mixing high-value data (AAMC) with low-value data (quick flashcards) indiscriminately. Instead, it layers them, using flashcards as initial exploratory probes, UWorld as a more reliable indicator of understanding, and AAMC as the ultimate confirmation.
+
+## Building the Knowledge Profiles
+To manage this complexity, the platform uses a structured approach. After all, you need a good data infrastructure before you can apply something like Thompson sampling. The system first organizes every interaction with content as a data pulse. Each pulse is a neuron firing a signal. Each data pulse includes:
+isCorrect: Whether the student got the question right.
+weighting: A factor that determines how influential this data point is. AAMC full-length questions might have a higher weighting than a quick flashcard.
+answeredAt: The timestamp, allowing for time decay. Old data might be less relevant than recent performance.
+level: The granularity of the concept tested (e.g., concept category vs. content category).
+levelName: The specific name of the concept (e.g., "Proteins").
+type: The type of question (flashcard, multiple-choice, reading comprehension).
+Once these data pulses are collected, the platform employs a two-part algorithm:
+Part 1 (Expensive and Slow):
+
+This portion runs periodically—once a day or once a week—and crunches all the data pulses. It painstakingly updates the entire network of knowledge profiles. For each relevant concept category, it calculates a mastery score by summing correct answers, factoring in the total attempts, weighting sources differently, and applying a time decay function. The time decay function might look like:
+
+<img 
+  src="https://my-mcat.s3.us-east-2.amazonaws.com/blog/Screenshot+2024-12-08+at+1.16.33%E2%80%AFAM.png" 
+  alt="Time Decay Function"
+  className="mx-auto"
+/>
+
+
+Where D is the number of days since the question was answered, and K is a constant. This reduces the influence of old data, acknowledging that a student who got a question right six months ago might not remember the concept as well today.
+
+This expensive algorithm also propagates results up and down the hierarchy. A concept category’s mastery influences its parent content category, and so on, ensuring coherence across the entire knowledge graph.
+Part 2 (Easy and Cheap):
+
+This fast-running component springs into action whenever the platform needs to recommend what to study next. It doesn’t look at raw data pulses. Instead, it relies on the already-updated knowledge profiles from Part 1. It acts like a guide, scanning the knowledge profiles to identify the "coldest rooms" or the weakest topics and then deciding which action to take (assign a video, propose a flashcard set, or pull from UWorld). Part 2 is where Thompson sampling can come into play. Armed with mastery estimates and their uncertainties, the system selects which "arm" to pull next. What makes this approach particularly powerful is its closed-loop nature. Every student interaction feeds back into the system. The knowledge profiles change, which in turn affects the next set of recommendations. Over time, as more students use the platform and generate data, the system collectively learns what works best. Consider two students:
+
+**Student A** Has strong foundational knowledge in Biochemistry but struggles with Physics.
+
+**Student B:** Shines in Physics reasoning but falters in Behavioral Sciences.
+
+The system’s job is to figure out each student’s ideal path. For Student A, the algorithm identifies weak areas in Physics and assigns more targeted materials—perhaps a set of UWorld questions followed by a video lecture. For Student B, it might experiment by offering questions from lesser-known areas to confirm that Physics remains strong and that the real trouble lies in Behavioral content. Over time, both students see their unique weaknesses addressed efficiently, guided by Thompson sampling and multi-armed bandit logic.
+## That’s All, Folks
+
+Adapting multi-armed bandit models and Thompson sampling to MCAT preparation is about more than just fancy math. It’s about building a flexible, data-driven system that respects the complexity and individuality of each learner. By integrating weights for different data sources, applying time decay, and splitting the algorithm into expensive periodic updates and quick on-demand recommendations, we create a robust, closed-loop system. This system steadily refines its understanding of each student’s knowledge and dynamically adjusts study recommendations.
+The end goal? 
+
+A platform that feels like a personal tutor—one that’s always learning, always testing assumptions, and always guiding the student toward their strongest possible performance on test day. It’s a bold vision, but with careful implementation and iterative improvement, it’s one that can become reality. And while there are open questions and challenges ahead, the journey itself will produce insights that push the boundaries of what adaptive learning technology can achieve. 
+
+Some would say that it’s foolish to blog about our secrets. Most companies would fear that their competitors might catch up. We believe students would benefit from understanding how our algorithm works and democratizing knowledge. 
+
+And, quite frankly, we’re not worried about the competition — they lack the technical and intellectual talent to steal from us. 

@@ -3,12 +3,10 @@ import { Metadata } from 'next'
 import { BlogNavbar } from './BlogNavbar';
 import { BlogSidebar } from './BlogSidebar'
 import MDXLayout from './mdx-provider'
+import 'katex/dist/katex.min.css'
+
 
 // This would normally come from your database/CMS
-const blogPosts = [
-  { id: 1, title: 'Optimizing Student Scores on the Medical College Admissions Test', slug: 'how-to-study-for-the-mcat', description: 'The scientific basis for MyMCAT.' },
-  { id: 2, title: 'Tier List for the MCAT', slug: 'second-post', description: 'Useful resources for the MCAT.' },
-]
 
 // Add metadata
 export const metadata: Metadata = {
@@ -43,7 +41,7 @@ export default function BlogLayout({
               <div className="max-w-[60rem] mx-auto px-6 py-16">
                 <div className="prose max-w-none mx-auto
                   prose-h1:text-[3rem] prose-h1:font-bold prose-h1:mb-8 prose-h1:text-center prose-h1:text-gray-900
-                  prose-h2:text-[1.5rem] prose-h2:font-bold prose-h2:mt-16 prose-h2:mb-2 prose-h2:text-center prose-h2:text-gray-900
+                  prose-h2:text-[1.5rem] prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-2 prose-h2:text-center prose-h2:text-gray-900
                   prose-strong:text-gray-900 prose-strong:font-bold
                   prose-p:text-gray-700 prose-p:leading-relaxed prose-p:text-[1.125rem] prose-p:mx-auto prose-p:max-w-[45rem] prose-p:mb-6 prose-p:first-line:indent-8
                   prose-li:text-gray-700 prose-li:leading-relaxed prose-li:text-[1.125rem] prose-li:mx-auto prose-li:max-w-[45rem]
