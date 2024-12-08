@@ -136,18 +136,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showBreaksDialog, setShowBreaksDialog] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showUWorldPopup, setShowUWorldPopup] = useState(false);
-  const [currentUWorldTasks, setCurrentUWorldTasks] = useState<UWorldTask[]>([
-    {
-      subject: "Electricity & Magnetism",
-      text: "Complete practice questions",
-      completed: false
-    },
-    {
-      subject: "Amino Acids",
-      text: "Review and practice",
-      completed: false
-    }
-  ]);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -1037,6 +1025,16 @@ const Schedule: React.FC<ScheduleProps> = ({
           ) : (
             <div className="mt-auto pt-2 flex justify-end items-center gap-2 z-20">
               <button
+                onClick={() => setShowUWorldPopup(true)}
+                className="px-4 h-12 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                  border-2 border-[--theme-border-color] 
+                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                  shadow-md rounded-lg transition flex items-center justify-center
+                  text-sm font-medium"
+              >
+                UWORLD
+              </button>
+              <button
                 onClick={() => setShowBreaksDialog(true)}
                 className="px-4 h-12 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                   border-2 border-[--theme-border-color] 
@@ -1217,7 +1215,6 @@ const Schedule: React.FC<ScheduleProps> = ({
       <UWorldPopup
         isOpen={showUWorldPopup}
         onClose={() => setShowUWorldPopup(false)}
-        tasks={currentUWorldTasks}
         onScoreSubmit={handleUWorldScoreSubmit}
       />
     </div>
