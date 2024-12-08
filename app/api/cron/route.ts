@@ -1,57 +1,100 @@
 import { NextRequest, NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+import { getUserEmail, updateUserStreak, handleUserInactivity } from "@/lib/server-utils";
+
 export const dynamic = 'force-dynamic'
 
-// TODO: Import necessary dependencies
-// - Prisma client for database access
-// - Email service (e.g., Resend/SendGrid)
-// - Date-handling utility (e.g., date-fns)
+const prisma = new PrismaClient();
+
+
+// Cron job to handle user inactivity and streak updates
+// - Check if user was active in the past day
+// - Update streak
+// - Update score if user was inactive for 2 days
 
 export async function GET(request: NextRequest) {
-  // Authentication check
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-
   try {
-    // Get current date info
-    // TODO: Add timezone handling if needed
-    const now = new Date();
-    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    // Get all paid users from the database
+    const users = await prisma.userInfo.findMany({
+      where: {
+        hasPaid: true
+      },
+      select: {
+        userId: true,
+        streak: true,
+        score: true,
+      },
+    });
 
-    // each week - summary email, what they did, how good they did
-    // each day send email if they haven't done all their tasks - mention that they can come back tomorrow for more
-    // each day update streak and subtract coins if they haven't completed any their tasks
+    console.log(`Found ${users.length} paid users`);
 
+    const failedEmailFetches: string[] = [];
+    const successfulEmailFetches: { userId: string; email: string }[] = [];
+    const streakUpdates: { userId: string; oldStreak: number; newStreak: number }[] = [];
+    const scoreUpdates: { userId: string; oldScore: number; newScore: number }[] = [];
 
-    // recalculate all knowledge profiles - algorithm
+    // Process each user
+    for (const user of users) {
+      // Check email
+      const email = await getUserEmail(user.userId);
+      if (email === null) {
+        failedEmailFetches.push(user.userId);
+        console.error(`Failed to fetch email for user ID: ${user.userId}`);
+      } else {
+        successfulEmailFetches.push({ userId: user.userId, email });
+      }
 
-    // Daily Tasks
-    // 1. Get all active users
-    // 2. For each user:
-    //    - Check last activity timestamp
-    //    - If inactive for 24h+:
-    //      - Decrease streak count
-    //      - Send reminder email
-    //    - If active:
-    //      - Update streak if needed
-    //      - Update last checked timestamp
+      // Check activity and handle streaks/scores
+      const activityStatus = await handleUserInactivity(user.userId);
+      
+      // Update streak based on past day activity
+      const oldStreak = user.streak;
+      const newStreak = await updateUserStreak(user.userId, activityStatus.wasActivePastDay);
+      
+      streakUpdates.push({
+        userId: user.userId,
+        oldStreak,
+        newStreak
+      });
 
-    // Weekly Tasks (e.g., run on Sunday)
-    // if (dayOfWeek === 0) {
-    //   1. Get all users
-    //   2. Generate weekly statistics:
-    //      - Activity summary
-    //      - Streak status
-    //      - Achievement highlights
-    //   3. Send weekly summary email
-    // }
+      // Track score updates if user was inactive for 2 days
+      if (activityStatus.wasInactiveTwoDays && activityStatus.newScore !== undefined) {
+        scoreUpdates.push({
+          userId: user.userId,
+          oldScore: user.score,
+          newScore: activityStatus.newScore
+        });
+        console.log(`User ${user.userId} lost a point for 2 days of inactivity. New score: ${activityStatus.newScore}`);
+      }
+
+      // Log activity status and streak changes
+      if (!activityStatus.wasActivePastDay && oldStreak > 0) {
+        console.log(`User ${user.userId} lost their streak of ${oldStreak} days. Should send email notification.`);
+      } else if (activityStatus.wasActivePastDay) {
+        console.log(`User ${user.userId} maintained/increased streak to ${newStreak} days`);
+      }
+    }
 
     // Log success and return response
+    const now = new Date();
     console.log("Cron job completed at:", now);
     return NextResponse.json({ 
       message: "Cron job completed successfully",
-      timestamp: now 
+      timestamp: now,
+      paidUsersProcessed: users.length,
+      successfulFetches: successfulEmailFetches.length,
+      failedFetches: {
+        count: failedEmailFetches.length,
+        userIds: failedEmailFetches
+      },
+      streakUpdates: {
+        total: streakUpdates.length,
+        updates: streakUpdates
+      },
+      scoreUpdates: {
+        total: scoreUpdates.length,
+        updates: scoreUpdates
+      }
     });
 
   } catch (error) {
@@ -60,6 +103,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ 
       error: "Internal server error" 
     }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

@@ -10,69 +10,25 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Fetch user info to get the score
+    // Fetch user info to get the score and streak
     const userInfo = await prisma.userInfo.findUnique({
       where: { userId },
-      select: { score: true },
+      select: { 
+        score: true,
+        streak: true 
+      },
     });
 
-    // Fetch the last 10 user tests and their responses, ordered by startedAt date
+    // Fetch the last 5 user tests and their responses
     const userTests = await prisma.userTest.findMany({
-      where: { 
-        userId,
-      },
-      include: {
-        responses: true,
-      },
-      orderBy: {
-        startedAt: 'desc' // Order by most recent first
-      },
-      take: 5 // Limit to the last 5 tests
+      where: { userId },
+      include: { responses: true },
+      orderBy: { startedAt: 'desc' },
+      take: 5
     });
 
     // Filter completed tests
     const completedTests = userTests.filter(test => test.finishedAt !== null);
-
-    // Initialize variables for streak calculation
-    let streaks: number[] = [];
-    let currentStreak = 0;
-    let currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0); // Set to start of day
-
-    for (const test of userTests) {
-      const testDate = new Date(test.startedAt);
-      testDate.setHours(0, 0, 0, 0); // Set to start of day
-
-      const dayDifference = (currentDate.getTime() - testDate.getTime()) / 86400000;
-
-      if (dayDifference === 0) {
-        // Same day, continue to next test
-        continue;
-      } else if (dayDifference === 1) {
-        // Previous day, increment streak
-        currentStreak++;
-        currentDate = testDate;
-      } else {
-        // Gap in streak, save current streak and start a new one
-        if (currentStreak > 0) {
-          streaks.push(currentStreak);
-        }
-        currentStreak = 1; // Start a new streak
-        currentDate = testDate;
-      }
-    }
-
-    // Add the final streak
-    if (currentStreak > 0) {
-      streaks.push(currentStreak);
-    }
-
-    // Calculate the current streak (the first element in the streaks array)
-    const currentStreakLength = streaks.length > 0 ? streaks[0] : 0;
-    // Previous streak (if any)
-    const previousStreakLength = streaks.length > 1 ? streaks[1] : 0;
-    // Determine if the streak was recently broken
-    const streakBrokenRecently = previousStreakLength > 0 && currentStreakLength < previousStreakLength;
 
     // Update calculations
     const totalTestsTaken = completedTests.length;
@@ -123,11 +79,9 @@ export async function GET(req: NextRequest) {
       totalQuestionsAnswered,
       averageTestScore,
       averageTimePerQuestion,
-      averageTimePerTest: averageTimePerTest, 
+      averageTimePerTest: averageTimePerTest,
       categoryAccuracy: categoryAccuracyPercentages,
-      streak: currentStreakLength,
-      previousStreak: previousStreakLength,
-      streakBrokenRecently,
+      streak: userInfo?.streak || 0,
     });
   } catch (error) {
     console.error('Error generating user report:', error);
