@@ -127,7 +127,7 @@ const CARsTutorial: React.FC<CARsTutorialProps> = ({
           options: {
             backgroundColor: '#ffffff',
             textColor: '#000000',
-            primaryColor: 'var(--theme-border-color)',
+            primaryColor: 'var(--theme-hover-color)',
             zIndex: 1000,
           },
         }}
@@ -152,7 +152,7 @@ const CARsTutorial: React.FC<CARsTutorialProps> = ({
           options: {
             backgroundColor: '#ffffff',
             textColor: '#000000',
-            primaryColor: 'var(--theme-border-color)',
+            primaryColor: 'var(--theme-hover-color)',
             zIndex: 1000,
           },
         }}
