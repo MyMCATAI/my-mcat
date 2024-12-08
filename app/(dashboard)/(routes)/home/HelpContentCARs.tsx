@@ -45,11 +45,11 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
           </h2>
 
           {activeMainSection === 'suite' && (
-            <div className="animate-fadeIn space-y-8">
+            <div className="animate-fadeIn space-y-8 text-[--theme-text-color]">
               <p className="text-center">You can practice and learn CARS here.</p>
 
               {/* Key Metrics Section */}
-              <section>
+              <section className="py-4 border-t border-[--theme-doctorsoffice-accent]">
                 <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
                   Key Metrics
                 </h3>
@@ -80,7 +80,7 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
                     <span className="text-xs mt-1">tests</span>
                   </div>
                 </div>
-                <div className="mt-4 space-y-2.5 text-sm">
+                <div className="mt-4 space-y-2.5 text-sm text-[--theme-text-color]">
                   <p><span className="font-medium">Score:</span> Averaged from last 10 passages</p>
                   <p><span className="font-medium">Time:</span> Target under 10 mins/passage</p>
                   <p><span className="font-medium">Coins:</span> Pay a coin a passage, earn back at 80%+ score</p>
@@ -89,11 +89,11 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
               </section>
 
               {/* System Design Section */}
-              <section>
+              <section className="py-4 border-t border-[--theme-doctorsoffice-accent]">
                 <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
                   System Design
                 </h3>
-                <ul className="text-sm space-y-2 list-disc pl-4">
+                <ul className="text-sm space-y-2 list-disc pl-4 text-[--theme-text-color]">
                   <li><span className="font-medium">Cost:</span> 1 coin per passage</li>
                   <li><span className="font-medium">Difficulty:</span> Levels 1-3, based on recent scores</li>
                   <li><span className="font-medium">Part 2:</span> Most passages have bonus questions</li>
@@ -102,11 +102,11 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
               </section>
 
               {/* Sidebar Section */}
-              <section>
+              <section className="py-4 border-t border-[--theme-doctorsoffice-accent]">
                 <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
                   Sidebar
                 </h3>
-                <ul className="text-sm space-y-2 list-disc pl-4">
+                <ul className="text-sm space-y-2 list-disc pl-4 text-[--theme-text-color]">
                   <li>Videos are collected from YouTube to help with CARs.</li>
                   <li>Insights from r/MCAT sends a feed of Reddit content to you for you to search and review.</li>
                 </ul>
@@ -115,7 +115,7 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
           )}
 
           {activeMainSection === 'strategies' && (
-            <div className="animate-fadeIn">
+            <div className="animate-fadeIn text-[--theme-text-color]">
               <div className="grid grid-cols-1 gap-4">
                 <a 
                   href="/blog/best-cars-strategy"

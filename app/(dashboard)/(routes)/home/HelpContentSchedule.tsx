@@ -64,7 +64,7 @@ const HelpContentSchedule: React.FC<HelpContentScheduleProps> = ({ onClose, onRe
                 The calendar allows you to build and modify a study schedule. You can see and complete daily tasks in the sidebar. 
               </p>
               
-              <section className="py-2 border-t border-[--theme-doctorsoffice-accent] border-opacity-20">
+              <section className="py-2 border-t border-[--theme-doctorsoffice-accent] text-[--theme-text-color] border-opacity-20">
                 <h3 className="text-xs mb-4 text-center opacity-60 uppercase tracking-wide">
                   Calendar View
                 </h3>
@@ -86,7 +86,7 @@ const HelpContentSchedule: React.FC<HelpContentScheduleProps> = ({ onClose, onRe
                 </div>
               </section>
 
-              <section className="py-2 border-t border-[--theme-doctorsoffice-accent] border-opacity-20">
+              <section className="py-2 border-t border-[--theme-doctorsoffice-accent] text-[--theme-text-color] border-opacity-20">
                 <h3 className="text-xs mb-4 text-center opacity-60 uppercase tracking-wide">
                   Daily To-Do List
                 </h3>
