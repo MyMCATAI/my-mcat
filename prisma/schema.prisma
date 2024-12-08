@@ -21,6 +21,7 @@ model UserInfo {
   hasPaid       Boolean        @default(false) // set true as soon as payment is made
   subscriptionType     String         @default("")
   diagnosticScores Json? @default("{\"total\":\"\",\"cp\":\"\",\"cars\":\"\",\"bb\":\"\",\"ps\":\"\"}")
+  streak          Int            @default(0)
 }
 
 model UserSubscription {
