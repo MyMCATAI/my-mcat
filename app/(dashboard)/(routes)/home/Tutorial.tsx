@@ -311,7 +311,7 @@ const Tutorial: React.FC<TutorialProps> = ({
           options: {
             backgroundColor: "#ffffff",
             textColor: "black",
-            primaryColor: "var(--theme-border-color)",
+            primaryColor: "var(--theme-hover-color)",
             overlayColor: "rgba(0, 0, 0, 0.5)",
             zIndex: 1000,
           },
@@ -331,7 +331,7 @@ const Tutorial: React.FC<TutorialProps> = ({
           options: {
             backgroundColor: "#ffffff",
             textColor: "#000000",
-            primaryColor: "var(--theme-border-color)",
+            primaryColor: "var(--theme-hover-color)",
             overlayColor: "rgba(0, 0, 0, 0.5)",
             zIndex: 1000,
           },
@@ -351,7 +351,7 @@ const Tutorial: React.FC<TutorialProps> = ({
           options: {
             backgroundColor: "#ffffff",
             textColor: "black",
-            primaryColor: "var(--theme-border-color)",
+            primaryColor: "var(--theme-hover-color)",
             overlayColor: "rgba(0, 0, 0, 0.5)",
             zIndex: 1000,
           },
