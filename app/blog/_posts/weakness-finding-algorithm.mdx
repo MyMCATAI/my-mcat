@@ -35,17 +35,26 @@ At each step:
 4. Update its α and β based on your answer (correct or incorrect).
 
 Over time, if a KC continues to appear weak (its distribution consistently suggests low mastery), you identify it as a weak KC and can concentrate remediation efforts there.
-This cyclical process continues until you’ve either identified a truly weak KC or confirmed that all are reasonably strong. Essentially, Thompson sampling automates the "let’s try another question from here" intuition. Instead of guessing randomly, it uses mathematical probability distributions to guide its choices. The process ensures minimal wasted effort: fewer questions asked overall, and a quicker identification of where you need improvement.
+This cyclical process continues until you’ve either identified a truly weak KC or confirmed that all are reasonably strong. 
+
+Essentially, Thompson sampling automates the "let’s try another question from here" intuition. 
+
+Instead of guessing randomly, it uses mathematical probability distributions to guide its choices. The process ensures minimal wasted effort: fewer questions asked overall, and a quicker identification of where you need improvement.
 By aligning with this probabilistic strategy, our MCAT study platform ensures that you don’t spend hours drilling random subjects aimlessly. Instead, it smartly guides you through your MCAT "casino," steering you toward the "slot machines" (KCs and CCs) where you’re most likely to gain a meaningful boost in understanding. In other words, it does the heavy lifting behind the scenes so that your study time is used efficiently, always honing in on what matters most for your success. 
 
 ## The Closed Feedback Loop
-At the heart of this MCAT preparation platform lies a closed feedback loop. Student interactions with various resources—MyMCAT proprietary questions, granular flashcards, UWorld practice sets, and official AAMC full-length exams—are all data pulses that feed into a central knowledge model. The system ingests these data pulses, updates the student’s knowledge profile, and then uses that profile to determine what to serve next. It’s as if the platform is constantly adjusting the thermostat in a massive, multi-room mansion, where each room’s temperature represents a student’s understanding of a concept. Too cold? The system turns up the heat by assigning more targeted materials. Too hot? The system can let that area rest and focus on another room that’s lagging behind.
+At the heart of this MCAT preparation platform lies a closed feedback loop. Student interactions with various resources—MyMCAT proprietary questions, granular flashcards, UWorld practice sets, and official AAMC full-length exams—are all data pulses that feed into a central knowledge model. The system ingests these data pulses, updates the student’s knowledge profile, and then uses that profile to determine what to serve next. It’s as if the platform is constantly adjusting the thermostat in a massive, multi-room mansion, where each room’s temperature represents a student’s understanding of a concept. 
+
+Too cold? The system turns up the heat by assigning more targeted materials. 
+
+Too hot? The system can let that area rest and focus on another room that’s lagging behind.
+
 This analogy is vital because it emphasizes the continuous, iterative process of refining understanding. The multi-armed bandit model guides the exploration and exploitation across different parts of the knowledge spectrum. Thompson sampling ensures the system remains open-minded, willing to test whether a previously neglected concept might need more attention. Over time, the system converges on a custom-tailored study trajectory for each student, ensuring that their precious study hours are spent in the most impactful ways.
 
 ## Weighing the Data Sources
 Not all data pulses are created equal. Imagine three different slot machines in the MCAT casino:
 
-**1. Anki:** Easy and quick to play, these questions let you see a lot of concepts rapidly. However, their granularity is extremely high—they might test a single fact or a simple recall item. Because these questions are quick and often don’t mimic the complexity of MCAT reasoning, their influence on your knowledge profile should be more tentative. They represent a form of exploration: you quickly sample a wide range of concepts at low cost, but you don’t trust them as much for determining deep mastery. However, they are **VERY granular** — we have them tagged down to CC. If you recall from earlier, that’s the tippity-top of the pyramid.
+**1. Anki:** Easy and quick to play, these questions let you see a lot of concepts rapidly. However, their granularity is extremely high—they might test a single fact or a simple recall item. Because these questions are quick and often don’t mimic the complexity of MCAT reasoning, their influence on your knowledge profile should be more tentative. They represent a form of exploration: you quickly sample a wide range of concepts at low cost, but you don’t trust them as much for determining deep mastery. However, they are VERY granular — we have them tagged down to CC. If you recall from earlier, that’s the tippity-top of the pyramid.
 
 **2. UWorld:** These questions are more rigorous, often reflective of the complexity and style of MCAT questions. They are a step closer to the actual test environment. Their results carry more weight in the knowledge profile because they test not just recall, but comprehension, application, and reasoning skills. Answering a UWorld question correctly indicates a more robust understanding than a simple flashcard would.
 
@@ -55,13 +64,16 @@ This weighting approach ensures that when the system updates knowledge profiles,
 
 ## Building the Knowledge Profiles
 To manage this complexity, the platform uses a structured approach. After all, you need a good data infrastructure before you can apply something like Thompson sampling. The system first organizes every interaction with content as a data pulse. Each pulse is a neuron firing a signal. Each data pulse includes:
-isCorrect: Whether the student got the question right.
-weighting: A factor that determines how influential this data point is. AAMC full-length questions might have a higher weighting than a quick flashcard.
-answeredAt: The timestamp, allowing for time decay. Old data might be less relevant than recent performance.
-level: The granularity of the concept tested (e.g., concept category vs. content category).
-levelName: The specific name of the concept (e.g., "Proteins").
-type: The type of question (flashcard, multiple-choice, reading comprehension).
+
+- isCorrect: Whether the student got the question right.
+- weighting: A factor that determines how influential this data point is. AAMC full-length questions might have a higher weighting than a quick flashcard.
+- answeredAt: The timestamp, allowing for time decay. Old data might be less relevant than recent performance.
+- level: The granularity of the concept tested (e.g., concept category vs. content category).
+- levelName: The specific name of the concept (e.g., "Proteins").
+- type: The type of question (flashcard, multiple-choice, reading comprehension).
+
 Once these data pulses are collected, the platform employs a two-part algorithm:
+
 Part 1 (Expensive and Slow):
 
 This portion runs periodically—once a day or once a week—and crunches all the data pulses. It painstakingly updates the entire network of knowledge profiles. For each relevant concept category, it calculates a mastery score by summing correct answers, factoring in the total attempts, weighting sources differently, and applying a time decay function. The time decay function might look like:
@@ -76,6 +88,7 @@ This portion runs periodically—once a day or once a week—and crunches all th
 Where D is the number of days since the question was answered, and K is a constant. This reduces the influence of old data, acknowledging that a student who got a question right six months ago might not remember the concept as well today.
 
 This expensive algorithm also propagates results up and down the hierarchy. A concept category’s mastery influences its parent content category, and so on, ensuring coherence across the entire knowledge graph.
+
 Part 2 (Easy and Cheap):
 
 This fast-running component springs into action whenever the platform needs to recommend what to study next. It doesn’t look at raw data pulses. Instead, it relies on the already-updated knowledge profiles from Part 1. It acts like a guide, scanning the knowledge profiles to identify the "coldest rooms" or the weakest topics and then deciding which action to take (assign a video, propose a flashcard set, or pull from UWorld). Part 2 is where Thompson sampling can come into play. Armed with mastery estimates and their uncertainties, the system selects which "arm" to pull next. What makes this approach particularly powerful is its closed-loop nature. Every student interaction feeds back into the system. The knowledge profiles change, which in turn affects the next set of recommendations. Over time, as more students use the platform and generate data, the system collectively learns what works best. Consider two students:
