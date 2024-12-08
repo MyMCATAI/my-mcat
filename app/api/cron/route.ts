@@ -19,6 +19,13 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
+    // each week - summary email, what they did, how good they did
+    // each day send email if they haven't done all their tasks - mention that they can come back tomorrow for more
+    // each day update streak and subtract coins if they haven't completed any their tasks
+
+
+    // recalculate all knowledge profiles - algorithm
+
     // Daily Tasks
     // 1. Get all active users
     // 2. For each user:

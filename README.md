@@ -88,3 +88,12 @@ npm run "script-name"
 - Implement calendar FE algos
 - Implement calendar BE algos
 - etc.
+
+
+
+todo
+- set up cron stuff
+- set up stripe algos
+- set up collecting data
+- workign coin economy
+
