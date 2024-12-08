@@ -784,7 +784,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                   backgroundColor: 'var(--theme-leaguecard-color)',
                 }}
               >
-                <span className="font-bold text-2xl text-white">
+                <span className="font-bold text-2xl" style={{ color: 'var(--theme-text-color)' }}>
                   {userScore.toLocaleString()}
                 </span>
                 <div className="relative">
