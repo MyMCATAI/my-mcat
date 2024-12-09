@@ -20,7 +20,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({ isOpen, onOpenChange }) =
   return (
     <Dialog 
       open={isOpen} 
-      onOpenChange={() => {}}
+      onOpenChange={onOpenChange}
       modal={true}
     >
       <DialogContent 
