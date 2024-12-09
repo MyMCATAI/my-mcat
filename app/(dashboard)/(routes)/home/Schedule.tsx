@@ -680,10 +680,7 @@ const Schedule: React.FC<ScheduleProps> = ({
         }}
       >
         <div className="text-center space-y-1">
-          <h1 className="text-sm font-medium opacity-50" style={{ color: 'var(--theme-text-color)' }}>
-            Tasks for
-          </h1>
-          <h2 className="text-lg font-semibold" style={{ color: 'var(--theme-text-color)' }}>
+          <h2 className="text-m font-semibold opacity-80" style={{ color: 'var(--theme-hover-color)' }}>
             {formatDate(new Date())}
           </h2>
         </div>
