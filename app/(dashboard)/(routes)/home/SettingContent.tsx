@@ -22,7 +22,7 @@ interface Option {
 }
 
 const options: Option[] = [
-  { id: "option1", label: "How many hours can you study each day? (We recommend 2-6 hours for each study day with a day at 0)" },
+  { id: "option1", label: "How many hours can you study each day? (We recommend 2-5 hours for each study day with a day at 0)" },
   { id: "option2", label: "Which days do you have 8 hours for full-length exams?" },
   { id: "option3", label: "When is your test?" },
   { id: "option4", label: "What resources do you want to use?" },
