@@ -463,7 +463,7 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
             </button>
           ))}
         </div>
-        <div className={`mt-4 ${activeTab === 'tab2' ? 'bg-transparent' : 'bg-[--theme-mainbox-color]'} flex-1 min-h-0 mb-8 overflow-hidden relative`}>
+        <div className={`mt-4 ${activeTab === 'tab2' ? 'bg-transparent' : 'bg-[--theme-mainbox-color]'} flex-1 min-h-0 mb-8 overflow-hidden relative rounded-lg`}>
           {renderContent(tabs.find(tab => tab.id === activeTab)!.content)}
         </div>
       </div>
