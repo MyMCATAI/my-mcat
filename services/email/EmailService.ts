@@ -1,6 +1,6 @@
 import sgMail from '@sendgrid/mail';
 import { templates } from './templates/index';
-import { EmailTemplate, SendEmailProps, EmailResponse } from './types/index';
+import { SendEmailProps, EmailResponse } from './types/index';
 if (!process.env.SENDGRID_API_KEY) {
   throw new Error('SENDGRID_API_KEY is not defined in environment variables');
 }
@@ -9,23 +9,29 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export class EmailService {
   private fromEmail: string;
+  private reminderEmail: string;
 
   constructor() {
     if (!process.env.SENDGRID_FROM_EMAIL) {
       throw new Error('SENDGRID_FROM_EMAIL is not defined in environment variables');
     }
+    if (!process.env.SENDGRID_REMINDER_EMAIL) {
+      throw new Error('SENDGRID_REMINDER_EMAIL is not defined in environment variables');
+    }
     this.fromEmail = process.env.SENDGRID_FROM_EMAIL;
+    this.reminderEmail = process.env.SENDGRID_REMINDER_EMAIL;
   }
 
-  async sendEmail({ to, template, data = {} }: SendEmailProps): Promise<EmailResponse> {
+  async sendEmail({ to, template, data = {}, useReminderEmail = false }: SendEmailProps): Promise<EmailResponse> {
     try {
-      console.log('Sending:', this.fromEmail, template);
+      const fromAddress = useReminderEmail ? this.reminderEmail : this.fromEmail;
+      console.log('Sending:', fromAddress, template);
 
       const templateConfig = templates[template](data);
       
       const msg = {
         to,
-        from: this.fromEmail,
+        from: fromAddress,
         subject: templateConfig.subject,
         html: templateConfig.html,
       };
@@ -51,5 +57,4 @@ export class EmailService {
   }
 }
 
-// Export a singleton instance
 export const emailService = new EmailService();

@@ -1,7 +1,13 @@
 import { TemplateConfig } from '../types';
 
-export const streakLossTemplate = (data: any): TemplateConfig => ({
-  subject: `Oh no! Your study streak is at risk! 😿`,
+export interface StreakLossEmailData {
+  userName: string;
+  scheduleUrl?: string;
+  settingsUrl?: string;
+}
+
+export const streakLossTemplate = (data: StreakLossEmailData): TemplateConfig => ({
+  subject: `Oh no! Your study streak was lost! 😿`,
   html: `
     <div style="font-family: Arial, sans-serif; max-width: 37.5rem; margin: 0 auto; padding: 1.25rem;">
       <p style="color: #333333; line-height: 1.6;">
@@ -9,25 +15,17 @@ export const streakLossTemplate = (data: any): TemplateConfig => ({
       </p>
       
       <p style="color: #333333; line-height: 1.6;">
-       Ahhhh! It's Kalypso! I noticed you didn't log in yesterday, and your study streak is at risk! But don't worry - you can still save it for 3 coins. 
+        Ahhhh! It's Kalypso! I noticed you didn't log in yesterday, and your study streak was lost! We're working on exciting features to help you manage your streaks and study breaks better.
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
-        <a href="${data.saveStreakUrl}" style="display: inline-block; background-color: #2b6cb0; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 0.375rem; margin-top: 1rem;">
-          Save My Streak (3 coins)
-        </a>
-      </p>
-      
-      <p style="color: #333333; line-height: 1.6;">
-        Remember: From this point forward, each day you don't log in will cost you 1 coin. We've designed this system to help you maintain consistency in your MCAT prep journey - because consistent practice is key to success!
+        If you need immediate assistance with managing your study schedule or would like early access to these upcoming features, please email MyMCAT's CTO, Josh, at josh@mymcat.ai - I'd be happy to help you out!
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
-        If you're feeling overwhelmed or your schedule needs adjustment, we've got you covered:
+        You can always visit your dashboard to get back on track:
         <br><br>
-        • <a href="${data.scheduleUrl}" style="color: #2b6cb0; text-decoration: underline;">Regenerate your study schedule</a>
-        <br>
-        • <a href="${data.breakUrl}" style="color: #2b6cb0; text-decoration: underline;">Schedule a study break</a>
+        • <a href="${data.scheduleUrl || 'https://mymcat.ai/home'}" style="color: #2b6cb0; text-decoration: underline;">View your study schedule</a>
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
@@ -37,7 +35,7 @@ export const streakLossTemplate = (data: any): TemplateConfig => ({
       </p>
 
       <p style="color: #666666; font-size: 0.75rem; margin-top: 1.875rem;">
-        Want to adjust your notification settings? <a href="${data.settingsUrl}" style="color: #2b6cb0; text-decoration: underline;">Click here</a>
+        Want to adjust your notification settings? <a href="${data.settingsUrl || 'https://mymcat.ai/home'}" style="color: #2b6cb0; text-decoration: underline;">Click here</a>
       </p>
     </div>
   `

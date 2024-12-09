@@ -1,6 +1,13 @@
 import { TemplateConfig } from '../types';
 
-export const coinLossTemplate = (data: any): TemplateConfig => ({
+export interface CoinLossEmailData {
+  userName: string;
+  remainingCoins: number;
+  scheduleUrl?: string;
+  settingsUrl?: string;
+}
+
+export const coinLossTemplate = (data: CoinLossEmailData): TemplateConfig => ({
   subject: `You've lost a coin due to inactivity! 🪙`,
   html: `
     <div style="font-family: Arial, sans-serif; max-width: 37.5rem; margin: 0 auto; padding: 1.25rem;">
@@ -17,17 +24,13 @@ export const coinLossTemplate = (data: any): TemplateConfig => ({
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
-        <a href="${data.loginUrl}" style="display: inline-block; background-color: #2b6cb0; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 0.375rem; margin-top: 1rem;">
-          Log In Now
-        </a>
+        We're working on exciting features to help you manage your study schedule and breaks better. If you need immediate assistance, please email MCAT's CTO, Josh, at josh@mymcat.ai - I'd be happy to help you out!
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
-        Need to adjust your study plan?
+        You can always visit your dashboard to get back on track:
         <br><br>
-        • <a href="${data.scheduleUrl}" style="color: #2b6cb0; text-decoration: underline;">Regenerate your study schedule</a>
-        <br>
-        • <a href="${data.breakUrl}" style="color: #2b6cb0; text-decoration: underline;">Schedule a study break</a>
+        • <a href="${data.scheduleUrl || 'https://mymcat.ai/home'}" style="color: #2b6cb0; text-decoration: underline;">View your study schedule</a>
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
@@ -37,7 +40,7 @@ export const coinLossTemplate = (data: any): TemplateConfig => ({
       </p>
 
       <p style="color: #666666; font-size: 0.75rem; margin-top: 1.875rem;">
-        Want to adjust your notification settings? <a href="${data.settingsUrl}" style="color: #2b6cb0; text-decoration: underline;">Click here</a>
+        Want to adjust your notification settings? <a href="${data.settingsUrl || 'https://mymcat.ai/home'}" style="color: #2b6cb0; text-decoration: underline;">Click here</a>
       </p>
     </div>
   `

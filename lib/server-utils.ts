@@ -81,7 +81,7 @@ export async function updateUserStreak(userId: string, wasActive: boolean): Prom
 
 export async function handleUserInactivity(userId: string): Promise<{ 
   wasActivePastDay: boolean;
-  wasInactiveTwoDays: boolean;
+  isFirstCoinLoss: boolean;
   newScore?: number;
 }> {
   // Check activity for past day (for streak)
@@ -89,11 +89,18 @@ export async function handleUserInactivity(userId: string): Promise<{
   
   // If active in past day, no need to check further
   if (wasActivePastDay) {
-    return { wasActivePastDay: true, wasInactiveTwoDays: false };
+    return { wasActivePastDay: true, isFirstCoinLoss: false };
   }
 
   // Check if inactive for 2 days
   const wasActivePastTwoDays = await checkUserActivity(userId, 2);
+  // Check if there was activity in the past 3 days
+  const wasActivePastThreeDays = await checkUserActivity(userId, 3);
+  
+  // isFirstCoinLoss is true only if:
+  // - User was not active in past 2 days (wasActivePastTwoDays = false)
+  // - BUT was active in past 3 days (wasActivePastThreeDays = true)
+  const isFirstCoinLoss = !wasActivePastTwoDays && wasActivePastThreeDays;
   
   if (!wasActivePastTwoDays) {
     // User has been inactive for 2 days, decrement score
@@ -103,7 +110,7 @@ export async function handleUserInactivity(userId: string): Promise<{
     });
 
     if (user) {
-      const newScore = Math.max(5, user.score - 1); // Decrement score but keep minimum of 5
+      const newScore = Math.max(5, user.score - 1);
       await prisma.userInfo.update({
         where: { userId },
         data: { score: newScore }
@@ -111,7 +118,7 @@ export async function handleUserInactivity(userId: string): Promise<{
 
       return {
         wasActivePastDay: false,
-        wasInactiveTwoDays: true,
+        isFirstCoinLoss,
         newScore
       };
     }
@@ -119,7 +126,7 @@ export async function handleUserInactivity(userId: string): Promise<{
 
   return {
     wasActivePastDay: false,
-    wasInactiveTwoDays: !wasActivePastTwoDays
+    isFirstCoinLoss: false
   };
 }
 
@@ -152,5 +159,50 @@ export async function sendReferralEmail(referrerName: string, friendEmail: strin
       return false;
     }
   }
+
+export async function sendStreakLossEmail(email: string, userName?: string): Promise<boolean> {
+  try {
+    const result = await emailService.sendEmail({
+      to: email,
+      template: 'streak-loss',
+      data: { userName },
+      useReminderEmail: false
+    });
+    return result.success;
+  } catch (error) {
+    console.error("Error sending streak loss email:", error);
+    return false;
+  }
+}
+
+export async function sendCoinLossEmail(email: string, userName: string, remainingCoins: number): Promise<boolean> {
+  try {
+    const result = await emailService.sendEmail({
+      to: email,
+      template: 'coin-loss',
+      data: { userName, remainingCoins },
+      useReminderEmail: false
+    });
+    return result.success;
+  } catch (error) {
+    console.error("Error sending coin loss email:", error);
+    return false;
+  }
+}
+
+export async function sendReminderEmail(email: string, name: string, pendingGoals?: string): Promise<boolean> {
+  try {
+    const result = await emailService.sendEmail({
+      to: email,
+      template: 'daily-reminder',
+      data: { name, pendingGoals },
+      useReminderEmail: true
+    });
+    return result.success;
+  } catch (error) {
+    console.error("Error sending reminder email:", error);
+    return false;
+  }
+}
 
   
