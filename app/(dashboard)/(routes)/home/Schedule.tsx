@@ -679,7 +679,7 @@ const Schedule: React.FC<ScheduleProps> = ({
           boxShadow: "var(--theme-box-shadow)",
         }}
       >
-        <div className="text-center">
+        <div className="text-center space-y-1">
           <h1 className="text-sm font-medium opacity-50" style={{ color: 'var(--theme-text-color)' }}>
             Tasks for
           </h1>
