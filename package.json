@@ -108,6 +108,7 @@
     "react-chatbotify": "^2.0.0-beta.4",
     "react-confetti": "^6.1.0",
     "react-countup": "^6.5.3",
+    "react-day-picker": "^9.4.2",
     "react-dom": "^18",
     "react-draggable": "^4.4.6",
     "react-hook-form": "^7.47.0",

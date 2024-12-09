@@ -52,6 +52,8 @@ import { FaCheckCircle } from "react-icons/fa";
 import HelpContentSchedule from './HelpContentSchedule';
 import { HelpCircle } from 'lucide-react';
 import { useOutsideClick } from '@/hooks/use-outside-click';
+import PracticeTests from './PracticeTests';
+import { ClipboardList } from "lucide-react";
 
 ChartJS.register(
   CategoryScale,
@@ -108,7 +110,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [typedText, setTypedText] = useState("");
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [showAnalytics, setShowAnalytics] = useState(true);
   const [showRewardDialog, setShowRewardDialog] = useState(false);
   const [rewardSection, setRewardSection] = useState("");
   const [userCoinCount, setUserCoinCount] = useState(0);
@@ -272,7 +273,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   const handleStudyPlanSaved = useCallback(() => {
     setShowSettings(false);
-    setShowAnalytics(false); // Switch to calendar mode
+    setCurrentView('calendar');
     setHasUpdatedStudyPlan(true);
 
     // Only start Part 2 if it hasn't been played yet
@@ -286,21 +287,6 @@ const Schedule: React.FC<ScheduleProps> = ({
       }, 1000);
     }
   }, []);
-
-  // Add this new effect to handle the transition from Part 2 to Part 3
-  // useEffect(() => {
-  //   if (
-  //     localStorage.getItem("tutorialPart2Played") === "true" &&
-  //     (!localStorage.getItem("tutorialPart3Played") ||
-  //       localStorage.getItem("tutorialPart3Played") === "false")
-  //   ) {
-  //     // Part 2 just finished, start Part 3
-  //     setTimeout(() => {
-  //       setRunTutorialPart3(true);
-  //       localStorage.setItem("tutorialPart3Played", "true");
-  //     }, 2000); // Delay after Part 2 ends
-  //   }
-  // }, [runTutorialPart2]);
 
   const toggleSettings = () => {
     setShowSettings((prev) => !prev);
@@ -365,10 +351,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     return activities.filter((activity) =>
       isSameDay(new Date(activity.scheduledDate), date)
     );
-  };
-
-  const handleToggleView = () => {
-    setShowAnalytics(!showAnalytics);
   };
 
   const router = useRouter();
@@ -664,6 +646,9 @@ const Schedule: React.FC<ScheduleProps> = ({
     });
   };
 
+  // Add new state for tracking view
+  const [currentView, setCurrentView] = useState<'analytics' | 'calendar' | 'tests'>('analytics');
+
   return (
     <div className="grid grid-cols-[25%_75%] h-full relative w-full">
       {/* Left Sidebar */}
@@ -775,7 +760,7 @@ const Schedule: React.FC<ScheduleProps> = ({
       {/* Right Content */}
       <div className="p-2.5 flex flex-col relative" style={{ marginLeft: "1.5rem" }}>
         {/* Stats Box - Vertical stack */}
-        {showAnalytics && !selectedSubject && (
+        {currentView === 'analytics' && !selectedSubject && (
           <div className="absolute top-6 left-8 z-10">
             <PurchaseButton tooltipText="Click to purchase more coins!">
               <div 
@@ -875,7 +860,6 @@ const Schedule: React.FC<ScheduleProps> = ({
             >
               <SettingContent
                 onStudyPlanSaved={handleStudyPlanSaved}
-                onToggleCalendarView={handleToggleView}
                 onClose={toggleSettings}
                 onActivitiesUpdate={onActivitiesUpdate}
               />
@@ -928,7 +912,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             {/* Analytics View */}
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
-                showAnalytics ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
+                currentView === 'analytics' ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
               } flex flex-col overflow-auto`}
             >
               {(isTypingComplete || isTutorialTypingComplete) && (
@@ -965,7 +949,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             {/* Calendar View */}
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
-                showAnalytics ? "opacity-0 pointer-events-none z-0" : "opacity-100 z-10"
+                currentView === 'calendar' ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
               } flex flex-col overflow-auto`}
             >
               <div className="flex-grow">
@@ -977,23 +961,76 @@ const Schedule: React.FC<ScheduleProps> = ({
                   onInteraction={() => {}}
                   setRunTutorialPart2={setRunTutorialPart2}
                   setRunTutorialPart3={setRunTutorialPart3}
-                  handleSetTab={handleSetTab}
                   onTasksUpdate={handleTasksUpdate}
                   updateTodaySchedule={updateTodaySchedule}
                 />
               </div>
             </div>
+
+            {/* Practice Tests View */}
+            <div
+              className={`absolute inset-0 transition-opacity duration-300 ${
+                currentView === 'tests' ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
+              } flex flex-col overflow-auto`}
+            >
+              <PracticeTests />
+            </div>
           </div>
 
           {/* View Toggle Buttons */}
-          {showAnalytics ? (
-            <div className="absolute bottom-4 right-4 flex flex-col space-y-2 z-20">
+          <div className="mt-auto flex justify-end items-center gap-2 pt-2">
+            {/* Only show Break button when not in tests view */}
+            {currentView !== 'tests' && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={handleToggleView}
-                      className="group p-4 w-20 h-20 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                      onClick={() => setShowBreaksDialog(true)}
+                      className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                        border-2 border-[--theme-border-color] 
+                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                        shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
+                    >
+                      <span className="text-xs font-medium">I Need A Break</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Take a Break</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setCurrentView('tests')}
+                    className={`group w-20 h-20 p-4 ${
+                      currentView === 'tests' 
+                        ? "bg-[--theme-hover-color] text-[--theme-hover-text]" 
+                        : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
+                    } border-2 border-[--theme-border-color] 
+                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                      shadow-md rounded-full transition flex flex-col items-center justify-center gap-1`}
+                  >
+                    <ClipboardList className="w-8 h-8" />
+                    <span className="text-xs font-medium">Tests</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Practice Tests</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {currentView !== 'calendar' && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setCurrentView('calendar')}
+                      className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                         border-2 border-[--theme-border-color] 
                         hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
                         shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
@@ -1007,39 +1044,18 @@ const Schedule: React.FC<ScheduleProps> = ({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            </div>
-          ) : (
-            <div className="mt-auto flex justify-end items-center gap-2">
-              <button
-                onClick={() => setShowBreaksDialog(true)}
-                className="px-4 h-12 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                  border-2 border-[--theme-border-color] 
-                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                  shadow-md rounded-lg transition flex items-center justify-center
-                  text-sm font-medium"
-              >
-                PRACTICE TESTS
-              </button>
-              <button
-                onClick={() => setShowBreaksDialog(true)}
-                className="px-4 h-12 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                  border-2 border-[--theme-border-color] 
-                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                  shadow-md rounded-lg transition flex items-center justify-center
-                  text-sm font-medium"
-              >
-                TAKE A BREAK
-              </button>
+            )}
+
+            {currentView !== 'analytics' && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={handleToggleView}
+                      onClick={() => setCurrentView('analytics')}
                       className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                         border-2 border-[--theme-border-color] 
                         hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                        shadow-md rounded-full transition flex flex-col items-center justify-center gap-1
-                        z-50"
+                        shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
                     >
                       <AnalyticsIcon className="w-8 h-8" />
                       <span className="text-xs font-medium">Stats</span>
@@ -1050,8 +1066,8 @@ const Schedule: React.FC<ScheduleProps> = ({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* New Activity Form */}
