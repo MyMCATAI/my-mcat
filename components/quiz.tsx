@@ -1,7 +1,6 @@
 import { Passage } from "@/types";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import ContentRenderer from "./ContentRenderer";
-import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import QuizSummary from "./QuizSummary";
 import Timer, { TimerRef } from "./Timer";
@@ -23,6 +22,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import Latex from "react-latex-next";
+import toast from "react-hot-toast";
+import { ExplanationImages } from "./ExplanationImages";
 
 export interface QuizQuestion {
   categoryId: string;
@@ -81,7 +82,6 @@ const Quiz: React.FC<QuizProps> = ({
 }) => {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [shuffledOptions, setShuffledOptions] = useState<
@@ -128,11 +128,7 @@ const Quiz: React.FC<QuizProps> = ({
 
         if (!data.questions || data.questions.length === 0) {
           if (page === 1) {
-            toast({
-              title: "No Questions Available",
-              description: "No quiz questions found for this category.",
-              variant: "destructive",
-            });
+            toast.error("No quiz questions found for this category.");
           }
           return;
         }
@@ -212,18 +208,14 @@ const Quiz: React.FC<QuizProps> = ({
       } catch (error: unknown) {
         if (error instanceof Error) {
           console.error("Error fetching questions:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load quiz questions. Please try again.",
-            variant: "destructive",
-          });
+          toast.error("Failed to load quiz questions. Please try again.");
         }
       } finally {
         setIsLoading(false);
         setIsLoadingMore(false);
       }
     },
-    [category, shuffle, toast]
+    [category, shuffle]
   );
 
   useEffect(() => {
@@ -248,17 +240,10 @@ const Quiz: React.FC<QuizProps> = ({
       if (!response.ok) throw new Error("Failed to create user test");
       const data = await response.json();
       setCurrentUserTestId(data.id);
-      toast({
-        title: "Quiz Started",
-        variant: "default",
-      });
+      toast.success("Quiz Started");
     } catch (err) {
       console.error("Error creating user test:", err);
-      toast({
-        title: "Error",
-        description: "Failed to create test session. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to create test session. Please try again.");
     }
   };
 
@@ -297,11 +282,7 @@ const Quiz: React.FC<QuizProps> = ({
       }
     } catch (error) {
       console.error("Error saving response:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save your answer. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to save your answer. Please try again.");
     }
   };
 
@@ -452,6 +433,11 @@ const Quiz: React.FC<QuizProps> = ({
                 imageWidth="70%"
               />
             </div>
+
+            <ExplanationImages 
+              questionContent={currentQuestion.questionContent} 
+              isFullScreen={isFullScreen} 
+            />
           </div>
         )}
       </div>
@@ -507,6 +493,8 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
   const handleDownvote = async () => {
     if (!currentQuestion) return;
 
+    toast.success("Question reported! Thank you for helping us improve.");
+
     try {
       const response = await fetch("/api/send-message", {
         method: "POST",
@@ -520,18 +508,9 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
         throw new Error("Failed to send downvote message");
       }
 
-      toast({
-        title: "Question reported!",
-        description: "Thank you for helping us improve.",
-        variant: "default",
-      });
     } catch (error) {
       console.error("Error sending downvote:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send feedback. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to send feedback. Please try again.");
     }
   };
 
