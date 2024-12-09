@@ -4,7 +4,6 @@ import { BlogNavbar } from './BlogNavbar';
 import { BlogSidebar } from './BlogSidebar'
 import MDXLayout from './mdx-provider'
 
-
 // This would normally come from your database/CMS
 
 // Add metadata

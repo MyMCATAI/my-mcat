@@ -46,9 +46,9 @@ const MethodologyAndTestimonials = () => {
 
   const pricingLogos = [
     { src: '/landingpage/BlueprintPricing.png', title: 'Blueprint' },
+    { src: '/landingpage/JackWestinPricing.png', title: 'Wack Westin' },
     { src: '/landingpage/KaplanPricing.png', title: 'Kaplan' },
     { src: '/landingpage/PrincetonReviewPricing.png', title: 'Princeton Review' },
-    { src: '/landingpage/JackWestinPricing.png', title: 'Wack Westin' },
   ];
 
   const globeConfig: WorldProps['globeConfig'] = {
@@ -363,7 +363,7 @@ const MethodologyAndTestimonials = () => {
               spaceBetween={30}
               slidesPerView={1}
               autoplay={{
-                delay: 6000,
+                delay: 4500,
                 disableOnInteraction: false,
               }}
               pagination={{ clickable: true }}
