@@ -54,6 +54,7 @@ import { HelpCircle } from 'lucide-react';
 import { useOutsideClick } from '@/hooks/use-outside-click';
 import PracticeTests from './PracticeTests';
 import { ClipboardList } from "lucide-react";
+import { Coffee } from "lucide-react";
 
 ChartJS.register(
   CategoryScale,
@@ -979,8 +980,8 @@ const Schedule: React.FC<ScheduleProps> = ({
 
           {/* View Toggle Buttons */}
           <div className="mt-auto flex justify-end items-center gap-2 pt-2">
-            {/* Only show Break button when not in tests view */}
-            {currentView !== 'tests' && (
+            {/* Break button - only show in calendar view */}
+            {currentView === 'calendar' && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -991,7 +992,8 @@ const Schedule: React.FC<ScheduleProps> = ({
                         hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
                         shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
                     >
-                      <span className="text-xs font-medium">I Need A Break</span>
+                      <Coffee className="w-8 h-8" />
+                      <span className="text-xs font-medium">Break</span>
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -1001,28 +1003,27 @@ const Schedule: React.FC<ScheduleProps> = ({
               </TooltipProvider>
             )}
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setCurrentView('tests')}
-                    className={`group w-20 h-20 p-4 ${
-                      currentView === 'tests' 
-                        ? "bg-[--theme-hover-color] text-[--theme-hover-text]" 
-                        : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
-                    } border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-full transition flex flex-col items-center justify-center gap-1`}
-                  >
-                    <ClipboardList className="w-8 h-8" />
-                    <span className="text-xs font-medium">Tests</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Practice Tests</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {currentView !== 'tests' && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setCurrentView('tests')}
+                      className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                        border-2 border-[--theme-border-color] 
+                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                        shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
+                    >
+                      <ClipboardList className="w-8 h-8" />
+                      <span className="text-xs font-medium">Tests</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Practice Tests</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
 
             {currentView !== 'calendar' && (
               <TooltipProvider>
