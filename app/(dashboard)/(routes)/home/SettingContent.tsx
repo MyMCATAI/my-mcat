@@ -474,12 +474,12 @@ const SettingContent: React.FC<SettingContentProps> = ({
               })()}
             />
             <div className="flex items-center mt-4 w-full">
-              <Button
+              <button
                 onClick={handleRecommendTestDate}
-                className="w-full text-[--theme-text-color] border-[--theme-border-color] bg-transparent border-2 hover:bg-[--theme-hover-color] py-2 px-4 rounded-lg transition duration-200"
+                className="w-full bg-[--theme-leaguecard-color] border-2 border-[--theme-border-color] text-[--theme-text-color] py-3 rounded-xl hover:bg-[--theme-hover-color] transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl font-semibold text-[1rem] flex items-center justify-center gap-2"
               >
-                Recommend me a test date
-              </Button>
+                <span>Get Recommended Test Date</span>
+              </button>
             </div>
           </div>
         );
@@ -545,8 +545,8 @@ const SettingContent: React.FC<SettingContentProps> = ({
               <button
                 className={`w-full text-left p-3 rounded-lg transition-colors duration-200 ${
                   activeOptions.includes(option.id)
-                    ? "bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] font-mono"
-                    : "bg-transparent text-[--theme-text-color] font-mono hover:bg-[--theme-doctorsoffice-accent]"
+                    ? "bg-[--theme-doctorsoffice-accent] text-[--theme-text-color]"
+                    : "bg-transparent text-[--theme-text-color] hover:bg-[--theme-doctorsoffice-accent]"
                 }`}
                 onClick={() => handleOptionClick(option.id)}
               >
@@ -567,7 +567,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
             </div>
           ))}
 
-          {/* Updated slider section */}
+          {/* Commented out slider section
           <TooltipProvider>
             <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-md relative">
               <div className="relative">
@@ -606,12 +606,13 @@ const SettingContent: React.FC<SettingContentProps> = ({
               </div>
             </div>
           </TooltipProvider>
+          */}
         </div>
 
         <div className="p-4 border-t border-[--theme-border-color]">
           {existingStudyPlan ? (
             <Button
-              className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200 flex items-center justify-center gap-2"
+              className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] py-2 px-4 rounded-lg hover:opacity-80 transition duration-200 flex items-center justify-center gap-2"
               onClick={() => {
                 handleSave();
                 handleGenerateStudyPlan();
@@ -628,7 +629,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] font-mono py-2 px-4 rounded-lg hover:opacity-80 transition duration-200 flex items-center justify-center gap-2"
+                    className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] py-2 px-4 rounded-lg hover:opacity-80 transition duration-200 flex items-center justify-center gap-2"
                     onClick={handleGenerateStudyPlan}
                     disabled={isGenerating}
                   >
