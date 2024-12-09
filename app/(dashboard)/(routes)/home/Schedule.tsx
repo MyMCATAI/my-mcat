@@ -679,9 +679,14 @@ const Schedule: React.FC<ScheduleProps> = ({
           boxShadow: "var(--theme-box-shadow)",
         }}
       >
-        <h1 className="text-sm font-medium text-center mb-4 opacity-60">
-          {formatDate(new Date())}
-        </h1>
+        <div className="text-center">
+          <h1 className="text-sm font-medium opacity-50" style={{ color: 'var(--theme-text-color)' }}>
+            Tasks for
+          </h1>
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--theme-text-color)' }}>
+            {formatDate(new Date())}
+          </h2>
+        </div>
 
         <div
           className="flex-grow overflow-y-auto space-y-4 pr-2"
