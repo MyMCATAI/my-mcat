@@ -16,7 +16,7 @@ export const dailyReminderTemplate = (data: DailyReminderEmailData): TemplateCon
       <p style="text-align: center;">
         <a href="https://mymcat.ai" style="background-color: #4CAF50; color: white; padding: 0.75rem 1.25rem; text-decoration: none; border-radius: 0.25rem; display: inline-block; margin: 1rem 0;">Let's Study Now! 📚</a>
       </p>
-      <p>Need any help getting back on track? Our team is here for you:</p>
+      <p>Need any help getting back on track? Our team is here for you: </p>
       <ul style="list-style-type: none; padding-left: 0;">
         <li>Josh (josh@mymcat.ai) - For any technical support</li>
         <li>Prynce (prynce@mymcat.ai) - For anything else</li>
