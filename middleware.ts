@@ -14,6 +14,8 @@ const publicRoutes = [
   "/redirect",
   "/api/webhook",
   "/api/cron",
+  "/api/weekly-report",
+  "/api/daily-reminder",
   "/sitemap.xml",
   "/robots.txt",
   "/parallax/(.*)",
