@@ -11,147 +11,179 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
   const [activeSection, setActiveSection] = useState<'aamc' | 'thirdParty' | 'myMcat' | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
 
-  const AAMCTests = [
-    { name: 'Unscored Sample', status: 'Not Started' },
-    { name: 'Full Length 1', status: 'Not Started' },
-    { name: 'Full Length 2', status: 'Not Started' },
-    { name: 'Full Length 3', status: 'Not Started' },
-    { name: 'Full Length 4', status: 'Not Started' },
-    { name: 'Sample Scored (FL5)', status: 'Not Started' },
+  // Sample scheduled tests data
+  const scheduledTests = [
+    { name: 'AAMC Full Length 1', date: 'Friday October 12', status: 'Scheduled' },
+    { name: 'AAMC Full Length 2', date: 'October 15', status: 'Not Started' },
+    { name: 'AAMC Full Length 3', date: 'October 20', status: 'Not Started' },
+    { name: 'Blueprint 1', date: 'October 25', status: 'Not Started' },
+  ];
+
+  const calendarDays = [
+    ['26', '27', '28', '29', '30', '1', '2'],
+    ['3', '4', '5', '6', '7', '8', '9'],
+    ['10', '11', '12', '13', '14', '15', '16'],
+    ['17', '18', '19', '20', '21', '22', '23'],
+    ['24', '25', '26', '27', '28', '29', '30'],
+    ['31', '1', '2', '3', '4', '5', '6']
   ];
 
   return (
-    <div className={`grid grid-cols-[20rem_1fr] gap-8 h-[65vh] ${className}`}>
-      {/* Calendar Section */}
-      <div className="border-r border-[--theme-border-color] pr-8">
-        <div className="sticky top-0">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={setDate}
-            className="rounded-md border border-[--theme-border-color]"
-          />
-          
-          <div className="mt-6 space-y-4">
-            <div className="p-4 bg-[--theme-doctorsoffice-accent] rounded-lg">
-              <h3 className="text-sm font-medium text-[--theme-text-color] mb-2">Next Test</h3>
-              <p className="text-xs text-[--theme-text-color] opacity-70">
-                No test scheduled
-              </p>
-            </div>
-            
-            <div className="p-4 bg-[--theme-doctorsoffice-accent] rounded-lg">
-              <h3 className="text-sm font-medium text-[--theme-text-color] mb-2">Test History</h3>
-              <p className="text-xs text-[--theme-text-color] opacity-70">
-                No tests taken yet
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content - Added max-height and overflow-y-auto */}
-      <div className="overflow-y-auto pr-4 max-h-[65vh]">
-        {activeSection ? (
-          <>
+    <div className={`flex flex-col h-full ${className}`}>
+      {activeSection ? (
+        // Active Section View
+        <div className="flex flex-col h-full">
+          <div className="flex items-center gap-4 mb-6">
             <button
               onClick={() => setActiveSection(null)}
-              className="mb-6 p-2 hover:bg-[--theme-hover-color] rounded-full transition-colors duration-200"
+              className="p-2 hover:bg-[--theme-hover-color] rounded-full transition-colors duration-200"
             >
               <ChevronRight className="h-5 w-5 text-[--theme-text-color] rotate-180" />
             </button>
             
-            <h2 className="text-[--theme-text-color] text-sm mb-6 opacity-60 uppercase tracking-wide">
+            <h2 className="text-[--theme-text-color] text-sm opacity-60 uppercase tracking-wide">
               {activeSection === 'aamc' ? 'AAMC Full Length Exams' : 
                activeSection === 'thirdParty' ? 'Third Party Exams' : 
                'MyMCAT Exams'}
             </h2>
+          </div>
 
-            <div className="space-y-4 text-[--theme-text-color]">
-              {activeSection === 'aamc' && (
-                <div className="animate-fadeIn">
-                  <section>
-                    <div className="space-y-2">
-                      {AAMCTests.map((test, index) => (
-                        <div
-                          key={index}
-                          className="bg-[--theme-doctorsoffice-accent] p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1">
-                              <h4 className="text-sm font-medium">{test.name}</h4>
-                              <p className="text-xs opacity-70">{test.status}</p>
-                            </div>
-                            <button 
-                              className="px-3 py-1.5 text-xs rounded-md border border-[--theme-border-color] 
-                                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                                transition-colors duration-200"
-                            >
-                              Schedule Test
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+          {activeSection === 'aamc' && (
+            <div className="grid grid-cols-2 gap-4 animate-fadeIn">
+              {AAMCTests.map((test, index) => (
+                <div
+                  key={index}
+                  className="bg-[--theme-doctorsoffice-accent] p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-medium">{test.name}</h4>
+                      <p className="text-xs opacity-70">{test.status}</p>
                     </div>
-
-                    <div className="mt-6 pt-6 border-t border-[--theme-doctorsoffice-accent]">
-                      <p className="text-xs leading-relaxed text-center opacity-70">
-                        AAMC practice tests are the most representative of the actual MCAT. 
-                        We recommend taking these under timed conditions.
-                      </p>
-                    </div>
-                  </section>
+                    <button 
+                      className="px-3 py-1.5 text-xs rounded-md border border-[--theme-border-color] 
+                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                        transition-colors duration-200"
+                    >
+                      Schedule Test
+                    </button>
+                  </div>
                 </div>
-              )}
-
-              {(activeSection === 'thirdParty' || activeSection === 'myMcat') && (
-                <div className="animate-fadeIn flex flex-col items-center justify-center py-12">
-                  <p className="text-sm opacity-70 text-center">
-                    Coming soon! This feature is currently under development.
-                  </p>
-                </div>
-              )}
+              ))}
             </div>
-          </>
-        ) : (
-          <>
-            <h2 className="text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide">
-              Practice Tests
-            </h2>
+          )}
 
-            <div className="space-y-8 text-[--theme-text-color]">
-              <div className="flex flex-col gap-2">
-                {[
-                  { id: 'aamc', label: 'AAMC Full Length Exams', description: 'Official AAMC practice exams' },
-                  { id: 'thirdParty', label: 'Third Party Exams', description: 'Blueprint, UWorld, and more' },
-                  { id: 'myMcat', label: 'MyMCAT Exams', description: 'AI-generated practice tests' },
-                ].map((section) => (
-                  <button
-                    key={section.id}
-                    onClick={() => setActiveSection(section.id as any)}
-                    className="p-4 rounded-lg text-left transition-all duration-200 bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <span className="text-sm font-medium">{section.label}</span>
-                        <p className="text-xs opacity-70">{section.description}</p>
+          {(activeSection === 'thirdParty' || activeSection === 'myMcat') && (
+            <div className="animate-fadeIn flex flex-col items-center justify-center py-8">
+              <p className="text-sm opacity-70 text-center">
+                Coming soon! This feature is currently under development.
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col h-full">
+          {/* Top Section - Using flex-grow-0 to prevent expansion */}
+          <div className="flex-grow-0" style={{ height: '60%' }}>
+            <div className="grid grid-cols-[1fr_1fr] gap-8 h-full">
+              {/* Calendar */}
+              <div className="bg-[--theme-doctorsoffice-accent] rounded-xl p-6 flex flex-col">
+                <div className="text-lg font-medium mb-4 text-center">
+                  December 2024
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {/* Day headers */}
+                  {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
+                    <div key={day} className="text-center text-sm font-medium p-2">
+                      {day}
+                    </div>
+                  ))}
+                  
+                  {/* Calendar days */}
+                  {calendarDays.flat().map((day, index) => (
+                    <div
+                      key={index}
+                      className={`aspect-square flex items-center justify-center text-sm p-2 rounded-md
+                        ${parseInt(day) > 0 && parseInt(day) <= 31 ? 'hover:bg-[--theme-hover-color] cursor-pointer' : 'opacity-30'}
+                        ${date?.getDate() === parseInt(day) ? 'bg-[--theme-hover-color] text-[--theme-hover-text]' : ''}
+                      `}
+                    >
+                      {day}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Scheduled Tests */}
+              <div className="flex flex-col h-full">
+                <h3 className="text-sm font-medium text-[--theme-text-color] opacity-60 uppercase tracking-wide mb-2">
+                  Scheduled Tests
+                </h3>
+                <div className="space-y-2 flex-grow overflow-auto">
+                  {scheduledTests.map((test, index) => (
+                    <div 
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-[--theme-doctorsoffice-accent] rounded-lg hover:bg-[--theme-hover-color] transition-colors duration-200"
+                    >
+                      <div className="space-y-0.5">
+                        <h4 className="text-sm font-medium">{test.name}</h4>
+                        <p className="text-xs opacity-70">{test.date}</p>
                       </div>
-                      <ChevronRight className="w-5 h-5" />
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          test.status === 'Scheduled' 
+                            ? 'bg-blue-100 text-blue-700' 
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {test.status}
+                        </span>
+                        <ChevronRight className="w-4 h-4 opacity-50" />
+                      </div>
                     </div>
-                  </button>
-                ))}
-              </div>
-
-              <div className="pt-6 border-t border-[--theme-doctorsoffice-accent]">
-                <p className="text-xs leading-relaxed text-center opacity-70">
-                  Practice tests are crucial for MCAT preparation. They help you build stamina, 
-                  identify weaknesses, and familiarize yourself with the exam format.
-                </p>
+                  ))}
+                </div>
               </div>
             </div>
-          </>
-        )}
-      </div>
+          </div>
+
+          {/* Bottom Section - Using remaining space */}
+          <div className="flex-grow flex flex-col justify-end" style={{ height: '40%' }}>
+            <h2 className="text-[--theme-text-color] text-xs opacity-60 uppercase tracking-wide mb-4 text-center">
+              Available Practice Tests
+            </h2>
+            <div className="flex justify-center gap-4 max-w-4xl mx-auto">
+              {[
+                { id: 'aamc', label: 'AAMC Full Length Exams', description: 'Official AAMC practice exams' },
+                { id: 'thirdParty', label: 'Third Party Exams', description: 'Blueprint, UWorld, and more' },
+                { id: 'myMcat', label: 'MyMCAT Exams', description: 'AI-generated practice tests' },
+              ].map((section) => (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id as any)}
+                  className="flex-1 p-4 rounded-lg text-left transition-all duration-200 bg-[--theme-doctorsoffice-accent] 
+                    hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg max-w-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <span className="text-sm font-medium">{section.label}</span>
+                      <p className="text-xs opacity-70">{section.description}</p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 flex-shrink-0" />
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Help Text */}
+            <div className="mt-4 pt-4 border-t border-[--theme-doctorsoffice-accent]">
+              <p className="text-xs leading-relaxed text-center opacity-70">
+                Practice tests are crucial for MCAT preparation. They help you build stamina, 
+                identify weaknesses, and familiarize yourself with the exam format.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
