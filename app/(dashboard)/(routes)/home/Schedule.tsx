@@ -680,7 +680,13 @@ const Schedule: React.FC<ScheduleProps> = ({
         }}
       >
         <div className="text-center space-y-1">
-          <h2 className="text-m font-semibold opacity-80" style={{ color: 'var(--theme-hover-color)' }}>
+          <h2 
+            className="text-m font-semibold" 
+            style={{ 
+              color: 'var(--theme-text-color)',
+              opacity: '0.6'
+            }}
+          >
             {formatDate(new Date())}
           </h2>
         </div>
