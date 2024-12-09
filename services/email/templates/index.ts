@@ -6,7 +6,7 @@ import { referralLinkTemplate } from './referralLink';
 import { weeklyReportTemplate } from './weeklyReport';
 import { coinLossTemplate } from './coinLoss';
 import { streakLossTemplate } from './streakLoss';
-import { dailyReminderTemplate } from './dailyReminder';
+import { dailyReminderTemplate } from './dailyreminder';
 
 export const templates = {
   welcome: welcomeTemplate,
