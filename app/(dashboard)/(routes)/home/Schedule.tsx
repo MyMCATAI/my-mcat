@@ -992,7 +992,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
           {/* View Toggle Buttons */}
           {showAnalytics ? (
-            <div className="absolute bottom-4 right-4 flex flex-col space-y-2 z-50">
+            <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -1014,7 +1014,7 @@ const Schedule: React.FC<ScheduleProps> = ({
               </TooltipProvider>
             </div>
           ) : (
-            <div className="mt-auto pt-2 flex justify-end items-center gap-2 z-50">
+            <div className="mt-auto pt-2 flex justify-end items-center gap-2">
               <button
                 onClick={() => setShowBreaksDialog(true)}
                 className="px-4 h-12 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
@@ -1043,8 +1043,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                       className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                         border-2 border-[--theme-border-color] 
                         hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                        shadow-md rounded-full transition flex flex-col items-center justify-center gap-1
-                        z-50"
+                        shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
                     >
                       <AnalyticsIcon className="w-8 h-8" />
                       <span className="text-xs font-medium">Stats</span>
