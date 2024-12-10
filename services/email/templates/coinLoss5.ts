@@ -1,3 +1,5 @@
+import { TemplateConfig } from '../types';
+
 export interface CoinLossEmailData {
   userName: string;
   remainingCoins: number;
