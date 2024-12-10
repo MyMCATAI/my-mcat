@@ -15,17 +15,28 @@ export interface PerformanceMetrics {
     };
   }
   
-  export function calculateQuestionsScore(questions: number): number {
-    if (questions >= 200) return 100;
-    if (questions >= 150) return 80;
-    if (questions >= 100) return 60;
-    if (questions >= 50) return 40;
-    if (questions >= 25) return 20;
+  export function calculateQuestionsScore(questions: number, subject: string): number {
+    // Keep CARs scoring the same
+    if (subject === "CARs") {
+      if (questions >= 200) return 100;
+      if (questions >= 150) return 80;
+      if (questions >= 100) return 60;
+      if (questions >= 50) return 40;
+      if (questions >= 25) return 20;
+      return 0;
+    }
+
+    // Higher threshold for other sections
+    if (questions >= 400) return 100;
+    if (questions >= 300) return 80;
+    if (questions >= 200) return 60;
+    if (questions >= 100) return 40;
+    if (questions >= 50) return 20;
     return 0;
   }
   
   export function calculateTimeScore(avgTime: number): number {
-    if (avgTime >= 55 && avgTime <= 65) return 100;
+    if (avgTime >= 55 && avgTime <= 65) return 100;  // Perfect for CARs
     if ((avgTime >= 45 && avgTime <= 54) || (avgTime >= 66 && avgTime <= 75)) return 80;
     if ((avgTime >= 35 && avgTime <= 44) || (avgTime >= 76 && avgTime <= 85)) return 60;
     if ((avgTime >= 25 && avgTime <= 34) || (avgTime >= 86 && avgTime <= 95)) return 40;
@@ -44,32 +55,48 @@ export interface PerformanceMetrics {
     currentScore: number,
     historicalScores: number[]
   ): 'up' | 'down' | 'flat' {
-    if (historicalScores.length < 2) return 'flat';
-  
-    const recentScores = historicalScores.slice(-3); // Get last 3 scores
-    const avgPreviousScore = recentScores.reduce((a, b) => a + b, 0) / recentScores.length;
-  
+    // If not enough historical data, return flat
+    if (historicalScores.length < 15) return 'flat';
+
+    // Get the last 15 scores
+    const previousScores = historicalScores.slice(-15);
+    const avgPreviousScore = previousScores.reduce((a, b) => a + b, 0) / previousScores.length;
+
     const difference = currentScore - avgPreviousScore;
-    if (Math.abs(difference) < 10) return 'flat'; // Less than 10% change is considered flat
+    if (Math.abs(difference) < 5) return 'flat'; // Less than 5% change is considered flat
     return difference > 0 ? 'up' : 'down';
+  }
+  
+  export function calculateAccuracyScore(accuracy: number): number {
+    if (accuracy >= 90) return 100;
+    if (accuracy >= 80) return 90;
+    if (accuracy >= 70) return 80;
+    if (accuracy >= 60) return 70;
+    if (accuracy >= 50) return 60;
+    if (accuracy >= 40) return 50;
+    if (accuracy >= 30) return 40;
+    if (accuracy >= 20) return 30;
+    if (accuracy >= 10) return 20;
+    return 10;
   }
   
   export function calculateGrade(
     current: PerformanceMetrics,
-    historicalScores: number[] = []
+    historicalScores: number[] = [],
+    subject: string
   ): GradeResult {
-    // Calculate component scores
-    const questionsScore = calculateQuestionsScore(current.questionsAnswered);
-    const accuracyScore = current.accuracy; // Assuming accuracy is already in percentage
+    const questionsScore = calculateQuestionsScore(current.questionsAnswered, subject);
+    const accuracyScore = calculateAccuracyScore(current.accuracy);
     const timeScore = calculateTimeScore(current.averageTime);
-  
-    // Calculate weighted total (25% questions, 50% accuracy, 25% time)
+
+    // Adjust weights to emphasize accuracy even more
+    // Questions: 15%, Accuracy: 70%, Time: 15%
     const totalScore = (
-      (questionsScore * 0.2) +
-      (accuracyScore * 0.6) +
-      (timeScore * 0.2)
+      (questionsScore * 0.15) +
+      (accuracyScore * 0.70) +
+      (timeScore * 0.15)
     );
-  
+
     const grade = getLetterGrade(totalScore);
     const trend = calculateTrend(totalScore, historicalScores);
   
