@@ -88,3 +88,26 @@ export const getUserInfo = async () => {
   export const setBio = async (newBio: string) => {
     return updateUserInfo({ bio: newBio });
   };
+
+export type NotificationPreference = 'all' | 'important' | 'none';
+
+export const updateNotificationPreference = async (preference: NotificationPreference) => {
+  const { userId } = auth();
+  if (!userId) return null;
+
+  const existingUser = await prismadb.userInfo.findUnique({
+    where: { userId }
+  });
+
+  if (!existingUser) return null;
+
+  // Cast the preference as string since that's what Prisma expects
+  const updatedInfo = await prismadb.userInfo.update({
+    where: { userId },
+    data: {
+      notificationPreference: preference as string
+    }
+  });
+
+  return updatedInfo;
+};
