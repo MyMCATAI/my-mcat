@@ -126,7 +126,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [hasUpdatedStudyPlan, setHasUpdatedStudyPlan] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [userScore, setUserScore] = useState(0);
-  const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showBreaksDialog, setShowBreaksDialog] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
 
@@ -163,15 +162,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     // Cleanup function to remove the event listener when the component unmounts
     return () => {
       window.removeEventListener("startTutorialPart4", eventListener);
-    };
-  }, []);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (emailTimeoutRef.current) {
-        clearTimeout(emailTimeoutRef.current);
-      }
     };
   }, []);
 
