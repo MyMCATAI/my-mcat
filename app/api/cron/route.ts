@@ -25,20 +25,28 @@ export async function GET(request: NextRequest) {
     return new Response("Unauthorized", { status: 401 });
   }
   try {
-    // Get all paid users from the database
+    // Get the date 7 days ago
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    // Get paid users who have been active in the last week
     const users = await prisma.userInfo.findMany({
       where: {
-        hasPaid: true
+        hasPaid: true,
+        updatedAt: {
+          gte: oneWeekAgo
+        }
       },
       select: {
         userId: true,
         streak: true,
         score: true,
         firstName: true,
+        notificationPreference: true,
       },
     });
 
-    console.log(`Found ${users.length} paid users`);
+    console.log(`Found ${users.length} paid users active in the last week`);
 
     // Process each user
     for (const user of users) {
@@ -57,21 +65,24 @@ export async function GET(request: NextRequest) {
       const oldStreak = user.streak;
       const newStreak = await updateUserStreak(user.userId, activityStatus.wasActivePastDay);
       
-      // Send streak loss email if they just lost their streak
-      if (!activityStatus.wasActivePastDay && oldStreak > 0 && newStreak === 0) {
-        await sendStreakLossEmail(email, name);
-        console.log(`Sent streak loss email to user ${user.userId}`);
-      }
+      // Only send emails if notificationPreference is "all"
+      if (user.notificationPreference === "all") {
+        // Send streak loss email if they just lost their streak
+        if (!activityStatus.wasActivePastDay && oldStreak > 0 && newStreak === 0) {
+          await sendStreakLossEmail(email, name);
+          console.log(`Sent streak loss email to user ${user.userId}`);
+        }
 
-      // Send coin loss email only on first coin loss
-      if (activityStatus.isFirstCoinLoss && 
-          activityStatus.newScore !== undefined) {
-        await sendCoinLossEmail(
-          email, 
-          name, 
-          activityStatus.newScore
-        );
-        console.log(`Sent coin loss email to user ${user.userId}`);
+        // Send coin loss email only on first coin loss
+        if (activityStatus.isFirstCoinLoss && 
+            activityStatus.newScore !== undefined) {
+          await sendCoinLossEmail(
+            email, 
+            name, 
+            activityStatus.newScore
+          );
+          console.log(`Sent coin loss email to user ${user.userId}`);
+        }
       }
     }
 
