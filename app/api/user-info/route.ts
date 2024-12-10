@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
-import { getUserInfo } from "@/lib/user-info";
+import { getUserInfo, updateNotificationPreference } from "@/lib/user-info";
 import { incrementUserScore } from "@/lib/user-info";
 import prismadb from "@/lib/prismadb";
 import { DEFAULT_BIO } from "@/constants";
@@ -81,17 +81,32 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { amount } = body;
+    const { amount, notificationPreference } = body;
 
-    if (typeof amount !== 'number' || isNaN(amount)) {
-      return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+    // Handle score update
+    if (amount !== undefined) {
+      if (typeof amount !== 'number' || isNaN(amount)) {
+        return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+      }
+
+      const updatedInfo = await incrementUserScore(amount);
+      return NextResponse.json({ score: updatedInfo.score });
     }
 
-    const updatedInfo = await incrementUserScore(amount);
+    // Handle notification preference update
+    if (notificationPreference !== undefined) {
+      const updatedInfo = await updateNotificationPreference(notificationPreference);
+      
+      if (!updatedInfo) {
+        return NextResponse.json({ error: "Failed to update notification preference" }, { status: 400 });
+      }
 
-    return NextResponse.json({ score: updatedInfo.score });
+      return NextResponse.json({ notificationPreference: updatedInfo.notificationPreference });
+    }
+
+    return NextResponse.json({ error: "No valid update parameters provided" }, { status: 400 });
   } catch (error) {
-    console.error('[USER_INFO_SCORE_PUT]', error);
+    console.error('[USER_INFO_PUT]', error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
