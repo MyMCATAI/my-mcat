@@ -205,4 +205,34 @@ export async function sendReminderEmail(email: string, name: string, pendingGoal
   }
 }
 
-  
+
+export async function sendWeeklyReportEmail(
+  email: string,
+  data: {
+    userName: string;
+    dailyActivity: Array<{ name: string; completed: boolean }>;
+    currentCoins: number
+    topicsCovered: string[];
+    practiceProblems: number;
+    flashcardsReviewed: number;
+    topicsReviewed: number;
+    improvements: string[];
+    focusAreas: string[];
+    dashboardUrl: string;
+    settingsUrl: string;
+    totalPatientsCount: number;
+  }
+): Promise<boolean> {
+  try {
+    const result = await emailService.sendEmail({
+      to: email,
+      template: 'weekly-report',
+      data,
+      useReminderEmail: false
+    });
+    return result.success;
+  } catch (error) {
+    console.error("Error sending weekly report email:", error);
+    return false;
+  }
+}
