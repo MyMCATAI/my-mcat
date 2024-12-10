@@ -5,6 +5,7 @@ import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
 import { NotificationPreferences } from '@/components/notification-preferences'
+import Link from 'next/link'
 
 export default function EmailPreferencesPage() {
   return (
@@ -22,12 +23,19 @@ export default function EmailPreferencesPage() {
           
           <div className="flex flex-col items-center space-y-4">
             <p className="text-white text-center mb-4">
-              Choose how often you'd like to receive study reminders from us
+              Choose how often you would like to receive study reminders from us
             </p>
             
             <NotificationPreferences 
               className="[&>*]:border-[#5F7E92] [&>*]:text-white" 
             />
+
+            <Link 
+              href="/home" 
+              className="text-[#5F7E92] hover:text-white transition-colors mt-6"
+            >
+              ← Return to Home
+            </Link>
           </div>
         </div>
       </div>

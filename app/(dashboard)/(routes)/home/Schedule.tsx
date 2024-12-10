@@ -50,8 +50,9 @@ import {
 } from "lucide-react";
 import { FaCheckCircle } from "react-icons/fa";
 import HelpContentSchedule from './HelpContentSchedule';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Bell } from 'lucide-react';
 import { useOutsideClick } from '@/hooks/use-outside-click';
+import Link from 'next/link';
 
 ChartJS.register(
   CategoryScale,
@@ -827,6 +828,20 @@ const Schedule: React.FC<ScheduleProps> = ({
               <TooltipContent>Settings</TooltipContent>
             </Tooltip>
           </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href="/preferences">
+                  <button className="p-2 rounded-full shadow-md bg-white hover:bg-gray-100">
+                    <Bell className="w-4 h-4 text-gray-600" />
+                  </button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>Email Preferences</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
 
           <TooltipProvider>
             <Tooltip>
