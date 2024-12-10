@@ -39,9 +39,20 @@ const allowedAdminUserIds = [
 export default clerkMiddleware((auth, request) => {
   const userAgent = request.headers.get('user-agent') || ''
   const isCrawler = /bot|crawler|spider|crawling|googlebot|bingbot|duckduckbot/i.test(userAgent);
+  const pathname = new URL(request.url).pathname;
   
   // More permissive crawler access
   if (isCrawler) {
+    return NextResponse.next();
+  }
+
+  // Special handling for preferences page
+  if (pathname === '/preferences') {
+    if (!auth().userId) {
+      const signInUrl = new URL('/sign-in', request.url);
+      signInUrl.searchParams.set('redirect_url', request.url);
+      return NextResponse.redirect(signInUrl);
+    }
     return NextResponse.next();
   }
 

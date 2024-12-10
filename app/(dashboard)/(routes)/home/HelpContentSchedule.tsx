@@ -144,10 +144,36 @@ const HelpContentSchedule: React.FC<HelpContentScheduleProps> = ({ onClose, onRe
 
           {activeMainSection === 'analytics' && (
             <div className="animate-fadeIn">
+              
               <section>
-                <ul className="text-sm space-y-2 list-disc pl-4">
-                  <li>Coming soon.</li>
-                </ul>
+                <h3 className="text-xs mb-4 text-center opacity-60 uppercase tracking-wide">
+                  Performance Rating
+                </h3>
+                
+                <div className="mt-4 flex justify-center">
+                  <video 
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline
+                    className="w-full rounded-lg border-2 border-[--theme-border-color]"
+                  >
+                    <source 
+                      src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/analyticswheel.mp4" 
+                      type="video/mp4" 
+                    />
+                  </video>
+                </div>
+                
+                <div className="mt-6 text-sm text-[--theme-text-color]">
+                  <p className="mb-2">Three factors determine your grade:</p>
+                  <ol className="list-decimal pl-6 space-y-1">
+                    <li>Total questions answered (20%)</li>
+                    <li>Accuracy (60%)</li>
+                    <li>Timing (20%)</li>
+                  </ol>
+                  <p className="mt-4">To get an S rating, answer a lot of questions accurately and quickly.</p>
+                </div>
               </section>
             </div>
           )}
