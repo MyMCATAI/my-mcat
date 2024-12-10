@@ -8,9 +8,7 @@ interface DailyActivity {
 interface WeeklyReportData {
   userName: string;
   dailyActivity: DailyActivity[];
-  coinsEarned: number;
-  coinsLost: number;
-  coinsNet: number;
+  currentCoins: number;
   topicsCovered: string[];
   practiceProblems: number;
   flashcardsReviewed: number;
@@ -19,6 +17,7 @@ interface WeeklyReportData {
   focusAreas: string[];
   dashboardUrl: string;
   settingsUrl: string;
+  totalPatientsCount?: number;
 }
 
 export const weeklyReportTemplate = (data: WeeklyReportData): TemplateConfig => ({
@@ -46,11 +45,9 @@ export const weeklyReportTemplate = (data: WeeklyReportData): TemplateConfig => 
       </div>
 
       <div style="background-color: #f7fafc; padding: 1.25rem; border-radius: 0.5rem; margin: 1.25rem 0;">
-        <h2 style="color: #2d3748; margin-top: 0;">Coins Summary 🪙</h2>
+        <h2 style="color: #2d3748; margin-top: 0;">Coins Balance 🪙</h2>
         <p style="color: #333333; margin: 0;">
-          Earned this week: +${data.coinsEarned}<br>
-          Lost this week: -${data.coinsLost}<br>
-          Net change: ${data.coinsNet}
+          Current balance: ${data.currentCoins} coins
         </p>
       </div>
 
@@ -75,8 +72,17 @@ export const weeklyReportTemplate = (data: WeeklyReportData): TemplateConfig => 
         </div>
       </div>
 
+      ${data.totalPatientsCount !== undefined ? `
       <div style="background-color: #f7fafc; padding: 1.25rem; border-radius: 0.5rem; margin: 1.25rem 0;">
-        <h2 style="color: #2d3748; margin-top: 0;">Areas of Growth ����</h2>
+        <h2 style="color: #2d3748; margin-top: 0;">Clinical Experience 👨‍⚕️</h2>
+        <p style="color: #333333;">
+          Total patients treated to date: ${data.totalPatientsCount}
+        </p>
+      </div>
+      ` : ''}
+
+      <div style="background-color: #f7fafc; padding: 1.25rem; border-radius: 0.5rem; margin: 1.25rem 0;">
+        <h2 style="color: #2d3748; margin-top: 0;">Areas of Growth 📝</h2>
         <div style="margin-bottom: 1rem;">
           <h3 style="color: #2d3748; font-size: 1rem;">Improvements:</h3>
           <ul style="color: #333333; padding-left: 1.25rem;">

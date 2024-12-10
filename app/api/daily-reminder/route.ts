@@ -13,81 +13,94 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Get today's date at start of day
+    // Get the date 7 days ago
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    // Get paid users who have been active in the last week
+    const users = await prisma.userInfo.findMany({
+      where: {
+        hasPaid: true,
+        updatedAt: {
+          gte: oneWeekAgo
+        }
+      },
+      select: {
+        userId: true,
+        firstName: true,
+        notificationPreference: true,
+      },
+    });
+
+    console.log(`Found ${users.length} paid users active in the last week`);
+
+    // Get today's date boundaries
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    // Get end of today
     const endOfToday = new Date(today);
     endOfToday.setHours(23, 59, 59, 999);
 
-    // Find all incomplete activities scheduled for today
-    const incompleteActivities = await prisma.calendarActivity.findMany({
-      where: {
-        scheduledDate: {
-          gte: today,
-          lte: endOfToday,
-        },
-        status: {
-          not: "Complete"
-        }
-      },
-      include: {
-        studyPlan: true,
-        category: true
-      }
-    });
+    let emailsSent = 0;
 
-    console.log(`Found ${incompleteActivities.length} incomplete activities for today`);
-
-    // Group activities by user
-    const userActivities: { [key: string]: typeof incompleteActivities } = {};
-    incompleteActivities.forEach(activity => {
-      if (!userActivities[activity.userId]) {
-        userActivities[activity.userId] = [];
-      }
-      userActivities[activity.userId].push(activity);
-    });
-
-    // Process each user's activities
-    for (const [userId, activities] of Object.entries(userActivities)) {
-      const email = await getUserEmail(userId);
-      if (!email) {
-        console.error(`Failed to fetch email for user ID: ${userId}`);
+    // Process each paid user
+    for (const user of users) {
+      // Skip users who don't want notifications
+      if (user.notificationPreference !== "all") {
         continue;
       }
 
-      // Get user info for personalization
-      const userInfo = await prisma.userInfo.findUnique({
-        where: { userId },
-        select: { firstName: true }
+      // Check for incomplete activities for this user
+      const incompleteActivities = await prisma.calendarActivity.findMany({
+        where: {
+          userId: user.userId,
+          scheduledDate: {
+            gte: today,
+            lte: endOfToday,
+          },
+          status: {
+            not: "Complete"
+          }
+        },
+        include: {
+          studyPlan: true,
+          category: true
+        }
       });
 
-      const name = userInfo?.firstName || "Future Doctor";
-      
-      // Format pending goals as a simple list of activity names
-      const pendingGoals = activities
-        .map(activity => activity.activityTitle)
-        .join('\n');
-      
-      // Send reminder email using the server-utils function
-      const emailSent = await sendReminderEmail(email, name, pendingGoals);
-      
-      if (emailSent) {
-        console.log(`Successfully sent daily reminder email to user ${userId}`);
-      } else {
-        console.error(`Failed to send daily reminder email to user ${userId}`);
+      // Only proceed if user has incomplete activities
+      if (incompleteActivities.length > 0) {
+        const email = await getUserEmail(user.userId);
+        if (!email) {
+          console.error(`Failed to fetch email for user ID: ${user.userId}`);
+          continue;
+        }
+
+        const name = user.firstName || "Future Doctor";
+        
+        // Format pending goals
+        const pendingGoals = incompleteActivities
+          .map(activity => activity.activityTitle)
+          .join('\n');
+        
+        // Send reminder email
+        const emailSent = await sendReminderEmail(email, name, pendingGoals);
+        
+        if (emailSent) {
+          emailsSent++;
+          console.log(`Successfully sent daily reminder email to user ${user.userId}`);
+        } else {
+          console.error(`Failed to send daily reminder email to user ${user.userId}`);
+        }
       }
     }
 
     // Log success and return response
     const now = new Date();
-    console.log("Daily reminder job completed at:", now);
     return NextResponse.json({ 
       message: "Daily reminder job completed successfully",
       timestamp: now,
-      activitiesFound: incompleteActivities.length,
-      usersProcessed: Object.keys(userActivities).length
+      paidUsersProcessed: users.length,
+      emailsSent
     });
 
   } catch (error) {
