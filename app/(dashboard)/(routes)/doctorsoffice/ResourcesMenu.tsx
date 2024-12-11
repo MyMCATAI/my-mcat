@@ -10,17 +10,18 @@ import {
   getClinicCostPerDay,
   getLevelNumber,
 } from "@/utils/calculateResourceTotals";
-import { HelpCircle } from "lucide-react"; // Add this import
+import { Plus, Globe, Headphones } from "lucide-react";
 import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 // Dynamic import for ChatBotWidgetNoChatBot
-const ChatBotWidgetNoChatBot = dynamic(
-  () => import("@/components/chatbot/ChatBotWidgetDoctorsOffice"),
-  {
-    ssr: false,
-    loading: () => <div>Loading...</div>,
-  }
-);
+// const ChatBotWidgetNoChatBot = dynamic(
+//   () => import("@/components/chatbot/ChatBotWidgetDoctorsOffice"),
+//   {
+//     ssr: false,
+//     loading: () => <div>Loading...</div>,
+//   }
+// );
 
 // Mapping function to convert DoctorOfficeStats to ReportData
 const mapDoctorOfficeStatsToReportData = (
@@ -48,6 +49,43 @@ interface ResourcesMenuProps {
   totalPatients: number;
   patientsPerDay: number;
 }
+
+// Add this interface near the top with other interfaces
+interface LeaderboardEntry {
+  id: number;
+  name: string;
+  title?: string;
+  streak: number;
+}
+
+// Add this constant outside the component
+const LEADERBOARD_DATA: LeaderboardEntry[] = [
+  {
+    id: 1,
+    name: "Prynce",
+    title: "Inventor",
+    streak: 15
+  },
+  {
+    id: 2,
+    name: "Josh",
+    title: "CTO",
+    streak: 12
+  },
+  {
+    id: 3,
+    name: "Armaan",
+    title: "Developer",
+    streak: 8
+  },
+  {
+    id: 4,
+    name: "Hanis",
+    title: "Developer",
+    streak: 5
+  }
+];
+
 const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   reportData,
   userRooms,
@@ -55,32 +93,40 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   totalPatients,
   patientsPerDay,
 }) => {
-  const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
-  const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(
-    null
-  );
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
   const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
-
-  const handleAssistantResponse = (
-    message: string,
-    dismissFunc: () => void
-  ) => {
-    setAssistantMessage(message);
-    setDismissMessage(() => dismissFunc);
-  };
-
-  const closeOverlay = () => {
-    if (dismissMessage) {
-      dismissMessage();
-    }
-    setAssistantMessage(null);
-    setDismissMessage(null);
-  };
+  const [isAddFriendOpen, setIsAddFriendOpen] = useState(false);
+  const [friendEmail, setFriendEmail] = useState("");
+  const [isHeadphonesDropdownOpen, setIsHeadphonesDropdownOpen] = useState(false);
+  const { isAutoPlay, setIsAutoPlay } = useMusicPlayer();
 
   const openTutorialDialog = (videoUrl: string) => {
     setTutorialVideoUrl(videoUrl);
     setIsTutorialDialogOpen(true);
+  };
+
+  const toggleAddFriendDropdown = () => {
+    setIsAddFriendOpen(!isAddFriendOpen);
+  };
+
+  const handleAddFriend = () => {
+    // Logic to add a friend using friendEmail
+    console.log("Adding friend:", friendEmail);
+    setFriendEmail("");
+    setIsAddFriendOpen(false);
+  };
+
+  const showGlobalRankings = () => {
+    // Logic to show global rankings
+    console.log("Showing global rankings");
+  };
+
+  const toggleHeadphonesDropdown = () => {
+    setIsHeadphonesDropdownOpen(!isHeadphonesDropdownOpen);
+  };
+
+  const handleAutoPlayChange = () => {
+    setIsAutoPlay(!isAutoPlay);
   };
 
   if (!reportData) {
@@ -99,79 +145,91 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   return (
     <div className="h-full">
       <div className="flex flex-col bg-[--theme-leaguecard-color] text-[--theme-text-color] items-center h-full rounded-lg p-4 overflow-auto relative">
-        <HelpCircle
-          className="absolute top-2 right-2 text-[--theme-border-color] hover:text-gray-200 transition-colors duration-200 cursor-pointer z-10"
-          size={20}
-          onClick={() =>
-            openTutorialDialog(
-              "https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TutorialVid.mp4"
-            )
-          }
-        />
         <div className="flex flex-col items-center mb-1 w-full">
           <div className="w-48 h-48 bg-[--theme-doctorsoffice-accent] border-2 border-[--theme-border-color] rounded-lg mb-4 overflow-hidden relative">
-            <ChatBotWidgetNoChatBot
-              reportData={mappedReportData}
-              onResponse={handleAssistantResponse}
+            <img
+              src="/kalypsoend.gif"
+              alt="Kalypso"
+              className="w-full h-full object-cover transform scale-[1.8] translate-y-[40%]"
             />
           </div>
-          {assistantMessage && (
-            <div className="max-w-xs bg-blue-500 text-white rounded-lg p-3 relative animate-fadeIn mt-2">
-              <div className="typing-animation">{assistantMessage}</div>
-              <div className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-blue-500"></div>
-              <button
-                onClick={closeOverlay}
-                className="absolute top-1 right-1 text-white hover:text-gray-200"
-                aria-label="Close"
-              >
-                &#10005;
-              </button>
-            </div>
-          )}
         </div>
 
         <DaysStreak days={reportData.streak} />
 
         <div className="w-full max-w-md mt-6">
-          <h3 className="text-lg font-semibold mb-4">Friend Leaderboard</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
-                  1
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Friend Leaderboard</h3>
+            <div className="flex gap-2">
+              <Plus
+                className="cursor-pointer text-[--theme-hover-color] hover:opacity-50 transition-opacity duration-200"
+                size={20}
+                onClick={toggleAddFriendDropdown}
+              />
+              <Globe
+                className="cursor-pointer text-[--theme-hover-color] hover:opacity-50 transition-opacity duration-200"
+                size={20}
+                onClick={showGlobalRankings}
+              />
+              <Headphones
+                className="cursor-pointer text-[--theme-hover-color] hover:opacity-50 transition-opacity duration-200"
+                size={20}
+                onClick={toggleHeadphonesDropdown}
+              />
+              {isHeadphonesDropdownOpen && (
+                <div className="absolute right-4 mt-6 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] rounded-lg shadow-lg w-48 z-50">
+                  <div 
+                    className="p-3 cursor-pointer hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors duration-200 rounded-lg text-sm"
+                    onClick={handleAutoPlayChange}
+                  >
+                    {isAutoPlay ? "Disable Auto Play" : "Enable Auto Play"}
+                  </div>
                 </div>
-                <span className="font-medium">Sarah Kim</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaFire className="text-yellow-300" />
-                <span>15 days</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
-                  2
-                </div>
-                <span className="font-medium">John Doe</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaFire className="text-yellow-300" />
-                <span>12 days</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
-                  3
-                </div>
-                <span className="font-medium">Alex Chen</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaFire className="text-yellow-300" />
-                <span>8 days</span>
-              </div>
+              )}
             </div>
           </div>
+
+          {isAddFriendOpen && (
+            <div className="mb-4 flex items-center gap-2">
+              <input
+                type="email"
+                value={friendEmail}
+                onChange={(e) => setFriendEmail(e.target.value)}
+                placeholder="Eventually you can add friends..."
+                className="w-full p-2 border rounded"
+              />
+              <button
+                onClick={handleAddFriend}
+                className="bg-[--theme-hover-color] text-[--theme-hover-text] p-2 rounded hover:opacity-50 transition-opacity duration-200"
+              >
+                Send
+              </button>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {LEADERBOARD_DATA.map((entry) => (
+              <div key={entry.id} className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
+                    {entry.id}
+                  </div>
+                  <span className="font-medium">
+                    {entry.name}
+                    {entry.title && ` (${entry.title})`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FaFire className="text-yellow-300" />
+                  <span>{entry.streak} days</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-sm text-gray-400/40 mt-4 text-center italic">
+            {"You'll eventually be able to add friends, see their cards, and also check the global rankings."}
+          </p>
         </div>
       </div>
       <TutorialVidDialog
