@@ -76,7 +76,7 @@ const spriteWaypoints: Record<number, Waypoint[]> = {
     { x: 10, y: 9, direction: 'SW' }, // Move down
   ],
   1: [
-    { x: 8, y: 9, direction: 'NW' },  // Start at waiting room
+    { x: 8, y: 9, direction: 'SW' },  // Start at waiting room
     { x: 5, y: 9, direction: 'NW' },  // Move NW to bottom left
     { x: 5, y: 8, direction: 'NE' },  // Move SE back to waiting room
     { x: 8, y: 8, direction: 'SE' },  // Move SE back to waiting room
