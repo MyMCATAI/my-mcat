@@ -17,7 +17,7 @@ const playlists: Record<string, Song[]> = {
     { title: "CS7", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace7.mp3" },
     { title: "CS8", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace8.mp3" },
     { title: "CS9", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace9.mp3" },
-    { title: "CS10", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace10.mp3" },
+    { title: "CS10", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberSpace10.mp3" },
   ],
   sakuraTrees: [
     { title: "ST1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees1.mp3" },
@@ -29,7 +29,7 @@ const playlists: Record<string, Song[]> = {
     { title: "ST7", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees7.mp3" },
     { title: "ST8", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees8.mp3" },
     { title: "ST9", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuratrees9.mp3" },
-    { title: "ST10", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuratrees10.mp3" },
+    { title: "ST10", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees10.mp3" },
   ],
   sunsetCity: [
     { title: "SC1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity1.mp3" },
@@ -41,7 +41,7 @@ const playlists: Record<string, Song[]> = {
     { title: "SC7", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetcity7.mp3" },
     { title: "SC8", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity8.mp3" },
     { title: "SC9", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetcity9.mp3" },
-    { title: "SC10", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetcity10.mp3" },
+    { title: "SC10", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity10.mp3" },
   ],
   mykonosBlue: [
     { title: "MB1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue1.mp3" },
@@ -53,11 +53,16 @@ const playlists: Record<string, Song[]> = {
     { title: "MB7", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue7.mp3" },
     { title: "MB8", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosBlue8.mp3" },
     { title: "MB9", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue9.mp3" },
-    { title: "MB10", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosblue10.mp3" },
+    { title: "MB10", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/mykonosBlue10.mp3" },
   ],
 };
 
-const MusicPlayer = ({ theme }: { theme: string }) => {
+interface MusicPlayerProps {
+  theme: string;
+  autoPlay?: boolean;
+}
+
+const MusicPlayer = ({ theme, autoPlay = false }: MusicPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [volume, setVolume] = useState(0.4);
@@ -103,6 +108,12 @@ const MusicPlayer = ({ theme }: { theme: string }) => {
       }
     }
   }, [currentSongIndex, shuffledPlaylist, isPlaying]);
+
+  useEffect(() => {
+    if (autoPlay && !isPlaying && audioRef.current) {
+      togglePlayPause();
+    }
+  }, [autoPlay]);
 
   const togglePlayPause = () => {
     if (audioRef.current) {
