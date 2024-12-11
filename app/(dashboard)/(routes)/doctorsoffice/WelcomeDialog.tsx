@@ -20,13 +20,14 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({ isOpen, onOpenChange }) =
   return (
     <Dialog 
       open={isOpen} 
-      onOpenChange={onOpenChange}
+      onOpenChange={() => {}}
       modal={true}
     >
       <DialogContent 
-        className="max-w-[33vw] bg-[--theme-doctorsoffice-accent] border text-[--theme-text-color] border-[--theme-border-color]"
+        className="max-w-[33rem] bg-[--theme-doctorsoffice-accent] border text-[--theme-text-color] border-[--theme-border-color]"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle className="text-[--theme-text-color] text-center">{"Welcome to The Anki Clinic!"}</DialogTitle>
