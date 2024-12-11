@@ -193,46 +193,8 @@ const AnimatedSpriteWalking: React.FC<{
     />
   );
 };
-
-const TimerDisplay: React.FC<{ timer: number, showChallengeButton: boolean }> = ({ timer, showChallengeButton }) => {
-  const minutes = Math.floor(timer / 60);
-  const seconds = timer % 60;
-  const formatNumber = (num: number) => num.toString().padStart(2, '0');
-  const isLowTime = timer <= 30;
-  const showRedShift = isLowTime && !showChallengeButton;
-
-  return (
-    <div className="absolute top-4 left-4 z-50">
-      <div className={`
-        p-1 rounded-xl shadow-lg
-        ${showRedShift 
-          ? 'bg-gradient-to-r from-red-600 to-red-700 animate-pulse' 
-          : 'bg-gradient-to-r from-indigo-500 to-purple-600'
-        }
-      `}>
-        <div className={`
-          px-6 py-3 rounded-lg
-          ${showRedShift 
-            ? 'bg-black bg-opacity-75' 
-            : 'bg-black bg-opacity-75'
-          }
-        `}>
-          <span className={`
-            font-mono text-2xl font-bold
-            ${showRedShift 
-              ? 'text-red-500' 
-              : 'text-white'
-            }
-          `}>
-            {formatNumber(minutes)}min {formatNumber(seconds)}sec
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 interface OfficeContainerProps {
+  setCompleteAllRoom: React.Dispatch<React.SetStateAction<boolean>>;
   visibleImages: Set<string>;
   clinicName: string | null;
   userScore: number;
@@ -246,9 +208,6 @@ interface OfficeContainerProps {
   updateVisibleImages: (newVisibleImages: Set<string>) => void;
   activeRooms: Set<string>;
   setActiveRooms: React.Dispatch<React.SetStateAction<Set<string>>>;
-  timer: number;
-  setTimer: React.Dispatch<React.SetStateAction<number>>;
-  showChallengeButton: boolean;
   isFlashcardsOpen: boolean;
   setIsFlashcardsOpen: (open: boolean) => void;
 }
@@ -310,6 +269,7 @@ const RoomSprite: React.FC<{
 };
 
 const OfficeContainer: React.FC<OfficeContainerProps> = ({
+  setCompleteAllRoom,
   visibleImages,
   clinicName,
   userScore,
@@ -323,9 +283,6 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   updateVisibleImages,
   activeRooms,
   setActiveRooms,
-  timer,
-  setTimer,
-  showChallengeButton,
   isFlashcardsOpen,
   setIsFlashcardsOpen,
 }) => {
@@ -347,7 +304,6 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   ]);
 
   const [currentLevel, setCurrentLevel] = useState(1);
-  const lastProcessedTimer = useRef(0);
 
   // Define zoom levels for each test level
   const zoomLevels: Record<number, { scale: number, offsetX: number, offsetY: number }> = {
@@ -655,28 +611,21 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     updateVisibleImages(newVisibleImages);
   }, [currentLevel, updateVisibleImages]);
 
-  // Update the timer effect that adds rooms to activeRooms
-  useEffect(() => {
-    if (timer > 0 && timer % 1 === 0 && lastProcessedTimer.current !== timer && !showChallengeButton) {
-      lastProcessedTimer.current = timer;
+  const isInitialized = useRef(false);
 
-      // Filter out completed rooms from available rooms
+  // When the app starts, put all rooms in activeRooms
+  useEffect(() => {
+    if (!isInitialized.current) {
       const availableRooms = currentLevelConfig.rooms
-        .map(room => room.id)
-        .filter(roomId => !activeRooms.has(roomId));
+          .map(room => room.id)
+          .filter(roomId => !activeRooms.has(roomId));
 
       if (availableRooms.length > 0) {
-        const randomIndex = Math.floor(Math.random() * availableRooms.length);
-        const roomToActivate = availableRooms[randomIndex];
-
-        setActiveRooms(prev => {
-          const newSet = new Set(prev);
-          newSet.add(roomToActivate);
-          return newSet;
-        });
+        setActiveRooms(new Set(availableRooms));
+        isInitialized.current = true;
       }
     }
-  }, [timer, currentLevelConfig.rooms, setActiveRooms]);
+  }, []);
 
   // Update the offset based on the current test level
   const offset = useMemo(() => ({
@@ -688,7 +637,6 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
 
   return (
     <div className="flex flex-col w-full h-full relative overflow-hidden">
-      <TimerDisplay timer={timer} showChallengeButton={showChallengeButton} />
       {/* Pixi.js stage container */}
       <div className="absolute inset-0 z-20 flex justify-center items-center">
         <Stage

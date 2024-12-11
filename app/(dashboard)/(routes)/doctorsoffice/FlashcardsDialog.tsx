@@ -27,6 +27,7 @@ interface FlashcardsDialogProps {
   currentUserTestId: string | null;
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  handleCompleteAllRoom: () => void;
 }
 
 const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>(({
@@ -39,6 +40,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
   currentUserTestId,
   isLoading,
   setIsLoading,
+  handleCompleteAllRoom,
 }, ref) => {
   const [wrongCards, setWrongCards] = useState<WrongCard[]>([]);
   const [correctCount, setCorrectCount] = useState(0);
@@ -145,7 +147,12 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
 
   const handleClose = useCallback(() => {
     if (correctCount > 0) {
-      setActiveRooms(prev => new Set([...prev].filter(room => room !== roomId)));
+      const newActiveRooms = new Set([...activeRooms].filter(room => room !== roomId));
+      console.log('Updating active rooms');
+      if (newActiveRooms.size === 0) {
+        handleCompleteAllRoom();
+      }
+      setActiveRooms(newActiveRooms);
     }
     onOpenChange(false);
   }, [roomId, setActiveRooms, onOpenChange, correctCount]);
