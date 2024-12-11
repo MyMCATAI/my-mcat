@@ -110,11 +110,10 @@ export const weeklyReportTemplate = (data: WeeklyReportData): TemplateConfig => 
       <p style="color: #333333; line-height: 1.6;">
         Keep up the amazing work!<br>
         Kalypso 🐱<br>
-        MyMCAT AI Tutor
       </p>
 
       <p style="color: #666666; font-size: 0.75rem; margin-top: 1.875rem;">
-        Want to adjust your notification settings? <a href="${data.settingsUrl}" style="color: #2b6cb0; text-decoration: underline;">Click here</a>
+        Want to adjust your notification settings? <a href="https://mymcat.ai/preferences" style="color: #2b6cb0; text-decoration: underline;">Click here</a>
       </p>
     </div>
   `

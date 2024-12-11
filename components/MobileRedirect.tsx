@@ -31,10 +31,11 @@ export default function MobileRedirect() {
         pathname !== '/' && 
         pathname !== '/intro' && 
         pathname !== '/onboarding' &&
+        pathname !== '/preferences' &&
         !pathname?.startsWith('/sign-in') &&
         !pathname?.startsWith('/sign-up') &&
         !pathname?.startsWith('/blog')) {
-      router.replace('/redirect')  // Redirect to the /redirect page
+      router.replace('/redirect')
     }
   }, [pathname, router])
 
@@ -43,6 +44,7 @@ export default function MobileRedirect() {
       pathname !== '/' && 
       pathname !== '/intro' && 
       pathname !== '/onboarding' &&
+      pathname !== '/preferences' &&
       !pathname?.startsWith('/sign-in') &&
       !pathname?.startsWith('/sign-up') &&
       !pathname?.startsWith('/blog')) {

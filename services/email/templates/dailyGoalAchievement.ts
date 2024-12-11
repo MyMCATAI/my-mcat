@@ -11,11 +11,10 @@ export const dailyGoalAchievementTemplate = (data: any): TemplateConfig => ({
       <p>If you have any questions or need assistance, our team is here to help:</p>
       <ul style="list-style-type: none; padding-left: 0;">
         <li>Josh (josh@mymcat.ai) - For any technical support</li>
-        <li>Prynce (prynce@mymcat.ai) - For anythinf else</li>
+        <li>Prynce (prynce@mymcat.ai) - For anything else</li>
       </ul>
       <p>Feline good wishes,</p>
-      <p>Kalypso, Your MCAT Study Buddy 🐱<br>
-      and the entire Studyverse Medicine Team</p>
+      <p>Kalypso 🐱<br>
     </div>
   `
 });
