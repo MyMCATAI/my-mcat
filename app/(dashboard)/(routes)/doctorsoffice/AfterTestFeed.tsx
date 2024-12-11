@@ -11,6 +11,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { animated, useSpring } from 'react-spring';
 import ChatBot from "@/components/chatbot/ChatBotFlashcard";
 import { useUser } from "@clerk/nextjs";
+import { GraduationCap } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface LargeDialogProps {
   open: boolean;
@@ -413,10 +415,22 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
                 isCorrect: boolean;
                 explanation?: string;
               }, index: number) => (
-                <div key={index} className={`p-2 rounded ${option.isCorrect ? 'bg-green-100' : ''}`}>
-                  <p>{option.option}. {option.text}</p>
+                <div 
+                  key={index} 
+                  className={`
+                    p-3 rounded-lg mb-2
+                    border border-[--theme-border-color]
+                    ${option.isCorrect 
+                      ? 'bg-green-500 bg-opacity-20' 
+                      : 'bg-transparent'
+                    }
+                    hover:bg-[--theme-hover-color] hover:bg-opacity-10
+                    transition-all duration-200
+                  `}
+                >
+                  <p className="text-[--theme-text-color]">{option.option}. {option.text}</p>
                   {option.isCorrect && (
-                    <p className="text-sm text-green-700 mt-1">
+                    <p className="text-sm mt-1 text-[--theme-text-color]">
                       Correct. {option.explanation}
                     </p>
                   )}
@@ -479,7 +493,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   };
 
   const renderReviewSection = () => (
-    <ScrollArea className="h-[calc(90vh-6rem)]">
+    <ScrollArea className="h-[calc(90vh-6rem)] scrollbar-none">
       <div className="space-y-4 pr-4 pb-4">
         {wrongCards.map((card, index) => (
           <animated.div 
@@ -487,19 +501,20 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
             style={index === 0 ? springs : undefined}
             className={`
               p-4 border border-[--theme-border-color] rounded-md 
-              bg-[--theme-gradient-end] cursor-pointer 
+              bg-[--theme-flashcard-color] cursor-pointer 
               transition-all duration-300 hover:shadow-lg
-              h-[300px]
+              h-[27rem]
               ${card.isFlipped ? 'bg-opacity-90' : ''}
             `}
             onClick={() => handleCardFlip(index)}
           >
             <div className="h-full flex flex-col">
-              <div className="text-sm text-gray-500 mb-2">{card.timestamp}</div>
-              <div className="flex-1 overflow-y-auto">
+              <div className="text-sm text-[--theme-text-color] opacity-50 mb-2">{card.timestamp}</div>
+              
+              <div className="flex-1 overflow-y-auto scrollbar-none">
                 {!card.isFlipped ? (
-                  <div className={`${card.types !== 'normal' ? 'h-full flex flex-col items-center justify-center' : ''}`}>
-                    <div className={`font-semibold mb-2 ${card.types !== 'normal' ? 'text-center' : ''}`}>
+                  <div className={`${card.types !== 'normal' ? 'h-full flex items-center justify-center' : ''}`}>
+                    <div className={`font-semibold mb-2 text-[--theme-text-color] ${card.types !== 'normal' ? 'text-center' : ''}`}>
                       {card.question}
                     </div>
                     {card.types === 'normal' && (
@@ -507,7 +522,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
                         {card.questionOptions.map((option, optIndex) => (
                           <div 
                             key={optIndex}
-                            className="p-2 rounded-md bg-opacity-50 bg-gray-100 text-sm"
+                            className="p-2 rounded-md bg-[--theme-doctorsoffice-accent] bg-opacity-20 text-sm text-[--theme-text-color]"
                           >
                             {option}
                           </div>
@@ -516,14 +531,14 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
                     )}
                   </div>
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center">
-                    <div className="text-sm mb-1 text-green-600">Correct Answer:</div>
-                    <div className="text-green-600 font-medium text-center">{card.answer}</div>
+                  <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                    <div className="text-sm mb-1 text-[--theme-text-color] opacity-70">Correct Answer:</div>
+                    <div className="text-green-500 font-semibold">{card.answer}</div>
                   </div>
                 )}
               </div>
               
-              <div className="text-xs text-gray-400 mt-4 pt-2 border-t border-gray-200">
+              <div className="text-xs text-[--theme-text-color] opacity-40 mt-4 pt-2 border-t border-[--theme-border-color]">
                 {card.isFlipped ? 'Click to hide answer' : 'Click to show answer'}
               </div>
             </div>
@@ -650,123 +665,232 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     return review.replace(/\$NAME/g, userName);
   };
 
+  // Add new refs for audio elements
+  const levelUpSound = useRef<HTMLAudioElement | null>(null);
+  const fanfareSound = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize audio elements
+  useEffect(() => {
+    levelUpSound.current = new Audio('/levelup.mp3');
+    fanfareSound.current = new Audio('/fanfare.mp3');
+  }, []);
+
+  // Play sound effects when dialog opens based on score
+  useEffect(() => {
+    if (open) {
+      const mcqResponses = userResponses.filter(r => r.question.types === 'normal');
+      const mcqCorrect = mcqResponses.filter(r => r.isCorrect).length;
+      const mcqTotal = mcqResponses.length;
+      const mcqPercentage = mcqTotal > 0 ? Math.round((mcqCorrect / mcqTotal) * 100) : 0;
+
+      if (mcqPercentage === 100) {
+        fanfareSound.current?.play();
+      } else if (mcqPercentage >= 80 && mcqPercentage < 100) {
+        levelUpSound.current?.play();
+      }
+    }
+  }, [open, userResponses]);
+
   const renderInitialScore = () => {
-    const starCount = getStarCount(score);
-    const percentage = Math.round((correctCount / (correctCount + wrongCount)) * 100);
+    const mcqResponses = userResponses.filter(r => r.question.types === 'normal');
+    const mcqCorrect = mcqResponses.filter(r => r.isCorrect).length;
+    const mcqTotal = mcqResponses.length;
+    const mcqPercentage = mcqTotal > 0 ? Math.round((mcqCorrect / mcqTotal) * 100) : 0;
     
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="text-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex flex-col gap-6 p-5 max-w-5xl mx-auto"
       >
-        {review && (
+        {/* Updated header section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="flex items-center justify-center gap-2"
+        >
+          <h1 className="text-2xl md:text-3xl font-bold text-[--theme-text-color] text-center mb-2">
+            {mcqPercentage >= 80 ? (
+              "Today was so good we won a coin!"
+            ) : (
+              "It was just another day in clinic..."
+            )}
+          </h1>
+          {mcqPercentage >= 80 && (
+            <img 
+              src="/game-components/PixelCupcake.png" 
+              alt="Coin" 
+              className="w-8 h-8 mb-2 object-contain"
+            />
+          )}
+        </motion.div>
+
+        {/* Top Section - Score and Review */}
+        <div className="flex gap-6">
+          {/* Left - Review Card */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-[--theme-flashcard-color] p-6 rounded-xl shadow-lg border border-[--theme-border-color] max-w-2xl mx-auto mb-8"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex-1 bg-[--theme-flashcard-color] p-6 rounded-2xl shadow-lg flex items-center"
           >
-            <div className="flex items-start gap-6">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-[--theme-hover-color] flex items-center justify-center">
-                    <span className="text-lg font-bold text-[--theme-text-color]">K</span>
-                  </div>
-                  <div className="text-left">
-                    <div className="font-semibold text-[--theme-text-color]">Kalypso</div>
-                    <div className="text-sm opacity-70 text-[--theme-text-color]">AI Medical Assistant</div>
+            {review && (
+              <div className="flex flex-col gap-4 w-full">
+                {/* Review content */}
+                <div className="flex gap-4 items-center">
+                  <img 
+                    src={review.profilePicture}
+                    alt="Reviewer" 
+                    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                  />
+                  <div className="flex-1">
+                    <p className="text-[--theme-text-color] leading-relaxed text-base italic text-left">
+                      {replaceNameInReview(review.review)}
+                    </p>
                   </div>
                 </div>
-                <p className="text-lg text-[--theme-text-color] leading-relaxed text-left">
-                  {replaceNameInReview(review.review)}
-                </p>
+
+                {/* Stars centered at bottom */}
+                <div className="flex justify-center mt-2">
+                  {[...Array(5)].map((_, i) => (
+                    <AnimatedStar
+                      key={i}
+                      progress={i < review.rating ? 1 : 0}
+                      uniqueId={`review-star-${i}`}
+                    />
+                  ))}
+                </div>
               </div>
-              <div className="flex-shrink-0">
-                <img 
-                  src={review.profilePicture}
-                  alt="Profile Picture" 
-                  className="w-20 h-20 rounded-lg object-cover"
-                />
+            )}
+          </motion.div>
+
+          {/* Right - Score Card */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="w-72 bg-[--theme-flashcard-color] p-6 rounded-2xl shadow-lg"
+          >
+            <h3 className="text-sm mb-4 text-center opacity-60 uppercase tracking-wide text-[--theme-text-color]">
+              Test Results
+            </h3>
+            <div className="flex flex-col items-center gap-4">
+              <div className="text-6xl font-bold text-[--theme-hover-color]">
+                {mcqPercentage}%
+              </div>
+              <div className="w-full grid grid-cols-1 gap-4 mt-2">
+                {/* MCQ Results */}
+                <div className="text-center p-3 rounded-lg bg-[--theme-doctorsoffice-accent] bg-opacity-20">
+                  <div className="text-sm text-[--theme-text-color] opacity-70">MCQ Results</div>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div>
+                      <div className="text-xs text-[--theme-text-color] opacity-70">Correct</div>
+                      <div className="text-lg font-semibold text-[--theme-text-color]">
+                        {mcqCorrect}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-[--theme-text-color] opacity-70">Incorrect</div>
+                      <div className="text-lg font-semibold text-[--theme-text-color]">
+                        {mcqTotal - mcqCorrect}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
-        )}
+        </div>
+
+        {/* Bottom Section - Performance Categories */}
+        <div className="grid grid-cols-2 gap-6">
+          {/* Needs Review */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-[--theme-flashcard-color] p-6 rounded-2xl shadow-lg"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-[--theme-text-color] flex items-center gap-2">
+                <span>Needs Review</span>
+                <span className="text-sm px-2 py-0.5 rounded-full bg-[--theme-doctorsoffice-accent] bg-opacity-20">
+                  {wrongCount}
+                </span>
+              </h3>
+              <div className="relative group">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={handleNavigateToTutoring}
+                  className="opacity-80 hover:opacity-100 transition-all duration-200 h-8 w-8"
+                >
+                  <GraduationCap className="h-4 w-4 text-[--theme-text-color] hover:text-[--theme-hover-color]" />
+                </Button>
+                <span className="absolute -bottom-8 right-0 bg-black/75 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                  Review weaknesses
+                </span>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {Object.entries(mostMissed).slice(0, 4).map(([concept, [_, incorrect, total]], index) => (
+                <div key={concept} 
+                  className="flex justify-between items-center p-3 rounded-lg bg-[--theme-doctorsoffice-accent] bg-opacity-10 hover:bg-opacity-20 transition-all"
+                >
+                  <span className="text-[--theme-text-color]">{concept}</span>
+                  <span className="font-medium text-[--theme-text-color]">{incorrect}/{total}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Proficient */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-[--theme-flashcard-color] p-6 rounded-2xl shadow-lg"
+          >
+            <h3 className="text-xl font-bold mb-4 text-[--theme-hover-color] flex items-center gap-2">
+              <span>Proficient</span>
+              <span className="text-sm px-2 py-0.5 rounded-full bg-[--theme-hover-color] bg-opacity-20 text-[--theme-hover-text]">
+                {correctCount}
+              </span>
+            </h3>
+            <div className="space-y-3">
+              {Object.entries(mostCorrect).slice(0, 4).map(([concept, [correct, _, total]], index) => (
+                <div key={concept} 
+                  className="flex justify-between items-center p-3 rounded-lg bg-[--theme-hover-color] bg-opacity-10 hover:bg-opacity-20 transition-all"
+                >
+                  <span className="text-[--theme-text-color]">{concept}</span>
+                  <span className="font-medium text-[--theme-hover-color]">{correct}/{total}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Continue Button */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mb-6"
+          transition={{ delay: 0.6 }}
+          className="flex justify-center mt-4"
         >
-          <div className="flex justify-center mb-4">
-            {[...Array(5)].map((_, i) => (
-              <AnimatedStar
-                key={i}
-                progress={i < starCount ? 1 : 0}
-                uniqueId={`score-star-${i}`}
-              />
-            ))}
-          </div>
-          <div className="text-4xl font-bold text-[--theme-text-color] mb-2">
-            {percentage}%
-          </div>
-          <div className="text-lg text-[--theme-text-color] opacity-80">
-            {correctCount} correct · {wrongCount} incorrect
-          </div>
+          <Button
+            onClick={handleGoToReviewFeed}
+            className="bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-opacity-90 transition-all duration-300 px-8 py-3 text-lg rounded-xl shadow-lg border border-[--theme-border-color]"
+            disabled={!isDataLoaded}
+          >
+            <div className="flex items-center gap-2">
+              {!isDataLoaded ? 'Loading...' : 'Continue to Review'}
+            </div>
+          </Button>
         </motion.div>
       </motion.div>
     );
   };
-
-  const renderStats = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="grid grid-cols-2 gap-8 mt-8"
-    >
-      {/* Needs Review Card */}
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.2 }}
-        className="bg-[--theme-flashcard-color] p-6 rounded-xl shadow-lg border border-[--theme-border-color]"
-      >
-        <h3 className="text-xl font-bold mb-4 text-[--theme-text-color]">
-          Needs Review ({wrongCount})
-        </h3>
-        <ul className="space-y-2">
-          {Object.entries(mostMissed).slice(0, 4).map(([concept, [_, incorrect, total]], index) => (
-            <li key={concept} className="flex justify-between text-[--theme-text-color]">
-              <span>{concept}</span>
-              <span className="text-[--theme-text-color]">{incorrect}/{total}</span>
-            </li>
-          ))}
-        </ul>
-      </motion.div>
-
-      {/* Mastered Card */}
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.4 }}
-        className="bg-[--theme-flashcard-color] p-6 rounded-xl shadow-lg border border-[--theme-border-color]"
-      >
-        <h3 className="text-xl font-bold mb-4 text-[--theme-hover-color]">
-          Proficient ({correctCount})
-        </h3>
-        <ul className="space-y-2">
-          {Object.entries(mostCorrect).slice(0, 4).map(([concept, [correct, _, total]], index) => (
-            <li key={concept} className="flex justify-between text-[--theme-text-color]">
-              <span>{concept}</span>
-              <span className="text-[--theme-hover-color]">{correct}/{total}</span>
-            </li>
-          ))}
-        </ul>
-      </motion.div>
-    </motion.div>
-  );
 
   // Replace feedItems with a chat-like interface
   const renderChatInterface = () => (
@@ -794,52 +918,63 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     });
   }, [wrongCards]);
 
+  const router = useRouter();
+
+  const handleNavigateToTutoring = () => {
+    router.push('/home?tab=AdaptiveTutoringSuite');
+  };
 
   if(userResponses.length === 0) {
     return null;
   }
   return (
     <Dialog open={open} onOpenChange={handleExit}>
-      <DialogContent className="bg-[--theme-mainbox-color] text-center p-8 max-w-[95vw] w-[75rem] h-[90vh] border border-[--theme-border-color] shadow-lg">
-        {!showReviewFeed ? (
-          <div className="h-full flex flex-col justify-center space-y-8">
-            {renderInitialScore()}
-            {showStats && renderStats()}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
+      <DialogContent className="bg-[--theme-mainbox-color] text-center p-4 max-w-[95vw] w-[65rem] h-[85vh] shadow-lg border border-transparent">
+        {showReviewFeed ? (
+          <div className="flex-1 flex gap-4 overflow-hidden relative">
+            {/* Back Button - Subtle circular design */}
+            <button
+              onClick={() => setShowReviewFeed(false)}
+              className="absolute top-4 left-4 z-50 w-8 h-8 rounded-full 
+                bg-[--theme-leaguecard-color] text-[--theme-text-color]
+                flex items-center justify-center
+                transition-all duration-300
+                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
             >
-              <Button
-                onClick={handleGoToReviewFeed}
-                className="mt-8 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] hover:bg-[--theme-hover-color] transition-colors duration-300"
-                disabled={!isDataLoaded}
+              <svg 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
               >
-                {!isDataLoaded ? 'Loading...' : 'Continue to Review'}
-              </Button>
-            </motion.div>
-          </div>
-        ) : (
-          <div className="flex-1 flex gap-4 overflow-hidden">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+            </button>
+
             {/* Left Side - Review Section */}
-            <div className="w-[35%] h-full border-r border-[--theme-border-color] pl-4">
+            <div className="w-[35%] h-full pr-4">
               {renderReviewSection()}
             </div>
 
             {/* Right Side - Chat Interface */}
             <div className="w-[65%] h-full flex flex-col">
-              <h2 className="text-2xl text-[--theme-text-color] font-bold mb-4">Interactive Review</h2>
-              <div className="flex-1 min-h-0 flex flex-col">
-                <div className="flex-1 min-h-0">
-                  <ChatBot
-                    width="100%"
-                    height="100%"
-                    backgroundColor="var(--theme-mainbox-color)"
-                    chatbotContext={chatbotContext}
-                  />
-                </div>
+              <div className="flex-1 min-h-0">
+                <ChatBot
+                  width="100%"
+                  height="100%"
+                  backgroundColor="var(--theme-mainbox-color)"
+                  chatbotContext={chatbotContext}
+                />
               </div>
             </div>
+          </div>
+        ) : (
+          <div className="h-full flex flex-col justify-center">
+            {renderInitialScore()}
           </div>
         )}
         {children}

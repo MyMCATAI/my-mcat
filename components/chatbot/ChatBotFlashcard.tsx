@@ -138,7 +138,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
   const flow = {
     start: {
-      message: "Meow there! I'm Kalypso. Let's discuss science!",
+      message: "Meow! I'm Kalypso. For videos and readings on your weaknesses, press the back button in the top left and click the hat in Needs Review. Otherwise, ask me anything!",
       path: "loop",
     },
     loop: {
@@ -208,7 +208,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
     chatWindowStyle: {
       display: "flex",
       flexDirection: "column" as const,
-      height: "calc(100vh - 12rem)",
+      height: "calc(100vh - 14rem)",
       width: "100%",
       backgroundColor: backgroundColor,
       position: "relative",
