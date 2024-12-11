@@ -43,12 +43,17 @@ const DoctorsOfficePage: React.FC = () => {
   // Add this useEffect
 
   // Game functionality
-  const [showChallengeButton, setShowChallengeButton] = useState(true);
   const [activeRooms, setActiveRooms] = useState<Set<string>>(() => new Set());
-  const [timer, setTimer] = useState<number>(60);
+  const [completeAllRoom, setCompleteAllRoom] = useState(false);
   const [currentUserTestId, setCurrentUserTestId] = useState<string | null>(
     null
   );
+
+  // Check for completion
+  // Initialization of activeRooms is done in OfficeContainer.tsx since currentLevelConfig is not available here
+  const handleCompleteAllRoom = () => {
+    setCompleteAllRoom(true);
+  };
 
   // User Responses
   const [userResponses, setUserResponses] = useState<UserResponse[]>([]);
@@ -84,60 +89,50 @@ const DoctorsOfficePage: React.FC = () => {
     }
   }, []);
 
-  // Add this effect after your other useEffects
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (!showChallengeButton && timer >= 0 && !isLoading) {
-      interval = setInterval(() => {
-        setTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            // Fetch user responses
-            if (currentUserTestId) {
-              fetchUserResponses(currentUserTestId);
-            }
-
-            // Dummy scoring logic
-            const correctQuestionWeight = 1;
-            const incorrectQuestionWeight = -0.5;
-            const testScore =
-              correctCount * correctQuestionWeight +
-              wrongCount * incorrectQuestionWeight;
-            setTestScore(testScore);
-
-            // Update the UserTest with score when timer ends
-            if (currentUserTestId) {
-              fetch(`/api/user-test/${currentUserTestId}`, {
-                method: "PUT",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  score: testScore, // Scoring logic to be added here
-                  finishedAt: new Date().toISOString(),
-                }),
-              }).catch(console.error);
-            }
-            if (!isFlashcardsOpen && !largeDialogQuit) {
-              setIsAfterTestDialogOpen(true);
-            }
-            setActiveRooms(new Set());
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
+    const initTest = async () => {
+      const userTestId = await createNewUserTest();
+      if (userTestId) {
+        setCurrentUserTestId(userTestId);
       }
     };
+    
+    initTest();
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && completeAllRoom) {
+      console.log('Finish all rooms')
+      // Fetch user responses
+      if (currentUserTestId) {
+        fetchUserResponses(currentUserTestId);
+
+        // Dummy scoring logic
+        const correctQuestionWeight = 1;
+        const incorrectQuestionWeight = -0.5;
+        const testScore =
+          correctCount * correctQuestionWeight +
+          wrongCount * incorrectQuestionWeight;
+        setTestScore(testScore);
+
+        // Update the UserTest with score
+        fetch(`/api/user-test/${currentUserTestId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            score: testScore,
+            finishedAt: new Date().toISOString(),
+          }),
+        }).catch(console.error);
+
+        if (!isFlashcardsOpen && !largeDialogQuit) {
+          setIsAfterTestDialogOpen(true);
+        }
+      }
+    }
   }, [
-    showChallengeButton,
-    timer,
     currentUserTestId,
     activeRooms.size,
     isFlashcardsOpen,
@@ -147,7 +142,8 @@ const DoctorsOfficePage: React.FC = () => {
     testScore,
     isLoading,
     largeDialogQuit,
-  ]); // Organized dependency array
+    completeAllRoom
+  ]);
 
   const createNewUserTest = async () => {
     try {
@@ -172,12 +168,6 @@ const DoctorsOfficePage: React.FC = () => {
     }
   };
 
-  const handleStartChallenge = async () => {
-    const userTestId = await createNewUserTest();
-    if (userTestId) {
-      setShowChallengeButton(false);
-    }
-  };
   // Marketplace Dialog
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const marketplaceDialogRef = useRef<{ open: () => void } | null>(null);
@@ -370,14 +360,6 @@ const DoctorsOfficePage: React.FC = () => {
     }
   }, []);
 
-  // Restart Challenge
-  useEffect(() => {
-    if (!isAfterTestDialogOpen && !showChallengeButton) {
-      setShowChallengeButton(true);
-      setTimer(60); // Reset timer to default value
-    }
-  }, [isAfterTestDialogOpen]);
-
   const performDailyCalculations = async () => {
     if (isCalculating) return;
     setIsCalculating(true);
@@ -568,18 +550,8 @@ const DoctorsOfficePage: React.FC = () => {
           />
         </div>
         <div className="w-3/4 font-krungthep relative rounded-r-lg">
-          {showChallengeButton && (
-            <div className="absolute inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-              <div className="transform scale-150">
-                <StartChallengeComponent
-                  onClick={handleStartChallenge}
-                  timer={timer} // Make sure these match
-                  setTimer={setTimer} // the interface exactly
-                />
-              </div>
-            </div>
-          )}
           <OfficeContainer
+            setCompleteAllRoom={setCompleteAllRoom}
             visibleImages={visibleImages}
             clinicName={clinicName}
             userScore={userScore}
@@ -593,9 +565,6 @@ const DoctorsOfficePage: React.FC = () => {
             updateVisibleImages={updateVisibleImages} // Add this line
             activeRooms={activeRooms}
             setActiveRooms={setActiveRooms}
-            timer={timer}
-            setTimer={setTimer}
-            showChallengeButton={showChallengeButton}
             isFlashcardsOpen={isFlashcardsOpen}
             setIsFlashcardsOpen={setIsFlashcardsOpen}
           />
@@ -667,6 +636,7 @@ const DoctorsOfficePage: React.FC = () => {
                   roomId={flashcardRoomId}
                   activeRooms={activeRooms}
                   setActiveRooms={setActiveRooms}
+                  handleCompleteAllRoom={handleCompleteAllRoom}
                   buttonContent={
                     <a
                       href="#"
