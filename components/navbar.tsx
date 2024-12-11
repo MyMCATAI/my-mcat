@@ -13,6 +13,7 @@ import axios from "axios";
 import { FaLinkedin, FaInstagram } from 'react-icons/fa';
 import MusicPlayer from "@/components/musicplayer";
 import { useTheme } from '@/contexts/ThemeContext';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 // Define the Song type
 type Song = {
@@ -48,6 +49,7 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
   const proModal = useProModal();
   // const [isLoading, setIsLoading] = useState(false);
   const { theme } = useTheme(); // Use the theme from context
+  const { isAutoPlay } = useMusicPlayer();
 
   // Hiding navbar on test questions page
   if (pathname?.includes('/test/testquestions')) {
@@ -65,7 +67,7 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
           </div>
         </Link>
         <div className="w-48">
-          <MusicPlayer theme={theme} />
+          <MusicPlayer theme={theme} autoPlay={isAutoPlay} />
         </div>
       </div>
       <div className="flex items-center h-full">

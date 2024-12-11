@@ -76,49 +76,49 @@ const spriteWaypoints: Record<number, Waypoint[]> = {
     { x: 10, y: 9, direction: 'SW' }, // Move down
   ],
   1: [
-    { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
+    { x: 8, y: 9, direction: 'NW' },  // Start at waiting room
     { x: 5, y: 9, direction: 'NW' },  // Move NW to bottom left
     { x: 5, y: 8, direction: 'NE' },  // Move SE back to waiting room
-    { x: 9, y: 8, direction: 'SE' },  // Move SE back to waiting room
+    { x: 8, y: 8, direction: 'SE' },  // Move SE back to waiting room
 
   ],
   2: [
-    { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
+    { x: 8, y: 9, direction: 'NW' },  // Start at waiting room
     { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
     { x: 4, y: 3, direction: 'NE' },  // Move NE to top left
     { x: 4, y: 3, direction: 'NW' },  // Move NW to top left
     { x: 4, y: 9, direction: 'SW' },  // Move SW to bottom left
-    { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
+    { x: 8, y: 9, direction: 'SE' },  // Move SE back to waiting room
   ],
   3: [
-    { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
+    { x: 8, y: 9, direction: 'NW' },  // Start at waiting room
     { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
     { x: 4, y: 4, direction: 'NE' },  // Move NE to middle left
     { x: 2.5, y: 4, direction: 'NW' },  // Move SE back to waiting room
     { x: 2.5, y: 6.5, direction: 'SW' },  // Move NE to middle left
     { x: 5, y: 9, direction: 'S' },  // Move SE back to waiting room
-    { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
+    { x: 8, y: 9, direction: 'SE' },  // Move SE back to waiting room
   ],
   4: [
-    { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
+    { x: 8, y: 9, direction: 'NW' },  // Start at waiting room
     { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
     { x: 4, y: 3, direction: 'NE' },  // Move NE to middle left
     { x: 2.5, y: 1.3, direction: 'N' },  // Move SE back to waiting room
     { x: 2.5, y: 7, direction: 'SW' },  // Move NE to middle left
     { x: 4.5, y: 9, direction: 'S' },  // Move SE back to waiting room
-    { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
+    { x: 8, y: 9, direction: 'SE' },  // Move SE back to waiting room
   ],
   5: [
-    { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
+    { x: 8, y: 9, direction: 'NW' },  // Start at waiting room
     { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
     { x: 3, y: 1.5, direction: 'NE' },  // Move NE to top left
     { x: 8, y: 1.5, direction: 'SE' },  // Move SE to top right
     { x: 3, y: 1.5, direction: 'NW' },  // Move NE to top left
     { x: 4, y: 9, direction: 'SW' },  // Move SE back to waiting room
-    { x: 9, y: 9, direction: 'SE' },  // Move SE back to waiting room
+    { x: 8, y: 9, direction: 'SE' },  // Move SE back to waiting room
   ],
   6: [
-    { x: 9, y: 9, direction: 'NW' },  // Start at waiting room
+    { x: 8, y: 9, direction: 'NW' },  // Start at waiting room
     { x: 4, y: 9, direction: 'NW' },  // Move NW to bottom left
     { x: 3, y: 2, direction: 'NE' },  // Move NE to top left
     { x: 10, y: 2, direction: 'SE' },  // Move SE to top right
@@ -194,6 +194,7 @@ const AnimatedSpriteWalking: React.FC<{
   );
 };
 interface OfficeContainerProps {
+  onNewGame: (fn: () => void) => void;
   setCompleteAllRoom: React.Dispatch<React.SetStateAction<boolean>>;
   visibleImages: Set<string>;
   clinicName: string | null;
@@ -269,6 +270,7 @@ const RoomSprite: React.FC<{
 };
 
 const OfficeContainer: React.FC<OfficeContainerProps> = ({
+  onNewGame,
   setCompleteAllRoom,
   visibleImages,
   clinicName,
@@ -613,19 +615,31 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
 
   const isInitialized = useRef(false);
 
-  // When the app starts, put all rooms in activeRooms
-  useEffect(() => {
-    if (!isInitialized.current) {
-      const availableRooms = currentLevelConfig.rooms
-          .map(room => room.id)
-          .filter(roomId => !activeRooms.has(roomId));
+  // // When the app starts, put all rooms in activeRooms
+  // useEffect(() => {
+  //   if (!isInitialized.current) {
+  //     const availableRooms = currentLevelConfig.rooms
+  //         .map(room => room.id)
+  //         .filter(roomId => !activeRooms.has(roomId));
 
-      if (availableRooms.length > 0) {
-        setActiveRooms(new Set(availableRooms));
-        isInitialized.current = true;
-      }
-    }
-  }, []);
+  //     if (availableRooms.length > 0) {
+  //       setActiveRooms(new Set(availableRooms));
+  //       isInitialized.current = true;
+  //     }
+  //   }
+  // }, []);
+
+  const populateRooms = useCallback(() => {
+    console.log("populateRooms");
+    // Get rooms directly from levelConfigurations
+    const rooms = levelConfigurations[currentLevel].rooms;
+    setActiveRooms(new Set(rooms.map(room => room.id)));
+  }, [currentLevel]); // Only depend on currentLevel
+
+  // Pass the stable function reference to parent
+  useEffect(() => {
+    onNewGame(populateRooms);
+  }, [onNewGame, populateRooms]); // Remove populateRooms from dependencies
 
   // Update the offset based on the current test level
   const offset = useMemo(() => ({
