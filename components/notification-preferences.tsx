@@ -1,13 +1,6 @@
-import { useState } from 'react'
-import { Check, User } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
 import { toast } from 'react-hot-toast'
 
 type NotificationPreference = 'all' | 'important' | 'none'
@@ -21,16 +14,37 @@ export function NotificationPreferences({
   initialPreference = 'all',
   className 
 }: NotificationPreferencesProps) {
-  const [preference, setPreference] = useState<NotificationPreference>(initialPreference)
-  const [isLoading, setIsLoading] = useState(false)
+  const [preference, setPreference] = useState<NotificationPreference | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchPreference = async () => {
+      try {
+        const response = await fetch('/api/user-info')
+        if (!response.ok) {
+          throw new Error('Failed to fetch user preferences')
+        }
+        const data = await response.json()
+        setPreference(data.notificationPreference || initialPreference)
+      } catch (error) {
+        console.error('Error fetching notification preferences:', error)
+        setPreference(initialPreference)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchPreference()
+  }, [initialPreference])
 
   const preferences: { value: NotificationPreference; label: string }[] = [
     { value: 'all', label: 'All Emails' },
-    { value: 'important', label: 'Important Only' },
-    { value: 'none', label: 'No Emails' },
+    { value: 'important', label: 'Important Emails' },
+    { value: 'none', label: 'Not Committed to Medicine' },
   ]
 
   const updatePreference = async (newPreference:  NotificationPreference) => {
+    if (isLoading || preference === newPreference) return
     setIsLoading(true)
     try {
       const response = await fetch('/api/user-info', {
@@ -54,38 +68,25 @@ export function NotificationPreferences({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="icon"
+    <div className={cn("w-full space-y-2", className)}>
+      {preferences.map((pref) => (
+        <div
+          key={pref.value}
+          onClick={() => !isLoading && updatePreference(pref.value)}
           className={cn(
-            "w-10 h-10 rounded-full bg-[--theme-leaguecard-color] border-2 border-[--theme-border-color] hover:bg-[--theme-hover-color]",
-            isLoading && "opacity-50 cursor-not-allowed",
-            className
+            "flex items-center justify-between p-4 rounded-lg cursor-pointer transition-all",
+            "border-2 border-[#5F7E92]",
+            "hover:bg-[#1A334D] hover:text-white",
+            preference === pref.value && "bg-[#1A334D] text-white",
+            (isLoading || !preference) && "opacity-50 cursor-not-allowed"
           )}
-          disabled={isLoading}
         >
-          <User className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        {preferences.map((pref) => (
-          <DropdownMenuItem
-            key={pref.value}
-            className={cn(
-              "flex items-center justify-between cursor-pointer",
-              preference === pref.value && "bg-[--theme-hover-color] text-[--theme-hover-text]"
-            )}
-            onClick={() => updatePreference(pref.value)}
-          >
-            {pref.label}
-            {preference === pref.value && (
-              <Check className="h-4 w-4 ml-2" />
-            )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <span>{pref.label}</span>
+          {preference === pref.value && (
+            <Check className="h-5 w-5 ml-2" />
+          )}
+        </div>
+      ))}
+    </div>
   )
 } 

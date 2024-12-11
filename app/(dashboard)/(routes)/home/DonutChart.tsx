@@ -21,6 +21,7 @@ interface DonutChartProps {
 const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
   const { user } = useClerk();
   const [hoveredSegment, setHoveredSegment] = React.useState<number | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [targetScore, setTargetScore] = React.useState(() => {
     return user?.unsafeMetadata?.targetScore?.toString() || "520";
   });
@@ -31,37 +32,54 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
   const [daysUntilExam, setDaysUntilExam] = React.useState<number | null>(null);
 
   useEffect(() => {
-    // Fetch performance metrics for all subjects
     const fetchPerformanceMetrics = async () => {
+      setIsLoading(true);
       try {
-        const subjects = ["CARs", "Psych/Soc", "Chem/Phys", "Bio/Biochem"];
+        const subjectMappings = {
+          "CARs": ["CARs"],
+          "Psych/Soc": ["Psychology", "Sociology"],
+          "Chem/Phys": ["Chemistry", "Physics"],
+          "Bio/Biochem": ["Biology", "Biochemistry"]
+        };
+
         const metrics: { [subject: string]: PerformanceMetrics } = {};
 
-        for (const subject of subjects) {
-          const subjectQuery = encodeURIComponent(subject);
-          const response = await fetch(
-            `/api/user-statistics?subjects=${subjectQuery}`
-          );
-          if (response.ok) {
-            const data = await response.json();
+        for (const [displayName, apiSubjects] of Object.entries(subjectMappings)) {
+          let totalQuestions = 0;
+          let totalCorrect = 0;
+          let totalTime = 0;
 
-            const totalQuestions = data.overallStats.totalQuestions;
-            const accuracy = data.overallStats.accuracy; // Already in percentage
-            const averageTime = data.overallStats.averageTime;
+          for (const subject of apiSubjects) {
+            const subjectQuery = encodeURIComponent(subject);
+            const response = await fetch(`/api/user-statistics?subjects=${subjectQuery}`);
+            
+            if (response.ok) {
+              const data = await response.json();
+              const subjectStats = data.subjectStats[subject];
+              
+              if (subjectStats) {
+                totalQuestions += subjectStats.totalQuestions;
+                totalCorrect += subjectStats.correctAnswers;
+                totalTime += subjectStats.averageTime * subjectStats.totalQuestions;
+              }
+            }
+          }
 
-            metrics[subject] = {
+          // Calculate combined metrics
+          if (totalQuestions > 0) {
+            metrics[displayName] = {
               questionsAnswered: totalQuestions,
-              accuracy: accuracy,
-              averageTime: averageTime,
+              accuracy: (totalCorrect / totalQuestions) * 100,
+              averageTime: totalTime / totalQuestions
             };
-          } else {
-            console.error(`Failed to fetch data for ${subject}`);
           }
         }
 
         setPerformanceMetrics(metrics);
       } catch (error) {
         console.error("Error fetching performance metrics:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -151,7 +169,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
     return labels.map((label) => {
       const metrics = performanceMetrics[label];
       if (metrics && metrics.questionsAnswered > 0) {
-        const gradeResult = calculateGrade(metrics, []); // Empty historical scores for now
+        const gradeResult = calculateGrade(metrics, [], label);
         return {
           grade: gradeResult.grade,
           color: getColorForLabel(label),
@@ -287,24 +305,30 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
       <div className="absolute text-center">
         {hoveredSegment !== null ? (
           <div className="transition-all duration-300 ease-in-out flex flex-col items-center">
-            <span
-              className="text-[12vh] font-bold leading-none"
-              style={{ color: getGradeInfo(hoveredSegment)?.color }}
-            >
-              {getGradeInfo(hoveredSegment)?.grade}
-            </span>
-            <div className="flex items-center">
-              <TrendIcon
-                trend={getGradeInfo(hoveredSegment)?.trend || "flat"}
-                color={getGradeInfo(hoveredSegment)?.color || "#000"}
-              />
-            </div>
-            <span
-              className="text-[3vh] font-semibold"
-              style={{ color: getGradeInfo(hoveredSegment)?.color }}
-            >
-              {data.labels[hoveredSegment]}
-            </span>
+            {isLoading ? (
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[--theme-hover-color]" />
+            ) : (
+              <>
+                <span
+                  className="text-[12vh] font-bold leading-none"
+                  style={{ color: getGradeInfo(hoveredSegment)?.color }}
+                >
+                  {getGradeInfo(hoveredSegment)?.grade || 'N/A'}
+                </span>
+                <div className="flex items-center">
+                  <TrendIcon
+                    trend={getGradeInfo(hoveredSegment)?.trend || "flat"}
+                    color={getGradeInfo(hoveredSegment)?.color || "#000"}
+                  />
+                </div>
+                <span
+                  className="text-[3vh] font-semibold"
+                  style={{ color: getGradeInfo(hoveredSegment)?.color }}
+                >
+                  {data.labels[hoveredSegment]}
+                </span>
+              </>
+            )}
           </div>
         ) : (
           <>
