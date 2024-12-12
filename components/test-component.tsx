@@ -135,7 +135,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
         console.error("Error fetching user score:", error);
       }
     };
-    
+
     fetchUserScore();
   }, []);
 
@@ -466,6 +466,9 @@ const TestComponent: React.FC<TestComponentProps> = ({
     setTechnique(technique);
 
     try {
+      // Check if test qualifies for a coin (perfect score within 10 minutes)
+      const earnedCoin = score === 100 && totalTimeInSeconds <= 600;
+
       // Update the user test record
       const response = await fetch(`/api/user-test/${userTest.id}`, {
         method: "PUT",
@@ -474,6 +477,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
           score,
           finishedAt: testFinishTime.toISOString(),
           totalTime: totalTimeInSeconds,
+          earnedCoin,
         }),
       });
 
@@ -481,29 +485,30 @@ const TestComponent: React.FC<TestComponentProps> = ({
         throw new Error("Failed to update test");
       }
 
-      // Calculate cupcakes earned (perfect score within 10 minutes = +1)
-      let cupcakesEarned = 0;
-      if (score === 100 && totalTimeInSeconds <= 600) {
-        cupcakesEarned = 1;
-      }
+      const updatedTest = await response.json();
 
-      const scoreChange = cupcakesEarned
+      // Award coin if earned
+      if (earnedCoin) {
+        const scoreResponse = await fetch("/api/user-info/", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: 1 }),
+        });
 
-      // Update user's score
-      const scoreResponse = await fetch("/api/user-info/", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: scoreChange }),
-      });
+        if (!scoreResponse.ok) {
+          throw new Error("Failed to update user score");
+        }
 
-      if (!scoreResponse.ok) {
-        throw new Error("Failed to update user score");
+        toast.success(
+          `Perfect score! You earned a coin for completing ${updatedTest.test.title} perfectly within 10 minutes!`
+        );
       }
 
       setShowScorePopup(true);
       onTestComplete && onTestComplete(score);
     } catch (err) {
       console.error("Error finishing test:", err);
+      toast.error("Failed to complete test");
     } finally {
       setIsSubmitting(false);
     }

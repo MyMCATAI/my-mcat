@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 import Image from "next/image";
@@ -9,6 +9,8 @@ import { useUser } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
 import { HelpCircle } from "lucide-react";
 import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
+import { toast } from "react-hot-toast";
+import { Button } from "@/components/ui/button";
 
 // Update the dynamic import
 const ChatBotWidgetNoChatBot = dynamic(
@@ -35,7 +37,11 @@ interface TestListingProps {
   onAssistantResponse: (message: string, dismissFunc: () => void) => void;
 }
 
-const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCompletedToday }) => {
+const Exams: React.FC<TestListingProps> = ({
+  tests,
+  onAssistantResponse,
+  testsCompletedToday,
+}) => {
   const { user } = useUser();
   const [userTests, setUserTests] = useState<UserTest[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -43,11 +49,25 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [welcomeAndTestMessage, setWelcomeAndTestMessage] = useState("");
   const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
-  const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(null);
+  const [dismissMessage, setDismissMessage] = useState<(() => void) | null>(
+    null
+  );
   const [welcomeComplete, setWelcomeComplete] = useState(false);
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
   const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
   const [kalypsoInteracted, setKalypsoInteracted] = useState(false);
+  const [hasUnlockedTests, setHasUnlockedTests] = useState(() => {
+    // Check localStorage for saved state
+    const saved = localStorage.getItem("hasUnlockedTests");
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [testsCompletedWhenUnlocked, setTestsCompletedWhenUnlocked] = useState(
+    () => {
+      const saved = localStorage.getItem("testsCompletedWhenUnlocked");
+      return saved ? parseInt(saved, 10) : 0;
+    }
+  );
+  const previousTestsCompletedRef = useRef(testsCompletedToday);
 
   const openTutorialDialog = (videoUrl: string) => {
     setTutorialVideoUrl(videoUrl);
@@ -76,7 +96,6 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
         setReportData(reportData);
         // setUserTests(testsData.userTests);
         // setReportData(reportData);
-
       } catch (err) {
         setError("Error fetching data");
         console.error(err);
@@ -117,6 +136,19 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
     }
   }, [user, tests, reportData, testsCompletedToday]);
 
+  useEffect(() => {
+    if (
+      hasUnlockedTests &&
+      testsCompletedToday >= testsCompletedWhenUnlocked + 2
+    ) {
+      setHasUnlockedTests(false);
+      localStorage.setItem("hasUnlockedTests", "false");
+      // Reset the stored count
+      setTestsCompletedWhenUnlocked(0);
+      localStorage.setItem("testsCompletedWhenUnlocked", "0");
+    }
+  }, [testsCompletedToday, testsCompletedWhenUnlocked, hasUnlockedTests]);
+
   const handleAssistantResponse = (
     message: string,
     dismissFunc: () => void
@@ -132,7 +164,11 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
     setDismissMessage(null);
   };
 
-  const getWelcomeMessage = (userName: string, streak: number, testsCompletedToday: number) => {
+  const getWelcomeMessage = (
+    userName: string,
+    streak: number,
+    testsCompletedToday: number
+  ) => {
     let message = `Hey ${
       userName.charAt(0).toUpperCase() + userName.slice(1)
     }! \n\n`;
@@ -162,6 +198,32 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
     }
   };
 
+  const handleUnlockTests = async () => {
+    try {
+      const response = await fetch("/api/user-info/", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: -1 }), // Spend 1 coin to unlock
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to process coin payment");
+      }
+
+      setHasUnlockedTests(true);
+      localStorage.setItem("hasUnlockedTests", "true");
+      // Store the current count when unlocking
+      setTestsCompletedWhenUnlocked(testsCompletedToday);
+      localStorage.setItem(
+        "testsCompletedWhenUnlocked",
+        testsCompletedToday.toString()
+      );
+      toast.success("Tests unlocked! You can now take 2 tests.");
+    } catch (error) {
+      console.error("Error unlocking tests:", error);
+      toast.error("Failed to unlock tests. Please try again.");
+    }
+  };
 
   return (
     <div
@@ -183,7 +245,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
             }}
           >
             <div className="flex mb-4">
-              <div 
+              <div
                 className="kalypso-portrait w-[8rem] h-[8rem] bg-transparent border-2 border-[--theme-border-color] rounded-lg mr-4 flex-shrink-0 overflow-hidden relative"
                 onClick={handleKalypsoInteraction}
               >
@@ -216,30 +278,39 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                   {[
                     {
                       icon: "/game-components/PixelHeart.png",
-                      value: reportData ? `${reportData.averageTestScore.toFixed(2)}%` : "N/A",
+                      value: reportData
+                        ? `${reportData.averageTestScore.toFixed(2)}%`
+                        : "N/A",
                       label: "Score",
-                      alt: "Heart"
+                      alt: "Heart",
                     },
                     {
                       icon: "/game-components/PixelWatch.png",
-                      value: reportData ? `${(reportData.averageTimePerTest / 60000).toFixed(2)} min` : "N/A",
+                      value: reportData
+                        ? `${(reportData.averageTimePerTest / 60000).toFixed(2)} min`
+                        : "N/A",
                       label: "Time",
-                      alt: "Watch"
+                      alt: "Watch",
                     },
                     {
                       icon: "/game-components/PixelCupcake.png",
                       value: reportData ? reportData.userScore : "N/A",
                       label: "Coins",
-                      alt: "Diamond"
+                      alt: "Diamond",
                     },
                     {
                       icon: "/game-components/PixelBook.png",
-                      value: reportData ? `${reportData.testsCompleted}/${reportData.totalTestsTaken}` : "N/A",
+                      value: reportData
+                        ? `${reportData.testsCompleted}/${reportData.totalTestsTaken}`
+                        : "N/A",
                       label: "Tests",
-                      alt: "Flex"
-                    }
+                      alt: "Flex",
+                    },
                   ].map((stat, index) => (
-                    <div key={index} className="flex flex-col items-center w-1/4 p-2 rounded-lg hover:bg-black/5 transition-all duration-200">
+                    <div
+                      key={index}
+                      className="flex flex-col items-center w-1/4 p-2 rounded-lg hover:bg-black/5 transition-all duration-200"
+                    >
                       <div className="w-[2.5rem] h-[2.5rem] relative mb-1">
                         <Image
                           src={stat.icon}
@@ -262,54 +333,56 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
               >
                 {welcomeAndTestMessage}
               </div>
-              {welcomeComplete && testsCompletedToday < MAX_TESTS_PER_DAY && tests.length > 0 && (
-                <div className="flex flex-col mt-12 ml-2">
-                  <div 
-                    className="flex items-center justify-between p-4 rounded-lg border-2 group theme-box hover:[background-color:var(--theme-hover-color)] transition-all duration-200"
-                    style={{
-                      borderColor: "var(--theme-border-color)",
-                      color: "var(--theme-text-color)",
-                    }}
-                  >
-                    <Link
-                      href={`/test/testquestions?id=${tests[0].id}`}
-                      className="flex-1"
+              {welcomeComplete &&
+                testsCompletedToday < MAX_TESTS_PER_DAY &&
+                tests.length > 0 && (
+                  <div className="flex flex-col mt-12 ml-2">
+                    <div
+                      className="flex items-center justify-between p-4 rounded-lg border-2 group theme-box hover:[background-color:var(--theme-hover-color)] transition-all duration-200"
+                      style={{
+                        borderColor: "var(--theme-border-color)",
+                        color: "var(--theme-text-color)",
+                      }}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-7 h-7 relative">
-                          <Image
-                            src="/computer.svg"
-                            layout="fill"
-                            objectFit="contain"
-                            alt="Computer icon"
-                            className="theme-svg"
-                          />
-                        </div>
-                        <div className="flex flex-col">
-                          <span
-                            className="text-xl group-hover:text-white transition-colors duration-200"
-                          >
-                            {tests[0].title}
-                          </span>
-                          <span className={`text-sm ${getDifficultyColor(tests[0].difficulty)}`}>
-                            Level {tests[0].difficulty}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                    <div className="flex items-center">
-                      <span 
-                        className="text-sm px-2 py-1 rounded-full border group-hover:text-white transition-colors duration-200"
-                        style={{
-                          borderColor: "var(--theme-border-color)",
-                        }}
+                      <Link
+                        href={`/test/testquestions?id=${tests[0].id}`}
+                        className="flex-1"
                       >
-                        Current
-                      </span>
+                        <div className="flex items-center gap-4">
+                          <div className="w-7 h-7 relative">
+                            <Image
+                              src="/computer.svg"
+                              layout="fill"
+                              objectFit="contain"
+                              alt="Computer icon"
+                              className="theme-svg"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-xl group-hover:text-white transition-colors duration-200">
+                              {tests[0].title}
+                            </span>
+                            <span
+                              className={`text-sm ${getDifficultyColor(tests[0].difficulty)}`}
+                            >
+                              Level {tests[0].difficulty}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                      <div className="flex items-center">
+                        <span
+                          className="text-sm px-2 py-1 rounded-full border group-hover:text-white transition-colors duration-200"
+                          style={{
+                            borderColor: "var(--theme-border-color)",
+                          }}
+                        >
+                          Current
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
         </div>
@@ -341,11 +414,21 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                 <TestList items={userTests} type="past" loading={loading} />
               </TabsContent>
               <TabsContent value="upcoming">
-                <TestList 
-                  items={tests} 
-                  type="upcoming" 
-                  loading={loading} 
-                />
+                {!hasUnlockedTests ? (
+                  <div className="flex flex-col items-center justify-center p-4 space-y-4">
+                    <p className="text-center text-[--theme-text-color]">
+                      Unlock the test section by paying a coin
+                    </p>
+                    <Button
+                      onClick={handleUnlockTests}
+                      className="bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color]"
+                    >
+                      Unlock 2 Tests (1 Coin)
+                    </Button>
+                  </div>
+                ) : (
+                  <TestList items={tests} type="upcoming" loading={loading} />
+                )}
               </TabsContent>
             </Tabs>
           </div>
