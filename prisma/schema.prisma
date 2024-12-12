@@ -270,9 +270,11 @@ model Referral {
   @@index([friendEmail])
 }
 
-
 model DataPulse {
   id         String    @id @default(cuid())
+  userId     String
+  positive   Int   @default(0)
+  negative   Int   @default(0)
   name       String    // name of the pulse event e.g amino acids, 1A, Chesmitry, etc
   level      String    @default("conceptCategory")  // this indicates the level of the pulse event: e.g. conceptCategory - contentCategory - subjectCategory - Section
   weight     Float     @default(1)  // suppose it applies to all questions in the conceptCategory
