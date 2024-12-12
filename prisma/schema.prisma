@@ -263,8 +263,21 @@ model Referral {
   referrerName  String   @default("")
   referrerEmail String   @default("")
   friendEmail   String   // friend's email who was referred
+  friendUserId  String  @default("") // friend's id who was referred (and then signed up)
   createdAt     DateTime @default(now())
-  
+  joinedAt      DateTime?
   @@index([userId])
   @@index([friendEmail])
+}
+
+
+model DataPulse {
+  id         String    @id @default(cuid())
+  name       String    // name of the pulse event e.g amino acids, 1A, Chesmitry, etc
+  level      String    @default("conceptCategory")  // this indicates the level of the pulse event: e.g. conceptCategory - contentCategory - subjectCategory - Section
+  weight     Float     @default(1)  // suppose it applies to all questions in the conceptCategory
+  source     String    @default("") // source of the pulse event e.g. UWorld, AAMC, Kaplan, Diagnostic test, etc
+  notes      String?   @db.Text
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
