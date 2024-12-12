@@ -24,6 +24,8 @@ import {
 import Latex from "react-latex-next";
 import toast from "react-hot-toast";
 import { ExplanationImages } from "./ExplanationImages";
+import { PurchaseButton } from "@/components/purchase-button";
+import { Coins } from "lucide-react";
 
 export interface QuizQuestion {
   categoryId: string;
@@ -103,6 +105,10 @@ const Quiz: React.FC<QuizProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [showIntroDialog, setShowIntroDialog] = useState(true);
+  const [userScore, setUserScore] = useState(0);
+  const [isStarting, setIsStarting] = useState(false);
+  const [hasAwardedCoin, setHasAwardedCoin] = useState(false);
 
   const fetchQuestions = useCallback(
     async (page: number = 1) => {
@@ -323,7 +329,20 @@ const Quiz: React.FC<QuizProps> = ({
     }
   };
 
-  // Add reset function
+  // First declare fetchUserScore
+  const fetchUserScore = useCallback(async () => {
+    try {
+      const response = await fetch("/api/user-info");
+      if (!response.ok) throw new Error("Failed to fetch user score");
+      const data = await response.json();
+      setUserScore(data.score || 0);
+    } catch (error) {
+      console.error("Error fetching user score:", error);
+      toast.error("Failed to load user information");
+    }
+  }, []);
+
+  // Then use it in handleReset
   const handleReset = useCallback(() => {
     setCurrentQuestionIndex(0);
     setSelectedAnswer(null);
@@ -331,11 +350,12 @@ const Quiz: React.FC<QuizProps> = ({
     setAnsweredQuestions(new Set());
     setHasAnsweredFirstQuestion(false);
     setShowSummary(false);
+    setShowIntroDialog(true);
+    setHasAwardedCoin(false);
     questionTimerRef.current?.resetTimer();
     totalTimerRef.current?.resetTimer();
-    // Optionally fetch new questions
-    fetchQuestions(1);
-  }, [fetchQuestions]);
+    fetchUserScore();
+  }, [fetchUserScore]);
 
   // Modify handleNextQuestion
   const handleNextQuestion = () => {
@@ -344,6 +364,7 @@ const Quiz: React.FC<QuizProps> = ({
     // Check if we've reached 15 questions
     if (currentQuestionIndex === 14) {
       setShowSummary(true);
+      handleQuizCompletion();
       return;
     }
 
@@ -434,9 +455,9 @@ const Quiz: React.FC<QuizProps> = ({
               />
             </div>
 
-            <ExplanationImages 
-              questionContent={currentQuestion.questionContent} 
-              isFullScreen={isFullScreen} 
+            <ExplanationImages
+              questionContent={currentQuestion.questionContent}
+              isFullScreen={isFullScreen}
             />
           </div>
         )}
@@ -507,12 +528,71 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
       if (!response.ok) {
         throw new Error("Failed to send downvote message");
       }
-
     } catch (error) {
       console.error("Error sending downvote:", error);
       toast.error("Failed to send feedback. Please try again.");
     }
   };
+
+  const handleStartQuiz = async () => {
+    try {
+      setIsStarting(true);
+
+      const response = await fetch("/api/user-info/", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: -1 }), // Spend 1 coin to start
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to process coin payment");
+      }
+
+      setShowIntroDialog(false);
+      fetchQuestions(1); // Start loading questions
+      toast.success("Quiz started! Good luck!");
+    } catch (error) {
+      console.error("Error starting quiz:", error);
+      toast.error("Failed to start quiz. Please try again.");
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  const handleQuizCompletion = async () => {
+    if (hasAwardedCoin) return; // Prevent multiple rewards
+
+    const correctAnswers = answerSummaries.filter((s) => s.isCorrect).length;
+    const totalQuestions = answerSummaries.length;
+    const percentage = Math.round((correctAnswers / totalQuestions) * 100);
+
+    if (percentage >= 80) {
+      try {
+        const response = await fetch("/api/user-info/", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: 1 }), // Reward 1 coin
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to process coin reward");
+        }
+
+        setHasAwardedCoin(true); // Set flag after successful reward
+        toast.success(
+          "Congratulations! You earned back your coin for scoring 80% or higher! 🎉"
+        );
+        fetchUserScore();
+      } catch (error) {
+        console.error("Error processing coin reward:", error);
+        toast.error("Failed to process coin reward");
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchUserScore();
+  }, [fetchUserScore]);
 
   if (isLoading) {
     return (
@@ -551,6 +631,61 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
       <div className="flex items-center justify-center h-full text-[--theme-text-color]">
         No questions available for this category.
       </div>
+    );
+  }
+
+  if (showIntroDialog) {
+    return (
+      <Dialog open={showIntroDialog} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-[500px] bg-[--theme-leaguecard-color] border-[--theme-border-color]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center mb-2 text-[--theme-text-color]">
+              Get ready for: {category} Quiz
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="bg-[--theme-gradient-end] p-4 rounded-lg space-y-2">
+              <h3 className="font-semibold flex items-center gap-2 text-[--theme-text-color]">
+                <Coins className="w-5 h-5" />
+                Coin Information
+              </h3>
+              <p className="text-sm text-[--theme-text-color]">
+                • Starting this quiz costs 1 coin
+              </p>
+              <p className="text-sm text-[--theme-text-color]">
+                • You can earn coins by achieving a perfect score
+              </p>
+              <p className="text-sm font-medium mt-2 text-[--theme-text-color]">
+                Your current balance: {userScore} coins
+              </p>
+            </div>
+
+            <div className="flex justify-center pt-4">
+              {userScore >= 1 ? (
+                <Button
+                  onClick={handleStartQuiz}
+                  disabled={isStarting}
+                  className="bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color] min-w-[200px]"
+                >
+                  {isStarting ? "Starting..." : "Start Quiz (1 Coin)"}
+                </Button>
+              ) : (
+                <div className="space-y-2 text-center">
+                  <p className="text-destructive text-sm">
+                    {"You need at least 1 coin to start this quiz"}
+                  </p>
+                  <PurchaseButton
+                    text="Purchase Coins to Start"
+                    className="bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color] min-w-[200px]"
+                    tooltipText="Purchase coins to access this quiz"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     );
   }
 
