@@ -2,9 +2,6 @@ import React, { useState, useEffect, useRef, useCallback, ReactNode } from 'reac
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { motion } from 'framer-motion';
 import AnimatedStar from "./AnimatedStar";
