@@ -7,7 +7,7 @@ export interface StreakLossEmailData {
 }
 
 export const streakLossTemplate = (data: StreakLossEmailData): TemplateConfig => ({
-  subject: `Oh no! Your study streak was lost! 😿`,
+  subject: "You lost your study streak 😿",
   html: `
     <div style="font-family: Arial, sans-serif; max-width: 37.5rem; margin: 0 auto; padding: 1.25rem;">
       <p style="color: #333333; line-height: 1.6;">
@@ -19,7 +19,7 @@ export const streakLossTemplate = (data: StreakLossEmailData): TemplateConfig =>
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
-        If you need immediate assistance with managing your study schedule or would like early access to these upcoming features, please email MyMCAT's CTO, Josh, at josh@mymcat.ai - I'd be happy to help you out!
+        If you need immediate assistance with managing your study schedule or would like early access to these upcoming features, please reply to this email and we'll get you sorted out!
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
@@ -31,7 +31,6 @@ export const streakLossTemplate = (data: StreakLossEmailData): TemplateConfig =>
       <p style="color: #333333; line-height: 1.6;">
         Keep up the great work!<br>
         Kalypso 🐱<br>
-        MyMCAT AI Tutor
       </p>
 
       <p style="color: #666666; font-size: 0.75rem; margin-top: 1.875rem;">

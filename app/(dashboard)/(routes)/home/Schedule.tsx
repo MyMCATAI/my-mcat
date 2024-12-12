@@ -831,20 +831,6 @@ const Schedule: React.FC<ScheduleProps> = ({
 
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Link href="/preferences">
-                  <button className="p-2 rounded-full shadow-md bg-white hover:bg-gray-100">
-                    <Bell className="w-4 h-4 text-gray-600" />
-                  </button>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent>Email Preferences</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-
-          <TooltipProvider>
-            <Tooltip>
               <TooltipTrigger>
                 <button
                   onClick={toggleHelp}

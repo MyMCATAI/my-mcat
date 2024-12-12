@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react';
-import { X, ChevronDown, ChevronUp, Check, Podcast, ArrowLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Check, Podcast, ArrowLeft, ChevronRight, Bell } from 'lucide-react';
 import { FaDiscord } from 'react-icons/fa';
 import MessageButton from '@/components/MessageButton';
 import { useOutsideClick } from '@/hooks/use-outside-click';
 import Image from 'next/image';
 import Icon from '@/components/ui/icon';
+import Link from 'next/link';
 
 interface HelpContentProps {
   onClose: () => void;
@@ -469,7 +470,26 @@ const HelpContent: React.FC<HelpContentProps> = ({ onClose, onResetTutorials }) 
               </button>
             </div>
 
-            {/* Contact section */}
+            {/* Email Preferences */}
+            <section className="pt-6 border-t border-[--theme-doctorsoffice-accent]">
+              <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+                Email Preferences
+              </h3>
+              <p className="text-xs leading-relaxed mb-4 text-center">
+                Manage your email notifications and communication preferences
+              </p>
+              <div className="flex justify-center">
+                <Link
+                  href="/preferences"
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span>Email Settings</span>
+                </Link>
+              </div>
+            </section>
+
+            {/* Need Help section */}
             <section className="pt-6 border-t border-[--theme-doctorsoffice-accent]">
               <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
                 Need Help?
