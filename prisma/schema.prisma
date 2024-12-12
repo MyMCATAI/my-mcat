@@ -127,6 +127,7 @@ model UserTest {
   finishedAt DateTime?
   reviewedAt DateTime?      
   score      Float?
+  earnedCoin Boolean? @default(false)
   test       Test?          @relation(fields: [testId], references: [id])
   passage    Passage?       @relation(fields: [passageId], references: [id])
   responses  UserResponse[]
