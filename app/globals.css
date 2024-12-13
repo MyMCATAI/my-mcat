@@ -200,7 +200,7 @@ body.theme-sunsetCity * {
     --theme-calendar-color: #87f8a0; /* Bright cyber green to contrast with blue */
     --theme-button-color: #001a3ae6; /* Slightly lighter than leaguecard-color: #000e2de6 */
     --theme-button-boxShadow: 0 0 2px 1px rgba(0, 123, 255, 0.5);
-    --theme-button-boxShadow-hover: 0 0 8px 2px rgba(0, 123, 255, 0.6);
+    --theme-button-boxShadow-hover: 0 0 9px 3px rgba(0, 123, 255, 0.7);
   }
 
 }
