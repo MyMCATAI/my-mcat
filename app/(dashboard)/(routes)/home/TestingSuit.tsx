@@ -66,7 +66,7 @@ const TestingSuit: React.FC = () => {
   const fetchTests = async (
     ordered: boolean = false,
     page: number = 1,
-    pageSize: number = 10
+    pageSize: number = 50
   ) => {
     try {
       setIsLoading(true);

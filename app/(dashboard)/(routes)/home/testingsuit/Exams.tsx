@@ -264,7 +264,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
               </div>
               {welcomeComplete && testsCompletedToday < MAX_TESTS_PER_DAY && tests.length > 0 && (
                 <div className="flex flex-col mt-8 ml-2">
-                  <Link href={`/test/testquestions?id=${tests[0].id}`} className="w-full max-w-[34rem]">
+                  <Link href={`/test/testquestions?id=${tests[0].id}`} className="w-full max-w-[28rem]">
                     <Button className="w-full" variant="default">
                       <div className="flex justify-between items-center w-full">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -278,7 +278,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                             />
                           </div>
                           <div className="flex flex-col items-start">
-                            <h2 className="text-sm xl:text-base font-normal truncate max-w-[24rem]">
+                            <h2 className="text-sm xl:text-base font-normal truncate max-w-[20rem]">
                               {tests[0].title}
                             </h2>
                             <span className={`text-sm xl:text-base font-medium ${getDifficultyColor(tests[0].difficulty)}`}>
@@ -304,7 +304,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
         </div>
         <div className="md:col-span-2">
           <div
-            className="h-[calc(100vh-8.3rem)] overflow-y-auto rounded-lg p-4 bg-[#001226] relative"
+            className="h-[calc(100vh-8.3rem)] rounded-lg p-4 bg-[#001226] relative"
             style={{
               backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
               backgroundSize: "cover",
