@@ -99,8 +99,8 @@ const TestList: React.FC<TestListProps> = ({
   }
 
   return (
-    <div className="w-full space-y-3">
-      <div className="flex items-center justify-center mb-4">
+    <div className="w-full h-full">
+      <div className="mb-4">
         <input
           type="text"
           value={searchQuery}
@@ -115,139 +115,152 @@ const TestList: React.FC<TestListProps> = ({
         />
       </div>
 
-      {type === "upcoming" && noTestsAvailable && (
-        <div className="text-center text-sm text-gray-500 mb-4">
-          {getNoTestsMessage()}
-        </div>
-      )}
+      <div 
+        className="space-y-3 overflow-y-auto h-[calc(100vh-22rem)] px-4 pt-2"
+        style={{ 
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch',
+          borderTop: '0.0925rem solid var(--theme-border-color)',
+          borderBottom: '0.0925rem solid var(--theme-border-color)',
+        }}
+      >
+        {type === "upcoming" && noTestsAvailable && (
+          <div className="text-center text-sm text-gray-500 mb-4">
+            {getNoTestsMessage()}
+          </div>
+        )}
 
-      {filteredItems.length === 0 ? (
-        <div className="text-center text-sm text-gray-500 mb-4">
-          No results found for &quot;{searchQuery}&quot;
-        </div>
-      ) : (
-        filteredItems.map((item) => (
-          <div key={item.id} className="w-full">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  {type === "upcoming" && noTestsAvailable ? (
-                    <div className="pointer-events-none">
-                      <div
-                        className="flex justify-between items-center bg-transparent rounded-lg px-3 py-2.5 cursor-not-allowed w-full h-16 opacity-50 transition-all duration-300"
-                        style={{
-                          backgroundColor: "var(--theme-adaptive-tutoring-color)",
-                          color: "var(--theme-text-color)",
-                        }}
-                      >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <div className="w-6 h-6 flex-shrink-0 relative">
-                            <Image
-                              className="theme-svg opacity-50"
-                              src={"/computer.svg"}
-                              layout="fill"
-                              objectFit="contain"
-                              alt="icon"
-                            />
-                          </div>
-                          <h2 className="text-sm xl:text-base font-normal truncate text-gray-500">
-                            {"title" in item ? item.title : "Untitled"}
-                          </h2>
-                        </div>
-                        <div className="flex-shrink-0 ml-2">
-                          <h2 className="text-sm xl:text-base font-medium whitespace-nowrap text-gray-500">
-                            {"difficulty" in item
-                              ? `Lvl ${item.difficulty}`
-                              : "N/A"}
-                          </h2>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <Link
-                      href={
-                        type === "past" && "score" in item
-                          ? `/user-test/${item.id}`
-                          : `/test/testquestions?id=${item.id}`
-                      }
-                      className="w-full"
-                    >
-                      <Button 
-                        className="w-full" 
-                        variant={noTestsAvailable ? "secondary" : "default"}
-                        disabled={noTestsAvailable}
-                      >
-                        <div className="flex justify-between items-center w-full">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <div className="w-6 h-6 flex-shrink-0 relative">
-                              <Image
-                                className="theme-svg"
-                                src={"/computer.svg"}
-                                layout="fill"
-                                objectFit="contain"
-                                alt="icon"
-                              />
+        {filteredItems.length === 0 ? (
+          <div className="text-center text-sm text-gray-500 mb-4">
+            No results found for &quot;{searchQuery}&quot;
+          </div>
+        ) : (
+          <div className="space-y-3 pb-4">
+            {filteredItems.map((item) => (
+              <div key={item.id} className="w-full">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      {type === "upcoming" && noTestsAvailable ? (
+                        <div className="pointer-events-none">
+                          <div
+                            className="flex justify-between items-center bg-transparent rounded-lg px-3 py-2.5 cursor-not-allowed w-full h-16 opacity-50 transition-all duration-300"
+                            style={{
+                              backgroundColor: "var(--theme-adaptive-tutoring-color)",
+                              color: "var(--theme-text-color)",
+                            }}
+                          >
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <div className="w-6 h-6 flex-shrink-0 relative">
+                                <Image
+                                  className="theme-svg opacity-50"
+                                  src={"/computer.svg"}
+                                  layout="fill"
+                                  objectFit="contain"
+                                  alt="icon"
+                                />
+                              </div>
+                              <h2 className="text-sm xl:text-base font-normal truncate text-gray-500">
+                                {"title" in item ? item.title : "Untitled"}
+                              </h2>
                             </div>
-                            <h2 className="text-sm xl:text-base font-normal truncate">
-                              {getTestTitle(item)}
-                            </h2>
-                          </div>
-                          <div className="flex-shrink-0 ml-2 flex items-center">
-                            <h2
-                              className={`text-sm xl:text-base font-medium whitespace-nowrap ${
-                                type === "past" && "score" in item
-                                  ? getScoreColor(item.score)
-                                  : "difficulty" in item
-                                    ? getDifficultyColor(item.difficulty as number)
-                                    : ""
-                              }`}
-                            >
-                              {type === "past" && "score" in item
-                                ? item.score !== null && item.score !== undefined
-                                  ? `${Math.round(item.score)}%`
-                                  : "N/A"
-                                : "difficulty" in item
+                            <div className="flex-shrink-0 ml-2">
+                              <h2 className="text-sm xl:text-base font-medium whitespace-nowrap text-gray-500">
+                                {"difficulty" in item
                                   ? `Lvl ${item.difficulty}`
                                   : "N/A"}
-                            </h2>
-                            {type === "past" &&
-                              "reviewedResponses" in item &&
-                              "totalResponses" in item &&
-                              item.reviewedResponses === item.totalResponses && (
-                                <CheckCircle className="w-4 h-4 ml-1 text-green-500" />
-                              )}
+                              </h2>
+                            </div>
                           </div>
                         </div>
-                      </Button>
-                    </Link>
-                  )}
-                </TooltipTrigger>
-                <TooltipContent>
-                  {type === "past" && "score" in item ? (
-                    <div>
-                      <p>Taken: {new Date(item.startedAt).toLocaleString()}</p>
-                      <p>
-                        Score:{" "}
-                        {item.score !== null && item.score !== undefined
-                          ? `${Math.round(item.score)}%`
-                          : "N/A"}
-                      </p>
-                      <p>
-                        Questions Reviewed: {item.reviewedResponses || 0}/
-                        {item.totalResponses || 0}
-                      </p>
-                    </div>
-                  ) : type === "upcoming" ? (
-                    <p>Upcoming test for today</p>
-                  ) : (
-                    <p></p>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                      ) : (
+                        <Link
+                          href={
+                            type === "past" && "score" in item
+                              ? `/user-test/${item.id}`
+                              : `/test/testquestions?id=${item.id}`
+                          }
+                          className="w-full"
+                        >
+                          <Button 
+                            className="w-full" 
+                            variant={noTestsAvailable ? "secondary" : "default"}
+                            disabled={noTestsAvailable}
+                          >
+                            <div className="flex justify-between items-center w-full">
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <div className="w-6 h-6 flex-shrink-0 relative">
+                                  <Image
+                                    className="theme-svg"
+                                    src={"/computer.svg"}
+                                    layout="fill"
+                                    objectFit="contain"
+                                    alt="icon"
+                                  />
+                                </div>
+                                <h2 className="text-sm xl:text-base font-normal truncate">
+                                  {getTestTitle(item)}
+                                </h2>
+                              </div>
+                              <div className="flex-shrink-0 ml-2 flex items-center">
+                                <h2
+                                  className={`text-sm xl:text-base font-medium whitespace-nowrap ${
+                                    type === "past" && "score" in item
+                                      ? getScoreColor(item.score)
+                                      : "difficulty" in item
+                                        ? getDifficultyColor(item.difficulty as number)
+                                        : ""
+                                  }`}
+                                >
+                                  {type === "past" && "score" in item
+                                    ? item.score !== null && item.score !== undefined
+                                      ? `${Math.round(item.score)}%`
+                                      : "N/A"
+                                    : "difficulty" in item
+                                    ? `Lvl ${item.difficulty}`
+                                    : "N/A"}
+                                </h2>
+                                {type === "past" &&
+                                  "reviewedResponses" in item &&
+                                  "totalResponses" in item &&
+                                  item.reviewedResponses === item.totalResponses && (
+                                    <CheckCircle className="w-4 h-4 ml-1 text-green-500" />
+                                  )}
+                              </div>
+                            </div>
+                          </Button>
+                        </Link>
+                      )}
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {type === "past" && "score" in item ? (
+                        <div>
+                          <p>Taken: {new Date(item.startedAt).toLocaleString()}</p>
+                          <p>
+                            Score:{" "}
+                            {item.score !== null && item.score !== undefined
+                              ? `${Math.round(item.score)}%`
+                              : "N/A"}
+                          </p>
+                          <p>
+                            Questions Reviewed: {item.reviewedResponses || 0}/
+                            {item.totalResponses || 0}
+                          </p>
+                        </div>
+                      ) : type === "upcoming" ? (
+                        <p>Upcoming test for today</p>
+                      ) : (
+                        <p></p>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            ))}
           </div>
-        ))
-      )}
+        )}
+      </div>
     </div>
   );
 };
