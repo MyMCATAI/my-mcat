@@ -53,6 +53,7 @@ import HelpContentSchedule from './HelpContentSchedule';
 import { HelpCircle, Bell, Coffee, ClipboardList } from 'lucide-react';
 import { useOutsideClick } from '@/hooks/use-outside-click';
 import UWorldPopup from '@/components/home/UWorldPopup';
+import CompletionDialog from '@/components/home/CompletionDialog';
 
 interface UWorldTask {
   text: string;
@@ -60,6 +61,11 @@ interface UWorldTask {
   subject: string;
 }
 import Link from 'next/link';
+
+interface CompletionDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
 ChartJS.register(
   CategoryScale,
@@ -137,6 +143,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showHelp, setShowHelp] = useState(false);
   const [showUWorldPopup, setShowUWorldPopup] = useState(false);
   const [showTestsDialog, setShowTestsDialog] = useState(false);
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -512,7 +519,7 @@ const Schedule: React.FC<ScheduleProps> = ({
         index === taskIndex ? { ...task, completed: true } : task
       );
 
-      // Update in backend
+      // Update backend
       const response = await fetch(`/api/calendar-activity`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -524,12 +531,13 @@ const Schedule: React.FC<ScheduleProps> = ({
 
       if (!response.ok) throw new Error("Failed to update task");
 
-      // Update local state
-      setTodayActivities((current) =>
-        current.map((a) =>
-          a.id === activityId ? { ...a, tasks: updatedTasks } : a
-        )
+      // Create the new activities array with the updated tasks
+      const updatedActivities = todayActivities.map((a) =>
+        a.id === activityId ? { ...a, tasks: updatedTasks } : a
       );
+
+      // Update local state
+      setTodayActivities(updatedActivities);
 
       // Check if all tasks are completed for this activity
       const allTasksCompleted = updatedTasks.every((task) => task.completed);
@@ -539,16 +547,13 @@ const Schedule: React.FC<ScheduleProps> = ({
           audioRef.current.play().catch(console.error);
         }
 
-        // Use activity id to get activity from calendar-activity
+        // Get activity details from backend
         const activityResponse = await fetch(`/api/calendar-activity`);
         const activities = await activityResponse.json();
-        
         const completedActivity = activities.find((a: FetchedActivity) => a.id === activityId);
 
         if (completedActivity.source === "generated" && isToday(new Date(completedActivity.scheduledDate))) {
-          // Update coin count
           await updateUserCoinCount();
-
           try {
             const response = await fetch("/api/user-info");
             if (response.ok) {
@@ -560,7 +565,7 @@ const Schedule: React.FC<ScheduleProps> = ({
           }
         }
 
-        // Show success toast
+        // Show success toast for individual activity
         if (completedActivity.source === "generated") {
           toast.success(
             `You've completed all tasks for ${activity.activityTitle}! You earned a coin!`
@@ -572,17 +577,19 @@ const Schedule: React.FC<ScheduleProps> = ({
         }
       }
 
-      // Check if ALL activities have ALL tasks completed
-      const allActivitiesCompleted = todayActivities.every((activity) =>
+      // Check if ALL activities have ALL tasks completed using the updated activities array
+      const areAllTasksCompleted = updatedActivities.every((activity) => 
         activity.tasks?.every((task) => task.completed)
       );
 
-      if (allActivitiesCompleted) {
-        // Play fanfare for completing everything
+      // If everything is complete, play fanfare and show completion dialog
+      if (areAllTasksCompleted) {
         if (fanfareRef.current) {
           fanfareRef.current.play().catch(console.error);
         }
+        setShowCompletionDialog(true);
       }
+
     } catch (error) {
       console.error("Error updating task:", error);
       toast.error("Failed to update task");
@@ -1245,6 +1252,11 @@ const Schedule: React.FC<ScheduleProps> = ({
         isOpen={showUWorldPopup}
         onClose={() => setShowUWorldPopup(false)}
         onScoreSubmit={handleUWorldScoreSubmit}
+      />
+
+      <CompletionDialog 
+        isOpen={showCompletionDialog} 
+        onClose={() => setShowCompletionDialog(false)}
       />
     </div>
   );

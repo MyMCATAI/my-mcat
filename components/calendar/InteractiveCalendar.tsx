@@ -11,10 +11,6 @@ import {
   NavigateAction,
 } from "react-big-calendar";
 import moment from "moment";
-import withDragAndDrop, {
-  EventInteractionArgs,
-} from "react-big-calendar/lib/addons/dragAndDrop";
-import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../styles/CustomCalendar.css";
 
@@ -50,8 +46,6 @@ interface CalendarEvent {
 }
 
 const localizer = momentLocalizer(moment);
-
-const DnDCalendar = withDragAndDrop<CalendarEvent>(Calendar);
 
 interface CalendarActivityData {
   activityTitle: string;
@@ -168,72 +162,6 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
       throw new Error(`Invalid date: ${date}`);
     }
     return parsed;
-  };
-
-  const onEventDrop = async ({
-    event,
-    start,
-    end,
-  }: EventInteractionArgs<CalendarEvent>) => {
-    if (start && end) {
-      try {
-        const updatedEvent: CalendarEvent = {
-          ...event,
-          start: parseDate(start),
-          end: parseDate(end),
-        };
-        setEvents((currentEvents) =>
-          currentEvents.map((ev) =>
-            ev.id === updatedEvent.id ? updatedEvent : ev
-          )
-        );
-        await updateEventInBackend(updatedEvent);
-
-        // Check if event was moved to/from today and update the schedule
-        const wasToday = isToday(event.start);
-        const isMovedToToday = isToday(start);
-        if (wasToday || isMovedToToday) {
-          updateTodaySchedule();
-        }
-
-        onInteraction();
-      } catch (error) {
-        console.error("Error updating event:", error);
-        // You might want to add some user feedback here
-      }
-    }
-  };
-
-  const onEventResize = async ({
-    event,
-    start,
-    end,
-  }: EventInteractionArgs<CalendarEvent>) => {
-    if (start && end) {
-      try {
-        const updatedEvent: CalendarEvent = {
-          ...event,
-          start: parseDate(start),
-          end: parseDate(end),
-        };
-        setEvents((currentEvents) =>
-          currentEvents.map((ev) =>
-            ev.id === updatedEvent.id ? updatedEvent : ev
-          )
-        );
-        await updateEventInBackend(updatedEvent);
-
-        // Check if event was resized on today's date
-        if (isToday(start) || isToday(event.start)) {
-          updateTodaySchedule();
-        }
-
-        onInteraction();
-      } catch (error) {
-        console.error("Error updating event:", error);
-        // You might want to add some user feedback here
-      }
-    }
   };
 
   const updateEventInBackend = async (event: CalendarEvent) => {
@@ -528,7 +456,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         }
       }}
     >
-      <DnDCalendar
+      <Calendar
         className="custom-calendar"
         date={date}
         onNavigate={handleNavigate}
@@ -536,9 +464,6 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         views={["month"]}
         events={events}
         localizer={localizer}
-        onEventDrop={onEventDrop}
-        onEventResize={onEventResize}
-        resizable
         selectable
         onSelectSlot={handleSelect}
         onSelectEvent={handleEventClick}
