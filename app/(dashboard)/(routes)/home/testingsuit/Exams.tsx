@@ -9,6 +9,7 @@ import { useUser } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
 import { HelpCircle } from "lucide-react";
 import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
+import { Button } from "@/components/ui/button";
 
 // Update the dynamic import
 const ChatBotWidgetNoChatBot = dynamic(
@@ -184,7 +185,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
           >
             <div className="flex mb-4">
               <div 
-                className="kalypso-portrait w-[8rem] h-[8rem] bg-transparent border-2 border-[--theme-border-color] rounded-lg mr-4 flex-shrink-0 overflow-hidden relative"
+                className="kalypso-portrait w-[8rem] h-[8rem] bg-[--theme-leaguecard-color] rounded-lg mr-4 flex-shrink-0 shadow-lg overflow-hidden relative"
                 onClick={handleKalypsoInteraction}
               >
                 <ChatBotWidgetNoChatBot
@@ -206,10 +207,9 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                 </div>
               )}
               <div
-                className="flex-grow p-2 bg-transparent border-2 rounded-lg relative"
+                className="flex-grow p-2 bg-[--theme-leaguecard-color] shadow-lg rounded-lg relative"
                 style={{
                   color: "var(--theme-text-color)",
-                  borderColor: "var(--theme-border-color)",
                 }}
               >
                 <div className="flex justify-between items-center h-full px-2 sm:px-4 md:px-6 lg:px-8 xl:px-16 cars-stats">
@@ -257,57 +257,46 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
             </div>
             <div className="flex flex-col">
               <div
-                className="text-lg leading-[1.5rem] tracking-[0.025rem] flex-1 mt-4 ml-2"
+                className="text-lg leading-[1.5rem] tracking-[0.025rem] flex-1 mt-8 ml-2"
                 style={{ color: "var(--theme-text-color)" }}
               >
                 {welcomeAndTestMessage}
               </div>
               {welcomeComplete && testsCompletedToday < MAX_TESTS_PER_DAY && tests.length > 0 && (
-                <div className="flex flex-col mt-12 ml-2">
-                  <div 
-                    className="flex items-center justify-between p-4 rounded-lg border-2 group theme-box hover:[background-color:var(--theme-hover-color)] transition-all duration-200"
-                    style={{
-                      borderColor: "var(--theme-border-color)",
-                      color: "var(--theme-text-color)",
-                    }}
-                  >
-                    <Link
-                      href={`/test/testquestions?id=${tests[0].id}`}
-                      className="flex-1"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-7 h-7 relative">
-                          <Image
-                            src="/computer.svg"
-                            layout="fill"
-                            objectFit="contain"
-                            alt="Computer icon"
-                            className="theme-svg"
-                          />
+                <div className="flex flex-col mt-8 ml-2">
+                  <Link href={`/test/testquestions?id=${tests[0].id}`} className="w-full max-w-[34rem]">
+                    <Button className="w-full" variant="default">
+                      <div className="flex justify-between items-center w-full">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <div className="w-6 h-6 flex-shrink-0 relative">
+                            <Image
+                              className="theme-svg"
+                              src="/computer.svg"
+                              layout="fill"
+                              objectFit="contain"
+                              alt="Computer icon"
+                            />
+                          </div>
+                          <div className="flex flex-col items-start">
+                            <h2 className="text-sm xl:text-base font-normal truncate max-w-[24rem]">
+                              {tests[0].title}
+                            </h2>
+                            <span className={`text-sm xl:text-base font-medium ${getDifficultyColor(tests[0].difficulty)}`}>
+                              Lvl {tests[0].difficulty}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex flex-col">
-                          <span
-                            className="text-xl group-hover:text-white transition-colors duration-200"
-                          >
-                            {tests[0].title}
-                          </span>
-                          <span className={`text-sm ${getDifficultyColor(tests[0].difficulty)}`}>
-                            Level {tests[0].difficulty}
+                        <div className="flex-shrink-0 ml-2">
+                          <span className="text-sm xl:text-base px-2 py-0.5 rounded-full border transition-colors bg-[--theme-leaguecard-color]"
+                            style={{
+                              borderColor: "var(--theme-border-color)",
+                            }}>
+                            Current
                           </span>
                         </div>
                       </div>
-                    </Link>
-                    <div className="flex items-center">
-                      <span 
-                        className="text-sm px-2 py-1 rounded-full border group-hover:text-white transition-colors duration-200"
-                        style={{
-                          borderColor: "var(--theme-border-color)",
-                        }}
-                      >
-                        Current
-                      </span>
-                    </div>
-                  </div>
+                    </Button>
+                  </Link>
                 </div>
               )}
             </div>
@@ -333,7 +322,9 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
               CARs Tests
             </h3>
             <Tabs defaultValue="past" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6 bg-transparent">
+              <TabsList 
+                className="grid w-full grid-cols-2 mb-6 bg-transparent" 
+              >
                 <TabsTrigger value="past">Past Tests</TabsTrigger>
                 <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
               </TabsList>
