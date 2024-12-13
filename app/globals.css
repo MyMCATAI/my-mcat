@@ -360,7 +360,7 @@ body.theme-sunsetCity * {
   --theme-adaptive-tutoring-boxShadow: 0 0 10px 1px rgba(255, 99, 71, 0.5);
   --theme-button-boxShadow: 0 0 2px 1px rgba(255, 99, 71, 0.3);
   --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 5px rgba(255, 99, 71, 0.8);
-  --theme-calendar-color: #ffeef6; /* Golden yellow to contrast with purple */
+  --theme-calendar-color: #ff9f7d; /* Changed from #ffeef6 to a warm coral color that matches the sunset theme */
   --theme-button-color: #261741; /* Slightly lighter than leaguecard-color: #231639 */
   --theme-button-boxShadow-hover: 0 0 8px 3px rgba(255, 99, 71, 0.6);
 }
