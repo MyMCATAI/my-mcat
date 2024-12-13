@@ -45,7 +45,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-
 // POST - Create a new DataPulse
 export async function POST(req: Request) {
   const { userId } = auth();
@@ -55,7 +54,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { name, level, weight, source, notes } = body;
+    const { name, level, weight, source, notes, positive, negative } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Missing required field: name" }, { status: 400 });
@@ -65,10 +64,12 @@ export async function POST(req: Request) {
       data: {
         userId,
         name,
+        positive: positive || 0,
+        negative: negative || 0,
         level: level || "conceptCategory",
         weight: weight || 1,
-        source: source || "UWorld",
-        notes: notes || "",
+        source: source || "",
+        notes: notes || null,
       }
     });
 
@@ -94,9 +95,18 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Missing required field: id" }, { status: 400 });
     }
 
+    // Ensure we're not trying to update createdAt
+    delete updateData.createdAt;
+    
     const updatedDataPulse = await prisma.dataPulse.update({
-      where: { id },
-      data: updateData
+      where: { 
+        id,
+        userId // Ensure user can only update their own records
+      },
+      data: {
+        ...updateData,
+        updatedAt: new Date() // Explicitly update the updatedAt timestamp
+      }
     });
 
     return NextResponse.json(updatedDataPulse);
