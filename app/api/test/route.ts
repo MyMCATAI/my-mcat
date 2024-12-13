@@ -257,10 +257,23 @@ async function getOrderedTests(
     difficulty?: number;
     relevanceScore: number;
     taken: boolean;
+    title?: string;
+    passageId?: string | null;
   }
 
   const testsWithRelevance = filteredTests.map(
-    (test: { questions: any[]; id: unknown; difficulty?: number }) => {
+    (test: {
+      id: string;
+      title: string;
+      description: string | null;
+      questions: Array<{
+        question: {
+          contentCategory: string;
+        };
+      }>;
+      difficulty: number | null;
+      passageId: string | null;
+    }) => {
       const testContentCategories = [
         ...new Set(
           test.questions.map(
