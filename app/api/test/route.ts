@@ -12,6 +12,7 @@ type ConceptCategory = {
 };
 
 async function getRecentTestScores(userId: string) {
+  console.log('Fetching recent test scores for user:', userId);
   const recentTests = await prisma.userTest.findMany({
     where: {
       userId,
@@ -23,7 +24,9 @@ async function getRecentTestScores(userId: string) {
     select: { score: true },
   });
 
-  return recentTests.map((test) => test.score as number);
+  const scores = recentTests.map((test) => test.score as number);
+  console.log('Recent test scores:', scores);
+  return scores;
 }
 
 async function getOrderedTests(
@@ -248,8 +251,16 @@ async function getOrderedTests(
   }
 
   // Calculate relevance score for each test
+  interface TestWithRelevance {
+    id: unknown;
+    questions: any[];
+    difficulty?: number;
+    relevanceScore: number;
+    taken: boolean;
+  }
+
   const testsWithRelevance = filteredTests.map(
-    (test: { questions: any[]; id: unknown }) => {
+    (test: { questions: any[]; id: unknown; difficulty?: number }) => {
       const testContentCategories = [
         ...new Set(
           test.questions.map(
@@ -266,116 +277,144 @@ async function getOrderedTests(
               (cc: { contentCategories: string | any[] }) =>
                 cc.contentCategories.includes(contentCategory)
             );
-            return score + (1 - (conceptCategory?.averageScore || 0)); // Higher score for lower mastery
+            return score + (1 - (conceptCategory?.averageScore || 0));
           }
           return score;
-        }, 0) / testContentCategories.length || 0; // Default to 0 if no categories match
+        }, 0) / testContentCategories.length || 0;
 
       return {
         ...test,
         relevanceScore,
         taken: takenTestIds.has(test.id),
-      };
+      } as TestWithRelevance;
     }
   );
 
   // Add this before the testsWithRelevance mapping
   const recentScores = await getRecentTestScores(userId);
-  const needsEasierTests =
-    recentScores.length === 3 && recentScores.every((score) => score < 60); // Using 60% as threshold
 
-  // Modify the sorting logic (around line 264)
-  const sortedTests = testsWithRelevance.sort(
-    (
-      a: { taken: any; relevanceScore: number; difficulty?: number },
-      b: { taken: any; relevanceScore: number; difficulty?: number }
-    ) => {
-      if (needsEasierTests) {
-        // If user needs easier tests, prioritize level 1-2 tests
-        if (!a.taken && !b.taken) {
-          const aIsEasy = (a.difficulty || 0) <= 2;
-          const bIsEasy = (b.difficulty || 0) <= 2;
-
-          if (aIsEasy && !bIsEasy) return -1;
-          if (!aIsEasy && bIsEasy) return 1;
-
-          // If both tests are of same difficulty category, use relevance score
-          return b.relevanceScore - a.relevanceScore;
-        }
-      } else {
-        // Use original sorting logic
-        if (!a.taken && !b.taken) return b.relevanceScore - a.relevanceScore;
-      }
-
-      if (!a.taken) return -1;
-      if (!b.taken) return 1;
-      return b.relevanceScore - a.relevanceScore;
+  function getRecommendedDifficulty(scores: number[]) {
+    console.log('Calculating recommended difficulty for scores:', scores);
+    
+    // If no scores yet, start with level 1
+    if (scores.length === 0) {
+      console.log('No scores available, defaulting to level 1');
+      return 1;
     }
-  );
+    
+    const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+    console.log('Average score calculated:', averageScore);
+    
+    if (averageScore < 50) {
+      console.log('Score < 50%, recommending level 1');
+      return 1;        // Level 1 for < 50%
+    }
+    if (averageScore < 80) {
+      console.log('Score < 80%, recommending level 2');
+      return 2;        // Level 2 for 50-80%
+    }
+    console.log('Score >= 80%, recommending level 3');
+    return 3;         // Level 3 for > 80%
+  }
 
-  // Recommends test to user based on current level of knowledge profile and difficulty match
-  async function recommendTest(userId: any, testsWithRelevance: any[]) {
-    // Get the user's knowledge profile to determine their current level
-    const userKnowledgeProfile = await prisma.knowledgeProfile.findMany({
-      where: { userId },
+  // Add this function near the top with other helper functions
+  async function findPart2Test(title: string) {
+    // Remove " - Part 1" from the title and prepare the part 2 title
+    const baseTitlePart1 = title.replace(/\s*-\s*Part\s*1\s*$/i, '').trim();
+    const titlePart2 = `${baseTitlePart1} - Part 2`;
+
+    // Search in ALL tests, regardless of difficulty
+    const part2Test = await prisma.test.findFirst({
+      where: {
+        title: titlePart2
+      },
+      include: {
+        questions: {
+          include: {
+            question: {
+              select: {
+                contentCategory: true,
+              },
+            },
+          },
+        },
+      },
     });
 
-    // Determine the user's current level based on their knowledge profile
-    const userLevel = getUserLevel(userKnowledgeProfile);
+    return part2Test;
+  }
 
-    // Filter tests based on the user's level and relevance score
-    const recommendedTests = testsWithRelevance.filter(
-      (test: { difficulty: any; relevanceScore: number }) => {
-        // Check if the test's difficulty level matches the user's level
-        const difficultyMatch = getDifficultyMatch(test.difficulty, userLevel);
-
-        // Check if the test's relevance score is above a certain threshold
-        const relevanceThreshold = 0.5;
-        const relevanceMatch = test.relevanceScore >= relevanceThreshold;
-
-        return difficultyMatch && relevanceMatch;
+  console.log('Starting test sorting process');
+  const sortedTests = await Promise.all(testsWithRelevance.map(async (test) => {
+    // Check if this test has a corresponding Part 2
+    if (test.title?.includes('Part 1')) {
+      const part2Test = await findPart2Test(test.title);
+      if (part2Test) {
+        // Add the Part 2 test to our list if it exists
+        testsWithRelevance.push({
+          ...part2Test,
+          relevanceScore: test.relevanceScore,
+          taken: false
+        } as TestWithRelevance);
       }
-    );
-
-    // Sort the recommended tests by relevance score in descending order
-    recommendedTests.sort(
-      (a: { relevanceScore: number }, b: { relevanceScore: number }) =>
-        b.relevanceScore - a.relevanceScore
-    );
-
-    // Return the top recommended test
-    return recommendedTests[0];
-  }
-
-  // Helper function to determine the user's level based on their knowledge profile
-  function getUserLevel(knowledgeProfile: any[]) {
-    // Calculate the user's average mastery level
-    const averageMastery =
-      knowledgeProfile.reduce(
-        (sum: any, profile: { conceptMastery: any }) =>
-          sum + profile.conceptMastery,
-        0
-      ) / knowledgeProfile.length;
-
-    // Determine the user's level based on their average mastery level
-    if (averageMastery < 0.3) {
-      return 1; // Beginner
-    } else if (averageMastery < 0.6) {
-      return 2; // Intermediate
-    } else {
-      return 3; // Advanced
     }
-  }
-  // Helper function to determine if the test's difficulty level matches the user's level
+    return test;
+  }));
 
-  function getDifficultyMatch(testDifficulty: number, userLevel: number) {
-    // Check if the test's difficulty level is within one level of the user's level
-    return Math.abs(testDifficulty - userLevel) <= 1;
-  }
+  // Now sort with the updated list
+  const finalSortedTests = testsWithRelevance.sort((a: TestWithRelevance, b: TestWithRelevance) => {
+    // First, check if either test is a "Part 2" of a recently completed test
+    const isAPart2 = a.title?.includes('Part 2');
+    const isBPart2 = b.title?.includes('Part 2');
+    
+    if (isAPart2 || isBPart2) {
+      // If both are Part 2, maintain normal sorting
+      if (isAPart2 && isBPart2) {
+        return b.relevanceScore - a.relevanceScore;
+      }
+      // Prioritize Part 2 tests
+      return isAPart2 ? -1 : 1;
+    }
+
+    // Rest of the sorting logic remains the same...
+    const recommendedDifficulty = getRecommendedDifficulty(recentScores);
+    console.log('Recommended difficulty level:', recommendedDifficulty);
+    
+    // If neither test has been taken
+    if (!a.taken && !b.taken) {
+      console.log('Comparing untaken tests:');
+      console.log('Test A:', { id: a.id, difficulty: a.difficulty });
+      console.log('Test B:', { id: b.id, difficulty: b.difficulty });
+      
+      // First, compare by how close they are to the recommended difficulty
+      const aDiffDist = Math.abs((a.difficulty || 1) - recommendedDifficulty);
+      const bDiffDist = Math.abs((b.difficulty || 1) - recommendedDifficulty);
+      
+      console.log('Distance from recommended difficulty:');
+      console.log('Test A distance:', aDiffDist);
+      console.log('Test B distance:', bDiffDist);
+      
+      if (aDiffDist !== bDiffDist) {
+        const result = aDiffDist - bDiffDist;
+        console.log('Sorting by difficulty distance, result:', result);
+        return result;
+      }
+      
+      // If they're equally close to recommended difficulty, use relevance score
+      const result = b.relevanceScore - a.relevanceScore;
+      console.log('Equal difficulty distance, sorting by relevance score, result:', result);
+      return result;
+    }
+    
+    // Keep existing logic for taken tests
+    if (!a.taken) return -1;
+    if (!b.taken) return 1;
+    return b.relevanceScore - a.relevanceScore;
+  });
 
   // Apply pagination
-  const paginatedTests = sortedTests.slice(skip, skip + pageSize);
-  const totalPages = Math.ceil(sortedTests.length / pageSize);
+  const paginatedTests = finalSortedTests.slice(skip, skip + pageSize);
+  const totalPages = Math.ceil(finalSortedTests.length / pageSize);
 
   console.log(
     `Returning ${paginatedTests.length} tests (page ${page} of ${totalPages})`
@@ -383,7 +422,7 @@ async function getOrderedTests(
 
   return {
     tests: paginatedTests.map(
-      ({ relevanceScore: number, taken, ...test }) => test as Test
+      ({ relevanceScore, taken, ...test }) => test as Test
     ),
     totalPages,
     currentPage: page,
