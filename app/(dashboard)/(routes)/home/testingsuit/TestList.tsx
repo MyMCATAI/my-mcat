@@ -116,7 +116,7 @@ const TestList: React.FC<TestListProps> = ({
       </div>
 
       <div 
-        className="space-y-3 overflow-y-auto h-[calc(100vh-22rem)] px-4 pt-2"
+        className="space-y-4 overflow-y-auto h-[calc(100vh-22rem)] px-4 pt-2"
         style={{ 
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
@@ -136,7 +136,7 @@ const TestList: React.FC<TestListProps> = ({
             No results found for &quot;{searchQuery}&quot;
           </div>
         ) : (
-          <div className="space-y-3 pb-4">
+          <div className="space-y-4 pb-4">
             {filteredItems.map((item) => (
               <div key={item.id} className="w-full">
                 <TooltipProvider>
