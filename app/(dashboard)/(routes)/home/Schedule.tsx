@@ -531,13 +531,14 @@ const Schedule: React.FC<ScheduleProps> = ({
 
       if (!response.ok) throw new Error("Failed to update task");
 
-      // Create the new activities array with the updated tasks
+      // Update local state
       const updatedActivities = todayActivities.map((a) =>
         a.id === activityId ? { ...a, tasks: updatedTasks } : a
       );
-
-      // Update local state
       setTodayActivities(updatedActivities);
+
+      // Call onActivitiesUpdate to refresh parent state
+      onActivitiesUpdate();
 
       // Check if all tasks are completed for this activity
       const allTasksCompleted = updatedTasks.every((task) => task.completed);
