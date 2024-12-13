@@ -48,7 +48,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           boxShadow: 'var(--theme-button-boxShadow)'
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = 'var(--theme-adaptive-tutoring-boxShadow-hover)';
+          e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow-hover)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow)';
