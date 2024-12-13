@@ -663,13 +663,11 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   });
 
+  const uWorldTasks = getUWorldTasks()
   const handleUWorldScoreSubmit = (scores: number[]) => {
-    // Here you can implement the logic to save the scores
     console.log("UWorld scores:", scores);
-    // You might want to make an API call here to save the scores
   };
 
-  // Add this helper function near the top of the component
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { 
       weekday: 'long', 
@@ -677,6 +675,7 @@ const Schedule: React.FC<ScheduleProps> = ({
       day: 'numeric' 
     });
   };
+
 
   return (
     <div className="grid grid-cols-[25%_75%] h-full relative w-full">
@@ -1252,6 +1251,7 @@ const Schedule: React.FC<ScheduleProps> = ({
         isOpen={showUWorldPopup}
         onClose={() => setShowUWorldPopup(false)}
         onScoreSubmit={handleUWorldScoreSubmit}
+        tasks={uWorldTasks}
       />
 
       <CompletionDialog 
@@ -1260,6 +1260,24 @@ const Schedule: React.FC<ScheduleProps> = ({
       />
     </div>
   );
+
+  function getUWorldTasks() {
+    const uWorldActivity = todayActivities.find(activity => activity.activityTitle === "UWorld");
+    if (!uWorldActivity?.tasks) return [];
+    
+    return uWorldActivity.tasks
+      .filter(task => {
+        // Only include tasks that match the format "X Q UWorld - Subject"
+        const pattern = /^\d+\s*Q\s*UWorld\s*-\s*.+$/i;
+        return pattern.test(task.text);
+      })
+      .map(task => ({
+        text: task.text,
+        completed: task.completed,
+        subject: task.text.split(' - ')[1]?.trim()
+      }));
+  }
+
 };
 
 export default Schedule;
