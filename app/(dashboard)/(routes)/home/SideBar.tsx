@@ -315,7 +315,7 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
                       <button 
                         className="text-sm font-medium text-blue-500 hover:text-[--theme-hover-color] transition-colors duration-200 underline-offset-4 hover:underline"
                       >
-                        Book {tutor.name === "Prynce K." ? `(50 coins/hr)` : `($${tutor.price}/hr)`}
+                        Book {tutor.name === "Prynce K." ? `(15 coins/hr)` : `($${tutor.price}/hr)`}
                       </button>
                     </DialogTrigger>
                     <BookTutorDialog tutor={tutor} />
