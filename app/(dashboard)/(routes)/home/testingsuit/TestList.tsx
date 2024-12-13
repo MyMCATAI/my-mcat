@@ -106,10 +106,11 @@ const TestList: React.FC<TestListProps> = ({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search tests..."
-          className="w-full rounded-lg px-4 py-2.5 transition-all duration-300"
+          className={`border rounded-md p-2 w-full theme-box theme-${theme}`}
           style={{
-            backgroundColor: "var(--theme-leaguecard-color)",
+            backgroundColor: "transparent",
             color: "var(--theme-text-color)",
+            borderColor: "var(--theme-border-color)",
           }}
         />
       </div>
