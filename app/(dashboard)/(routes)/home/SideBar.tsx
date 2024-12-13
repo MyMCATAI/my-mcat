@@ -4,7 +4,6 @@ import { FetchedActivity } from '@/types';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
-import MVPDialog from "@/components/MVPDialog";
 import RedditPosts from "../../../../components/RedditPosts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
