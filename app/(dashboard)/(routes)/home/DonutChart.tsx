@@ -42,19 +42,22 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
           "Bio/Biochem": ["Biology", "Biochemistry"]
         };
 
-        const metrics: { [subject: string]: PerformanceMetrics } = {};
+        // Create a single request for all subjects
+        const allSubjects = Object.values(subjectMappings).flat();
+        const subjectsQuery = encodeURIComponent(allSubjects.join(','));
+        const response = await fetch(`/api/user-statistics?subjects=${subjectsQuery}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          const metrics: { [subject: string]: PerformanceMetrics } = {};
 
-        for (const [displayName, apiSubjects] of Object.entries(subjectMappings)) {
-          let totalQuestions = 0;
-          let totalCorrect = 0;
-          let totalTime = 0;
+          // Process the response for each subject group
+          for (const [displayName, apiSubjects] of Object.entries(subjectMappings)) {
+            let totalQuestions = 0;
+            let totalCorrect = 0;
+            let totalTime = 0;
 
-          for (const subject of apiSubjects) {
-            const subjectQuery = encodeURIComponent(subject);
-            const response = await fetch(`/api/user-statistics?subjects=${subjectQuery}`);
-            
-            if (response.ok) {
-              const data = await response.json();
+            for (const subject of apiSubjects) {
               const subjectStats = data.subjectStats[subject];
               
               if (subjectStats) {
@@ -63,19 +66,18 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
                 totalTime += subjectStats.averageTime * subjectStats.totalQuestions;
               }
             }
+
+            if (totalQuestions > 0) {
+              metrics[displayName] = {
+                questionsAnswered: totalQuestions,
+                accuracy: (totalCorrect / totalQuestions) * 100,
+                averageTime: totalTime / totalQuestions
+              };
+            }
           }
 
-          // Calculate combined metrics
-          if (totalQuestions > 0) {
-            metrics[displayName] = {
-              questionsAnswered: totalQuestions,
-              accuracy: (totalCorrect / totalQuestions) * 100,
-              averageTime: totalTime / totalQuestions
-            };
-          }
+          setPerformanceMetrics(metrics);
         }
-
-        setPerformanceMetrics(metrics);
       } catch (error) {
         console.error("Error fetching performance metrics:", error);
       } finally {
