@@ -11,6 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 
 interface TestListProps {
   items: (Test | UserTest)[];
@@ -105,11 +106,10 @@ const TestList: React.FC<TestListProps> = ({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search tests..."
-          className={`border rounded-md p-2 w-full theme-box theme-${theme}`}
+          className="w-full rounded-lg px-4 py-2.5 transition-all duration-300"
           style={{
-            backgroundColor: "var(--theme-background-color)",
+            backgroundColor: "var(--theme-leaguecard-color)",
             color: "var(--theme-text-color)",
-            borderColor: "var(--theme-border-color)",
           }}
         />
       </div>
@@ -133,9 +133,9 @@ const TestList: React.FC<TestListProps> = ({
                   {type === "upcoming" && noTestsAvailable ? (
                     <div className="pointer-events-none">
                       <div
-                        className="flex justify-between items-center bg-transparent border-2 opacity-50 rounded-[0.9375rem] px-3 py-2.5 cursor-not-allowed w-full h-[4rem] theme-box"
+                        className="flex justify-between items-center bg-transparent rounded-lg px-3 py-2.5 cursor-not-allowed w-full h-16 opacity-50 transition-all duration-300"
                         style={{
-                          borderColor: "var(--theme-border-color)",
+                          backgroundColor: "var(--theme-adaptive-tutoring-color)",
                           color: "var(--theme-text-color)",
                         }}
                       >
@@ -169,60 +169,55 @@ const TestList: React.FC<TestListProps> = ({
                           ? `/user-test/${item.id}`
                           : `/test/testquestions?id=${item.id}`
                       }
+                      className="w-full"
                     >
-                      <div
-                        className={`flex justify-between items-center bg-transparent border-2 opacity-100 rounded-[0.9375rem] px-3 py-2.5 hover:opacity-100 transition-all duration-300 group w-full h-[4rem] hover:[background-color:var(--theme-hover-color)] theme-box ${theme} ${
-                          type === "upcoming" && noTestsAvailable
-                            ? "opacity-50 cursor-not-allowed"
-                            : ""
-                        }`}
-                        style={{
-                          borderColor: "var(--theme-border-color)",
-                          color: "var(--theme-text-color)",
-                        }}
+                      <Button 
+                        className="w-full" 
+                        variant={noTestsAvailable ? "secondary" : "default"}
+                        disabled={noTestsAvailable}
                       >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <div className="w-6 h-6 flex-shrink-0 relative">
-                            <Image
-                              className="theme-svg"
-                              src={"/computer.svg"}
-                              layout="fill"
-                              objectFit="contain"
-                              alt="icon"
-                            />
+                        <div className="flex justify-between items-center w-full">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <div className="w-6 h-6 flex-shrink-0 relative">
+                              <Image
+                                className="theme-svg"
+                                src={"/computer.svg"}
+                                layout="fill"
+                                objectFit="contain"
+                                alt="icon"
+                              />
+                            </div>
+                            <h2 className="text-sm xl:text-base font-normal truncate">
+                              {getTestTitle(item)}
+                            </h2>
                           </div>
-                          <h2 className="text-sm xl:text-base font-normal group-hover:[color:var(--theme-hover-text)] truncate">
-                            {getTestTitle(item)}
-                          </h2>
-                        </div>
-                        <div className="flex-shrink-0 ml-2 flex items-center">
-                          <h2
-                            className={`text-sm xl:text-base font-medium whitespace-nowrap ${
-                              type === "past" && "score" in item
-                                ? getScoreColor(item.score)
+                          <div className="flex-shrink-0 ml-2 flex items-center">
+                            <h2
+                              className={`text-sm xl:text-base font-medium whitespace-nowrap ${
+                                type === "past" && "score" in item
+                                  ? getScoreColor(item.score)
+                                  : "difficulty" in item
+                                    ? getDifficultyColor(item.difficulty as number)
+                                    : ""
+                              }`}
+                            >
+                              {type === "past" && "score" in item
+                                ? item.score !== null && item.score !== undefined
+                                  ? `${Math.round(item.score)}%`
+                                  : "N/A"
                                 : "difficulty" in item
-                                  ? getDifficultyColor(
-                                      item.difficulty as number
-                                    )
-                                  : ""
-                            }`}
-                          >
-                            {type === "past" && "score" in item
-                              ? item.score !== null && item.score !== undefined
-                                ? `${Math.round(item.score)}%`
-                                : "N/A"
-                              : "difficulty" in item
-                                ? `Lvl ${item.difficulty}`
-                                : "N/A"}
-                          </h2>
-                          {type === "past" &&
-                            "reviewedResponses" in item &&
-                            "totalResponses" in item &&
-                            item.reviewedResponses === item.totalResponses && (
-                              <CheckCircle className="w-4 h-4 ml-1 text-green-500" />
-                            )}
+                                  ? `Lvl ${item.difficulty}`
+                                  : "N/A"}
+                            </h2>
+                            {type === "past" &&
+                              "reviewedResponses" in item &&
+                              "totalResponses" in item &&
+                              item.reviewedResponses === item.totalResponses && (
+                                <CheckCircle className="w-4 h-4 ml-1 text-green-500" />
+                              )}
+                          </div>
                         </div>
-                      </div>
+                      </Button>
                     </Link>
                   )}
                 </TooltipTrigger>
