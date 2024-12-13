@@ -136,19 +136,6 @@ export async function PUT(req: NextRequest) {
       data: updateData,
     });
 
-    // Check if all activities are complete and send email
-    const allActivitiesComplete = await checkAllActivitiesComplete(userId);
-    if (allActivitiesComplete) {
-      const userEmail = await UserService.getUserEmail();
-      if (userEmail) {
-        await emailService.sendEmail({
-          to: userEmail,
-          template: 'daily-goal-achievement',
-          data: { name: (await UserService.getUserName()) || 'Future Doctor' }
-        });
-      }
-    }
-
     return NextResponse.json(updatedActivity);
   } catch (error) {
     console.error('Error updating calendar activity:', error);
