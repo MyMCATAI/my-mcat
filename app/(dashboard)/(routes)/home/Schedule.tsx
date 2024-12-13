@@ -50,7 +50,7 @@ import {
 } from "lucide-react";
 import { FaCheckCircle } from "react-icons/fa";
 import HelpContentSchedule from './HelpContentSchedule';
-import { HelpCircle, Bell } from 'lucide-react';
+import { HelpCircle, Bell, Coffee, ClipboardList } from 'lucide-react';
 import { useOutsideClick } from '@/hooks/use-outside-click';
 import UWorldPopup from '@/components/home/UWorldPopup';
 
@@ -136,6 +136,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showBreaksDialog, setShowBreaksDialog] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showUWorldPopup, setShowUWorldPopup] = useState(false);
+  const [showTestsDialog, setShowTestsDialog] = useState(false);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -1000,14 +1001,58 @@ const Schedule: React.FC<ScheduleProps> = ({
           </div>
 
           {/* View Toggle Buttons */}
-          {showAnalytics ? (
-            <div className="absolute bottom-4 right-4 flex flex-col space-y-2 z-20">
+          <div className="mt-auto flex justify-end items-center gap-2 pt-2">
+            {/* Break button - only show in calendar view */}
+            {!showAnalytics && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setShowBreaksDialog(true)}
+                      className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                        border-2 border-[--theme-border-color] 
+                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                        shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
+                    >
+                      <Coffee className="w-8 h-8" />
+                      <span className="text-xs font-medium">Break</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Take a Break</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
+            {/* Practice Tests button */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setShowTestsDialog(true)}
+                    className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                      border-2 border-[--theme-border-color] 
+                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                      shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
+                  >
+                    <ClipboardList className="w-8 h-8" />
+                    <span className="text-xs font-medium">Tests</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Practice Tests</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {showAnalytics ? (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       onClick={handleToggleView}
-                      className="group p-4 w-20 h-20 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                      className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                         border-2 border-[--theme-border-color] 
                         hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
                         shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
@@ -1021,39 +1066,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            </div>
-          ) : (
-            <div className="mt-auto pt-2 flex justify-end items-center gap-2 z-20">
-              <button
-                onClick={() => setShowUWorldPopup(true)}
-                className="px-4 h-12 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                  border-2 border-[--theme-border-color] 
-                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                  shadow-md rounded-lg transition flex items-center justify-center
-                  text-sm font-medium"
-              >
-                UWORLD
-              </button>
-              <button
-                onClick={() => setShowBreaksDialog(true)}
-                className="px-4 h-12 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                  border-2 border-[--theme-border-color] 
-                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                  shadow-md rounded-lg transition flex items-center justify-center
-                  text-sm font-medium"
-              >
-                PRACTICE TESTS
-              </button>
-              <button
-                onClick={() => setShowBreaksDialog(true)}
-                className="px-4 h-12 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                  border-2 border-[--theme-border-color] 
-                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                  shadow-md rounded-lg transition flex items-center justify-center
-                  text-sm font-medium"
-              >
-                TAKE A BREAK
-              </button>
+            ) : (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -1073,8 +1086,8 @@ const Schedule: React.FC<ScheduleProps> = ({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* New Activity Form */}
@@ -1207,6 +1220,22 @@ const Schedule: React.FC<ScheduleProps> = ({
             <p className="text-center text-black">
               Toggle holidays. Add difficult weeks in school. Ask for a break.
               Your schedule will be updated automatically.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showTestsDialog} onOpenChange={setShowTestsDialog}>
+        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
+          <DialogHeader>
+            <DialogTitle className="text-center text-black">
+              Test Management Coming Soon!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <p className="text-center text-black">
+              Tests will allow you to manage AAMC and third party tests, review them in an intelligent suite, and glean insights on strategic changes to improve performance. For early access, email prynce@mymcat.ai.
             </p>
           </div>
         </DialogContent>
