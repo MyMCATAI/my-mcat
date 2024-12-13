@@ -19,22 +19,29 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Fetch the last 5 user tests and their responses
+    // Fetch all user tests and their responses (removed take: 5 limit)
     const userTests = await prisma.userTest.findMany({
-      where: { userId },
+      where: { 
+        userId,
+        finishedAt: { not: null },  // Only get completed tests
+        score: { not: null }        // Only get tests with scores
+      },
       include: { responses: true },
-      orderBy: { startedAt: 'desc' },
-      take: 5
+      orderBy: { startedAt: 'desc' }
     });
 
-    // Filter completed tests
-    const completedTests = userTests.filter(test => test.finishedAt !== null);
+    // Filter completed tests with valid scores
+    const completedTests = userTests.filter(test => 
+      test.finishedAt !== null && 
+      test.score !== null && 
+      !isNaN(test.score)
+    );
 
-    // Update calculations
+    // Update calculations with null checks
     const totalTestsTaken = completedTests.length;
     const totalQuestionsAnswered = completedTests.reduce((sum, test) => sum + test.responses.length, 0);
     const totalScore = completedTests.reduce((sum, test) => sum + (test.score || 0), 0);
-    const averageTestScore = totalTestsTaken > 0 ? totalScore / totalTestsTaken : 0;
+    const averageTestScore = totalTestsTaken > 0 ? (totalScore / totalTestsTaken) : 0;
 
     // Update time calculations
     const totalTimeSpent = completedTests.reduce((sum, test) => 
