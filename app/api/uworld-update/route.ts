@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     // Create UWorld tasks based on the unique content categories
     const tasks = [
       ...lowestMasteryCategories.map((category) => ({
-        text: `15 Q UWorld - ${categoryMapping[category.contentCategory] || category.contentCategory}`,
+        text: `12 Q UWorld - ${categoryMapping[category.contentCategory] || category.contentCategory}`,
         completed: false
       })),
       {
