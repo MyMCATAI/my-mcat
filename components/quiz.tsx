@@ -2,7 +2,6 @@ import { Passage } from "@/types";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import ContentRenderer from "./ContentRenderer";
 import { Skeleton } from "@/components/ui/skeleton";
-import QuizSummary from "./QuizSummary";
 import Timer, { TimerRef } from "./Timer";
 import { ThumbsDown, BarChart2, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,8 @@ import {
 import Latex from "react-latex-next";
 import toast from "react-hot-toast";
 import { ExplanationImages } from "./ExplanationImages";
+import { QuizIntroDialog } from "./ATS/QuizIntroDialogue";
+import { useUserInfo } from "@/hooks/useUserInfo";
 
 export interface QuizQuestion {
   categoryId: string;
@@ -75,11 +76,17 @@ interface AnswerSummary {
   explanation: string; // Add explanation field
 }
 
+const calculateScore = (summaries: AnswerSummary[]): number => {
+  const correctAnswers = summaries.filter(summary => summary.isCorrect).length;
+  return (correctAnswers / summaries.length) * 100;
+};
+
 const Quiz: React.FC<QuizProps> = ({
   category,
   shuffle = false,
   setChatbotContext,
 }) => {
+  const { userInfo, isLoading: isLoadingUserInfo, updateScore } = useUserInfo();
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -93,6 +100,9 @@ const Quiz: React.FC<QuizProps> = ({
   const [answerSummaries, setAnswerSummaries] = useState<AnswerSummary[]>([]);
   const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] =
     useState(false);
+  const [showIntroDialog, setShowIntroDialog] = useState(true);
+  const [isStarting, setIsStarting] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const questionTimerRef = useRef<TimerRef>(null);
   const totalTimerRef = useRef<TimerRef>(null);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(
@@ -103,6 +113,22 @@ const Quiz: React.FC<QuizProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+
+  const handleStartQuiz = async () => {
+    try {
+      setIsStarting(true);
+      await updateScore(-1); // Spend 1 coin to start
+      setShowIntroDialog(false);
+      setHasStarted(true);
+      await fetchQuestions();
+      toast.success("Quiz started! Good luck!");
+    } catch (error) {
+      console.error("Error starting quiz:", error);
+      toast.error("Failed to start quiz. Please try again.");
+    } finally {
+      setIsStarting(false);
+    }
+  };
 
   const fetchQuestions = useCallback(
     async (page: number = 1) => {
@@ -222,7 +248,7 @@ const Quiz: React.FC<QuizProps> = ({
     if (!category || isLoading) return;
     fetchQuestions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, fetchQuestions]);
+  }, [category, fetchQuestions, hasStarted]);
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -286,7 +312,6 @@ const Quiz: React.FC<QuizProps> = ({
     }
   };
 
-  // Update handleAnswerSelect
   const handleAnswerSelect = (answer: string) => {
     if (answeredQuestions.has(currentQuestion.id)) return;
 
@@ -323,7 +348,6 @@ const Quiz: React.FC<QuizProps> = ({
     }
   };
 
-  // Add reset function
   const handleReset = useCallback(() => {
     setCurrentQuestionIndex(0);
     setSelectedAnswer(null);
@@ -337,12 +361,24 @@ const Quiz: React.FC<QuizProps> = ({
     fetchQuestions(1);
   }, [fetchQuestions]);
 
-  // Modify handleNextQuestion
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     setSelectedAnswer(null);
 
-    // Check if we've reached 15 questions
-    if (currentQuestionIndex === 14) {
+    // Check if we've reached 15 questions or all available questions
+    if (currentQuestionIndex === 14 || currentQuestionIndex === questions.length - 1) {
+      const score = calculateScore(answerSummaries);
+      
+      // If score is 80% or higher, award a coin
+      if (score >= 80) {
+        try {
+          await updateScore(1);
+          toast.success("Congratulations! You earned a coin for scoring above 80%! 🎉");
+        } catch (error) {
+          console.error("Error incrementing score:", error);
+          toast.error("Failed to award coin");
+        }
+      }
+      
       setShowSummary(true);
       return;
     }
@@ -366,7 +402,6 @@ const Quiz: React.FC<QuizProps> = ({
     );
   };
 
-  // Update renderOptions
   const renderOptions = (question: QuizQuestion) => {
     const options = shuffledOptions[question.id] || [];
     const hasAnswered = answeredQuestions.has(question.id);
@@ -478,7 +513,6 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
     }
   };
 
-  // Add fullscreen change event listener
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullScreen(!!document.fullscreenElement);
@@ -489,7 +523,6 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  // Add this function near other handlers
   const handleDownvote = async () => {
     if (!currentQuestion) return;
 
@@ -514,7 +547,7 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingUserInfo) {
     return (
       <div className="h-full bg-transparent text-black px-6 rounded-lg mx-auto">
         <div className="mb-4 flex justify-between items-center">
@@ -546,11 +579,22 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
     );
   }
 
-  if (!questions.length || !currentQuestion) {
+  if (!isLoading && (!questions.length || !currentQuestion)) {
     return (
       <div className="flex items-center justify-center h-full text-[--theme-text-color]">
         No questions available for this category.
       </div>
+    );
+  }
+
+  if (!hasStarted) {
+    return (
+      <QuizIntroDialog
+        category={category}
+        userScore={userInfo?.score ?? 0}
+        isStarting={isStarting}
+        onStart={handleStartQuiz} 
+      />
     );
   }
 
