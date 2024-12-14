@@ -85,7 +85,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   isFirstVisit = true,
 }) => {
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [contentType, setContentType] = useState("video");
   const [isLoading, setIsLoading] = useState(true);
@@ -448,6 +447,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   };
 
   const handleBookClick = () => {
+
     setContentType("reading");
 
     const firstPDF = content.find((item) => item.type === "reading");
@@ -470,7 +470,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     }
 
     setCurrentContentId(null);
-    setContent([]);
   };
 
   const handleCardClick = async (index: number) => {
@@ -1121,7 +1120,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                         </div>
                       </div>
                     )}
-
                   {contentType === "quiz" && selectedCategory && (
                     <div className="h-[calc(100vh-23rem)]">
                       <Quiz
