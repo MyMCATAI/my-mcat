@@ -1,36 +1,36 @@
 import { TemplateConfig } from '../types';
 
 export const referralLinkTemplate = (data: any): TemplateConfig => ({
-  subject: `Poke! Your friend ${data.referrerName} poked you about your MCAT prep!`,
+  subject: `Poke! ${data.referrerName} poked you to study with us at MyMCAT`,
   html: `
     <div style="font-family: Arial, sans-serif; max-width: 37.5rem; margin: 0 auto; padding: 1.25rem;">
       <p style="color: #333333; line-height: 1.6;">
-        Hi there! 🐱
+        Hi-ya,
       </p>
       
       <p style="color: #333333; line-height: 1.6;">
-        I'm Kalypso, the superkitty at MyMCAT! We're making an intelligent tutoring platform so that a520+ is in the hands of every capable student. Your friend ${data.referrerName} thought you might be interested in studying with us. 
+        I'm Kalypso, the superkitty. Your friend ${data.referrerName} thought you might want to study together on MyMCAT.
       </p>
       
       <p style="color: #333333; line-height: 1.6;">
-        Our students have seen an average increase of 15 points, with a median score of 516. We're constantly improving our platform to help students like you succeed.
+        Our students typically improve by 15 points, reaching a median score of 516. ${data.referrerName} is already using our platform and wanted to let you know about it.
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
-        If you'd like to learn more, you can:
+        You can:
         <br><br>
-        • Visit our platform: <a href="https://mymcat.ai" style="color: #2b6cb0; text-decoration: underline;">mymcat.ai</a>
+        • Visit our platform: <a href="https://mymcat.ai" style="color: #2b6cb0;">mymcat.ai</a>
         <br>
-        • Join our study community: <a href="https://discord.gg/rTxN7wkh6e" style="color: #2b6cb0; text-decoration: underline;">Discord group</a>
+        • Join our study group: <a href="https://discord.gg/rTxN7wkh6e" style="color: #2b6cb0;">Discord</a>
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
-        Happy studying!<br>
-        Kalypso 🐱<br>
+        Best regards,<br>
+        Kalypso
       </p>
 
       <p style="color: #666666; font-size: 0.75rem; margin-top: 1.875rem;">
-        Received this by mistake? Feel free to ignore this email - ${data.referrerName} invited you to MyMCAT.ai
+        This invitation was sent by ${data.referrerName}. If this was a mistake, please disregard this message.
       </p>
     </div>
   `
