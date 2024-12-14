@@ -53,7 +53,6 @@ import { useOutsideClick } from '@/hooks/use-outside-click';
 import UWorldPopup from '@/components/home/UWorldPopup';
 import CompletionDialog from '@/components/home/CompletionDialog';
 import ScoreDisplay from '@/components/score/ScoreDisplay';
-import StreakDisplay from '@/components/score/StreakDisplay';
 
 ChartJS.register(
   CategoryScale,
@@ -732,9 +731,6 @@ const Schedule: React.FC<ScheduleProps> = ({
                   <ScoreDisplay score={userCoinCount} />
                 </button>
               </PurchaseButton>
-            </div>
-            <div className="mt-4">
-              <StreakDisplay streak={userStreak} />
             </div>
           </div>
         )}
