@@ -133,8 +133,8 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
       hoverBackgroundColor: "rgba(186, 104, 200)", // Hover Purple
     },
     "Chem/Phys": {
-      backgroundColor: "rgba(255, 235, 59, 0.6)", // Yellow - increased opacity further
-      hoverBackgroundColor: "rgba(255, 235, 59, 1)", // Hover Yellow - full opacity
+      backgroundColor: "rgba(251, 192, 45, 0.5)", // Darker yellow with higher opacity
+      hoverBackgroundColor: "rgba(251, 192, 45, 1)", // Full opacity darker yellow
     },
     "Bio/Biochem": {
       backgroundColor: "rgba(33, 150, 243, 0.15)", // Blue
