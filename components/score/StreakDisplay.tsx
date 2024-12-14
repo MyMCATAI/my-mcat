@@ -21,7 +21,7 @@ const StreakPopup = ({ streak, isOpen, onClose }: StreakPopupProps) => {
   }, [isOpen]);
 
   const getStreakMessage = (streak: number) => {
-    if (streak === 1) {
+    if (streak <= 1) {
       return null;
     } else if (streak >= 2 && streak < 7) {
       return {
