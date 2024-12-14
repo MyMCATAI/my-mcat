@@ -226,9 +226,9 @@ const QuestionComponent = forwardRef<{ applyStyle: (style: string) => void }, Qu
       className="flex flex-col items-center px-6 font-serif text-black text-sm"
     >
       <div className="w-full max-w-3xl flex flex-col">
-        <div className="flex justify-between items-center mt-2 mb-4 pt-6 mx-4">
-          <div className="flex items-center space-x-4">
-            <h2 className="text-base font-bold ">
+        <div className="flex justify-between items-center mt-2 mb-4 pt-6">
+          <div className="flex items-center">
+            <h2 className="text-base font-bold">
               Question {currentQuestionIndex + 1} of {totalQuestions}
             </h2>
           </div>

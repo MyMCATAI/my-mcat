@@ -134,24 +134,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
   };
 
   const getWelcomeMessage = (userName: string, streak: number, testsCompletedToday: number) => {
-    let message = `Hey ${
-      userName.charAt(0).toUpperCase() + userName.slice(1)
-    }! \n\n`;
-
-    if (streak > 0) {
-      if (streak === 1) {
-        message += "You've started your streak! Great job showing up today! ";
-      } else {
-        message += `You're on a ${streak}-day streak! Keep it up! `;
-      }
-    }
-
-    if (testsCompletedToday >= MAX_TESTS_PER_DAY) {
-      message += `\n\nCongratulations on completing ${testsCompletedToday} tests today! Make sure to review your tests to improve your learning and come back tomorrow for more.`;
-    } else {
-      message += "\n\n";
-    }
-
+    let message = `Hey ${userName.charAt(0).toUpperCase() + userName.slice(1)}! \n\n`;
     return message;
   };
 
@@ -234,8 +217,8 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                     },
                     {
                       icon: "/game-components/PixelBook.png",
-                      value: reportData ? `${reportData.testsCompleted}/${reportData.totalTestsTaken}` : "N/A",
-                      label: "Tests",
+                      value: reportData ? `${reportData.testsReviewed}/${reportData.testsCompleted}` : "N/A",
+                      label: "Reviewed",
                       alt: "Flex"
                     }
                   ].map((stat, index) => (

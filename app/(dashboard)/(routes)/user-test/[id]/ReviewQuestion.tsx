@@ -371,42 +371,40 @@ Help me understand this question so I can learn.`;
                 ))}
               </TooltipProvider>
             </div>
+
+            <div className="flex justify-between mt-8 mb-8">
+              <button
+                onClick={onPrevious}
+                disabled={isFirst}
+                className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+              >
+                Previous
+              </button>
+              {isLast ? (
+                <button
+                  onClick={handleFinishReview}
+                  disabled={isReviewFinished}
+                  className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded ${
+                    isReviewFinished ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isReviewFinished ? 'Review Finished' : 'Finish Review'}
+                </button>
+              ) : (
+                <button
+                  onClick={onNext}
+                  className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded"
+                >
+                  Next
+                </button>
+              )}
+            </div>
           </div>
 
           <ChatBotInLineForReview 
             chatbotContext={generateChatbotContext()}
             key={question.id}
           />
-        </div>
-      </div>
-
-      <div className="p-6 bg-white border-t">
-        <div className="flex justify-between">
-          <button
-            onClick={onPrevious}
-            disabled={isFirst}
-            className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-          >
-            Previous
-          </button>
-          {isLast ? (
-            <button
-              onClick={handleFinishReview}
-              disabled={isReviewFinished}
-              className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded ${
-                isReviewFinished ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {isReviewFinished ? 'Review Finished' : 'Finish Review'}
-            </button>
-          ) : (
-            <button
-              onClick={onNext}
-              className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded"
-            >
-              Next
-            </button>
-          )}
         </div>
       </div>
 
