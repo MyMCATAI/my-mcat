@@ -16,64 +16,75 @@ export async function GET(req: Request) {
     const pageSize = parseInt(searchParams.get("pageSize") || "10");
     const includeCARS = searchParams.get("includeCARS") === "true";
     const searchQuery = searchParams.get("searchQuery");
-    const selectedSubjects = searchParams.get("subjects")?.split(',').filter(Boolean);
+    const selectedSubjects = searchParams
+      .get("subjects")
+      ?.split(",")
+      .filter(Boolean);
     const isRandom = searchParams.get("random") === "true";
 
+    // Add this before the categories query
+    const userInfo = await prisma.userInfo.findUnique({
+      where: { userId },
+      select: { diagnosticScores: true },
+    });
+
     // Single query with join instead of separate queries
-    const [categories, userInfo] = await Promise.all([
-      prisma.category.findMany({
-        where: {
-          AND: [
-            searchQuery
-              ? {
-                  OR: [
-                    { subjectCategory: { contains: searchQuery.toLowerCase() } },
-                    { conceptCategory: { contains: searchQuery.toLowerCase() } },
-                  ],
-                }
-              : {},
-            includeCARS ? {} : { subjectCategory: { not: "CARs" } },
-            ...(selectedSubjects && selectedSubjects.length > 0
-              ? [{
+    const categories = await prisma.category.findMany({
+      where: {
+        AND: [
+          searchQuery
+            ? {
+                OR: [
+                  { subjectCategory: { contains: searchQuery.toLowerCase() } },
+                  { conceptCategory: { contains: searchQuery.toLowerCase() } },
+                ],
+              }
+            : {},
+          includeCARS ? {} : { subjectCategory: { not: "CARs" } },
+          ...(selectedSubjects && selectedSubjects.length > 0
+            ? [
+                {
                   subjectCategory: {
-                    in: selectedSubjects
-                  }
-                }]
-              : []),
-          ],
-        },
-        ...(isRandom ? {
-          orderBy: {
-            id: 'asc'
+                    in: selectedSubjects,
+                  },
+                },
+              ]
+            : []),
+          ...(isRandom
+            ? [
+                {
+                  knowledgeProfiles: {
+                    none: {
+                      AND: [{ userId: userId }, { completedAt: { not: null } }],
+                    },
+                  },
+                },
+              ]
+            : []),
+        ],
+      },
+      include: {
+        knowledgeProfiles: {
+          where: { userId },
+          select: {
+            completedAt: true,
+            completionPercentage: true,
+            conceptMastery: true,
+            contentMastery: true,
           },
-          take: 6
-        } : {}),
-        include: {
-          knowledgeProfiles: {
-            where: { userId },
-            select: {
-              completedAt: true,
-              completionPercentage: true,
-              conceptMastery: true,
-              contentMastery: true
-            }
-          }
-        }
-      }),
-      prisma.userInfo.findUnique({
-        where: { userId },
-        select: { diagnosticScores: true }
-      })
-    ]);
+        },
+      },
+    });
 
     // Transform the data to flatten the structure
-    let sortedCategories = categories.map(category => ({
+    let sortedCategories = categories.map((category) => ({
       ...category,
       completedAt: category.knowledgeProfiles[0]?.completedAt || null,
-      completionPercentage: category.knowledgeProfiles[0]?.completionPercentage || 0,
+      completionPercentage:
+        category.knowledgeProfiles[0]?.completionPercentage || 0,
       conceptMastery: category.knowledgeProfiles[0]?.conceptMastery || null,
       contentMastery: category.knowledgeProfiles[0]?.contentMastery || null,
-      isCompleted: category.knowledgeProfiles[0]?.completedAt ? true : false
+      isCompleted: category.knowledgeProfiles[0]?.completedAt ? true : false,
     }));
 
     if (isRandom) {
@@ -82,8 +93,12 @@ export async function GET(req: Request) {
         .slice(0, pageSize);
     } else {
       // First, separate incomplete and complete categories
-      const incompleteCategories = sortedCategories.filter(cat => !cat.isCompleted);
-      const completedCategories = sortedCategories.filter(cat => cat.isCompleted);
+      const incompleteCategories = sortedCategories.filter(
+        (cat) => !cat.isCompleted
+      );
+      const completedCategories = sortedCategories.filter(
+        (cat) => cat.isCompleted
+      );
 
       // Sort each group separately by concept mastery
       const sortByConceptMastery = (a: any, b: any) => {
@@ -99,15 +114,18 @@ export async function GET(req: Request) {
       // If diagnostic scores exist, sort within each group
       if (userInfo?.diagnosticScores) {
         const scoreRanking = Object.entries(userInfo.diagnosticScores)
-          .filter(([key]) => key !== 'total')
+          .filter(([key]) => key !== "total")
           .sort(([, a], [, b]) => Number(a) - Number(b))
-          .reduce((acc, [section], index) => {
-            const subjects = getSectionSubjects(section);
-            subjects.forEach(subject => {
-              acc[subject] = index;
-            });
-            return acc;
-          }, {} as Record<string, number>);
+          .reduce(
+            (acc, [section], index) => {
+              const subjects = getSectionSubjects(section);
+              subjects.forEach((subject) => {
+                acc[subject] = index;
+              });
+              return acc;
+            },
+            {} as Record<string, number>
+          );
 
         const sortByDiagnostic = (a: any, b: any) => {
           const rankA = scoreRanking[a.subjectCategory] ?? 999;
@@ -125,12 +143,15 @@ export async function GET(req: Request) {
 
     // Paginate results
     const startIndex = (page - 1) * pageSize;
-    const paginatedCategories = sortedCategories.slice(startIndex, startIndex + pageSize);
+    const paginatedCategories = sortedCategories.slice(
+      startIndex,
+      startIndex + pageSize
+    );
 
     const result = {
       items: paginatedCategories,
       totalPages: Math.ceil(sortedCategories.length / pageSize),
-      currentPage: page
+      currentPage: page,
     };
 
     return NextResponse.json(result);
