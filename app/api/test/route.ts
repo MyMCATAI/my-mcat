@@ -426,21 +426,63 @@ async function getOrderedTests(
   });
 
   // Apply pagination
-  const paginatedTests = finalSortedTests.slice(skip, skip + pageSize);
+  let paginatedTests = finalSortedTests.slice(skip, skip + pageSize);
   const totalPages = Math.ceil(finalSortedTests.length / pageSize);
 
   console.log(
     `Returning ${paginatedTests.length} tests (page ${page} of ${totalPages})`
   );
 
+  const introTestCompleted = await hasCompletedIntroTest(userId);
+
+  if (!introTestCompleted) {
+    // Get the intro test
+    const introTest = await prisma.test.findUnique({
+      where: { id: "cm4nr1new004p5v6dxty82tws" },
+      include: {
+        questions: {
+          include: {
+            question: {
+              select: {
+                contentCategory: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (introTest) {
+      // Remove intro test if it's in the current page
+      const filteredPageTests = paginatedTests.filter(test => test.id !== introTest.id);
+      // Add intro test at the beginning with required TestWithRelevance properties
+      paginatedTests = [{
+        ...introTest,
+        relevanceScore: 1, // Give it maximum relevance
+        taken: false
+      } as TestWithRelevance, ...filteredPageTests.slice(0, pageSize - 1)];
+    }
+  }
+
   return {
-    tests: paginatedTests.map(
-      ({ relevanceScore, taken, ...test }) => test as Test
-    ),
+    tests: paginatedTests.map(({ relevanceScore, taken, ...test }) => test as Test),
     totalPages,
     currentPage: page,
     conceptCategories: sortedConceptCategories,
   };
+}
+
+// Add this helper function at the top
+async function hasCompletedIntroTest(userId: string) {
+  const completedIntroTest = await prisma.userTest.findFirst({
+    where: {
+      userId: userId,
+      testId: "cm4nr1new004p5v6dxty82tws",
+      finishedAt: { not: null }, // Make sure it's completed
+    },
+  });
+
+  return !!completedIntroTest;
 }
 
 export async function GET(req: Request) {
