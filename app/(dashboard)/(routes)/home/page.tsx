@@ -164,9 +164,7 @@ const Page = () => {
         console.log('Fetched userInfo:', userInfo);
         setUserInfo(userInfo);
         setHasPaid(userInfo.hasPaid);
-        
-        // Artificially set streak to 10 for testing
-        setUserStreak(10);
+      
         
         // Show streak popup for testing
         const lastStreakPopup = localStorage.getItem('lastStreakPopup');
