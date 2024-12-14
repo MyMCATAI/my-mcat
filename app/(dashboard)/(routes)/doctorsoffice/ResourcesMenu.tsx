@@ -30,6 +30,7 @@ const mapDoctorOfficeStatsToReportData = (
     userScore: stats.qualityOfCare * 50,
     totalTestsTaken: stats.patientsPerDay,
     testsCompleted: stats.patientsPerDay,
+    testsReviewed: stats.patientsPerDay,
     completionRate: 100,
     totalQuestionsAnswered: stats.patientsPerDay * 10,
     averageTestScore: stats.qualityOfCare * 50,
