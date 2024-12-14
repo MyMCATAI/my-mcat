@@ -19,22 +19,43 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Fetch all user tests and their responses (removed take: 5 limit)
+    // Fetch user tests with response review status
     const userTests = await prisma.userTest.findMany({
       where: { 
         userId,
         finishedAt: { not: null },  // Only get completed tests
         score: { not: null }        // Only get tests with scores
       },
-      include: { responses: true },
-      orderBy: { startedAt: 'desc' }
+      include: {
+        responses: {
+          select: {
+            id: true,
+            isReviewed: true,
+            userAnswer: true,
+            questionId: true,
+            isCorrect: true,
+            timeSpent: true,
+            categoryId: true
+          }
+        },
+      },
+      orderBy: {
+        startedAt: 'desc'
+      },
+      take: 5
     });
 
-    // Filter completed tests with valid scores
+    // Filter completed tests with valid scores and reviews
     const completedTests = userTests.filter(test => 
       test.finishedAt !== null && 
       test.score !== null && 
-      !isNaN(test.score)
+      !isNaN(test.score) &&
+      test.responses.every(r => r.userAnswer !== null)  // Ensure all responses have answers
+    );
+
+    // Add review tracking
+    const reviewedTests = completedTests.filter(test =>
+      test.responses.every(r => r.isReviewed === true)
     );
 
     // Update calculations with null checks
@@ -82,6 +103,7 @@ export async function GET(req: NextRequest) {
       userScore: userInfo?.score || 0,
       totalTestsTaken,
       testsCompleted: completedTests.length,
+      testsReviewed: reviewedTests.length,
       completionRate: totalTestsTaken > 0 ? (completedTests.length / totalTestsTaken) * 100 : 0,
       totalQuestionsAnswered,
       averageTestScore,

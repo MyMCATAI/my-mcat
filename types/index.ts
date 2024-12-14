@@ -144,6 +144,7 @@ export interface ReportData {
   userScore: number;
   totalTestsTaken: number;
   testsCompleted: number;
+  testsReviewed: number;
   completionRate: number;
   totalQuestionsAnswered: number;
   averageTestScore: number;
