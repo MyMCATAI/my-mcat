@@ -121,6 +121,8 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
               <div className="grid grid-cols-1 gap-4">
                 <a 
                   href="/blog/best-cars-strategy"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="block p-4 bg-[--theme-doctorsoffice-accent] rounded-lg shadow hover:shadow-lg hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200"
                 >
                   <div className="space-y-2">
@@ -132,6 +134,8 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
                 </a>
                 <a 
                   href="/blog/how-to-answer-cars-questions"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="block p-4 bg-[--theme-doctorsoffice-accent] rounded-lg shadow hover:shadow-lg hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200"
                 >
                   <div className="space-y-2">
@@ -143,6 +147,8 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
                 </a>
                 <a 
                   href="/blog/cars-ai-help"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="block p-4 bg-[--theme-doctorsoffice-accent] rounded-lg shadow hover:shadow-lg hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200"
                 >
                   <div className="space-y-2">
