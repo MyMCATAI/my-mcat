@@ -29,15 +29,20 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
   tasks,
   onScoreSubmit,
 }) => {
-  const [scores, setScores] = useState<number[]>(new Array(tasks.length).fill(0));
-  const [questions, setQuestions] = useState<number[]>(new Array(tasks.length).fill(0));
+  const [correctAnswers, setCorrectAnswers] = useState<number[]>(new Array(tasks.length).fill(0));
+  const [incorrectAnswers, setIncorrectAnswers] = useState<number[]>(new Array(tasks.length).fill(0));
   const [recentPulses, setRecentPulses] = useState<DataPulse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const calculateScore = (correct: number, incorrect: number) => {
+    const total = correct + incorrect;
+    if (total === 0) return 0;
+    return Math.round((correct / total) * 100);
+  };
 
   useEffect(() => {
     const fetchRecentPulses = async () => {
       try {
-        // Get yesterday's date
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
 
@@ -48,29 +53,25 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
 
         const pulses: DataPulse[] = await response.json();
         
-        // Filter pulses from the last 24 hours
         const recentPulses = pulses.filter(pulse => 
           new Date(pulse.createdAt) > yesterday
         );
 
         setRecentPulses(recentPulses);
 
-        // Update scores and questions if we have matching pulses
-        const newScores = [...scores];
-        const newQuestions = [...questions];
+        const newCorrect = [...correctAnswers];
+        const newIncorrect = [...incorrectAnswers];
 
         tasks.forEach((task, index) => {
           const matchingPulse = recentPulses.find(p => p.name === task.subject);
           if (matchingPulse) {
-            const totalQuestions = matchingPulse.positive + matchingPulse.negative;
-            const percentage = Math.round((matchingPulse.positive / totalQuestions) * 100);
-            newScores[index] = percentage;
-            newQuestions[index] = totalQuestions;
+            newCorrect[index] = matchingPulse.positive;
+            newIncorrect[index] = matchingPulse.negative;
           }
         });
 
-        setScores(newScores);
-        setQuestions(newQuestions);
+        setCorrectAnswers(newCorrect);
+        setIncorrectAnswers(newIncorrect);
       } catch (error) {
         console.error('Error fetching recent pulses:', error);
       } finally {
@@ -83,34 +84,30 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
     }
   }, [isOpen]);
 
-  const handleScoreChange = (index: number, value: string) => {
-    const newScore = Math.min(100, Math.max(0, parseInt(value) || 0));
-    const newScores = [...scores];
-    newScores[index] = newScore;
-    setScores(newScores);
+  const handleCorrectAnswersChange = (index: number, value: string) => {
+    const newCorrect = Math.max(0, parseInt(value) || 0);
+    const newCorrectAnswers = [...correctAnswers];
+    newCorrectAnswers[index] = newCorrect;
+    setCorrectAnswers(newCorrectAnswers);
   };
 
-  const handleQuestionsChange = (index: number, value: string) => {
-    const newQuestions = [...questions];
-    newQuestions[index] = parseInt(value) || 0;
-    setQuestions(newQuestions);
+  const handleIncorrectAnswersChange = (index: number, value: string) => {
+    const newIncorrect = Math.max(0, parseInt(value) || 0);
+    const newIncorrectAnswers = [...incorrectAnswers];
+    newIncorrectAnswers[index] = newIncorrect;
+    setIncorrectAnswers(newIncorrectAnswers);
   };
 
   const handleSubmit = async () => {
     try {
-      // Create a DataPulse for each task
       const createPromises = tasks.map(async (task, index) => {
-        const totalQuestions = questions[index];
-        const scorePercentage = scores[index];
-        
-        // Calculate positive and negative based on percentage
-        const positiveQuestions = Math.round((scorePercentage / 100) * totalQuestions);
-        const negativeQuestions = totalQuestions - positiveQuestions;
+        const positive = correctAnswers[index] || 0;
+        const negative = incorrectAnswers[index] || 0;
 
         const dataPulse = {
           name: task.subject,
-          positive: positiveQuestions,
-          negative: negativeQuestions,
+          positive,
+          negative,
           level: "contentCategory",
           source: "UWorld",
           notes: "",
@@ -133,15 +130,20 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
       });
 
       await Promise.all(createPromises);
-      onScoreSubmit(scores);
+      const calculatedScores = correctAnswers.map((correct, index) => 
+        calculateScore(correct || 0, incorrectAnswers[index] || 0)
+      );
+      onScoreSubmit(calculatedScores);
       onClose();
     } catch (error) {
       console.error('Error submitting scores:', error);
-
     }
   };
 
   const calculateAverageScore = () => {
+    const scores = correctAnswers.map((correct, index) => 
+      calculateScore(correct, incorrectAnswers[index])
+    );
     if (scores.length === 0) return 0;
     const sum = scores.reduce((acc, score) => acc + score, 0);
     return Math.round(sum / scores.length);
@@ -151,26 +153,23 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
     return recentPulses.some(pulse => pulse.name === taskSubject);
   };
 
-  const areAllTasksReadOnly = () => {
-    return tasks.every(task => isScoreReadOnly(task.subject));
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[40rem] bg-[#152c69] text-white" closeButtonClassName="hidden">
+      <DialogContent className="sm:max-w-[40rem] bg-[#f8fafc] text-black">
         <DialogHeader>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-2xl font-bold text-white">
-                UWorld Progress
+              <DialogTitle className="text-2xl font-bold text-black">
+                UWorld
               </DialogTitle>
               <a 
-                href="https://www.uworld.com/app/index.html?srsltid=AfmBOooIWaD-Q3kqMxNO_ffk2cazgN6SHu5fMXnfyXFAOErFGxI5W9Lw#/login/"
+                href="https://www.uworld.com/app/index.html#/login/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-black rounded-lg hover:bg-gray-200 transition-all shadow-sm hover:shadow-md"
               >
                 <span>Visit</span>
+                <span className="text-[0.625rem] text-gray-500">*</span>
                 <svg 
                   className="w-4 h-4" 
                   fill="none" 
@@ -186,139 +185,88 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
                 </svg>
               </a>
             </div>
-            <div className="text-xs text-[#307af4] italic">
-              *This tool is not affiliated with or endorsed by UWorld
+            <div className="text-[0.7rem] text-gray-400 italic">
+              Our study tool is unaffiliated with UWorld
             </div>
           </div>
         </DialogHeader>
 
-        <div className="flex flex-col space-y-6">
+        <div className="flex flex-col space-y-12">
           {isLoading ? (
             <div className="text-center py-4">Loading...</div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-8">
               {tasks.map((task, index) => (
                 <div 
                   key={index}
-                  className="bg-[#1e3a8a] p-4 rounded-lg border border-[#234097]"
+                  className="bg-[#8e9aab] bg-opacity-10 p-6 rounded-lg border border-[#e5e7eb] shadow-sm"
                 >
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex-grow">
-                      <p className="text-white font-medium">{task.subject}</p>
-                      <p className="text-sm text-gray-300">{task.text}</p>
+                      <p className="text-black font-medium text-lg">{task.subject}</p>
+                      <p className="text-sm text-gray-600">{task.text}</p>
                     </div>
                     <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-xs text-green-700 font-medium">Correct</span>
                         <Input
                           type="number"
                           min="0"
-                          value={questions[index]}
-                          onChange={(e) => handleQuestionsChange(index, e.target.value)}
-                          className={`w-20 text-center ${
-                            isScoreReadOnly(task.subject) 
-                              ? 'bg-gray-100 text-gray-700' 
-                              : 'bg-white text-black'
-                          }`}
-                          placeholder="Questions"
+                          value={correctAnswers[index]}
+                          onChange={(e) => handleCorrectAnswersChange(index, e.target.value)}
+                          className="w-24 text-center bg-green-50 border-green-400 focus:border-green-600 focus:ring-green-600 text-green-800 font-medium"
+                          placeholder="0"
                           disabled={isScoreReadOnly(task.subject)}
                         />
-                        <span className="text-gray-300 text-sm">Qs</span>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-xs text-red-700 font-medium">Incorrect</span>
                         <Input
                           type="number"
                           min="0"
-                          max="100"
-                          value={scores[index]}
-                          onChange={(e) => handleScoreChange(index, e.target.value)}
-                          className={`w-20 text-center ${
-                            isScoreReadOnly(task.subject) 
-                              ? 'bg-gray-100 text-gray-700' 
-                              : 'bg-white text-black'
-                          }`}
-                          placeholder="Score"
+                          value={incorrectAnswers[index]}
+                          onChange={(e) => handleIncorrectAnswersChange(index, e.target.value)}
+                          className="w-24 text-center bg-red-50 border-red-400 focus:border-red-600 focus:ring-red-600 text-red-800 font-medium"
+                          placeholder="0"
                           disabled={isScoreReadOnly(task.subject)}
                         />
-                        <span className="text-gray-300">%</span>
                       </div>
                     </div>
-                    {isScoreReadOnly(task.subject) && (
-                      <div className="mt-2 text-xs text-blue-300">
-                        {"Score from today's previous attempt"}
-                      </div>
-                    )}
                   </div>
-                  <div className="relative h-2 bg-[#234097] rounded-full mt-3">
+                  <div className="relative h-2 bg-gray-100 rounded-full mt-3">
                     <div 
-                      className={`absolute h-full rounded-full transition-all duration-300 ${
-                        scores[index] >= 75 ? 'bg-green-500' :
-                        scores[index] >= 50 ? 'bg-yellow-500' : 
-                        'bg-red-500'
-                      }`}
-                      style={{ width: `${scores[index]}%` }}
+                      className="absolute h-full bg-blue-300 rounded-full transition-all duration-300"
+                      style={{ width: `${calculateScore(correctAnswers[index], incorrectAnswers[index])}%` }}
                     />
-                    {scores[index] > 0 && (
-                      <div 
-                        className="absolute -top-1.5 text-xs font-medium text-white"
-                        style={{ 
-                          left: `${scores[index]}%`, 
-                          transform: 'translateX(-50%)'
-                        }}
-                      >
-                        {scores[index]}%
-                      </div>
-                    )}
                   </div>
+                  {isScoreReadOnly(task.subject) && (
+                    <div className="mt-2 text-xs text-gray-500">
+                      {"Score from today's previous attempt"}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
 
-          <div className="border-t border-[#2c4ba3] pt-6">
-            <h3 className="text-xl font-semibold mb-4 text-white">Overall Progress</h3>
-            <div className="relative h-8 bg-[#2c4ba3] rounded-full">
-              <div 
-                className={`absolute h-full rounded-full transition-all duration-300 ${
-                  calculateAverageScore() >= 75 ? 'bg-green-500' :
-                  calculateAverageScore() >= 50 ? 'bg-yellow-500' : 
-                  'bg-red-500'
-                }`}
-                style={{ width: `${calculateAverageScore()}%` }}
-              />
-              {calculateAverageScore() > 0 && (
-                <div 
-                  className="absolute -top-6 text-base font-medium text-white"
-                  style={{ 
-                    left: `${calculateAverageScore()}%`, 
-                    transform: 'translateX(-50%)'
-                  }}
-                >
-                  {calculateAverageScore()}%
-                </div>
-              )}
-            </div>
+          <div className="flex justify-end space-x-4">
+            <button
+              onClick={onClose}
+              className="px-4 py-1.5 text-gray-600 hover:text-gray-900 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              Submit Scores
+            </button>
           </div>
-
-          {!areAllTasksReadOnly() && (
-            <div className="flex justify-end space-x-2 mt-6">
-              <button
-                onClick={onClose}
-                className="px-4 py-1.5 text-gray-300 hover:text-white transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-              >
-                Submit Scores
-              </button>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>
   );
 };
 
-export default UWorldPopup; 
+export default UWorldPopup;
