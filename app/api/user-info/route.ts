@@ -81,15 +81,27 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { amount, notificationPreference } = body;
+    const { amount, notificationPreference, incrementScore, decrementScore } = body;
 
-    // Handle score update
+    // Handle score update with amount
     if (amount !== undefined) {
       if (typeof amount !== 'number' || isNaN(amount)) {
         return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
       }
 
       const updatedInfo = await incrementUserScore(amount);
+      return NextResponse.json({ score: updatedInfo.score });
+    }
+
+    // Handle increment/decrement score
+    if (incrementScore !== undefined || decrementScore !== undefined) {
+      let scoreChange = 1; // Default increment
+      
+      if (decrementScore) {
+        scoreChange = -1;
+      }
+
+      const updatedInfo = await incrementUserScore(scoreChange);
       return NextResponse.json({ score: updatedInfo.score });
     }
 
