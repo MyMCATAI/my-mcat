@@ -18,10 +18,15 @@ interface ATSSettingContentProps {
 const subjects = [
   { name: "Chemistry", icon: "atoms", progress: 45, color: "#E6B800" },
   { name: "Biology", icon: "evolution", progress: 30, color: "#4CAF50" },
-  { name: "Biochemistry", icon: "dna_n_biotechnology", progress: 60, color: "#2196F3" },
+  {
+    name: "Biochemistry",
+    icon: "dna_n_biotechnology",
+    progress: 60,
+    color: "#2196F3",
+  },
   { name: "Psychology", icon: "cognition", progress: 25, color: "#9C27B0" },
   { name: "Physics", icon: "force", progress: 75, color: "#800000" },
-  { name: "Sociology", icon: "soconcom", progress: 40, color: "#FF5722" }
+  { name: "Sociology", icon: "soconcom", progress: 40, color: "#FF5722" },
 ];
 
 const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
@@ -37,14 +42,39 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
   const [totalPages, setTotalPages] = useState<number>(1);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [selectedSubjectsForShuffle, setSelectedSubjectsForShuffle] = useState<Set<string>>(
-    new Set(subjects.map(subject => subject.name))
-  );
+  const [selectedSubjectsForShuffle, setSelectedSubjectsForShuffle] = useState<
+    Set<string>
+  >(() => {
+    const savedSubjects = localStorage.getItem("selectedSubjects");
+    return savedSubjects
+      ? new Set(JSON.parse(savedSubjects))
+      : new Set(subjects.map((subject) => subject.name));
+  });
 
   useEffect(() => {
-    fetchCategories(searchQuery, selectedSubject, currentPage, selectedSubjectsForShuffle);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Load checked categories from localStorage on mount
+    const savedCategories = localStorage.getItem("checkedCategories");
+    if (savedCategories) {
+      setCheckedCategories(JSON.parse(savedCategories));
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCategories(
+      searchQuery,
+      selectedSubject,
+      currentPage,
+      selectedSubjectsForShuffle
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSubject, currentPage, selectedSubjectsForShuffle]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "selectedSubjects",
+      JSON.stringify(Array.from(selectedSubjectsForShuffle))
+    );
+  }, [selectedSubjectsForShuffle]);
 
   const fetchCategories = async (
     searchQuery: string,
@@ -63,7 +93,10 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
       }
 
       if (selectedSubjects && selectedSubjects.size > 0) {
-        url.searchParams.append("subjects", Array.from(selectedSubjects).join(','));
+        url.searchParams.append(
+          "subjects",
+          Array.from(selectedSubjects).join(",")
+        );
       }
 
       const response = await fetch(url.toString());
@@ -93,13 +126,25 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
 
   const handleCategoryCheck = (category: Category, isChecked: boolean) => {
     if (isChecked) {
-      if (checkedCategories.length >= 6) {
-        setCheckedCategories((prev) => [category, ...prev.slice(0, -1)]);
-      } else {
-        setCheckedCategories((prev) => [category, ...prev]);
-      }
+      const newCheckedCategories =
+        checkedCategories.length >= 6
+          ? [category, ...checkedCategories.slice(0, -1)]
+          : [category, ...checkedCategories];
+
+      setCheckedCategories(newCheckedCategories);
+      localStorage.setItem(
+        "checkedCategories",
+        JSON.stringify(newCheckedCategories)
+      );
     } else {
-      setCheckedCategories((prev) => prev.filter((c) => c.id !== category.id));
+      const newCheckedCategories = checkedCategories.filter(
+        (c) => c.id !== category.id
+      );
+      setCheckedCategories(newCheckedCategories);
+      localStorage.setItem(
+        "checkedCategories",
+        JSON.stringify(newCheckedCategories)
+      );
     }
   };
 
@@ -110,19 +155,30 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
       url.searchParams.append("random", "true");
       url.searchParams.append("pageSize", "10");
       url.searchParams.append("page", "1");
-      
+      url.searchParams.append("excludeCompleted", "true");
+
       if (selectedSubjectsForShuffle.size > 0) {
-        url.searchParams.append("subjects", Array.from(selectedSubjectsForShuffle).join(','));
+        url.searchParams.append(
+          "subjects",
+          Array.from(selectedSubjectsForShuffle).join(",")
+        );
       }
 
       const response = await fetch(url.toString());
       const data = await response.json();
-      setCategories(data.items);
-      setCheckedCategories(data.items.slice(0, 6));
+
+      // Filter out any categories that might have completedAt set
+      const incompleteCategories = data.items.filter(
+        (category: Category & { knowledgeProfiles?: any[] }) =>
+          !category.knowledgeProfiles?.[0]?.completedAt
+      );
+
+      setCategories(incompleteCategories);
+      setCheckedCategories(incompleteCategories.slice(0, 6));
       setTotalPages(data.totalPages);
       setCurrentPage(1);
     } catch (error) {
-      console.error('Failed to fetch random categories:', error);
+      console.error("Failed to fetch random categories:", error);
     } finally {
       setIsLoading(false);
     }
@@ -139,7 +195,12 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 setCurrentPage(1);
-                fetchCategories(searchQuery, selectedSubject, 1, selectedSubjectsForShuffle);
+                fetchCategories(
+                  searchQuery,
+                  selectedSubject,
+                  1,
+                  selectedSubjectsForShuffle
+                );
               }
             }}
             onClick={() => setShowSearchResults(true)}
@@ -154,7 +215,10 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
         </div>
 
         <div className="h-10 flex-shrink-0">
-          <button onClick={handleRandomize} className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-transparent text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition duration-200">
+          <button
+            onClick={handleRandomize}
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-transparent text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition duration-200"
+          >
             <span>Shuffle</span>
           </button>
         </div>
@@ -175,7 +239,9 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
                 <div key={category.id} className="flex items-center gap-2 h-8">
                   <Checkbox
                     id={category.id}
-                    checked={checkedCategories.some((c) => c.id === category.id)}
+                    checked={checkedCategories.some(
+                      (c) => c.id === category.id
+                    )}
                     onCheckedChange={(isChecked) =>
                       handleCategoryCheck(category, isChecked as boolean)
                     }
@@ -197,13 +263,23 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
         <div className="flex-shrink-0 space-y-2">
           <div className="h-10">
             <button
-              onClick={() => setCheckedCategories([])}
+              onClick={() => {
+                setCheckedCategories([]);
+                setSelectedSubjectsForShuffle(
+                  new Set(subjects.map((subject) => subject.name))
+                );
+                localStorage.removeItem("checkedCategories");
+                localStorage.setItem(
+                  "selectedSubjects",
+                  JSON.stringify(subjects.map((subject) => subject.name))
+                );
+              }}
               className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
                 bg-transparent text-[--theme-text-color]
                 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
                 transition duration-200"
             >
-              <span>Reset Checked Categories</span>
+              <span>Reset All Categories</span>
             </button>
           </div>
 
@@ -262,27 +338,31 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
         <div className="max-h-[8rem] overflow-y-auto">
           <div className="grid grid-cols-2 gap-2">
             {subjects.map((subject) => (
-              <div 
-                key={subject.name} 
+              <div
+                key={subject.name}
                 className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[--theme-hover-color] transition-colors"
               >
                 <Checkbox
                   id={`shuffle-filter-${subject.name}`}
                   checked={selectedSubjectsForShuffle.has(subject.name)}
                   onCheckedChange={(checked) => {
-                    setSelectedSubjectsForShuffle(prev => {
+                    setSelectedSubjectsForShuffle((prev) => {
                       const newSet = new Set(prev);
                       if (checked) {
                         newSet.add(subject.name);
                       } else {
                         newSet.delete(subject.name);
                       }
+                      localStorage.setItem(
+                        "selectedSubjects",
+                        JSON.stringify(Array.from(newSet))
+                      );
                       return newSet;
                     });
                   }}
                   className="h-4 w-4"
                 />
-                <label 
+                <label
                   htmlFor={`shuffle-filter-${subject.name}`}
                   className="text-sm font-medium flex items-center gap-2 cursor-pointer"
                   style={{ color: subject.color }}
@@ -294,10 +374,8 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
           </div>
         </div>
       </div>
-      
-      <div className="flex-grow overflow-y-auto">
-        {SettingsContent()}
-      </div>
+
+      <div className="flex-grow overflow-y-auto">{SettingsContent()}</div>
     </div>
   );
 };
