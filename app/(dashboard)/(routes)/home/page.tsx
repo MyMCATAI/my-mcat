@@ -18,13 +18,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { checkProStatus } from "@/lib/utils";
-import WelcomePopUp from "@/components/home/WelcomePopUp";
-import UpdateNotificationPopup from "@/components/home/UpdateNotificationPopup";
 import FlashcardDeck from "./FlashcardDeck";
 import { toast } from 'react-hot-toast';
 import { PurchaseButton } from "@/components/purchase-button";
 import { isToday } from "date-fns";
 import { shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
+import StreakPopup from "@/components/score/StreakDisplay";
 
 
 const Page = () => {
@@ -50,8 +49,6 @@ const Page = () => {
   } | null>(null);
   const [userInfo, setUserInfo] = useState<any>(null);
 
-  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
-  const [showUpdateNotification, setShowUpdateNotification] = useState(false);
   const [currentPage, setCurrentPage] = useState("Schedule");
   const chatbotRef = useRef<{ sendMessage: (message: string) => void; }>({
     sendMessage: () => {}
@@ -59,6 +56,8 @@ const Page = () => {
   const paymentStatus = searchParams?.get("payment");
   const [hasPaid, setHasPaid] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showStreakPopup, setShowStreakPopup] = useState(false);
+  const [userStreak, setUserStreak] = useState(0);
 
   useEffect(() => {    
     // if returning from stripe, show toast depending on payment
@@ -106,17 +105,6 @@ const Page = () => {
   useEffect(()=>{
     updateCalendarChatContext(activities);
   },[activities])
-  useEffect(() => {
-    const hasSeenWelcome = localStorage.getItem("hasSeenWelcome");
-    if (!hasSeenWelcome) {
-      setShowWelcomePopup(true);
-      localStorage.setItem("hasSeenWelcome", "true");
-    }
-  }, []);
-
-  const handleCloseWelcomePopup = () => {
-    setShowWelcomePopup(false);
-  };
 
   const fetchActivities = async () => {
     try {
@@ -173,8 +161,22 @@ const Page = () => {
         return;
       } else if (response.ok) {
         const userInfo = await response.json();
+        console.log('Fetched userInfo:', userInfo);
         setUserInfo(userInfo);
         setHasPaid(userInfo.hasPaid);
+        
+        // Artificially set streak to 10 for testing
+        setUserStreak(10);
+        
+        // Show streak popup for testing
+        const lastStreakPopup = localStorage.getItem('lastStreakPopup');
+        const today = new Date().toDateString();
+        
+        if (!lastStreakPopup || lastStreakPopup !== today) {
+          console.log('Showing streak popup');
+          localStorage.setItem('lastStreakPopup', today);
+          setShowStreakPopup(true);
+        }
       } else {
         throw new Error("Failed to fetch user info");
       }
@@ -337,28 +339,6 @@ const Page = () => {
     };
   }, []);
 
-  const handleCloseUpdateNotification = () => {
-    setShowUpdateNotification(false);
-  };
-
-  const haveAllTutorialsPlayed = () => {
-    const tutorialPart1Played =
-      localStorage.getItem("tutorialPart1Played") === "true";
-    const tutorialPart2Played =
-      localStorage.getItem("tutorialPart2Played") === "true";
-    const tutorialPart3Played =
-      localStorage.getItem("tutorialPart3Played") === "true";
-    const tutorialPart4Played =
-      localStorage.getItem("tutorialPart4Played") === "true";
-
-    return (
-      tutorialPart1Played &&
-      tutorialPart2Played &&
-      tutorialPart3Played &&
-      tutorialPart4Played
-    );
-  };
-
   const updateCalendarChatContext = (currentActivities: FetchedActivity[]) => {
     const today = new Date();
     const yesterday = new Date(today);
@@ -417,6 +397,29 @@ const Page = () => {
     if (newTab === "Schedule") {
       updateCalendarChatContext(activities);
     }
+  };
+
+  const shouldShowStreakPopup = () => {
+    console.log('shouldShowStreakPopup called'); // Debug log
+    console.log('Current userStreak:', userStreak); // Debug log
+    
+    if (userStreak < 1) {
+      console.log('Streak too low, not showing popup'); // Debug log
+      return false;
+    }
+    
+    const lastStreakPopup = localStorage.getItem('lastStreakPopup');
+    const today = new Date().toDateString();
+    
+    console.log('Last streak popup:', lastStreakPopup); // Debug log
+    console.log('Today:', today); // Debug log
+    
+    if (!lastStreakPopup || lastStreakPopup !== today) {
+      console.log('Conditions met, should show popup'); // Debug log
+      localStorage.setItem('lastStreakPopup', today);
+      return true;
+    }
+    return false;
   };
 
   return (
@@ -506,16 +509,13 @@ const Page = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Welcome Popup */}
-        <WelcomePopUp
-          open={showWelcomePopup}
-          onOpenChange={handleCloseWelcomePopup}
-        />
-
-        {/* Update Notification Popup */}
-        <UpdateNotificationPopup
-          open={showUpdateNotification && haveAllTutorialsPlayed()}
-          onOpenChange={handleCloseUpdateNotification}
+        <StreakPopup 
+          streak={userStreak}
+          isOpen={showStreakPopup}
+          onClose={() => {
+            console.log('Closing streak popup'); // Debug log
+            setShowStreakPopup(false);
+          }}
         />
       </div>
   );
