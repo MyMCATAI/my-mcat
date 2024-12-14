@@ -6,7 +6,6 @@ import React, {
   useCallback,
 } from "react";
 import { isSameDay, isToday, isTomorrow } from "date-fns";
-import { useUser } from "@clerk/nextjs";
 import SettingContent from "./SettingContent";
 import { NewActivity, FetchedActivity } from "@/types";
 import { DialogHeader } from "@/components/ui/dialog";
@@ -41,7 +40,6 @@ import Tutorial from "./Tutorial";
 import { Checkbox } from "@/components/ui/checkbox";
 import Statistics from "@/components/Statistics";
 import DonutChart from "./DonutChart";
-import { FaFire } from "react-icons/fa";
 import { PurchaseButton } from "@/components/purchase-button";
 import { toast } from "react-hot-toast";
 import {
@@ -54,18 +52,8 @@ import { HelpCircle, Bell, Coffee, ClipboardList } from 'lucide-react';
 import { useOutsideClick } from '@/hooks/use-outside-click';
 import UWorldPopup from '@/components/home/UWorldPopup';
 import CompletionDialog from '@/components/home/CompletionDialog';
-
-interface UWorldTask {
-  text: string;
-  completed: boolean;
-  subject: string;
-}
-import Link from 'next/link';
-
-interface CompletionDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+import ScoreDisplay from '@/components/score/ScoreDisplay';
+import StreakDisplay from '@/components/score/StreakDisplay';
 
 ChartJS.register(
   CategoryScale,
@@ -109,7 +97,6 @@ type Section =
 
 const Schedule: React.FC<ScheduleProps> = ({
   activities,
-  onStudyPlanSaved,
   handleSetTab,
   isActive,
   onActivitiesUpdate,
@@ -119,26 +106,22 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showNewActivityForm, setShowNewActivityForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [typedText, setTypedText] = useState("");
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(true);
   const [showRewardDialog, setShowRewardDialog] = useState(false);
   const [rewardSection, setRewardSection] = useState("");
   const [userCoinCount, setUserCoinCount] = useState(0);
+  const [userStreak, setUserStreak] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const fanfareRef = useRef<HTMLAudioElement>(null);
   const [runTutorialPart1, setRunTutorialPart1] = useState(false);
   const [runTutorialPart2, setRunTutorialPart2] = useState(false);
   const [runTutorialPart3, setRunTutorialPart3] = useState(false);
   const [runTutorialPart4, setRunTutorialPart4] = useState(false);
-  const [tutorialText, setTutorialText] = useState("");
   const [isTutorialTypingComplete, setIsTutorialTypingComplete] =
     useState(false);
   const [tutorialStep, setTutorialStep] = useState(1);
-  const [hasUpdatedStudyPlan, setHasUpdatedStudyPlan] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [userScore, setUserScore] = useState(0);
   const [showBreaksDialog, setShowBreaksDialog] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showUWorldPopup, setShowUWorldPopup] = useState(false);
@@ -172,10 +155,8 @@ const Schedule: React.FC<ScheduleProps> = ({
       setTimeout(handleStartTutorialPart4, 10000); // Delay by 10 seconds
     };
 
-    // Add the event listener when the component mounts
     window.addEventListener("startTutorialPart4", eventListener);
 
-    // Cleanup function to remove the event listener when the component unmounts
     return () => {
       window.removeEventListener("startTutorialPart4", eventListener);
     };
@@ -235,9 +216,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   useEffect(() => {
     setCurrentDate(new Date());
-    setTypedText("");
     setIsTypingComplete(false);
-    setTutorialText("");
     setIsTutorialTypingComplete(false);
 
     let text = getActivitiesText;
@@ -252,11 +231,6 @@ const Schedule: React.FC<ScheduleProps> = ({
 
     let index = 0;
     const typingTimer = setInterval(() => {
-      if (runTutorialPart1) {
-        setTutorialText((prev) => text.slice(0, prev.length + 1));
-      } else {
-        setTypedText((prev) => text.slice(0, prev.length + 1));
-      }
       index++;
       if (index > text.length) {
         clearInterval(typingTimer);
@@ -273,14 +247,9 @@ const Schedule: React.FC<ScheduleProps> = ({
     };
   }, [getActivitiesText, runTutorialPart1, tutorialStep]);
 
-  const handleTutorialStepChange = (step: number) => {
-    setTutorialStep(step);
-  };
-
   const handleStudyPlanSaved = useCallback(() => {
     setShowSettings(false);
     setShowAnalytics(false); // Switch to calendar mode
-    setHasUpdatedStudyPlan(true);
 
     // Only start Part 2 if it hasn't been played yet
     if (
@@ -294,30 +263,8 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   }, []);
 
-  // Add this new effect to handle the transition from Part 2 to Part 3
-  // useEffect(() => {
-  //   if (
-  //     localStorage.getItem("tutorialPart2Played") === "true" &&
-  //     (!localStorage.getItem("tutorialPart3Played") ||
-  //       localStorage.getItem("tutorialPart3Played") === "false")
-  //   ) {
-  //     // Part 2 just finished, start Part 3
-  //     setTimeout(() => {
-  //       setRunTutorialPart3(true);
-  //       localStorage.setItem("tutorialPart3Played", "true");
-  //     }, 2000); // Delay after Part 2 ends
-  //   }
-  // }, [runTutorialPart2]);
-
   const toggleSettings = () => {
     setShowSettings((prev) => !prev);
-  };
-
-  const endAllTutorials = () => {
-    setRunTutorialPart1(false);
-    setRunTutorialPart2(false);
-    setRunTutorialPart3(false);
-    setRunTutorialPart4(false);
   };
 
   const toggleNewActivityForm = () =>
@@ -402,29 +349,24 @@ const Schedule: React.FC<ScheduleProps> = ({
   };
 
   useEffect(() => {
-    const fetchUserCoinCount = async () => {
+    const fetchUserInfo = async () => {
       try {
         const response = await fetch("/api/user-info");
         if (response.ok) {
           const data = await response.json();
-          setUserCoinCount(data.coinCount);
+
+          setUserCoinCount(data.score);
+          setUserStreak(data.streak)
         }
       } catch (error) {
         console.error("Error fetching user coin count:", error);
       }
     };
 
-    fetchUserCoinCount();
+    fetchUserInfo();
   }, []);
 
-  const handleActivateTutorial = (step: number) => {
-    setTutorialStep(step);
-    setRunTutorialPart1(true);
-  };
-
-  // Add this function to reset the local storage variables
   const resetTutorials = () => {
-    setIsResetting(true);
     localStorage.removeItem("tutorialPart1Played");
     localStorage.removeItem("tutorialPart2Played");
     localStorage.removeItem("tutorialPart3Played");
@@ -439,7 +381,6 @@ const Schedule: React.FC<ScheduleProps> = ({
       setRunTutorialPart1(true);
       setTutorialStep(1);
       localStorage.setItem("tutorialPart1Played", "true");
-      setIsResetting(false);
     }, 2000);
   };
 
@@ -449,21 +390,7 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   }, [isActive]);
 
-  useEffect(() => {
-    const fetchUserScore = async () => {
-      try {
-        const response = await fetch("/api/user-info");
-        if (response.ok) {
-          const data = await response.json();
-          setUserScore(data.score);
-        }
-      } catch (error) {
-        console.error("Error fetching user score:", error);
-      }
-    };
-
-    fetchUserScore();
-  }, []);
+ 
 
   const [todayActivities, setTodayActivities] = useState<Activity[]>([]);
 
@@ -559,7 +486,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             const response = await fetch("/api/user-info");
             if (response.ok) {
               const data = await response.json();
-              setUserScore(data.score);
+              setUserCoinCount(data.score);
             }
           } catch (error) {
             console.error("Error fetching user score:", error);
@@ -796,30 +723,19 @@ const Schedule: React.FC<ScheduleProps> = ({
 
       {/* Right Content */}
       <div className="p-2.5 flex flex-col relative" style={{ marginLeft: "1.25rem" }}>
-        {/* Stats Box - Vertical stack */}
+        {/* Purchase Button */}
         {showAnalytics && !selectedSubject && (
-          <div className="absolute top-6 left-8 z-10">
-            <PurchaseButton tooltipText="Click to purchase more coins!">
-              <div 
-                className="flex items-center gap-2 rounded-2xl px-4 py-2 transition-all duration-200"
-                style={{
-                  backgroundColor: 'var(--theme-leaguecard-color)',
-                }}
-              >
-                <span className="font-bold text-2xl" style={{ color: 'var(--theme-text-color)' }}>
-                  {userScore.toLocaleString()}
-                </span>
-                <div className="relative">
-                  <Image
-                    src="/game-components/PixelCupcake.png"
-                    alt="Coins"
-                    width={32}
-                    height={32}
-                    className="transform hover:scale-110 transition-transform duration-200"
-                  />
-                </div>
-              </div>
-            </PurchaseButton>
+          <div className="absolute top-6 left-8 z-50">
+            <div className="pointer-events-auto">
+              <PurchaseButton tooltipText="Click to purchase more coins!">
+                <button className="hover:opacity-80 transition-opacity">
+                  <ScoreDisplay score={userCoinCount} />
+                </button>
+              </PurchaseButton>
+            </div>
+            <div className="mt-4">
+              <StreakDisplay streak={userStreak} />
+            </div>
           </div>
         )}
 
@@ -932,9 +848,9 @@ const Schedule: React.FC<ScheduleProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Main Container with fixed dimensions */}
+        {/* Main Container - Add lower z-index */}
         <div
-          className="flex-grow h-[calc(100vh-8rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
+          className="flex-grow h-[calc(100vh-8rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden z-0"
           style={{
             backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
             backgroundSize: "cover",
