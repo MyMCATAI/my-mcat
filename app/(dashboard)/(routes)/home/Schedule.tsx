@@ -354,7 +354,9 @@ const Schedule: React.FC<ScheduleProps> = ({
         const response = await fetch("/api/user-info");
         if (response.ok) {
           const data = await response.json();
+
           setUserCoinCount(data.score);
+          setUserStreak(data.streak)
         }
       } catch (error) {
         console.error("Error fetching user coin count:", error);
@@ -730,6 +732,9 @@ const Schedule: React.FC<ScheduleProps> = ({
                   <ScoreDisplay score={userCoinCount} />
                 </button>
               </PurchaseButton>
+            </div>
+            <div className="mt-4">
+              <StreakDisplay streak={userStreak} />
             </div>
           </div>
         )}
