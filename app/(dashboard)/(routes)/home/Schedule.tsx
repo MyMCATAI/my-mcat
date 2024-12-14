@@ -354,7 +354,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         const response = await fetch("/api/user-info");
         if (response.ok) {
           const data = await response.json();
-
           setUserCoinCount(data.score);
         }
       } catch (error) {
