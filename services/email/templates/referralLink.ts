@@ -1,7 +1,7 @@
 import { TemplateConfig } from '../types';
 
 export const referralLinkTemplate = (data: any): TemplateConfig => ({
-  subject: `Poke! Your friend${data.referrerName} poked you about your MCAT prep!`,
+  subject: `Poke! Your friend ${data.referrerName} poked you about your MCAT prep!`,
   html: `
     <div style="font-family: Arial, sans-serif; max-width: 37.5rem; margin: 0 auto; padding: 1.25rem;">
       <p style="color: #333333; line-height: 1.6;">

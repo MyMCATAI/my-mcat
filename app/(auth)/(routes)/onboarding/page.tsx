@@ -23,8 +23,6 @@ export default function OnboardingPage() {
   const [suggestions, setSuggestions] = useState<Array<{name: string, city: string, state: string}>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [step, setStep] = useState(1); 
-  const [gpaMessage, setGpaMessage] = useState('');
-  const [scoreMessage, setScoreMessage] = useState('');
   const [attemptMessage, setAttemptMessage] = useState('');
   const [hasNotTakenMCAT, setHasNotTakenMCAT] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -36,7 +34,6 @@ export default function OnboardingPage() {
   const [kalypsoMessage, setKalypsoMessage] = useState('');
   const [friendEmail, setFriendEmail] = useState('');
   const [targetScore, setTargetScore] = useState<string>('');
-  const [highScoreMessage, setHighScoreMessage] = useState('');
   const [isCanadian, setIsCanadian] = useState(false);
   const [gpaValue, setGpaValue] = useState<string>('');
   const [diagnosticValue, setDiagnosticValue] = useState<string>('');
@@ -106,10 +103,7 @@ export default function OnboardingPage() {
       }
     }
 
-    setGpaMessage('');
-    setScoreMessage('');
     setAttemptMessage('');
-    setHighScoreMessage('');
     setStep(step + 1);
   };
 
@@ -141,42 +135,15 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleGPAChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGPAChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setGpaValue(value);
-    
-    const gpa = parseFloat(value);
-    clearTimeout(window.gpaTimeout);
-    window.gpaTimeout = setTimeout(() => {
-      if (gpa >= 3.7) {
-        setGpaMessage("That's a great GPA! You're a rockstar! 🌟");
-        setTimeout(() => setGpaMessage(''), 1500);
-      } else if (gpa < 3.6) {
-        setGpaMessage("Good thing you're going to offset your GPA with a GREAT MCAT score! We'll make sure of that. 💪");
-        setTimeout(() => setGpaMessage(''), 2500);
-      } else {
-        setGpaMessage('');
-      }
-    }, 1000);
-  }, []);
+  };
 
-  const handleScoreChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setDiagnosticValue(value);
-    
-    const score = parseInt(value);
-    clearTimeout(window.scoreTimeout);
-    
-    window.scoreTimeout = setTimeout(() => {
-      if (score >= 510) {
-        setScoreMessage("I know 528 potential when I see it! 🎯");
-        setTimeout(() => setScoreMessage(''), 1500);
-      } else {
-        setScoreMessage("Don't beat yourself up over it. We're just beginning!");
-        setTimeout(() => setScoreMessage(''), 2500);
-      }
-    }, 1000);
-  }, []);
+  };
 
   const handleAttemptChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -184,7 +151,7 @@ export default function OnboardingPage() {
     
     if (parseInt(value) > 1) {
       setAttemptMessage("Oooo, I love a good comeback story!");
-      setTimeout(() => setAttemptMessage(''), 1200);
+      setTimeout(() => setAttemptMessage(''), 2000);
     } else {
       setAttemptMessage('');
     }
@@ -205,14 +172,6 @@ export default function OnboardingPage() {
   const handleTargetScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setTargetScore(value);
-    
-    const score = parseInt(value);
-    if (score > 519) {
-      setHighScoreMessage("Ambitious, aren't we?");
-      setTimeout(() => setHighScoreMessage(''), 1500);
-    } else {
-      setHighScoreMessage('');
-    }
   };
 
   const onPurchase = async () => {
@@ -245,47 +204,24 @@ export default function OnboardingPage() {
   const emailIsValid = isValidEmail(friendEmail)
 
   return (
-    <div className="flex items-center justify-center min-h-screen relative px-4 py-6 md:px-0">
-      {(step === 4 && kalypsoMessage) && (
-        <motion.div 
-          initial={{ x: '100%' }}
-          animate={{ x: '0%' }}
-          transition={{ type: "spring", duration: 1 }}
-          className="fixed -bottom-24 -right-10 translate-y-1/4 z-50 hidden md:block"
-        >
-          <div className="w-[48rem] h-[48rem] relative">
-            <Image
-              src="/kalypsoend.gif"
-              alt="Kalypso"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-        </motion.div>
-      )}
-
+    <div className="flex flex-col items-center justify-center min-h-screen relative px-4 py-6 md:px-0">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="w-full max-w-2xl p-4 md:p-8 rounded-lg border border-[#5F7E92] bg-[#001226] relative"
       >
-        <div className="md:absolute md:right-0 md:translate-x-[calc(100%+2rem)] h-full top-0 relative md:static">
-          <AnimatePresence>
-            {gpaMessage && (
-              <Tooltip message={gpaMessage} topPosition={160} className="md:static fixed bottom-4 left-4 right-4 z-50" />
-            )}
-            {scoreMessage && (
-              <Tooltip message={scoreMessage} topPosition={252} />
-            )}
-            {attemptMessage && (
-              <Tooltip message={attemptMessage} topPosition={370} />
-            )}
-            {highScoreMessage && (
-              <Tooltip message={highScoreMessage} topPosition={440} />
-            )}
-          </AnimatePresence>
-        </div>
+        <AnimatePresence>
+          {attemptMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="fixed top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white px-8 py-4 rounded-xl shadow-lg text-lg z-50"
+            >
+              {attemptMessage}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {step === 1 && (
           <div className="space-y-6 md:space-y-8">
@@ -639,6 +575,25 @@ export default function OnboardingPage() {
               </button>
             </div>
           </div>
+        )}
+
+        {kalypsoMessage && (
+          <motion.div 
+            initial={{ x: '100%' }}
+            animate={{ x: '0%' }}
+            transition={{ type: "spring", duration: 1 }}
+            className="fixed bottom-0 right-0 md:right-8 transform translate-x-1/2 z-50 pointer-events-none"
+          >
+            <div className="w-[20rem] h-[36rem] md:w-[32rem] md:h-[32rem] lg:w-[48rem] lg:h-[48rem] relative">
+              <Image
+                src="/kalypsoend.gif"
+                alt="Kalypso"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+          </motion.div>
         )}
       </motion.div>
     </div>
