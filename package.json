@@ -31,7 +31,11 @@
     "update-questions": "ts-node --project tsconfig.server.json scripts/updateQuestionCategories.ts",
     "delete-study-plan": "ts-node --project tsconfig.server.json scripts/deleteStudyPlan.ts",
     "update-user-response-categories": "ts-node --project tsconfig.server.json scripts/updateUserResponseCategories.ts",
-    "delete-questions": "ts-node --project tsconfig.server.json scripts/deleteQuestions.ts"
+    "delete-questions": "ts-node --project tsconfig.server.json scripts/deleteQuestions.ts",
+    "delete-categories": "ts-node --project tsconfig.server.json scripts/deleteCategories.ts",
+    "create-cars-passages": "ts-node --project tsconfig.server.json scripts/createCARsPassages.ts",
+    "create-cars-tests-and-questions": "ts-node --project tsconfig.server.json scripts/createCARsTestsAndQuestions.ts",
+    "log-recent-entries": "ts-node --project tsconfig.server.json scripts/logRecentEntries.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.633.0",
