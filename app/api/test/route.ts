@@ -318,16 +318,16 @@ async function getOrderedTests(
     const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
     console.log('Average score calculated:', averageScore);
     
-    if (averageScore < 50) {
-      console.log('Score < 50%, recommending level 1');
-      return 1;        // Level 1 for < 50%
+    if (averageScore < 65) {
+      console.log('Score < 70%, recommending level 1');
+      return 1;        // Level 1 for < 65%
     }
-    if (averageScore < 80) {
-      console.log('Score < 80%, recommending level 2');
-      return 2;        // Level 2 for 50-80%
+    if (averageScore < 90) {
+      console.log('Score < 85%, recommending level 2');
+      return 2;        // Level 2 for 65-90%
     }
-    console.log('Score >= 80%, recommending level 3');
-    return 3;         // Level 3 for > 80%
+    console.log('Score >= 85%, recommending level 3');
+    return 3;         // Level 3 for > 90%
   }
 
   // Add this function near the top with other helper functions
