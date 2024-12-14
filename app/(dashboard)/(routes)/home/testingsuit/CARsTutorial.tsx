@@ -99,15 +99,20 @@ const CARsTutorial: React.FC<CARsTutorialProps> = ({
 
   const algorithmStep: Step[] = [
     {
-      target: "body",
+      target: ".help-button",
       content: (
         <div className="space-y-4 text-black">
-          <h2 className="text-xl font-bold">{"Get started with your first CARs passage!"}</h2>
-          <p>{"Our algorithm picks out a CARs passage that's your difficulty: it can go from really easy to brutally hard. You can start now, or go to Bulletin and see our recommended CARs strategies."}</p>
+          <h2 className="text-xl font-bold">{"Learn the scaffolding strategy!"}</h2>
+          <p>{"Our algorithm picks a CARs passage at your level. Click here to learn more about our recommended CARs strategies."}</p>
         </div>
       ),
-      placement: "center",
+      placement: "bottom",
       disableBeacon: true,
+      styles: {
+        options: {
+          width: 300,
+        },
+      },
     }
   ];
 

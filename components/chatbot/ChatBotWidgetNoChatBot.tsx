@@ -49,6 +49,10 @@ const ChatBotWidgetNoChatBot: React.FC<ChatBotWidgetNoChatBotProps> = ({
 
     // Wait for 2 seconds (duration of kalypsotalk animation)
     await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Set to end state while waiting for API response
+    setKalypsoState('end');
+    setKalypsoSrc('/kalypsoend.gif');
 
     if (!reportData) {
       handleResponse("Oops! I couldn't find your report data. Please make sure you're logged in and have completed some tests.");
