@@ -43,10 +43,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import DiagnosticDialog from './DiagnosticDialog';
+import DiagnosticDialog from "./DiagnosticDialog";
 import ATSTutorial from "./ATSTutorial";
 import CompleteTopicButton from "@/components/CompleteTopicButton";
-import ReactConfetti from 'react-confetti';
+import ReactConfetti from "react-confetti";
 import { HelpCircle } from "lucide-react";
 
 interface ContentItem {
@@ -70,12 +70,12 @@ interface AdaptiveTutoringProps {
   isFirstVisit?: boolean;
 }
 
-type PlatformType = 'spotify' | 'apple' | 'mymcat';
+type PlatformType = "spotify" | "apple" | "mymcat";
 
 const platformText: Record<PlatformType, string> = {
-  spotify: 'Spotify',
-  apple: 'Apple Music',
-  mymcat: 'MyMCAT'
+  spotify: "Spotify",
+  apple: "Apple Music",
+  mymcat: "MyMCAT",
 };
 
 const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
@@ -84,8 +84,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   chatbotRef,
   isFirstVisit = true,
 }) => {
-
-  
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -124,8 +122,10 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const [runTutorialPart2, setRunTutorialPart2] = useState(false);
   const [runTutorialPart3, setRunTutorialPart3] = useState(false);
   const [runTutorialPart4, setRunTutorialPart4] = useState(() => {
-    const initialTutorialPlayed = localStorage.getItem("initialTutorialPlayed") === "true";
-    const atsIconTutorialPlayed = localStorage.getItem("atsIconTutorialPlayed") === "true";
+    const initialTutorialPlayed =
+      localStorage.getItem("initialTutorialPlayed") === "true";
+    const atsIconTutorialPlayed =
+      localStorage.getItem("atsIconTutorialPlayed") === "true";
     return initialTutorialPlayed && !atsIconTutorialPlayed;
   });
 
@@ -135,36 +135,42 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
   const [isEmptyButtonHovered, setIsEmptyButtonHovered] = useState(false);
   const emptyButtonRef = useRef<HTMLDivElement>(null);
-  const [emptyButtonPosition, setEmptyButtonPosition] = useState({ top: 0, left: 0 });
+  const [emptyButtonPosition, setEmptyButtonPosition] = useState({
+    top: 0,
+    left: 0,
+  });
 
   const [tutorialKey, setTutorialKey] = useState(0);
 
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const fetchInitialData = useCallback(async (useKnowledgeProfiles: boolean = false) => {
-    setIsLoading(true);
-    try {
-      const categoriesData = await fetchCategories(useKnowledgeProfiles);
-      setCategories(categoriesData);
-      setInitialCategories(categoriesData);
-      setCheckedCategories(categoriesData);
+  const fetchInitialData = useCallback(
+    async (useKnowledgeProfiles: boolean = false) => {
+      setIsLoading(true);
+      try {
+        const categoriesData = await fetchCategories(useKnowledgeProfiles);
+        setCategories(categoriesData);
+        setInitialCategories(categoriesData);
+        setCheckedCategories(categoriesData);
 
-      if (categoriesData.length > 0) {
-        const initialCategory = categoriesData[0].conceptCategory;
-        setSelectedCategory(initialCategory);
-        await fetchContentAndQuestions(initialCategory);
+        if (categoriesData.length > 0) {
+          const initialCategory = categoriesData[0].conceptCategory;
+          setSelectedCategory(initialCategory);
+          await fetchContentAndQuestions(initialCategory);
+        }
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load initial data. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching initial data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load initial data. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   useEffect(() => {
     fetchInitialData(true);
@@ -311,13 +317,13 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const extractVideoId = (url: string) => {
     try {
       // Remove any playlist or additional parameters
-      const baseUrl = url.split('&')[0];
-      
+      const baseUrl = url.split("&")[0];
+
       // Try to match the video ID
       const vMatch = baseUrl.match(/(?:v=|\/)([\w-]{11})(?:\?|&|\/|$)/);
       return vMatch ? vMatch[1] : null;
     } catch (error) {
-      console.error('Error extracting video ID:', error);
+      console.error("Error extracting video ID:", error);
       return null;
     }
   };
@@ -370,9 +376,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     async (category: string) => {
       setIsLoading(true);
       try {
-        const [contentData] = await Promise.all([
-          fetchContent(category),
-        ]);
+        const [contentData] = await Promise.all([fetchContent(category)]);
         setContent(contentData);
         updateContentVisibility(contentData);
       } catch (error) {
@@ -458,19 +462,19 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     if (!selectedCategory) {
       toast({
         title: "No Category Selected",
-        description: "Please select a category first to view its quiz questions.",
+        description:
+          "Please select a category first to view its quiz questions.",
         variant: "destructive",
       });
       return;
     }
-    
+
     setCurrentContentId(null);
     setContent([]);
   };
 
   const handleCardClick = async (index: number) => {
     const selectedCategoryItem = checkedCategories[index];
-
     if (!selectedCategoryItem) {
       console.error("Category not found at index:", index);
       return;
@@ -479,12 +483,11 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     setSelectedCard(index);
     const selectedCategory = selectedCategoryItem.conceptCategory;
     setSelectedCategory(selectedCategory);
+    localStorage.setItem("selectedCardIndex", index.toString());
 
     try {
       setIsLoading(true);
-      const [contentData] = await Promise.all([
-        fetchContent(selectedCategory),
-      ]);
+      const [contentData] = await Promise.all([fetchContent(selectedCategory)]);
 
       setContent(contentData);
       updateContentVisibility(contentData);
@@ -573,13 +576,13 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const platformIcons: Record<PlatformType, any> = {
     spotify: FaSpotify,
     apple: FaApple,
-    mymcat: FaHeadphones
+    mymcat: FaHeadphones,
   };
 
   const getPodcastPlatform = (link: string): PlatformType | null => {
-    if (link.includes('spotify.com')) return 'spotify';
-    if (link.includes('apple.com')) return 'apple';
-    if (link.includes('/podcast/')) return 'mymcat';
+    if (link.includes("spotify.com")) return "spotify";
+    if (link.includes("apple.com")) return "apple";
+    if (link.includes("/podcast/")) return "mymcat";
     return null;
   };
 
@@ -594,20 +597,21 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const response = await fetch('/api/user-info');
-        if (!response.ok) throw new Error('Failed to fetch user info');
-        
+        const response = await fetch("/api/user-info");
+        if (!response.ok) throw new Error("Failed to fetch user info");
+
         const userInfo = await response.json();
-        
+
         // Check if diagnostic scores exist and are not empty
         const diagnosticScores = userInfo.diagnosticScores;
-        const hasCompletedDiagnostic = diagnosticScores && 
-          Object.values(diagnosticScores).some(score => score !== "");
+        const hasCompletedDiagnostic =
+          diagnosticScores &&
+          Object.values(diagnosticScores).some((score) => score !== "");
 
         // Only show diagnostic dialog if user hasn't completed it
         setShowDiagnosticDialog(!hasCompletedDiagnostic);
       } catch (error) {
-        console.error('Error fetching user info:', error);
+        console.error("Error fetching user info:", error);
         // If there's an error, we'll show the diagnostic dialog as a fallback
         setShowDiagnosticDialog(true);
       }
@@ -638,7 +642,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   useEffect(() => {
     updateEmptyButtonPosition();
     window.addEventListener("resize", updateEmptyButtonPosition);
-    return () => window.removeEventListener("resize", updateEmptyButtonPosition);
+    return () =>
+      window.removeEventListener("resize", updateEmptyButtonPosition);
   }, [updateEmptyButtonPosition]);
 
   useEffect(() => {
@@ -663,27 +668,48 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     setRunTutorialPart3(false);
     setRunTutorialPart4(false);
     setCatIconInteracted(false);
-    setShowHelp(false); // Close the help dialog
-    setTutorialKey(prev => prev + 1);
+    setShowHelp(false);
+    setTutorialKey((prev) => prev + 1);
+
+    // Clear both types of stored categories
+    localStorage.removeItem("checkedCategories");
+    localStorage.removeItem("selectedSubjects");
   };
   const handleTopicComplete = async (categoryId: string) => {
-    // Remove the completed category from both lists
-    setCategories(prevCategories => 
-      prevCategories.filter(category => category.id !== categoryId)
+    const newCheckedCategories = checkedCategories.filter(
+      (category) => category.id !== categoryId
     );
-    
-    setCheckedCategories(prevChecked => 
-      prevChecked.filter(category => category.id !== categoryId)
+    setCheckedCategories(newCheckedCategories);
+    localStorage.setItem(
+      "checkedCategories",
+      JSON.stringify(newCheckedCategories)
     );
 
     // Find the current category index before removal
-    const currentIndex = checkedCategories.findIndex(cat => cat.id === categoryId);
-    
+    const currentIndex = checkedCategories.findIndex(
+      (cat) => cat.id === categoryId
+    );
+
     // Find the next category (prioritize the next index, otherwise wrap to beginning)
     const nextIndex = currentIndex < 5 ? currentIndex + 1 : 0;
     handleCardClick(nextIndex);
-    
   };
+
+  useEffect(() => {
+    // Load checked categories from localStorage on mount
+    const savedCategories = localStorage.getItem("checkedCategories");
+    if (savedCategories) {
+      const parsedCategories = JSON.parse(savedCategories);
+      setCheckedCategories(parsedCategories);
+
+      // If there are saved categories, set the first one as selected
+      if (parsedCategories.length > 0) {
+        setSelectedCategory(parsedCategories[0].conceptCategory);
+        setSelectedCard(0);
+      }
+    }
+  }, []);
+
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
       {showConfetti && (
@@ -698,94 +724,94 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       <div className="flex items-stretch w-full mb-3">
         <div className="flex-grow mr-3.5 ml-2">
           <div className="grid grid-cols-7 gap-3 ats-topic-icons">
-            {isLoading
-              ? (
-                  [
-                    "empty",
-                    "medicine",
-                    "study",
-                    "vaccine",
-                    "science",
-                    "education",
-                    "cat",
-                  ] as const
-                ).map((theme, index) => (
-                  <ThemedSkeleton key={index} theme={theme} />
-                ))
-              : (
-                  <>
-                    <div
-                      ref={emptyButtonRef}
-                      className="relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all hover:bg-[--theme-hover-color]"
-                      style={{
-                        backgroundColor: "var(--theme-adaptive-tutoring-color)",
-                        boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
-                      }}
-                      onMouseEnter={() => {
-                        setIsEmptyButtonHovered(true);
-                        updateEmptyButtonPosition();
-                      }}
-                      onMouseLeave={() => setIsEmptyButtonHovered(false)}
-                    >
-                      <div className="relative w-full h-full flex flex-col justify-center items-center">
-                        <div className="settings-container flex-col">
-                          <svg
-                            className="settings-icon w-8 h-8"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M9.25,22l-.4-3.2c-.216-.084-.42-.184-.612-.3c-.192-.117-.38-.242-.563-.375L4.7,19.375L1.95,14.625L4.525,12.675c-.016-.117-.024-.23-.024-.338V11.662c0-.108.008-.221.025-.337L1.95,9.375L4.7,4.625L7.675,5.875c.183-.134.375-.259.575-.375c.2-.117.4-.217.6-.3l.4-3.2H14.75l.4,3.2c.216.084.42.184.612.3c.192.117.38.242.563.375l2.975-.75l2.75,4.75l-2.575,1.95c.016.117.024.23.024.338v.675c0,.108-.008.221-.025.337l2.575,1.95l-2.75,4.75l-2.95-.75c-.183.133-.375.258-.575.375c-.2.117-.4.217-.6.3l-.4,3.2H9.25zM12.05,15.5c.966,0,1.791-.342,2.475-1.025c.683-.683,1.025-1.508,1.025-2.475c0-.966-.342-1.791-1.025-2.475c-.683-.683-1.508-1.025-2.475-1.025c-0.984,0-1.813,.342-2.488,1.025c-0.675,.683-1.012,1.508-1.012,2.475c0,.966,.337,1.791,1.012,2.475c.675,.683,1.504,1.025,2.488,1.025z"
-                              className="text-[--theme-text-color]"
-                            />
-                          </svg>
-                          <span className="text-xs font-semibold text-[--theme-text-color]">
-                            SETTINGS
-                          </span>
-                        </div>
+            {isLoading ? (
+              (
+                [
+                  "empty",
+                  "medicine",
+                  "study",
+                  "vaccine",
+                  "science",
+                  "education",
+                  "cat",
+                ] as const
+              ).map((theme, index) => (
+                <ThemedSkeleton key={index} theme={theme} />
+              ))
+            ) : (
+              <>
+                <div
+                  ref={emptyButtonRef}
+                  className="relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all hover:bg-[--theme-hover-color]"
+                  style={{
+                    backgroundColor: "var(--theme-adaptive-tutoring-color)",
+                    boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                  }}
+                  onMouseEnter={() => {
+                    setIsEmptyButtonHovered(true);
+                    updateEmptyButtonPosition();
+                  }}
+                  onMouseLeave={() => setIsEmptyButtonHovered(false)}
+                >
+                  <div className="relative w-full h-full flex flex-col justify-center items-center">
+                    <div className="settings-container flex-col">
+                      <svg
+                        className="settings-icon w-8 h-8"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M9.25,22l-.4-3.2c-.216-.084-.42-.184-.612-.3c-.192-.117-.38-.242-.563-.375L4.7,19.375L1.95,14.625L4.525,12.675c-.016-.117-.024-.23-.024-.338V11.662c0-.108.008-.221.025-.337L1.95,9.375L4.7,4.625L7.675,5.875c.183-.134.375-.259.575-.375c.2-.117.4-.217.6-.3l.4-3.2H14.75l.4,3.2c.216.084.42.184.612.3c.192.117.38.242.563.375l2.975-.75l2.75,4.75l-2.575,1.95c.016.117.024.23.024.338v.675c0,.108-.008.221-.025.337l2.575,1.95l-2.75,4.75l-2.95-.75c-.183.133-.375.258-.575.375c-.2.117-.4.217-.6.3l-.4,3.2H9.25zM12.05,15.5c.966,0,1.791-.342,2.475-1.025c.683-.683,1.025-1.508,1.025-2.475c0-.966-.342-1.791-1.025-2.475c-.683-.683-1.508-1.025-2.475-1.025c-0.984,0-1.813,.342-2.488,1.025c-0.675,.683-1.012,1.508-1.012,2.475c0,.966,.337,1.791,1.012,2.475c.675,.683,1.504,1.025,2.488,1.025z"
+                          className="text-[--theme-text-color]"
+                        />
+                      </svg>
+                      <span className="text-xs font-semibold text-[--theme-text-color]">
+                        SETTINGS
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                {checkedCategories?.slice(0, 6).map((category, index) => (
+                  <div
+                    key={category.id}
+                    className={`relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all flex flex-col justify-between items-center ${index === 1 ? "specific-topic-icon" : ""}`}
+                    style={{
+                      backgroundColor: "var(--theme-adaptive-tutoring-color)",
+                      boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.boxShadow =
+                        "var(--theme-adaptive-tutoring-boxShadow-hover)";
+                      e.currentTarget.style.transform = "scale(1.05)";
+                      e.currentTarget.style.zIndex = "30";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow =
+                        "var(--theme-adaptive-tutoring-boxShadow)";
+                      e.currentTarget.style.transform = "scale(1)";
+                      e.currentTarget.style.zIndex = "10";
+                    }}
+                    onClick={() => handleCardClick(index)}
+                  >
+                    <div className="relative w-full h-full flex flex-col justify-center items-center">
+                      <div className="opacity-0 group-hover:opacity-100 absolute inset-0 gb-black bg-opacity-50 flex items-end transition-opacity duration-300">
+                        <p className="text-[--theme-text-color] text-xs p-1 mt-2 truncate w-full">
+                          {category?.conceptCategory || "No title"}
+                        </p>
+                      </div>
+                      <div className="m-auto transform scale-90">
+                        <Icon
+                          name={category.icon}
+                          className="w-6 h-6"
+                          color={category.color}
+                        />
                       </div>
                     </div>
-                    {checkedCategories?.slice(0, 6).map((category, index) => (
-                      <div
-                        key={category.id}
-                        className={`relative z-10 rounded-lg text-center mb-2 group min-h-[6.25rem] cursor-pointer transition-all flex flex-col justify-between items-center ${index === 1 ? 'specific-topic-icon' : ''}`}
-                        style={{
-                          backgroundColor: "var(--theme-adaptive-tutoring-color)",
-                          boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.boxShadow =
-                            "var(--theme-adaptive-tutoring-boxShadow-hover)";
-                          e.currentTarget.style.transform = "scale(1.05)";
-                          e.currentTarget.style.zIndex = "30";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.boxShadow =
-                            "var(--theme-adaptive-tutoring-boxShadow)";
-                          e.currentTarget.style.transform = "scale(1)";
-                          e.currentTarget.style.zIndex = "10";
-                        }}
-                        onClick={() => handleCardClick(index)}
-                      >
-                        <div className="relative w-full h-full flex flex-col justify-center items-center">
-                          <div className="opacity-0 group-hover:opacity-100 absolute inset-0 gb-black bg-opacity-50 flex items-end transition-opacity duration-300">
-                            <p className="text-[--theme-text-color] text-xs p-1 mt-2 truncate w-full">
-                              {category?.conceptCategory || "No title"}
-                            </p>
-                          </div>
-                          <div className="m-auto transform scale-90">
-                            <Icon
-                              name={category.icon}
-                              className="w-6 h-6"
-                              color={category.color}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                )}
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </div>
         <div className="col-span-1">
@@ -799,8 +825,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                       showHelp ? "bg-[--theme-hover-color]" : "bg-white"
                     }`}
                   >
-                    <HelpCircle 
-                      className="w-4 h-4" 
+                    <HelpCircle
+                      className="w-4 h-4"
                       fill="none"
                       stroke={showHelp ? "white" : "#333"}
                     />
@@ -852,26 +878,35 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               <div className="flex items-center relative group">
                 <div className="flex items-center transition-opacity duration-300 group-hover:opacity-0">
                   <p className="text-m px-10 flex items-center">
-                    {selectedCategory && categories.find(cat => 
-                      cat.conceptCategory === selectedCategory && cat.isCompleted
-                    ) && (
-                      <span className="flex items-center text-green-500 mr-2">
-                        <Check className="w-4 h-4" />
-                      </span>
-                    )}
+                    {selectedCategory &&
+                      categories.find(
+                        (cat) =>
+                          cat.conceptCategory === selectedCategory &&
+                          cat.isCompleted
+                      ) && (
+                        <span className="flex items-center text-green-500 mr-2">
+                          <Check className="w-4 h-4" />
+                        </span>
+                      )}
                     {selectedCategory || ""}
                   </p>
                 </div>
                 {selectedCategory && (
                   <div className="absolute left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    {categories.find(cat => cat.conceptCategory === selectedCategory)?.isCompleted ? (
+                    {categories.find(
+                      (cat) => cat.conceptCategory === selectedCategory
+                    )?.isCompleted ? (
                       <p className="text-green-500 flex items-center">
                         <Check className="w-4 h-4 mr-1" />
                         Completed
                       </p>
                     ) : (
                       <CompleteTopicButton
-                        categoryId={categories.find(cat => cat.conceptCategory === selectedCategory)?.id || ''}
+                        categoryId={
+                          categories.find(
+                            (cat) => cat.conceptCategory === selectedCategory
+                          )?.id || ""
+                        }
                         categoryName={selectedCategory}
                         onComplete={handleTopicComplete}
                         setShowConfetti={setShowConfetti}
@@ -971,9 +1006,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                               )}
                             </CollapsibleContent>
                           </Collapsible>
-                          
-                          <a 
-                            href="https://app.termly.io/policy-viewer/policy.html?policyUUID=bbaa0360-e283-49d9-b273-19f54d765254" 
+
+                          <a
+                            href="https://app.termly.io/policy-viewer/policy.html?policyUUID=bbaa0360-e283-49d9-b273-19f54d765254"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-sm text-[--theme-hover-color] hover:underline"
@@ -1074,9 +1109,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                               )}
                             </CollapsibleContent>
                           </Collapsible>
-                          
-                          <a 
-                            href="https://app.termly.io/policy-viewer/policy.html?policyUUID=bbaa0360-e283-49d9-b273-19f54d765254" 
+
+                          <a
+                            href="https://app.termly.io/policy-viewer/policy.html?policyUUID=bbaa0360-e283-49d9-b273-19f54d765254"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-sm text-[--theme-hover-color] hover:underline"
@@ -1089,9 +1124,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
                   {contentType === "quiz" && selectedCategory && (
                     <div className="h-[calc(100vh-23rem)]">
-                      <Quiz 
-                        category={selectedCategory} 
-                        shuffle={true} 
+                      <Quiz
+                        category={selectedCategory}
+                        shuffle={true}
                         setChatbotContext={setChatbotContext}
                       />
                     </div>
@@ -1127,34 +1162,35 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                             onClick={() => handleContentClick(video.id)}
                             className="cursor-pointer mb-2"
                           >
-                              <div>
-                                <Image
-                                   src={videoId 
+                            <div>
+                              <Image
+                                src={
+                                  videoId
                                     ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-                                    : '/knowledge.png'
-                                  }
-                                  alt={`Thumbnail ${index}`}
-                                  width={140}
-                                  height={90}
-                                  className={`relative w-30 h-18 bg-black cursor-pointer rounded-lg ${
-                                    currentContentId === video.id && isPlaying
-                                      ? "border-4 border-[--theme-border-color]"
-                                      : ""
-                                  }`}
-                                />
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <p className="text-xs mt-1 text-[--theme-text-color] truncate">
-                                        {video.title}
-                                      </p>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p className="text-xs">{video.title}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </div>
+                                    : "/knowledge.png"
+                                }
+                                alt={`Thumbnail ${index}`}
+                                width={140}
+                                height={90}
+                                className={`relative w-30 h-18 bg-black cursor-pointer rounded-lg ${
+                                  currentContentId === video.id && isPlaying
+                                    ? "border-4 border-[--theme-border-color]"
+                                    : ""
+                                }`}
+                              />
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <p className="text-xs mt-1 text-[--theme-text-color] truncate">
+                                      {video.title}
+                                    </p>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="text-xs">{video.title}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
                           </div>
                         );
                       })}
@@ -1184,9 +1220,12 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                 <div className="relative">
                   {/* Only show podcast button if category has valid podcast links */}
                   {(() => {
-                    const currentCategory = categories.find(cat => cat.conceptCategory === selectedCategory);
-                    const hasPodcastLinks = currentCategory?.podcastLinks && 
-                      currentCategory.podcastLinks !== "" && 
+                    const currentCategory = categories.find(
+                      (cat) => cat.conceptCategory === selectedCategory
+                    );
+                    const hasPodcastLinks =
+                      currentCategory?.podcastLinks &&
+                      currentCategory.podcastLinks !== "" &&
                       currentCategory.podcastLinks !== "[]";
 
                     return hasPodcastLinks ? (
@@ -1229,9 +1268,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               style={{
                 top: `${emptyButtonPosition.top}rem`,
                 left: `${emptyButtonPosition.left + 8}rem`,
-                width: '40rem',
-                height: '80vh',
-                maxHeight: 'calc(100vh - 4rem)',
+                width: "40rem",
+                height: "80vh",
+                maxHeight: "calc(100vh - 4rem)",
               }}
               onMouseEnter={() => setIsEmptyButtonHovered(true)}
               onMouseLeave={() => setIsEmptyButtonHovered(false)}
@@ -1261,14 +1300,16 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               </h3>
               <hr className="border-[--theme-hover-text] opacity-30 mb-2" />
               {(() => {
-                const currentCategory = categories.find(cat => cat.conceptCategory === selectedCategory);
+                const currentCategory = categories.find(
+                  (cat) => cat.conceptCategory === selectedCategory
+                );
                 if (!currentCategory?.podcastLinks) return null;
-                
+
                 let links: string[] = [];
                 try {
                   links = JSON.parse(currentCategory.podcastLinks);
                 } catch (e) {
-                  console.error('Error parsing podcast links:', e);
+                  console.error("Error parsing podcast links:", e);
                   return null;
                 }
 
@@ -1277,7 +1318,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                   if (!platform || !platformIcons[platform]) return null;
 
                   const Icon = platformIcons[platform];
-                  
+
                   return (
                     <a
                       key={index}
@@ -1332,8 +1373,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               exit={{ opacity: 0, y: -20 }}
               className="absolute top-0 right-4 w-[32rem] z-50 max-h-[80vh] flex flex-col"
             >
-              <HelpContent 
-                onClose={() => setShowHelp(false)} 
+              <HelpContent
+                onClose={() => setShowHelp(false)}
                 onResetTutorials={handleResetTutorials}
               />
             </motion.div>
