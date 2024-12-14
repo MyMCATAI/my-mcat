@@ -9,7 +9,7 @@ export const referralLinkTemplate = (data: any): TemplateConfig => ({
       </p>
       
       <p style="color: #333333; line-height: 1.6;">
-        I'm Kalypso, the superkitty at MyMCAT.ai. We're a sexy new technology company that's making an intelligent tutoring platform so a 520+ is in the hands of every capable student. Your friend ${data.referrerName} thought you might be interested in studying with us. We're helping pre-med students like you achieve their target scores through personalized AI tutoring.
+        I'm Kalypso, the superkitty at MyMCAT! We're making an intelligent tutoring platform so that a520+ is in the hands of every capable student. Your friend ${data.referrerName} thought you might be interested in studying with us. 
       </p>
       
       <p style="color: #333333; line-height: 1.6;">
@@ -27,7 +27,6 @@ export const referralLinkTemplate = (data: any): TemplateConfig => ({
       <p style="color: #333333; line-height: 1.6;">
         Happy studying!<br>
         Kalypso 🐱<br>
-        MyMCAT AI Tutor
       </p>
 
       <p style="color: #666666; font-size: 0.75rem; margin-top: 1.875rem;">
