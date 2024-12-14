@@ -42,6 +42,8 @@ export function PurchaseButton({
     </Button>
   );
 
+  // TODO Josh make this open as a modal with multiple options
+
   return (
     <TooltipProvider>
       <Tooltip>
