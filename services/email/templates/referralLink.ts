@@ -5,11 +5,11 @@ export const referralLinkTemplate = (data: any): TemplateConfig => ({
   html: `
     <div style="font-family: Arial, sans-serif; max-width: 37.5rem; margin: 0 auto; padding: 1.25rem;">
       <p style="color: #333333; line-height: 1.6;">
-        Hi-ya,
+        Meow there!,
       </p>
       
       <p style="color: #333333; line-height: 1.6;">
-        I'm Kalypso, the superkitty. Your friend ${data.referrerName} thought you might want to study together on MyMCAT.
+        I'm Kalypso, your friendlysuperkitty. Your friend ${data.referrerName} thought you might want to study together on MyMCAT.
       </p>
       
       <p style="color: #333333; line-height: 1.6;">
