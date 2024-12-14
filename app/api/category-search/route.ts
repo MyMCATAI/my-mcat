@@ -50,13 +50,17 @@ export async function GET(req: Request) {
                 },
               ]
             : []),
-          {
-            knowledgeProfiles: {
-              none: {
-                AND: [{ userId: userId }, { completedAt: { not: null } }],
-              },
-            },
-          },
+          ...(isRandom
+            ? [
+                {
+                  knowledgeProfiles: {
+                    none: {
+                      AND: [{ userId: userId }, { completedAt: { not: null } }],
+                    },
+                  },
+                },
+              ]
+            : []),
         ],
       },
       include: {
