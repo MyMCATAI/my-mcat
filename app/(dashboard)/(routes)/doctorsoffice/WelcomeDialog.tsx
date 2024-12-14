@@ -47,7 +47,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({ isOpen, onOpenChange }) =
           </p>
           <div className="space-y-2">
             <a 
-              href="https://discord.gg/EC3RC3tp"
+              href="https://discord.gg/rTxN7wkh6e" 
               target="_blank"
               rel="noopener noreferrer"
             >
