@@ -12,7 +12,7 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '10');
+    const pageSize = parseInt(searchParams.get('pageSize') || '20');
     const contentId = searchParams.get('id');
     const conceptCategory = searchParams.get('conceptCategory')?.replace(/_/g, ' ') || '';
     if (contentId) {
