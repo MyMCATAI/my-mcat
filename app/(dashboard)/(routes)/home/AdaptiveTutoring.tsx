@@ -144,6 +144,10 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
   const [showConfetti, setShowConfetti] = useState(false);
 
+  const [lastSelectedCategory, setLastSelectedCategory] = useState<string | null>(
+    localStorage.getItem("lastSelectedCategory")
+  );
+
   const fetchInitialData = useCallback(
     async (useKnowledgeProfiles: boolean = false) => {
       setIsLoading(true);
@@ -151,13 +155,30 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         const categoriesData = await fetchCategories(useKnowledgeProfiles);
         setCategories(categoriesData);
         setInitialCategories(categoriesData);
-        setCheckedCategories(categoriesData);
 
-        if (categoriesData.length > 0) {
-          const initialCategory = categoriesData[0].conceptCategory;
-          setSelectedCategory(initialCategory);
-          await fetchContentAndQuestions(initialCategory);
+        // Load checked categories from localStorage
+        const savedCategories = localStorage.getItem("checkedCategories");
+        const parsedCategories = savedCategories 
+          ? JSON.parse(savedCategories) 
+          : categoriesData.slice(0, 6);
+        
+        setCheckedCategories(parsedCategories);
+
+        // Set the selected category based on lastSelectedCategory or first checked category
+        const categoryToSelect = lastSelectedCategory && 
+          parsedCategories.find(cat => cat.conceptCategory === lastSelectedCategory)
+            ? lastSelectedCategory
+            : parsedCategories[0]?.conceptCategory;
+
+        if (categoryToSelect) {
+          setSelectedCategory(categoryToSelect);
+          const index = parsedCategories.findIndex(
+            cat => cat.conceptCategory === categoryToSelect
+          );
+          setSelectedCard(index >= 0 ? index : 0);
         }
+
+        await fetchContentAndQuestions(categoryToSelect);
       } catch (error) {
         console.error("Error fetching initial data:", error);
         toast({
@@ -169,7 +190,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         setIsLoading(false);
       }
     },
-    []
+    [lastSelectedCategory]
   );
 
   useEffect(() => {
@@ -483,12 +504,14 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     setSelectedCard(index);
     const selectedCategory = selectedCategoryItem.conceptCategory;
     setSelectedCategory(selectedCategory);
-    localStorage.setItem("selectedCardIndex", index.toString());
-
+    
+    // Persist the selected category
+    localStorage.setItem("lastSelectedCategory", selectedCategory);
+    setLastSelectedCategory(selectedCategory);
+    
     try {
       setIsLoading(true);
-      const [contentData] = await Promise.all([fetchContent(selectedCategory)]);
-
+      const contentData = await fetchContent(selectedCategory);
       setContent(contentData);
       updateContentVisibility(contentData);
     } catch (error) {
@@ -708,6 +731,28 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         setSelectedCard(0);
       }
     }
+  }, []);
+
+  useEffect(() => {
+    // Cleanup function to ensure we don't have an invalid selected category
+    return () => {
+      const lastSelectedCategory = localStorage.getItem("lastSelectedCategory");
+      const checkedCategories = localStorage.getItem("checkedCategories");
+      
+      if (lastSelectedCategory && checkedCategories) {
+        const parsedCategories = JSON.parse(checkedCategories);
+        const categoryExists = parsedCategories.some(
+          (cat: Category) => cat.conceptCategory === lastSelectedCategory
+        );
+        
+        if (!categoryExists && parsedCategories.length > 0) {
+          localStorage.setItem(
+            "lastSelectedCategory", 
+            parsedCategories[0].conceptCategory
+          );
+        }
+      }
+    };
   }, []);
 
   return (
@@ -936,9 +981,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                       <Image
                         src="/cat.svg"
                         alt="AI Chat"
-                        width={24}
-                        height={24}
-                        className="theme-svg w-6 h-6"
+                        width={28}
+                        height={28}
+                        className="theme-svg w-7 h-7"
                       />
                     </div>
                   </button>

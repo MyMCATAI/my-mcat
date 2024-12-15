@@ -186,7 +186,7 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
               </a>
             </div>
             <div className="text-[0.7rem] text-gray-400 italic">
-              Our study tool is unaffiliated with UWorld
+              Our study tool is unaffiliated with UWorld. We recommend doing Tutored & Untimed.
             </div>
           </div>
         </DialogHeader>
