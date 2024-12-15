@@ -79,10 +79,12 @@ export function TestIntroModal({
               • Starting this test costs 1 coin
             </p>
             <p className="text-sm text-[--theme-text-color]">
-              • You can earn coins by achieving a perfect score within 10 minutes
+              You can earn that coin back by achieving a 8/9 stars.
             </p>
             <p className="text-sm text-[--theme-text-color]">
-              • Additional coins can be earned by reviewing the test afterwards
+              • Get 3 stars for highlighting, strikethrough, crossing out.
+              • Get 3 stars for doing a passage in under 10 minutes.
+              • Get 3 stars for getting 100% of them correct. 
             </p>
             <p className="text-sm font-medium mt-2 text-[--theme-text-color]">
               Your current balance: {userScore} coins
