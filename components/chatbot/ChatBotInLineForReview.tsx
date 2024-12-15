@@ -16,13 +16,17 @@ interface MyChatBotProps {
   isVoiceEnabled?: boolean;
   width?: string | number;
   backgroundColor?: string;
+  chatbotRef?: React.MutableRefObject<{
+    sendMessage: (message: string) => void;
+  }>;
 }
 
 const MyChatBot: React.FC<MyChatBotProps> = ({ 
   chatbotContext, 
   isVoiceEnabled = false, 
   width = '100%',
-  backgroundColor = 'white'
+  backgroundColor = 'white',
+  chatbotRef
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +55,41 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
 
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (chatbotRef) {
+      chatbotRef.current = {
+        sendMessage: (message: string) => {
+          const chatbotContainer = document.querySelector('[data-testid="chatbot-review"]');
+          const textarea = chatbotContainer?.querySelector('textarea');
+          if (textarea) {
+            textarea.value = message;
+            const enterEvent = new KeyboardEvent('keydown', {
+              key: 'Enter',
+              code: 'Enter',
+              keyCode: 13,
+              which: 13,
+              bubbles: true
+            });
+            textarea.focus();
+            setTimeout(() => {
+              textarea.dispatchEvent(enterEvent);
+            }, 50);
+          }
+        }
+      };
+    }
+  }, [chatbotRef]);
+
+  const handleOptionClick = (type: "question" | "summary") => {
+    if (!chatbotRef?.current) return;
+    
+    const message = type === "question" 
+      ? "Help me understand why this answer is correct"
+      : "Can you summarize the key points of this passage?";
+
+    chatbotRef.current.sendMessage(message);
+  };
 
   const sendMessage = async (message: string) => {
     setIsLoading(true);
@@ -189,6 +228,18 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
             >
               📖
             </button>
+            <button
+              onClick={() => handleOptionClick("question")}
+              className="px-2 text-sm bg-gray-200 text-black rounded hover:bg-blue-600 hover:text-white transition-colors"
+            >
+              Question Help
+            </button>
+            <button
+              onClick={() => handleOptionClick("summary")}
+              className="px-2 text-sm bg-gray-200 text-black rounded hover:bg-blue-600 hover:text-white transition-colors"
+            >
+              Passage Summary
+            </button>
           </div>
           <button 
             onClick={openDialog}
@@ -256,14 +307,17 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   }
 
   return (
-    <div style={{ 
-      inlineSize: width, 
-      backgroundColor: backgroundColor, 
-      display: 'flex', 
-      flexDirection: 'column', 
-      height: '100%', 
-      position: 'relative' 
-    }}>
+    <div 
+      data-testid="chatbot-review"
+      style={{ 
+        inlineSize: width, 
+        backgroundColor: backgroundColor, 
+        display: 'flex', 
+        flexDirection: 'column', 
+        height: '100%', 
+        position: 'relative' 
+      }}
+    >
       <style jsx global>{`
         .rcb-chat-input::before {
           content: none !important;
@@ -323,7 +377,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   );
 };
 
-const App: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled, width, backgroundColor }) => {
+const App: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled, width, backgroundColor, chatbotRef }) => {
   return (
     <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
       <MyChatBot 
@@ -331,6 +385,7 @@ const App: React.FC<MyChatBotProps> = ({ chatbotContext, isVoiceEnabled, width, 
         isVoiceEnabled={isVoiceEnabled} 
         width={width} 
         backgroundColor={backgroundColor}
+        chatbotRef={chatbotRef}
       />
     </div>
   );
