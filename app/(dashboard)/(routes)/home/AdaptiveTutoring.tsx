@@ -699,23 +699,46 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     localStorage.removeItem("selectedSubjects");
   };
   const handleTopicComplete = async (categoryId: string) => {
+    // First, remove the completed category from checked categories
     const newCheckedCategories = checkedCategories.filter(
       (category) => category.id !== categoryId
     );
     setCheckedCategories(newCheckedCategories);
-    localStorage.setItem(
-      "checkedCategories",
-      JSON.stringify(newCheckedCategories)
-    );
+    localStorage.setItem("checkedCategories", JSON.stringify(newCheckedCategories));
 
-    // Find the current category index before removal
-    const currentIndex = checkedCategories.findIndex(
-      (cat) => cat.id === categoryId
-    );
+    // Fetch fresh categories with updated knowledge profiles
+    try {
+      const response = await fetch("/api/category?useKnowledgeProfiles=true&page=1&pageSize=10");
+      if (!response.ok) throw new Error("Failed to fetch categories");
+      
+      const data = await response.json();
+      const freshCategories = data.items;
 
-    // Find the next category (prioritize the next index, otherwise wrap to beginning)
-    const nextIndex = currentIndex < 5 ? currentIndex + 1 : 0;
-    handleCardClick(nextIndex);
+      // Filter out completed categories and get the first uncompleted one
+      const nextCategory = freshCategories.find(cat => 
+        !cat.isCompleted && 
+        !newCheckedCategories.some(checked => checked.id === cat.id)
+      );
+
+      if (nextCategory) {
+        // Add the new category to checked categories
+        const updatedCheckedCategories = [...newCheckedCategories, nextCategory];
+        setCheckedCategories(updatedCheckedCategories);
+        localStorage.setItem("checkedCategories", JSON.stringify(updatedCheckedCategories));
+
+        // Set it as selected and fetch its content
+        setSelectedCategory(nextCategory.conceptCategory);
+        setSelectedCard(newCheckedCategories.length); // It will be added at the end
+        await fetchContentAndQuestions(nextCategory.conceptCategory);
+      }
+    } catch (error) {
+      console.error("Error fetching next category:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load next topic. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   useEffect(() => {
@@ -1012,7 +1035,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                           className="w-full h-full"
                           url={currentContent.link}
                           playing={isPlaying}
-                          muted
                           width="100%"
                           height="100%"
                           onProgress={({ playedSeconds }) =>
