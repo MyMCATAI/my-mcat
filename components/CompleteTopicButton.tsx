@@ -100,21 +100,21 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
               {"Are you confident that you've mastered this topic? By marking it as complete, you're indicating that you understand the core concepts and are ready to move on."}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
+          <DialogFooter className="flex gap-2">
+            <button
               onClick={() => setIsOpen(false)}
               disabled={isLoading}
+              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:opacity-80 transition-opacity duration-200"
             >
-              {"Cancel"}
-            </Button>
-            <Button
+              Cancel
+            </button>
+            <button
               onClick={handleComplete}
               disabled={isLoading}
-              className="bg-green-600 hover:bg-green-700"
+              className="px-4 py-2 rounded-md bg-green-600 text-white hover:opacity-90 transition-opacity duration-200"
             >
-              {isLoading ? "Completing..." : "Yes, Complete Topic"}
-            </Button>
+              {isLoading ? "Completing..." : "Complete"}
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
