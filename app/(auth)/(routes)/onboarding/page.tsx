@@ -403,14 +403,14 @@ export default function OnboardingPage() {
                   name="attemptNumber"
                   value={attemptValue}
                   onChange={handleAttemptChange}
-                  className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 [&>option]:bg-[#001226] [&>option]:text-white"
                   required
                 >
-                  <option value="">Select attempt number</option>
-                  <option value="1">First attempt</option>
-                  <option value="2">Second attempt</option>
-                  <option value="3">Third attempt</option>
-                  <option value="4+">Fourth or more</option>
+                  <option value="" className="bg-[#001226] text-white">Select attempt number</option>
+                  <option value="1" className="bg-[#001226] text-white">First attempt</option>
+                  <option value="2" className="bg-[#001226] text-white">Second attempt</option>
+                  <option value="3" className="bg-[#001226] text-white">Third attempt</option>
+                  <option value="4+" className="bg-[#001226] text-white">Fourth or more</option>
                 </select>
               </div>
             </div>
