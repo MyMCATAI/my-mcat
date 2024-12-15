@@ -1,5 +1,5 @@
 // File: app/api/user-test/response/route.ts
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 
@@ -11,11 +11,14 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url);
-  const userTestId = searchParams.get('userTestId');
-  const questionId = searchParams.get('questionId');
+  const userTestId = searchParams.get("userTestId");
+  const questionId = searchParams.get("questionId");
 
   if (!userTestId || !questionId) {
-    return NextResponse.json({ error: "Missing required query parameters" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing required query parameters" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -28,13 +31,19 @@ export async function GET(req: Request) {
     });
 
     if (!existingResponse) {
-      return NextResponse.json({ error: "Response not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Response not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(existingResponse);
   } catch (error) {
-    console.error('Error fetching user response:', error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("Error fetching user response:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -47,26 +56,39 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { userTestId, questionId, userAnswer, isCorrect, timeSpent, userNotes } = body;
+    const {
+      userTestId,
+      questionId,
+      userAnswer,
+      isCorrect,
+      timeSpent,
+      userNotes,
+    } = body;
 
     // Only validate questionId as required
     if (!questionId) {
       console.log("Missing required field: questionId");
-      return NextResponse.json({ error: "Missing required field: questionId" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required field: questionId" },
+        { status: 400 }
+      );
     }
 
     // Truncate values to prevent exceeding column limits
-    const truncatedUserAnswer = userAnswer?.substring(0, 200) || '';
-    const truncatedUserNotes = userNotes?.substring(0, 750) || '';
+    const truncatedUserAnswer = userAnswer?.substring(0, 200) || "";
+    const truncatedUserNotes = userNotes?.substring(0, 750) || "";
 
     // First, fetch the question to get its categoryId
     const question = await prisma.question.findUnique({
       where: { id: questionId },
-      select: { categoryId: true }
+      select: { categoryId: true },
     });
 
     if (!question) {
-      return NextResponse.json({ error: "Question not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Question not found" },
+        { status: 404 }
+      );
     }
 
     // Check for existing response
@@ -89,7 +111,8 @@ export async function POST(req: Request) {
         where: { id: existingResponse.id },
         data: {
           userAnswer: truncatedUserAnswer || existingResponse.userAnswer,
-          isCorrect: isCorrect !== undefined ? isCorrect : existingResponse.isCorrect,
+          isCorrect:
+            isCorrect !== undefined ? isCorrect : existingResponse.isCorrect,
           timeSpent: timeSpent || existingResponse.timeSpent,
           userNotes: updatedUserNotes,
         },
@@ -111,7 +134,9 @@ export async function POST(req: Request) {
           userAnswer: truncatedUserAnswer,
           isCorrect: isCorrect || false,
           timeSpent: timeSpent || 0,
-          userNotes: truncatedUserNotes ? `[${new Date().toISOString()}] - ${truncatedUserNotes}` : '',
+          userNotes: truncatedUserNotes
+            ? `[${new Date().toISOString()}] - ${truncatedUserNotes}`
+            : "",
         },
         include: {
           question: true,
@@ -123,8 +148,11 @@ export async function POST(req: Request) {
       return NextResponse.json(newResponse);
     }
   } catch (error) {
-    console.error('Error handling user response:', error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("Error handling user response:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -140,7 +168,10 @@ export async function PUT(req: Request) {
     console.log("body PUT response");
     console.log(body);
     if (!id) {
-      return NextResponse.json({ error: "Missing required field: id" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required field: id" },
+        { status: 400 }
+      );
     }
 
     // Handle notes separately to append timestamps
@@ -167,7 +198,10 @@ export async function PUT(req: Request) {
 
     return NextResponse.json(updatedResponse);
   } catch (error) {
-    console.error('Error updating user response:', error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("Error updating user response:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

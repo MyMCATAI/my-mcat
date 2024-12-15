@@ -32,7 +32,7 @@ export interface QuizQuestion {
   id: string;
   passage: Passage | null;
   passageId: string | null;
-  questionAnswerNotes: string[] | null;
+  questionAnswerNotes: string | null;
   questionContent: string;
   questionID: string;
   questionOptions: string[];
@@ -45,14 +45,6 @@ interface QuizProps {
     contentTitle: string;
     context: string;
   }) => void;
-}
-
-// Add interface for user response
-interface QuestionResponse {
-  questionId: string;
-  userAnswer: string;
-  isCorrect: boolean;
-  answeredAt: Date;
 }
 
 // Add utility function for shuffling
@@ -77,7 +69,9 @@ interface AnswerSummary {
 }
 
 const calculateScore = (summaries: AnswerSummary[]): number => {
-  const correctAnswers = summaries.filter(summary => summary.isCorrect).length;
+  const correctAnswers = summaries.filter(
+    (summary) => summary.isCorrect
+  ).length;
   return (correctAnswers / summaries.length) * 100;
 };
 
@@ -90,7 +84,6 @@ const Quiz: React.FC<QuizProps> = ({
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [shuffledOptions, setShuffledOptions] = useState<
     Record<string, string[]>
   >({});
@@ -113,6 +106,7 @@ const Quiz: React.FC<QuizProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
 
   const handleStartQuiz = async () => {
     try {
@@ -324,12 +318,12 @@ const Quiz: React.FC<QuizProps> = ({
     const timeSpent = questionTimerRef.current?.getElapsedTime() || 0;
     const isCorrect = answer === currentQuestion.questionOptions[0];
 
-    setSelectedAnswer(answer);
     setAnsweredQuestions((prev) => new Set([...prev, currentQuestion.id]));
+    setUserAnswers((prev) => ({ ...prev, [currentQuestion.id]: answer }));
 
     if (currentQuestion) {
       // Get the explanation for the correct answer (first note in the array)
-      const explanation = currentQuestion.questionAnswerNotes?.[0] || "";
+      const explanation = currentQuestion?.questionAnswerNotes && JSON.parse(currentQuestion.questionAnswerNotes)[0] || ""
 
       setAnswerSummaries((prev) => [
         ...prev,
@@ -350,7 +344,6 @@ const Quiz: React.FC<QuizProps> = ({
 
   const handleReset = useCallback(() => {
     setCurrentQuestionIndex(0);
-    setSelectedAnswer(null);
     setAnswerSummaries([]);
     setAnsweredQuestions(new Set());
     setHasAnsweredFirstQuestion(false);
@@ -362,23 +355,27 @@ const Quiz: React.FC<QuizProps> = ({
   }, [fetchQuestions]);
 
   const handleNextQuestion = async () => {
-    setSelectedAnswer(null);
 
     // Check if we've reached 15 questions or all available questions
-    if (currentQuestionIndex === 14 || currentQuestionIndex === questions.length - 1) {
+    if (
+      currentQuestionIndex === 14 ||
+      currentQuestionIndex === questions.length - 1
+    ) {
       const score = calculateScore(answerSummaries);
-      
+
       // If score is 80% or higher, award a coin
       if (score >= 80) {
         try {
           await updateScore(1);
-          toast.success("Congratulations! You earned a coin for scoring above 80%! 🎉");
+          toast.success(
+            "Congratulations! You earned a coin for scoring above 80%! 🎉"
+          );
         } catch (error) {
           console.error("Error incrementing score:", error);
           toast.error("Failed to award coin");
         }
       }
-      
+
       setShowSummary(true);
       return;
     }
@@ -406,8 +403,8 @@ const Quiz: React.FC<QuizProps> = ({
     const options = shuffledOptions[question.id] || [];
     const hasAnswered = answeredQuestions.has(question.id);
     const correctAnswer = question.questionOptions[0];
+    const userAnswer = userAnswers[question.id];
 
-    // Parse the questionAnswerNotes if it's a string
     let explanations = question.questionAnswerNotes;
     if (typeof explanations === "string") {
       try {
@@ -422,7 +419,7 @@ const Quiz: React.FC<QuizProps> = ({
       <div>
         <div className="space-y-2">
           {options.map((option, index) => {
-            const isSelected = selectedAnswer === option;
+            const isSelected = hasAnswered && userAnswer === option;
             const isCorrectAnswer = option === correctAnswer;
 
             let buttonClass =
@@ -469,9 +466,9 @@ const Quiz: React.FC<QuizProps> = ({
               />
             </div>
 
-            <ExplanationImages 
-              questionContent={currentQuestion.questionContent} 
-              isFullScreen={isFullScreen} 
+            <ExplanationImages
+              questionContent={currentQuestion.questionContent}
+              isFullScreen={isFullScreen}
             />
           </div>
         )}
@@ -540,7 +537,6 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
       if (!response.ok) {
         throw new Error("Failed to send downvote message");
       }
-
     } catch (error) {
       console.error("Error sending downvote:", error);
       toast.error("Failed to send feedback. Please try again.");
@@ -593,7 +589,7 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
         category={category}
         userScore={userInfo?.score ?? 0}
         isStarting={isStarting}
-        onStart={handleStartQuiz} 
+        onStart={handleStartQuiz}
       />
     );
   }

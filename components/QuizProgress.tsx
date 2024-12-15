@@ -1,4 +1,10 @@
 import React, { useEffect } from 'react';
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Add the interfaces needed
 interface AnswerSummary {
@@ -8,6 +14,7 @@ interface AnswerSummary {
   isCorrect: boolean;
   timeSpent: number;
   questionNumber: number;
+  explanation: string
 }
 
 interface QuizProgressProps {
@@ -61,24 +68,32 @@ const QuizProgress: React.FC<QuizProgressProps> = ({ summaries, totalQuestions }
       <div className="mt-6 space-y-4">
         <h3 className="font-semibold text-[--theme-text-color]">Question Details</h3>
         {summaries.map((summary, index) => (
-          <div 
-            key={index} 
-            className={`p-4 rounded-lg border ${
-              summary.isCorrect 
-                ? 'bg-emerald-500/20 border-emerald-500/20' 
-                : 'bg-rose-500/20 border-rose-500/20'
-            }`}
-          >
-            <p className="font-semibold text-[--theme-text-color]">Question {summary.questionNumber}</p>
-            <p className="text-sm mt-1 text-[--theme-text-color]">
-              {summary.questionContent.replace(/<img[^>]*>/g, '')}
-            </p>
-            <div className="mt-2 text-sm">
-              <p className="text-[--theme-text-color]">Your answer: {summary.userAnswer}</p>
-              <p className="text-[--theme-text-color]">Correct answer: {summary.correctAnswer}</p>
-              <p className="text-[--theme-text-color]">Time taken: {Math.round(summary.timeSpent)} seconds</p>
-            </div>
-          </div>
+          <TooltipProvider key={index}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div 
+                  className={`p-4 rounded-lg border ${
+                    summary.isCorrect 
+                      ? 'bg-emerald-500/20 border-emerald-500/20' 
+                      : 'bg-rose-500/20 border-rose-500/20'
+                  }`}
+                >
+                  <p className="font-semibold text-[--theme-text-color]">Question {summary.questionNumber}</p>
+                  <p className="text-sm mt-1 text-[--theme-text-color]">
+                    {summary.questionContent.replace(/<img[^>]*>/g, '')}
+                  </p>
+                  <div className="mt-2 text-sm">
+                    <p className="text-[--theme-text-color]">Your answer: {summary.userAnswer}</p>
+                    <p className="text-[--theme-text-color]">Correct answer: {summary.correctAnswer}</p>
+                    <p className="text-[--theme-text-color]">Time taken: {Math.round(summary.timeSpent)} seconds</p>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-md p-4">
+                <p className="text-sm">{summary.explanation}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         ))}
       </div>
     </div>
