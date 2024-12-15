@@ -78,6 +78,13 @@ const platformText: Record<PlatformType, string> = {
   mymcat: "MyMCAT",
 };
 
+// Add this interface for category type safety
+interface CategoryWithCompletion extends Category {
+  isCompleted?: boolean;
+  conceptCategory: string;
+  id: string;
+}
+
 const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   toggleChatBot,
   setChatbotContext,
@@ -166,14 +173,14 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
         // Set the selected category based on lastSelectedCategory or first checked category
         const categoryToSelect = lastSelectedCategory && 
-          parsedCategories.find(cat => cat.conceptCategory === lastSelectedCategory)
+          parsedCategories.find((cat: CategoryWithCompletion) => cat.conceptCategory === lastSelectedCategory)
             ? lastSelectedCategory
             : parsedCategories[0]?.conceptCategory;
 
         if (categoryToSelect) {
           setSelectedCategory(categoryToSelect);
           const index = parsedCategories.findIndex(
-            cat => cat.conceptCategory === categoryToSelect
+            (cat: CategoryWithCompletion) => cat.conceptCategory === categoryToSelect
           );
           setSelectedCard(index >= 0 ? index : 0);
         }
@@ -715,7 +722,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       const freshCategories = data.items;
 
       // Filter out completed categories and get the first uncompleted one
-      const nextCategory = freshCategories.find(cat => 
+      const nextCategory = freshCategories.find((cat: CategoryWithCompletion) => 
         !cat.isCompleted && 
         !newCheckedCategories.some(checked => checked.id === cat.id)
       );
