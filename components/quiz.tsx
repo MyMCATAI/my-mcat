@@ -107,6 +107,8 @@ const Quiz: React.FC<QuizProps> = ({
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
+  const [isQuizComplete, setIsQuizComplete] = useState(false);
+  const [hasAwardedCoins, setHasAwardedCoins] = useState(false);
 
   const handleStartQuiz = async () => {
     try {
@@ -348,28 +350,26 @@ const Quiz: React.FC<QuizProps> = ({
     setAnsweredQuestions(new Set());
     setHasAnsweredFirstQuestion(false);
     setShowSummary(false);
+    setIsQuizComplete(false);
+    setHasAwardedCoins(false);
     questionTimerRef.current?.resetTimer();
     totalTimerRef.current?.resetTimer();
-    // Optionally fetch new questions
     fetchQuestions(1);
   }, [fetchQuestions]);
 
   const handleNextQuestion = async () => {
+    if (isQuizComplete) return;
 
-    // Check if we've reached 15 questions or all available questions
-    if (
-      currentQuestionIndex === 14 ||
-      currentQuestionIndex === questions.length - 1
-    ) {
+    if (currentQuestionIndex === 14 || currentQuestionIndex === questions.length - 1) {
+      setIsQuizComplete(true);
+      
       const score = calculateScore(answerSummaries);
 
-      // If score is 80% or higher, award a coin
-      if (score >= 80) {
+      if (score >= 80 && !hasAwardedCoins) {
         try {
           await updateScore(1);
-          toast.success(
-            "Congratulations! You earned a coin for scoring above 80%! 🎉"
-          );
+          setHasAwardedCoins(true);
+          toast.success("Congratulations! You earned a coin for scoring above 80%! 🎉");
         } catch (error) {
           console.error("Error incrementing score:", error);
           toast.error("Failed to award coin");
@@ -380,7 +380,6 @@ const Quiz: React.FC<QuizProps> = ({
       return;
     }
 
-    // Check if we need to fetch more questions
     if (currentQuestionIndex === questions.length - 3) {
       setCurrentPage((prev) => prev + 1);
       fetchQuestions(currentPage + 1);
@@ -704,13 +703,15 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
           Previous
         </button>
 
-        <button
-          onClick={handleNextQuestion}
-          disabled={isLoadingMore}
-          className="px-4 py-2 bg-[#0e2247] text-white rounded disabled:opacity-50"
-        >
-          Next
-        </button>
+        {!isQuizComplete && (
+          <button
+            onClick={handleNextQuestion}
+            disabled={isLoadingMore || isQuizComplete}
+            className="px-4 py-2 bg-[#0e2247] text-white rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        )}
       </div>
 
       {/* Add Dialog for Quiz Summary */}
