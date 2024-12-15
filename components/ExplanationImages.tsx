@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ImageIcon } from "lucide-react";
@@ -27,20 +27,15 @@ export const ExplanationImages: React.FC<ExplanationImagesProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
+  const [hasLoadedImages, setHasLoadedImages] = useState(false);
   const imageDialogRef = useRef<HTMLDivElement>(null);
 
   useOutsideClick(imageDialogRef, () => {
     setSelectedImage(null);
   });
 
-  useEffect(() => {
-    if (questionContent) {
-      fetchImages();
-    }
-  }, [questionContent]);
-
   const fetchImages = async () => {
-    if (!questionContent) return;
+    if (!questionContent || hasLoadedImages) return;
     
     setIsLoading(true);
     setError(null);
@@ -66,6 +61,7 @@ export const ExplanationImages: React.FC<ExplanationImagesProps> = ({
       });
 
       setImages(validImages);
+      setHasLoadedImages(true);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load images';
       console.error('Error fetching images:', errorMessage);
@@ -78,6 +74,20 @@ export const ExplanationImages: React.FC<ExplanationImagesProps> = ({
   const handleImageClick = (image: ImageData) => {
     setSelectedImage(image);
   };
+
+  if (!hasLoadedImages && !isLoading) {
+    return (
+      <div className="mt-4">
+        <Button
+          onClick={fetchImages}
+          className="flex items-center gap-2 bg-[--theme-hover-color] text-white hover:bg-[--theme-hover-color]/90"
+        >
+          <ImageIcon className="w-4 h-4" />
+          Show Related Images
+        </Button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
