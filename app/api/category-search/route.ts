@@ -21,14 +21,14 @@ export async function GET(req: Request) {
       ?.split(",")
       .filter(Boolean);
     const isRandom = searchParams.get("random") === "true";
+    const checkedIds = searchParams.get("checkedIds")?.split(",").filter(Boolean) || [];
 
-    // Add this before the categories query
     const userInfo = await prisma.userInfo.findUnique({
       where: { userId },
       select: { diagnosticScores: true },
     });
 
-    // Single query with join instead of separate queries
+    // Get all categories first
     const categories = await prisma.category.findMany({
       where: {
         AND: [
@@ -76,85 +76,55 @@ export async function GET(req: Request) {
       },
     });
 
-    // Transform the data to flatten the structure
-    let sortedCategories = categories.map((category) => ({
+    // Transform categories
+    let transformedCategories = categories.map((category) => ({
       ...category,
       completedAt: category.knowledgeProfiles[0]?.completedAt || null,
-      completionPercentage:
-        category.knowledgeProfiles[0]?.completionPercentage || 0,
+      completionPercentage: category.knowledgeProfiles[0]?.completionPercentage || 0,
       conceptMastery: category.knowledgeProfiles[0]?.conceptMastery || null,
       contentMastery: category.knowledgeProfiles[0]?.contentMastery || null,
       isCompleted: category.knowledgeProfiles[0]?.completedAt ? true : false,
     }));
 
+    let sortedCategories;
+    
     if (isRandom) {
-      sortedCategories = sortedCategories
-        .sort(() => Math.random() - 0.5)
-        .slice(0, pageSize);
+      // Just shuffle the array without slicing
+      sortedCategories = transformedCategories.sort(() => Math.random() - 0.5);
     } else {
-      // First, separate incomplete and complete categories
-      const incompleteCategories = sortedCategories.filter(
-        (cat) => !cat.isCompleted
+      // Your existing sorting logic for non-random case
+      const checkedCategories = transformedCategories.filter(cat => 
+        checkedIds.includes(cat.id)
       );
-      const completedCategories = sortedCategories.filter(
-        (cat) => cat.isCompleted
+      const uncheckedCategories = transformedCategories.filter(cat => 
+        !checkedIds.includes(cat.id)
       );
 
-      // Sort each group separately by concept mastery
-      const sortByConceptMastery = (a: any, b: any) => {
-        if (a.conceptMastery === null && b.conceptMastery === null) return 0;
-        if (a.conceptMastery === null) return 1;
-        if (b.conceptMastery === null) return -1;
-        return a.conceptMastery - b.conceptMastery;
-      };
+      checkedCategories.sort((a, b) => 
+        checkedIds.indexOf(a.id) - checkedIds.indexOf(b.id)
+      );
 
-      incompleteCategories.sort(sortByConceptMastery);
-      completedCategories.sort(sortByConceptMastery);
+      const sortedUnchecked = uncheckedCategories.sort((a, b) => {
+        if (!a.isCompleted && b.isCompleted) return -1;
+        if (a.isCompleted && !b.isCompleted) return 1;
+        return a.subjectCategory.localeCompare(b.subjectCategory);
+      });
 
-      // If diagnostic scores exist, sort within each group
-      if (userInfo?.diagnosticScores) {
-        const scoreRanking = Object.entries(userInfo.diagnosticScores)
-          .filter(([key]) => key !== "total")
-          .sort(([, a], [, b]) => Number(a) - Number(b))
-          .reduce(
-            (acc, [section], index) => {
-              const subjects = getSectionSubjects(section);
-              subjects.forEach((subject) => {
-                acc[subject] = index;
-              });
-              return acc;
-            },
-            {} as Record<string, number>
-          );
-
-        const sortByDiagnostic = (a: any, b: any) => {
-          const rankA = scoreRanking[a.subjectCategory] ?? 999;
-          const rankB = scoreRanking[b.subjectCategory] ?? 999;
-          return rankA - rankB;
-        };
-
-        incompleteCategories.sort(sortByDiagnostic);
-        completedCategories.sort(sortByDiagnostic);
-      }
-
-      // Combine the groups, maintaining incomplete first
-      sortedCategories = [...incompleteCategories, ...completedCategories];
+      sortedCategories = [...checkedCategories, ...sortedUnchecked];
     }
 
-    // Paginate results
+    // Calculate pagination
+    const totalPages = Math.ceil(sortedCategories.length / pageSize);
     const startIndex = (page - 1) * pageSize;
-    const paginatedCategories = sortedCategories.slice(
-      startIndex,
-      startIndex + pageSize
-    );
+    const endIndex = startIndex + pageSize;
+    const paginatedCategories = sortedCategories.slice(startIndex, endIndex);
 
-    const result = {
+    return NextResponse.json({
       items: paginatedCategories,
-      totalPages: Math.ceil(sortedCategories.length / pageSize),
+      totalPages,
       currentPage: page,
-    };
-
-    return NextResponse.json(result);
+      totalItems: sortedCategories.length
+    });
   } catch (error) {
     console.log("[CATEGORIES_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });

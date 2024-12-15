@@ -78,6 +78,13 @@ const platformText: Record<PlatformType, string> = {
   mymcat: "MyMCAT",
 };
 
+// Add this interface for category type safety
+interface CategoryWithCompletion extends Category {
+  isCompleted?: boolean;
+  conceptCategory: string;
+  id: string;
+}
+
 const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   toggleChatBot,
   setChatbotContext,
@@ -143,6 +150,10 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
   const [showConfetti, setShowConfetti] = useState(false);
 
+  const [lastSelectedCategory, setLastSelectedCategory] = useState<string | null>(
+    localStorage.getItem("lastSelectedCategory")
+  );
+
   const fetchInitialData = useCallback(
     async (useKnowledgeProfiles: boolean = false) => {
       setIsLoading(true);
@@ -150,13 +161,30 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         const categoriesData = await fetchCategories(useKnowledgeProfiles);
         setCategories(categoriesData);
         setInitialCategories(categoriesData);
-        setCheckedCategories(categoriesData);
 
-        if (categoriesData.length > 0) {
-          const initialCategory = categoriesData[0].conceptCategory;
-          setSelectedCategory(initialCategory);
-          await fetchContentAndQuestions(initialCategory);
+        // Load checked categories from localStorage
+        const savedCategories = localStorage.getItem("checkedCategories");
+        const parsedCategories = savedCategories 
+          ? JSON.parse(savedCategories) 
+          : categoriesData.slice(0, 6);
+        
+        setCheckedCategories(parsedCategories);
+
+        // Set the selected category based on lastSelectedCategory or first checked category
+        const categoryToSelect = lastSelectedCategory && 
+          parsedCategories.find((cat: CategoryWithCompletion) => cat.conceptCategory === lastSelectedCategory)
+            ? lastSelectedCategory
+            : parsedCategories[0]?.conceptCategory;
+
+        if (categoryToSelect) {
+          setSelectedCategory(categoryToSelect);
+          const index = parsedCategories.findIndex(
+            (cat: CategoryWithCompletion) => cat.conceptCategory === categoryToSelect
+          );
+          setSelectedCard(index >= 0 ? index : 0);
         }
+
+        await fetchContentAndQuestions(categoryToSelect);
       } catch (error) {
         console.error("Error fetching initial data:", error);
         toast({
@@ -168,7 +196,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         setIsLoading(false);
       }
     },
-    []
+    [lastSelectedCategory]
   );
 
   useEffect(() => {
@@ -482,12 +510,14 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     setSelectedCard(index);
     const selectedCategory = selectedCategoryItem.conceptCategory;
     setSelectedCategory(selectedCategory);
-    localStorage.setItem("selectedCardIndex", index.toString());
-
+    
+    // Persist the selected category
+    localStorage.setItem("lastSelectedCategory", selectedCategory);
+    setLastSelectedCategory(selectedCategory);
+    
     try {
       setIsLoading(true);
-      const [contentData] = await Promise.all([fetchContent(selectedCategory)]);
-
+      const contentData = await fetchContent(selectedCategory);
       setContent(contentData);
       updateContentVisibility(contentData);
     } catch (error) {
@@ -675,23 +705,46 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     localStorage.removeItem("selectedSubjects");
   };
   const handleTopicComplete = async (categoryId: string) => {
+    // First, remove the completed category from checked categories
     const newCheckedCategories = checkedCategories.filter(
       (category) => category.id !== categoryId
     );
     setCheckedCategories(newCheckedCategories);
-    localStorage.setItem(
-      "checkedCategories",
-      JSON.stringify(newCheckedCategories)
-    );
+    localStorage.setItem("checkedCategories", JSON.stringify(newCheckedCategories));
 
-    // Find the current category index before removal
-    const currentIndex = checkedCategories.findIndex(
-      (cat) => cat.id === categoryId
-    );
+    // Fetch fresh categories with updated knowledge profiles
+    try {
+      const response = await fetch("/api/category?useKnowledgeProfiles=true&page=1&pageSize=10");
+      if (!response.ok) throw new Error("Failed to fetch categories");
+      
+      const data = await response.json();
+      const freshCategories = data.items;
 
-    // Find the next category (prioritize the next index, otherwise wrap to beginning)
-    const nextIndex = currentIndex < 5 ? currentIndex + 1 : 0;
-    handleCardClick(nextIndex);
+      // Filter out completed categories and get the first uncompleted one
+      const nextCategory = freshCategories.find((cat: CategoryWithCompletion) => 
+        !cat.isCompleted && 
+        !newCheckedCategories.some(checked => checked.id === cat.id)
+      );
+
+      if (nextCategory) {
+        // Add the new category to checked categories
+        const updatedCheckedCategories = [...newCheckedCategories, nextCategory];
+        setCheckedCategories(updatedCheckedCategories);
+        localStorage.setItem("checkedCategories", JSON.stringify(updatedCheckedCategories));
+
+        // Set it as selected and fetch its content
+        setSelectedCategory(nextCategory.conceptCategory);
+        setSelectedCard(newCheckedCategories.length); // It will be added at the end
+        await fetchContentAndQuestions(nextCategory.conceptCategory);
+      }
+    } catch (error) {
+      console.error("Error fetching next category:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load next topic. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   useEffect(() => {
@@ -707,6 +760,28 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         setSelectedCard(0);
       }
     }
+  }, []);
+
+  useEffect(() => {
+    // Cleanup function to ensure we don't have an invalid selected category
+    return () => {
+      const lastSelectedCategory = localStorage.getItem("lastSelectedCategory");
+      const checkedCategories = localStorage.getItem("checkedCategories");
+      
+      if (lastSelectedCategory && checkedCategories) {
+        const parsedCategories = JSON.parse(checkedCategories);
+        const categoryExists = parsedCategories.some(
+          (cat: Category) => cat.conceptCategory === lastSelectedCategory
+        );
+        
+        if (!categoryExists && parsedCategories.length > 0) {
+          localStorage.setItem(
+            "lastSelectedCategory", 
+            parsedCategories[0].conceptCategory
+          );
+        }
+      }
+    };
   }, []);
 
   return (
@@ -935,9 +1010,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                       <Image
                         src="/cat.svg"
                         alt="AI Chat"
-                        width={24}
-                        height={24}
-                        className="theme-svg w-6 h-6"
+                        width={28}
+                        height={28}
+                        className="theme-svg w-7 h-7"
                       />
                     </div>
                   </button>
@@ -966,7 +1041,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                           className="w-full h-full"
                           url={currentContent.link}
                           playing={isPlaying}
-                          muted
                           width="100%"
                           height="100%"
                           onProgress={({ playedSeconds }) =>
