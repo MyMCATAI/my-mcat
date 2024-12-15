@@ -55,19 +55,18 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
     // Load checked categories from localStorage on mount
     const savedCategories = localStorage.getItem("checkedCategories");
     if (savedCategories) {
-      setCheckedCategories(JSON.parse(savedCategories));
+      const parsedCategories = JSON.parse(savedCategories);
+      setCheckedCategories(parsedCategories);
     }
-  }, []);
-
-  useEffect(() => {
+    
+    // Fetch categories after setting checked categories
     fetchCategories(
       searchQuery,
       selectedSubject,
       currentPage,
       selectedSubjectsForShuffle
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSubject, currentPage, selectedSubjectsForShuffle]);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(
@@ -88,6 +87,11 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
       url.searchParams.append("page", page.toString());
       url.searchParams.append("pageSize", "8");
 
+      const checkedIds = checkedCategories.map(cat => cat.id).join(',');
+      if (checkedIds) {
+        url.searchParams.append("checkedIds", checkedIds);
+      }
+
       if (searchQuery) {
         url.searchParams.append("searchQuery", searchQuery);
       }
@@ -105,15 +109,37 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
       }
       const data = await response.json();
 
-      // Use totalPages directly from the API response
       setTotalPages(data.totalPages);
 
-      // Preserve checked status when setting new categories
-      const newCategories = data.items.map((category: Category) => ({
+      // Create a map of checked categories for quick lookup
+      const checkedMap = new Map(
+        checkedCategories.map((cat, index) => [cat.id, index])
+      );
+
+      // Sort the categories
+      const sortedCategories = [...data.items].sort((a, b) => {
+        const aCheckedIndex = checkedMap.get(a.id);
+        const bCheckedIndex = checkedMap.get(b.id);
+        
+        // If both are checked, maintain their original order in checkedCategories
+        if (aCheckedIndex !== undefined && bCheckedIndex !== undefined) {
+          return aCheckedIndex - bCheckedIndex;
+        }
+        
+        // If only one is checked, it should come first
+        if (aCheckedIndex !== undefined) return -1;
+        if (bCheckedIndex !== undefined) return 1;
+        
+        // For unchecked items, incomplete ones come before completed ones
+        if (!a.isCompleted && b.isCompleted) return -1;
+        if (a.isCompleted && !b.isCompleted) return 1;
+        
+        return 0;
+      });
+
+      const newCategories = sortedCategories.map((category: Category) => ({
         ...category,
-        isChecked: checkedCategories.some(
-          (checked) => checked.id === category.id
-        ),
+        isChecked: checkedMap.has(category.id),
       }));
 
       setCategories(newCategories);
@@ -126,25 +152,45 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
 
   const handleCategoryCheck = (category: Category, isChecked: boolean) => {
     if (isChecked) {
-      const newCheckedCategories =
-        checkedCategories.length >= 6
-          ? [category, ...checkedCategories.slice(0, -1)]
-          : [category, ...checkedCategories];
+      let newCheckedCategories: Category[];
+      
+      if (checkedCategories.length >= 6) {
+        // Remove the last category and add the new one at the beginning
+        newCheckedCategories = [category, ...checkedCategories.slice(0, -1)];
+        
+        // If the removed category was selected, select the new category
+        const removedCategory = checkedCategories[checkedCategories.length - 1];
+        const lastSelectedCategory = localStorage.getItem("lastSelectedCategory");
+        
+        if (lastSelectedCategory === removedCategory.conceptCategory) {
+          localStorage.setItem("lastSelectedCategory", category.conceptCategory);
+        }
+      } else {
+        newCheckedCategories = [category, ...checkedCategories];
+      }
 
       setCheckedCategories(newCheckedCategories);
-      localStorage.setItem(
-        "checkedCategories",
-        JSON.stringify(newCheckedCategories)
-      );
+      localStorage.setItem("checkedCategories", JSON.stringify(newCheckedCategories));
+
+      // If this is the first category or no category is selected, select this one
+      if (!localStorage.getItem("lastSelectedCategory") || checkedCategories.length === 0) {
+        localStorage.setItem("lastSelectedCategory", category.conceptCategory);
+      }
     } else {
       const newCheckedCategories = checkedCategories.filter(
         (c) => c.id !== category.id
       );
       setCheckedCategories(newCheckedCategories);
-      localStorage.setItem(
-        "checkedCategories",
-        JSON.stringify(newCheckedCategories)
-      );
+      localStorage.setItem("checkedCategories", JSON.stringify(newCheckedCategories));
+
+      // If the unchecked category was selected, select the first remaining category
+      const lastSelectedCategory = localStorage.getItem("lastSelectedCategory");
+      if (lastSelectedCategory === category.conceptCategory && newCheckedCategories.length > 0) {
+        localStorage.setItem(
+          "lastSelectedCategory", 
+          newCheckedCategories[0].conceptCategory
+        );
+      }
     }
   };
 
@@ -173,10 +219,24 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
           !category.knowledgeProfiles?.[0]?.completedAt
       );
 
+      // Take only the first 6 categories
+      const newCheckedCategories = incompleteCategories.slice(0, 6);
+
+      // Update state
       setCategories(incompleteCategories);
-      setCheckedCategories(incompleteCategories.slice(0, 6));
+      setCheckedCategories(newCheckedCategories);
       setTotalPages(data.totalPages);
       setCurrentPage(1);
+
+      // Persist to localStorage
+      localStorage.setItem("checkedCategories", JSON.stringify(newCheckedCategories));
+
+      // Set and persist the first category as selected
+      if (newCheckedCategories.length > 0) {
+        const firstCategory = newCheckedCategories[0].conceptCategory;
+        localStorage.setItem("lastSelectedCategory", firstCategory);
+      }
+
     } catch (error) {
       console.error("Failed to fetch random categories:", error);
     } finally {
