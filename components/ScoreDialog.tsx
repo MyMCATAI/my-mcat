@@ -120,16 +120,19 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
   };
 
   const getTimingStars = (totalTimeTaken: number, totalQuestions: number) => {
-    // Assume five questions
-    // Less than 9 minutes: 3 points
-    // Less than 10 minutes: 2 points
-    // Less than 12 minutes: 1 point
+    // Calculate average time per question in seconds
     const averageTimePerQuestion = totalTimeTaken / totalQuestions;
-    if (averageTimePerQuestion < 9 * 60 / 5) {
+
+    // Thresholds for average time per question
+    const excellentTime = 60;   // 1 minute per question
+    const goodTime = 90;        // 1.5 minutes per question
+    const decentTime = 120;     // 2 minutes per question
+
+    if (averageTimePerQuestion < excellentTime) {
       return 3;
-    } else if (averageTimePerQuestion < 10 * 60 / 5) {
+    } else if (averageTimePerQuestion < goodTime) {
       return 2;
-    } else if (averageTimePerQuestion < 12 * 60 / 5) {
+    } else if (averageTimePerQuestion < decentTime) {
       return 1;
     } else {
       return 0;
@@ -155,7 +158,8 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
   };
 
   const getCupcakeImage = (point: number) => {
-    if (point === 3) return "/onecupcake.png";
+    const totalStars = Math.round(point * 3); // Convert average back to total stars
+    if (totalStars >= 8) return "/gleamingcoin.gif";
     return null;
   };
 
@@ -163,7 +167,7 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
     if (point === 3) {
       return {
         title: "AMAZING!",
-        description: "You won a cupcake!",
+        description: "You won a cupcake coin!",
       };
     } else if (point === 2) {
       return {
@@ -229,7 +233,7 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
               alt="Cupcake"
               width={200}
               height={200}
-              className="h-[20vh] w-auto"
+              className="h-[30vh] w-auto"
             />
           )}
         </div>

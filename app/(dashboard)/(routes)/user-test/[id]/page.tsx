@@ -170,7 +170,7 @@ export default function UserTestReviewPage() {
               </p>
             )}
           </div>
-          <Link href="/home" className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded transition duration-300">
+          <Link href={`/home?tab=CARS`} className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded transition duration-300">
             Return Home
           </Link>
         </div>

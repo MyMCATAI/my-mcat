@@ -9,6 +9,7 @@ interface TestHeaderProps {
   isCreatingTest: boolean;
   currentQuestionIndex: number;
   hasAnsweredFirstQuestion: boolean;
+  homeLink: string;
 }
 
 export interface TestHeaderRef {
@@ -24,7 +25,7 @@ export interface TestHeaderRef {
 }
 
 const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(
-  ({ title, isCreatingTest, currentQuestionIndex, hasAnsweredFirstQuestion }, ref) => {
+  ({ title, isCreatingTest, currentQuestionIndex, hasAnsweredFirstQuestion, homeLink }, ref) => {
     const {
       seconds: questionSeconds,
       minutes: questionMinutes,
@@ -159,7 +160,7 @@ const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(
             Question {currentQuestionIndex + 1}
           </div>
           <Link
-            href="/home"
+            href={homeLink}
             className="ml-4 p-2 bg-sky-500 hover:bg-sky-600 text-white rounded transition duration-300"
           >
             <FaHome size={24} />
