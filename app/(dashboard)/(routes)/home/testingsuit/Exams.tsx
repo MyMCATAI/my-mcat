@@ -134,8 +134,13 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
   };
 
   const getWelcomeMessage = (userName: string, streak: number, testsCompletedToday: number) => {
-    let message = `Hey ${userName.charAt(0).toUpperCase() + userName.slice(1)}! \n\n`;
-    return message;
+    const name = userName.charAt(0).toUpperCase() + userName.slice(1);
+    
+    if (testsCompletedToday >= MAX_TESTS_PER_DAY) {
+      return `Hey! You've reached your limit of ${MAX_TESTS_PER_DAY} tests for today. Come back tomorrow for more tests!`;
+    }
+    
+    return `Hey ${name}! `;
   };
 
   const handleKalypsoInteraction = () => {
@@ -319,6 +324,8 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                   items={tests} 
                   type="upcoming" 
                   loading={loading} 
+                  testsAvailableToday={MAX_TESTS_PER_DAY}
+                  testsCompletedToday={testsCompletedToday}
                 />
               </TabsContent>
             </Tabs>

@@ -454,6 +454,7 @@ const Page = () => {
                 onTabChange={handleTabChange}
                 currentPage="home"
                 initialTab={activeTab}
+                className="z-50"
               />
             }
             </div>

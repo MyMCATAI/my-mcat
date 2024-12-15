@@ -52,6 +52,9 @@ const ReviewQuestionComponent: React.FC<ReviewQuestionComponentProps> = ({
   const [feedbackType, setFeedbackType] = useState<'upvote' | 'downvote' | null>(null);
   const [complaintCategory, setComplaintCategory] = useState<string | null>(null);
   const [clickedOptionIndex, setClickedOptionIndex] = useState<number | null>(null);
+  const chatbotRef = useRef<{
+    sendMessage: (message: string) => void;
+  }>({ sendMessage: () => {} });
 
   useEffect(() => {
     if (question) {
@@ -404,6 +407,7 @@ Help me understand this question so I can learn.`;
           <ChatBotInLineForReview 
             chatbotContext={generateChatbotContext()}
             key={question.id}
+            chatbotRef={chatbotRef}
           />
         </div>
       </div>
@@ -469,30 +473,28 @@ Help me understand this question so I can learn.`;
       <Dialog open={showRewardDialog} onOpenChange={setShowRewardDialog}>
         <DialogContent className="sm:max-w-md" closeButtonClassName="text-black hover:text-gray-700">
           <DialogHeader className="text-center">
-            <DialogTitle className="text-center text-black">Congratulations!</DialogTitle>
+            <DialogTitle className="text-center text-black">Review Complete!</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col items-center justify-center p-6 space-y-4">
-            <Image
-              src="/game-components/PixelCupcake.png"
-              alt="Coin"
-              width={96}
-              height={96}
-            />
-            <p className="text-center text-lg text-black">
-              You&apos;ve earned <span className="font-bold">1 cupcake coin</span> for reviewing today!
-            </p>
+          <div className="flex flex-col items-center justify-center space-y-4">
             {isLast && part2Test && (
               <>
                 <p className="text-center text-md ml-2 text-black">Want to run it back with new questions?</p>
                 <Link
                   href={`/test/testquestions?id=${part2Test.id}`}
-                  className="inline-block bg-[--theme-hover-color] text-white px-6 ml-2 py-3 rounded-lg hover:opacity-80 transition-all duration-300"
+                  className="w-full text-center bg-[--theme-hover-color] text-white px-6 py-3 rounded-lg hover:opacity-80 transition-all duration-300"
                   onClick={() => setShowRewardDialog(false)}
                 >
                   Start {part2Test.title}
                 </Link>
               </>
             )}
+            <Link
+              href="/home?tab=CARS"
+              className="w-full text-center bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-all duration-300"
+              onClick={() => setShowRewardDialog(false)}
+            >
+              Back to CARs
+            </Link>
           </div>
         </DialogContent>
       </Dialog>

@@ -20,6 +20,7 @@ import { VocabContext } from "@/contexts/VocabContext";
 import VocabList from "@/components/VocabList";
 import { fetchDefinitionAndAddToVocab } from "@/lib/utils";
 import { TestIntroModal } from "@/components/test/TestIntroModal";
+import Link from 'next/link';
 
 interface TestComponentProps {
   testId: string;
@@ -923,6 +924,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
         isCreatingTest={isCreatingTest}
         currentQuestionIndex={currentQuestionIndex}
         hasAnsweredFirstQuestion={hasAnsweredFirstQuestion}
+        homeLink="/home?tab=CARS"
       />
       {/* Toolbar with highlight, strikethrough, flag, and vocab list toggle */}
       <div className="h-9 border-t-2 border-b-2 border-white bg-[#84aedd] flex items-center justify-between px-4">
