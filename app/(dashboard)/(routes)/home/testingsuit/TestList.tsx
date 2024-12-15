@@ -141,7 +141,7 @@ const TestList: React.FC<TestListProps> = ({
 
         {isTestDisabled && (
           <div className="text-center text-sm text-gray-500 mb-4">
-            You've completed {initialTestsCompleted} out of {MAX_TESTS_PER_DAY} tests today. Check back tomorrow for more tests!
+            You&apos;ve completed {initialTestsCompleted} out of {MAX_TESTS_PER_DAY} tests today. Check back tomorrow for more tests!
           </div>
         )}
 

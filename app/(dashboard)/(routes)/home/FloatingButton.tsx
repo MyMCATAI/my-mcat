@@ -8,7 +8,8 @@ import { useRouter } from 'next/navigation';
 interface FloatingButtonProps {
   onTabChange: (tab: string) => void;
   currentPage: 'home' | 'doctorsoffice';
-  initialTab: string; // Add this new prop
+  initialTab: string;
+  className?: string;
 }
 
 interface ButtonPosition {
@@ -43,7 +44,7 @@ const Typewriter: React.FC<{ text: string; delay?: number }> = ({ text, delay = 
   return <span>{displayedText}</span>;
 };
 
-const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPage, initialTab }) => {
+const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPage, initialTab, className }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const hoverTimeout = useRef<number | null>(null);
