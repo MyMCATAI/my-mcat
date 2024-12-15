@@ -379,14 +379,14 @@ async function getOrderedTests(
     // First, check if either test is a "Part 2" of a recently completed test
     const isAPart2 = a.title?.includes('Part 2');
     const isBPart2 = b.title?.includes('Part 2');
-    
-    if (isAPart2 || isBPart2) {
-      // If both are Part 2, maintain normal sorting
-      if (isAPart2 && isBPart2) {
-        return b.relevanceScore - a.relevanceScore;
-      }
-      // Prioritize Part 2 tests
-      return isAPart2 ? -1 : 1;
+    const aBaseTitle = a.title?.replace(/\s*-\s*Part\s*[12]\s*$/i, '').trim();
+    const bBaseTitle = b.title?.replace(/\s*-\s*Part\s*[12]\s*$/i, '').trim();
+
+    // If tests are part of the same series (Part 1 and 2)
+    if (aBaseTitle === bBaseTitle) {
+      // Keep Part 1 before Part 2
+      if (isAPart2 && !isBPart2) return 1;
+      if (!isAPart2 && isBPart2) return -1;
     }
 
     // Rest of the sorting logic remains the same...

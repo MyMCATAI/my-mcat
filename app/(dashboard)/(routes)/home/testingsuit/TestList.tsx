@@ -17,7 +17,11 @@ interface TestListProps {
   items: (Test | UserTest)[];
   type: "upcoming" | "past";
   loading?: boolean;
+  testsAvailableToday?: number;
+  testsCompletedToday?: number;
 }
+
+const MAX_TESTS_PER_DAY = 2;
 
 const getDifficultyColor = (difficulty: number) => {
   if (difficulty < 3) return "text-green-500";
@@ -36,6 +40,8 @@ const TestList: React.FC<TestListProps> = ({
   items,
   type,
   loading = false,
+  testsAvailableToday = MAX_TESTS_PER_DAY,
+  testsCompletedToday: initialTestsCompleted = 0,
 }) => {
   const { theme } = useTheme();
   const [userScore, setUserScore] = useState<number | null>(null);
@@ -84,6 +90,8 @@ const TestList: React.FC<TestListProps> = ({
     return `Check back tomorrow for more tests!`;
   };
 
+  const isTestDisabled = type === "upcoming" && initialTestsCompleted >= MAX_TESTS_PER_DAY;
+
   if (loading) {
     return (
       <div className="w-full space-y-3">
@@ -131,6 +139,12 @@ const TestList: React.FC<TestListProps> = ({
           </div>
         )}
 
+        {isTestDisabled && (
+          <div className="text-center text-sm text-gray-500 mb-4">
+            You've completed {initialTestsCompleted} out of {MAX_TESTS_PER_DAY} tests today. Check back tomorrow for more tests!
+          </div>
+        )}
+
         {filteredItems.length === 0 ? (
           <div className="text-center text-sm text-gray-500 mb-4">
             No results found for &quot;{searchQuery}&quot;
@@ -142,36 +156,34 @@ const TestList: React.FC<TestListProps> = ({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      {type === "upcoming" && noTestsAvailable ? (
-                        <div className="pointer-events-none">
-                          <div
-                            className="flex justify-between items-center bg-transparent rounded-lg px-3 py-2.5 cursor-not-allowed w-full h-16 opacity-50 transition-all duration-300"
-                            style={{
-                              backgroundColor: "var(--theme-adaptive-tutoring-color)",
-                              color: "var(--theme-text-color)",
-                            }}
-                          >
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <div className="w-6 h-6 flex-shrink-0 relative">
-                                <Image
-                                  className="theme-svg opacity-50"
-                                  src={"/computer.svg"}
-                                  layout="fill"
-                                  objectFit="contain"
-                                  alt="icon"
-                                />
-                              </div>
-                              <h2 className="text-sm xl:text-base font-normal truncate text-gray-500">
-                                {"title" in item ? item.title : "Untitled"}
-                              </h2>
+                      {isTestDisabled ? (
+                        <div
+                          className="flex justify-between items-center bg-transparent rounded-lg px-3 py-2.5 cursor-not-allowed w-full h-16 opacity-50 transition-all duration-300"
+                          style={{
+                            backgroundColor: "var(--theme-adaptive-tutoring-color)",
+                            color: "var(--theme-text-color)",
+                          }}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <div className="w-6 h-6 flex-shrink-0 relative">
+                              <Image
+                                className="theme-svg opacity-50"
+                                src={"/computer.svg"}
+                                layout="fill"
+                                objectFit="contain"
+                                alt="icon"
+                              />
                             </div>
-                            <div className="flex-shrink-0 ml-2">
-                              <h2 className="text-sm xl:text-base font-medium whitespace-nowrap text-gray-500">
-                                {"difficulty" in item
-                                  ? `Lvl ${item.difficulty}`
-                                  : "N/A"}
-                              </h2>
-                            </div>
+                            <h2 className="text-sm xl:text-base font-normal truncate text-gray-500">
+                              {"title" in item ? item.title : "Untitled"}
+                            </h2>
+                          </div>
+                          <div className="flex-shrink-0 ml-2">
+                            <h2 className="text-sm xl:text-base font-medium whitespace-nowrap text-gray-500">
+                              {"difficulty" in item
+                                ? `Lvl ${item.difficulty}`
+                                : "N/A"}
+                            </h2>
                           </div>
                         </div>
                       ) : (
@@ -234,24 +246,30 @@ const TestList: React.FC<TestListProps> = ({
                       )}
                     </TooltipTrigger>
                     <TooltipContent>
-                      {type === "past" && "score" in item ? (
-                        <div>
-                          <p>Taken: {new Date(item.startedAt).toLocaleString()}</p>
-                          <p>
-                            Score:{" "}
-                            {item.score !== null && item.score !== undefined
-                              ? `${Math.round(item.score)}%`
-                              : "N/A"}
-                          </p>
-                          <p>
-                            Questions Reviewed: {item.reviewedResponses || 0}/
-                            {item.totalResponses || 0}
-                          </p>
-                        </div>
-                      ) : type === "upcoming" ? (
-                        <p>Upcoming test for today</p>
+                      {isTestDisabled ? (
+                        <p>You have reached the daily test limit. Check back tomorrow!</p>
                       ) : (
-                        <p></p>
+                        <>
+                          {type === "past" && "score" in item ? (
+                            <div>
+                              <p>Taken: {new Date(item.startedAt).toLocaleString()}</p>
+                              <p>
+                                Score:{" "}
+                                {item.score !== null && item.score !== undefined
+                                  ? `${Math.round(item.score)}%`
+                                  : "N/A"}
+                              </p>
+                              <p>
+                                Questions Reviewed: {item.reviewedResponses || 0}/
+                                {item.totalResponses || 0}
+                              </p>
+                            </div>
+                          ) : type === "upcoming" ? (
+                            <p>Upcoming test for today</p>
+                          ) : (
+                            <p></p>
+                          )}
+                        </>
                       )}
                     </TooltipContent>
                   </Tooltip>

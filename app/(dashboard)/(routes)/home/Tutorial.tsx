@@ -170,7 +170,7 @@ const Tutorial: React.FC<TutorialProps> = ({
             className="w-full rounded-lg"
           />
         </div>
-        <p className="text-lg mt-6">You can modify the calendar as well.</p>
+        <p className="text-lg mt-6">Click a cell and add an activity to your calendar.</p>
       </div>
     </div>
   );
