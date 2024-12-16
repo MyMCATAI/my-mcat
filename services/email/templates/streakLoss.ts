@@ -7,7 +7,7 @@ export interface StreakLossEmailData {
 }
 
 export const streakLossTemplate = (data: StreakLossEmailData): TemplateConfig => ({
-  subject: "You lost your study streak 😿",
+  subject: "There goes the study streak 😿",
   html: `
     <div style="font-family: Arial, sans-serif; max-width: 37.5rem; margin: 0 auto; padding: 1.25rem;">
       <p style="color: #333333; line-height: 1.6;">
@@ -15,7 +15,7 @@ export const streakLossTemplate = (data: StreakLossEmailData): TemplateConfig =>
       </p>
       
       <p style="color: #333333; line-height: 1.6;">
-        Ahhhh! It's Kalypso! I noticed you didn't log in yesterday, and your study streak was lost! We're working on exciting features to help you manage your streaks and study breaks better.
+        I noticed you didn't log in yesterday, and oops! There goes your streak! We're working on exciting features to help you manage your streaks and study breaks better.
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
