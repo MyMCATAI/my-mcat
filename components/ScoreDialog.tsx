@@ -115,28 +115,16 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
   const getStarCount = (score: number) => {
     if (score === 100) return 3;
     if (score >= 80) return 2;
-    if (score >= 60) return 1;
-    return 0;
+    return 1;
   };
 
   const getTimingStars = (totalTimeTaken: number, totalQuestions: number) => {
-    // Calculate average time per question in seconds
-    const averageTimePerQuestion = totalTimeTaken / totalQuestions;
+    // Convert total time to minutes
+    const totalMinutes = totalTimeTaken / 60;
 
-    // Thresholds for average time per question
-    const excellentTime = 60;   // 1 minute per question
-    const goodTime = 90;        // 1.5 minutes per question
-    const decentTime = 120;     // 2 minutes per question
-
-    if (averageTimePerQuestion < excellentTime) {
-      return 3;
-    } else if (averageTimePerQuestion < goodTime) {
-      return 2;
-    } else if (averageTimePerQuestion < decentTime) {
-      return 1;
-    } else {
-      return 0;
-    }
+    if (totalMinutes <= 10) return 3;
+    if (totalMinutes <= 12) return 2;
+    return 1;
   };
 
   const getTechniqueStars = (technique: number) => {

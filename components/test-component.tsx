@@ -482,13 +482,18 @@ const TestComponent: React.FC<TestComponentProps> = ({
         throw new Error("Failed to update test");
       }
 
-      // Calculate cupcakes earned (perfect score within 10 minutes = +1)
-      let cupcakesEarned = 0;
-      if (score === 100 && totalTimeInSeconds <= 600) {
-        cupcakesEarned = 1;
-      }
+      // Calculate total stars (score stars + timing stars + technique stars)
+      const scoreStars = score === 100 ? 3 : score >= 80 ? 2 : 1;
+      const totalMinutes = totalTimeInSeconds / 60;
+      const timingStars = totalMinutes <= 10 ? 3 : totalMinutes <= 12 ? 2 : 1;
+      const techniqueStars = technique;
+      
+      const totalStars = scoreStars + timingStars + techniqueStars;
 
-      const scoreChange = cupcakesEarned
+      // Award coin if total stars >= 8
+      const cupcakesEarned = totalStars >= 8 ? 1 : 0;
+
+      const scoreChange = cupcakesEarned;
 
       // Update user's score
       const scoreResponse = await fetch("/api/user-info/", {
