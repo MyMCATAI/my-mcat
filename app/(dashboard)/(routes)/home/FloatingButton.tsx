@@ -8,12 +8,12 @@ import { AnimatePresence } from "framer-motion";
 import FloatingTaskList from './FloatingTaskList';
 
 interface FloatingButtonProps {
+  activities?: any[];
+  onTasksUpdate?: (tasks: any[]) => void;
   onTabChange: (tab: string) => void;
   currentPage: string;
   initialTab: string;
   className?: string;
-  activities: Activity[];
-  onTasksUpdate: () => void;
 }
 
 interface ButtonPosition {
@@ -214,7 +214,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
          !recentlyChangedTab && (
           <FloatingTaskList 
             activities={activities}
-            onTasksUpdate={onTasksUpdate}
+            onTasksUpdate={() => onTasksUpdate?.([])}
             onHover={handleTaskListHover}
           />
         )}
