@@ -20,6 +20,17 @@ interface UserInfo {
   notificationPreference?: boolean;
 }
 
+interface Referral {
+  id: string;
+  userId: string;
+  referrerName: string;
+  referrerEmail: string;
+  friendEmail: string;
+  friendUserId: string;
+  createdAt: Date;
+  joinedAt: Date | null;
+}
+
 interface UseUserInfoReturn {
   userInfo: UserInfo | null;
   isLoading: boolean;
@@ -30,12 +41,19 @@ interface UseUserInfoReturn {
   incrementScore: () => Promise<void>;
   decrementScore: () => Promise<void>;
   refetch: () => Promise<void>;
+  referrals: Referral[];
+  isLoadingReferrals: boolean;
+  fetchReferrals: () => Promise<void>;
+  createReferral: (data: { referrerName?: string; referrerEmail?: string; friendEmail: string }) => Promise<void>;
+  checkHasReferrals: () => Promise<boolean>;
 }
 
 export function useUserInfo(): UseUserInfoReturn {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [isLoadingReferrals, setIsLoadingReferrals] = useState(false);
 
   const fetchUserInfo = useCallback(async () => {
     try {
@@ -164,6 +182,67 @@ export function useUserInfo(): UseUserInfoReturn {
     }
   }, []);
 
+  const fetchReferrals = useCallback(async () => {
+    try {
+      setIsLoadingReferrals(true);
+      const response = await fetch('/api/referrals');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch referrals');
+      }
+
+      const data = await response.json();
+      setReferrals(data);
+    } catch (err) {
+      toast.error('Failed to load referrals');
+      throw err;
+    } finally {
+      setIsLoadingReferrals(false);
+    }
+  }, []);
+
+  const createReferral = useCallback(async (data: { referrerName?: string; referrerEmail?: string; friendEmail: string }) => {
+    try {
+      const response = await fetch('/api/referrals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create referral');
+      }
+
+      const newReferral = await response.json();
+      setReferrals(prev => [newReferral, ...prev]);
+      toast.success('Referral created successfully');
+    } catch (err) {
+      toast.error('Failed to create referral');
+      throw err;
+    }
+  }, []);
+
+  // Fetch referrals on mount
+  useEffect(() => {
+    fetchReferrals();
+  }, [fetchReferrals]);
+
+  const checkHasReferrals = useCallback(async () => {
+    try {
+      const response = await fetch('/api/referrals?checkExistence=true');
+      if (!response.ok) {
+        throw new Error('Failed to check referrals');
+      }
+      
+      const data = await response.json();
+      console.log('data', data);
+      return data.exists;
+    } catch (err) {
+      console.error('Failed to check referrals:', err);
+      return false;
+    }
+  }, []);
+
   return {
     userInfo,
     isLoading,
@@ -174,5 +253,10 @@ export function useUserInfo(): UseUserInfoReturn {
     incrementScore,
     decrementScore,
     refetch: fetchUserInfo,
+    referrals,
+    isLoadingReferrals,
+    fetchReferrals,
+    createReferral,
+    checkHasReferrals,
   };
 } 

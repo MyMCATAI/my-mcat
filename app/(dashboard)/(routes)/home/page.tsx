@@ -24,6 +24,7 @@ import { PurchaseButton } from "@/components/purchase-button";
 import { isToday } from "date-fns";
 import { shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
 import StreakPopup from "@/components/score/StreakDisplay";
+import { useUserInfo } from "@/hooks/useUserInfo";
 
 
 const Page = () => {
@@ -47,7 +48,8 @@ const Page = () => {
     contentTitle: string;
     context: string;
   } | null>(null);
-  const [userInfo, setUserInfo] = useState<any>(null);
+  const { userInfo, isLoading: isLoadingUserInfo, checkHasReferrals } = useUserInfo();
+  const [hasReferral, setHasReferral] = useState(false);
 
   const [currentPage, setCurrentPage] = useState("Schedule");
   const chatbotRef = useRef<{ sendMessage: (message: string) => void; }>({
@@ -69,6 +71,7 @@ const Page = () => {
       toast.error("Payment Cancelled. Your payment was cancelled.");
     }
   }, [paymentStatus]);
+
   useEffect(() => {
     const initializePage = async () => {
       setIsLoading(true);
@@ -76,7 +79,10 @@ const Page = () => {
         await fetchActivities();
         const proStatus = await checkProStatus();
         setIsPro(proStatus);
-        await fetchUserInfo();
+        
+        // Check for referrals
+        const hasExistingReferral = await checkHasReferrals();
+        setHasReferral(hasExistingReferral);
 
         // Only update knowledge profiles if needed
         if (typeof window !== 'undefined' && shouldUpdateKnowledgeProfiles()) {
@@ -88,9 +94,6 @@ const Page = () => {
             updateKnowledgeProfileTimestamp();
           }
         }
-        
-        // Show welcome popup
-        // setShowWelcomePopup(true);
       } catch (error) {
         console.error("Error initializing page:", error);
       } finally {
@@ -99,8 +102,7 @@ const Page = () => {
     };
 
     initializePage();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [checkHasReferrals]);
 
   useEffect(()=>{
     updateCalendarChatContext(activities);
@@ -154,38 +156,8 @@ const Page = () => {
     }
   };
 
-  const fetchUserInfo = async () => {
-    try {
-      const response = await fetch("/api/user-info");
-      if (response.status === 404) {
-        return;
-      } else if (response.ok) {
-        const userInfo = await response.json();
-        console.log('Fetched userInfo:', userInfo);
-        setUserInfo(userInfo);
-        setHasPaid(userInfo.hasPaid);
-      
-        
-        // Show streak popup for testing
-        const lastStreakPopup = localStorage.getItem('lastStreakPopup');
-        const today = new Date().toDateString();
-        
-        if (!lastStreakPopup || lastStreakPopup !== today) {
-          console.log('Showing streak popup');
-          localStorage.setItem('lastStreakPopup', today);
-          setShowStreakPopup(true);
-        }
-      } else {
-        throw new Error("Failed to fetch user info");
-      }
-    } catch (error) {
-      console.error("Error fetching user info:", error);
-      toast.error("Failed to fetch user info. Please try again.");
-    }
-  };
-
   const renderContent = () => {
-    if (isLoading) {
+    if (isLoading || isLoadingUserInfo) {
       return (
         <div className="flex justify-center items-center h-full">
           <div className="text-center">
@@ -196,8 +168,8 @@ const Page = () => {
       );
     }
 
-    // First check if user hasn't paid
-    if (!hasPaid) {
+    // Check both payment and referral status
+    if (!userInfo?.hasPaid && !hasReferral) {
       return (
         <div className="flex justify-center items-center h-full">
           <div className="bg-[--theme-mainbox-color] rounded-lg p-[2rem] shadow-lg">
@@ -212,21 +184,22 @@ const Page = () => {
               />
               <div className="mb-[2rem]">
                 <p className="text-[--theme-text-color] text-lg leading-relaxed mb-[2rem]">
-                  With 10 coins, you can unlock the Adaptive Tutoring Suite, Calendar, and Daily CARs. 
-                  With hard work, you can earn coins and unlock more features without having to pay another cent. 
-                  Please purchase coins to begin your MCAT journey!
+                  {!userInfo?.hasPaid 
+                    ? "With 10 coins, you can unlock the Adaptive Tutoring Suite, Calendar, and Daily CARs. With hard work, you can earn coins and unlock more features without having to pay another cent. Please purchase coins to begin your MCAT journey!"
+                    : "Please refer a friend to unlock all features. Share MyMCAT with your study buddies!"}
                 </p>
-                <PurchaseButton 
-                  text="Get Started with Coins"
-                  className="bg-[--theme-hover-color] !important
-                    px-[2rem] py-[0.75rem] text-lg 
-                    text-[--theme-hover-text] 
-                    transition-opacity duration-200
-                    rounded-lg
-                    hover:!bg-[--theme-hover-color]
-                    hover:opacity-80"
-                  tooltipText="Purchase coins to begin your MCAT journey"
-                />
+                
+                  <PurchaseButton 
+                    text="Get Started with Coins"
+                    className="bg-[--theme-hover-color] !important
+                      px-[2rem] py-[0.75rem] text-lg 
+                      text-[--theme-hover-text] 
+                      transition-opacity duration-200
+                      rounded-lg
+                      hover:!bg-[--theme-hover-color]
+                      hover:opacity-80"
+                    tooltipText="Purchase coins to begin your MCAT journey"
+                  />
               </div>
             </div>
           </div>

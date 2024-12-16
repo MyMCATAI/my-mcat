@@ -36,24 +36,35 @@ export async function POST(request: Request) {
       // If JSON parsing fails, we'll just use the default values
     }
 
-    // Only process referral if friendEmail is provided and is a non-empty string
+    // If there's a valid friend email, create UserInfo with bonus score instead of checkout
     if (friendEmail?.trim()) {
       const user = await currentUser();
       if (!user) {
         return new NextResponse("User not found", { status: 404 });
       }
 
-      // Get user's email
       const userEmail = user.emailAddresses[0]?.emailAddress;
       
+      // Create or update UserInfo with bonus score
+      const userInfo = await prismadb.userInfo.upsert({
+        where: { userId },
+        create: { 
+          userId,
+          bio: "Future doctor preparing to ace the MCAT! 🎯 Committed to learning and growing every day.",
+          score: 5, // Bonus score for referred users
+          hasPaid: false // has not paid
+        },
+        update: {} // Don't update anything if user already exists
+      });
+
+      // Handle referral logic
       if (user) {
-        // First try to get firstName from UserInfo, then fallback to Clerk user
         let referrerName: string | undefined;
         
         const userInfo = await prismadb.userInfo.findUnique({
           where: { userId }
         });
-        referrerName = userInfo?.firstName ||undefined
+        referrerName = userInfo?.firstName || undefined;
         
         if (!referrerName) {
           referrerName = user.firstName || 'A friend';
@@ -64,34 +75,35 @@ export async function POST(request: Request) {
           sendWelcomeEmail(referrerName, userEmail),
           sendReferralEmail(referrerName, friendEmail)
         ]);
+
+        try {
+          await prismadb.referral.create({
+            data: {
+              userId,
+              referrerName: user.fullName ?? "Unknown",
+              referrerEmail: userEmail ?? "",
+              friendEmail,
+            }
+          });
+        } catch (error) {
+          // Continue execution even if referral creation fails
+        }
       }
 
-      try {
-        await prismadb.referral.create({
-          data: {
-            userId,
-            referrerName: user.fullName ?? "Unknown",
-            referrerEmail: userEmail ?? "",
-            friendEmail,
-          }
-        });
-      } catch (error) {
-        // Continue execution even if referral creation fails
-      }
+      // Return success response for referred users with redirect URL
+      return NextResponse.json({ 
+        success: true, 
+        message: "User setup completed with referral bonus",
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/home`
+      }, { headers: corsHeaders });
     }
 
-    // Determine which price ID to use
-    let priceId;
-    switch (priceType) {
-      case 'discount':
-        priceId = process.env.STRIPE_PRICE_ID_HALF_OFF_DISCOUNT!;
-        break;
-      default:
-        priceId = process.env.STRIPE_PRICE_ID!;
-        break;
-    }
+    // If no friend email, proceed with regular Stripe checkout
+    let priceId = priceType === 'discount' 
+      ? process.env.STRIPE_PRICE_ID_HALF_OFF_DISCOUNT!
+      : process.env.STRIPE_PRICE_ID!;
 
-    // Create or ensure UserInfo exists
+    // Create basic UserInfo for non-referred users
     const userInfo = await prismadb.userInfo.upsert({
       where: { userId },
       create: { 

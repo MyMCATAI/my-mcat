@@ -163,7 +163,7 @@ export default function OnboardingPage() {
     } else if (kalypsoMessage.includes("equitable financial model")) {
       setKalypsoMessage("You buy coins to access features. Overtime, you can earn coins and access more features. However, if you slack off, you lose coins and have to buy more. We force you to be accountable!");
     } else if (kalypsoMessage.includes("slack off")) {
-      setKalypsoMessage("Ten coins get you started. And I can get you a discount for half, but you gotta invite a friend! 🤝");
+      setKalypsoMessage("Ten coins get you started. OR I can get you a you can invite a friend and start with 5 coins for free! 🤝");
     } else {
       setKalypsoMessage('');
     }
@@ -540,21 +540,22 @@ export default function OnboardingPage() {
 
         {step === 4 && !kalypsoMessage && (
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-6">Get Your Coins</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">Get Started</h2>
             <div className="bg-[#0A1A2F] p-6 rounded-lg mb-6 relative">
               {emailIsValid && (
                 <div className="absolute -top-3 right-3 bg-green-500 text-white text-sm px-3 py-1 rounded-full">
-                  50% OFF!
+                  FREE ACCESS!
                 </div>
               )}
               <div className="flex justify-center items-center gap-3">
-                {emailIsValid && (
-                  <p className="text-3xl font-bold text-gray-400 line-through">$19.00</p>
+                {emailIsValid ? (
+                  <p className="text-3xl font-bold text-white">FREE</p>
+                ) : (
+                  <p className="text-3xl font-bold text-white">$19.00</p>
                 )}
-                <p className="text-3xl font-bold text-white">${emailIsValid ? '9.50' : '19.00'}</p>
               </div>
               <div className="mt-2 flex items-center justify-center gap-2">
-                <p className="text-gray-400">10 Coins</p>
+                <p className="text-gray-400">{emailIsValid ? "5 Coins" : "10 Coins"}</p>
                 <span className="text-yellow-400">✨</span>
               </div>
             </div>
@@ -563,7 +564,7 @@ export default function OnboardingPage() {
                 type="email"
                 value={friendEmail}
                 onChange={(e) => setFriendEmail(e.target.value)}
-                placeholder={"Friend's email for 50% discount"}
+                placeholder="Enter friend's email for free access"
                 className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button 
@@ -571,7 +572,7 @@ export default function OnboardingPage() {
                 disabled={loading || (friendEmail.length > 0 && !emailIsValid)}
                 className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                {loading ? "Loading..." : "Purchase Coins"}
+                {loading ? "Loading..." : emailIsValid ? "Get Free Access" : "Purchase Coins"}
               </button>
             </div>
           </div>
