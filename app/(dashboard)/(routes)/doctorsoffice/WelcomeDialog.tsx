@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FaDiscord } from "react-icons/fa";
@@ -20,7 +20,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({ isOpen, onOpenChange }) =
   return (
     <Dialog 
       open={isOpen} 
-      onOpenChange={() => {}}
+      onOpenChange={onOpenChange}
       modal={true}
     >
       <DialogContent 
