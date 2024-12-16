@@ -9,7 +9,7 @@ export const referralLinkTemplate = (data: any): TemplateConfig => ({
       </p>
       
       <p style="color: #333333; line-height: 1.6;">
-        I'm Kalypso, your friendlysuperkitty. Your friend ${data.referrerName} thought you might want to study together on MyMCAT.
+        I'm Kalypso, your friendly superkitty. Your friend ${data.referrerName} thought you might want to study together on MyMCAT.
       </p>
       
       <p style="color: #333333; line-height: 1.6;">
