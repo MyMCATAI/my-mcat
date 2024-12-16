@@ -309,7 +309,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
             >
               CARs Tests
             </h3>
-            <Tabs defaultValue="past" className="w-full">
+            <Tabs defaultValue="upcoming" className="w-full">
               <TabsList 
                 className="grid w-full grid-cols-2 mb-6 bg-transparent" 
               >
