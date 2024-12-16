@@ -23,34 +23,29 @@ interface Activity {
 }
 
 interface FloatingTaskListProps {
-  activities: Activity[];
-  onTasksUpdate: () => void;
-  onHover: (isHovered: boolean) => void;
+  activities?: Activity[];
+  onTasksUpdate?: () => void;
+  onHover: (hovering: boolean) => void;
 }
 
 const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
-  activities,
+  activities = [],
   onTasksUpdate,
   onHover,
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const todayActivities = activities.filter(activity => 
+  const todayActivities = activities.filter((activity: Activity) => 
     isToday(new Date(activity.scheduledDate))
   );
 
   const handleTaskCompletion = async (activityId: string, taskIndex: number, completed: boolean) => {
     try {
-      const activity = todayActivities.find((a) => a.id === activityId);
+      const activity = todayActivities.find((a: Activity) => a.id === activityId);
       if (!activity || !activity.tasks) return;
 
-      // If task is already completed, prevent unchecking
-      if (activity.tasks[taskIndex].completed) {
-        return;
-      }
-
-      const updatedTasks = activity.tasks.map((task, index) =>
+      const updatedTasks = activity.tasks.map((task: Task, index: number) =>
         index === taskIndex ? { ...task, completed: true } : task
       );
 
@@ -67,10 +62,10 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
       if (!response.ok) throw new Error("Failed to update task");
 
       // Call onTasksUpdate to refresh parent state
-      onTasksUpdate();
+      onTasksUpdate?.();
 
       // Check if all tasks are completed for this activity
-      const allTasksCompleted = updatedTasks.every((task) => task.completed);
+      const allTasksCompleted = updatedTasks.every((task: Task) => task.completed);
       if (allTasksCompleted) {
         // Play success sound
         if (audioRef.current) {

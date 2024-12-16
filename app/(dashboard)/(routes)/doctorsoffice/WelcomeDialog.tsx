@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FaDiscord } from "react-icons/fa";
 import { useRouter } from 'next/navigation';
+import FloatingButton from '../home/FloatingButton';
 
 interface WelcomeDialogProps {
   isOpen: boolean;
@@ -11,16 +12,26 @@ interface WelcomeDialogProps {
 
 const WelcomeDialog: React.FC<WelcomeDialogProps> = ({ isOpen, onOpenChange }) => {
   const router = useRouter();
+  const [activities, setActivities] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<string>('doctorsoffice');
 
   const handleGoToDashboard = () => {
     router.push('/home');
     onOpenChange(false);
   };
 
+  const handleTasksUpdate = (tasks: any[]) => {
+    console.log(tasks);
+  };
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+  };
+
   return (
     <Dialog 
       open={isOpen} 
-      onOpenChange={() => {}}
+      onOpenChange={onOpenChange}
       modal={true}
     >
       <DialogContent 
@@ -63,6 +74,13 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({ isOpen, onOpenChange }) =
               Go to Dashboard
             </Button>
           </div>
+          <FloatingButton
+            onTabChange={handleTabChange}
+            currentPage="doctorsoffice"
+            initialTab={activeTab}
+            activities={activities}
+            onTasksUpdate={handleTasksUpdate}
+          />
         </div>
       </DialogContent>
     </Dialog>
