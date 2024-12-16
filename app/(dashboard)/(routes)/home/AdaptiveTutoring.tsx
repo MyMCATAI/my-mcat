@@ -921,111 +921,149 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
             }}
           >
             <div className="py-2 flex items-center justify-center gap-4 mt-2 ml-2 mr-2">
-              <button
-                onClick={handleCameraClick}
-                className="camera-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
-              >
-                <div className="w-6 h-6 relative theme-box">
-                  <Image
-                    src="/camera.svg"
-                    layout="fill"
-                    objectFit="contain"
-                    alt="camera"
-                    className="theme-svg"
-                  />
-                </div>
-              </button>
-              <button
-                onClick={handleBookClick}
-                className="book-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
-              >
-                <div className="w-6 h-6 relative theme-box">
-                  <Image
-                    src="/bookopened.svg"
-                    layout="fill"
-                    objectFit="contain"
-                    alt="book opened"
-                    className="theme-svg"
-                  />
-                </div>
-              </button>
-              <div className="flex items-center relative group">
-                <div className="flex items-center transition-opacity duration-300 group-hover:opacity-0">
-                  <p className="text-m px-10 flex items-center">
-                    {selectedCategory &&
-                      categories.find(
-                        (cat) =>
-                          cat.conceptCategory === selectedCategory &&
-                          cat.isCompleted
-                      ) && (
-                        <span className="flex items-center text-green-500 mr-2">
-                          <Check className="w-4 h-4" />
-                        </span>
-                      )}
-                    {selectedCategory || ""}
-                  </p>
-                </div>
-                {selectedCategory && (
-                  <div className="absolute left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    {categories.find(
-                      (cat) => cat.conceptCategory === selectedCategory
-                    )?.isCompleted ? (
-                      <p className="text-green-500 flex items-center">
-                        <Check className="w-4 h-4 mr-1" />
-                        Completed
-                      </p>
-                    ) : (
-                      <CompleteTopicButton
-                        categoryId={
-                          categories.find(
-                            (cat) => cat.conceptCategory === selectedCategory
-                          )?.id || ""
-                        }
-                        categoryName={selectedCategory}
-                        onComplete={handleTopicComplete}
-                        setShowConfetti={setShowConfetti}
-                      />
-                    )}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={handleCameraClick}
+                      className="camera-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
+                    >
+                      <div className="w-6 h-6 relative theme-box">
+                        <Image
+                          src="/camera.svg"
+                          layout="fill"
+                          objectFit="contain"
+                          alt="camera"
+                          className="theme-svg"
+                        />
+                      </div>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
+                    <p className="text-white">Video Lectures</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={handleBookClick}
+                      className="book-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
+                    >
+                      <div className="w-6 h-6 relative theme-box">
+                        <Image
+                          src="/bookopened.svg"
+                          layout="fill"
+                          objectFit="contain"
+                          alt="book opened"
+                          className="theme-svg"
+                        />
+                      </div>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
+                    <p className="text-white">Reading Materials</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <div className="flex items-center relative group">
+                  <div className="flex items-center transition-opacity duration-300 group-hover:opacity-0">
+                    <p className="text-m px-10 flex items-center">
+                      {selectedCategory &&
+                        categories.find(
+                          (cat) =>
+                            cat.conceptCategory === selectedCategory &&
+                            cat.isCompleted
+                        ) && (
+                          <span className="flex items-center text-green-500 mr-2">
+                            <Check className="w-4 h-4" />
+                          </span>
+                        )}
+                      {selectedCategory || ""}
+                    </p>
                   </div>
-                )}
-              </div>
-              <button
-                onClick={handleQuizTabClick}
-                className="quiz-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
-              >
-                <div className="w-7 h-7 relative theme-box">
-                  <Image
-                    src="/exam.svg"
-                    layout="fill"
-                    objectFit="contain"
-                    alt="exam"
-                    className="theme-svg"
-                  />
-                </div>
-              </button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200">
-                    <div className="w-7 h-7 relative theme-box">
-                      <Image
-                        src="/cat.svg"
-                        alt="AI Chat"
-                        width={28}
-                        height={28}
-                        className="theme-svg w-7 h-7"
-                      />
+                  {selectedCategory && (
+                    <div className="absolute left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      {categories.find(
+                        (cat) => cat.conceptCategory === selectedCategory
+                      )?.isCompleted ? (
+                        <p className="text-green-500 flex items-center">
+                          <Check className="w-4 h-4 mr-1" />
+                          Completed
+                        </p>
+                      ) : (
+                        <CompleteTopicButton
+                          categoryId={
+                            categories.find(
+                              (cat) => cat.conceptCategory === selectedCategory
+                            )?.id || ""
+                          }
+                          categoryName={selectedCategory}
+                          onComplete={handleTopicComplete}
+                          setShowConfetti={setShowConfetti}
+                        />
+                      )}
                     </div>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => handleCatClick("explain")}>
-                    Explain This
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleCatClick("question")}>
-                    Question Me
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  )}
+                </div>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={handleQuizTabClick}
+                      className="quiz-button p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200"
+                    >
+                      <div className="w-7 h-7 relative theme-box">
+                        <Image
+                          src="/exam.svg"
+                          layout="fill"
+                          objectFit="contain"
+                          alt="exam"
+                          className="theme-svg"
+                        />
+                      </div>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
+                    <p className="text-white">Practice Questions</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <TooltipProvider>
+                  <Tooltip delayDuration={0}>
+                    <DropdownMenu>
+                      <div className="flex items-center">
+                        <TooltipTrigger asChild>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200">
+                              <div className="w-7 h-7 relative theme-box">
+                                <Image
+                                  src="/cat.svg"
+                                  alt="AI Chat"
+                                  width={28}
+                                  height={28}
+                                  className="theme-svg w-7 h-7"
+                                />
+                              </div>
+                            </button>
+                          </DropdownMenuTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-[#001226] border border-[#5F7E92]">
+                          <p className="text-white">Ask Kalypso for Help</p>
+                        </TooltipContent>
+                      </div>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => handleCatClick("explain")}>
+                          Explain This
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleCatClick("question")}>
+                          Question Me
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </Tooltip>
+                </TooltipProvider>
+              </TooltipProvider>
             </div>
 
             <div className="p-2 flex-grow overflow-y-auto scrollbar-hide">

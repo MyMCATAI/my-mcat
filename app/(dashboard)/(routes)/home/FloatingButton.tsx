@@ -4,12 +4,16 @@ import React, { useState, useRef, useEffect } from "react";
 import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
+import { AnimatePresence } from "framer-motion";
+import FloatingTaskList from './FloatingTaskList';
 
 interface FloatingButtonProps {
   onTabChange: (tab: string) => void;
-  currentPage: 'home' | 'doctorsoffice';
+  currentPage: string;
   initialTab: string;
   className?: string;
+  activities: Activity[];
+  onTasksUpdate: () => void;
 }
 
 interface ButtonPosition {
@@ -17,6 +21,18 @@ interface ButtonPosition {
   left: number;
   tab: string;
   icon: string;
+}
+
+interface Activity {
+  id: string;
+  scheduledDate: string;
+  activityTitle: string;
+  activityText: string;
+  hours: number;
+  activityType: string;
+  link?: string | null;
+  tasks?: { text: string; completed: boolean; }[];
+  source?: string;
 }
 
 // Updated Typewriter component
@@ -33,7 +49,7 @@ const Typewriter: React.FC<{ text: string; delay?: number }> = ({ text, delay = 
         } else {
           clearInterval(interval);
         }
-      }, 10); // Adjust this value to control typing speed (lower = faster)
+      }, 10);
 
       return () => clearInterval(interval);
     }, delay);
@@ -44,10 +60,19 @@ const Typewriter: React.FC<{ text: string; delay?: number }> = ({ text, delay = 
   return <span>{displayedText}</span>;
 };
 
-const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPage, initialTab, className }) => {
+const FloatingButton: React.FC<FloatingButtonProps> = ({ 
+  onTabChange, 
+  currentPage, 
+  initialTab, 
+  className,
+  activities = [],
+  onTasksUpdate 
+}) => {
   const [isHovered, setIsHovered] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(initialTab);
+  const [recentlyChangedTab, setRecentlyChangedTab] = useState(false);
   const hoverTimeout = useRef<number | null>(null);
+  const tabChangeTimeout = useRef<number | null>(null);
   const router = useRouter();
   const [showTutoringMessage, setShowTutoringMessage] = useState(false);
 
@@ -59,9 +84,19 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
   };
 
   const handleMouseLeave = () => {
+    if (hoverTimeout.current) {
+      clearTimeout(hoverTimeout.current);
+    }
     hoverTimeout.current = window.setTimeout(() => {
       setIsHovered(false);
     }, 200);
+  };
+
+  const handleTaskListHover = (hovering: boolean) => {
+    if (hoverTimeout.current) {
+      clearTimeout(hoverTimeout.current);
+    }
+    setIsHovered(hovering);
   };
 
   const buttonPositions: ButtonPosition[] = [
@@ -78,16 +113,45 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
   ];
 
   const handleButtonClick = (tab: string) => {
-    // Define tab behaviors
     const tabActions = {
       KnowledgeProfile: () => {
         router.push('/home');
         setActiveTab(tab);
         onTabChange(tab);
+        setRecentlyChangedTab(true);
+        if (tabChangeTimeout.current) {
+          clearTimeout(tabChangeTimeout.current);
+        }
+        tabChangeTimeout.current = window.setTimeout(() => {
+          setRecentlyChangedTab(false);
+        }, 3000);
+      },
+      CARS: () => {
+        if (currentPage === 'doctorsoffice') {
+          router.push('/home');
+        }
+        setActiveTab(tab);
+        onTabChange(tab);
+        setRecentlyChangedTab(true);
+        if (tabChangeTimeout.current) {
+          clearTimeout(tabChangeTimeout.current);
+        }
+        tabChangeTimeout.current = window.setTimeout(() => {
+          setRecentlyChangedTab(false);
+        }, 3000);
       },
       doctorsoffice: () => {
         const targetPath = currentPage === 'home' ? '/doctorsoffice' : '/home';
         router.push(targetPath);
+        setActiveTab(tab);
+        onTabChange(tab);
+        setRecentlyChangedTab(true);
+        if (tabChangeTimeout.current) {
+          clearTimeout(tabChangeTimeout.current);
+        }
+        tabChangeTimeout.current = window.setTimeout(() => {
+          setRecentlyChangedTab(false);
+        }, 3000);
       },
       default: () => {
         if (currentPage === 'doctorsoffice') {
@@ -95,15 +159,20 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
         }
         setActiveTab(tab);
         onTabChange(tab);
+        setRecentlyChangedTab(true);
+        if (tabChangeTimeout.current) {
+          clearTimeout(tabChangeTimeout.current);
+        }
+        tabChangeTimeout.current = window.setTimeout(() => {
+          setRecentlyChangedTab(false);
+        }, 3000);
       }
     };
 
-    // Execute the appropriate action
     const action = tabActions[tab as keyof typeof tabActions] || tabActions.default;
     action();
   };
 
-  // Mapping of tab names to descriptive texts
   const labelTexts: Record<string, string> = {
     "Schedule": "Dashboard",
     "doctorsoffice": "The Anki Clinic",
@@ -111,30 +180,46 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
     "KnowledgeProfile": "Tutoring Suite",
   };
 
-  // Updated Helper function to determine label position
   const getLabelPosition = (index: number) => {
     switch (index) {
-      case 0: // Schedule
+      case 0:
         return { top: '-5.5rem', left: '10rem' };
-      case 1: // doctorsoffice
+      case 1:
         return { top: '-1.2rem', left: '15.5rem' };
-      case 2: // test
+      case 2:
         return { top: '4rem', left: '16.5rem' };
-      default: // KnowledgeProfile or any other
+      default:
         return { top: '2rem', left: '12.5rem' };
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (tabChangeTimeout.current) {
+        clearTimeout(tabChangeTimeout.current);
+      }
+    };
+  }, []);
 
   return (
     <>
       {isHovered && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
       )}
-      {showTutoringMessage && (
-        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black p-4 rounded-lg shadow-lg z-50">
-          {"You don't have enough coins to unlock the tutoring suite! Head to Anki Clinic to earn it."}
-        </div>
-      )}
+
+      <AnimatePresence>
+        {isHovered && 
+         activeTab !== "Schedule" && 
+         currentPage !== "Schedule" && 
+         !recentlyChangedTab && (
+          <FloatingTaskList 
+            activities={activities}
+            onTasksUpdate={onTasksUpdate}
+            onHover={handleTaskListHover}
+          />
+        )}
+      </AnimatePresence>
+
       <span className="fixed bottom-[8rem] left-[0.625rem] z-50">
         <div
           className="relative group"
@@ -191,7 +276,6 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({ onTabChange, currentPag
                     height={isActive ? 44 : 32} 
                   />
                 </button>
-                {/* Label */}
                 <span
                   className="absolute"
                   style={{
