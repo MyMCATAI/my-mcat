@@ -201,6 +201,7 @@ body.theme-sunsetCity * {
     --theme-button-color: #001a3ae6; /* Slightly lighter than leaguecard-color: #000e2de6 */
     --theme-button-boxShadow: 0 0 2px 1px rgba(0, 123, 255, 0.5);
     --theme-button-boxShadow-hover: 0 0 9px 3px rgba(0, 123, 255, 0.7);
+    --theme-tasklist-bg: rgba(0, 58, 86, 0.95); /* Slightly more opaque than current */
   }
 
 }
@@ -325,6 +326,7 @@ body.theme-sunsetCity * {
   --theme-calendar-color: #FCB5AC; /* Vibrant pink to contrast with soft pink */
   --theme-button-color: #fff5f8e6; /* Slightly darker than leaguecard-color: #ffffffe6 */
   --theme-button-boxShadow-hover: 0 0 8px 2px rgba(255, 0, 89, 0.6);
+  --theme-tasklist-bg: rgba(250, 238, 244, 0.95); /* Light pink */
 }
 
 /* Add theme-specific gradients */
@@ -363,6 +365,7 @@ body.theme-sunsetCity * {
   --theme-calendar-color: #ff9f7d; /* Changed from #ffeef6 to a warm coral color that matches the sunset theme */
   --theme-button-color: #261741; /* Slightly lighter than leaguecard-color: #231639 */
   --theme-button-boxShadow-hover: 0 0 8px 3px rgba(255, 99, 71, 0.6);
+  --theme-tasklist-bg: rgba(35, 22, 57, 0.95); /* Dark purple, more opaque */
 }
 
 .theme-sunsetCity .gradientbg {
@@ -664,6 +667,7 @@ body {
   --theme-button-color: rgba(240, 245, 247, 0.9); /* Slightly lighter than leaguecard-color: rgba(255, 255, 255, 0.9) */
   --theme-button-boxShadow: 0 0 3px 2px rgba(63, 194, 255, 0.5);
   --theme-button-boxShadow-hover: 0 0 8px 3px rgba(76, 181, 230, 0.6);
+  --theme-tasklist-bg: rgba(255, 255, 255, 0.95); /* Light white */
 }
 
 .theme-mykonosBlue .gradientbg {

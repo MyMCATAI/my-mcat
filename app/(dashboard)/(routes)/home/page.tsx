@@ -455,6 +455,8 @@ const Page = () => {
                 currentPage="home"
                 initialTab={activeTab}
                 className="z-50"
+                activities={activities}
+                onTasksUpdate={fetchActivities}
               />
             }
             </div>
