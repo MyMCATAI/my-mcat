@@ -23,8 +23,8 @@ export async function GET(req: NextRequest) {
     const userTests = await prisma.userTest.findMany({
       where: { 
         userId,
-        finishedAt: { not: null },  // Only get completed tests
-        score: { not: null }        // Only get tests with scores
+        finishedAt: { not: null },  
+        score: { not: null }    
       },
       include: {
         responses: {
@@ -42,7 +42,6 @@ export async function GET(req: NextRequest) {
       orderBy: {
         startedAt: 'desc'
       },
-      take: 5
     });
 
     // Filter completed tests with valid scores and reviews
@@ -53,7 +52,6 @@ export async function GET(req: NextRequest) {
       test.responses.every(r => r.userAnswer !== null)  // Ensure all responses have answers
     );
 
-    // Add review tracking
     const reviewedTests = completedTests.filter(test =>
       test.responses.every(r => r.isReviewed === true)
     );
