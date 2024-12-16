@@ -19,9 +19,9 @@ import {
 } from "@/utils/calculateResourceTotals";
 import WelcomeDialog from "./WelcomeDialog";
 import FlashcardsDialog from "./FlashcardsDialog";
-import StartChallengeComponent from "./StartChallengeComponent";
 import AfterTestFeed from "./AfterTestFeed";
 import type { UserResponse } from "@prisma/client";
+import { FetchedActivity } from "@/types";
 
 const DoctorsOfficePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("doctorsoffice");
@@ -537,6 +537,26 @@ const DoctorsOfficePage: React.FC = () => {
     setVisibleImages(newVisibleImages);
   }, []);
 
+  const [activities, setActivities] = useState<FetchedActivity[]>([]);
+
+  const fetchActivities = async () => {
+    try {
+      const response = await fetch("/api/calendar-activity");
+      if (!response.ok) {
+        throw new Error("Failed to fetch activities");
+      }
+      const activities = await response.json();
+      setActivities(activities);
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+      toast.error("Failed to fetch activities. Please try again.");
+    }
+  };
+
+  useEffect(() => {
+    fetchActivities();
+  }, []);
+
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
       <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
@@ -703,6 +723,8 @@ const DoctorsOfficePage: React.FC = () => {
           onTabChange={handleTabChange}
           currentPage="doctorsoffice"
           initialTab={activeTab}
+          activities={activities}
+          onTasksUpdate={fetchActivities}
         />
       </div>
       <WelcomeDialog
