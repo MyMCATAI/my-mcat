@@ -9,32 +9,38 @@ import {
 } from "@/lib/server-utils";
 
 export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
 const prisma = new PrismaClient();
 
-
-// Cron job to handle user inactivity and streak updates
-// - Check if user was active in the past day
-// - Update streak
-// - Update score if user was inactive for 2 days
-
 export async function GET(request: NextRequest) {
+  const now = new Date();
+  console.log(`Starting inactivity check cron job at ${now.toLocaleString()}`);
 
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    console.log("Unauthorized request received");
     return new Response("Unauthorized", { status: 401 });
   }
+
   try {
     // Get the date 7 days ago
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    // Get paid users who have been active in the last week
+    // Get the date 24 hours ago
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+    // Get paid users who have been active in the last week AND were created more than 24 hours ago
     const users = await prisma.userInfo.findMany({
       where: {
         hasPaid: true,
         updatedAt: {
           gte: oneWeekAgo
+        },
+        createdAt: {
+          lt: oneDayAgo // This ensures the user was created more than 24 hours ago
         }
       },
       select: {
@@ -48,15 +54,22 @@ export async function GET(request: NextRequest) {
 
     console.log(`Found ${users.length} paid users active in the last week`);
 
+    let streakLossCount = 0;
+    let coinLossCount = 0;
+    const userResults = [];
+
     // Process each user
     for (const user of users) {
-      // Get email
-      const name = user.firstName || "Future Doctor"
+      const name = user.firstName || "Future Doctor";
       const email = await getUserEmail(user.userId);
+      
       if (!email) {
-        console.error(`Failed to fetch email for user ID: ${user.userId}`);
+        console.log(`⚠️ Failed to fetch email for user ID: ${user.userId}`);
         continue;
       }
+
+      console.log(`\n-------------------`);
+      console.log(`Processing user: ${name} (${email})`);
 
       // Check activity and handle streaks/scores
       const activityStatus = await handleUserInactivity(user.userId);
@@ -64,39 +77,69 @@ export async function GET(request: NextRequest) {
       // Update streak based on past day activity
       const oldStreak = user.streak;
       const newStreak = await updateUserStreak(user.userId, activityStatus.wasActivePastDay);
+
+      const result = {
+        userId: user.userId,
+        name,
+        email,
+        wasActive: activityStatus.wasActivePastDay,
+        oldStreak,
+        newStreak,
+        coinLoss: activityStatus.isFirstCoinLoss,
+        newScore: activityStatus.newScore,
+        emailsSent: [] as string[]
+      };
       
       // Only send emails if notificationPreference is "all"
       if (user.notificationPreference === "all") {
         // Send streak loss email if they just lost their streak
         if (!activityStatus.wasActivePastDay && oldStreak > 0 && newStreak === 0) {
-          await sendStreakLossEmail(email, name);
-          console.log(`Sent streak loss email to user ${user.userId}`);
+          const sent = await sendStreakLossEmail(email, name);
+          if (sent) {
+            streakLossCount++;
+            result.emailsSent.push('streak-loss');
+            console.log(`✉️ Sent streak loss email`);
+          }
         }
 
         // Send coin loss email only on first coin loss
-        if (activityStatus.isFirstCoinLoss && 
-            activityStatus.newScore !== undefined) {
-          await sendCoinLossEmail(
-            email, 
-            name, 
-            activityStatus.newScore
-          );
-          console.log(`Sent coin loss email to user ${user.userId}`);
+        if (activityStatus.isFirstCoinLoss && activityStatus.newScore !== undefined) {
+          const sent = await sendCoinLossEmail(email, name, activityStatus.newScore);
+          if (sent) {
+            coinLossCount++;
+            result.emailsSent.push('coin-loss');
+            console.log(`✉️ Sent coin loss email`);
+          }
         }
       }
+
+      console.log(`Status: ${activityStatus.wasActivePastDay ? '✅ Active' : '❌ Inactive'}`);
+      console.log(`Streak: ${oldStreak} → ${newStreak}`);
+      if (activityStatus.newScore !== undefined) {
+        console.log(`Score updated to: ${activityStatus.newScore}`);
+      }
+      console.log(`-------------------`);
+
+      userResults.push(result);
     }
 
-    // Log success and return response
-    const now = new Date();
-    console.log("Cron job completed at:", now);
+    console.log("\n=== SUMMARY ===");
+    console.log(`Time: ${now.toLocaleString()}`);
+    console.log(`Total users processed: ${users.length}`);
+    console.log(`Streak loss emails sent: ${streakLossCount}`);
+    console.log(`Coin loss emails sent: ${coinLossCount}`);
+    console.log("=============\n");
+
     return NextResponse.json({ 
       message: "Cron job completed successfully",
       timestamp: now,
-      paidUsersProcessed: users.length
+      paidUsersProcessed: users.length,
+      streakLossEmails: streakLossCount,
+      coinLossEmails: coinLossCount,
+      details: userResults
     });
 
   } catch (error) {
-    // Error handling
     console.error("Cron job failed:", error);
     return NextResponse.json({ 
       error: "Internal server error" 
@@ -105,22 +148,3 @@ export async function GET(request: NextRequest) {
     await prisma.$disconnect();
   }
 }
-
-// Helper functions to implement:
-// 1. processUserStreaks(user)
-//    - Check user activity
-//    - Update streak counts
-//    - Return updated user data
-
-// 2. sendReminderEmail(user)
-//    - Generate reminder email content
-//    - Send via email service
-
-// 3. generateWeeklySummary(user)
-//    - Compile weekly statistics
-//    - Generate email content
-//    - Send summary email
-
-// 4. isUserActive(user)
-//    - Check if user has been active in last 24h
-//    - Return boolean
