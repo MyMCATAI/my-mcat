@@ -110,9 +110,10 @@ const DoctorsOfficePage: React.FC = () => {
         // Dummy scoring logic
         const correctQuestionWeight = 1;
         const incorrectQuestionWeight = -0.5;
-        const testScore =
+        let testScore =
           correctCount * correctQuestionWeight +
           wrongCount * incorrectQuestionWeight;
+        testScore = Math.max(testScore, 0);
         setTestScore(testScore);
 
         // Update the UserTest with score
@@ -458,14 +459,6 @@ const DoctorsOfficePage: React.FC = () => {
     setUserScore(newScore);
   };
 
-  // Marketplace Dialog handlers
-  const handleOpenMarketplace = () => {
-    setIsWelcomeDialogOpen(false);
-    setIsMarketplaceOpen(true);
-    setHasOpenedMarketplace(true);
-    marketplaceDialogRef.current?.open();
-  };
-
   // Flashcards Dialog handlers
   useEffect(() => {
     if (flashcardRoomId !== "") {
@@ -473,11 +466,6 @@ const DoctorsOfficePage: React.FC = () => {
     }
   }, [flashcardRoomId]);
 
-  // Add a handler to close the dialog
-  const handleCloseFlashcards = () => {
-    setIsFlashcardsOpen(false);
-    setFlashcardRoomId(""); // Reset the room ID when closing
-  };
 
   const handleWelcomeDialogOpenChange = (open: boolean) => {
     setIsWelcomeDialogOpen(open);
@@ -556,6 +544,11 @@ const DoctorsOfficePage: React.FC = () => {
   useEffect(() => {
     fetchActivities();
   }, []);
+
+  // Add this handler for when clinic is unlocked
+  const handleClinicUnlocked = async () => {
+    await fetchData(); // Refetch all data to update scores and other stats
+  };
 
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
@@ -730,6 +723,7 @@ const DoctorsOfficePage: React.FC = () => {
       <WelcomeDialog
         isOpen={isWelcomeDialogOpen}
         onOpenChange={handleWelcomeDialogOpenChange}
+        onClinicUnlocked={handleClinicUnlocked}
       />
     </div>
   );
