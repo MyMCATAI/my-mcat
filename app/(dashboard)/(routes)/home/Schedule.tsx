@@ -49,10 +49,10 @@ import {
   BarChart as AnalyticsIcon,
 } from "lucide-react";
 import { FaCheckCircle } from "react-icons/fa";
-import HelpContentSchedule from './HelpContentSchedule';
-import { HelpCircle } from 'lucide-react';
-import { useOutsideClick } from '@/hooks/use-outside-click';
-import PracticeTests from './PracticeTests';
+import HelpContentSchedule from "./HelpContentSchedule";
+import { HelpCircle } from "lucide-react";
+import { useOutsideClick } from "@/hooks/use-outside-click";
+import PracticeTests from "./PracticeTests";
 import { ClipboardList } from "lucide-react";
 import { Coffee } from "lucide-react";
 
@@ -274,7 +274,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   const handleStudyPlanSaved = useCallback(() => {
     setShowSettings(false);
-    setCurrentView('calendar');
+    setCurrentView("calendar");
     setHasUpdatedStudyPlan(true);
 
     // Only start Part 2 if it hasn't been played yet
@@ -524,10 +524,15 @@ const Schedule: React.FC<ScheduleProps> = ({
         // Use activity id to get activity from calendar-activity
         const activityResponse = await fetch(`/api/calendar-activity`);
         const activities = await activityResponse.json();
-        
-        const completedActivity = activities.find((a: FetchedActivity) => a.id === activityId);
 
-        if (completedActivity.source === "generated" && isToday(new Date(completedActivity.scheduledDate))) {
+        const completedActivity = activities.find(
+          (a: FetchedActivity) => a.id === activityId
+        );
+
+        if (
+          completedActivity.source === "generated" &&
+          isToday(new Date(completedActivity.scheduledDate))
+        ) {
           // Update coin count
           await updateUserCoinCount();
 
@@ -640,142 +645,163 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   // Add this helper function near the top of the component
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
     });
   };
 
   // Add new state for tracking view
-  const [currentView, setCurrentView] = useState<'analytics' | 'calendar' | 'tests'>('analytics');
+  const [currentView, setCurrentView] = useState<
+    "analytics" | "calendar" | "tests"
+  >("analytics");
 
   return (
-    <div className="grid grid-cols-[25%_75%] h-full relative w-full">
-      {/* Left Sidebar */}
-      <div 
-        className="w-full p-5 flex flex-col ml-2.5 mt-2.5 mb-2.5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
-        style={{
-          backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "center",
-          backgroundColor: "var(--theme-mainbox-color)",
-          color: "var(--theme-text-color)",
-          boxShadow: "var(--theme-box-shadow)",
-        }}
-      >
-        <div className="text-center space-y-1">
-          <h1 className="text-sm font-medium opacity-50" style={{ color: 'var(--theme-text-color)' }}>
-            Tasks for
-          </h1>
-          <h2 className="text-lg font-semibold" style={{ color: 'var(--theme-text-color)' }}>
-            {formatDate(new Date())}
-          </h2>
-        </div>
-
+    <div
+      className={`${currentView === "tests" ? "" : "grid grid-cols-[25%_75%]"} h-full relative w-full`}
+    >
+      {/* Left Sidebar - Only show when not in tests view */}
+      {currentView !== "tests" && (
         <div
-          className="flex-grow overflow-y-auto space-y-4 pr-2"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          className="w-full p-5 flex flex-col ml-2.5 mt-2.5 mb-2.5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
+          style={{
+            backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundColor: "var(--theme-mainbox-color)",
+            color: "var(--theme-text-color)",
+            boxShadow: "var(--theme-box-shadow)",
+          }}
         >
-          <style jsx>{`
-            div::-webkit-scrollbar {
-              display: none;
-            }
-          `}</style>
-          {/* Today's Activities Section */}
-          <div className="space-y-6">
-            {todayActivities.map((activity) => (
-              <div key={activity.id} className="mb-6">
-                <button
-                  className={`w-full py-3 px-4 
-                    ${
-                      isActivityCompleted(activity)
-                        ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                        : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
-                    }
-                    border-2 border-[--theme-border-color]
-                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
-                    font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
-                    text-sm`}
-                  onClick={() => handleButtonClick(activity.activityTitle)}
-                >
-                  <span>{activity.activityTitle}</span>
-                  {isActivityCompleted(activity) ? (
-                    <FaCheckCircle
-                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
-                      style={{ color: "var(--theme-hover-text)" }}
-                    />
-                  ) : (
-                    <svg
-                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
+          <div className="text-center space-y-1">
+            <h1
+              className="text-sm font-medium opacity-50"
+              style={{ color: "var(--theme-text-color)" }}
+            >
+              Tasks for
+            </h1>
+            <h2
+              className="text-lg font-semibold"
+              style={{ color: "var(--theme-text-color)" }}
+            >
+              {formatDate(new Date())}
+            </h2>
+          </div>
+
+          <div
+            className="flex-grow overflow-y-auto space-y-4 pr-2"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            <style jsx>{`
+              div::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
+            {/* Today's Activities Section */}
+            <div className="space-y-6">
+              {todayActivities.map((activity) => (
+                <div key={activity.id} className="mb-6">
+                  <button
+                    className={`w-full py-3 px-4 
+                      ${
+                        isActivityCompleted(activity)
+                          ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
+                          : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
+                      }
+                      border-2 border-[--theme-border-color]
+                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
+                      font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
+                      text-sm`}
+                    onClick={() => handleButtonClick(activity.activityTitle)}
+                  >
+                    <span>{activity.activityTitle}</span>
+                    {isActivityCompleted(activity) ? (
+                      <FaCheckCircle
+                        className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                        style={{ color: "var(--theme-hover-text)" }}
                       />
-                    </svg>
-                  )}
-                </button>
-
-                <div className="bg-[--theme-leaguecard-color] shadow-md p-4 mt-2 space-y-2 rounded-lg">
-                  {activity.tasks && activity.tasks.length > 0 ? (
-                    activity.tasks.map((task, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Checkbox
-                          id={`task-${activity.id}-${index}`}
-                          checked={task.completed}
-                          onCheckedChange={(checked) =>
-                            handleTaskCompletion(
-                              activity.id,
-                              index,
-                              checked as boolean
-                            )
-                          }
+                    ) : (
+                      <svg
+                        className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
                         />
-                        <label
-                          htmlFor={`task-${activity.id}-${index}`}
-                          className="text-sm leading-tight cursor-pointer flex-grow"
-                        >
-                          {task.text}
-                        </label>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm italic">No tasks for this activity</p>
-                  )}
-                </div>
-              </div>
-            ))}
+                      </svg>
+                    )}
+                  </button>
 
-            {todayActivities.length === 0 && (
-              <p className="text-center italic">
-                No activities scheduled for today
-              </p>
-            )}
+                  <div className="bg-[--theme-leaguecard-color] shadow-md p-4 mt-2 space-y-2 rounded-lg">
+                    {activity.tasks && activity.tasks.length > 0 ? (
+                      activity.tasks.map((task, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Checkbox
+                            id={`task-${activity.id}-${index}`}
+                            checked={task.completed}
+                            onCheckedChange={(checked) =>
+                              handleTaskCompletion(
+                                activity.id,
+                                index,
+                                checked as boolean
+                              )
+                            }
+                          />
+                          <label
+                            htmlFor={`task-${activity.id}-${index}`}
+                            className="text-sm leading-tight cursor-pointer flex-grow"
+                          >
+                            {task.text}
+                          </label>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm italic">
+                        No tasks for this activity
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {todayActivities.length === 0 && (
+                <p className="text-center italic">
+                  No activities scheduled for today
+                </p>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Right Content */}
-      <div className="p-2.5 flex flex-col relative" style={{ marginLeft: "1.5rem" }}>
+      {/* Right Content - Adjust margin and width based on view */}
+      <div
+        className={`p-2.5 flex flex-col relative ${
+          currentView === "tests" ? "w-full" : "ml-6"
+        }`}
+      >
         {/* Stats Box - Vertical stack */}
-        {currentView === 'analytics' && !selectedSubject && (
+        {currentView === "analytics" && !selectedSubject && (
           <div className="absolute top-6 left-8 z-10">
             <PurchaseButton tooltipText="Click to purchase more coins!">
-              <div 
+              <div
                 className="flex items-center gap-2 rounded-2xl px-4 py-2 transition-all duration-200"
                 style={{
-                  backgroundColor: 'var(--theme-leaguecard-color)',
+                  backgroundColor: "var(--theme-leaguecard-color)",
                 }}
               >
-                <span className="font-bold text-2xl" style={{ color: 'var(--theme-text-color)' }}>
+                <span
+                  className="font-bold text-2xl"
+                  style={{ color: "var(--theme-text-color)" }}
+                >
                   {userScore.toLocaleString()}
                 </span>
                 <div className="relative">
@@ -830,8 +856,8 @@ const Schedule: React.FC<ScheduleProps> = ({
                     showHelp ? "bg-[--theme-hover-color]" : "bg-white"
                   }`}
                 >
-                  <HelpCircle 
-                    className="w-4 h-4" 
+                  <HelpCircle
+                    className="w-4 h-4"
                     fill="none"
                     stroke={showHelp ? "white" : "#333"}
                   />
@@ -853,7 +879,7 @@ const Schedule: React.FC<ScheduleProps> = ({
               onClick={toggleSettings}
             />
           )}
-        </AnimatePresence>  
+        </AnimatePresence>
 
         {/* Settings Modal */}
         <AnimatePresence>
@@ -891,7 +917,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                 exit={{ opacity: 0, y: -20 }}
                 className="absolute top-0 right-4 w-[32rem] z-50 max-h-[80vh] flex flex-col"
               >
-                <HelpContentSchedule 
+                <HelpContentSchedule
                   onClose={toggleHelp}
                   onResetTutorials={resetTutorials}
                 />
@@ -900,9 +926,13 @@ const Schedule: React.FC<ScheduleProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Main Container with fixed dimensions */}
+        {/* Main Container - Adjust padding and height for tests view */}
         <div
-          className="flex-grow h-[calc(100vh-8rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
+          className={`flex-grow ${
+            currentView === "tests"
+              ? "p-3 h-[calc(100vh-5rem)]"
+              : "h-[calc(100vh-8rem)] p-4"
+          } w-full rounded-[10px] flex flex-col relative overflow-hidden`}
           style={{
             backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
             backgroundSize: "cover",
@@ -918,7 +948,9 @@ const Schedule: React.FC<ScheduleProps> = ({
             {/* Analytics View */}
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
-                currentView === 'analytics' ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
+                currentView === "analytics"
+                  ? "opacity-100 z-10"
+                  : "opacity-0 pointer-events-none z-0"
               } flex flex-col overflow-auto`}
             >
               {(isTypingComplete || isTutorialTypingComplete) && (
@@ -933,7 +965,9 @@ const Schedule: React.FC<ScheduleProps> = ({
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <DonutChart onProgressClick={(label) => setSelectedSubject(label)} />
+                        <DonutChart
+                          onProgressClick={(label) => setSelectedSubject(label)}
+                        />
                       </motion.div>
                     ) : (
                       <motion.div
@@ -944,7 +978,10 @@ const Schedule: React.FC<ScheduleProps> = ({
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <Statistics onReturn={() => setSelectedSubject(null)} subject={selectedSubject} />
+                        <Statistics
+                          onReturn={() => setSelectedSubject(null)}
+                          subject={selectedSubject}
+                        />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -955,7 +992,9 @@ const Schedule: React.FC<ScheduleProps> = ({
             {/* Calendar View */}
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
-                currentView === 'calendar' ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
+                currentView === "calendar"
+                  ? "opacity-100 z-10"
+                  : "opacity-0 pointer-events-none z-0"
               } flex flex-col overflow-auto`}
             >
               <div className="flex-grow">
@@ -969,6 +1008,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                   setRunTutorialPart3={setRunTutorialPart3}
                   onTasksUpdate={handleTasksUpdate}
                   updateTodaySchedule={updateTodaySchedule}
+                  handleSetTab={handleSetTab}
                 />
               </div>
             </div>
@@ -976,7 +1016,9 @@ const Schedule: React.FC<ScheduleProps> = ({
             {/* Practice Tests View */}
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
-                currentView === 'tests' ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
+                currentView === "tests"
+                  ? "opacity-100 z-10"
+                  : "opacity-0 pointer-events-none z-0"
               } flex flex-col overflow-auto`}
             >
               <PracticeTests />
@@ -986,7 +1028,7 @@ const Schedule: React.FC<ScheduleProps> = ({
           {/* View Toggle Buttons */}
           <div className="mt-auto flex justify-end items-center gap-2 pt-2">
             {/* Break button - only show in calendar view */}
-            {currentView === 'calendar' && (
+            {currentView === "calendar" && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -1008,12 +1050,12 @@ const Schedule: React.FC<ScheduleProps> = ({
               </TooltipProvider>
             )}
 
-            {currentView !== 'tests' && (
+            {currentView !== "tests" && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => setCurrentView('tests')}
+                      onClick={() => setCurrentView("tests")}
                       className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                         border-2 border-[--theme-border-color] 
                         hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
@@ -1030,12 +1072,12 @@ const Schedule: React.FC<ScheduleProps> = ({
               </TooltipProvider>
             )}
 
-            {currentView !== 'calendar' && (
+            {currentView !== "calendar" && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => setCurrentView('calendar')}
+                      onClick={() => setCurrentView("calendar")}
                       className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                         border-2 border-[--theme-border-color] 
                         hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
@@ -1052,12 +1094,12 @@ const Schedule: React.FC<ScheduleProps> = ({
               </TooltipProvider>
             )}
 
-            {currentView !== 'analytics' && (
+            {currentView !== "analytics" && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => setCurrentView('analytics')}
+                      onClick={() => setCurrentView("analytics")}
                       className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                         border-2 border-[--theme-border-color] 
                         hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 

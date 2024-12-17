@@ -1,7 +1,12 @@
 // app/(dashboard)/(routes)/home/PracticeTests.tsx
-import React, { useState } from 'react';
-import { ChevronRight, Plus, GripVertical } from 'lucide-react';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import React, { useState } from "react";
+import { ChevronRight, Plus, GripVertical } from "lucide-react";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "@hello-pangea/dnd";
 
 interface PracticeTestsProps {
   className?: string;
@@ -24,27 +29,71 @@ interface StudentStats {
 // Example array for AAMC tests when activeSection === 'aamc'
 // (Assuming these are defined somewhere; adjust as needed)
 const AAMCTests = [
-  { name: 'AAMC FL 1', status: 'Not Started' },
-  { name: 'AAMC FL 2', status: 'Not Started' },
+  { name: "AAMC FL 1", status: "Not Started" },
+  { name: "AAMC FL 2", status: "Not Started" },
   // Add more tests as needed...
 ];
 
 const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
   const [activeSection, setActiveSection] = useState<
-    'aamc' | 'thirdParty' | 'myMcat' | 'custom' | 'diagnostic' | 'section' | null
+    | "aamc"
+    | "thirdParty"
+    | "myMcat"
+    | "custom"
+    | "diagnostic"
+    | "section"
+    | null
   >(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [studentStats] = useState<StudentStats>({
     averageScore: 85, // Example value - replace with actual data
-    testsTaken: 3,    // Example value - replace with actual data
-    testsRemaining: 8 // Example value - replace with actual data
+    testsTaken: 3, // Example value - replace with actual data
+    testsRemaining: 8, // Example value - replace with actual data
   });
 
   const [scheduledTests, setScheduledTests] = useState<Test[]>([
-    { id: '1', name: 'Full Length 1', company: 'AAMC', status: 'Not Started', calendarDate: 12 },
-    { id: '2', name: 'Sample Unscored', company: 'AAMC', status: 'Not Started', calendarDate: 15 },
-    { id: '3', name: 'Full Length 3', company: 'Blueprint', status: 'Not Started', calendarDate: 20 },
-    { id: '4', name: 'Full Length 4', company: 'AAMC', status: 'Not Started', calendarDate: 25 },
+    {
+      id: "1",
+      name: "Full Length 1",
+      company: "AAMC",
+      status: "Not Started",
+      calendarDate: 12,
+    },
+    {
+      id: "2",
+      name: "Sample Unscored",
+      company: "AAMC",
+      status: "Not Started",
+      calendarDate: 15,
+    },
+    {
+      id: "3",
+      name: "Full Length 3",
+      company: "Blueprint",
+      status: "Not Started",
+      calendarDate: 20,
+    },
+    {
+      id: "4",
+      name: "Full Length 4",
+      company: "AAMC",
+      status: "Not Started",
+      calendarDate: 25,
+    },
+    {
+      id: "5",
+      name: "Full Length 5",
+      company: "AAMC",
+      status: "Not Started",
+      calendarDate: 25,
+    },
+    {
+      id: "6",
+      name: "Full Length 6",
+      company: "AAMC",
+      status: "Not Started",
+      calendarDate: 25,
+    },
   ]);
 
   const handleDragEnd = (result: DropResult) => {
@@ -58,12 +107,12 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
   };
 
   const calendarDays = [
-    ['26', '27', '28', '29', '30', '1', '2'],
-    ['3', '4', '5', '6', '7', '8', '9'],
-    ['10', '11', '12', '13', '14', '15', '16'],
-    ['17', '18', '19', '20', '21', '22', '23'],
-    ['24', '25', '26', '27', '28', '29', '30'],
-    ['31', '1', '2', '3', '4', '5', '6'],
+    ["26", "27", "28", "29", "30", "1", "2"],
+    ["3", "4", "5", "6", "7", "8", "9"],
+    ["10", "11", "12", "13", "14", "15", "16"],
+    ["17", "18", "19", "20", "21", "22", "23"],
+    ["24", "25", "26", "27", "28", "29", "30"],
+    ["31", "1", "2", "3", "4", "5", "6"],
   ];
 
   const isTestDate = (day: string) => {
@@ -84,21 +133,21 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
             </button>
 
             <h2 className="text-[--theme-text-color] text-sm opacity-60 uppercase tracking-wide">
-              {activeSection === 'aamc'
-                ? 'AAMC Full Length Exams'
-                : activeSection === 'thirdParty'
-                ? 'Third Party Exams'
-                : activeSection === 'myMcat'
-                ? 'MyMCAT Exams'
-                : activeSection === 'custom'
-                ? 'Custom Exams'
-                : activeSection === 'diagnostic'
-                ? 'Diagnostic Tests'
-                : 'Section Banks'}
+              {activeSection === "aamc"
+                ? "AAMC Full Length Exams"
+                : activeSection === "thirdParty"
+                  ? "Third Party Exams"
+                  : activeSection === "myMcat"
+                    ? "MyMCAT Exams"
+                    : activeSection === "custom"
+                      ? "Custom Exams"
+                      : activeSection === "diagnostic"
+                        ? "Diagnostic Tests"
+                        : "Section Banks"}
             </h2>
           </div>
 
-          {activeSection === 'aamc' && (
+          {activeSection === "aamc" && (
             <div className="grid grid-cols-2 gap-4 animate-fadeIn">
               {AAMCTests.map((test, index) => (
                 <div
@@ -123,9 +172,15 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
             </div>
           )}
 
-          {(activeSection === 'thirdParty' || activeSection === 'myMcat' || activeSection === 'custom' || activeSection === 'diagnostic' || activeSection === 'section') && (
+          {(activeSection === "thirdParty" ||
+            activeSection === "myMcat" ||
+            activeSection === "custom" ||
+            activeSection === "diagnostic" ||
+            activeSection === "section") && (
             <div className="animate-fadeIn flex flex-col items-center justify-center py-8">
-              <p className="text-sm opacity-70 text-center">Coming soon! This feature is currently under development.</p>
+              <p className="text-sm opacity-70 text-center">
+                Coming soon! This feature is currently under development.
+              </p>
             </div>
           )}
         </div>
@@ -137,18 +192,23 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
               <div
                 className="bg-[--theme-leaguecard-color] rounded-xl p-8 mx-4"
                 style={{
-                  margin: '0.5rem 1rem',
-                  boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
+                  margin: "0.5rem 1rem",
+                  boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
                 }}
               >
                 <div className="grid grid-cols-2 h-full gap-8">
                   {/* Calendar Side */}
                   <div className="flex flex-col">
-                    <div className="text-lg font-medium mb-4 text-center">December 2024</div>
+                    <div className="text-lg font-medium mb-4 text-center">
+                      December 2024
+                    </div>
                     <div className="grid grid-cols-7 gap-1">
                       {/* Day headers */}
-                      {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
-                        <div key={day} className="text-center text-sm font-medium p-2">
+                      {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
+                        <div
+                          key={day}
+                          className="text-center text-sm font-medium p-2"
+                        >
                           {day}
                         </div>
                       ))}
@@ -158,9 +218,9 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
                         <div
                           key={index}
                           className={`aspect-square flex items-center justify-center text-sm p-2 rounded-md
-                            ${parseInt(day) > 0 && parseInt(day) <= 31 ? 'hover:bg-[--theme-hover-color] cursor-pointer' : 'opacity-30'}
-                            ${date?.getDate() === parseInt(day) ? 'bg-[--theme-hover-color] text-[--theme-hover-text]' : ''}
-                            ${isTestDate(day) ? 'bg-[--theme-calendar-color] text-[--theme-text-color] font-bold' : ''}
+                            ${parseInt(day) > 0 && parseInt(day) <= 31 ? "hover:bg-[--theme-hover-color] cursor-pointer" : "opacity-30"}
+                            ${date?.getDate() === parseInt(day) ? "bg-[--theme-hover-color] text-[--theme-hover-text]" : ""}
+                            ${isTestDate(day) ? "bg-[--theme-calendar-color] text-[--theme-text-color] font-bold" : ""}
                           `}
                         >
                           {day}
@@ -182,25 +242,36 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
                           className="flex-grow overflow-y-auto space-y-2 min-h-[200px]"
                         >
                           {scheduledTests.map((test, index) => (
-                            <Draggable key={test.id} draggableId={test.id} index={index}>
+                            <Draggable
+                              key={test.id}
+                              draggableId={test.id}
+                              index={index}
+                            >
                               {(provided, snapshot) => (
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   className={`flex items-center p-3 bg-[--theme-leaguecard-accent] rounded-lg 
                                     transition-all duration-200
-                                    ${snapshot.isDragging ? 'opacity-75' : ''}
+                                    ${snapshot.isDragging ? "opacity-75" : ""}
                                     hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]`}
                                   style={{
-                                    ...provided.draggableProps.style
+                                    ...provided.draggableProps.style,
                                   }}
                                 >
-                                  <div {...provided.dragHandleProps} className="mr-2 cursor-grab active:cursor-grabbing">
+                                  <div
+                                    {...provided.dragHandleProps}
+                                    className="mr-2 cursor-grab active:cursor-grabbing"
+                                  >
                                     <GripVertical className="w-4 h-4 opacity-50" />
                                   </div>
                                   <div className="flex-grow">
-                                    <h4 className="text-sm font-medium">{test.name}</h4>
-                                    <p className="text-xs opacity-70">{test.company}</p>
+                                    <h4 className="text-sm font-medium">
+                                      {test.name}
+                                    </h4>
+                                    <p className="text-xs opacity-70">
+                                      {test.company}
+                                    </p>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <button
@@ -243,12 +314,36 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
               </h2>
               <div className="grid grid-cols-3 gap-4 max-h-[24rem] overflow-y-auto">
                 {[
-                  { id: 'aamc', label: 'AAMC Full Length Exams', description: 'Official AAMC practice exams' },
-                  { id: 'thirdParty', label: 'Third Party Exams', description: 'Blueprint, UWorld, and more' },
-                  { id: 'myMcat', label: 'MyMCAT Exams', description: 'AI-generated practice tests' },
-                  { id: 'custom', label: 'Custom Exams', description: 'Create your own practice tests' },
-                  { id: 'diagnostic', label: 'Diagnostic Tests', description: 'Assess your starting point' },
-                  { id: 'section', label: 'Section Banks', description: 'Practice specific test sections' },
+                  {
+                    id: "aamc",
+                    label: "AAMC Full Length Exams",
+                    description: "Official AAMC practice exams",
+                  },
+                  {
+                    id: "thirdParty",
+                    label: "Third Party Exams",
+                    description: "Blueprint, UWorld, and more",
+                  },
+                  {
+                    id: "myMcat",
+                    label: "MyMCAT Exams",
+                    description: "AI-generated practice tests",
+                  },
+                  {
+                    id: "custom",
+                    label: "Custom Exams",
+                    description: "Create your own practice tests",
+                  },
+                  {
+                    id: "diagnostic",
+                    label: "Diagnostic Tests",
+                    description: "Assess your starting point",
+                  },
+                  {
+                    id: "section",
+                    label: "Section Banks",
+                    description: "Practice specific test sections",
+                  },
                 ].map((section) => (
                   <button
                     key={section.id}
@@ -258,8 +353,12 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
                   >
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <span className="text-sm font-medium">{section.label}</span>
-                        <p className="text-xs opacity-70">{section.description}</p>
+                        <span className="text-sm font-medium">
+                          {section.label}
+                        </span>
+                        <p className="text-xs opacity-70">
+                          {section.description}
+                        </p>
                       </div>
                       <ChevronRight className="w-5 h-5 flex-shrink-0" />
                     </div>
