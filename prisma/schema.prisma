@@ -9,20 +9,21 @@ datasource db {
 }
 
 model UserInfo {
-  id            String         @id @default(cuid())
-  userId        String         @unique
-  bio           String
-  firstName     String?        @default("")
-  updatedAt     DateTime       @updatedAt
-  apiCount      Int            @default(0)
-  createdAt     DateTime       @default(now())
-  score         Int            @default(0) // coins
-  clinicRooms   String         @default("") // array string
-  hasPaid       Boolean        @default(false) // set true as soon as payment is made
-  subscriptionType     String         @default("")
-  diagnosticScores Json? @default("{\"total\":\"\",\"cp\":\"\",\"cars\":\"\",\"bb\":\"\",\"ps\":\"\"}")
-  streak          Int            @default(0)
-  notificationPreference String @default("all")
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  bio                    String
+  updatedAt              DateTime @updatedAt
+  apiCount               Int      @default(0)
+  createdAt              DateTime @default(now())
+  score                  Int      @default(0)
+  clinicRooms            String   @default("")
+  hasPaid                Boolean  @default(false)
+  subscriptionType       String   @default("")
+  diagnosticScores       Json?
+  firstName              String?  @default("")
+  streak                 Int      @default(0)
+  notificationPreference String   @default("all")
+  unlocks                Json?    @default("[]")
 }
 
 model UserSubscription {
@@ -39,8 +40,8 @@ model Passage {
   text        String     @db.Text
   citation    String     @db.Text
   title       String?    @db.Text
-  description String?    @db.Text
   difficulty  Float      @default(1)
+  description String?    @db.Text
   questions   Question[]
   tests       Test[]
   userTests   UserTest[]
@@ -51,17 +52,17 @@ model Question {
   questionContent     String         @db.Text
   questionOptions     String         @db.Text
   questionAnswerNotes String?        @db.Text
-  context             String?        @db.Text
   passageId           String?
   categoryId          String
   contentCategory     String
   questionID          String
   difficulty          Float          @default(1)
+  context             String?        @db.Text
+  contentId           String?
   links               String?        @db.Text
   tags                String?        @db.Text
-  types               String?        @db.Text // flashcard, normal, patient, (typicall null = normal) 
+  types               String?        @db.Text
   states              String?        @db.Text
-  contentId           String?
   passage             Passage?       @relation(fields: [passageId], references: [id])
   category            Category       @relation(fields: [categoryId], references: [id])
   content             Content?       @relation(fields: [contentId], references: [id])
@@ -122,11 +123,12 @@ model UserTest {
   id         String         @id @default(cuid())
   userId     String
   testId     String?
-  passageId  String?
   startedAt  DateTime       @default(now())
   finishedAt DateTime?
-  reviewedAt DateTime?      
   score      Float?
+  passageId  String?
+  reviewedAt DateTime?
+  earnedCoin Boolean?       @default(false)
   test       Test?          @relation(fields: [testId], references: [id])
   passage    Passage?       @relation(fields: [passageId], references: [id])
   responses  UserResponse[]
@@ -137,23 +139,23 @@ model UserTest {
 }
 
 model UserResponse {
-  id         String    @id @default(cuid())
-  userId String?
-  userTestId String?
-  questionId String
-  userAnswer String
-  isCorrect  Boolean
-  categoryId String?
-  timeSpent  Float?
-  weighting  Float @default(1)
-  userNotes  String?   @db.Text
-  reviewNotes String?  @db.Text
-  answeredAt DateTime  @default(now())
-  isReviewed Boolean?  @default(false)
-  flagged    Boolean?   @default(false)
-  userTest   UserTest? @relation(fields: [userTestId], references: [id])
-  question   Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  Category   Category? @relation(fields: [categoryId], references: [id])
+  id          String    @id @default(cuid())
+  userTestId  String?
+  questionId  String
+  userAnswer  String
+  isCorrect   Boolean
+  timeSpent   Float?
+  userNotes   String?   @db.Text
+  answeredAt  DateTime  @default(now())
+  categoryId  String?
+  userId      String?
+  weighting   Float     @default(1)
+  isReviewed  Boolean?  @default(false)
+  reviewNotes String?   @db.Text
+  flagged     Boolean?  @default(false)
+  userTest    UserTest? @relation(fields: [userTestId], references: [id])
+  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  Category    Category? @relation(fields: [categoryId], references: [id])
 
   @@index([userId])
   @@index([userTestId])
@@ -189,12 +191,12 @@ model CalendarActivity {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   status        String    @default("Not Started")
-  source        String    @default("")
   contentId     String?
+  tasks         Json?
+  source        String    @default("")
   studyPlan     StudyPlan @relation(fields: [studyPlanId], references: [id])
   category      Category? @relation(fields: [categoryId], references: [id])
   content       Content?  @relation(fields: [contentId], references: [id])
-  tasks         Json?     @default("[]") // Array of task objects
 
   @@index([userId])
   @@index([studyPlanId])
@@ -202,19 +204,20 @@ model CalendarActivity {
   @@index([scheduledDate])
   @@index([contentId])
 }
+
 model Content {
   id                 String             @id @default(cuid())
   title              String             @default("")
   categoryId         String
   link               String             @default("")
-  audioLink          String             @default("") // faux json array of strings
   type               String             @default("")
   total_timing       Float              @default(0)
   minutes_estimate   Float              @default(0)
-  transcript         String?              @db.LongText
-  summary            String?            @db.Text
+  transcript         String?            @db.LongText
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
+  summary            String?            @db.Text
+  audioLink          String             @default("")
   category           Category           @relation(fields: [categoryId], references: [id])
   calendarActivities CalendarActivity[]
   questions          Question[]
@@ -223,17 +226,17 @@ model Content {
 }
 
 model KnowledgeProfile {
-  id             String    @id @default(cuid())
-  userId         String
-  categoryId     String
-  correctAnswers Int       @default(0)
-  totalAttempts  Int       @default(0)
-  lastAttemptAt  DateTime  @default(now())
-  completedAt    DateTime?
-  conceptMastery Float?
-  contentMastery Float?
-  completionPercentage Float @default(0)
-  category       Category  @relation(fields: [categoryId], references: [id])
+  id                   String    @id @default(cuid())
+  userId               String
+  categoryId           String
+  correctAnswers       Int       @default(0)
+  totalAttempts        Int       @default(0)
+  lastAttemptAt        DateTime  @default(now())
+  conceptMastery       Float?
+  contentMastery       Float?
+  completionPercentage Float     @default(0)
+  completedAt          DateTime?
+  category             Category  @relation(fields: [categoryId], references: [id])
 
   @@unique([userId, categoryId])
   @@index([userId])
@@ -241,10 +244,10 @@ model KnowledgeProfile {
 }
 
 model Review {
-  id      String @id @default(cuid())
-  tier    Int
-  rating  Int
-  review  String @db.Text
+  id             String @id @default(cuid())
+  tier           Int
+  rating         Int
+  review         String @db.Text
   profilePicture String
 }
 
@@ -258,28 +261,29 @@ model PatientRecord {
 }
 
 model Referral {
-  id            String   @id @default(cuid())
-  userId        String   // referrer's userId
-  referrerName  String   @default("")
-  referrerEmail String   @default("")
-  friendEmail   String   // friend's email who was referred
-  friendUserId  String  @default("") // friend's id who was referred (and then signed up)
-  createdAt     DateTime @default(now())
+  id            String    @id @default(cuid())
+  userId        String
+  referrerName  String    @default("")
+  referrerEmail String    @default("")
+  friendEmail   String
+  createdAt     DateTime  @default(now())
+  friendUserId  String    @default("")
   joinedAt      DateTime?
+
   @@index([userId])
   @@index([friendEmail])
 }
 
 model DataPulse {
-  id         String    @id @default(cuid())
-  userId     String
-  positive   Int   @default(0)
-  negative   Int   @default(0)
-  name       String    // name of the pulse event e.g amino acids, 1A, Chesmitry, etc
-  level      String    @default("conceptCategory")  // this indicates the level of the pulse event: e.g. conceptCategory - contentCategory - subjectCategory - Section
-  weight     Float     @default(1)  // suppose it applies to all questions in the conceptCategory
-  source     String    @default("") // source of the pulse event e.g. UWorld, AAMC, Kaplan, Diagnostic test, etc
-  notes      String?   @db.Text
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  level     String   @default("conceptCategory")
+  weight    Float    @default(1)
+  source    String   @default("")
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  negative  Int      @default(0)
+  positive  Int      @default(0)
+  userId    String
 }
