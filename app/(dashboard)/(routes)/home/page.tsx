@@ -269,11 +269,6 @@ const Page = () => {
         content = null;
     }
 
-    // Only wrap non-Schedule content with MDOnlyFeaturesDialog
-    if (!isPro && activeTab !== "Schedule" && activeTab !== "test") {
-      return <MDOnlyFeaturesDialog content={content} />;
-    }
-
     return content;
   };
 
@@ -444,16 +439,14 @@ const Page = () => {
               {renderContent()}
             </div>
 
-            {/* {hasPaid && (
-              <FloatingButton
-                onTabChange={handleTabChange}
-                currentPage="home"
-                initialTab={activeTab}
-                className="z-50"
-                activities={activities}
-                onTasksUpdate={fetchActivities}
-              />
-            )} */}
+            <FloatingButton
+              onTabChange={handleTabChange}
+              currentPage={currentPage}
+              initialTab={activeTab}
+              className="z-50"
+              activities={activities}
+              onTasksUpdate={fetchActivities}
+            />
           </div>
         </div>
         <div className="w-1/4">
