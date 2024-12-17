@@ -150,19 +150,23 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
       animate={{ opacity: 1, x: -16 }}
       exit={{ opacity: 0, x: -320 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      onMouseEnter={() => {
+      className="fixed bottom-64 left-1 z-40 w-[24rem] 
+                 rounded-lg shadow-xl transition-shadow duration-300 hover:shadow-lg"
+      style={{
+        backgroundColor: 'var(--theme-leaguecard-color)',
+        color: "var(--theme-text-color)",
+        boxShadow: 'var(--theme-button-boxShadow-hover)',
+        transition: 'box-shadow 0.3s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = 'var(--theme-adaptive-tutoring-boxShadow-hover)';
         setIsHovered(true);
         onHover(true);
       }}
-      onMouseLeave={() => {
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow-hover)';
         setIsHovered(false);
         onHover(false);
-      }}
-      className="fixed bottom-64 left-1 z-40 w-[24rem] 
-                 rounded-lg shadow-xl bg-[var(--theme-leaguecard-color)]"
-      style={{
-        color: "var(--theme-text-color)",
-        boxShadow: 'var(--theme-button-boxShadow-hover)',
       }}
     >
       <div className="p-2 border-b border-white/10 flex justify-between items-center">
