@@ -4,6 +4,7 @@ import prismadb from "@/lib/prismadb";
 import { absoluteUrl } from "@/lib/utils";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { sendReferralEmail, sendWelcomeEmail } from "@/lib/server-utils";
+import { ProductType, isValidProductType } from "@/types";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -101,10 +102,32 @@ export async function POST(request: Request) {
     }
 
     // If no friend email, proceed with regular Stripe checkout
-    let priceId =
-      priceType === "discount"
-        ? process.env.STRIPE_PRICE_ID_HALF_OFF_DISCOUNT!
-        : process.env.STRIPE_PRICE_ID!;
+    let priceId: string;
+    let productType: ProductType = ProductType.COINS_10; // Default product type
+    let mode: 'payment' | 'subscription' = 'payment';
+
+    // Validate and set product type
+    if (isValidProductType(priceType)) {
+      productType = priceType as ProductType;
+      
+      switch (productType) {
+        case ProductType.COINS_10_DISCOUNT:
+          priceId = process.env.STRIPE_PRICE_ID_HALF_OFF_DISCOUNT!;
+          break;
+        case ProductType.COINS_50:
+          priceId = process.env.STRIPE_PRICE_50_ID!;
+          break;
+        case ProductType.MD_PREMIUM:
+          priceId = process.env.STRIPE_PRICE_PREMIUM_ID!;
+          mode = 'subscription';
+          break;
+        case ProductType.COINS_10:
+        default:
+          priceId = process.env.STRIPE_PRICE_ID!;
+      }
+    } else {
+      priceId = process.env.STRIPE_PRICE_ID!; // Default to 10 coins if invalid type
+    }
 
     // Create basic UserInfo for non-referred users
     const userInfo = await prismadb.userInfo.upsert({
@@ -120,11 +143,12 @@ export async function POST(request: Request) {
       success_url: absoluteUrl("/home?payment=success"),
       cancel_url: absoluteUrl("/home?payment=cancelled"),
       payment_method_types: ["card"],
-      mode: "payment",
+      mode: mode,
       billing_address_collection: "auto",
       client_reference_id: userId,
       metadata: {
         userId: userId,
+        productType: productType,
       },
       line_items: [
         {

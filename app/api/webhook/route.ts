@@ -2,7 +2,7 @@ import Stripe from "stripe"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
-
+import { ProductType, isValidProductType, getCoinAmountForProduct, ProductName } from "@/types"
 import prismadb from "@/lib/prismadb"
 import { stripe } from "@/lib/stripe"
 
@@ -91,23 +91,33 @@ export async function POST(req: Request) {
     case "checkout.session.completed":
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.userId;
+      const productType = session.metadata?.productType;
+      const productName = session.metadata?.productName;
             
-      if (userId) {
+      console.log(session.metadata)
+      if (userId && productType && isValidProductType(productType)) {
         try {
+          const coinAmount = getCoinAmountForProduct(
+            productType as ProductType,
+            productName as ProductName
+          );
+          const isPremium = productType === ProductType.MD_PREMIUM;
+
           // First check if user exists
           const existingUser = await prismadb.userInfo.findUnique({
             where: { userId }
           });
 
           if (existingUser) {
-            // If exists, increment score
+            // If exists, increment score and update subscription type if needed
             await prismadb.userInfo.update({
               where: { userId },
               data: { 
                 score: {
-                  increment: 10
+                  increment: coinAmount
                 },
-                hasPaid: true
+                hasPaid: true,
+                subscriptionType: isPremium ? "premium" : "coins",
               }
             });
           } else {
@@ -116,9 +126,21 @@ export async function POST(req: Request) {
               data: { 
                 userId,
                 bio: "Future doctor preparing to ace the MCAT! 🎯 Committed to learning and growing every day.",
-                score: 10,
-                hasPaid: true
+                score: coinAmount,
+                hasPaid: true,
+                subscriptionType: isPremium ? "premium" : "coins",
               }
+            });
+          }
+
+          // If this is a premium subscription, update or create UserSubscription
+          if (isPremium && session.customer) {
+            await upsertUserSubscription({
+              userId,
+              stripeCustomerId: session.customer,
+              stripeSubscriptionId: session.subscription,
+              stripePriceId: session.amount_subtotal,
+              stripeCurrentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
             });
           }
         } catch (error) {
