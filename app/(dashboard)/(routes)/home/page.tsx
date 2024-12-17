@@ -19,15 +19,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { checkProStatus } from "@/lib/utils";
 import FlashcardDeck from "./FlashcardDeck";
-import { toast } from 'react-hot-toast';
+import { toast } from "react-hot-toast";
 import { PurchaseButton } from "@/components/purchase-button";
 import { isToday } from "date-fns";
-import { shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
+import {
+  shouldUpdateKnowledgeProfiles,
+  updateKnowledgeProfileTimestamp,
+} from "@/lib/utils";
 import StreakPopup from "@/components/score/StreakDisplay";
-
+import { useUserInfo } from "@/hooks/useUserInfo";
+import MDOnlyFeaturesDialog from "@/components/home/MDOnlyFeaturesDialog";
 
 const Page = () => {
-  
   const searchParams = useSearchParams();
   const initialTab = searchParams?.get("tab") || "Schedule";
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -47,11 +50,16 @@ const Page = () => {
     contentTitle: string;
     context: string;
   } | null>(null);
-  const [userInfo, setUserInfo] = useState<any>(null);
+  const {
+    userInfo,
+    isLoading: isLoadingUserInfo,
+    checkHasReferrals,
+  } = useUserInfo();
+  const [hasReferral, setHasReferral] = useState(false);
 
   const [currentPage, setCurrentPage] = useState("Schedule");
-  const chatbotRef = useRef<{ sendMessage: (message: string) => void; }>({
-    sendMessage: () => {}
+  const chatbotRef = useRef<{ sendMessage: (message: string) => void }>({
+    sendMessage: () => {},
   });
   const paymentStatus = searchParams?.get("payment");
   const [hasPaid, setHasPaid] = useState(false);
@@ -59,16 +67,19 @@ const Page = () => {
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [userStreak, setUserStreak] = useState(0);
 
-  useEffect(() => {    
+  useEffect(() => {
     // if returning from stripe, show toast depending on payment
     if (!paymentStatus) return;
 
     if (paymentStatus === "success") {
-      toast.success("Payment Successful! Your coins have been added to your account."); // todo handle different purchases
+      toast.success(
+        "Payment Successful! Your coins have been added to your account."
+      ); // todo handle different purchases
     } else if (paymentStatus === "cancelled") {
       toast.error("Payment Cancelled. Your payment was cancelled.");
     }
   }, [paymentStatus]);
+
   useEffect(() => {
     const initializePage = async () => {
       setIsLoading(true);
@@ -76,21 +87,21 @@ const Page = () => {
         await fetchActivities();
         const proStatus = await checkProStatus();
         setIsPro(proStatus);
-        await fetchUserInfo();
+
+        // Check for referrals
+        const hasExistingReferral = await checkHasReferrals();
+        setHasReferral(hasExistingReferral);
 
         // Only update knowledge profiles if needed
-        if (typeof window !== 'undefined' && shouldUpdateKnowledgeProfiles()) {
+        if (typeof window !== "undefined" && shouldUpdateKnowledgeProfiles()) {
           const response = await fetch("/api/knowledge-profile/update", {
             method: "POST",
           });
-          
+
           if (response.ok) {
             updateKnowledgeProfileTimestamp();
           }
         }
-        
-        // Show welcome popup
-        // setShowWelcomePopup(true);
       } catch (error) {
         console.error("Error initializing page:", error);
       } finally {
@@ -99,12 +110,11 @@ const Page = () => {
     };
 
     initializePage();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [checkHasReferrals]);
 
-  useEffect(()=>{
+  useEffect(() => {
     updateCalendarChatContext(activities);
-  },[activities])
+  }, [activities]);
 
   const fetchActivities = async () => {
     try {
@@ -119,9 +129,10 @@ const Page = () => {
       );
 
       // get UWorld activities that need task generation
-      const uworldActivities = todaysActivities.filter((activity: FetchedActivity) => 
-        activity.activityTitle === "UWorld" && 
-        (!activity.tasks || activity.tasks.length === 1)
+      const uworldActivities = todaysActivities.filter(
+        (activity: FetchedActivity) =>
+          activity.activityTitle === "UWorld" &&
+          (!activity.tasks || activity.tasks.length === 1)
       );
 
       let updatedActivities = [...activities];
@@ -132,20 +143,20 @@ const Page = () => {
           method: "POST",
           body: JSON.stringify({ todayUWorldActivity: uworldActivities }),
         });
-    
+
         const responseUWorldJson = await responseUWorld.json();
         const uworldActivityTasks = responseUWorldJson.tasks;
-        
+
         // Update only the activities that needed new tasks
-        updatedActivities = updatedActivities.map(activity => 
-          isToday(new Date(activity.scheduledDate)) && 
+        updatedActivities = updatedActivities.map((activity) =>
+          isToday(new Date(activity.scheduledDate)) &&
           activity.activityTitle === "UWorld" &&
           (!activity.tasks || activity.tasks.length === 1)
-            ? { ...activity, tasks: uworldActivityTasks } 
+            ? { ...activity, tasks: uworldActivityTasks }
             : activity
         );
       }
-      
+
       setActivities(updatedActivities);
       updateCalendarChatContext(updatedActivities);
     } catch (error) {
@@ -154,38 +165,8 @@ const Page = () => {
     }
   };
 
-  const fetchUserInfo = async () => {
-    try {
-      const response = await fetch("/api/user-info");
-      if (response.status === 404) {
-        return;
-      } else if (response.ok) {
-        const userInfo = await response.json();
-        console.log('Fetched userInfo:', userInfo);
-        setUserInfo(userInfo);
-        setHasPaid(userInfo.hasPaid);
-      
-        
-        // Show streak popup for testing
-        const lastStreakPopup = localStorage.getItem('lastStreakPopup');
-        const today = new Date().toDateString();
-        
-        if (!lastStreakPopup || lastStreakPopup !== today) {
-          console.log('Showing streak popup');
-          localStorage.setItem('lastStreakPopup', today);
-          setShowStreakPopup(true);
-        }
-      } else {
-        throw new Error("Failed to fetch user info");
-      }
-    } catch (error) {
-      console.error("Error fetching user info:", error);
-      toast.error("Failed to fetch user info. Please try again.");
-    }
-  };
-
   const renderContent = () => {
-    if (isLoading) {
+    if (isLoading || isLoadingUserInfo) {
       return (
         <div className="flex justify-center items-center h-full">
           <div className="text-center">
@@ -196,8 +177,8 @@ const Page = () => {
       );
     }
 
-    // First check if user hasn't paid
-    if (!hasPaid) {
+    // Check both payment and referral status
+    if (!userInfo?.hasPaid && !hasReferral) {
       return (
         <div className="flex justify-center items-center h-full">
           <div className="bg-[--theme-mainbox-color] rounded-lg p-[2rem] shadow-lg">
@@ -205,26 +186,27 @@ const Page = () => {
               <h2 className="text-6xl font-bold text-[--theme-text-color] mb-[3rem] animate-fade-in-up">
                 Welcome to MyMCAT!
               </h2>
-              <img 
-                src="/kalypsodiagnostic.png" 
-                alt="Kalypso" 
+              <img
+                src="/kalypsodiagnostic.png"
+                alt="Kalypso"
                 className="mx-auto mb-[3rem] max-w-[20rem]"
               />
               <div className="mb-[2rem]">
                 <p className="text-[--theme-text-color] text-lg leading-relaxed mb-[2rem]">
-                  With 10 coins, you can unlock the Adaptive Tutoring Suite, Calendar, and Daily CARs. 
-                  With hard work, you can earn coins and unlock more features without having to pay another cent. 
-                  Please purchase coins to begin your MCAT journey!
+                  {!userInfo?.hasPaid
+                    ? "With 10 coins, you can unlock the Adaptive Tutoring Suite, Calendar, and Daily CARs. With hard work, you can earn coins and unlock more features without having to pay another cent. Please purchase coins to begin your MCAT journey!"
+                    : "Please refer a friend to unlock all features. Share MyMCAT with your study buddies!"}
                 </p>
-                <PurchaseButton 
+
+                <PurchaseButton
                   text="Get Started with Coins"
                   className="bg-[--theme-hover-color] !important
-                    px-[2rem] py-[0.75rem] text-lg 
-                    text-[--theme-hover-text] 
-                    transition-opacity duration-200
-                    rounded-lg
-                    hover:!bg-[--theme-hover-color]
-                    hover:opacity-80"
+                      px-[2rem] py-[0.75rem] text-lg
+                      text-[--theme-hover-text]
+                      transition-opacity duration-200
+                      rounded-lg
+                      hover:!bg-[--theme-hover-color]
+                      hover:opacity-80"
                   tooltipText="Purchase coins to begin your MCAT journey"
                 />
               </div>
@@ -278,33 +260,32 @@ const Page = () => {
         content = "";
         break;
       case "CARS":
-        content = (
-          <TestingSuit />
-        );
+        content = <TestingSuit />;
         break;
       case "flashcards":
-        content = <FlashcardDeck  />;
+        content = <FlashcardDeck />;
         break;
       default:
         content = null;
     }
 
     // Only wrap non-Schedule content with MDOnlyFeaturesDialog
-    // if (!isPro && activeTab !== "Schedule" && activeTab !== "test") {
-    //   return <MDOnlyFeaturesDialog content={content} />;
-    // }
+    if (!isPro && activeTab !== "Schedule" && activeTab !== "test") {
+      return <MDOnlyFeaturesDialog content={content} />;
+    }
 
     return content;
   };
 
   useEffect(() => {
     const handleScroll = () => {
-      const remToPixels = (rem: number) => rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const remToPixels = (rem: number) =>
+        rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
       const scrollToPosition = remToPixels(scrollPosition);
-      
+
       window.scrollTo({
         top: scrollToPosition,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     };
 
@@ -341,9 +322,9 @@ const Page = () => {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     // Create array of next 7 days
-    const nextWeekDays = Array.from({length: 7}, (_, i) => {
+    const nextWeekDays = Array.from({ length: 7 }, (_, i) => {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       return date;
@@ -351,40 +332,54 @@ const Page = () => {
 
     // Helper function to format activities for a specific date
     const formatActivitiesForDate = (activities: FetchedActivity[]) => {
-      return activities.map(a => 
-        `${a.activityTitle} (${a.activityType}, ${a.hours}h, ${a.status})`
-      ).join(', ');
+      return activities
+        .map(
+          (a) =>
+            `${a.activityTitle} (${a.activityType}, ${a.hours}h, ${a.status})`
+        )
+        .join(", ");
     };
 
     // Get activities for yesterday and each day of the week
     const yesterdayActivities = currentActivities.filter(
-      activity => new Date(activity.scheduledDate).toDateString() === yesterday.toDateString()
+      (activity) =>
+        new Date(activity.scheduledDate).toDateString() ===
+        yesterday.toDateString()
     );
 
     // Create context string with detailed information
     const context = `
       Here's my personal MCAT study calendar:
 
-      Yesterday (${yesterday.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}):
-      ${formatActivitiesForDate(yesterdayActivities) || 'No activities scheduled'}
+      Yesterday (${yesterday.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}):
+      ${formatActivitiesForDate(yesterdayActivities) || "No activities scheduled"}
 
-      ${nextWeekDays.map(date => {
-        const dayActivities = currentActivities.filter(
-          activity => new Date(activity.scheduledDate).toDateString() === date.toDateString()
-        );
-        
-        const dayLabel = date.toDateString() === today.toDateString() 
-          ? 'Today' 
-          : date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+      ${nextWeekDays
+        .map((date) => {
+          const dayActivities = currentActivities.filter(
+            (activity) =>
+              new Date(activity.scheduledDate).toDateString() ===
+              date.toDateString()
+          );
 
-        return `${dayLabel}:
-      ${formatActivitiesForDate(dayActivities) || 'No activities scheduled'}`;
-      }).join('\n\n')}
+          const dayLabel =
+            date.toDateString() === today.toDateString()
+              ? "Today"
+              : date.toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "short",
+                  day: "numeric",
+                });
+
+          return `${dayLabel}:
+      ${formatActivitiesForDate(dayActivities) || "No activities scheduled"}`;
+        })
+        .join("\n\n")}
     `.trim();
 
     setChatbotContext({
       contentTitle: "Personal Calendar",
-      context: context
+      context: context,
     });
   };
 
@@ -398,58 +393,58 @@ const Page = () => {
   };
 
   const shouldShowStreakPopup = () => {
-    console.log('shouldShowStreakPopup called'); // Debug log
-    console.log('Current userStreak:', userStreak); // Debug log
-    
+    console.log("shouldShowStreakPopup called"); // Debug log
+    console.log("Current userStreak:", userStreak); // Debug log
+
     if (userStreak < 1) {
-      console.log('Streak too low, not showing popup'); // Debug log
+      console.log("Streak too low, not showing popup"); // Debug log
       return false;
     }
-    
-    const lastStreakPopup = localStorage.getItem('lastStreakPopup');
+
+    const lastStreakPopup = localStorage.getItem("lastStreakPopup");
     const today = new Date().toDateString();
-    
-    console.log('Last streak popup:', lastStreakPopup); // Debug log
-    console.log('Today:', today); // Debug log
-    
+
+    console.log("Last streak popup:", lastStreakPopup); // Debug log
+    console.log("Today:", today); // Debug log
+
     if (!lastStreakPopup || lastStreakPopup !== today) {
-      console.log('Conditions met, should show popup'); // Debug log
-      localStorage.setItem('lastStreakPopup', today);
+      console.log("Conditions met, should show popup"); // Debug log
+      localStorage.setItem("lastStreakPopup", today);
       return true;
     }
     return false;
   };
 
   return (
-      <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
-        <div className="text-white flex gap-[1.5rem] overflow-visible">
-          <div className="w-3/4 relative overflow-visible">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <h2 
-                  className="text-white text-2xl ml-3 font-thin leading-normal shadow-text cursor-pointer" 
-                  onClick={() => window.location.href = '/home'}
-                >
-                  {activeTab === "Schedule"
-                    ? "Dashboard"
-                    : activeTab === "KnowledgeProfile"
+    <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
+      <div className="text-white flex gap-[1.5rem] overflow-visible">
+        <div className="w-3/4 relative overflow-visible">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <h2
+                className="text-white text-2xl ml-3 font-thin leading-normal shadow-text cursor-pointer"
+                onClick={() => (window.location.href = "/home")}
+              >
+                {activeTab === "Schedule"
+                  ? "Dashboard"
+                  : activeTab === "KnowledgeProfile"
                     ? "Adaptive Tutoring Suite"
                     : activeTab === "flashcards"
-                    ? "Flashcards"
-                    : activeTab === "CARS"
-                    ? "Daily CARs Practice"
-                    : "Home"}
-                  {/* {isPro && " Pro"} */}
-                </h2>
-                <ThemeSwitcher />
-              </div>
+                      ? "Flashcards"
+                      : activeTab === "CARS"
+                        ? "Daily CARs Practice"
+                        : "Home"}
+                {/* {isPro && " Pro"} */}
+              </h2>
+              <ThemeSwitcher />
             </div>
-            <div className="relative overflow-visible">
-              <div className="p-3 gradientbg h-[calc(100vh-5rem)] rounded-lg">
-                {renderContent()}
-              </div>
+          </div>
+          <div className="relative overflow-visible">
+            <div className="p-3 gradientbg h-[calc(100vh-5rem)] rounded-lg">
+              {renderContent()}
+            </div>
 
-              {hasPaid && 
+            {/* {hasPaid && (
               <FloatingButton
                 onTabChange={handleTabChange}
                 currentPage="home"
@@ -458,67 +453,67 @@ const Page = () => {
                 activities={activities}
                 onTasksUpdate={fetchActivities}
               />
-            }
-            </div>
-          </div>
-          <div className="w-1/4">
-            <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
-              &nbsp;
-            </h2>
-
-            <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
-              <SideBar
-                activities={activities}
-                currentPage={currentPage}
-                chatbotContext={chatbotContext}
-                chatbotRef={chatbotRef}
-              />
-            </div>
+            )} */}
           </div>
         </div>
+        <div className="w-1/4">
+          <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
+            &nbsp;
+          </h2>
 
-        {/* Score Popup */}
-        <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
-          <DialogContent className="bg-[#001226] text-white border border-sky-500 rounded-lg">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-semibold text-sky-300">
-                Test Completed!
-              </DialogTitle>
-              <DialogDescription className="text-gray-300">
-                Great job on completing the diagnostic test.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <p className="text-xl">
-                Your Score:{" "}
-                <span className="font-bold text-sky-300">
-                  {testScore.toFixed(2)}%
-                </span>
-              </p>
-            </div>
-            <div className="flex justify-end">
-              <Button
-                onClick={() => setShowScorePopup(false)}
-                className="bg-sky-500 hover:bg-sky-600 text-white"
-                disabled={isUpdatingProfile || isGeneratingActivities}
-              >
-                {isUpdatingProfile || isGeneratingActivities
-                  ? "Processing..."
-                  : "Close"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <StreakPopup 
-          streak={userStreak}
-          isOpen={showStreakPopup}
-          onClose={() => {
-            console.log('Closing streak popup'); // Debug log
-            setShowStreakPopup(false);
-          }}
-        />
+          <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
+            <SideBar
+              activities={activities}
+              currentPage={currentPage}
+              chatbotContext={chatbotContext}
+              chatbotRef={chatbotRef}
+            />
+          </div>
+        </div>
       </div>
+
+      {/* Score Popup */}
+      <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
+        <DialogContent className="bg-[#001226] text-white border border-sky-500 rounded-lg">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold text-sky-300">
+              Test Completed!
+            </DialogTitle>
+            <DialogDescription className="text-gray-300">
+              Great job on completing the diagnostic test.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-xl">
+              Your Score:{" "}
+              <span className="font-bold text-sky-300">
+                {testScore.toFixed(2)}%
+              </span>
+            </p>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              onClick={() => setShowScorePopup(false)}
+              className="bg-sky-500 hover:bg-sky-600 text-white"
+              disabled={isUpdatingProfile || isGeneratingActivities}
+            >
+              {isUpdatingProfile || isGeneratingActivities
+                ? "Processing..."
+                : "Close"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <StreakPopup
+        streak={userStreak}
+        isOpen={showStreakPopup}
+        onClose={() => {
+          console.log("Closing streak popup"); // Debug log
+          setShowStreakPopup(false);
+        }}
+      />
+    </div>
   );
 };
 
