@@ -17,7 +17,7 @@ import {
 } from "@radix-ui/react-dialog";
 import Image from "next/image";
 import InteractiveCalendar from "@/components/calendar/InteractiveCalendar";
-import {
+import { 
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -621,7 +621,7 @@ const Schedule: React.FC<ScheduleProps> = ({
       >
         <div className="text-center space-y-1">
           <h2 
-            className="text-m font-semibold" 
+            className="text-sm font-semibold"
             style={{ 
               color: 'var(--theme-text-color)',
               opacity: '0.6'
@@ -645,7 +645,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             {todayActivities.map((activity) => (
               <div key={activity.id} className="mb-6">
                 <button
-                  className={`w-full py-3 px-4 
+                  className={`w-full py-2 px-3 
                     ${
                       isActivityCompleted(activity)
                         ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
@@ -681,7 +681,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                   )}
                 </button>
 
-                <div className="bg-[--theme-leaguecard-color] shadow-md p-4 mt-2 space-y-2 rounded-lg">
+                <div className="bg-[--theme-leaguecard-color] shadow-md p-3 mt-2 space-y-2 rounded-lg">
                   {activity.tasks && activity.tasks.length > 0 ? (
                     activity.tasks.map((task, index) => (
                       <div key={index} className="flex items-center gap-2">

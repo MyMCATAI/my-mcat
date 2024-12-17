@@ -28,7 +28,7 @@ import {
 } from "@/lib/utils";
 import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
-import MDOnlyFeaturesDialog from "@/components/home/MDOnlyFeaturesDialog";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
   const searchParams = useSearchParams();
@@ -66,6 +66,7 @@ const Page = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [userStreak, setUserStreak] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     // if returning from stripe, show toast depending on payment
@@ -379,11 +380,14 @@ const Page = () => {
   };
 
   const handleTabChange = (newTab: string) => {
-    setActiveTab(newTab);
-    setCurrentPage(newTab);
-
-    if (newTab === "Schedule") {
-      updateCalendarChatContext(activities);
+    if (newTab === "doctorsoffice") {
+      router.push('/doctorsoffice');
+    } else {
+      setActiveTab(newTab);
+      setCurrentPage(newTab);
+      if (newTab === "Schedule") {
+        updateCalendarChatContext(activities);
+      }
     }
   };
 
