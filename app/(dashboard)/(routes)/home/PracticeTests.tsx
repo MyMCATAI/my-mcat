@@ -80,20 +80,6 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
       status: "Not Started",
       calendarDate: 25,
     },
-    {
-      id: "5",
-      name: "Full Length 5",
-      company: "AAMC",
-      status: "Not Started",
-      calendarDate: 25,
-    },
-    {
-      id: "6",
-      name: "Full Length 6",
-      company: "AAMC",
-      status: "Not Started",
-      calendarDate: 25,
-    },
   ]);
 
   const handleDragEnd = (result: DropResult) => {

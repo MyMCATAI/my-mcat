@@ -930,7 +930,7 @@ const Schedule: React.FC<ScheduleProps> = ({
         <div
           className={`flex-grow ${
             currentView === "tests"
-              ? "p-3 h-[calc(100vh-5rem)]"
+              ? "p-3 h-[calc(100vh-8rem)] p-4"
               : "h-[calc(100vh-8rem)] p-4"
           } w-full rounded-[10px] flex flex-col relative overflow-hidden`}
           style={{
