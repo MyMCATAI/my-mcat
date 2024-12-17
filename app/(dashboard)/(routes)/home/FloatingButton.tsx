@@ -126,23 +126,19 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
           setRecentlyChangedTab(false);
         }, 3000);
       },
-      CARS: () => {
-        if (currentPage === 'doctorsoffice') {
+      doctorsoffice: () => {
+        if (currentPage === 'home') {
+          router.push('/doctorsoffice');
+        } else {
           router.push('/home');
         }
         setActiveTab(tab);
         onTabChange(tab);
-        setRecentlyChangedTab(true);
-        if (tabChangeTimeout.current) {
-          clearTimeout(tabChangeTimeout.current);
-        }
-        tabChangeTimeout.current = window.setTimeout(() => {
-          setRecentlyChangedTab(false);
-        }, 3000);
       },
-      doctorsoffice: () => {
-        const targetPath = currentPage === 'home' ? '/doctorsoffice' : '/home';
-        router.push(targetPath);
+      CARS: () => {
+        if (currentPage === 'doctorsoffice') {
+          router.push('/home');
+        }
         setActiveTab(tab);
         onTabChange(tab);
         setRecentlyChangedTab(true);
