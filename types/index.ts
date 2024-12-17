@@ -204,3 +204,45 @@ export interface OnboardingFormData {
   targetScore: string;
   medicalSchool: MedicalSchool | null;
 }
+
+export enum ProductType {
+  COINS_10 = "coins_10",
+  COINS_50 = "coins_50",
+  COINS_10_DISCOUNT = "coins_10_discount",
+  MD_PREMIUM = "md_premium"
+}
+
+export type ProductName = "TenCoins" | "FiftyCoins" | "MDPremium"; // these are set in the stripe product metadata in Stripe Dashboard
+
+// Type guard to check if a string is a valid ProductType
+export function isValidProductType(type: string): type is ProductType {
+  return Object.values(ProductType).includes(type as ProductType);
+}
+
+// Helper to get coin amount for a product type or name
+export function getCoinAmountForProduct(productType: ProductType, productName?: ProductName): number {
+  // First check product name if provided
+  if (productName) {
+    switch (productName) {
+      case "FiftyCoins":
+        return 50;
+      case "TenCoins":
+        return 10;
+      case "MDPremium":
+        return 0;
+    }
+  }
+
+  // Fall back to product type if no name or unrecognized name
+  switch (productType) {
+    case ProductType.COINS_50:
+      return 50;
+    case ProductType.COINS_10:
+    case ProductType.COINS_10_DISCOUNT:
+      return 10;
+    case ProductType.MD_PREMIUM:
+      return 0; // Premium subscription doesn't use coins
+    default:
+      return 10;
+  }
+}
