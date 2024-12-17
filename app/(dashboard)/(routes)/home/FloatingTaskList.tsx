@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Checkbox } from "@/components/ui/checkbox";
 import { FaCheckCircle } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { isToday } from "date-fns";
+import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 
 interface Task {
   text: string;
@@ -33,12 +34,26 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
   onTasksUpdate,
   onHover,
 }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
   const todayActivities = activities.filter((activity: Activity) => 
     isToday(new Date(activity.scheduledDate))
   );
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => 
+      prev === todayActivities.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => 
+      prev === 0 ? todayActivities.length - 1 : prev - 1
+    );
+  };
 
   const handleTaskCompletion = async (activityId: string, taskIndex: number, completed: boolean) => {
     try {
@@ -131,103 +146,115 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{ duration: 0.2 }}
-      className="fixed bottom-[16rem] left-[0.625rem] z-50 w-[24rem] max-h-[40rem] rounded-lg shadow-xl transition-shadow duration-300 hover:shadow-lg"
-      style={{
-        backgroundColor: 'var(--theme-leaguecard-color)',
-        color: "var(--theme-text-color)",
-        boxShadow: 'var(--theme-button-boxShadow-hover)',
-        transition: 'box-shadow 0.3s ease',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--theme-adaptive-tutoring-boxShadow-hover)';
+      initial={{ opacity: 0, x: -320 }}
+      animate={{ opacity: 1, x: -16 }}
+      exit={{ opacity: 0, x: -320 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      onMouseEnter={() => {
+        setIsHovered(true);
         onHover(true);
       }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow-hover)';
+      onMouseLeave={() => {
+        setIsHovered(false);
         onHover(false);
       }}
+      className="fixed bottom-64 left-1 z-40 w-[24rem] 
+                 rounded-lg shadow-xl bg-[var(--theme-leaguecard-color)]"
+      style={{
+        color: "var(--theme-text-color)",
+        boxShadow: 'var(--theme-button-boxShadow-hover)',
+      }}
     >
+      <div className="p-2 border-b border-white/10 flex justify-between items-center">
+        <h2 className="text-xs ml-5 opacity-60 uppercase tracking-wide">Current Task</h2>
+        <div className="flex items-center gap-3">
+          <span className="text-xs opacity-60">
+            {todayActivities.filter(a => !isActivityCompleted(a)).length} remaining
+          </span>
+          {todayActivities.length > 1 && (
+            <button
+              onClick={goToNext}
+              className="p-1.5 rounded-full 
+                       hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
+                       transition-all"
+            >
+              <IoChevronForward size={16} />
+            </button>
+          )}
+        </div>
+      </div>
+
       <div 
         ref={listRef}
-        className="p-6 space-y-6 overflow-y-auto max-h-[40rem]"
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none'
-        }}
+        className="px-6 pt-3 pb-4 space-y-2"
       >
-        {todayActivities.map((activity) => (
-          <div key={activity.id} className="mb-6">
-            <button
-              className={`w-full py-4 px-5 
-                ${
-                  isActivityCompleted(activity)
+        {todayActivities.length > 0 ? (
+          <div className="space-y-3">
+            <div key={todayActivities[currentIndex].id}>
+              <button
+                className={`w-full py-4 px-5 
+                  ${isActivityCompleted(todayActivities[currentIndex])
                     ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                    : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
-                }
-                border-2 border-[--theme-border-color]
-                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
-                font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
-                text-base`}
-            >
-              <span>{activity.activityTitle}</span>
-              {isActivityCompleted(activity) ? (
-                <FaCheckCircle
-                  className="min-w-[1.5rem] min-h-[1.5rem] w-[1.5rem] h-[1.5rem]"
-                  style={{ color: "var(--theme-hover-text)" }}
-                />
-              ) : (
-                <svg
-                  className="min-w-[1.5rem] min-h-[1.5rem] w-[1.5rem] h-[1.5rem]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
+                    : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"}
+                  border-2 border-[--theme-border-color]
+                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
+                  font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
+                  text-base`}
+              >
+                <span>{todayActivities[currentIndex].activityTitle}</span>
+                {isActivityCompleted(todayActivities[currentIndex]) ? (
+                  <FaCheckCircle
+                    className="min-w-[1.5rem] min-h-[1.5rem] w-[1.5rem] h-[1.5rem]"
+                    style={{ color: "var(--theme-hover-text)" }}
                   />
-                </svg>
-              )}
-            </button>
-
-            <div className="bg-[--theme-leaguecard-color] shadow-md p-5 mt-3 space-y-3 rounded-lg">
-              {activity.tasks && activity.tasks.length > 0 ? (
-                activity.tasks.map((task, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <Checkbox
-                      id={`floating-task-${activity.id}-${index}`}
-                      checked={task.completed}
-                      onCheckedChange={(checked) =>
-                        handleTaskCompletion(
-                          activity.id,
-                          index,
-                          checked as boolean
-                        )
-                      }
+                ) : (
+                  <svg
+                    className="min-w-[1.5rem] min-h-[1.5rem] w-[1.5rem] h-[1.5rem]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
                     />
-                    <label
-                      htmlFor={`floating-task-${activity.id}-${index}`}
-                      className="text-base leading-tight cursor-pointer flex-grow"
-                    >
-                      {task.text}
-                    </label>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm italic">No tasks for this activity</p>
-              )}
+                  </svg>
+                )}
+              </button>
+
+              <div className="bg-[--theme-leaguecard-color] shadow-md p-5 mt-3 space-y-3 rounded-lg">
+                {todayActivities[currentIndex].tasks && todayActivities[currentIndex].tasks.length > 0 ? (
+                  todayActivities[currentIndex].tasks.map((task, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <Checkbox
+                        id={`floating-task-${todayActivities[currentIndex].id}-${index}`}
+                        checked={task.completed}
+                        onCheckedChange={(checked) =>
+                          handleTaskCompletion(
+                            todayActivities[currentIndex].id,
+                            index,
+                            checked as boolean
+                          )
+                        }
+                      />
+                      <label
+                        htmlFor={`floating-task-${todayActivities[currentIndex].id}-${index}`}
+                        className="text-base leading-tight cursor-pointer flex-grow"
+                      >
+                        {task.text}
+                      </label>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm italic">No tasks for this activity</p>
+                )}
+              </div>
             </div>
           </div>
-        ))}
-
-        {todayActivities.length === 0 && (
+        ) : (
           <p className="text-center italic text-white">
             No activities scheduled for today
           </p>
@@ -235,12 +262,6 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
       </div>
 
       <audio ref={audioRef} src="/levelup.mp3" />
-
-      <style jsx>{`
-        div::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </motion.div>
   );
 };
