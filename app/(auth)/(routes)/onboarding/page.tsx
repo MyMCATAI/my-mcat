@@ -1,14 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { searchUniversities } from '@/utils/universities';
-import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useClerk } from '@clerk/nextjs';
+import { useState, useEffect, useCallback } from "react";
+import { searchUniversities } from "@/utils/universities";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import { useClerk } from "@clerk/nextjs";
 import axios from "axios";
-import { MedicalSchool } from '@/types';
-import { Tooltip } from './Tooltip';
-
+import { MedicalSchool } from "@/types";
+import { Tooltip } from "./Tooltip";
 
 // Add this email validation function
 const isValidEmail = (email: string) => {
@@ -19,26 +18,32 @@ export default function OnboardingPage() {
   const { user } = useClerk();
   const [loading, setLoading] = useState(false);
   const [isNonTraditional, setIsNonTraditional] = useState(false);
-  const [collegeQuery, setCollegeQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<Array<{name: string, city: string, state: string}>>([]);
+  const [collegeQuery, setCollegeQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<
+    Array<{ name: string; city: string; state: string }>
+  >([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [step, setStep] = useState(1); 
-  const [attemptMessage, setAttemptMessage] = useState('');
+  const [step, setStep] = useState(1);
+  const [attemptMessage, setAttemptMessage] = useState("");
   const [hasNotTakenMCAT, setHasNotTakenMCAT] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const [medSchoolQuery, setMedSchoolQuery] = useState('');
-  const [medSchoolSuggestions, setMedSchoolSuggestions] = useState<MedicalSchool[]>([]);
-  const [selectedSchool, setSelectedSchool] = useState<MedicalSchool | null>(null);
+  const [medSchoolQuery, setMedSchoolQuery] = useState("");
+  const [medSchoolSuggestions, setMedSchoolSuggestions] = useState<
+    MedicalSchool[]
+  >([]);
+  const [selectedSchool, setSelectedSchool] = useState<MedicalSchool | null>(
+    null
+  );
   const [isMedSchoolInputFocused, setIsMedSchoolInputFocused] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [kalypsoMessage, setKalypsoMessage] = useState('');
-  const [friendEmail, setFriendEmail] = useState('');
-  const [targetScore, setTargetScore] = useState<string>('');
+  const [kalypsoMessage, setKalypsoMessage] = useState("");
+  const [friendEmail, setFriendEmail] = useState("");
+  const [targetScore, setTargetScore] = useState<string>("");
   const [isCanadian, setIsCanadian] = useState(false);
-  const [gpaValue, setGpaValue] = useState<string>('');
-  const [diagnosticValue, setDiagnosticValue] = useState<string>('');
-  const [attemptValue, setAttemptValue] = useState<string>('');
-  const [firstName, setFirstName] = useState('');
+  const [gpaValue, setGpaValue] = useState<string>("");
+  const [diagnosticValue, setDiagnosticValue] = useState<string>("");
+  const [attemptValue, setAttemptValue] = useState<string>("");
+  const [firstName, setFirstName] = useState("");
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -61,7 +66,9 @@ export default function OnboardingPage() {
       if (medSchoolQuery.length >= 3) {
         setIsSearching(true);
         try {
-          const response = await fetch(`/api/medical-schools?query=${encodeURIComponent(medSchoolQuery)}`);
+          const response = await fetch(
+            `/api/medical-schools?query=${encodeURIComponent(medSchoolQuery)}`
+          );
           const data = await response.json();
           setMedSchoolSuggestions(data.results);
         } finally {
@@ -78,36 +85,38 @@ export default function OnboardingPage() {
 
   const handleNextStep = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (step === 1) {
       setLoading(true);
       try {
-        const response = await fetch('/api/user-info', {
-          method: 'POST',
+        const response = await fetch("/api/user-info", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ 
-            firstName
-          })
+          body: JSON.stringify({
+            firstName,
+          }),
         });
-        
+
         if (!response.ok) {
-          throw new Error('Failed to create user info');
+          throw new Error("Failed to create user info");
         }
       } catch (error) {
-        console.error('Error creating user info:', error);
+        console.error("Error creating user info:", error);
         return;
       } finally {
         setLoading(false);
       }
     }
 
-    setAttemptMessage('');
+    setAttemptMessage("");
     setStep(step + 1);
   };
 
-  const handleOnboardingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleOnboardingSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
     setLoading(true);
 
@@ -115,21 +124,31 @@ export default function OnboardingPage() {
       if (user) {
         await user.update({
           unsafeMetadata: {
-            college: isNonTraditional ? 'Non-Traditional' : isCanadian ? 'Canadian' : collegeQuery,
+            college: isNonTraditional
+              ? "Non-Traditional"
+              : isCanadian
+                ? "Canadian"
+                : collegeQuery,
             isCanadian: isCanadian,
             gpa: gpaValue ? parseFloat(gpaValue) : null,
-            diagnosticScore: hasNotTakenMCAT ? null : (diagnosticValue ? parseInt(diagnosticValue) : null),
+            diagnosticScore: hasNotTakenMCAT
+              ? null
+              : diagnosticValue
+                ? parseInt(diagnosticValue)
+                : null,
             attemptNumber: attemptValue || null,
             targetScore: targetScore ? parseInt(targetScore) : null,
-            onboardingComplete: true
-          }
+            onboardingComplete: true,
+          },
         });
       }
-      
+
       setStep(4);
-      setKalypsoMessage(`Hi-ya ${firstName}! I'm Kalypso. I'm your MCAT friend throughout your journey. And we'll get you that ${targetScore}!`);
+      setKalypsoMessage(
+        `Hi-ya ${firstName}! I'm Kalypso. I'm your MCAT friend throughout your journey. And we'll get you that ${targetScore}!`
+      );
     } catch (error) {
-      console.error('Onboarding error:', error);
+      console.error("Onboarding error:", error);
     } finally {
       setLoading(false);
     }
@@ -145,27 +164,36 @@ export default function OnboardingPage() {
     setDiagnosticValue(value);
   };
 
-  const handleAttemptChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setAttemptValue(value);
-    
-    if (parseInt(value) > 1) {
-      setAttemptMessage("Oooo, I love a good comeback story!");
-      setTimeout(() => setAttemptMessage(''), 2000);
-    } else {
-      setAttemptMessage('');
-    }
-  }, []);
+  const handleAttemptChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      setAttemptValue(value);
+
+      if (parseInt(value) > 1) {
+        setAttemptMessage("Oooo, I love a good comeback story!");
+        setTimeout(() => setAttemptMessage(""), 2000);
+      } else {
+        setAttemptMessage("");
+      }
+    },
+    []
+  );
 
   const handleKalypsoDialogue = useCallback(() => {
     if (kalypsoMessage.includes("Hi")) {
-      setKalypsoMessage("Kaplan charges $3000 for an MCAT journey. For how little they offer, that's way too much. We do more than they do, and we use a more equitable financial model: coins.");
+      setKalypsoMessage(
+        "Kaplan charges $3000 for an MCAT journey. For how little they offer, that's way too much. We do more than they do, and we use a more equitable financial model: coins."
+      );
     } else if (kalypsoMessage.includes("equitable financial model")) {
-      setKalypsoMessage("You buy coins to access features. Overtime, you can earn coins and access more features. However, if you slack off, you lose coins and have to buy more. We force you to be accountable!");
+      setKalypsoMessage(
+        "You buy coins to access features. Overtime, you can earn coins and access more features. However, if you slack off, you lose coins and have to buy more. We force you to be accountable!"
+      );
     } else if (kalypsoMessage.includes("slack off")) {
-      setKalypsoMessage("Ten coins get you started. And I can get you a discount for half, but you gotta invite a friend! 🤝");
+      setKalypsoMessage(
+        "Ten coins get you started. OR I can get you a you can invite a friend and start with 5 coins for free! 🤝"
+      );
     } else {
-      setKalypsoMessage('');
+      setKalypsoMessage("");
     }
   }, [kalypsoMessage]);
 
@@ -178,18 +206,18 @@ export default function OnboardingPage() {
     try {
       setLoading(true);
       const response = await fetch("/api/stripe/checkout", {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          priceType: isValidEmail(friendEmail) ? 'discount' : 'default',
-          ...(isValidEmail(friendEmail) && { friendEmail })
-        })
+          priceType: isValidEmail(friendEmail) ? "discount" : "default",
+          ...(isValidEmail(friendEmail) && { friendEmail }),
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        throw new Error("Failed to create checkout session");
       }
 
       const data = await response.json();
@@ -201,7 +229,7 @@ export default function OnboardingPage() {
     }
   };
 
-  const emailIsValid = isValidEmail(friendEmail)
+  const emailIsValid = isValidEmail(friendEmail);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen relative px-4 py-6 md:px-0">
@@ -231,10 +259,14 @@ export default function OnboardingPage() {
               </h1>
               <div className="space-y-2 md:space-y-3">
                 <p className="text-gray-300 text-base md:text-lg">
-                  {"Congratulations on taking the first step towards crushing the MCAT! You've just joined a community of of successful students who used MyMCAT to achieve their dream scores."}
+                  {
+                    "Congratulations on taking the first step towards crushing the MCAT! You've just joined a community of of successful students who used MyMCAT to achieve their dream scores."
+                  }
                 </p>
                 <p className="text-gray-300">
-                  {"Before we customize your study experience, we'll need to know a bit about you."}
+                  {
+                    "Before we customize your study experience, we'll need to know a bit about you."
+                  }
                 </p>
               </div>
             </div>
@@ -254,7 +286,7 @@ export default function OnboardingPage() {
                 />
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={loading || !firstName.trim()}
                 className="w-full bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-lg font-medium"
@@ -262,8 +294,20 @@ export default function OnboardingPage() {
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     {"Processing..."}
                   </span>
@@ -297,25 +341,29 @@ export default function OnboardingPage() {
                     placeholder="Start typing your college name..."
                     required={!isNonTraditional && !isCanadian}
                   />
-                  {showSuggestions && suggestions.length > 0 && isInputFocused && (
-                    <div className="absolute z-10 w-full mt-1 bg-[#001226] border border-[#5F7E92] rounded-md shadow-lg max-h-60 overflow-auto">
-                      {suggestions.map((school, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          className="w-full px-4 py-2 text-left text-white hover:bg-[#1a2b3c] focus:outline-none"
-                          onClick={() => {
-                            setCollegeQuery(school.name);
-                            setShowSuggestions(false);
-                            setIsInputFocused(false);
-                          }}
-                        >
-                          <div className="text-sm">{school.name}</div>
-                          <div className="text-xs text-gray-400">{school.city}, {school.state}</div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {showSuggestions &&
+                    suggestions.length > 0 &&
+                    isInputFocused && (
+                      <div className="absolute z-10 w-full mt-1 bg-[#001226] border border-[#5F7E92] rounded-md shadow-lg max-h-60 overflow-auto">
+                        {suggestions.map((school, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            className="w-full px-4 py-2 text-left text-white hover:bg-[#1a2b3c] focus:outline-none"
+                            onClick={() => {
+                              setCollegeQuery(school.name);
+                              setShowSuggestions(false);
+                              setIsInputFocused(false);
+                            }}
+                          >
+                            <div className="text-sm">{school.name}</div>
+                            <div className="text-xs text-gray-400">
+                              {school.city}, {school.state}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                 </div>
               ) : null}
               <div className="flex items-center gap-4 mt-2">
@@ -327,11 +375,14 @@ export default function OnboardingPage() {
                     onChange={(e) => setIsNonTraditional(e.target.checked)}
                     className="rounded border-[#5F7E92]"
                   />
-                  <label htmlFor="nonTraditional" className="text-white text-sm">
+                  <label
+                    htmlFor="nonTraditional"
+                    className="text-white text-sm"
+                  >
                     Non-traditional
                   </label>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
@@ -349,7 +400,9 @@ export default function OnboardingPage() {
 
             {/* GPA */}
             <div className="space-y-2 relative">
-              <label className="block text-white text-sm font-medium">What is your undergraduate GPA?</label>
+              <label className="block text-white text-sm font-medium">
+                What is your undergraduate GPA?
+              </label>
               <div className="relative">
                 <input
                   type="number"
@@ -368,7 +421,9 @@ export default function OnboardingPage() {
 
             {/* Diagnostic Score */}
             <div className="space-y-2 relative">
-              <label className="block text-white text-sm font-medium">{"What's your most recent MCAT score?"}</label>
+              <label className="block text-white text-sm font-medium">
+                {"What's your most recent MCAT score?"}
+              </label>
               <div className="relative">
                 <input
                   type="number"
@@ -391,31 +446,35 @@ export default function OnboardingPage() {
                   onChange={(e) => setHasNotTakenMCAT(e.target.checked)}
                   className="rounded border-[#5F7E92]"
                 />
-                <label htmlFor="hasNotTakenMCAT" className="text-white text-sm">{"Haven't taken it yet"}</label>
+                <label htmlFor="hasNotTakenMCAT" className="text-white text-sm">
+                  {"Haven't taken it yet"}
+                </label>
               </div>
             </div>
 
             {/* Attempt Number */}
             <div className="space-y-2 relative">
-              <label className="block text-white text-sm font-medium">Which attempt are you on in your MCAT prep?</label>
+              <label className="block text-white text-sm font-medium">
+                Which attempt are you on in your MCAT prep?
+              </label>
               <div className="relative">
                 <select
                   name="attemptNumber"
                   value={attemptValue}
                   onChange={handleAttemptChange}
-                  className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 [&>option]:bg-[#001226] [&>option]:text-white"
+                  className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 >
-                  <option value="" className="bg-[#001226] text-white">Select attempt number</option>
-                  <option value="1" className="bg-[#001226] text-white">First attempt</option>
-                  <option value="2" className="bg-[#001226] text-white">Second attempt</option>
-                  <option value="3" className="bg-[#001226] text-white">Third attempt</option>
-                  <option value="4+" className="bg-[#001226] text-white">Fourth or more</option>
+                  <option value="">Select attempt number</option>
+                  <option value="1">First attempt</option>
+                  <option value="2">Second attempt</option>
+                  <option value="3">Third attempt</option>
+                  <option value="4+">Fourth or more</option>
                 </select>
               </div>
             </div>
 
-            <button 
+            <button
               type="submit"
               className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors"
             >
@@ -437,14 +496,18 @@ export default function OnboardingPage() {
                   value={medSchoolQuery}
                   onChange={(e) => setMedSchoolQuery(e.target.value)}
                   onFocus={() => setIsMedSchoolInputFocused(true)}
-                  onBlur={() => setTimeout(() => setIsMedSchoolInputFocused(false), 200)}
+                  onBlur={() =>
+                    setTimeout(() => setIsMedSchoolInputFocused(false), 200)
+                  }
                   className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter medical school name..."
                 />
                 {medSchoolSuggestions.length > 0 && isMedSchoolInputFocused && (
                   <div className="absolute z-10 w-full mt-1 bg-[#001226] border border-[#5F7E92] rounded-md shadow-lg max-h-60 overflow-auto">
                     {isSearching ? (
-                      <div className="px-4 py-2 text-gray-400">Searching...</div>
+                      <div className="px-4 py-2 text-gray-400">
+                        Searching...
+                      </div>
                     ) : (
                       medSchoolSuggestions.map((school, index) => (
                         <button
@@ -458,15 +521,22 @@ export default function OnboardingPage() {
                           }}
                         >
                           <div className="text-sm">{school.name}</div>
-                          <div className="text-xs text-gray-400">{school.state}</div>
+                          <div className="text-xs text-gray-400">
+                            {school.state}
+                          </div>
                         </button>
                       ))
                     )}
-                    {medSchoolQuery.length >= 3 && !isSearching && medSchoolSuggestions.length === 0 && isMedSchoolInputFocused && (
-                      <div className="absolute z-10 w-full mt-1 bg-[#001226] border border-[#5F7E92] rounded-md shadow-lg">
-                        <div className="px-4 py-2 text-gray-400">No medical schools found</div>
-                      </div>
-                    )}
+                    {medSchoolQuery.length >= 3 &&
+                      !isSearching &&
+                      medSchoolSuggestions.length === 0 &&
+                      isMedSchoolInputFocused && (
+                        <div className="absolute z-10 w-full mt-1 bg-[#001226] border border-[#5F7E92] rounded-md shadow-lg">
+                          <div className="px-4 py-2 text-gray-400">
+                            No medical schools found
+                          </div>
+                        </div>
+                      )}
                   </div>
                 )}
               </div>
@@ -479,24 +549,38 @@ export default function OnboardingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="p-4 md:p-6 border border-[#5F7E92] rounded-lg bg-[#001226]/50 space-y-3 md:space-y-4"
               >
-                <h3 className="text-base md:text-lg font-semibold text-white">{selectedSchool.name}</h3>
+                <h3 className="text-base md:text-lg font-semibold text-white">
+                  {selectedSchool.name}
+                </h3>
                 <div className="grid grid-cols-2 gap-2 md:gap-4">
                   <div className="bg-[#0A1A2F] p-3 rounded-md">
-                    <div className="text-xs text-gray-400 mb-1">Average MCAT</div>
-                    <div className="text-white font-medium text-lg">{selectedSchool.averageMCAT}</div>
+                    <div className="text-xs text-gray-400 mb-1">
+                      Average MCAT
+                    </div>
+                    <div className="text-white font-medium text-lg">
+                      {selectedSchool.averageMCAT}
+                    </div>
                   </div>
                   <div className="bg-[#0A1A2F] p-3 rounded-md">
-                    <div className="text-xs text-gray-400 mb-1">Average GPA</div>
-                    <div className="text-white font-medium text-lg">{selectedSchool.averageGPA}</div>
+                    <div className="text-xs text-gray-400 mb-1">
+                      Average GPA
+                    </div>
+                    <div className="text-white font-medium text-lg">
+                      {selectedSchool.averageGPA}
+                    </div>
                   </div>
                 </div>
-                <p className="text-sm text-gray-300 leading-relaxed">{selectedSchool.description}</p>
+                <p className="text-sm text-gray-300 leading-relaxed">
+                  {selectedSchool.description}
+                </p>
               </motion.div>
             )}
 
             {/* Target Score */}
             <div className="space-y-2">
-              <label className="block text-white text-sm font-medium">{"What's your target score?"}</label>
+              <label className="block text-white text-sm font-medium">
+                {"What's your target score?"}
+              </label>
               <input
                 type="number"
                 name="targetScore"
@@ -510,17 +594,17 @@ export default function OnboardingPage() {
               />
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={loading}
               className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Processing...' : 'Continue'}
+              {loading ? "Processing..." : "Continue"}
             </button>
           </form>
         )}
 
-        {(step === 4) && kalypsoMessage && (
+        {step === 4 && kalypsoMessage && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -528,7 +612,7 @@ export default function OnboardingPage() {
           >
             <p className="text-white text-lg">{kalypsoMessage}</p>
             <div className="flex justify-center">
-              <button 
+              <button
                 onClick={handleKalypsoDialogue}
                 className="mt-4 border text-white px-6 py-2 rounded-md hover:bg-blue-900 transition-colors"
               >
@@ -540,21 +624,24 @@ export default function OnboardingPage() {
 
         {step === 4 && !kalypsoMessage && (
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-6">Get Your Coins</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">Get Started</h2>
             <div className="bg-[#0A1A2F] p-6 rounded-lg mb-6 relative">
               {emailIsValid && (
                 <div className="absolute -top-3 right-3 bg-green-500 text-white text-sm px-3 py-1 rounded-full">
-                  50% OFF!
+                  FREE ACCESS!
                 </div>
               )}
               <div className="flex justify-center items-center gap-3">
-                {emailIsValid && (
-                  <p className="text-3xl font-bold text-gray-400 line-through">$19.00</p>
+                {emailIsValid ? (
+                  <p className="text-3xl font-bold text-white">FREE</p>
+                ) : (
+                  <p className="text-3xl font-bold text-white">$19.00</p>
                 )}
-                <p className="text-3xl font-bold text-white">${emailIsValid ? '9.50' : '19.00'}</p>
               </div>
               <div className="mt-2 flex items-center justify-center gap-2">
-                <p className="text-gray-400">10 Coins</p>
+                <p className="text-gray-400">
+                  {emailIsValid ? "5 Coins" : "10 Coins"}
+                </p>
                 <span className="text-yellow-400">✨</span>
               </div>
             </div>
@@ -563,24 +650,28 @@ export default function OnboardingPage() {
                 type="email"
                 value={friendEmail}
                 onChange={(e) => setFriendEmail(e.target.value)}
-                placeholder={"Friend's email for 50% discount"}
+                placeholder="Enter friend's email for free access"
                 className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <button 
+              <button
                 onClick={onPurchase}
                 disabled={loading || (friendEmail.length > 0 && !emailIsValid)}
                 className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                {loading ? "Loading..." : "Purchase Coins"}
+                {loading
+                  ? "Loading..."
+                  : emailIsValid
+                    ? "Get Free Access"
+                    : "Purchase Coins"}
               </button>
             </div>
           </div>
         )}
 
         {kalypsoMessage && (
-          <motion.div 
-            initial={{ x: '100%' }}
-            animate={{ x: '0%' }}
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: "0%" }}
             transition={{ type: "spring", duration: 1 }}
             className="fixed bottom-0 right-0 md:right-8 transform translate-x-1/2 z-50 pointer-events-none"
           >
