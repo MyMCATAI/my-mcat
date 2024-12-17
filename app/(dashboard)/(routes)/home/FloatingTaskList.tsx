@@ -150,7 +150,7 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
       animate={{ opacity: 1, x: -16 }}
       exit={{ opacity: 0, x: -320 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed bottom-64 left-1 z-40 w-[24rem] 
+      className="fixed bottom-80 left-1 z-40 w-[24rem] 
                  rounded-lg shadow-xl transition-shadow duration-300 hover:shadow-lg"
       style={{
         backgroundColor: 'var(--theme-leaguecard-color)',
