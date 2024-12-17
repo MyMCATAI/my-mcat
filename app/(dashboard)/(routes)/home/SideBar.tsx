@@ -43,8 +43,8 @@ type VideoCategory = 'RBT' | 'RWT' | 'CMP';
 const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, currentPage, chatbotContext, chatbotRef }) => {
   const [activeTab, setActiveTab] = useState("tab1");
   const [tutors, setTutors] = useState<Tutor[]>([
-    { name: "Ali N.", university: "Duke University", stars: 4.5, reviews: 5, price: 150 },
     { name: "Prynce K.", university: "Rice University", stars: 5, reviews: 16, price: 50 },
+    { name: "Ali N.", university: "Duke University", stars: 4.5, reviews: 5, price: 150 },
     { name: "Saanvi A.", university: "New York University", stars: 5, reviews: 3, price: 85 },
     { name: "Ethan K.", university: "Univ of Pennsylvania", stars: 4.5, reviews: 8, price: 200 }
   ]);
@@ -315,7 +315,7 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
                       <button 
                         className="text-sm font-medium text-blue-500 hover:text-[--theme-hover-color] transition-colors duration-200 underline-offset-4 hover:underline"
                       >
-                        Book {tutor.name === "Prynce K." ? `(15 coins/hr)` : `($${tutor.price}/hr)`}
+                        Book (5 coins/meeting)
                       </button>
                     </DialogTrigger>
                     <BookTutorDialog tutor={tutor} />
@@ -339,8 +339,6 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
     }
     return null;
   };
-
-  const [isMVPDialogOpen, setIsMVPDialogOpen] = useState(false);
 
   const tabs: { id: string; label: string; content: TabContent }[] = [
     { id: "tab1", label: "Insights", content: { type: 'insights', videos: videos } },
@@ -411,6 +409,27 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
         toast.error('Failed to send message. Please try again.');
       }
     };
+
+    if (tutor.name === "Prynce K.") {
+      return (
+        <DialogContent className="max-w-[40rem] bg-[--theme-leaguecard-color] border text-[--theme-text-color] border-[--theme-border-color]">
+          <DialogHeader>
+            <DialogTitle className="text-[--theme-text-color] text-center">Book a Session</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-center mb-4">
+              Click the link below to meet with Prynce.
+            </p>
+            <div className="w-[calc(100%-2rem)] bg-white h-[calc(100vh-30rem)] rounded-lg overflow-hidden mx-auto">
+              <iframe 
+                src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ3hMOL4oJtFVHit6w6WyM2EuvBFRPoG59w6a-T0rU14-PWTIPMVRDlOx3PrYoVMpNYOVo4UhVXk?gv=true" 
+                className="w-full h-full border-0"
+              />
+            </div>
+          </div>
+        </DialogContent>
+      );
+    }
 
     return (
       <DialogContent className="max-w-[40rem] bg-[--theme-leaguecard-color] border text-[--theme-text-color] border-[--theme-border-color]">
