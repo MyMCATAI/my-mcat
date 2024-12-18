@@ -81,7 +81,38 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { amount, notificationPreference, incrementScore, decrementScore } = body;
+    const { amount, notificationPreference, incrementScore, decrementScore, unlockGame } = body;
+    if (unlockGame) {
+      const userInfo = await prismadb.userInfo.findUnique({
+        where: { userId }
+      });
+
+      if (!userInfo) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      const currentUnlocks = Array.isArray(userInfo.unlocks) ? userInfo.unlocks : [];
+
+      let updatedInfo;
+      if (!currentUnlocks.includes('game')) {
+        updatedInfo = await prismadb.userInfo.update({
+          where: { userId },
+          data: {
+            score: userInfo.score - decrementScore,
+            unlocks: [...currentUnlocks, 'game']
+          }
+        });
+      } else {
+        updatedInfo = await prismadb.userInfo.update({
+          where: { userId },
+          data: {
+            score: userInfo.score - decrementScore,
+          }
+        });
+      }
+
+      return NextResponse.json(updatedInfo);
+    }
 
     // Handle score update with amount
     if (amount !== undefined) {

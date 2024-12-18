@@ -11,6 +11,7 @@ import type { UserResponse } from '@prisma/client';
 import { cleanQuestion } from './FlashcardDeck';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { animated, useSpring } from 'react-spring';
+import prisma from '@/lib/prismadb';
 
 interface LargeDialogProps {
   open: boolean;
@@ -74,6 +75,16 @@ interface UserResponseWithCategory {
   question: Question;
 }
 
+interface WrongCard {
+  id: string;
+  timestamp: string;
+  question: string;
+  answer: string;
+  questionOptions: string[];
+  isFlipped: boolean;
+  types: string; // normal: multiple choice; flashcard: fill in the blank
+}
+
 const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, children, userResponses, correctCount, wrongCount, testScore, largeDialogQuit, setLargeDialogQuit }) => {
   const [score, setScore] = useState(0);
   const [showReviewFeed, setShowReviewFeed] = useState(false);
@@ -121,17 +132,15 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
   const [conceptStats, setConceptStats] = useState<ConceptScore>({});
 
   // Add new state for wrong cards
-  const [wrongCards, setWrongCards] = useState<Array<{
-    timestamp: string;
-    question: string;
-    answer: string;
-  }>>([]);
+  const [wrongCards, setWrongCards] = useState<WrongCard[]>([]);
 
   // Add spring animation
   const springs = useSpring({
     from: { opacity: 0, transform: 'translateY(20px)' },
     to: { opacity: 1, transform: 'translateY(0px)' },
   });
+
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -231,6 +240,33 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
     }
   };
 
+  const cleanAnswer = (text: string): string => {
+    const matches = [...text.matchAll(/{{c[^:]*::(.+?)(?=::|}})/g)];
+    const result = matches.map(match => match[1]).join(', ');
+    
+    return result
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+        .trim();
+  };
+
+  const getAnswerContent = (response: UserResponseWithCategory): string => {
+    if (!response.question) return '';
+    
+    try {
+      const options = JSON.parse(response.question.questionOptions || '[]');
+      if (response.question.types === 'normal') {
+        return `${options[0]}`;
+      }
+      
+      // For flashcard questions
+      return cleanAnswer(response.question.questionContent);
+    } catch (e) {
+      console.error('Error parsing question options:', e);
+      return cleanAnswer(response.question.questionContent);
+    }
+  };
+
   const parseUserResponses = useCallback((responses: UserResponseWithCategory[]) => {
     // Return empty stats if responses is undefined or empty
     if (!responses?.length) {
@@ -243,11 +279,7 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
       total: number;
     }> = {};
 
-    const newWrongCards: Array<{
-      timestamp: string;
-      question: string;
-      answer: string;
-    }> = [];
+    const newWrongCards: WrongCard[] = [];
 
     responses.forEach(response => {
       // Access concept through the question's category
@@ -269,17 +301,19 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
       } else {
         conceptStats[concept].incorrect += 1;
         
-        // Add to wrong cards
         newWrongCards.push({
+          id: response.questionId,
           timestamp: new Date(response.answeredAt).toLocaleString(),
           question: cleanQuestion(response.question?.questionContent || ''),
-          answer: response.userAnswer
+          answer: getAnswerContent(response),
+          questionOptions: response.question.types === 'normal' ? JSON.parse(response.question?.questionOptions || '[]') : [],
+          isFlipped: false,
+          types: response.question.types
         });
       }
       conceptStats[concept].total += 1;
     });
 
-    // Update wrong cards state
     setWrongCards(newWrongCards);
 
     return conceptStats;
@@ -318,6 +352,8 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
       }, {} as ConceptScore);
     setMostMissed(sortedByMissed);
 
+    // Set isDataLoaded to true after all data processing is complete
+    setIsDataLoaded(true);
   }, [userResponses, parseUserResponses, correctCount, wrongCount, testScore]);
 
   const [isFlipped, setIsFlipped] = useState(false);
@@ -470,6 +506,125 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
     }
   };
 
+  const handleCardFlip = (index: number) => {
+    setWrongCards(cards => 
+      cards.map((card, i) => 
+        i === index ? { ...card, isFlipped: !card.isFlipped } : card
+      )
+    );
+  };
+
+  const renderKittyLitter = () => (
+    <div className="w-full h-full border-[--theme-border-color] pl-4 flex flex-col">
+      <h3 className="text-lg font-bold mb-4">Kitty Litter</h3>
+      <ScrollArea className="flex-1">
+        <div className="space-y-4 pr-4 pb-4">
+          {wrongCards.map((card, index) => (
+            <animated.div 
+              key={index}
+              style={index === 0 ? springs : undefined}
+              className={`
+                p-4 border border-[--theme-border-color] rounded-md 
+                bg-[--theme-gradient-end] cursor-pointer 
+                transition-all duration-300 hover:shadow-lg
+                h-[300px]
+                ${card.isFlipped ? 'bg-opacity-90' : ''}
+              `}
+              onClick={() => handleCardFlip(index)}
+            >
+              <div className="h-full flex flex-col">
+                <div className="text-sm text-gray-500 mb-2">{card.timestamp}</div>
+                
+                <div className="flex-1 overflow-y-auto">
+                  {!card.isFlipped ? (
+                    // If the question is not multiple choice question, display it in the center of the card
+                    <div className={`${card.types !== 'normal' ? 'h-full flex items-center justify-center' : ''}`}>
+                      <div className={`font-semibold mb-2 ${card.types !== 'normal' ? 'text-center' : ''}`}>
+                        {card.question}
+                      </div>
+                      {card.types === 'normal' && (
+                        <div className="mt-2 space-y-2">
+                          {card.questionOptions.map((option, optIndex) => (
+                            <div 
+                              key={optIndex}
+                              className="p-2 rounded-md bg-opacity-50 bg-gray-100 text-sm"
+                            >
+                              {option}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-green-600 font-medium text-center">
+                      <div className="text-sm mb-1">Correct Answer:</div>
+                      <div>{card.answer}</div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="text-xs text-gray-400 mt-4 pt-2 border-t border-gray-200">
+                  {card.isFlipped ? 'Click to hide answer' : 'Click to show answer'}
+                </div>
+              </div>
+            </animated.div>
+          ))}
+          {wrongCards.length === 0 && (
+            <div className="text-center text-gray-500 italic">
+              No wrong answers to review
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && wrongCards.length > 0) {
+        e.preventDefault();
+        // Flip the first visible card
+        handleCardFlip(0);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [wrongCards.length]);
+
+  const generateSummaryMessage = (conceptStats: ConceptScore): string => {
+    const totalQuestions = correctCount + wrongCount;
+    
+    // Get all unique topics
+    const topics = Object.keys(conceptStats);
+    
+    // Find best and worst performing topics
+    const bestTopic = Object.entries(conceptStats)
+      .filter(([topic, [correct, ignored, total]]) => total >= 3) // Only consider topics with at least 3 questions
+      .sort(([topicA, a], [topicB, b]) => (b[0]/b[2]) - (a[0]/a[2]))[0];
+      
+    const worstTopic = Object.entries(conceptStats)
+      .filter(([topic, [correct, ignored, total]]) => total >= 3)
+      .sort(([topicA, a], [topicB, b]) => (a[0]/a[2]) - (b[0]/b[2]))[0];
+
+    let message = `You completed ${totalQuestions} questions covering ${topics.join(', ')}. `;
+    
+    if (bestTopic) {
+      const [topicName, [correct, _, total]] = bestTopic;
+      if (correct/total > 0.8) {
+        message += `Excellent work on ${topicName}! You got ${correct}/${total} correct. `;
+      }
+    }
+    
+    if (worstTopic) {
+      const [topicName, [correct, _, total]] = worstTopic;
+      if (correct/total < 0.7) {
+        message += `You might want to spend some time reviewing ${topicName} in the Adaptive Tutoring Suite before your next practice session. `;
+      }
+    }
+
+    return message;
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleExit}>
@@ -480,68 +635,30 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
         transition={{ duration: 0.3 }}
       >
         <DialogContent 
-          className="bg-[--theme-text-color] text-center p-8 bg-[--theme-leaguecard-color] border border-[--theme-border-color] rounded-xl max-w-[90vw] w-[1000px] max-h-[90vh] h-[800px] overflow-hidden"
+          className="bg-[--theme-text-color] text-center p-8 bg-[--theme-leaguecard-color] border border-[--theme-border-color] rounded-xl max-w-[90vw] w-[1000px] max-h-[90vh] h-[800px] overflow-hidden flex flex-col"
           closeButtonClassName="text-[--theme-text-color] hover:text-[--theme-text-color] focus:ring-[--theme-text-color]"
         >
           {!showReviewFeed ? (
             <div className="bg-[--theme-gradient-end] p-4 rounded-lg shadow-lg">
               {renderStars()}
               <p className="text-xl font-semibold text-[--theme-text-color] mt-2 mb-4">
-                You answered {correctCount + wrongCount} questions and got a total score of {testScore}!!
+                You answered {correctCount + wrongCount} questions and got a total score of {testScore}!
+              </p>
+              <p className="text-lg text-[--theme-text-color] mb-6">
+                {generateSummaryMessage(conceptStats)}
               </p>
               {renderPerformanceSummary()}
               <Button
                 onClick={handleGoToReviewFeed}
                 className="mt-4 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] hover:bg-[--theme-hover-color]"
+                disabled={!isDataLoaded}
               >
-                Go to review feed?
+                {!isDataLoaded ? 'Loading...' : 'Go to review feed?'}
               </Button>
             </div>
           ) : (
-            <div className="h-full flex gap-4">
-              {/* Main Feed Section - Left Side */}
-              <ScrollArea className="w-[70%] h-full pr-4">
-                <h2 className="text-2xl font-bold mb-4">Review Feed</h2>
-                {renderAminoAcidOverview()}
-                <div className="overflow-visible relative">
-                  {feedItems.map((item, index) => (
-                    <div 
-                      key={item.id} 
-                      ref={index === feedItems.length - 1 ? lastFeedItemRef : null}
-                    >
-                      {renderFeedItem(item)}
-                    </div>
-                  ))}
-                  {hasMore && <div className="text-center py-4">Loading more...</div>}
-                </div>
-              </ScrollArea>
-
-              {/* Kitty Litter Section - Right Side */}
-              <div className="w-[30%] h-full border-l border-[--theme-border-color] pl-4">
-                <div className="h-full flex flex-col">
-                  <h3 className="text-lg font-bold mb-4">Kitty Litter</h3>
-                  <ScrollArea className="flex-1">
-                    <div className="space-y-4 pr-2">
-                      {wrongCards.map((card, index) => (
-                        <animated.div 
-                          key={index} 
-                          style={index === 0 ? springs : undefined}
-                          className="p-4 border border-[--theme-border-color] rounded-md bg-[--theme-gradient-end]"
-                        >
-                          <div className="text-sm text-gray-500 mb-2">{card.timestamp}</div>
-                          <div className="font-semibold mb-2">{card.question}</div>
-                          <div className="text-[--theme-hover-text]">{card.answer}</div>
-                        </animated.div>
-                      ))}
-                      {wrongCards.length === 0 && (
-                        <div className="text-center text-gray-500 italic">
-                          No wrong answers to review
-                        </div>
-                      )}
-                    </div>
-                  </ScrollArea>
-                </div>
-              </div>
+            <div className="flex-1 flex gap-4 overflow-hidden">
+              {renderKittyLitter()}
             </div>
           )}
           {showExitConfirmation && (
