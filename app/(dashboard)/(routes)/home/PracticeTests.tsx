@@ -7,6 +7,18 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import TestReview from '@/components/home/TestReview';
 
 interface PracticeTestsProps {
   className?: string;
@@ -18,6 +30,8 @@ interface Test {
   company: string;
   status: string;
   calendarDate?: number;
+  score?: number;
+  breakdown?: string;
 }
 
 interface StudentStats {
@@ -33,6 +47,31 @@ const AAMCTests = [
   { name: "AAMC FL 2", status: "Not Started" },
   // Add more tests as needed...
 ];
+
+const COMPANIES = ["AAMC", "Blueprint", "Jack Westin", "Altius"] as const;
+type Company = typeof COMPANIES[number];
+
+const COMPANY_INFO = {
+  "Jack Westin": {
+    url: "https://jackwestin.com/mcat-cars-practice-exams",
+    note: "(6 Free FLs)"
+  },
+  "Blueprint": {
+    url: "https://blueprintprep.com/mcat/free-resources/free-mcat-practice-bundle",
+    note: "(One Free HL)"
+  },
+  "AAMC": {
+    url: "https://students-residents.aamc.org/prepare-mcat-exam/practice-mcat-exam-official-low-cost-products",
+    note: "(Two Free Samples)"
+  },
+  "Altius": {
+    url: "https://altiustestprep.com/practice-exam/free-exam/",
+    note: "(One Free FL)"
+  }
+} as const;
+
+type ValuePiece = Date | null;
+type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
   const [activeSection, setActiveSection] = useState<
@@ -82,6 +121,31 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
     },
   ]);
 
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newTest, setNewTest] = useState({
+    company: "" as Company,
+    testNumber: "",
+    date: null as Date | null,
+    useRecommendedDate: true
+  });
+
+  const [activeTest, setActiveTest] = useState<Test | null>(null);
+
+  const handleAddTest = () => {
+    const testId = `${scheduledTests.length + 1}`;
+    const newTestEntry: Test = {
+      id: testId,
+      name: `FL${newTest.testNumber}`,
+      company: newTest.company,
+      status: "Not Started",
+      calendarDate: parseInt(newTest.date),
+    };
+
+    setScheduledTests([...scheduledTests, newTestEntry]);
+    setIsAddDialogOpen(false);
+    setNewTest({ company: "" as Company, testNumber: "", date: null, useRecommendedDate: true });
+  };
+
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
@@ -105,256 +169,371 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
     return scheduledTests.some((test) => test.calendarDate === parseInt(day));
   };
 
+  const formatDate = (date: Date | null): string => {
+    if (!date) return "";
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   return (
     <div className={`flex flex-col ${className}`}>
-      {activeSection ? (
-        // Active Section View
-        <div className="flex flex-col h-full">
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => setActiveSection(null)}
-              className="p-2 hover:bg-[--theme-hover-color] rounded-full transition-colors duration-200"
-            >
-              <ChevronRight className="h-5 w-5 text-[--theme-text-color] rotate-180" />
-            </button>
-
-            <h2 className="text-[--theme-text-color] text-sm opacity-60 uppercase tracking-wide">
-              {activeSection === "aamc"
-                ? "AAMC Full Length Exams"
-                : activeSection === "thirdParty"
-                  ? "Third Party Exams"
-                  : activeSection === "myMcat"
-                    ? "MyMCAT Exams"
-                    : activeSection === "custom"
-                      ? "Custom Exams"
-                      : activeSection === "diagnostic"
-                        ? "Diagnostic Tests"
-                        : "Section Banks"}
-            </h2>
-          </div>
-
-          {activeSection === "aamc" && (
-            <div className="grid grid-cols-2 gap-4 animate-fadeIn">
-              {AAMCTests.map((test, index) => (
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="flex flex-col h-[calc(100vh-16rem)]">
+          {activeTest ? (
+            // When a test is active, it takes up the full container
+            <div className="h-full px-4">
+              <TestReview 
+                test={activeTest} 
+                onBack={() => setActiveTest(null)} 
+              />
+            </div>
+          ) : (
+            // Original layout with calendar and tests
+            <>
+              {/* Calendar + Scheduled Tests Section */}
+              <div className="h-[70%] min-h-0 mb-4 mt-1">
                 <div
-                  key={index}
-                  className="bg-[--theme-doctorsoffice-accent] p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200"
+                  className="bg-[--theme-leaguecard-color] rounded-xl p-8 mx-4 h-full"
+                  style={{
+                    boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                  }}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-medium">{test.name}</h4>
-                      <p className="text-xs opacity-70">{test.status}</p>
+                  <div className="grid grid-cols-2 gap-8 h-full min-h-0">
+                    {/* Calendar Side */}
+                    <div className="flex flex-col h-full max-h-full overflow-hidden">
+                      <div className="text-lg font-medium mb-1 text-center">
+                        December 2024
+                      </div>
+                      <div className="flex-1 min-h-0 overflow-hidden">
+                        {/* Calendar Grid Container */}
+                        <div className="h-full flex flex-col">
+                          {/* Header Row - Updated with more responsive text sizes */}
+                          <div className="grid grid-cols-7 mb-0.5">
+                            {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
+                              <div
+                                key={day}
+                                className="text-center text-[min(0.6rem,1.5vh)] font-medium truncate"
+                              >
+                                {day}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Calendar Grid - Updated cell styling with responsive text */}
+                          <div className="flex-1 grid grid-rows-6 min-h-0">
+                            {calendarDays.map((week, weekIndex) => (
+                              <div key={weekIndex} className="grid grid-cols-7">
+                                {week.map((day, dayIndex) => (
+                                  <div
+                                    key={`${weekIndex}-${dayIndex}`}
+                                    className={`h-full flex items-center justify-center text-[min(0.7rem,1.8vh)] p-0.5
+                                      ${parseInt(day) > 0 && parseInt(day) <= 31 ? "hover:bg-[--theme-hover-color] cursor-pointer" : "opacity-30"}
+                                      ${date?.getDate() === parseInt(day) ? "bg-[--theme-hover-color] text-[--theme-hover-text]" : ""}
+                                      ${isTestDate(day) ? "bg-[--theme-calendar-color] text-[--theme-text-color] font-bold" : ""}
+                                    `}
+                                  >
+                                    {day}
+                                  </div>
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <button
-                      className="px-3 py-1.5 text-xs rounded-md border border-[--theme-border-color] 
-                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                        transition-colors duration-200"
-                    >
-                      Schedule Test
-                    </button>
+
+                    {/* Scheduled Tests Side */}
+                    <div className="flex flex-col h-full">
+                      <h3 className="text-sm font-medium text-[--theme-text-color] opacity-60 uppercase tracking-wide mb-4 text-center">
+                        Scheduled Tests
+                      </h3>
+                      <div className="flex-1 min-h-0 overflow-auto">
+                        <Droppable droppableId="droppable-tests">
+                          {(provided) => (
+                            <div
+                              {...provided.droppableProps}
+                              ref={provided.innerRef}
+                              className="space-y-2"
+                            >
+                              {scheduledTests.map((test, index) => (
+                                <Draggable
+                                  key={test.id}
+                                  draggableId={test.id}
+                                  index={index}
+                                >
+                                  {(provided, snapshot) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      className={`flex items-center p-3 bg-[--theme-leaguecard-accent] rounded-lg 
+                                        transition-all duration-200
+                                        ${snapshot.isDragging ? "opacity-75" : ""}
+                                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]`}
+                                      style={{
+                                        ...provided.draggableProps.style,
+                                      }}
+                                    >
+                                      <div
+                                        {...provided.dragHandleProps}
+                                        className="mr-2 cursor-grab active:cursor-grabbing"
+                                      >
+                                        <GripVertical className="w-4 h-4 opacity-50" />
+                                      </div>
+                                      <div className="flex-grow">
+                                        <h4 className="text-sm font-medium">
+                                          {test.name}
+                                        </h4>
+                                        <p className="text-xs opacity-70">
+                                          {test.company}
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
+                                            hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                                            transition-colors duration-200"
+                                        >
+                                          Set Date
+                                        </button>
+                                        <button
+                                          className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
+                                            hover:bg-green-500 hover:text-white
+                                            transition-colors duration-200"
+                                        >
+                                          Complete
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
+                            </div>
+                          )}
+                        </Droppable>
+                      </div>
+
+                      <button
+                        onClick={() => setIsAddDialogOpen(true)}
+                        className="mt-4 w-full py-2 px-4 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                          rounded-lg transition-colors duration-200 text-sm font-medium flex items-center justify-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Practice Test
+                      </button>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
 
-          {(activeSection === "thirdParty" ||
-            activeSection === "myMcat" ||
-            activeSection === "custom" ||
-            activeSection === "diagnostic" ||
-            activeSection === "section") && (
-            <div className="animate-fadeIn flex flex-col items-center justify-center py-8">
-              <p className="text-sm opacity-70 text-center">
-                Coming soon! This feature is currently under development.
-              </p>
-            </div>
+              {/* Previous Practice Tests Section */}
+              <div className="h-[25%] px-4 mt-1">
+                <div className="grid grid-cols-5 gap-4 h-full">
+                  {[
+                    { company: "AAMC", testNumber: "FL1", score: 527, breakdown: "132/132/132/131", dateTaken: "Dec 15" },
+                    { company: "Blueprint", testNumber: "FL2", score: 515, breakdown: "129/128/129/129", dateTaken: "Dec 10" },
+                    { company: "AAMC", testNumber: "FL3", score: 508, breakdown: "127/127/127/127", dateTaken: "Dec 5" },
+                    { company: "Jack Westin", testNumber: "FL1", score: 498, breakdown: "124/124/125/125", dateTaken: "Nov 30" },
+                    { company: "Altius", testNumber: "FL4", score: 522, breakdown: "131/130/131/130", dateTaken: "Nov 25" },
+                  ].map((test, index) => (
+                    <div
+                      key={index}
+                      className="h-full p-3 rounded-lg bg-[--theme-leaguecard-accent] transition-all duration-300 cursor-pointer"
+                      style={{
+                        boxShadow: 'var(--theme-button-boxShadow)',
+                        transition: 'box-shadow 0.3s ease, transform 0.3s ease'
+                      }}
+                      onClick={() => setActiveTest(test)}
+                    >
+                      <div className="h-full flex flex-col">
+                        <div className="flex justify-between text-[10px] mb-1">
+                          <span className="text-[11px]">{test.company} {test.testNumber}</span>
+                          <span className="opacity-50">{test.dateTaken}</span>
+                        </div>
+                        <div className="flex-grow flex items-center justify-center">
+                          <span 
+                            className={`text-4xl font-bold leading-none transition-all duration-300
+                              ${test.score < 500 ? 'text-red-500' : ''}
+                              ${test.score >= 500 && test.score < 510 ? 'text-yellow-500' : ''}
+                              ${test.score >= 510 && test.score < 515 ? 'text-green-500' : ''}
+                              ${test.score >= 515 && test.score < 520 ? 'text-sky-500' : ''}
+                              ${test.score >= 520 && test.score < 525 ? 
+                                'text-sky-400 animate-pulse-subtle shadow-lg' : ''}
+                              ${test.score >= 525 ? 
+                                'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-transparent bg-clip-text animate-pulse-subtle shadow-lg' : ''}
+                            `}
+                          >
+                            {test.score}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-center mt-1">
+                          <span className={`
+                            ${test.score >= 520 ? 'font-semibold' : 'opacity-50'}
+                          `}>
+                            {test.breakdown}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
         </div>
-      ) : (
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex flex-col">
-            {/* Calendar + Scheduled Tests Section */}
-            <div>
-              <div
-                className="bg-[--theme-leaguecard-color] rounded-xl p-8 mx-4"
-                style={{
-                  margin: "0.5rem 1rem",
-                  boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
-                }}
-              >
-                <div className="grid grid-cols-2 h-full gap-8">
-                  {/* Calendar Side */}
-                  <div className="flex flex-col">
-                    <div className="text-lg font-medium mb-4 text-center">
-                      December 2024
-                    </div>
-                    <div className="grid grid-cols-7 gap-1">
-                      {/* Day headers */}
-                      {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-                        <div
-                          key={day}
-                          className="text-center text-sm font-medium p-2"
-                        >
-                          {day}
-                        </div>
-                      ))}
+      </DragDropContext>
 
-                      {/* Calendar days */}
-                      {calendarDays.flat().map((day, index) => (
-                        <div
-                          key={index}
-                          className={`aspect-square flex items-center justify-center text-sm p-2 rounded-md
-                            ${parseInt(day) > 0 && parseInt(day) <= 31 ? "hover:bg-[--theme-hover-color] cursor-pointer" : "opacity-30"}
-                            ${date?.getDate() === parseInt(day) ? "bg-[--theme-hover-color] text-[--theme-hover-text]" : ""}
-                            ${isTestDate(day) ? "bg-[--theme-calendar-color] text-[--theme-text-color] font-bold" : ""}
-                          `}
-                        >
-                          {day}
-                        </div>
-                      ))}
-                    </div>
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[40rem] bg-[#f8fafc] text-black">
+          <DialogHeader>
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-1">
+                  <DialogTitle className="text-2xl font-bold text-black">
+                    Add Practice Test
+                  </DialogTitle>
+                  <div className="text-[0.7rem] text-gray-400 italic">
+                    Our study tool is unaffiliated. Click visit to access their websites.
                   </div>
-
-                  {/* Scheduled Tests Side */}
-                  <div className="flex flex-col">
-                    <h3 className="text-sm font-medium text-[--theme-text-color] opacity-60 uppercase tracking-wide mb-4 text-center">
-                      Scheduled Tests
-                    </h3>
-                    <Droppable droppableId="droppable-tests">
-                      {(provided) => (
-                        <div
-                          {...provided.droppableProps}
-                          ref={provided.innerRef}
-                          className="flex-grow overflow-y-auto space-y-2 min-h-[200px]"
-                        >
-                          {scheduledTests.map((test, index) => (
-                            <Draggable
-                              key={test.id}
-                              draggableId={test.id}
-                              index={index}
-                            >
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  className={`flex items-center p-3 bg-[--theme-leaguecard-accent] rounded-lg 
-                                    transition-all duration-200
-                                    ${snapshot.isDragging ? "opacity-75" : ""}
-                                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]`}
-                                  style={{
-                                    ...provided.draggableProps.style,
-                                  }}
-                                >
-                                  <div
-                                    {...provided.dragHandleProps}
-                                    className="mr-2 cursor-grab active:cursor-grabbing"
-                                  >
-                                    <GripVertical className="w-4 h-4 opacity-50" />
-                                  </div>
-                                  <div className="flex-grow">
-                                    <h4 className="text-sm font-medium">
-                                      {test.name}
-                                    </h4>
-                                    <p className="text-xs opacity-70">
-                                      {test.company}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
-                                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                                        transition-colors duration-200"
-                                    >
-                                      Set Date
-                                    </button>
-                                    <ChevronRight className="w-4 h-4 opacity-50" />
-                                  </div>
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
-
-                    <button
-                      onClick={() => {
-                        /* Add your logic here */
-                      }}
-                      className="mt-4 w-full py-2 px-4 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                        rounded-lg transition-colors duration-200 text-sm font-medium flex items-center justify-center gap-2"
+                </div>
+                {newTest.company && (
+                  <a 
+                    href={COMPANY_INFO[newTest.company].url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-black rounded-lg hover:bg-gray-200 transition-all shadow-sm hover:shadow-md"
+                  >
+                    <span>Visit</span>
+                    <span className="text-[0.625rem] text-gray-500">*</span>
+                    <svg 
+                      className="w-4 h-4" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
                     >
-                      <Plus className="w-4 h-4" />
-                      Add Practice Test
-                    </button>
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
+                      />
+                    </svg>
+                  </a>
+                )}
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="flex flex-col space-y-8 py-6">
+            <div className="bg-[#8e9aab] bg-opacity-10 p-6 rounded-lg border border-[#e5e7eb] shadow-sm">
+              <div className="space-y-6">
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium text-gray-700">Company</label>
+                  <Select
+                    value={newTest.company}
+                    onValueChange={(value) => setNewTest({ ...newTest, company: value as Company })}
+                  >
+                    <SelectTrigger className="bg-white border-gray-300 h-10">
+                      <SelectValue placeholder="Select company" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMPANIES.map((company) => (
+                        <SelectItem key={company} value={company}>
+                          <span className="flex items-center justify-between w-full">
+                            <span>{company}</span>
+                            <span className="text-xs text-gray-500 ml-2">
+                              {COMPANY_INFO[company].note}
+                            </span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium text-gray-700">Full Length Number</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={newTest.testNumber}
+                    onChange={(e) => setNewTest({ ...newTest, testNumber: e.target.value })}
+                    placeholder="Enter test number"
+                    className="bg-white border-gray-300 h-10"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700">Test Date</label>
+                    <div className="flex items-center gap-1 ml-auto">
+                      <input
+                        type="checkbox"
+                        checked={newTest.useRecommendedDate}
+                        onChange={(e) => setNewTest({ 
+                          ...newTest, 
+                          useRecommendedDate: e.target.checked,
+                          date: null
+                        })}
+                        className="rounded border-gray-300"
+                        id="pickForMe"
+                      />
+                      <label htmlFor="pickForMe" className="text-sm text-gray-600">
+                        Pick for me
+                      </label>
+                    </div>
                   </div>
+                  
+                  {newTest.useRecommendedDate ? (
+                    <div className="text-sm text-gray-600 italic p-2 bg-gray-50 rounded text-center">
+                      We'll recommend the next available test date based on your study schedule
+                    </div>
+                  ) : (
+                    <div className="flex justify-center">
+                      <Calendar
+                        onChange={(value) => setNewTest({ ...newTest, date: value as Date })}
+                        value={newTest.date}
+                        className="w-fit bg-white rounded-lg shadow-sm"
+                        tileClassName="text-gray-700"
+                        minDate={new Date()}
+                        formatMonthYear={(locale, date) => {
+                          return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                        }}
+                      />
+                    </div>
+                  )}
+                  
+                  {newTest.date && (
+                    <div className="text-sm text-gray-600 mt-1 text-center">
+                      Selected date: {formatDate(newTest.date)}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Previous Practice Tests Section */}
-            <div className="mt-8 px-4">
-              <h2 className="text-[--theme-text-color] text-xs opacity-60 uppercase tracking-wide mb-4 text-center">
-                Previous Practice Tests
-              </h2>
-              <div className="grid grid-cols-3 gap-4 max-h-[24rem] overflow-y-auto">
-                {[
-                  {
-                    id: "aamc",
-                    label: "AAMC Full Length Exams",
-                    description: "Official AAMC practice exams",
-                  },
-                  {
-                    id: "thirdParty",
-                    label: "Third Party Exams",
-                    description: "Blueprint, UWorld, and more",
-                  },
-                  {
-                    id: "myMcat",
-                    label: "MyMCAT Exams",
-                    description: "AI-generated practice tests",
-                  },
-                  {
-                    id: "custom",
-                    label: "Custom Exams",
-                    description: "Create your own practice tests",
-                  },
-                  {
-                    id: "diagnostic",
-                    label: "Diagnostic Tests",
-                    description: "Assess your starting point",
-                  },
-                  {
-                    id: "section",
-                    label: "Section Banks",
-                    description: "Practice specific test sections",
-                  },
-                ].map((section) => (
-                  <button
-                    key={section.id}
-                    onClick={() => setActiveSection(section.id as any)}
-                    className="p-4 rounded-lg text-left transition-all duration-200 bg-[--theme-doctorsoffice-accent] 
-                      hover:bg-[--theme-hover-color]"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <span className="text-sm font-medium">
-                          {section.label}
-                        </span>
-                        <p className="text-xs opacity-70">
-                          {section.description}
-                        </p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 flex-shrink-0" />
-                    </div>
-                  </button>
-                ))}
-              </div>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setIsAddDialogOpen(false)}
+                className="px-4 py-1.5 text-gray-600 hover:text-gray-900 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddTest}
+                disabled={!newTest.company || !newTest.testNumber || (!newTest.date && !newTest.useRecommendedDate)}
+                className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add Test
+              </button>
             </div>
           </div>
-        </DragDropContext>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
