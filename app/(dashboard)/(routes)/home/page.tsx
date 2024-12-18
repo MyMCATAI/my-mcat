@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { checkProStatus } from "@/lib/utils";
-import FlashcardDeck from "./FlashcardDeck";
 import { toast } from "react-hot-toast";
 import { PurchaseButton } from "@/components/purchase-button";
 import { isToday } from "date-fns";
@@ -29,6 +28,7 @@ import {
 import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useRouter } from "next/navigation";
+import { OptionsDialog } from "@/components/home/OptionsDialog";
 
 const Page = () => {
   const searchParams = useSearchParams();
@@ -67,6 +67,7 @@ const Page = () => {
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [userStreak, setUserStreak] = useState(0);
   const router = useRouter();
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
 
   useEffect(() => {
     // if returning from stripe, show toast depending on payment
@@ -263,9 +264,6 @@ const Page = () => {
       case "CARS":
         content = <TestingSuit />;
         break;
-      case "flashcards":
-        content = <FlashcardDeck />;
-        break;
       default:
         content = null;
     }
@@ -433,8 +431,13 @@ const Page = () => {
                       : activeTab === "CARS"
                         ? "Daily CARs Practice"
                         : "Home"}
-                {/* {isPro && " Pro"} */}
               </h2>
+              <button
+                onClick={() => setShowOptionsModal(true)}
+                className="px-4 py-2 bg-sky-500 hover:bg-sky-600 rounded-lg text-white transition-colors"
+              >
+                Choose Activity
+              </button>
               <ThemeSwitcher />
             </div>
           </div>
@@ -509,6 +512,12 @@ const Page = () => {
           console.log("Closing streak popup"); // Debug log
           setShowStreakPopup(false);
         }}
+      />
+
+      <OptionsDialog 
+        showOptionsModal={showOptionsModal}
+        setShowOptionsModal={setShowOptionsModal}
+        handleTabChange={handleTabChange}
       />
     </div>
   );
