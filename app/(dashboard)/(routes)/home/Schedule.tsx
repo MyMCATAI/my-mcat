@@ -17,7 +17,7 @@ import {
 } from "@radix-ui/react-dialog";
 import Image from "next/image";
 import InteractiveCalendar from "@/components/calendar/InteractiveCalendar";
-import { 
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -47,12 +47,14 @@ import {
   BarChart as AnalyticsIcon,
 } from "lucide-react";
 import { FaCheckCircle } from "react-icons/fa";
-import HelpContentSchedule from './HelpContentSchedule';
-import { HelpCircle, Bell, Coffee, ClipboardList } from 'lucide-react';
-import { useOutsideClick } from '@/hooks/use-outside-click';
-import UWorldPopup from '@/components/home/UWorldPopup';
-import CompletionDialog from '@/components/home/CompletionDialog';
-import ScoreDisplay from '@/components/score/ScoreDisplay';
+import HelpContentSchedule from "./HelpContentSchedule";
+import { HelpCircle } from "lucide-react";
+import { useOutsideClick } from "@/hooks/use-outside-click";
+import PracticeTests from "./PracticeTests";
+import { ClipboardList } from "lucide-react";
+import { Coffee } from "lucide-react";
+import CompletionDialog from "@/components/home/CompletionDialog";
+import UWorldPopup from "@/components/home/UWorldPopup";
 
 ChartJS.register(
   CategoryScale,
@@ -107,7 +109,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [showAnalytics, setShowAnalytics] = useState(true);
   const [showRewardDialog, setShowRewardDialog] = useState(false);
   const [rewardSection, setRewardSection] = useState("");
   const [userCoinCount, setUserCoinCount] = useState(0);
@@ -126,6 +127,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showUWorldPopup, setShowUWorldPopup] = useState(false);
   const [showTestsDialog, setShowTestsDialog] = useState(false);
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [hasUpdatedStudyPlan, setHasUpdatedStudyPlan] = useState(false);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -248,7 +250,8 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   const handleStudyPlanSaved = useCallback(() => {
     setShowSettings(false);
-    setShowAnalytics(false); // Switch to calendar mode
+    setCurrentView("calendar");
+    setHasUpdatedStudyPlan(true);
 
     // Only start Part 2 if it hasn't been played yet
     if (
@@ -320,10 +323,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     );
   };
 
-  const handleToggleView = () => {
-    setShowAnalytics(!showAnalytics);
-  };
-
   const router = useRouter();
 
   const handleButtonClick = (section: string) => {
@@ -355,7 +354,7 @@ const Schedule: React.FC<ScheduleProps> = ({
           const data = await response.json();
 
           setUserCoinCount(data.score);
-          setUserStreak(data.streak)
+          setUserStreak(data.streak);
         }
       } catch (error) {
         console.error("Error fetching user coin count:", error);
@@ -388,8 +387,6 @@ const Schedule: React.FC<ScheduleProps> = ({
       setShowSettings(false);
     }
   }, [isActive]);
-
- 
 
   const [todayActivities, setTodayActivities] = useState<Activity[]>([]);
 
@@ -477,9 +474,16 @@ const Schedule: React.FC<ScheduleProps> = ({
         // Get activity details from backend
         const activityResponse = await fetch(`/api/calendar-activity`);
         const activities = await activityResponse.json();
-        const completedActivity = activities.find((a: FetchedActivity) => a.id === activityId);
 
-        if (completedActivity.source === "generated" && isToday(new Date(completedActivity.scheduledDate))) {
+        const completedActivity = activities.find(
+          (a: FetchedActivity) => a.id === activityId
+        );
+
+        if (
+          completedActivity.source === "generated" &&
+          isToday(new Date(completedActivity.scheduledDate))
+        ) {
+          // Update coin count
           await updateUserCoinCount();
           try {
             const response = await fetch("/api/user-info");
@@ -505,7 +509,7 @@ const Schedule: React.FC<ScheduleProps> = ({
       }
 
       // Check if ALL activities have ALL tasks completed using the updated activities array
-      const areAllTasksCompleted = updatedActivities.every((activity) => 
+      const areAllTasksCompleted = updatedActivities.every((activity) =>
         activity.tasks?.every((task) => task.completed)
       );
 
@@ -516,7 +520,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         }
         setShowCompletionDialog(true);
       }
-
     } catch (error) {
       console.error("Error updating task:", error);
       toast.error("Failed to update task");
@@ -590,148 +593,182 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   });
 
-  const uWorldTasks = getUWorldTasks()
+  const uWorldTasks = getUWorldTasks();
   const handleUWorldScoreSubmit = (scores: number[]) => {
     console.log("UWorld scores:", scores);
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
     });
   };
 
+  // Add new state for tracking view
+  const [currentView, setCurrentView] = useState<
+    "analytics" | "calendar" | "tests"
+  >("analytics");
 
   return (
-    <div className="grid grid-cols-[25%_75%] h-full relative w-full">
-      {/* Left Sidebar */}
-      <div 
-        className="w-full p-5 flex flex-col ml-2.5 mt-2.5 mb-2.5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
-        style={{
-          backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "center",
-          backgroundColor: "var(--theme-mainbox-color)",
-          color: "var(--theme-text-color)",
-          boxShadow: "var(--theme-box-shadow)",
-        }}
-      >
-        <div className="text-center space-y-1">
-          <h2 
-            className="text-sm font-semibold"
-            style={{ 
-              color: 'var(--theme-text-color)',
-              opacity: '0.6'
-            }}
-          >
-            {formatDate(new Date())}
-          </h2>
-        </div>
-
+    <div
+      className={`${currentView === "tests" ? "" : "grid grid-cols-[25%_75%]"} h-full relative w-full`}
+    >
+      {/* Left Sidebar - Only show when not in tests view */}
+      {currentView !== "tests" && (
         <div
-          className="flex-grow overflow-y-auto space-y-4 pr-2"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          className="w-full p-5 flex flex-col ml-2.5 mt-2.5 mb-2.5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
+          style={{
+            backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundColor: "var(--theme-mainbox-color)",
+            color: "var(--theme-text-color)",
+            boxShadow: "var(--theme-box-shadow)",
+          }}
         >
-          <style jsx>{`
-            div::-webkit-scrollbar {
-              display: none;
-            }
-          `}</style>
-          {/* Today's Activities Section */}
-          <div className="space-y-6">
-            {todayActivities.map((activity) => (
-              <div key={activity.id} className="mb-6">
-                <button
-                  className={`w-full py-2 px-3 
-                    ${
-                      isActivityCompleted(activity)
-                        ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                        : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
-                    }
-                    border-2 border-[--theme-border-color]
-                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
-                    font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
-                    text-sm`}
-                  onClick={() => handleButtonClick(activity.activityTitle)}
-                >
-                  <span>{activity.activityTitle}</span>
-                  {isActivityCompleted(activity) ? (
-                    <FaCheckCircle
-                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
-                      style={{ color: "var(--theme-hover-text)" }}
-                    />
-                  ) : (
-                    <svg
-                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
+          <div className="text-center space-y-1">
+            <h1
+              className="text-sm font-medium opacity-50"
+              style={{ color: "var(--theme-text-color)" }}
+            >
+              Tasks for
+            </h1>
+            <h2
+              className="text-lg font-semibold"
+              style={{ color: "var(--theme-text-color)" }}
+            >
+              {formatDate(new Date())}
+            </h2>
+          </div>
+
+          <div
+            className="flex-grow overflow-y-auto space-y-4 pr-2"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            <style jsx>{`
+              div::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
+            {/* Today's Activities Section */}
+            <div className="space-y-6">
+              {todayActivities.map((activity) => (
+                <div key={activity.id} className="mb-6">
+                  <button
+                    className={`w-full py-3 px-4 
+                      ${
+                        isActivityCompleted(activity)
+                          ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
+                          : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
+                      }
+                      border-2 border-[--theme-border-color]
+                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
+                      font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
+                      text-sm`}
+                    onClick={() => handleButtonClick(activity.activityTitle)}
+                  >
+                    <span>{activity.activityTitle}</span>
+                    {isActivityCompleted(activity) ? (
+                      <FaCheckCircle
+                        className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                        style={{ color: "var(--theme-hover-text)" }}
                       />
-                    </svg>
-                  )}
-                </button>
-
-                <div className="bg-[--theme-leaguecard-color] shadow-md p-3 mt-2 space-y-2 rounded-lg">
-                  {activity.tasks && activity.tasks.length > 0 ? (
-                    activity.tasks.map((task, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Checkbox
-                          id={`task-${activity.id}-${index}`}
-                          checked={task.completed}
-                          onCheckedChange={(checked) =>
-                            handleTaskCompletion(
-                              activity.id,
-                              index,
-                              checked as boolean
-                            )
-                          }
+                    ) : (
+                      <svg
+                        className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
                         />
-                        <label
-                          htmlFor={`task-${activity.id}-${index}`}
-                          className="text-sm leading-tight cursor-pointer flex-grow"
-                        >
-                          {task.text}
-                        </label>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm italic">No tasks for this activity</p>
-                  )}
-                </div>
-              </div>
-            ))}
+                      </svg>
+                    )}
+                  </button>
 
-            {todayActivities.length === 0 && (
-              <p className="text-center italic">
-                No activities scheduled for today
-              </p>
-            )}
+                  <div className="bg-[--theme-leaguecard-color] shadow-md p-4 mt-2 space-y-2 rounded-lg">
+                    {activity.tasks && activity.tasks.length > 0 ? (
+                      activity.tasks.map((task, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Checkbox
+                            id={`task-${activity.id}-${index}`}
+                            checked={task.completed}
+                            onCheckedChange={(checked) =>
+                              handleTaskCompletion(
+                                activity.id,
+                                index,
+                                checked as boolean
+                              )
+                            }
+                          />
+                          <label
+                            htmlFor={`task-${activity.id}-${index}`}
+                            className="text-sm leading-tight cursor-pointer flex-grow"
+                          >
+                            {task.text}
+                          </label>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm italic">
+                        No tasks for this activity
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {todayActivities.length === 0 && (
+                <p className="text-center italic">
+                  No activities scheduled for today
+                </p>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Right Content */}
-      <div className="p-2.5 flex flex-col relative" style={{ marginLeft: "1.25rem" }}>
-        {/* Purchase Button */}
-        {showAnalytics && !selectedSubject && (
-          <div className="absolute top-6 left-8 z-50">
-            <div className="pointer-events-auto">
-              <PurchaseButton tooltipText="Click to purchase more coins!">
-                <button className="hover:opacity-80 transition-opacity">
-                  <ScoreDisplay score={userCoinCount} />
-                </button>
-              </PurchaseButton>
-            </div>
+      {/* Right Content - Adjust margin and width based on view */}
+      <div
+        className={`p-2.5 flex flex-col relative ${
+          currentView === "tests" ? "w-full" : "ml-6"
+        }`}
+      >
+        {/* Stats Box - Vertical stack */}
+        {currentView === "analytics" && !selectedSubject && (
+          <div className="absolute top-6 left-8 z-10">
+            <PurchaseButton tooltipText="Click to purchase more coins!">
+              <div
+                className="flex items-center gap-2 rounded-2xl px-4 py-2 transition-all duration-200"
+                style={{
+                  backgroundColor: "var(--theme-leaguecard-color)",
+                }}
+              >
+                <span
+                  className="font-bold text-2xl"
+                  style={{ color: "var(--theme-text-color)" }}
+                >
+                  {userCoinCount.toLocaleString()}
+                </span>
+                <div className="relative">
+                  <Image
+                    src="/game-components/PixelCupcake.png"
+                    alt="Coins"
+                    width={32}
+                    height={32}
+                    className="transform hover:scale-110 transition-transform duration-200"
+                  />
+                </div>
+              </div>
+            </PurchaseButton>
           </div>
         )}
 
@@ -773,8 +810,8 @@ const Schedule: React.FC<ScheduleProps> = ({
                     showHelp ? "bg-[--theme-hover-color]" : "bg-white"
                   }`}
                 >
-                  <HelpCircle 
-                    className="w-4 h-4" 
+                  <HelpCircle
+                    className="w-4 h-4"
                     fill="none"
                     stroke={showHelp ? "white" : "#333"}
                   />
@@ -796,7 +833,7 @@ const Schedule: React.FC<ScheduleProps> = ({
               onClick={toggleSettings}
             />
           )}
-        </AnimatePresence>  
+        </AnimatePresence>
 
         {/* Settings Modal */}
         <AnimatePresence>
@@ -809,7 +846,6 @@ const Schedule: React.FC<ScheduleProps> = ({
             >
               <SettingContent
                 onStudyPlanSaved={handleStudyPlanSaved}
-                onToggleCalendarView={handleToggleView}
                 onClose={toggleSettings}
                 onActivitiesUpdate={onActivitiesUpdate}
               />
@@ -835,7 +871,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                 exit={{ opacity: 0, y: -20 }}
                 className="absolute top-0 right-4 w-[32rem] z-50 max-h-[80vh] flex flex-col"
               >
-                <HelpContentSchedule 
+                <HelpContentSchedule
                   onClose={toggleHelp}
                   onResetTutorials={resetTutorials}
                 />
@@ -844,9 +880,13 @@ const Schedule: React.FC<ScheduleProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Main Container - Add lower z-index */}
+        {/* Main Container - Adjust padding and height for tests view */}
         <div
-          className="flex-grow h-[calc(100vh-8rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden z-0"
+          className={`flex-grow ${
+            currentView === "tests"
+              ? "p-3 h-[calc(100vh-8rem)] p-4"
+              : "h-[calc(100vh-8rem)] p-4"
+          } w-full rounded-[10px] flex flex-col relative overflow-hidden`}
           style={{
             backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
             backgroundSize: "cover",
@@ -862,7 +902,9 @@ const Schedule: React.FC<ScheduleProps> = ({
             {/* Analytics View */}
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
-                showAnalytics ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
+                currentView === "analytics"
+                  ? "opacity-100 z-10"
+                  : "opacity-0 pointer-events-none z-0"
               } flex flex-col overflow-auto`}
             >
               {(isTypingComplete || isTutorialTypingComplete) && (
@@ -877,7 +919,9 @@ const Schedule: React.FC<ScheduleProps> = ({
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <DonutChart onProgressClick={(label) => setSelectedSubject(label)} />
+                        <DonutChart
+                          onProgressClick={(label) => setSelectedSubject(label)}
+                        />
                       </motion.div>
                     ) : (
                       <motion.div
@@ -888,7 +932,10 @@ const Schedule: React.FC<ScheduleProps> = ({
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <Statistics onReturn={() => setSelectedSubject(null)} subject={selectedSubject} />
+                        <Statistics
+                          onReturn={() => setSelectedSubject(null)}
+                          subject={selectedSubject}
+                        />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -899,7 +946,9 @@ const Schedule: React.FC<ScheduleProps> = ({
             {/* Calendar View */}
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
-                showAnalytics ? "opacity-0 pointer-events-none z-0" : "opacity-100 z-10"
+                currentView === "calendar"
+                  ? "opacity-100 z-10"
+                  : "opacity-0 pointer-events-none z-0"
               } flex flex-col overflow-auto`}
             >
               <div className="flex-grow">
@@ -911,18 +960,29 @@ const Schedule: React.FC<ScheduleProps> = ({
                   onInteraction={() => {}}
                   setRunTutorialPart2={setRunTutorialPart2}
                   setRunTutorialPart3={setRunTutorialPart3}
-                  handleSetTab={handleSetTab}
                   onTasksUpdate={handleTasksUpdate}
                   updateTodaySchedule={updateTodaySchedule}
+                  handleSetTab={handleSetTab}
                 />
               </div>
+            </div>
+
+            {/* Practice Tests View */}
+            <div
+              className={`absolute inset-0 transition-opacity duration-300 ${
+                currentView === "tests"
+                  ? "opacity-100 z-10"
+                  : "opacity-0 pointer-events-none z-0"
+              } flex flex-col overflow-auto`}
+            >
+              <PracticeTests />
             </div>
           </div>
 
           {/* View Toggle Buttons */}
           <div className="mt-auto flex justify-end items-center gap-2 pt-2">
             {/* Break button - only show in calendar view */}
-            {!showAnalytics && (
+            {currentView === "calendar" && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -944,33 +1004,34 @@ const Schedule: React.FC<ScheduleProps> = ({
               </TooltipProvider>
             )}
 
-            {/* Practice Tests button */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setShowTestsDialog(true)}
-                    className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                      border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
-                  >
-                    <ClipboardList className="w-8 h-8" />
-                    <span className="text-xs font-medium">Tests</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Practice Tests</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            {showAnalytics ? (
+            {currentView !== "tests" && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={handleToggleView}
+                      onClick={() => setCurrentView("tests")}
+                      className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                        border-2 border-[--theme-border-color] 
+                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                        shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
+                    >
+                      <ClipboardList className="w-8 h-8" />
+                      <span className="text-xs font-medium">Tests</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Practice Tests</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
+            {currentView !== "calendar" && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setCurrentView("calendar")}
                       className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                         border-2 border-[--theme-border-color] 
                         hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
@@ -985,12 +1046,14 @@ const Schedule: React.FC<ScheduleProps> = ({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            ) : (
+            )}
+
+            {currentView !== "analytics" && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={handleToggleView}
+                      onClick={() => setCurrentView("analytics")}
                       className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                         border-2 border-[--theme-border-color] 
                         hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
@@ -1154,7 +1217,10 @@ const Schedule: React.FC<ScheduleProps> = ({
           </DialogHeader>
           <div className="p-4">
             <p className="text-center text-black">
-              Tests will allow you to manage AAMC and third party tests, review them in an intelligent suite, and glean insights on strategic changes to improve performance. For early access, email prynce@mymcat.ai.
+              Tests will allow you to manage AAMC and third party tests, review
+              them in an intelligent suite, and glean insights on strategic
+              changes to improve performance. For early access, email
+              prynce@mymcat.ai.
             </p>
           </div>
         </DialogContent>
@@ -1167,30 +1233,31 @@ const Schedule: React.FC<ScheduleProps> = ({
         tasks={uWorldTasks}
       />
 
-      <CompletionDialog 
-        isOpen={showCompletionDialog} 
+      <CompletionDialog
+        isOpen={showCompletionDialog}
         onClose={() => setShowCompletionDialog(false)}
       />
     </div>
   );
 
   function getUWorldTasks() {
-    const uWorldActivity = todayActivities.find(activity => activity.activityTitle === "UWorld");
+    const uWorldActivity = todayActivities.find(
+      (activity) => activity.activityTitle === "UWorld"
+    );
     if (!uWorldActivity?.tasks) return [];
-    
+
     return uWorldActivity.tasks
-      .filter(task => {
+      .filter((task) => {
         // Only include tasks that match the format "X Q UWorld - Subject"
         const pattern = /^\d+\s*Q\s*UWorld\s*-\s*.+$/i;
         return pattern.test(task.text);
       })
-      .map(task => ({
+      .map((task) => ({
         text: task.text,
         completed: task.completed,
-        subject: task.text.split(' - ')[1]?.trim()
+        subject: task.text.split(" - ")[1]?.trim(),
       }));
   }
-
 };
 
 export default Schedule;
