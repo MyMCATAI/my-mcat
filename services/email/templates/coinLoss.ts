@@ -8,7 +8,7 @@ export interface CoinLossEmailData {
 }
 
 export const coinLossTemplate = (data: CoinLossEmailData): TemplateConfig => ({
-  subject: `You've lost a coin due to inactivity! 🪙`,
+  subject: `There goes a coin! 🪙`,
   html: `
     <div style="font-family: Arial, sans-serif; max-width: 37.5rem; margin: 0 auto; padding: 1.25rem;">
       <p style="color: #333333; line-height: 1.6;">
@@ -16,11 +16,11 @@ export const coinLossTemplate = (data: CoinLossEmailData): TemplateConfig => ({
       </p>
       
       <p style="color: #333333; line-height: 1.6;">
-        Kalypso here! Just letting you know that you've lost a coin due to not logging in. You now have ${data.remainingCoins} coins left.
+        Kalypso here! Just letting you know that not logging in was pricey! You now have ${data.remainingCoins} coins left.
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
-        This is your only courtesy email - from now on, you'll silently lose one coin each day you don't log in until you reach zero. Remember, consistency is key in MCAT prep!
+        This is your only courtesy email - from now on, it's minus a coin each day! Remember, consistency is key in MCAT prep!
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
