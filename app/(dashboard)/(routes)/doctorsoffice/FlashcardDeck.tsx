@@ -96,7 +96,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     
     // Set initial volume for both sounds
     if (correctSound.current) correctSound.current.volume = 0.3;
-    if (whooshSound.current) whooshSound.current.volume = 0.3;
+    if (whooshSound.current) whooshSound.current.volume = 0.15;
   }, []);
 
   const handleDeckComplete = useCallback(() => {
