@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
 
 interface UserInfo {
+  unlocks?: string[];
   userId: string;
   bio: string;
   firstName: string;
@@ -53,7 +54,10 @@ interface UseUserInfoReturn {
     friendEmail: string;
   }) => Promise<void>;
   checkHasReferrals: () => Promise<boolean>;
+  unlockGame: () => Promise<void>;
 }
+
+const CLINIC_COST = 10;
 
 export function useUserInfo(): UseUserInfoReturn {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -267,6 +271,32 @@ export function useUserInfo(): UseUserInfoReturn {
     }
   }, []);
 
+  const unlockGame = useCallback(async () => {
+    try {
+      const response = await fetch('/api/user-info', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          unlockGame: true,
+          decrementScore: CLINIC_COST
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to unlock game');
+      }
+
+      const data = await response.json();
+      setUserInfo(prev => prev ? { ...prev, unlocks: [...(prev.unlocks || []), 'game'] } : null);
+      toast.success('Welcome to the Anki Clinic!');
+    } catch (err) {
+      toast.error('Failed to unlock the Anki Clinic');
+      throw err;
+    }
+  }, []);
+
   return {
     userInfo,
     isLoading,
@@ -282,5 +312,6 @@ export function useUserInfo(): UseUserInfoReturn {
     fetchReferrals,
     createReferral,
     checkHasReferrals,
+    unlockGame,
   };
 }
