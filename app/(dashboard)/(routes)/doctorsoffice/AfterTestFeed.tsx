@@ -54,7 +54,7 @@ interface Question {
   questionAnswerNotes?: string;
   context?: string;
   category: Category;
-  // ... other question fields if needed
+  types: string
 }
 
 interface UserResponseWithCategory {
