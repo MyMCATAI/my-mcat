@@ -287,3 +287,20 @@ model DataPulse {
   positive  Int      @default(0)
   userId    String
 }
+
+model UserActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // e.g., 'page_view', 'quiz_attempt', 'study_session'
+  location  String   // URL or section identifier
+  startTime DateTime @default(now())
+  endTime   DateTime?
+  duration  Int?     // Duration in seconds
+  metadata  Json?    // Additional context data
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([startTime])
+}
