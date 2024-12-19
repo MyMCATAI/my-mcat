@@ -32,10 +32,10 @@ export const FullscreenPrompt = () => {
             msRequestFullscreen?: () => Promise<void>;
         };
 
-        const isSupported = docEl.requestFullscreen || 
+        const isSupported = !!(docEl.requestFullscreen || 
             docEl.webkitRequestFullscreen ||
             docEl.mozRequestFullScreen ||
-            docEl.msRequestFullscreen;
+            docEl.msRequestFullscreen);
 
         if (isSupported) {
             const isFullscreen = doc.fullscreenElement ||
