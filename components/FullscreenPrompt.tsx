@@ -12,7 +12,7 @@ export const FullscreenPrompt = () => {
     const pathname = usePathname();
 
     // List of paths where the prompt should not appear
-    const excludedPaths = ['/', '/blog', '/preferences', '/intro'];
+    const excludedPaths = ['/', '/blog', '/preferences', '/intro', '/sign-in', '/sign-up', '/onboarding'];
 
     useEffect(() => {
         const neverShow = localStorage.getItem('fullscreenPrompt-neverShow');
