@@ -99,7 +99,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
           <div className="space-y-4">
             <p className="text-sm leading-relaxed">
               Your performance shows strong understanding in CARS and Bio/Biochem sections. 
-              However, there's room for improvement in the Chemistry/Physics section, 
+              However, theres room for improvement in the Chemistry/Physics section, 
               particularly in thermodynamics and electrochemistry concepts.
             </p>
             <div className="space-y-2">
@@ -158,7 +158,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
           <div className="flex items-center space-x-4">
             <div className="flex-1 p-3 rounded bg-[--theme-leaguecard-accent]">
               <p className="text-sm">
-                Based on your performance, we've adjusted your study schedule. 
+                Based on your performance, we have adjusted your study schedule. 
                 Added 2 additional practice sessions for thermodynamics this week.
               </p>
             </div>
