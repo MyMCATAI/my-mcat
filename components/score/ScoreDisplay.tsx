@@ -11,7 +11,7 @@ const ScoreDisplay = ({ score }: ScoreDisplayProps) => {
       style={{
         backgroundColor: 'var(--theme-leaguecard-color)',
         position: 'relative',
-        zIndex: 20
+        zIndex: 30
       }}
     >
       <span 
