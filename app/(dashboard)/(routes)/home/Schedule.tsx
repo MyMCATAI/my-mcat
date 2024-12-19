@@ -724,7 +724,7 @@ const Schedule: React.FC<ScheduleProps> = ({
       <div className="p-2.5 flex flex-col relative" style={{ marginLeft: "1.25rem" }}>
         {/* Purchase Button */}
         {showAnalytics && !selectedSubject && (
-          <div className="absolute top-6 left-8 z-50">
+          <div className="absolute top-6 left-8 z-30">
             <div className="pointer-events-auto">
               <PurchaseButton tooltipText="Click to purchase more coins!">
                 <button className="hover:opacity-80 transition-opacity">
