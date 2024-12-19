@@ -196,18 +196,18 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
               {/* Calendar + Scheduled Tests Section */}
               <div className="h-[70%] min-h-0 mb-4 mt-1">
                 <div
-                  className="bg-[--theme-leaguecard-color] rounded-xl p-8 mx-4 h-full"
+                  className="bg-[--theme-leaguecard-color] rounded-xl p-4 sm:p-6 lg:p-8 mx-4 h-full overflow-hidden"
                   style={{
                     boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
                   }}
                 >
-                  <div className="grid grid-cols-2 gap-8 h-full min-h-0">
-                    {/* Calendar Side */}
-                    <div className="flex flex-col h-full max-h-full overflow-hidden">
+                  <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full">
+                    {/* Calendar Side - Add overflow handling */}
+                    <div className="flex flex-col h-full overflow-hidden">
                       <div className="text-lg font-medium mb-1 text-center">
                         December 2024
                       </div>
-                      <div className="flex-1 min-h-0 overflow-hidden">
+                      <div className="flex-1 overflow-auto px-2">
                         {/* Calendar Grid Container */}
                         <div className="h-full flex flex-col">
                           {/* Header Row - Updated with more responsive text sizes */}
@@ -245,18 +245,18 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
                       </div>
                     </div>
 
-                    {/* Scheduled Tests Side */}
-                    <div className="flex flex-col h-full">
+                    {/* Scheduled Tests Side - Add overflow handling */}
+                    <div className="flex flex-col h-full overflow-hidden">
                       <h3 className="text-sm font-medium text-[--theme-text-color] opacity-60 uppercase tracking-wide mb-4 text-center">
                         Scheduled Tests
                       </h3>
-                      <div className="flex-1 min-h-0 overflow-auto">
+                      <div className="flex-1 overflow-auto px-2">
                         <Droppable droppableId="droppable-tests">
                           {(provided) => (
                             <div
                               {...provided.droppableProps}
                               ref={provided.innerRef}
-                              className="space-y-2"
+                              className="space-y-2 pb-2"
                             >
                               {scheduledTests.map((test, index) => (
                                 <Draggable
@@ -341,38 +341,44 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
                   ].map((test, index) => (
                     <div
                       key={index}
-                      className="h-full p-3 rounded-lg bg-[--theme-leaguecard-accent] transition-all duration-300 cursor-pointer"
+                      className="h-full p-3 rounded-lg bg-opacity-50 bg-[--theme-leaguecard-accent] 
+                        transition-all duration-300 cursor-pointer group
+                        hover:bg-opacity-100 hover:transform hover:scale-[1.02]"
                       style={{
                         boxShadow: 'var(--theme-button-boxShadow)',
-                        transition: 'box-shadow 0.3s ease, transform 0.3s ease'
+                        height: '15vh',
                       }}
                       onClick={() => setActiveTest(test)}
                     >
                       <div className="h-full flex flex-col">
-                        <div className="flex justify-between text-[10px] mb-1">
-                          <span className="text-[11px]">{test.company} {test.testNumber}</span>
-                          <span className="opacity-50">{test.dateTaken}</span>
+                        {/* Company and Date - Always visible but muted */}
+                        <div className="flex justify-between text-[10px] mb-1 opacity-40 group-hover:opacity-100 transition-opacity">
+                          <span className="text-[10px] opacity-75">{test.company} {test.testNumber}</span>
+                          <span className="text-[10px] opacity-75">{test.dateTaken}</span>
                         </div>
+
+                        {/* Score - Always visible but muted by default */}
                         <div className="flex-grow flex items-center justify-center">
                           <span 
                             className={`text-4xl font-bold leading-none transition-all duration-300
-                              ${test.score < 500 ? 'text-red-500' : ''}
-                              ${test.score >= 500 && test.score < 510 ? 'text-yellow-500' : ''}
-                              ${test.score >= 510 && test.score < 515 ? 'text-green-500' : ''}
-                              ${test.score >= 515 && test.score < 520 ? 'text-sky-500' : ''}
+                              opacity-40 group-hover:opacity-100
+                              ${test.score < 500 ? 'group-hover:text-red-500' : ''}
+                              ${test.score >= 500 && test.score < 510 ? 'group-hover:text-yellow-500' : ''}
+                              ${test.score >= 510 && test.score < 515 ? 'group-hover:text-green-500' : ''}
+                              ${test.score >= 515 && test.score < 520 ? 'group-hover:text-sky-500' : ''}
                               ${test.score >= 520 && test.score < 525 ? 
-                                'text-sky-400 animate-pulse-subtle shadow-lg' : ''}
+                                'group-hover:text-sky-400 group-hover:animate-pulse-subtle' : ''}
                               ${test.score >= 525 ? 
-                                'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-transparent bg-clip-text animate-pulse-subtle shadow-lg' : ''}
+                                'group-hover:bg-gradient-to-r from-violet-500 to-fuchsia-500 group-hover:text-transparent group-hover:bg-clip-text group-hover:animate-pulse-subtle' : ''}
                             `}
                           >
                             {test.score}
                           </span>
                         </div>
-                        <div className="text-[11px] text-center mt-1">
-                          <span className={`
-                            ${test.score >= 520 ? 'font-semibold' : 'opacity-50'}
-                          `}>
+
+                        {/* Breakdown - Hidden until hover */}
+                        <div className="flex justify-center text-[10px] mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="opacity-75">
                             {test.breakdown}
                           </span>
                         </div>

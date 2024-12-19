@@ -620,7 +620,7 @@ const Schedule: React.FC<ScheduleProps> = ({
         <div
           className="w-full p-5 flex flex-col ml-2.5 mt-2.5 mb-2.5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
           style={{
-            backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
+            backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), var(--theme-interface-image)`,
             backgroundSize: "cover",
             backgroundRepeat: "no-repeat",
             backgroundPosition: "center",
@@ -888,7 +888,7 @@ const Schedule: React.FC<ScheduleProps> = ({
               : "h-[calc(100vh-8rem)] p-4"
           } w-full rounded-[10px] flex flex-col relative overflow-hidden`}
           style={{
-            backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
+            backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), var(--theme-interface-image)`,
             backgroundSize: "cover",
             backgroundRepeat: "no-repeat",
             backgroundPosition: "center",
