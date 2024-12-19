@@ -96,21 +96,21 @@ export const FullscreenPrompt = () => {
                     <X size={18} />
                 </button>
                 <p className="text-lg text-gray-700 dark:text-gray-300 mb-4 text-center">
-                    Our website looks better in full screen.
+                    {"Our website looks better in full screen."}
                 </p>
                 <div className="flex flex-col space-y-4">
                     <button
                         onClick={enterFullscreen}
                         className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                     >
-                        Enter Fullscreen
+                        {"Enter Fullscreen"}
                     </button>
                     <div className="flex flex-col items-center space-y-2 w-full">
                         <button
                             onClick={handleNoClick}
                             className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                         >
-                            No
+                            {"No"}
                         </button>
                         {showCheckbox && (
                             <label className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer mt-2">
@@ -120,7 +120,7 @@ export const FullscreenPrompt = () => {
                                     onChange={(e) => setNeverShowAgain(e.target.checked)}
                                     className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
                                 />
-                                <span>Don't show again</span>
+                                <span>{"Don't show again"}</span>
                             </label>
                         )}
                     </div>
