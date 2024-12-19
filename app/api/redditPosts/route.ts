@@ -25,10 +25,8 @@ export async function GET(request: NextRequest) {
     timeRange = 'month'; // default to month for any other value
   }
 
-  console.log(`Time range set to: ${timeRange}`);
   try {
     const accessToken = await getRedditAccessToken();
-    console.log(`Access token: ${accessToken}`);
     let redditUrl;
     if (query) {
       redditUrl = `https://oauth.reddit.com/r/${encodeURIComponent(subreddit)}/search.json?q=${encodeURIComponent(
@@ -40,7 +38,6 @@ export async function GET(request: NextRequest) {
       )}/top.json?t=${timeRange}&limit=50`;
     }
 
-    console.log(`Fetching from Reddit URL: ${redditUrl}`);
 
     const fetchWithRetry = async (url: string, options: RequestInit, retries = 1): Promise<Response> => {
       const response = await fetch(url, options);

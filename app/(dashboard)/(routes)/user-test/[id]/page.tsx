@@ -7,8 +7,10 @@ import Link from 'next/link';
 import { UserTest, Passage } from '@/types';
 import PassageComponent from "@/components/test/Passage";
 import ReviewQuestionComponent from "./ReviewQuestion";
+import { useUserActivity } from '@/hooks/useUserActivity';
 
 export default function UserTestReviewPage() {
+  const { startActivity, updateActivityEndTime } = useUserActivity();
   const [userTest, setUserTest] = useState<UserTest | null>(null);
   const [currentResponseIndex, setCurrentResponseIndex] = useState(0);
   const [currentPassage, setCurrentPassage] = useState<Passage | null>(null);
@@ -22,6 +24,38 @@ export default function UserTestReviewPage() {
     contentTitle: "",
     context: ""
   });
+
+  const [currentActivityId, setCurrentActivityId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const initializeActivity = async () => {
+      const activity = await startActivity({
+        type: 'review',
+        location: "CARs",
+        metadata: {
+          initialLoad: true,
+          testId: id,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      if (activity) {
+        setCurrentActivityId(activity.id);
+      }
+    };
+
+    initializeActivity();
+  }, []);
+
+  useEffect(() => {
+    if (!currentActivityId) return;
+
+    const intervalId = setInterval(() => {
+      updateActivityEndTime(currentActivityId);
+    }, 300000); // Update every 5 minutes
+
+    return () => clearInterval(intervalId);
+  }, [currentActivityId]);
 
   useEffect(() => {
     if (typeof id === 'string') {
@@ -91,12 +125,14 @@ export default function UserTestReviewPage() {
   const handleNextQuestion = () => {
     if (userTest && currentResponseIndex < userTest.responses.length - 1) {
       setCurrentResponseIndex(currentResponseIndex + 1);
+      updateActivityEndTime(currentActivityId);
     }
   };
 
   const handlePreviousQuestion = () => {
     if (currentResponseIndex > 0) {
       setCurrentResponseIndex(currentResponseIndex - 1);
+      updateActivityEndTime(currentActivityId);
     }
   };
   if (loading) return (

@@ -263,7 +263,6 @@ export function useUserInfo(): UseUserInfoReturn {
       }
 
       const data = await response.json();
-      console.log("data", data);
       return data.exists;
     } catch (err) {
       console.error("Failed to check referrals:", err);

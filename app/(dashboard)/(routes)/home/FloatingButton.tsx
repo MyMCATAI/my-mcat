@@ -103,7 +103,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
     { top: 0, left: 0, tab: "Schedule", icon: "/calendar.svg" },
     { top: 0, left: 0, tab: "doctorsoffice", icon: "/gamecontroller.svg" },
     { top: 0, left: 0, tab: "CARS", icon: "/book.svg" },
-    { top: 0, left: 0, tab: "KnowledgeProfile", icon: "/graduationcap.svg" },
+    { top: 0, left: 0, tab: "AdaptiveTutoringSuite", icon: "/graduationcap.svg" },
   ];
 
   const inactivePositions = [
@@ -114,7 +114,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
 
   const handleButtonClick = (tab: string) => {
     const tabActions = {
-      KnowledgeProfile: () => {
+      AdaptiveTutoringSuite: () => {
         router.push('/home');
         setActiveTab(tab);
         onTabChange(tab);
@@ -173,7 +173,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
     "Schedule": "Dashboard",
     "doctorsoffice": "The Anki Clinic",
     "CARS": "Daily CARs Suite",
-    "KnowledgeProfile": "Tutoring Suite",
+    "AdaptiveTutoringSuite": "Tutoring Suite",
   };
 
   const getLabelPosition = (index: number) => {

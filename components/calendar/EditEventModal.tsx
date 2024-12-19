@@ -169,7 +169,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
         router.push("/doctorsoffice");
         break;
       case "Adaptive Tutoring Suite":
-        handleSetTab("KnowledgeProfile");
+        handleSetTab("AdaptiveTutoringSuite");
         break;
       default:
         break;
