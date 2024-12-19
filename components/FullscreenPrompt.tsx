@@ -45,6 +45,9 @@ export const FullscreenPrompt = () => {
 
             if (!isFullscreen && !isDismissed) {
                 setShowPrompt(true);
+                window.dispatchEvent(new CustomEvent('fullscreenPromptChange', { 
+                  detail: { isVisible: true } 
+                }));
             }
         }
     }, [isDismissed, pathname]);
@@ -82,13 +85,32 @@ export const FullscreenPrompt = () => {
         }
         setShowPrompt(false);
         setIsDismissed(true);
+        window.dispatchEvent(new CustomEvent('fullscreenPromptChange', { 
+          detail: { isVisible: false } 
+        }));
     };
 
     if (!showPrompt) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm mx-4 animate-fade-in relative">
+        <div 
+            className="fixed inset-0 flex items-center justify-center"
+            style={{
+                zIndex: 2147483647,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                position: 'fixed',
+                isolation: 'isolate',
+                pointerEvents: 'auto' // Ensure clicks are received
+            }}
+        >
+            <div 
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm mx-4 animate-fade-in relative"
+                style={{
+                    position: 'relative',
+                    zIndex: 2147483647
+                }}
+                onClick={(e) => e.stopPropagation()}
+            >
                 <button 
                     onClick={dismissPrompt}
                     className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"

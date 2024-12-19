@@ -20,10 +20,23 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
 }) => {
   const router = useRouter();
   const { userInfo } = useUserInfo();
+  const [isFullscreenPromptVisible, setIsFullscreenPromptVisible] = useState(false);
+
+  useEffect(() => {
+    // Listen for a custom event from FullscreenPrompt
+    const handleFullscreenPromptChange = (e: CustomEvent) => {
+      setIsFullscreenPromptVisible(e.detail.isVisible);
+    };
+
+    window.addEventListener('fullscreenPromptChange', handleFullscreenPromptChange as EventListener);
+    return () => {
+      window.removeEventListener('fullscreenPromptChange', handleFullscreenPromptChange as EventListener);
+    };
+  }, []);
 
   const handleOpenChange = (open: boolean) => {
-    // Prevent dialog from being closed
-    return;
+    // Allow the dialog to be temporarily hidden when interacting with other UI
+    onOpenChange(open);
   };
 
   const handleGoToDashboard = () => {
@@ -32,12 +45,21 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
 
   return (
     <Dialog 
-      open={isOpen} // Always show dialog when isOpen is true
-      onOpenChange={handleOpenChange}
-      modal={true}
+      open={isOpen}
+      onOpenChange={(open) => {
+        // Only allow closing if FullscreenPrompt is visible
+        if (isFullscreenPromptVisible) {
+          onOpenChange(open);
+        }
+      }}
+      modal={!isFullscreenPromptVisible} // Modal when FullscreenPrompt is not visible
     >
       <DialogContent 
         className="max-w-[33rem] bg-[--theme-doctorsoffice-accent] border text-[--theme-text-color] border-[--theme-border-color]"
+        style={{ 
+          visibility: isFullscreenPromptVisible ? 'hidden' : 'visible' 
+        }}
+        onClick={(e) => e.stopPropagation()}
       >
         <DialogHeader>
           <DialogTitle className="text-[--theme-text-color] text-center">{"Welcome to The Anki Clinic!"}</DialogTitle>
