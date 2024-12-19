@@ -152,18 +152,6 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
             ))}
           </div>
         </div>
-
-        <div className="lg:col-span-5 bg-[--theme-leaguecard-color] p-4 rounded-2xl shadow-xl min-h-[5rem]">
-          <h3 className="text-sm uppercase tracking-wide opacity-60 mb-4">Updates</h3>
-          <div className="flex items-center space-x-4">
-            <div className="flex-1 p-3 rounded bg-[--theme-leaguecard-accent]">
-              <p className="text-sm">
-                Based on your performance, we have adjusted your study schedule. 
-                Added 2 additional practice sessions for thermodynamics this week.
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

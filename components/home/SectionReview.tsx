@@ -111,7 +111,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
 
       <div className="flex-1 min-h-0">
         <div className="bg-[--theme-leaguecard-color] p-6 rounded-2xl shadow-xl h-full flex flex-col">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-6">              
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[--theme-leaguecard-accent]/50">
@@ -156,10 +156,11 @@ const SectionReview: React.FC<SectionReviewProps> = ({
                     setEditingQuestion(question);
                     setIsAddingQuestion(true);
                   }}
-                  className={`aspect-square rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 text-xs
+                  className={`aspect-square rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 text-xs
                     ${question.status === 'wrong' ? 'bg-red-500/20 text-red-500' : ''}
                     ${question.status === 'flagged' ? 'bg-yellow-500/20 text-yellow-500' : ''}
                     ${question.status === 'correct' ? 'bg-green-500/20 text-green-500' : ''}
+                    hover:opacity-75
                   `}
                 >
                   <span className="text-xs font-medium">{question.number}</span>
