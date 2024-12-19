@@ -151,8 +151,8 @@ const TestList: React.FC<TestListProps> = ({
           </div>
         ) : (
           <div className="space-y-4 pb-4">
-            {filteredItems.map((item) => (
-              <div key={item.id} className="w-full">
+            {filteredItems.map((item, index) => (
+              <div key={index} className="w-full">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>

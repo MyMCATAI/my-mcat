@@ -80,14 +80,14 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
   };
 
   return (
-    <>
+    <div className="max-w-[300px]">
       <Button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white w-full"
         size="sm"
       >
         <Check className="w-4 h-4" />
-        {`Complete ${categoryName}`}
+        <span className="truncate">{`Complete ${categoryName}`}</span>
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -118,7 +118,7 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };
 

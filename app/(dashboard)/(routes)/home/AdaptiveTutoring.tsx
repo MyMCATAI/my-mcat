@@ -67,7 +67,7 @@ interface AdaptiveTutoringProps {
   chatbotRef: React.MutableRefObject<{
     sendMessage: (message: string) => void;
   }>;
-  isFirstVisit?: boolean;
+  onActivityChange: (type: string, location: string, metadata?: any) => Promise<void>;
 }
 
 type PlatformType = "spotify" | "apple" | "mymcat";
@@ -89,29 +89,22 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   toggleChatBot,
   setChatbotContext,
   chatbotRef,
-  isFirstVisit = true,
+  onActivityChange,
 }) => {
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [contentType, setContentType] = useState("video");
   const [isLoading, setIsLoading] = useState(true);
-
-  const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [content, setContent] = useState<ContentItem[]>([]);
   const [currentContentId, setCurrentContentId] = useState<string | null>(null);
-
   const [isPlaying, setIsPlaying] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-
-  const { toast } = useToast();
-
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showPodcast, setShowPodcast] = useState(false);
   const [podcastPosition, setPodcastPosition] = useState({ top: 0, left: 0 });
   const podcastButtonRef = useRef<HTMLButtonElement>(null);
   const [isPodcastHovered, setIsPodcastHovered] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
-
   const [checkedCategories, setCheckedCategories] = useState<Category[]>([]);
   const [playedSeconds, setPlayedSeconds] = useState<number>(0);
 
@@ -120,9 +113,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
-
   const [initialCategories, setInitialCategories] = useState<Category[]>([]);
-
   const [showDiagnosticDialog, setShowDiagnosticDialog] = useState(false);
   const [runTutorialPart1, setRunTutorialPart1] = useState(false);
   const [runTutorialPart2, setRunTutorialPart2] = useState(false);
@@ -153,6 +144,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const [lastSelectedCategory, setLastSelectedCategory] = useState<string | null>(
     localStorage.getItem("lastSelectedCategory")
   );
+  const { toast } = useToast();
 
   const fetchInitialData = useCallback(
     async (useKnowledgeProfiles: boolean = false) => {
@@ -181,7 +173,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
           const index = parsedCategories.findIndex(
             (cat: CategoryWithCompletion) => cat.conceptCategory === categoryToSelect
           );
-          setSelectedCard(index >= 0 ? index : 0);
         }
 
         await fetchContentAndQuestions(categoryToSelect);
@@ -490,8 +481,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     if (!selectedCategory) {
       toast({
         title: "No Category Selected",
-        description:
-          "Please select a category first to view its quiz questions.",
+        description: "Please select a category first to view its quiz questions.",
         variant: "destructive",
       });
       return;
@@ -507,7 +497,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       return;
     }
 
-    setSelectedCard(index);
     const selectedCategory = selectedCategoryItem.conceptCategory;
     setSelectedCategory(selectedCategory);
     
@@ -734,7 +723,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
         // Set it as selected and fetch its content
         setSelectedCategory(nextCategory.conceptCategory);
-        setSelectedCard(newCheckedCategories.length); // It will be added at the end
         await fetchContentAndQuestions(nextCategory.conceptCategory);
       }
     } catch (error) {
@@ -757,7 +745,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       // If there are saved categories, set the first one as selected
       if (parsedCategories.length > 0) {
         setSelectedCategory(parsedCategories[0].conceptCategory);
-        setSelectedCard(0);
       }
     }
   }, []);
@@ -783,6 +770,25 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       }
     };
   }, []);
+
+  // Update activity when category or type changes
+  useEffect(() => {
+    if(!selectedCategory || !contentType) return
+    const updateActivity = async () => {
+      await onActivityChange(
+        contentType === 'quiz' ? 'testing' : 'studying', 
+        'AdaptiveTutoringSuite', 
+        {
+          category: selectedCategory,
+          contentType: contentType,
+          timestamp: new Date().toISOString()
+        }
+      );
+    };
+
+    updateActivity();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentType, selectedCategory])
 
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">

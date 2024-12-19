@@ -25,6 +25,7 @@ import Link from 'next/link';
 interface TestComponentProps {
   testId: string;
   onTestComplete?: (score: number) => void;
+  updateActivityEndTime?: () => void;
 }
 
 interface DictionaryPosition {
@@ -36,6 +37,7 @@ interface DictionaryPosition {
 const TestComponent: React.FC<TestComponentProps> = ({
   testId,
   onTestComplete,
+  updateActivityEndTime
 }) => {
   const [test, setTest] = useState<Test | null>(null);
   const [userTest, setUserTest] = useState<{ id: string } | null>(null);
@@ -296,6 +298,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
     userAnswer: string,
     isCorrect: boolean
   ) => {
+    updateActivityEndTime ?updateActivityEndTime() : null
     if (!hasAnsweredFirstQuestion) {
       setHasAnsweredFirstQuestion(true);
       testHeaderRef.current?.startQuestionTimer();

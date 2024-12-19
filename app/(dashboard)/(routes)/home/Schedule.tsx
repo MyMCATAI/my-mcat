@@ -335,7 +335,7 @@ const Schedule: React.FC<ScheduleProps> = ({
         router.push("/doctorsoffice");
         break;
       case "Adaptive Tutoring Suite":
-        handleSetTab("KnowledgeProfile");
+        handleSetTab("AdaptiveTutoringSuite");
         break;
       case "AAMC Materials":
         break;
