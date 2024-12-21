@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({
-      message: "Review completed successfully. 1 cupcake coin added.",
+      message: "Review completed successfully. 1 studycoinadded.",
       updatedUserTest,
       newScore: updatedUserInfo.score
     });

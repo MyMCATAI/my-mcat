@@ -16,11 +16,11 @@ export const coinLossTemplate = (data: CoinLossEmailData): TemplateConfig => ({
       </p>
       
       <p style="color: #333333; line-height: 1.6;">
-        Kalypso here! Just letting you know that not logging in was pricey! You now have ${data.remainingCoins} coins left.
+        Kalypso here! Just letting you know that not logging in was pricey (specifically, one coin)! You've still got ${data.remainingCoins} of 'em, though!
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
-        This is your only courtesy email - from now on, it's minus a coin each day! Remember, consistency is key in MCAT prep!
+        Watch out! The MCAT doesn't wait for you. Remember, consistency is key to not being BROKEEE!
       </p>
 
       <p style="color: #333333; line-height: 1.6;">

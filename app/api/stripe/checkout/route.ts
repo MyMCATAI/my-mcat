@@ -52,13 +52,13 @@ export async function POST(request: Request) {
         create: {
           userId,
           bio: "Future doctor preparing to ace the MCAT! 🎯",
-          score: 5, // Initial score of 5 coins for new users
+          score: 9, // Initial score of 9 coins for new users
           hasPaid: false,
           firstName: user.firstName || "",
         },
         update: {
           score: {
-            increment: 5, // Add 5 to the existing score
+            increment: productType === ProductType.COINS_50 ? 50 : 10, // Add either 50 or 10 coins based on product type
           },
         },
       });
