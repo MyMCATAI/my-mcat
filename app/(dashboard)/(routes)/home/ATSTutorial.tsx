@@ -34,17 +34,7 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
     if (runPart1 && (status === STATUS.FINISHED || status === STATUS.SKIPPED)) {
       setRunPart1(false);
       localStorage.setItem("initialTutorialPlayed", "true");
-      
-      // Immediately start atsIconStep tutorial if it hasn't been played
-      if (localStorage.getItem("atsIconTutorialPlayed") !== "true") {
-        setRunPart4(true);
-      }
-    }
 
-    // For atsIconStep tutorial
-    if (runPart4 && (status === STATUS.FINISHED || status === STATUS.SKIPPED)) {
-      setRunPart4(false);
-      localStorage.setItem("atsIconTutorialPlayed", "true");
     }
   };
 
@@ -109,6 +99,17 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
       placement: 'left',
     },
     {
+      target: '.ats-topic-icons',
+      content: (
+        <div className="space-y-4 text-black">
+          <h2 className="text-xl font-bold">{"Topic Selection"}</h2>
+          <p>{"Here you have six subjects selected for you based on your weaknesses. Press the question mark on the right for more help! Then over the settings button (left) for more!"}</p>
+        </div>
+      ),
+      placement: 'bottom',
+      spotlightClicks: true,
+    },
+    {
       target: 'body',
       content: (
         <div className="space-y-4 text-black">
@@ -131,62 +132,62 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
     }
   ];
 
-  const topicSelectionStep: Step[] = [
-    {
-      target: '.ats-topic-icons',
-      content: (
-        <div className="space-y-4 text-black">
-          <h2 className="text-xl font-bold">{"Topic Selection"}</h2>
-          <p>{"Here you have six subjects selected for you based on your weaknesses. Press the question mark on the right for more help! Then over the settings button (left) for more!"}</p>
-        </div>
-      ),
-      placement: 'bottom',
-      spotlightClicks: true,
-    }
-  ];
+  // const topicSelectionStep: Step[] = [
+  //   {
+  //     target: '.ats-topic-icons',
+  //     content: (
+  //       <div className="space-y-4 text-black">
+  //         <h2 className="text-xl font-bold">{"Topic Selection"}</h2>
+  //         <p>{"Here you have six subjects selected for you based on your weaknesses. Press the question mark on the right for more help! Then over the settings button (left) for more!"}</p>
+  //       </div>
+  //     ),
+  //     placement: 'bottom',
+  //     spotlightClicks: true,
+  //   }
+  // ];
 
-  const settingsSteps: Step[] = [
-    {
-      target: '.checkmark-button',
-      content: (
-        <div className="space-y-4 text-black">
-          <h2 className="text-xl font-bold">{"Track Your Progress"}</h2>
-          <p>{"You can checkmark off categories once you're done with them."}</p>
-        </div>
-      ),
-      placement: 'bottom',
-    },
-    {
-      target: '.shuffle-button',
-      content: (
-        <div className="space-y-4 text-black">
-          <h2 className="text-xl font-bold">{"Shuffle Subjects"}</h2>
-          <p>{"If you'd like to shuffle based upon subjects, we have a button for that."}</p>
-        </div>
-      ),
-      placement: 'bottom',
-    },
-    {
-      target: '.topic-search',
-      content: (
-        <div className="space-y-4 text-black">
-          <h2 className="text-xl font-bold">{"Find Specific Topics"}</h2>
-          <p>{"If you'd like a specific topic, you can search for it here."}</p>
-        </div>
-      ),
-      placement: 'bottom',
-    },
-    {
-      target: '.algorithm-button',
-      content: (
-        <div className="space-y-4 text-black">
-          <h2 className="text-xl font-bold">{"Smart Recommendations"}</h2>
-          <p>{"If you don't know what to study, we keep tab on the questions you've missed and can give you subjects to study!"}</p>
-        </div>
-      ),
-      placement: 'bottom',
-    }
-  ];
+  // const settingsSteps: Step[] = [
+  //   {
+  //     target: '.checkmark-button',
+  //     content: (
+  //       <div className="space-y-4 text-black">
+  //         <h2 className="text-xl font-bold">{"Track Your Progress"}</h2>
+  //         <p>{"You can checkmark off categories once you're done with them."}</p>
+  //       </div>
+  //     ),
+  //     placement: 'bottom',
+  //   },
+  //   {
+  //     target: '.shuffle-button',
+  //     content: (
+  //       <div className="space-y-4 text-black">
+  //         <h2 className="text-xl font-bold">{"Shuffle Subjects"}</h2>
+  //         <p>{"If you'd like to shuffle based upon subjects, we have a button for that."}</p>
+  //       </div>
+  //     ),
+  //     placement: 'bottom',
+  //   },
+  //   {
+  //     target: '.topic-search',
+  //     content: (
+  //       <div className="space-y-4 text-black">
+  //         <h2 className="text-xl font-bold">{"Find Specific Topics"}</h2>
+  //         <p>{"If you'd like a specific topic, you can search for it here."}</p>
+  //       </div>
+  //     ),
+  //     placement: 'bottom',
+  //   },
+  //   {
+  //     target: '.algorithm-button',
+  //     content: (
+  //       <div className="space-y-4 text-black">
+  //         <h2 className="text-xl font-bold">{"Smart Recommendations"}</h2>
+  //         <p>{"If you don't know what to study, we keep tab on the questions you've missed and can give you subjects to study!"}</p>
+  //       </div>
+  //     ),
+  //     placement: 'bottom',
+  //   }
+  // ];
 
   return (
     <>
@@ -207,9 +208,9 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
           },
         }}
       />
-      <Joyride
+      {/* <Joyride
         steps={topicSelectionStep}
-        run={runPart4 && !showSettingsSteps}
+        run={runPart4}
         continuous
         showProgress
         showSkipButton
@@ -227,8 +228,8 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
             zIndex: 1000,
           },
         }}
-      />
-      <Joyride
+      /> */}
+      {/* <Joyride
         steps={settingsSteps}
         run={showSettingsSteps}
         continuous
@@ -243,7 +244,7 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
             zIndex: 1000,
           },
         }}
-      />
+      /> */}
     </>
   );
 };
