@@ -26,16 +26,12 @@ export async function POST(request: Request) {
     // Make body parsing optional with default values
     let priceType = "default";
     let friendEmail: string | undefined;
-    let productType: ProductType = ProductType.COINS_10; // Default product type
 
     try {
       const body = await request.json();
       if (body) {
         priceType = body.priceType || "default";
         friendEmail = body.friendEmail || undefined;
-        if (isValidProductType(priceType)) {
-          productType = priceType as ProductType;
-        }
       }
     } catch (error) {
       // If JSON parsing fails, we'll just use the default values
@@ -56,13 +52,13 @@ export async function POST(request: Request) {
         create: {
           userId,
           bio: "Future doctor preparing to ace the MCAT! 🎯",
-          score: 9, // Initial score of 9 coins for new users
+          score: 5, // Initial score of 5 coins for new users
           hasPaid: false,
           firstName: user.firstName || "",
         },
         update: {
           score: {
-            increment: productType === ProductType.COINS_50 ? 50 : 10, // Add either 50 or 10 coins based on product type
+            increment: 5, // Add 5 to the existing score
           },
         },
       });
@@ -107,6 +103,7 @@ export async function POST(request: Request) {
 
     // If no friend email, proceed with regular Stripe checkout
     let priceId: string;
+    let productType: ProductType = ProductType.COINS_10; // Default product type
     let mode: 'payment' | 'subscription' = 'payment';
 
     // Validate and set product type
