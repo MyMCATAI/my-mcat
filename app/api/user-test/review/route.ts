@@ -55,9 +55,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({
-      message: "Review completed successfully. 1 studycoinadded.",
-      updatedUserTest,
-      newScore: updatedUserInfo.score
+      message: "Review completed successfully.",
+      updatedUserTest
     });
 
   } catch (error) {
