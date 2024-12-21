@@ -4,6 +4,7 @@ import { Category } from "@/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import ATSSettingsTutorial from "./ATSSettingsTutorial";
 
 interface Option {
   id: string;
@@ -32,6 +33,7 @@ const subjects = [
 const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
   checkedCategories,
   setCheckedCategories,
+    
 }) => {
   const { theme } = useTheme();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -50,6 +52,17 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
       ? new Set(JSON.parse(savedSubjects))
       : new Set(subjects.map((subject) => subject.name));
   });
+
+  const [showSettingsSteps, setShowSettingsSteps] = useState<boolean>(() => {
+    const hasSeenTutorial = localStorage.getItem("hasSeenSettingsTutorial");
+    return !hasSeenTutorial;
+  });
+
+  useEffect(() => {
+    if (!showSettingsSteps) {
+      localStorage.setItem("hasSeenSettingsTutorial", "true");
+    }
+  }, [showSettingsSteps]);
 
   useEffect(() => {
     // Load checked categories from localStorage on mount
@@ -247,7 +260,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
   const SettingsContent = () => {
     return (
       <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md flex flex-col gap-2">
-        <div className="flex items-center justify-center h-10 flex-shrink-0">
+        <div className="flex items-center justify-center h-10 flex-shrink-0 topic-search">
           <input
             type="text"
             value={searchQuery}
@@ -277,7 +290,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
         <div className="h-10 flex-shrink-0">
           <button
             onClick={handleRandomize}
-            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-transparent text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition duration-200"
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-transparent text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition duration-200 shuffle-button"
           >
             <span>Shuffle</span>
           </button>
@@ -320,7 +333,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
           )}
         </div>
 
-        <div className="flex-shrink-0 space-y-2">
+        <div className="flex-shrink-0 space-y-2 reset-button">
           <div className="h-10">
             <button
               onClick={() => {
@@ -400,7 +413,7 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
             {subjects.map((subject) => (
               <div
                 key={subject.name}
-                className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[--theme-hover-color] transition-colors"
+                className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[--theme-hover-color] transition-colors checkmark-button"
               >
                 <Checkbox
                   id={`shuffle-filter-${subject.name}`}
@@ -436,6 +449,10 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
       </div>
 
       <div className="flex-grow overflow-y-auto">{SettingsContent()}</div>
+      <ATSSettingsTutorial 
+        showSettingsSteps={showSettingsSteps}
+        setShowSettingsSteps={setShowSettingsSteps}
+      />
     </div>
   );
 };

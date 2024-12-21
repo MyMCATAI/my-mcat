@@ -91,6 +91,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   chatbotRef,
   onActivityChange,
 }) => {
+  const [isFirstVisit] = useState(() => !localStorage.getItem("initialTutorialPlayed"));
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [contentType, setContentType] = useState("video");
@@ -115,20 +116,15 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   };
   const [initialCategories, setInitialCategories] = useState<Category[]>([]);
   const [showDiagnosticDialog, setShowDiagnosticDialog] = useState(false);
-  const [runTutorialPart1, setRunTutorialPart1] = useState(false);
+  const [runTutorialPart1, setRunTutorialPart1] = useState(() => {
+    return !localStorage.getItem("initialTutorialPlayed");
+  });
   const [runTutorialPart2, setRunTutorialPart2] = useState(false);
   const [runTutorialPart3, setRunTutorialPart3] = useState(false);
   const [runTutorialPart4, setRunTutorialPart4] = useState(() => {
-    const initialTutorialPlayed =
-      localStorage.getItem("initialTutorialPlayed") === "true";
-    const atsIconTutorialPlayed =
-      localStorage.getItem("atsIconTutorialPlayed") === "true";
-    return initialTutorialPlayed && !atsIconTutorialPlayed;
+    return !localStorage.getItem("atsIconTutorialPlayed");
   });
-
-  const [catIconInteracted, setCatIconInteracted] = useState(() => {
-    return localStorage.getItem("catIconInteracted") === "true";
-  });
+  const [catIconInteracted, setCatIconInteracted] = useState(false);
 
   const [isEmptyButtonHovered, setIsEmptyButtonHovered] = useState(false);
   const emptyButtonRef = useRef<HTMLDivElement>(null);
@@ -145,6 +141,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     localStorage.getItem("lastSelectedCategory")
   );
   const { toast } = useToast();
+
+  const [showSettingsSteps, setShowSettingsSteps] = useState(false);
 
   const fetchInitialData = useCallback(
     async (useKnowledgeProfiles: boolean = false) => {
@@ -196,8 +194,12 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
   const handleDiagnosticSubmit = async (scores: any) => {
     setShowDiagnosticDialog(false);
-    localStorage.setItem("atsTutorialPlayed", "true");
     await fetchInitialData(true);
+    
+    // Only start tutorial if it hasn't been played
+    if (!localStorage.getItem("initialTutorialPlayed")) {
+      setRunTutorialPart1(true);
+    }
   };
 
   useEffect(() => {
@@ -771,24 +773,12 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     };
   }, []);
 
-  // Update activity when category or type changes
   useEffect(() => {
-    if(!selectedCategory || !contentType) return
-    const updateActivity = async () => {
-      await onActivityChange(
-        contentType === 'quiz' ? 'testing' : 'studying', 
-        'AdaptiveTutoringSuite', 
-        {
-          category: selectedCategory,
-          contentType: contentType,
-          timestamp: new Date().toISOString()
-        }
-      );
-    };
-
-    updateActivity();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contentType, selectedCategory])
+    // Check if initial tutorial should play (first visit and not played)
+    if (isFirstVisit && !localStorage.getItem("initialTutorialPlayed")) {
+      setRunTutorialPart1(true);
+    }    
+  }, [isFirstVisit]);
 
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
@@ -872,7 +862,13 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                       e.currentTarget.style.transform = "scale(1)";
                       e.currentTarget.style.zIndex = "10";
                     }}
-                    onClick={() => handleCardClick(index)}
+                    onClick={(e) => {
+                      if (runTutorialPart1) {
+                        e.preventDefault();
+                        return;
+                      }
+                      handleCardClick(index);
+                    }}
                   >
                     <div className="relative w-full h-full flex flex-col justify-center items-center">
                       <div className="opacity-0 group-hover:opacity-100 absolute inset-0 gb-black bg-opacity-50 flex items-end transition-opacity duration-300">
@@ -1041,7 +1037,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                       <div className="flex items-center">
                         <TooltipTrigger asChild>
                           <DropdownMenuTrigger asChild>
-                            <button className="p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200">
+                            <button className="p-2 hover:bg-[--theme-hover-color] rounded transition-colors duration-200 cat-icon">
                               <div className="w-7 h-7 relative theme-box">
                                 <Image
                                   src="/cat.svg"
