@@ -155,7 +155,7 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
     if (point === 3) {
       return {
         title: "AMAZING!",
-        description: "You won a cupcake coin!",
+        description: "You won a studycoin!",
       };
     } else if (point === 2) {
       return {

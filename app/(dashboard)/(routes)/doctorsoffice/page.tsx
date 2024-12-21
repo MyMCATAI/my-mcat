@@ -202,7 +202,7 @@ const DoctorsOfficePage: React.FC = () => {
       cost: 5,
       benefits: [
         "4 patients a day",
-        "1 cupcake coin a day",
+        "1 studycoin a day",
         "Quality of Care (QC) = 1x",
         "You are an intern learning the ropes.",
       ],
@@ -220,7 +220,7 @@ const DoctorsOfficePage: React.FC = () => {
       cost: 15,
       benefits: [
         "8 patients a day",
-        "1 cupcake coin a day",
+        "1 studycoin a day",
         "Quality of Care (QC) = 1.25x",
         "You are a doctor in training with Kalypso.",
       ],
@@ -234,7 +234,7 @@ const DoctorsOfficePage: React.FC = () => {
       cost: 25,
       benefits: [
         "10 patients a day",
-        "2 cupcake coins a day",
+        "2 studycoins a day",
         "Quality of Care (QC) = 1.5x",
         "You are a physician.",
       ],
@@ -249,7 +249,7 @@ const DoctorsOfficePage: React.FC = () => {
       cost: 35,
       benefits: [
         "Quality of Care (QC) = 1.5x",
-        "2 cupcake coins a day",
+        "2 studycoins a day",
         "You can do surgeries.",
       ],
     },
@@ -259,7 +259,7 @@ const DoctorsOfficePage: React.FC = () => {
       cost: 60,
       benefits: [
         "Quality of Care (QC) = 1.75x",
-        "3 cupcake coins a day",
+        "3 studycoins a day",
         "You can lead teams.",
         "UWorld Raffle Entry ($400 value)",
       ],
@@ -273,7 +273,7 @@ const DoctorsOfficePage: React.FC = () => {
       cost: 80,
       benefits: [
         "Quality of Care (QC) = 2x",
-        "3 cupcake coins a day",
+        "3 studycoins a day",
         "You are now renowned.",
         "30 min tutoring session.",
       ],
@@ -598,7 +598,7 @@ const DoctorsOfficePage: React.FC = () => {
             <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
               <Image
                 src="/game-components/PixelCupcake.png"
-                alt="Coin"
+                alt="Studycoin"
                 width={32}
                 height={32}
                 className="mr-2"

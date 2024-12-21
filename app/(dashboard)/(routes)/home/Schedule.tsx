@@ -1106,7 +1106,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             </p>
             <p className="text-center text-lg text-black">
               You&apos;ve earned{" "}
-              <span className="font-bold">1 cupcake coin</span> for your hard
+              <span className="font-bold">1 studycoin</span> for your hard
               work!
             </p>
           </div>
