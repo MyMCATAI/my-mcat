@@ -529,14 +529,16 @@ export default function OnboardingPage() {
                   name="attemptNumber"
                   value={attemptValue}
                   onChange={handleAttemptChange}
-                  className="flex-1 px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none"
+                  className="flex-1 px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 
+                            rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 
+                            transition-all appearance-none [&>option]:bg-[#001226] [&>option]:text-white"
                   required
                 >
-                  <option value="">Select attempt number</option>
-                  <option value="1">First attempt</option>
-                  <option value="2">Second attempt</option>
-                  <option value="3">Third attempt</option>
-                  <option value="4+">Fourth or more</option>
+                  <option value="" className="text-white bg-[#001226]">Select attempt number</option>
+                  <option value="1" className="text-white bg-[#001226]">First attempt</option>
+                  <option value="2" className="text-white bg-[#001226]">Second attempt</option>
+                  <option value="3" className="text-white bg-[#001226]">Third attempt</option>
+                  <option value="4+" className="text-white bg-[#001226]">Fourth or more</option>
                 </select>
 
                 <motion.button
@@ -751,9 +753,9 @@ export default function OnboardingPage() {
                     <motion.div
                       initial={{ opacity: 0, scale: 0.5 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-full"
                     >
-                      ✅
+                      <span className="text-lg leading-none">✅</span>
                     </motion.div>
                   )}
                 </div>
@@ -793,7 +795,7 @@ export default function OnboardingPage() {
             transition={{ type: "spring", duration: 1 }}
             className="fixed -bottom-6 left-1/2 -translate-x-1/2 md:bottom-0 md:right-8 md:translate-x-0 md:left-auto z-50 pointer-events-none"
           >
-            <div className="w-[20rem] h-[24rem] md:w-[32rem] md:h-[32rem] lg:w-[48rem] lg:h-[48rem] relative">
+            <div className="w-[20rem] h-[24rem] md:w-[24rem] md:h-[24rem] lg:w-[32rem] lg:h-[32rem] relative">
               <Image
                 src="/kalypsoend.gif"
                 alt="Kalypso"
