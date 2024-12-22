@@ -42,16 +42,16 @@ export function PurchaseButton({
 
   const pricingOptions = [
     {
-      title: "10 Coins",
-      price: "$19.00",
+      title: "10 StudyCoins",
+      price: "$49.99",
       description: "One-time purchase of 10 coins. Use them to unlock premium features, AI-powered analytics, and Kalypso AI assistance. Perfect for focused study sessions.",
       image: "/10coins.png",
       productType: ProductType.COINS_10
     },
     {
-      title: "50 Coins",
-      price: "$49.99",
-      description: "One-time purchase of 50 coins. Best value for coins. Get extended access to advanced analytics, detailed AI feedback, and comprehensive feature access.",
+      title: "25 StudyCoins",
+      price: "$99.99",
+      description: "One-time purchase of 25 coins. Best value for coins. Get extended access to advanced analytics, detailed AI feedback, and comprehensive feature access.",
       image: "/50coins.png",
       productType: ProductType.COINS_50
     },
@@ -102,7 +102,7 @@ export function PurchaseButton({
       </TooltipProvider>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-4xl bg-[--theme-leaguecard-color] text-[--theme-text-color] border border-[--theme-border-color]">
+        <DialogContent className="max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border border-transparent">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-center mb-4 text-[--theme-text-color]">
               Purchase Options
@@ -121,10 +121,19 @@ export function PurchaseButton({
                 className={`rounded-lg p-6 flex flex-col items-center space-y-4 transition-all relative h-full w-full text-left
                   ${
                     index === displayOptions.length - 1 && showMDPremium 
-                      ? 'bg-gradient-to-br from-[--theme-gradient-start] via-[--theme-gradient-end] to-[--theme-doctorsoffice-accent] border-2 border-[--theme-doctorsoffice-accent] shadow-xl shadow-[--theme-doctorsoffice-accent]/30 hover:shadow-2xl hover:shadow-[--theme-doctorsoffice-accent]/40 hover:scale-[1.02] hover:-translate-y-1' 
-                      : 'bg-[--theme-leaguecard-color] border border-[--theme-border-color] hover:border-[--theme-doctorsoffice-accent] hover:shadow-lg hover:scale-[1.01]'
+                      ? 'bg-gradient-to-br from-[--theme-gradient-start] via-[--theme-gradient-end] to-[--theme-doctorsoffice-accent] shadow-xl shadow-[--theme-doctorsoffice-accent]/30 hover:shadow-2xl hover:shadow-[--theme-doctorsoffice-accent]/40 hover:scale-[1.02] hover:-translate-y-1' 
+                      : 'bg-[--theme-leaguecard-color]'
                   }
                   ${loadingStates[option.productType] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                style={{ 
+                  boxShadow: 'var(--theme-button-boxShadow)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow-hover)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow)';
+                }}
               >
                 {index === displayOptions.length - 1 && showMDPremium && (
                   <div className="absolute -top-3 -right-3 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] px-3 py-1 rounded-full text-sm font-bold shadow-lg transform rotate-12 pointer-events-none">

@@ -199,8 +199,8 @@ body.theme-sunsetCity * {
     --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 4px rgba(0, 123, 255, 0.8);
     --theme-calendar-color: #87f8a0; /* Bright cyber green to contrast with blue */
     --theme-button-color: #001a3ae6; /* Slightly lighter than leaguecard-color: #000e2de6 */
-    --theme-button-boxShadow: 0 0 2px 1px rgba(0, 123, 255, 0.5);
-    --theme-button-boxShadow-hover: 0 0 9px 3px rgba(0, 123, 255, 0.7);
+    --theme-button-boxShadow: 0 0 4px 3px rgba(63, 194, 255, 0.41); /* Increased spread/blur, reduced alpha by 18% from 0.5 */
+    --theme-button-boxShadow-hover: 0 0 10px 4px rgba(76, 181, 230, 0.49); /* Increased spread/blur, reduced alpha by 18% from 0.6 */
   }
 
 }
@@ -662,8 +662,8 @@ body {
   --theme-adaptive-tutoring-boxShadow-hover: 0 0 11px 5px rgba(76, 181, 230, 0.8);
   --theme-calendar-color: #B2E0D0; /* Warm orange to contrast with blue */
   --theme-button-color: rgba(240, 245, 247, 0.9); /* Slightly lighter than leaguecard-color: rgba(255, 255, 255, 0.9) */
-  --theme-button-boxShadow: 0 0 3px 2px rgba(63, 194, 255, 0.5);
-  --theme-button-boxShadow-hover: 0 0 8px 3px rgba(76, 181, 230, 0.6);
+  --theme-button-boxShadow: 0 0 4px 3px rgba(66, 163, 208, 0.497); /* Increased spread/blur, reduced alpha by 18% from 0.5 */
+  --theme-button-boxShadow-hover: 0 0 8px 4px rgba(4, 149, 216, 0.595); /* Increased spread/blur, reduced alpha by 18% from 0.6 */
 }
 
 .theme-mykonosBlue .gradientbg {
