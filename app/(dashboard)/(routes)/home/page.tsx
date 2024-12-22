@@ -8,7 +8,7 @@ import FloatingButton from "./FloatingButton";
 import { FetchedActivity } from "@/types";
 import TestingSuit from "./TestingSuit";
 import ThemeSwitcher from "@/components/home/ThemeSwitcher";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,7 @@ import {
 } from "@/lib/utils";
 import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
-import { useRouter } from "next/navigation";
+import { useUserActivity } from '@/hooks/useUserActivity';
 
 const Page = () => {
   const searchParams = useSearchParams();
@@ -67,6 +67,9 @@ const Page = () => {
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [userStreak, setUserStreak] = useState(0);
   const router = useRouter();
+  const { startActivity, endActivity,updateActivityEndTime } = useUserActivity();
+  const [currentStudyActivityId, setCurrentStudyActivityId] = useState<string | null>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     // if returning from stripe, show toast depending on payment
@@ -246,13 +249,14 @@ const Page = () => {
           />
         );
         break;
-      case "KnowledgeProfile":
+      case "AdaptiveTutoringSuite":
         content = (
           <div className="h-full overflow-hidden">
             <AdaptiveTutoring
               toggleChatBot={toggleChatBot}
               setChatbotContext={setChatbotContext}
               chatbotRef={chatbotRef}
+              onActivityChange={handleActivityChange}
             />
           </div>
         );
@@ -379,39 +383,81 @@ const Page = () => {
     });
   };
 
-  const handleTabChange = (newTab: string) => {
+  // Handle tab changes
+  const handleTabChange = async (newTab: string) => {
     if (newTab === "doctorsoffice") {
-      router.push('/doctorsoffice');
-    } else {
-      setActiveTab(newTab);
-      setCurrentPage(newTab);
-      if (newTab === "Schedule") {
-        updateCalendarChatContext(activities);
+      if (currentStudyActivityId) {
+        await endActivity(currentStudyActivityId);
+        setCurrentStudyActivityId(null);
       }
+      router.push('/doctorsoffice');
+      return;
+    }
+
+    setActiveTab(newTab);
+    setCurrentPage(newTab);
+
+    if (newTab !== "AdaptiveTutoringSuite"){
+    handleActivityChange('studying', newTab)}
+
+    if (newTab === "Schedule") {
+      updateCalendarChatContext(activities);
     }
   };
 
-  const shouldShowStreakPopup = () => {
-    console.log("shouldShowStreakPopup called"); // Debug log
-    console.log("Current userStreak:", userStreak); // Debug log
+  // Modify the useEffect for activity tracking
+  useEffect(() => {
+    const initializeActivity = async () => {
+      // Only start a new activity if we're on the home page and don't have an active one
+      if (pathname.startsWith('/home') && !currentStudyActivityId && !isLoading) {
+        const activity = await startActivity({
+          type: 'studying',
+          location: activeTab,
+          metadata: {
+            initialLoad: true,
+            timestamp: new Date().toISOString()
+          }
+        });
 
-    if (userStreak < 1) {
-      console.log("Streak too low, not showing popup"); // Debug log
-      return false;
+        if (activity) {
+          setCurrentStudyActivityId(activity.id);
+        }
+      }
+    };
+
+    initializeActivity();
+
+  }, [isLoading, pathname]);
+
+  useEffect(() => {
+    if (!currentStudyActivityId) return;
+
+    // Update every 5 minutes 
+    const intervalId = setInterval(() => {
+      updateActivityEndTime(currentStudyActivityId);
+    }, 300000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [currentStudyActivityId, updateActivityEndTime]);
+
+  const handleActivityChange = async (newType: string, newLocation: string, metadata = {}) => {
+    // End current activity
+    if (currentStudyActivityId) {
+      await endActivity(currentStudyActivityId);
+      setCurrentStudyActivityId(null);
     }
 
-    const lastStreakPopup = localStorage.getItem("lastStreakPopup");
-    const today = new Date().toDateString();
-
-    console.log("Last streak popup:", lastStreakPopup); // Debug log
-    console.log("Today:", today); // Debug log
-
-    if (!lastStreakPopup || lastStreakPopup !== today) {
-      console.log("Conditions met, should show popup"); // Debug log
-      localStorage.setItem("lastStreakPopup", today);
-      return true;
-    }
-    return false;
+    // Start new activity
+    const activity = await startActivity({
+      type: newType,
+      location: newLocation,
+      metadata: {
+        ...metadata,
+        timestamp: new Date().toISOString()
+      }
+    });
+      setCurrentStudyActivityId(activity.id);
   };
 
   return (
@@ -426,7 +472,7 @@ const Page = () => {
               >
                 {activeTab === "Schedule"
                   ? "Dashboard"
-                  : activeTab === "KnowledgeProfile"
+                  : activeTab === "AdaptiveTutoringSuite"
                     ? "Adaptive Tutoring Suite"
                     : activeTab === "flashcards"
                       ? "Flashcards"
