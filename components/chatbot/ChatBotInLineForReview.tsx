@@ -183,7 +183,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
 
   const flow = {
     start: {
-      message: "Meow there! Welcome to review. Click the red question mark for more info — or just talk to me :)",
+      message: "Meow there! Welcome to review. Please note that a question won't count as reviewed unless you spend a minute or more on it. Click the red question mark for more info :)",
       path: "loop"
     },
     loop: {

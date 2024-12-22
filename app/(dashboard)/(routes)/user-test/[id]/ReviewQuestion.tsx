@@ -172,6 +172,23 @@ ${userMessage}
     setIsReviewFinished(true);
 
     try {
+      // First, check for Part 2 test if this is Part 1
+      if (testTitle && testTitle.toLowerCase().includes('part 1')) {
+        try {
+          // Make sure we're passing a title that includes "Part 1"
+          const part2Response = await fetch(`/api/test/find-next?title=${encodeURIComponent(testTitle)}`);
+          if (part2Response.ok) {
+            const data = await part2Response.json();
+            if (data) {
+              setPart2Test({ id: data.id, title: data.title });
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching Part 2 test:', error);
+        }
+      }
+
+      // Then complete the review
       const response = await fetch('/api/user-test/review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -183,20 +200,17 @@ ${userMessage}
       }
 
       const data = await response.json();
+      
+      // Show the reward dialog
+      setShowRewardDialog(true);
 
-      if (data.alreadyReviewed) {
-        // If already reviewed, redirect to home page
+      // Only redirect to home if it's already reviewed AND has no part 2
+      if (data.alreadyReviewed && (!part2Test || testTitle?.toLowerCase().includes('part 2'))) {
         router.push('/home');
-      } else {
-        // If not already reviewed, show reward dialog and play sound
-        setShowRewardDialog(true);
-        const audio = new Audio('/levelup.mp3');
-        audio.play();
       }
     } catch (error) {
       console.error('Error completing review:', error);
       setIsReviewFinished(false);
-      // Redirect to home page in case of an error
       router.push('/home');
     }
   };
@@ -210,7 +224,7 @@ ${userMessage}
 
   useEffect(() => {
     const fetchPart2Test = async () => {
-      if (isLast && testTitle.toLowerCase().includes('part 1')) {
+      if (isLast && testTitle && testTitle.toLowerCase().includes('part 1')) {
         try {
           const response = await fetch(`/api/test/find-next?title=${encodeURIComponent(testTitle)}`);
           if (response.ok) {
@@ -476,7 +490,7 @@ Help me understand this question so I can learn.`;
             <DialogTitle className="text-center text-black">Review Complete!</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center justify-center space-y-4">
-            {isLast && part2Test && (
+            {isLast && part2Test && !testTitle.toLowerCase().includes('part 2') && (
               <>
                 <p className="text-center text-md ml-2 text-black">Want to run it back with new questions?</p>
                 <Link
@@ -488,13 +502,21 @@ Help me understand this question so I can learn.`;
                 </Link>
               </>
             )}
-            <Link
-              href="/home?tab=CARS"
-              className="w-full text-center bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-all duration-300"
-              onClick={() => setShowRewardDialog(false)}
-            >
-              Back to CARs
-            </Link>
+            {isLast && (
+              <>
+                <Link
+                  href="/home?tab=CARS&CARSonly=true&activeTab=upcoming"
+                  className={`w-full text-center px-6 py-3 rounded-lg hover:opacity-80 transition-all duration-300 ${
+                    part2Test && !testTitle.toLowerCase().includes('part 2') 
+                      ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' 
+                      : 'bg-[--theme-hover-color] text-white'
+                  }`}
+                  onClick={() => setShowRewardDialog(false)}
+                >
+                  Find New CARS Passage
+                </Link>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>

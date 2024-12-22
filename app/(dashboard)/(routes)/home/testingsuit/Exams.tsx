@@ -10,6 +10,7 @@ import dynamic from "next/dynamic";
 import { HelpCircle } from "lucide-react";
 import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
 import { Button } from "@/components/ui/button";
+import { useSearchParams } from "next/navigation";
 
 // Update the dynamic import
 const ChatBotWidgetNoChatBot = dynamic(
@@ -38,6 +39,8 @@ interface TestListingProps {
 
 const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCompletedToday }) => {
   const { user } = useUser();
+  const searchParams = useSearchParams();
+  const defaultTab = searchParams.get('activeTab') || 'past';
   const [userTests, setUserTests] = useState<UserTest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -309,7 +312,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
             >
               CARs Tests
             </h3>
-            <Tabs defaultValue="upcoming" className="w-full">
+            <Tabs defaultValue={defaultTab} className="w-full">
               <TabsList 
                 className="grid w-full grid-cols-2 mb-6 bg-transparent" 
               >
