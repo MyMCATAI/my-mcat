@@ -8,7 +8,7 @@ import FloatingButton from "./FloatingButton";
 import { FetchedActivity } from "@/types";
 import TestingSuit from "./TestingSuit";
 import ThemeSwitcher from "@/components/home/ThemeSwitcher";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -28,9 +28,7 @@ import {
 } from "@/lib/utils";
 import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
-import { useUserActivity } from '@/hooks/useUserActivity';
-import { OptionsDialog } from "@/components/home/OptionsDialog";
-import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
   const searchParams = useSearchParams();
@@ -69,10 +67,6 @@ const Page = () => {
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [userStreak, setUserStreak] = useState(0);
   const router = useRouter();
-  const { startActivity, endActivity,updateActivityEndTime } = useUserActivity();
-  const [currentStudyActivityId, setCurrentStudyActivityId] = useState<string | null>(null);
-  const pathname = usePathname();
-  const [showOptionsModal, setShowOptionsModal] = useState(false);
 
   useEffect(() => {
     // if returning from stripe, show toast depending on payment
@@ -252,14 +246,13 @@ const Page = () => {
           />
         );
         break;
-      case "AdaptiveTutoringSuite":
+      case "KnowledgeProfile":
         content = (
           <div className="h-full overflow-hidden">
             <AdaptiveTutoring
               toggleChatBot={toggleChatBot}
               setChatbotContext={setChatbotContext}
               chatbotRef={chatbotRef}
-              onActivityChange={handleActivityChange}
             />
           </div>
         );
@@ -386,85 +379,39 @@ const Page = () => {
     });
   };
 
-  // Handle tab changes
-  const handleTabChange = async (newTab: string) => {
+  const handleTabChange = (newTab: string) => {
     if (newTab === "doctorsoffice") {
-      if (currentStudyActivityId) {
-        await endActivity(currentStudyActivityId);
-        setCurrentStudyActivityId(null);
-      }
       router.push('/doctorsoffice');
-      return;
-    }
-
-    setActiveTab(newTab);
-    setCurrentPage(newTab);
-
-    if (newTab !== "AdaptiveTutoringSuite"){
-    handleActivityChange('studying', newTab)}
-
-    if (newTab === "Schedule") {
-      updateCalendarChatContext(activities);
+    } else {
+      setActiveTab(newTab);
+      setCurrentPage(newTab);
+      if (newTab === "Schedule") {
+        updateCalendarChatContext(activities);
+      }
     }
   };
 
-  // Modify the useEffect for activity tracking
-  useEffect(() => {
-    const initializeActivity = async () => {
-      // Only start a new activity if we're on the home page and don't have an active one
-      if (pathname.startsWith('/home') && !currentStudyActivityId && !isLoading) {
-        const activity = await startActivity({
-          type: 'studying',
-          location: activeTab,
-          metadata: {
-            initialLoad: true,
-            timestamp: new Date().toISOString()
-          }
-        });
+  const shouldShowStreakPopup = () => {
+    console.log("shouldShowStreakPopup called"); // Debug log
+    console.log("Current userStreak:", userStreak); // Debug log
 
-        if (activity) {
-          setCurrentStudyActivityId(activity.id);
-        }
-      }
-    };
-
-    initializeActivity();
-
-  }, [isLoading, pathname]);
-
-  useEffect(() => {
-    if (!currentStudyActivityId) return;
-
-    // Update every 5 minutes 
-    const intervalId = setInterval(() => {
-      updateActivityEndTime(currentStudyActivityId);
-    }, 300000);
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
-  }, [currentStudyActivityId, updateActivityEndTime]);
-
-  const handleActivityChange = async (newType: string, newLocation: string, metadata = {}) => {
-    // End current activity
-    if (currentStudyActivityId) {
-      await endActivity(currentStudyActivityId);
-      setCurrentStudyActivityId(null);
+    if (userStreak < 1) {
+      console.log("Streak too low, not showing popup"); // Debug log
+      return false;
     }
 
-    // Start new activity
-    const activity = await startActivity({
-      type: newType,
-      location: newLocation,
-      metadata: {
-        ...metadata,
-        timestamp: new Date().toISOString()
-      }
-    });
-      setCurrentStudyActivityId(activity.id);
-  };
+    const lastStreakPopup = localStorage.getItem("lastStreakPopup");
+    const today = new Date().toDateString();
 
-  const openOptionsDialog = () => {
-    setShowOptionsModal(true);
+    console.log("Last streak popup:", lastStreakPopup); // Debug log
+    console.log("Today:", today); // Debug log
+
+    if (!lastStreakPopup || lastStreakPopup !== today) {
+      console.log("Conditions met, should show popup"); // Debug log
+      localStorage.setItem("lastStreakPopup", today);
+      return true;
+    }
+    return false;
   };
 
   return (
@@ -479,7 +426,7 @@ const Page = () => {
               >
                 {activeTab === "Schedule"
                   ? "Dashboard"
-                  : activeTab === "AdaptiveTutoringSuite"
+                  : activeTab === "KnowledgeProfile"
                     ? "Adaptive Tutoring Suite"
                     : activeTab === "flashcards"
                       ? "Flashcards"
@@ -562,21 +509,6 @@ const Page = () => {
           console.log("Closing streak popup"); // Debug log
           setShowStreakPopup(false);
         }}
-      />
-
-      <button
-        onClick={openOptionsDialog}
-        className="fixed bottom-6 right-6 p-4 bg-sky-500 hover:bg-sky-600 
-                   rounded-full shadow-lg transition-all duration-300 
-                   hover:scale-110 z-50"
-      >
-        <Plus className="w-6 h-6 text-white" />
-      </button>
-
-      <OptionsDialog
-        showOptionsModal={showOptionsModal}
-        setShowOptionsModal={setShowOptionsModal}
-        handleTabChange={handleTabChange}
       />
     </div>
   );
