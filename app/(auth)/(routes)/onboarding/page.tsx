@@ -710,7 +710,7 @@ export default function OnboardingPage() {
                     type="email"
                     value={friendEmail}
                     onChange={(e) => setFriendEmail(e.target.value)}
-                    placeholder="Enter a fellow premed{`'`}s email"
+                    placeholder="Enter a fellow premed email"
                     className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 
                              rounded-xl text-white placeholder-white/40 focus:outline-none 
                              focus:ring-2 focus:ring-blue-500/50 transition-all"
