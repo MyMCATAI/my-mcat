@@ -182,7 +182,7 @@ export default function OnboardingPage() {
   const handleKalypsoDialogue = useCallback(() => {
     if (kalypsoMessage.includes("Hi")) {
       setKalypsoMessage(
-        "Kaplan charges $3000 for an MCAT journey. For how little they offer, that's way too much. We do more than they do, and we use a more equitable financial model: coins."
+        "We don't charge thousands like test prep companies do. Our model is more equitable: coins."
       );
     } else if (kalypsoMessage.includes("equitable financial model")) {
       setKalypsoMessage(
@@ -190,7 +190,7 @@ export default function OnboardingPage() {
       );
     } else if (kalypsoMessage.includes("slack off")) {
       setKalypsoMessage(
-        "Ten coins get you started. OR I can get you a you can invite a friend and start with 5 coins for free! 🤝"
+        "I've been saving (a LOT) and I can get 9 coins for free. All you have to do is invite a friend and get the word out about MyMCAT.ai :) 🤝"
       );
     } else {
       setKalypsoMessage("");
@@ -232,11 +232,11 @@ export default function OnboardingPage() {
   const emailIsValid = isValidEmail(friendEmail);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen relative px-4 py-6 md:px-0">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#001226]">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="w-full max-w-2xl p-4 md:p-8 rounded-lg border border-[#5F7E92] bg-[#001226] relative"
+        className="w-full max-w-4xl px-4 md:px-8 py-6 md:py-12"
       >
         <AnimatePresence>
           {attemptMessage && (
@@ -252,48 +252,69 @@ export default function OnboardingPage() {
         </AnimatePresence>
 
         {step === 1 && (
-          <div className="space-y-6 md:space-y-8">
-            <div className="text-center space-y-3 md:space-y-4">
-              <h1 className="text-2xl md:text-3xl font-bold text-white">
-                {"Welcome to Your MCAT Journey! 🎉"}
-              </h1>
-              <div className="space-y-2 md:space-y-3">
-                <p className="text-gray-300 text-base md:text-lg">
-                  {
-                    "Congratulations on taking the first step towards crushing the MCAT! You've just joined a community of of successful students who used MyMCAT to achieve their dream scores."
-                  }
-                </p>
-                <p className="text-gray-300">
-                  {
-                    "Before we customize your study experience, we'll need to know a bit about you."
-                  }
-                </p>
-              </div>
+          <div className="space-y-12 max-w-2xl mx-auto">
+            <div className="text-center space-y-6">
+              <motion.h1 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="text-4xl md:text-5xl text-white bg-300% animate-gradient relative py-1"
+              >
+                <motion.span
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                >
+                  Meowdy there, partner!
+                </motion.span>
+                <motion.span 
+                  initial={{ rotate: -45 }}
+                  animate={{ rotate: 0 }}
+                  transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+                  className="ml-2 inline-block"
+                >
+                  🤠
+                </motion.span>
+              </motion.h1>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="space-y-4"
+              >
+              </motion.div>
             </div>
 
             <form onSubmit={handleNextStep} className="space-y-6">
-              <div className="space-y-2">
-                <label className="block text-white text-sm font-medium">
-                  {"First, what should I call you?"}
-                </label>
+              <div className="relative">
                 <input
                   type="text"
+                  id="firstName"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-4 py-3 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="peer w-full px-4 py-4 pr-12 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white placeholder-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                   placeholder="Enter your first name"
                   required
                 />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || !firstName.trim()}
-                className="w-full bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-lg font-medium"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <label
+                  htmlFor="firstName"
+                  className="absolute left-4 -top-6 text-sm text-blue-200/80 transition-all
+                           peer-placeholder-shown:text-base peer-placeholder-shown:text-white/60 
+                           peer-placeholder-shown:top-4 peer-focus:-top-6 peer-focus:text-sm 
+                           peer-focus:text-blue-200/80 opacity-0 peer-placeholder-shown:opacity-100"
+                >
+                  First, enter your name!
+                </label>
+                <button
+                  type="submit"
+                  disabled={loading || !firstName.trim()}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full 
+                            bg-gradient-to-r from-blue-400 to-blue-500 
+                            hover:scale-110 transition-transform disabled:opacity-50 
+                            disabled:hover:scale-100"
+                >
+                  {loading ? (
+                    <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
                       <circle
                         className="opacity-25"
                         cx="12"
@@ -309,24 +330,43 @@ export default function OnboardingPage() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    {"Processing..."}
-                  </span>
-                ) : (
-                  "Let's Begin!"
-                )}
-              </button>
+                  ) : (
+                    <svg 
+                      className="w-5 h-5 text-white transform rotate-90" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" 
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </form>
           </div>
         )}
 
         {step === 2 && (
-          <form onSubmit={handleNextStep} className="space-y-6">
-            {/* College Selection */}
-            <div className="space-y-2">
-              <label className="block text-white text-sm font-medium">
-                {`Great to have you here, ${firstName}! Let's talk about your college journey. What college do you attend?`}
-              </label>
-              {!isNonTraditional && !isCanadian ? (
+          <form onSubmit={handleNextStep} className="max-w-2xl mx-auto space-y-12">
+            {/* College Section */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <h2 className="text-2xl font-light text-white">
+                Great to have you here, {firstName}! 
+                <span className="block mt-2 text-lg text-gray-400 font-light">
+                  Let's talk about your college journey.
+                </span>
+              </h2>
+              
+              {!isNonTraditional && !isCanadian && (
                 <div className="relative">
                   <input
                     type="text"
@@ -334,76 +374,76 @@ export default function OnboardingPage() {
                     value={collegeQuery}
                     onChange={(e) => setCollegeQuery(e.target.value)}
                     onFocus={() => setIsInputFocused(true)}
-                    onBlur={() => {
-                      setTimeout(() => setIsInputFocused(false), 200);
-                    }}
-                    className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
+                    className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                     placeholder="Start typing your college name..."
                     required={!isNonTraditional && !isCanadian}
                   />
-                  {showSuggestions &&
-                    suggestions.length > 0 &&
-                    isInputFocused && (
-                      <div className="absolute z-10 w-full mt-1 bg-[#001226] border border-[#5F7E92] rounded-md shadow-lg max-h-60 overflow-auto">
-                        {suggestions.map((school, index) => (
-                          <button
-                            key={index}
-                            type="button"
-                            className="w-full px-4 py-2 text-left text-white hover:bg-[#1a2b3c] focus:outline-none"
-                            onClick={() => {
-                              setCollegeQuery(school.name);
-                              setShowSuggestions(false);
-                              setIsInputFocused(false);
-                            }}
-                          >
-                            <div className="text-sm">{school.name}</div>
-                            <div className="text-xs text-gray-400">
-                              {school.city}, {school.state}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                  {showSuggestions && suggestions.length > 0 && isInputFocused && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute z-10 w-full mt-2 bg-[#001226]/95 backdrop-blur-[2px] 
+                                 border border-white/10 rounded-xl shadow-lg max-h-60 overflow-auto 
+                                 scrollbar-thin scrollbar-thumb-white/20"
+                    >
+                      {suggestions.map((school, index) => (
+                        <motion.button
+                          key={index}
+                          type="button"
+                          whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                          onClick={() => {
+                            setCollegeQuery(school.name);
+                            setShowSuggestions(false);
+                            setIsInputFocused(false);
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-white/5 
+                                   transition-colors border-b border-white/5 last:border-b-0"
+                        >
+                          <div className="text-white/90 text-sm font-medium">{school.name}</div>
+                          <div className="text-white/60 text-xs mt-0.5">
+                            {school.city}, {school.state}
+                          </div>
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  )}
                 </div>
-              ) : null}
-              <div className="flex items-center gap-4 mt-2">
-                <div className="flex items-center space-x-2">
+              )}
+
+              <div className="flex gap-6">
+                <label className="flex items-center space-x-3 text-white cursor-pointer group">
                   <input
                     type="checkbox"
-                    id="nonTraditional"
                     checked={isNonTraditional}
                     onChange={(e) => setIsNonTraditional(e.target.checked)}
-                    className="rounded border-[#5F7E92]"
+                    className="w-5 h-5 rounded border-white/20 text-blue-500 focus:ring-blue-500/50 bg-transparent"
                   />
-                  <label
-                    htmlFor="nonTraditional"
-                    className="text-white text-sm"
-                  >
-                    Non-traditional
-                  </label>
-                </div>
+                  <span className="group-hover:text-blue-400 transition-colors">Non-traditional</span>
+                </label>
 
-                <div className="flex items-center space-x-2">
+                <label className="flex items-center space-x-3 text-white cursor-pointer group">
                   <input
                     type="checkbox"
-                    id="isCanadian"
                     checked={isCanadian}
                     onChange={(e) => setIsCanadian(e.target.checked)}
-                    className="rounded border-[#5F7E92]"
+                    className="w-5 h-5 rounded border-white/20 text-blue-500 focus:ring-blue-500/50 bg-transparent"
                   />
-                  <label htmlFor="isCanadian" className="text-white text-sm">
-                    Canadian
-                  </label>
-                </div>
+                  <span className="group-hover:text-blue-400 transition-colors">Canadian</span>
+                </label>
               </div>
-            </div>
+            </motion.div>
 
-            {/* GPA */}
-            <div className="space-y-2 relative">
-              <label className="block text-white text-sm font-medium">
-                What is your undergraduate GPA?
-              </label>
-              <div className="relative">
+            {/* GPA & MCAT Section */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="grid grid-cols-2 gap-8"
+            >
+              <div className="space-y-3">
+                <label className="block text-sm text-gray-400">Undergraduate GPA</label>
                 <input
                   type="number"
                   name="gpa"
@@ -412,19 +452,14 @@ export default function OnboardingPage() {
                   max="4.0"
                   value={gpaValue}
                   onChange={handleGPAChange}
-                  className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your GPA (e.g., 3.50)"
+                  className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                  placeholder="e.g., 3.50"
                   required
                 />
               </div>
-            </div>
 
-            {/* Diagnostic Score */}
-            <div className="space-y-2 relative">
-              <label className="block text-white text-sm font-medium">
-                {"What's your most recent MCAT score?"}
-              </label>
-              <div className="relative">
+              <div className="space-y-3">
+                <label className="block text-sm text-gray-400">Recent MCAT Score</label>
                 <input
                   type="number"
                   name="diagnosticScore"
@@ -432,37 +467,37 @@ export default function OnboardingPage() {
                   max="528"
                   value={diagnosticValue}
                   onChange={handleScoreChange}
-                  className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your diagnostic score (472-528)"
+                  className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                  placeholder="472-528"
                   required={!hasNotTakenMCAT}
                   disabled={hasNotTakenMCAT}
                 />
-              </div>
-              <div className="flex items-center space-x-2 mt-2">
-                <input
-                  type="checkbox"
-                  id="hasNotTakenMCAT"
-                  checked={hasNotTakenMCAT}
-                  onChange={(e) => setHasNotTakenMCAT(e.target.checked)}
-                  className="rounded border-[#5F7E92]"
-                />
-                <label htmlFor="hasNotTakenMCAT" className="text-white text-sm">
-                  {"Haven't taken it yet"}
+                <label className="flex items-center space-x-3 text-white cursor-pointer group mt-2">
+                  <input
+                    type="checkbox"
+                    checked={hasNotTakenMCAT}
+                    onChange={(e) => setHasNotTakenMCAT(e.target.checked)}
+                    className="w-5 h-5 rounded border-white/20 text-blue-500 focus:ring-blue-500/50 bg-transparent"
+                  />
+                  <span className="text-sm group-hover:text-blue-400 transition-colors">Haven't taken it yet</span>
                 </label>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Attempt Number */}
-            <div className="space-y-2 relative">
-              <label className="block text-white text-sm font-medium">
-                Which attempt are you on in your MCAT prep?
-              </label>
-              <div className="relative">
+            {/* Attempt Section */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="space-y-3"
+            >
+              <label className="block text-sm text-gray-400">MCAT Attempt</label>
+              <div className="flex items-end gap-4">
                 <select
                   name="attemptNumber"
                   value={attemptValue}
                   onChange={handleAttemptChange}
-                  className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none"
                   required
                 >
                   <option value="">Select attempt number</option>
@@ -471,136 +506,152 @@ export default function OnboardingPage() {
                   <option value="3">Third attempt</option>
                   <option value="4+">Fourth or more</option>
                 </select>
-              </div>
-            </div>
 
-            <button
-              type="submit"
-              className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors"
-            >
-              Continue
-            </button>
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  type="submit"
+                  className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white 
+                             px-6 py-3 rounded-xl transition-all duration-300 
+                             focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                >
+                  Continue
+                </motion.button>
+              </div>
+            </motion.div>
           </form>
         )}
 
         {step === 3 && (
           <form onSubmit={handleOnboardingSubmit} className="space-y-6">
             {/* Medical School Search */}
-            <div className="space-y-2">
-              <label className="block text-white text-sm font-medium">
-                What medical school do you see yourself in?
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={medSchoolQuery}
-                  onChange={(e) => setMedSchoolQuery(e.target.value)}
-                  onFocus={() => setIsMedSchoolInputFocused(true)}
-                  onBlur={() =>
-                    setTimeout(() => setIsMedSchoolInputFocused(false), 200)
-                  }
-                  className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter medical school name..."
-                />
-                {medSchoolSuggestions.length > 0 && isMedSchoolInputFocused && (
-                  <div className="absolute z-10 w-full mt-1 bg-[#001226] border border-[#5F7E92] rounded-md shadow-lg max-h-60 overflow-auto">
-                    {isSearching ? (
-                      <div className="px-4 py-2 text-gray-400">
-                        Searching...
-                      </div>
-                    ) : (
-                      medSchoolSuggestions.map((school, index) => (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6 max-w-2xl mx-auto"
+            >
+              <div className="space-y-3">
+                <h2 className="text-2xl font-light text-white">
+                  What medical school do you see yourself in?
+                </h2>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={medSchoolQuery}
+                    onChange={(e) => setMedSchoolQuery(e.target.value)}
+                    onFocus={() => setIsMedSchoolInputFocused(true)}
+                    onBlur={() => setTimeout(() => setIsMedSchoolInputFocused(false), 200)}
+                    className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 
+                               rounded-xl text-white focus:outline-none focus:ring-2 
+                               focus:ring-blue-500/50 transition-all"
+                    placeholder="Enter medical school name..."
+                  />
+                  {medSchoolSuggestions.length > 0 && isMedSchoolInputFocused && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute z-10 w-full mt-2 bg-[#001226]/95 backdrop-blur-[2px] 
+                                 border border-white/10 rounded-xl shadow-lg max-h-60 overflow-auto 
+                                 scrollbar-thin scrollbar-thumb-white/20"
+                    >
+                      {medSchoolSuggestions.map((school, index) => (
                         <button
                           key={index}
                           type="button"
-                          className="w-full px-4 py-2 text-left text-white hover:bg-[#1a2b3c] focus:outline-none"
                           onClick={() => {
                             setSelectedSchool(school);
                             setMedSchoolQuery(school.name);
                             setIsMedSchoolInputFocused(false);
                           }}
+                          className="w-full px-4 py-3 text-left hover:bg-white/5 
+                                   transition-colors border-b border-white/5 last:border-b-0"
                         >
-                          <div className="text-sm">{school.name}</div>
-                          <div className="text-xs text-gray-400">
-                            {school.state}
-                          </div>
+                          <div className="text-white/90 text-sm font-medium">{school.name}</div>
+                          <div className="text-white/60 text-xs mt-0.5">{school.state}</div>
                         </button>
-                      ))
-                    )}
-                    {medSchoolQuery.length >= 3 &&
-                      !isSearching &&
-                      medSchoolSuggestions.length === 0 &&
-                      isMedSchoolInputFocused && (
-                        <div className="absolute z-10 w-full mt-1 bg-[#001226] border border-[#5F7E92] rounded-md shadow-lg">
-                          <div className="px-4 py-2 text-gray-400">
-                            No medical schools found
-                          </div>
-                        </div>
-                      )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Selected Medical School Card */}
-            {selectedSchool && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 md:p-6 border border-[#5F7E92] rounded-lg bg-[#001226]/50 space-y-3 md:space-y-4"
-              >
-                <h3 className="text-base md:text-lg font-semibold text-white">
-                  {selectedSchool.name}
-                </h3>
-                <div className="grid grid-cols-2 gap-2 md:gap-4">
-                  <div className="bg-[#0A1A2F] p-3 rounded-md">
-                    <div className="text-xs text-gray-400 mb-1">
-                      Average MCAT
-                    </div>
-                    <div className="text-white font-medium text-lg">
-                      {selectedSchool.averageMCAT}
-                    </div>
-                  </div>
-                  <div className="bg-[#0A1A2F] p-3 rounded-md">
-                    <div className="text-xs text-gray-400 mb-1">
-                      Average GPA
-                    </div>
-                    <div className="text-white font-medium text-lg">
-                      {selectedSchool.averageGPA}
-                    </div>
-                  </div>
+                      ))}
+                    </motion.div>
+                  )}
                 </div>
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  {selectedSchool.description}
-                </p>
-              </motion.div>
-            )}
+              </div>
 
-            {/* Target Score */}
-            <div className="space-y-2">
-              <label className="block text-white text-sm font-medium">
-                {"What's your target score?"}
-              </label>
-              <input
-                type="number"
-                name="targetScore"
-                min="472"
-                max="528"
-                value={targetScore}
-                onChange={handleTargetScoreChange}
-                className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your target score (472-528)"
-                required
-              />
-            </div>
+              {/* Selected Medical School Card */}
+              {selectedSchool && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-6 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm 
+                             shadow-xl space-y-4 relative overflow-hidden"
+                >
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 to-purple-700/10 pointer-events-none" />
+                  
+                  <h3 className="text-xl font-light text-white relative">
+                    {selectedSchool.name}
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 gap-4 relative">
+                    <div className="bg-white/5 backdrop-blur-md p-4 rounded-lg border border-white/10">
+                      <div className="text-sm text-blue-200/80 mb-1">
+                        Average MCAT
+                      </div>
+                      <div className="text-white text-2xl font-light">
+                        {selectedSchool.averageMCAT}
+                      </div>
+                    </div>
+                    <div className="bg-white/5 backdrop-blur-md p-4 rounded-lg border border-white/10">
+                      <div className="text-sm text-blue-200/80 mb-1">
+                        Average GPA
+                      </div>
+                      <div className="text-white text-2xl font-light">
+                        {selectedSchool.averageGPA}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-300/90 text-sm leading-relaxed relative">
+                    {selectedSchool.description}
+                  </p>
+                </motion.div>
+              )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Processing..." : "Continue"}
-            </button>
+              {/* Target Score */}
+              <div className="space-y-3">
+                <h2 className="text-2xl font-light text-white">
+                  What's your target score?
+                </h2>
+                <div className="flex items-end gap-4">
+                  <input
+                    type="number"
+                    name="targetScore"
+                    min="472"
+                    max="528"
+                    value={targetScore}
+                    onChange={handleTargetScoreChange}
+                    className="flex-1 px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 
+                               rounded-xl text-white focus:outline-none focus:ring-2 
+                               focus:ring-blue-500/50 transition-all"
+                    placeholder="Enter your target score (472-528)"
+                    required
+                  />
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                    type="submit"
+                    disabled={loading}
+                    className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white 
+                               px-6 py-3 rounded-xl transition-all duration-300 
+                               focus:outline-none focus:ring-2 focus:ring-blue-500/50
+                               disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Processing..." : "Next"}
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
           </form>
         )}
 
@@ -608,64 +659,99 @@ export default function OnboardingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-6 border rounded-lg border-transparent min-h-[12rem] flex flex-col justify-between"
+            className="p-6 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm 
+               max-w-2xl mx-auto space-y-6 relative overflow-hidden"
           >
-            <p className="text-white text-lg">{kalypsoMessage}</p>
-            <div className="flex justify-center">
-              <button
+            {/* Subtle gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 pointer-events-none" />
+            
+            <p className="text-white text-xl font-light relative">
+              {kalypsoMessage}
+            </p>
+
+            <div className="flex justify-end relative">
+              <motion.button
                 onClick={handleKalypsoDialogue}
-                className="mt-4 border text-white px-6 py-2 rounded-md hover:bg-blue-900 transition-colors"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white 
+                   px-6 py-2.5 rounded-xl transition-all duration-300 
+                   focus:outline-none focus:ring-2 focus:ring-blue-500/50
+                   border border-white/10"
               >
-                Okay!
-              </button>
+                Continue
+              </motion.button>
             </div>
           </motion.div>
         )}
 
         {step === 4 && !kalypsoMessage && (
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-6">Get Started</h2>
-            <div className="bg-[#0A1A2F] p-6 rounded-lg mb-6 relative">
-              {emailIsValid && (
-                <div className="absolute -top-3 right-3 bg-green-500 text-white text-sm px-3 py-1 rounded-full">
-                  FREE ACCESS!
-                </div>
-              )}
-              <div className="flex justify-center items-center gap-3">
-                {emailIsValid ? (
-                  <p className="text-3xl font-bold text-white">FREE</p>
-                ) : (
-                  <p className="text-3xl font-bold text-white">$19.00</p>
-                )}
-              </div>
-              <div className="mt-2 flex items-center justify-center gap-2">
-                <p className="text-gray-400">
-                  {emailIsValid ? "5 Coins" : "10 Coins"}
-                </p>
-                <span className="text-yellow-400">✨</span>
-              </div>
-            </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-2xl mx-auto text-center space-y-8"
+          >
             <div className="space-y-4">
-              <input
-                type="email"
-                value={friendEmail}
-                onChange={(e) => setFriendEmail(e.target.value)}
-                placeholder="Enter friend's email for free access"
-                className="w-full px-3 py-2 bg-transparent border border-[#5F7E92] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={onPurchase}
-                disabled={loading || (friendEmail.length > 0 && !emailIsValid)}
-                className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
-              >
-                {loading
-                  ? "Loading..."
-                  : emailIsValid
-                    ? "Get Free Access"
-                    : "Purchase Coins"}
-              </button>
             </div>
-          </div>
+
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 space-y-6">
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-4xl">🎁</span>
+                <div className="text-left">
+                  <p className="text-white text-xl font-light">Kalypso's Gift</p>
+                  <p className="text-blue-300/80">9 Coins • Starter Pack</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="relative">
+                  <input
+                    type="email"
+                    value={friendEmail}
+                    onChange={(e) => setFriendEmail(e.target.value)}
+                    placeholder="Enter a fellow premed's email"
+                    className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 
+                             rounded-xl text-white placeholder-white/40 focus:outline-none 
+                             focus:ring-2 focus:ring-blue-500/50 transition-all"
+                  />
+                  {emailIsValid && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      ✅
+                    </motion.div>
+                  )}
+                </div>
+
+                <button
+                  onClick={onPurchase}
+                  disabled={loading || !emailIsValid}
+                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white 
+                           py-3 px-6 rounded-xl font-medium hover:opacity-90 transition-opacity
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : (
+                    "Get Started"
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <p className="text-white/60 text-sm">
+              We'll send them an invite when you're done with onboarding
+            </p>
+          </motion.div>
         )}
 
         {kalypsoMessage && (
