@@ -29,6 +29,8 @@ import {
 import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
+import { OptionsDialog } from "@/components/home/OptionsDialog";
+import { Plus } from "lucide-react";
 
 const Page = () => {
   const searchParams = useSearchParams();
@@ -70,6 +72,7 @@ const Page = () => {
   const { startActivity, endActivity,updateActivityEndTime } = useUserActivity();
   const [currentStudyActivityId, setCurrentStudyActivityId] = useState<string | null>(null);
   const pathname = usePathname();
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
 
   useEffect(() => {
     // if returning from stripe, show toast depending on payment
@@ -460,6 +463,10 @@ const Page = () => {
       setCurrentStudyActivityId(activity.id);
   };
 
+  const openOptionsDialog = () => {
+    setShowOptionsModal(true);
+  };
+
   return (
     <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
       <div className="text-white flex gap-[1.5rem] overflow-visible">
@@ -555,6 +562,21 @@ const Page = () => {
           console.log("Closing streak popup"); // Debug log
           setShowStreakPopup(false);
         }}
+      />
+
+      <button
+        onClick={openOptionsDialog}
+        className="fixed bottom-6 right-6 p-4 bg-sky-500 hover:bg-sky-600 
+                   rounded-full shadow-lg transition-all duration-300 
+                   hover:scale-110 z-50"
+      >
+        <Plus className="w-6 h-6 text-white" />
+      </button>
+
+      <OptionsDialog
+        showOptionsModal={showOptionsModal}
+        setShowOptionsModal={setShowOptionsModal}
+        handleTabChange={handleTabChange}
       />
     </div>
   );
