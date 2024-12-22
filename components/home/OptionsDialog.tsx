@@ -39,32 +39,30 @@ export const OptionsDialog = ({
       cost: "25 coins",
       tab: "KnowledgeProfile",
       isPremium: true,
-      videoUrl: "https://www.youtube.com/embed/YOUR_TEST_REVIEW_VIDEO_ID"
+      videoUrl: "https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TestingSuiteAdvertisement.mp4"
     }
   ];
 
   return (
     <Dialog open={showOptionsModal} onOpenChange={setShowOptionsModal}>
-      <DialogContent className="max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border-2 border-[--theme-border-color]">
-        <h2 className="text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center">
-          {selectedOption ? selectedOption : 'Choose Your Study Path'}
+      <DialogContent className={"max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border-2 border-transparent"}>
+        <h2 className={"text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center"}>
+          {selectedOption ? selectedOption : "Choose Your Study Path"}
         </h2>
 
         {!selectedOption ? (
-          // Options Grid View
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
+            <div className={"grid grid-cols-1 md:grid-cols-3 gap-6 p-4"}>
               {options.map((option, index) => (
                 <button 
                   key={index}
                   onClick={() => {
                     setSelectedOption(option.title);
-                    // Only navigate when they click "Start" after watching the video
                   }}
-                  className={`rounded-lg p-6 flex flex-col items-center space-y-4 transition-all relative h-full w-full
+                  className={`rounded-lg p-6 flex flex-col items-center space-y-4 transition-all relative h-full w-full hover:scale-[1.02] hover:-translate-y-1
                     ${option.isPremium 
-                      ? 'bg-gradient-to-br from-[--theme-gradient-start] via-[--theme-gradient-end] to-[--theme-doctorsoffice-accent] shadow-xl shadow-[--theme-doctorsoffice-accent]/30 hover:shadow-2xl hover:shadow-[--theme-doctorsoffice-accent]/40 hover:scale-[1.02] hover:-translate-y-1' 
-                      : 'bg-[--theme-leaguecard-color]'}`}
+                      ? "bg-gradient-to-br from-[--theme-gradient-start] via-[--theme-gradient-end] to-[--theme-doctorsoffice-accent] shadow-xl shadow-[--theme-doctorsoffice-accent]/30 hover:shadow-2xl hover:shadow-[--theme-doctorsoffice-accent]/40" 
+                      : "bg-[--theme-leaguecard-color]"}`}
                   style={{ 
                     boxShadow: 'var(--theme-button-boxShadow)'
                   }}
@@ -76,7 +74,7 @@ export const OptionsDialog = ({
                   }}
                 >
                   {option.isPremium && (
-                    <div className="absolute -top-3 -right-3 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] px-3 py-1 rounded-full text-sm font-bold shadow-lg transform rotate-12">
+                    <div className={"absolute -top-3 -right-3 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] px-3 py-1 rounded-full text-sm font-bold shadow-lg transform rotate-12"}>
                       Premium
                     </div>
                   )}
@@ -84,7 +82,7 @@ export const OptionsDialog = ({
                     src={option.image} 
                     alt={option.alt} 
                     className={`w-32 h-32 object-contain mb-3 pointer-events-none ${
-                      option.isPremium ? 'scale-110 transition-transform duration-300 group-hover:scale-125' : ''
+                      option.isPremium ? "scale-110 transition-transform duration-300 group-hover:scale-125" : ""
                     }`}
                   />
                   <span className="text-center font-bold text-[--theme-text-color] pointer-events-none">{option.title}</span>
@@ -92,26 +90,30 @@ export const OptionsDialog = ({
                 </button>
               ))}
             </div>
-            <p className="text-sm text-[--theme-text-color] mt-6 mb-4 leading-relaxed text-center">
-              Start with adaptive tutoring or flashcards - both are available with your coins! With more coins from studying, 
-              you can unlock our enhanced test review suite, currently at an early access discount.
+            <p className={"text-m text-[--theme-text-color] mb-4 leading-relaxed text-left ml-4"}>
+              Begin your learning journey with adaptive tutoring or flashcards, both accessible with your coins. The more you study, the more coins you can earn.
+              If you&apos;re nearing your test date, consider purchasing coins to gain early access to our advanced test review suite at a discounted rate.
             </p>
           </>
         ) : (
-          // Video View
           <>
-            <div className="relative pb-[56.25%] h-0">
+            <div className={"relative pb-[56.25%] h-0"}>
               <iframe
-                className="absolute top-0 left-0 w-full h-full rounded-lg"
+                className={"absolute top-0 left-0 w-full h-full rounded-lg"}
                 src={options.find(opt => opt.title === selectedOption)?.videoUrl}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
             </div>
-            <div className="flex gap-4 mt-4">
+            {selectedOption === "TEST REVIEW" && (
+              <p className={"text-m text-[--theme-text-color] mt-4 text-left ml-10"}>
+                Test review is still in production. AI will summarize why you got questions wrong and suggest strategic improvements. Prices will double next month so get it now.
+              </p>
+            )}
+            <div className={"flex gap-4 mt-4"}>
               <button
                 onClick={() => setSelectedOption(null)}
-                className="flex-1 py-2 px-4 bg-[--theme-leaguecard-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                className={"flex-1 py-2 px-4 bg-[--theme-leaguecard-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"}
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back to Options
@@ -124,7 +126,7 @@ export const OptionsDialog = ({
                     handleTabChange(option.tab);
                   }
                 }}
-                className="flex-1 py-2 px-4 bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color] rounded-lg transition-colors duration-200"
+                className={"flex-1 py-2 px-4 bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color] rounded-lg transition-colors duration-200"}
               >
                 Start {selectedOption}
               </button>
