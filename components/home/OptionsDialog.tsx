@@ -1,4 +1,6 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useState } from "react";
+import { ArrowLeft } from "lucide-react";
 
 interface OptionsDialogProps {
   showOptionsModal: boolean;
@@ -10,47 +12,126 @@ export const OptionsDialog = ({
   showOptionsModal, 
   setShowOptionsModal, 
   handleTabChange 
-}: OptionsDialogProps) => (
-  <Dialog open={showOptionsModal} onOpenChange={setShowOptionsModal}>
-    <DialogContent className="bg-[#001226] text-white border border-sky-500 rounded-lg max-w-3xl">
-      <h2 className="text-2xl font-semibold text-sky-300 text-center mb-6">Pick one</h2>
-      <div className="grid grid-cols-3 gap-6">
-        <button 
-          onClick={() => {
-            setShowOptionsModal(false);
-            handleTabChange("Schedule");
-          }}
-          className="flex flex-col items-center p-4 rounded-lg hover:bg-sky-900/50 transition-colors"
-        >
-          <img src="/kalypsocalendar.png" alt="Calendar" className="w-32 h-32 object-contain mb-3" />
-          <span className="text-center font-medium">ADAPTIVE TUTORING</span>
-          <span className="text-sm text-sky-300">(5 coins)</span>
-        </button>
+}: OptionsDialogProps) => {
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
-        <button 
-          onClick={() => {
-            setShowOptionsModal(false);
-            handleTabChange("flashcards");
-          }}
-          className="flex flex-col items-center p-4 rounded-lg hover:bg-sky-900/50 transition-colors"
-        >
-          <img src="/kalypsodiagnostic.png" alt="Flashcards" className="w-32 h-32 object-contain mb-3" />
-          <span className="text-center font-medium">ANKI GAME</span>
-          <span className="text-sm text-sky-300">(5 coins)</span>
-        </button>
+  const options = [
+    {
+      title: "ADAPTIVE TUTORING",
+      image: "/kalypsocalendar.png",
+      alt: "Calendar",
+      cost: "5 coins",
+      tab: "Schedule",
+      videoUrl: "https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/ATSAdvertisement.mp4"
+    },
+    {
+      title: "ANKI GAME",
+      image: "/kalypsodiagnostic.png",
+      alt: "Flashcards",
+      cost: "5 coins",
+      tab: "flashcards",
+      videoUrl: "https://www.youtube.com/embed/YOUR_ANKI_VIDEO_ID"
+    },
+    {
+      title: "TEST REVIEW",
+      image: "/kalypotesting.png",
+      alt: "Testing",
+      cost: "25 coins",
+      tab: "KnowledgeProfile",
+      isPremium: true,
+      videoUrl: "https://www.youtube.com/embed/YOUR_TEST_REVIEW_VIDEO_ID"
+    }
+  ];
 
-        <button 
-          onClick={() => {
-            setShowOptionsModal(false);
-            handleTabChange("KnowledgeProfile");
-          }}
-          className="flex flex-col items-center p-4 rounded-lg hover:bg-sky-900/50 transition-colors"
-        >
-          <img src="/kalypotesting.png" alt="Testing" className="w-32 h-32 object-contain mb-3" />
-          <span className="text-center font-medium">ENHANCED TEST REVIEW</span>
-          <span className="text-sm text-sky-300">(50 coins)</span>
-        </button>
-      </div>
-    </DialogContent>
-  </Dialog>
-);
+  return (
+    <Dialog open={showOptionsModal} onOpenChange={setShowOptionsModal}>
+      <DialogContent className="max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border-2 border-[--theme-border-color]">
+        <h2 className="text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center">
+          {selectedOption ? selectedOption : 'Choose Your Study Path'}
+        </h2>
+
+        {!selectedOption ? (
+          // Options Grid View
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
+              {options.map((option, index) => (
+                <button 
+                  key={index}
+                  onClick={() => {
+                    setSelectedOption(option.title);
+                    // Only navigate when they click "Start" after watching the video
+                  }}
+                  className={`rounded-lg p-6 flex flex-col items-center space-y-4 transition-all relative h-full w-full
+                    ${option.isPremium 
+                      ? 'bg-gradient-to-br from-[--theme-gradient-start] via-[--theme-gradient-end] to-[--theme-doctorsoffice-accent] shadow-xl shadow-[--theme-doctorsoffice-accent]/30 hover:shadow-2xl hover:shadow-[--theme-doctorsoffice-accent]/40 hover:scale-[1.02] hover:-translate-y-1' 
+                      : 'bg-[--theme-leaguecard-color]'}`}
+                  style={{ 
+                    boxShadow: 'var(--theme-button-boxShadow)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow-hover)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow)';
+                  }}
+                >
+                  {option.isPremium && (
+                    <div className="absolute -top-3 -right-3 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] px-3 py-1 rounded-full text-sm font-bold shadow-lg transform rotate-12">
+                      Premium
+                    </div>
+                  )}
+                  <img 
+                    src={option.image} 
+                    alt={option.alt} 
+                    className={`w-32 h-32 object-contain mb-3 pointer-events-none ${
+                      option.isPremium ? 'scale-110 transition-transform duration-300 group-hover:scale-125' : ''
+                    }`}
+                  />
+                  <span className="text-center font-bold text-[--theme-text-color] pointer-events-none">{option.title}</span>
+                  <span className="text-sm text-[--theme-text-color] pointer-events-none">({option.cost})</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-sm text-[--theme-text-color] mt-6 mb-4 leading-relaxed text-center">
+              Start with adaptive tutoring or flashcards - both are available with your coins! With more coins from studying, 
+              you can unlock our enhanced test review suite, currently at an early access discount.
+            </p>
+          </>
+        ) : (
+          // Video View
+          <>
+            <div className="relative pb-[56.25%] h-0">
+              <iframe
+                className="absolute top-0 left-0 w-full h-full rounded-lg"
+                src={options.find(opt => opt.title === selectedOption)?.videoUrl}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+            <div className="flex gap-4 mt-4">
+              <button
+                onClick={() => setSelectedOption(null)}
+                className="flex-1 py-2 px-4 bg-[--theme-leaguecard-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Options
+              </button>
+              <button
+                onClick={() => {
+                  const option = options.find(opt => opt.title === selectedOption);
+                  if (option) {
+                    setShowOptionsModal(false);
+                    handleTabChange(option.tab);
+                  }
+                }}
+                className="flex-1 py-2 px-4 bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color] rounded-lg transition-colors duration-200"
+              >
+                Start {selectedOption}
+              </button>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
