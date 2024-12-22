@@ -14,6 +14,29 @@ const isValidEmail = (email: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
+// Add this custom hook at the top of your file
+const useTypewriter = (text: string, speed: number = 20) => {
+  const [displayedText, setDisplayedText] = useState("");
+
+  useEffect(() => {
+    let i = 0;
+    setDisplayedText(""); // Reset text when input changes
+
+    const typing = setInterval(() => {
+      if (i < text.length) {
+        setDisplayedText(prev => prev + text.charAt(i));
+        i++;
+      } else {
+        clearInterval(typing);
+      }
+    }, speed);
+
+    return () => clearInterval(typing);
+  }, [text, speed]);
+
+  return displayedText;
+};
+
 export default function OnboardingPage() {
   const { user } = useClerk();
   const [loading, setLoading] = useState(false);
@@ -44,6 +67,7 @@ export default function OnboardingPage() {
   const [diagnosticValue, setDiagnosticValue] = useState<string>("");
   const [attemptValue, setAttemptValue] = useState<string>("");
   const [firstName, setFirstName] = useState("");
+  const [messageId, setMessageId] = useState(1);
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -180,27 +204,30 @@ export default function OnboardingPage() {
   );
 
   const handleKalypsoDialogue = useCallback(() => {
-    // Add a small delay for better readability
-    const delay = 100; // milliseconds
-
-    setTimeout(() => {
-      if (kalypsoMessage.includes("Hi")) {
+    switch (messageId) {
+      case 1:
         setKalypsoMessage(
           "We don't charge thousands like test prep companies do. Our model is more equitable: coins."
         );
-      } else if (kalypsoMessage.includes("coins")) {
+        setMessageId(2);
+        break;
+      case 2:
         setKalypsoMessage(
           "You buy coins to access features. Overtime, you can earn coins and access more features. However, if you slack off, you lose coins and have to buy more. We force you to be accountable!"
         );
-      } else if (kalypsoMessage.includes("slack off")) {
+        setMessageId(3);
+        break;
+      case 3:
         setKalypsoMessage(
-          "I've been saving (a LOT) and I can get 9 coins for free. All you have to do is invite a friend and get the word out about MyMCAT.ai :) 🤝"
+          "I've been saving (a LOT) and I can get you 9 coins for FREE. All you have to do is invite a friend and get the word out about MyMCAT.ai :3 🤝"
         );
-      } else {
+        setMessageId(4);
+        break;
+      case 4:
         setKalypsoMessage("");
-      }
-    }, delay);
-  }, [kalypsoMessage]);
+        break;
+    }
+  }, [messageId]);
 
   const handleTargetScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -764,9 +791,9 @@ export default function OnboardingPage() {
             initial={{ x: "100%" }}
             animate={{ x: "0%" }}
             transition={{ type: "spring", duration: 1 }}
-            className="fixed bottom-0 right-0 md:right-8 transform translate-x-1/2 z-50 pointer-events-none"
+            className="fixed -bottom-6 left-1/2 -translate-x-1/2 md:bottom-0 md:right-8 md:translate-x-0 md:left-auto z-50 pointer-events-none"
           >
-            <div className="w-[20rem] h-[36rem] md:w-[32rem] md:h-[32rem] lg:w-[48rem] lg:h-[48rem] relative">
+            <div className="w-[20rem] h-[24rem] md:w-[32rem] md:h-[32rem] lg:w-[48rem] lg:h-[48rem] relative">
               <Image
                 src="/kalypsoend.gif"
                 alt="Kalypso"
