@@ -12,7 +12,6 @@ type ConceptCategory = {
 };
 
 async function getRecentTestScores(userId: string) {
-  console.log('Fetching recent test scores for user:', userId);
   const recentTests = await prisma.userTest.findMany({
     where: {
       userId,
@@ -25,7 +24,6 @@ async function getRecentTestScores(userId: string) {
   });
 
   const scores = recentTests.map((test) => test.score as number);
-  console.log('Recent test scores:', scores);
   return scores;
 }
 
@@ -35,9 +33,6 @@ async function getOrderedTests(
   pageSize: number,
   CARSonly: boolean = false
 ) {
-  console.log(
-    `Getting ordered tests for user ${userId}, page ${page}, pageSize ${pageSize}, CARSonly: ${CARSonly}`
-  );
   const skip = (page - 1) * pageSize;
 
   // Fetch user's knowledge profiles
@@ -48,8 +43,7 @@ async function getOrderedTests(
     },
     include: { category: true },
   });
-  console.log(`Fetched ${knowledgeProfiles.length} knowledge profiles`);
-
+  
   // Calculate average scores for each concept category and collect content categories
   const conceptCategories: {
     [key: string]: ConceptCategory & { count: number };
@@ -132,8 +126,7 @@ async function getOrderedTests(
       },
     },
   });
-  console.log(`Fetched ${allTests.length} tests`);
-
+  
   // If no tests were fetched, log a warning and fetch all tests without any filter
   if (allTests.length === 0) {
     console.warn(
@@ -152,7 +145,6 @@ async function getOrderedTests(
         },
       },
     });
-    console.log(`Fetched ${allAvailableTests.length} tests without filter`);
     if (allAvailableTests.length === 0) {
       console.error("No tests available in the database.");
       return {
@@ -183,8 +175,7 @@ async function getOrderedTests(
       .filter((test: any) => test.finishedAt !== null)
       .map((test: any) => test.testId)
   );
-  console.log(`User has taken ${takenTestIds.size} tests`);
-
+  
   const recentlyTakenPassageIds = new Set(
     userTests.map((test: any) => test.passageId)
   );
@@ -193,8 +184,7 @@ async function getOrderedTests(
   const filteredTests = allTests.filter(
     (test: { id: unknown }) => !takenTestIds.has(test.id)
   );
-  console.log(`Number of tests not yet taken: ${filteredTests.length}`);
-
+  
   // Further filter tests that have passages that have already been taken
   const finalFilteredTests = filteredTests.filter(
     (test: { questions: any[] }) =>
@@ -209,8 +199,6 @@ async function getOrderedTests(
           )
       )
   );
-
-  console.log(`Filtered ${allTests.length - filteredTests.length} tests`);
 
   // Function to get the next test of the same passage
   async function getNextTestOfSamePassage(userId: string) {
@@ -307,26 +295,20 @@ async function getOrderedTests(
   const recentScores = await getRecentTestScores(userId);
 
   function getRecommendedDifficulty(scores: number[]) {
-    console.log('Calculating recommended difficulty for scores:', scores);
     
     // If no scores yet, start with level 1
     if (scores.length === 0) {
-      console.log('No scores available, defaulting to level 1');
       return 1;
     }
     
     const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-    console.log('Average score calculated:', averageScore);
     
     if (averageScore < 65) {
-      console.log('Score < 70%, recommending level 1');
       return 1;        // Level 1 for < 65%
     }
     if (averageScore < 90) {
-      console.log('Score < 85%, recommending level 2');
       return 2;        // Level 2 for 65-90%
     }
-    console.log('Score >= 85%, recommending level 3');
     return 3;         // Level 3 for > 90%
   }
 
@@ -357,7 +339,6 @@ async function getOrderedTests(
     return part2Test;
   }
 
-  console.log('Starting test sorting process');
   const sortedTests = await Promise.all(testsWithRelevance.map(async (test) => {
     // Check if this test has a corresponding Part 2
     if (test.title?.includes('Part 1')) {
@@ -391,31 +372,21 @@ async function getOrderedTests(
 
     // Rest of the sorting logic remains the same...
     const recommendedDifficulty = getRecommendedDifficulty(recentScores);
-    console.log('Recommended difficulty level:', recommendedDifficulty);
     
     // If neither test has been taken
     if (!a.taken && !b.taken) {
-      console.log('Comparing untaken tests:');
-      console.log('Test A:', { id: a.id, difficulty: a.difficulty });
-      console.log('Test B:', { id: b.id, difficulty: b.difficulty });
       
       // First, compare by how close they are to the recommended difficulty
       const aDiffDist = Math.abs((a.difficulty || 1) - recommendedDifficulty);
       const bDiffDist = Math.abs((b.difficulty || 1) - recommendedDifficulty);
       
-      console.log('Distance from recommended difficulty:');
-      console.log('Test A distance:', aDiffDist);
-      console.log('Test B distance:', bDiffDist);
-      
       if (aDiffDist !== bDiffDist) {
         const result = aDiffDist - bDiffDist;
-        console.log('Sorting by difficulty distance, result:', result);
         return result;
       }
       
       // If they're equally close to recommended difficulty, use relevance score
       const result = b.relevanceScore - a.relevanceScore;
-      console.log('Equal difficulty distance, sorting by relevance score, result:', result);
       return result;
     }
     
@@ -428,10 +399,6 @@ async function getOrderedTests(
   // Apply pagination
   let paginatedTests = finalSortedTests.slice(skip, skip + pageSize);
   const totalPages = Math.ceil(finalSortedTests.length / pageSize);
-
-  console.log(
-    `Returning ${paginatedTests.length} tests (page ${page} of ${totalPages})`
-  );
 
   const introTestCompleted = await hasCompletedIntroTest(userId);
 
@@ -486,7 +453,6 @@ async function hasCompletedIntroTest(userId: string) {
 }
 
 export async function GET(req: Request) {
-  console.log("GET request tests");
 
   try {
     const { userId } = auth();
@@ -504,7 +470,6 @@ export async function GET(req: Request) {
 
     // Get the number of tests completed today
     const today = new Date();
-    console.log("Checking tests completed for date:", today);
 
     // First, let's check all tests for this user today without restrictions
     const allUserTestsToday = await prisma.userTest.findMany({
@@ -517,8 +482,7 @@ export async function GET(req: Request) {
       },
     });
 
-    console.log("All user tests today:", allUserTestsToday);
-
+    
     // Then do our actual count
     const testsCompletedToday = await prisma.userTest.count({
       where: {
@@ -530,7 +494,6 @@ export async function GET(req: Request) {
       },
     });
 
-    console.log("Tests completed count:", testsCompletedToday);
 
     if (isDiagnostic) {
       return new NextResponse(
@@ -564,20 +527,17 @@ export async function GET(req: Request) {
       });
 
       if (!test) {
-        console.log(`Test not found for id: ${testId}`);
         return new NextResponse(JSON.stringify({ error: "Test not found" }), {
           status: 404,
           headers: { "Content-Type": "application/json" },
         });
       }
 
-      console.log(`Returning test with id: ${testId}`);
       return new NextResponse(JSON.stringify(test), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
     } else {
-      console.log("Calling getOrderedTests");
       const testsData = await getOrderedTests(userId, page, pageSize, CARSonly);
 
       return new NextResponse(

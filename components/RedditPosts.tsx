@@ -109,8 +109,8 @@ const RedditPosts: React.FC = () => {
     setSelectedPost(null);
   };
 
-  const isContentTruncated = (element: HTMLElement) => {
-    return element.scrollHeight > element.clientHeight;
+  const isContentTruncated = (element?: HTMLElement | null) => {
+    return element ? element.scrollHeight > element.clientHeight : true
   };
 
   return (
