@@ -179,9 +179,9 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
   };
 
   return (
-    <div className={`flex flex-col ${className}`}>
+    <div className={`flex flex-col ${className} overflow-hidden`}>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex flex-col h-[calc(100vh-16rem)]">
+        <div className="flex flex-col h-[calc(100vh-12rem)] overflow-hidden">
           {activeTest ? (
             // When a test is active, it takes up the full container
             <div className="h-full px-4">
@@ -194,7 +194,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
             // Original layout with calendar and tests
             <>
               {/* Calendar + Scheduled Tests Section */}
-              <div className="h-[70%] min-h-0 mb-4 mt-1">
+              <div className="h-[75%] min-h-0 mb-2 mt-2">
                 <div
                   className="bg-[--theme-leaguecard-color] rounded-xl p-4 sm:p-6 lg:p-8 mx-4 h-full overflow-hidden"
                   style={{
@@ -330,7 +330,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
               </div>
 
               {/* Previous Practice Tests Section */}
-              <div className="h-[25%] px-4 mt-1">
+              <div className="h-[22%] px-4 mt-2">
                 <div className="grid grid-cols-5 gap-4 h-full">
                   {[
                     { company: "AAMC", testNumber: "FL1", score: 527, breakdown: "132/132/132/131", dateTaken: "Dec 15" },
@@ -349,6 +349,12 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
                         height: '15vh',
                       }}
                       onClick={() => setActiveTest(test)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow-hover)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow)';
+                      }}
                     >
                       <div className="h-full flex flex-col">
                         {/* Company and Date - Always visible but muted */}

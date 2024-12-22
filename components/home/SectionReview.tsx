@@ -27,7 +27,15 @@ const SectionReview: React.FC<SectionReviewProps> = ({
   isCompleted, 
   onComplete 
 }) => {
-  const [listOfQuestions, setListOfQuestions] = useState<Question[]>([]);
+  const [listOfQuestions, setListOfQuestions] = useState<Question[]>([
+    { id: '1', number: '1', category: 'Kinematics', mistake: 'Forgot to convert units', improvement: 'Always check units before calculations', status: 'wrong' },
+    { id: '2', number: '2', category: 'Thermodynamics', mistake: 'Mixed up endothermic/exothermic', improvement: 'Draw energy diagrams', status: 'flagged' },
+    { id: '3', number: '3', category: 'Kinematics', mistake: 'Missed acceleration component', improvement: 'Break vectors into components', status: 'wrong' },
+    { id: '4', number: '4', category: 'Acids & Bases', mistake: 'Wrong pH calculation', improvement: 'Use ICE tables properly', status: 'wrong' },
+    { id: '5', number: '5', category: 'Thermodynamics', mistake: 'Confused ΔH and ΔG', improvement: 'Review Gibbs free energy conditions', status: 'flagged' },
+    // ... adding more questions with varied categories and statuses ...
+    { id: '20', number: '20', category: 'Acids & Bases', mistake: 'Forgot buffer equation', improvement: 'Memorize Henderson-Hasselbalch', status: 'correct' },
+  ]);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
@@ -79,10 +87,18 @@ const SectionReview: React.FC<SectionReviewProps> = ({
 
         <div className="flex-grow bg-[--theme-leaguecard-color] shadow-xl rounded-2xl p-5">
           <div className="flex gap-4 h-full">
-            <div className="flex-grow flex flex-col">
-              <span className="text-xs uppercase tracking-wide opacity-60">Kalypso's Advice</span>
-              <div className="flex-grow flex items-center justify-center text-sm opacity-50">
-                Coming soon...
+            <div className="flex-grow flex flex-col justify-center">
+              <span className="text-xs uppercase tracking-wide opacity-60 mb-3">Kalypso's Advice</span>
+              <div className="space-y-3">
+                <p className="text-sm">
+                  Focus on Kinematics fundamentals - you're consistently missing vector components and unit conversions.
+                </p>
+                <p className="text-sm">
+                  Review Thermodynamics, especially the relationship between ΔH, ΔS, and ΔG. Create a quick reference chart.
+                </p>
+                <p className="text-sm text-yellow-500">
+                  💡 Pro Tip: For Acids & Bases, practice ICE tables with complex buffer systems.
+                </p>
               </div>
             </div>
 
