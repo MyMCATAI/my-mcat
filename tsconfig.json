@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "scripts/uploadCategories.tsx", "../Documents/contentgenerator/Saraswati/app/(dashboard)/(routes)/mcat/ClaudeSettingsModal.tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "scripts/uploadCategories.tsx"],
   "exclude": ["node_modules"]
 }
