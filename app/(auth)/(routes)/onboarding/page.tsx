@@ -180,21 +180,26 @@ export default function OnboardingPage() {
   );
 
   const handleKalypsoDialogue = useCallback(() => {
-    if (kalypsoMessage.includes("Hi")) {
-      setKalypsoMessage(
-        "We don't charge thousands like test prep companies do. Our model is more equitable: coins."
-      );
-    } else if (kalypsoMessage.includes("equitable financial model")) {
-      setKalypsoMessage(
-        "You buy coins to access features. Overtime, you can earn coins and access more features. However, if you slack off, you lose coins and have to buy more. We force you to be accountable!"
-      );
-    } else if (kalypsoMessage.includes("slack off")) {
-      setKalypsoMessage(
-        "I've been saving (a LOT) and I can get 9 coins for free. All you have to do is invite a friend and get the word out about MyMCAT.ai :) 🤝"
-      );
-    } else {
-      setKalypsoMessage("");
-    }
+    // Add a small delay for better readability
+    const delay = 100; // milliseconds
+
+    setTimeout(() => {
+      if (kalypsoMessage.includes("Hi")) {
+        setKalypsoMessage(
+          "We don't charge thousands like test prep companies do. Our model is more equitable: coins."
+        );
+      } else if (kalypsoMessage.includes("coins")) {
+        setKalypsoMessage(
+          "You buy coins to access features. Overtime, you can earn coins and access more features. However, if you slack off, you lose coins and have to buy more. We force you to be accountable!"
+        );
+      } else if (kalypsoMessage.includes("slack off")) {
+        setKalypsoMessage(
+          "I've been saving (a LOT) and I can get 9 coins for free. All you have to do is invite a friend and get the word out about MyMCAT.ai :) 🤝"
+        );
+      } else {
+        setKalypsoMessage("");
+      }
+    }, delay);
   }, [kalypsoMessage]);
 
   const handleTargetScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
