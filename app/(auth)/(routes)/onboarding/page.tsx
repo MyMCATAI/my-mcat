@@ -362,7 +362,7 @@ export default function OnboardingPage() {
               <h2 className="text-2xl font-light text-white">
                 Great to have you here, {firstName}! 
                 <span className="block mt-2 text-lg text-gray-400 font-light">
-                  Let's talk about your college journey.
+                  Let{`'`}s talk about your college journey.
                 </span>
               </h2>
               
@@ -479,7 +479,7 @@ export default function OnboardingPage() {
                     onChange={(e) => setHasNotTakenMCAT(e.target.checked)}
                     className="w-5 h-5 rounded border-white/20 text-blue-500 focus:ring-blue-500/50 bg-transparent"
                   />
-                  <span className="text-sm group-hover:text-blue-400 transition-colors">Haven't taken it yet</span>
+                  <span className="text-sm group-hover:text-blue-400 transition-colors">Haven{`'`}t taken it yet</span>
                 </label>
               </div>
             </motion.div>
@@ -620,7 +620,7 @@ export default function OnboardingPage() {
               {/* Target Score */}
               <div className="space-y-3">
                 <h2 className="text-2xl font-light text-white">
-                  What's your target score?
+                  What{`'`}s your target score?
                 </h2>
                 <div className="flex items-end gap-4">
                   <input
@@ -699,7 +699,7 @@ export default function OnboardingPage() {
               <div className="flex items-center justify-center gap-3">
                 <span className="text-4xl">🎁</span>
                 <div className="text-left">
-                  <p className="text-white text-xl font-light">Kalypso's Gift</p>
+                  <p className="text-white text-xl font-light">Kalypso{`'`}s Gift</p>
                   <p className="text-blue-300/80">9 Coins • Starter Pack</p>
                 </div>
               </div>
@@ -710,7 +710,7 @@ export default function OnboardingPage() {
                     type="email"
                     value={friendEmail}
                     onChange={(e) => setFriendEmail(e.target.value)}
-                    placeholder="Enter a fellow premed's email"
+                    placeholder="Enter a fellow premed{`'`}s email"
                     className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 
                              rounded-xl text-white placeholder-white/40 focus:outline-none 
                              focus:ring-2 focus:ring-blue-500/50 transition-all"
@@ -749,7 +749,7 @@ export default function OnboardingPage() {
             </div>
 
             <p className="text-white/60 text-sm">
-              We'll send them an invite when you're done with onboarding
+              We{`'`}ll send them an invite when you{`'`}re done with onboarding
             </p>
           </motion.div>
         )}
