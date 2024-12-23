@@ -48,7 +48,7 @@ import {
 } from "lucide-react";
 import { FaCheckCircle } from "react-icons/fa";
 import HelpContentSchedule from './HelpContentSchedule';
-import { HelpCircle, Bell, Coffee, ClipboardList } from 'lucide-react';
+import { HelpCircle, Bell, Coffee, ClipboardList, AlertTriangle } from 'lucide-react';
 import { useOutsideClick } from '@/hooks/use-outside-click';
 import UWorldPopup from '@/components/home/UWorldPopup';
 import CompletionDialog from '@/components/home/CompletionDialog';
@@ -725,12 +725,30 @@ const Schedule: React.FC<ScheduleProps> = ({
         {/* Purchase Button */}
         {showAnalytics && !selectedSubject && (
           <div className="absolute top-6 left-8 z-30">
-            <div className="pointer-events-auto">
+            <div className="pointer-events-auto flex items-center gap-2">
               <PurchaseButton tooltipText="Click to purchase more coins!">
                 <button className="hover:opacity-80 transition-opacity">
                   <ScoreDisplay score={userCoinCount} />
                 </button>
               </PurchaseButton>
+              
+              {userCoinCount <= 3 && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div className="animate-vibrate">
+                        <AlertTriangle 
+                          className="h-6 w-6 text-red-500 drop-shadow-glow" 
+                          strokeWidth={3}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-red-500 text-white border-red-600">
+                      <p>Low coin balance! Purchase more coins to continue accessing our features.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
           </div>
         )}
