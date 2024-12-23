@@ -4,6 +4,12 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
+interface CustomDocument extends Document {
+    webkitFullscreenElement?: Element | null;
+    mozFullScreenElement?: Element | null;
+    msFullscreenElement?: Element | null;
+}
+
 export const FullscreenPrompt = () => {
     const [showPrompt, setShowPrompt] = useState(false);
     const [isDismissed, setIsDismissed] = useState(false);
@@ -15,41 +21,51 @@ export const FullscreenPrompt = () => {
     const excludedPaths = ['/', '/blog', '/preferences', '/intro', '/sign-in', '/sign-up', '/onboarding'];
 
     useEffect(() => {
+        // Check localStorage first
         const neverShow = localStorage.getItem('fullscreenPrompt-neverShow');
-        if (neverShow === 'true') return;
+        const sessionDismissed = sessionStorage.getItem('fullscreenPrompt-dismissed');
+        if (neverShow === 'true' || sessionDismissed === 'true') return;
         if (excludedPaths.includes(pathname)) return;
 
-        // Properly typed fullscreen checks
-        const doc = document as Document & {
-            webkitFullscreenElement?: Element;
-            mozFullScreenElement?: Element;
-            msFullscreenElement?: Element;
-        };
-
-        const docEl = document.documentElement as HTMLElement & {
-            webkitRequestFullscreen?: () => Promise<void>;
-            mozRequestFullScreen?: () => Promise<void>;
-            msRequestFullscreen?: () => Promise<void>;
-        };
-
-        const isSupported = !!(docEl.requestFullscreen || 
-            docEl.webkitRequestFullscreen ||
-            docEl.mozRequestFullScreen ||
-            docEl.msRequestFullscreen);
-
-        if (isSupported) {
-            const isFullscreen = doc.fullscreenElement ||
+        // Add fullscreen change event listener
+        const handleFullscreenChange = () => {
+            const doc = document as CustomDocument;
+            const isFullscreen = !!(doc.fullscreenElement ||
                 doc.webkitFullscreenElement ||
                 doc.mozFullScreenElement ||
-                doc.msFullscreenElement;
-
-            if (!isFullscreen && !isDismissed) {
-                setShowPrompt(true);
-                window.dispatchEvent(new CustomEvent('fullscreenPromptChange', { 
-                  detail: { isVisible: true } 
-                }));
+                doc.msFullscreenElement);
+            
+            if (isFullscreen) {
+                setShowPrompt(false);
+                sessionStorage.setItem('fullscreenPrompt-dismissed', 'true');
             }
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+        // Check if already in fullscreen
+        const doc = document as CustomDocument;
+        const isFullscreen = !!(doc.fullscreenElement ||
+            doc.webkitFullscreenElement ||
+            doc.mozFullScreenElement ||
+            doc.msFullscreenElement);
+
+        if (!isFullscreen && !isDismissed) {
+            setShowPrompt(true);
+            window.dispatchEvent(new CustomEvent('fullscreenPromptChange', { 
+                detail: { isVisible: true } 
+            }));
         }
+
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+        };
     }, [isDismissed, pathname]);
 
     const enterFullscreen = () => {
@@ -82,11 +98,13 @@ export const FullscreenPrompt = () => {
     const dismissPrompt = () => {
         if (neverShowAgain) {
             localStorage.setItem('fullscreenPrompt-neverShow', 'true');
+        } else {
+            sessionStorage.setItem('fullscreenPrompt-dismissed', 'true');
         }
         setShowPrompt(false);
         setIsDismissed(true);
         window.dispatchEvent(new CustomEvent('fullscreenPromptChange', { 
-          detail: { isVisible: false } 
+            detail: { isVisible: false } 
         }));
     };
 
