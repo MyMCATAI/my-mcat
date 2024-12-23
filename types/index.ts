@@ -225,7 +225,7 @@ export function getCoinAmountForProduct(productType: ProductType, productName?: 
   if (productName) {
     switch (productName) {
       case "FiftyCoins":
-        return 50;
+        return 25;
       case "TenCoins":
         return 10;
       case "MDPremium":
@@ -236,7 +236,7 @@ export function getCoinAmountForProduct(productType: ProductType, productName?: 
   // Fall back to product type if no name or unrecognized name
   switch (productType) {
     case ProductType.COINS_50:
-      return 50;
+      return 25;
     case ProductType.COINS_10:
     case ProductType.COINS_10_DISCOUNT:
       return 10;
