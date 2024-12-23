@@ -45,7 +45,7 @@ async function createCARsPassagesFromCSV(isDryRun = true) {
           console.log('\n--- Preview of passage to be created ---');
           console.log('Text:', previewText(record.text));
           console.log('Citation:', previewText(record.citation || ''));
-          console.log('Title:', previewText(record.title || ''));
+          console.log('Title:', previewText(record['passage title'] || ''));
           console.log('Description:', previewText(record.description || ''));
           console.log('Difficulty:', difficulty);
           console.log('----------------------------------------\n');
@@ -54,7 +54,7 @@ async function createCARsPassagesFromCSV(isDryRun = true) {
             data: {
               text: record.text,
               citation: record.citation || '',
-              title: record.title || null,
+              title: record['passage title'] || null,
               description: record.description || null,
               difficulty: difficulty,
             },

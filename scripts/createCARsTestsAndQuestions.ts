@@ -9,6 +9,8 @@ config();
 
 const prisma = new PrismaClient();
 
+const DRY_RUN = false
+
 interface CARsRecord {
   text: string;
   citation: string;
@@ -75,6 +77,10 @@ async function createCARsTestsAndQuestions() {
   const csvFilePath = path.join(process.cwd(), 'data', 'CARsContent.csv');
   const fileContent = fs.readFileSync(csvFilePath, { encoding: 'utf-8' });
 
+  if (DRY_RUN) {
+    console.log('🏃 DRY RUN MODE - No database changes will be made');
+  }
+
   parse(fileContent, {
     columns: true,
     skip_empty_lines: true,
@@ -137,15 +143,19 @@ async function createCARsTestsAndQuestions() {
             test = existingTest;
             console.log(`Using existing test: ${test.id}`);
           } else {
-            test = await prisma.test.create({
-              data: {
-                title: testTitle,
-                passageId: passage.id,
-                description: records[0].description || '',
-                difficulty: parseFloat(records[0]['passage difficulty']) || 1
-              }
-            });
-            console.log(`Created new test: ${test.id}`);
+            if (DRY_RUN) {
+              console.log(`Would create new test: ${testTitle}`);
+            } else {
+              test = await prisma.test.create({
+                data: {
+                  title: testTitle,
+                  passageId: passage.id,
+                  description: records[0].description || '',
+                  difficulty: parseFloat(records[0]['passage difficulty']) || 1
+                }
+              });
+            }
+            console.log(`Created new test: ${test?.id}`);
           }
 
           // Process each question
@@ -175,20 +185,24 @@ async function createCARsTestsAndQuestions() {
             let question = existingQuestion;
             
             if (!existingQuestion) {
-              question = await prisma.question.create({
-                data: {
-                  questionContent: record.question,
-                  questionOptions: JSON.stringify(options),
-                  questionAnswerNotes: record.explanation,
-                  context: record.context || '',
-                  difficulty: parseFloat(record['question difficulty']) || 1,
-                  passageId: passage.id,
-                  categoryId: category.id,
-                  contentCategory: category.contentCategory,
-                  questionID: `CARS_${passage.id}_${testTitle}_${i + 1}`
-                }
-              });
-              console.log(`Created new question: ${question.id}`);
+              if (DRY_RUN) {
+                console.log(`Would create new question: ${record.question}`);
+              } else {
+                question = await prisma.question.create({
+                  data: {
+                    questionContent: record.question,
+                    questionOptions: JSON.stringify(options),
+                    questionAnswerNotes: record.explanation,
+                    context: record.context || '',
+                    difficulty: parseFloat(record['question difficulty']) || 1,
+                    passageId: passage.id,
+                    categoryId: category.id,
+                    contentCategory: category.contentCategory,
+                    questionID: `CARS_${passage.id}_${testTitle}_${i + 1}`
+                  }
+                });
+              }
+              console.log(`Created new question: ${question?.id}`);
             } else {
               console.log(`Using existing question: ${existingQuestion.id}`);
             }
@@ -203,14 +217,18 @@ async function createCARsTestsAndQuestions() {
               });
 
               if (!existingTestQuestion) {
-                const testQuestion = await prisma.testQuestion.create({
-                  data: {
-                    testId: test.id,
-                    questionId: question.id,
-                    sequence: i + 1
-                  }
-                });
-                console.log(`Created new test question link: ${testQuestion.id}`);
+                if (DRY_RUN) {
+                  console.log(`Would create new test question link: ${test.id}_${question.id}`);
+                } else {
+                  const testQuestion = await prisma.testQuestion.create({
+                    data: {
+                      testId: test.id,
+                      questionId: question.id,
+                      sequence: i + 1
+                    }
+                  });
+                  console.log(`Created new test question link: ${testQuestion.id}`);
+                }
               } else {
                 console.log(`Test question link already exists`);
               }
