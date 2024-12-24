@@ -113,7 +113,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   const currentCardIndexRef = useRef<number>(0);
   
   const [shuffledOptions, setShuffledOptions] = useState<{ options: string[], correctIndex: number }>({ options: [], correctIndex: -1 });
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [selectedOption, setSelectedOption] = useState<number>(-1);
 
 
   useEffect(() => {
@@ -256,7 +256,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     }
     setIsRevealed(false);
     setHasSeenAnswer(false);
-    setSelectedOption(null);
+    setSelectedOption(-1);
     setAnsweredMCQ(false);
   }, [currentCardIndex, flashcards]);
 
@@ -385,7 +385,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
       onRest: () => {
         setCurrentCardIndex(prevIndex => prevIndex + 1);
         setIsRevealed(false);
-        setSelectedOption(null);
+        setSelectedOption(-1);
         api.start({ opacity: 1 });
       }
     });
@@ -524,6 +524,24 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     }
   };
 
+  const handleMCQOptionSelect = (index: number) => {
+    if (currentCardIndex >= flashcards.length) return;
+    
+    const currentCard = flashcards[currentCardIndex];
+    if (!currentCard) return;
+
+    setSelectedOption(index);
+    setHasSeenAnswer(true);
+    
+    // Track MCQ questions only when first selecting an answer
+    if (currentCard.questionType === 'normal' && selectedOption === -1) {
+      setTotalMCQQuestions(prev => prev + 1);
+      if (index === (shuffledOptions?.correctIndex ?? -1) && onMCQAnswer) {
+        onMCQAnswer(true);
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center w-full h-full relative focus-visible:outline-none">
       {isLoading && flashcards.length === 0 ? (
@@ -635,7 +653,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
           
           <div className="fixed bottom-1 left-1/2 transform -translate-x-1/2 text-xs text-gray-400">
             <span className="mr-3">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">Space</kbd> reveal for non-MCQ questions
+              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">Space</kbd> reveal
             </span>
             <span>
               <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">←→</kbd> answer
