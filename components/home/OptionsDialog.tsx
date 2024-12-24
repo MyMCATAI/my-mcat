@@ -30,7 +30,7 @@ export const OptionsDialog = ({
       alt: "Flashcards",
       cost: "5 coins",
       tab: "flashcards",
-      videoUrl: "https://www.youtube.com/embed/YOUR_ANKI_VIDEO_ID"
+      videoUrl: "https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/AnkiClinicAdvertisement.mp4"
     },
     {
       title: "TEST REVIEW",
