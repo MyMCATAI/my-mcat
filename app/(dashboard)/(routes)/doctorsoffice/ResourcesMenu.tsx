@@ -208,6 +208,33 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
           )}
 
           <div className="space-y-3">
+            <div className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
+                  1
+                </div>
+            </div>
+          </div>
+
+          {isAddFriendOpen && (
+            <div className="mb-4 flex items-center gap-2">
+              <input
+                type="email"
+                value={friendEmail}
+                onChange={(e) => setFriendEmail(e.target.value)}
+                placeholder="Eventually you can add friends..."
+                className="w-full p-2 border rounded"
+              />
+              <button
+                onClick={handleAddFriend}
+                className="bg-[--theme-hover-color] text-[--theme-hover-text] p-2 rounded hover:opacity-50 transition-opacity duration-200"
+              >
+                Send
+              </button>
+            </div>
+          )}
+
+          <div className="space-y-3">
             {LEADERBOARD_DATA.map((entry) => (
               <div key={entry.id} className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
                 <div className="flex items-center gap-3">
@@ -237,6 +264,7 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
         onClose={() => setIsTutorialDialogOpen(false)}
         videoUrl={tutorialVideoUrl}
       />
+    </div>
     </div>
   );
 };
