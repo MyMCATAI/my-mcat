@@ -265,11 +265,11 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                       <animated.div 
                         key={index} 
                         style={index === 0 ? springs : undefined}
-                        className="p-4 border border-[--theme-border-color] rounded-md"
+                        className="p-4 border border-[--theme-border-color] rounded-md bg-[--theme-flashcard-color]"
                       >
-                        <div className="text-sm text-gray-500 mb-2">{card.timestamp}</div>
-                        <div className="font-semibold mb-2">{card.question}</div>
-                        <div className="text-[--theme-hover-text]">{card.answer}</div>
+                        <div className="text-sm text-[--theme-text-color] opacity-50 mb-2">{card.timestamp}</div>
+                        <div className="font-semibold mb-2 text-[--theme-text-color]">{card.question}</div>
+                        <div className="text-[--theme-hover-color] font-medium">{card.answer}</div>
                       </animated.div>
                     ))}
                   </div>
