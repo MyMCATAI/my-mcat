@@ -32,10 +32,9 @@ export async function GET(request: NextRequest) {
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 
-    // Get paid users who have been active in the last week AND were created more than 24 hours ago
+    // Get users who have been active in the last week AND were created more than 24 hours ago
     const users = await prisma.userInfo.findMany({
       where: {
-        hasPaid: true,
         updatedAt: {
           gte: oneWeekAgo
         },
@@ -52,7 +51,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    console.log(`Found ${users.length} paid users active in the last week`);
+    console.log(`Found ${users.length} users active in the last week`);
 
     let streakLossCount = 0;
     let coinLossCount = 0;

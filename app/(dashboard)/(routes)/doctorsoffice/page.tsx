@@ -43,7 +43,6 @@ const DoctorsOfficePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [totalMCQQuestions, setTotalMCQQuestions] = useState(0);
   const [correctMCQQuestions, setCorrectMCQQuestions] = useState(0);
-  // Add this useEffect
 
   const afterTestFeedRef = useRef<{ setWrongCards: (cards: any[]) => void } | null>(null);
 
@@ -160,7 +159,11 @@ const DoctorsOfficePage: React.FC = () => {
     const handleCoinReward = async () => {
       // User get 1 coin for 80% correct MCQs
       if (completeAllRoom) {
-        if (correctMCQQuestions >= 0.8 * totalMCQQuestions) {
+        const mcqQuestions = totalMCQQuestions;
+        const mcqCorrect = correctMCQQuestions;
+        const mcqPercentage = mcqQuestions > 0 ? (mcqCorrect / mcqQuestions) * 100 : 0;
+
+        if (mcqQuestions > 0 && mcqPercentage >= 80) {
           const response = await fetch("/api/user-info", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -174,8 +177,8 @@ const DoctorsOfficePage: React.FC = () => {
           }
 
           toast.success("You earned 1 coin for 80%+ correct MCQs!");
-        } else {
-          toast.error("You did not earn any coin for this test.");
+        } else if (mcqQuestions > 0) {
+          toast.error(`You need 80% correct MCQs to earn a coin. You got ${mcqPercentage.toFixed(1)}%`);
         }
       }
     }
@@ -238,10 +241,9 @@ const DoctorsOfficePage: React.FC = () => {
       ],
       cost: 2,
       benefits: [
-        "4 patients a day",
-        "1 studycoin a day",
-        "Quality of Care (QC) = 1x",
         "You are an intern learning the ropes.",
+        "Psychology",
+        "Sociology"
       ],
     },
     {
@@ -256,10 +258,8 @@ const DoctorsOfficePage: React.FC = () => {
       ],
       cost: 4,
       benefits: [
-        "8 patients a day",
-        "1 studycoin a day",
-        "Quality of Care (QC) = 1.25x",
         "You are a doctor in training with Kalypso.",
+        "Biology"
       ],
     },
     {
@@ -270,10 +270,8 @@ const DoctorsOfficePage: React.FC = () => {
       ],
       cost: 6,
       benefits: [
-        "10 patients a day",
-        "2 studycoins a day",
-        "Quality of Care (QC) = 1.5x",
         "You are a physician.",
+        "Advanced Biology"
       ],
     },
     {
@@ -285,9 +283,8 @@ const DoctorsOfficePage: React.FC = () => {
       ],
       cost: 8,
       benefits: [
-        "Quality of Care (QC) = 1.5x",
-        "2 studycoins a day",
         "You can do surgeries.",
+        "Biochemistry"
       ],
     },
     {
@@ -295,10 +292,9 @@ const DoctorsOfficePage: React.FC = () => {
       items: [{ id: "MRIMachine1", src: "/game-components/MRIMachine.png" }],
       cost: 10,
       benefits: [
-        "Quality of Care (QC) = 1.75x",
-        "3 studycoins a day",
         "You can lead teams.",
-        "UWorld Raffle Entry ($400 value)",
+        "Physics",
+        "Chemistry"
       ],
     },
     {
@@ -309,33 +305,11 @@ const DoctorsOfficePage: React.FC = () => {
       ],
       cost: 12,
       benefits: [
-        "Quality of Care (QC) = 2x",
-        "3 studycoins a day",
         "You are now renowned.",
-        "30 min tutoring session.",
+        "Advanced Chemistry",
+        "Advanced Physics"
       ],
-    },
-    {
-      name: "Team Vacation",
-      items: [],
-      cost: 1,
-      benefits: ["Can take a break tomorrow and save your streak."],
-    },
-    {
-      name: "Free Clinic Day",
-      items: [],
-      cost: 5,
-      benefits: [
-        "Treat 50 patients",
-        "Double your chances of a 5-star review!",
-      ],
-    },
-    {
-      name: "University Sponsorship",
-      items: [],
-      cost: 20,
-      benefits: ["2x boost your value for university in a day"],
-    },
+    }
   ];
 
   const fetchData = async () => {
@@ -643,6 +617,8 @@ const DoctorsOfficePage: React.FC = () => {
       setCorrectCount(0);
       setWrongCount(0);
       setTestScore(0);
+      setTotalMCQQuestions(0);
+      setCorrectMCQQuestions(0);
 
       flashcardsDialogRef.current?.setWrongCards([])
       flashcardsDialogRef.current?.setCorrectCount(0)
@@ -713,14 +689,15 @@ const DoctorsOfficePage: React.FC = () => {
           <div className="absolute top-4 left-4 flex gap-2 z-50">
             <button
               onClick={handleNewGame}
-              className="bg-gradient-to-r from-[--theme-gradient-start] to-[--theme-gradient-end] 
-              hover:from-[--theme-hover-color] hover:to-[--theme-hover-color] 
-              text-white px-6 py-3 rounded-lg transition-all duration-300 
-              shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 
-              font-bold text-lg flex items-center gap-2"
+              className="bg-transparent border-2 border-[--theme-border-color] text-[--theme-hover-color]
+                px-6 py-3 rounded-lg transition-all duration-300 
+                shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 
+                font-bold text-lg flex items-center gap-2
+                opacity-90 hover:opacity-100
+                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
             >
-              <span className="border-r border-white/30 pr-2">New Game</span>
-              <span className="text-red-500">-1</span>
+              <span className="border-r border-[--theme-border-color] hover:border-white/30 pr-2">New Game</span>
+              <span className="text-white">-1</span>
               <Image
                 src="/game-components/PixelCupcake.png"
                 alt="Coin"
@@ -729,8 +706,7 @@ const DoctorsOfficePage: React.FC = () => {
                 className="inline-block"
               />
             </button>
-            
-            {isGameInProgress && wrongCount>0 && (
+            {isGameInProgress && totalMCQQuestions>0 && (
               <button
                 onClick={handleOpenAfterTestFeed}
                 className="bg-gradient-to-r from-blue-500 to-blue-600

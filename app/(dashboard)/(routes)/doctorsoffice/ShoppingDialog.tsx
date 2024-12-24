@@ -147,68 +147,70 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
         <div className="flex-grow flex">
           <div className="w-2/3 pr-2">
             <ScrollArea className="h-[calc(80vh-120px)] overflow-visible">
-              <div className="grid grid-cols-2 gap-2 p-1">
-                {levelInfo.map(({ level, title, image, cost }, index) => {
-                  const group = imageGroups.find(g => g.cost === cost);
-                  const isPurchased = group ? group.items.every((item) => visibleImages.has(item.id)) : false;
-                  const previousLevelPurchased = level === 1 || imageGroups
-                    .find(g => g.cost === levelInfo[level - 2].cost)?.items
-                    .every(item => visibleImages.has(item.id));
-                  const isAvailable = isPurchased || previousLevelPurchased;
+              <div className="pr-4 pb-4 themed-scrollbar">
+                <div className="grid grid-cols-2 gap-2 p-1">
+                  {levelInfo.map(({ level, title, image, cost }, index) => {
+                    const group = imageGroups.find(g => g.cost === cost);
+                    const isPurchased = group ? group.items.every((item) => visibleImages.has(item.id)) : false;
+                    const previousLevelPurchased = level === 1 || imageGroups
+                      .find(g => g.cost === levelInfo[level - 2].cost)?.items
+                      .every(item => visibleImages.has(item.id));
+                    const isAvailable = isPurchased || previousLevelPurchased;
 
-                  return (
-                    <div
-                      key={title}
-                      onClick={() => isAvailable && handleLevelClick(level)}
-                      onMouseEnter={() => setHoveredLevel(level)}
-                      onMouseLeave={() => setHoveredLevel(null)}
-                      className={`relative cursor-pointer transition-all duration-200 aspect-[4/3] group w-full ${!isAvailable && 'opacity-50 cursor-not-allowed'}`}
-                    >
-                      <div className={`absolute inset-0 transition-all duration-200 
-                        ${isPurchased ? 'opacity-100' : 'opacity-100'}
-                        border border-[--theme-border-color] rounded-md overflow-hidden
-                        ${hoveredLevel === level ? 'bg-[--theme-hover-color]' : 'bg-[--theme-leaguecard-color]'}`}>
-                        <div className="absolute top-0 left-0 right-0 bg-black bg-opacity-50 p-1 text-white flex justify-between items-center z-10">
-                          <div>
-                            <div className="text-xs font-krungthep">LEVEL {level}</div>
-                            <div className="text-sm font-krungthep">{title}</div>
-                          </div>
-                          <div className="text-sm font-krungthep">{cost} Coins</div>
-                        </div>
-                        <div className={`absolute inset-0 transition-opacity duration-200 ${hoveredLevel === level ? 'opacity-10' : 'opacity-100'}`}>
-                          <Image
-                            src={image}
-                            alt={title}
-                            layout="fill"
-                            objectFit="contain"
-                            className="rounded-md"
-                          />
-                        </div>
-                        {hoveredLevel === level && group && (
-                          <div className="absolute inset-0 flex items-center justify-center p-4">
-                            <ul className="list-disc text-[--theme-hover-text]">
-                              {group.benefits.map((benefit, index) => (
-                                <li key={index} className="text-sm">{benefit}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        {isPurchased && (
-                          <div className="absolute inset-0 bg-green-500 bg-opacity-50 flex items-center justify-center">
-                            <div className="text-white text-2xl font-bold">Purchased</div>
-                          </div>
-                        )}
-                        {!isPurchased && !isAvailable && (
-                          <div className="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center">
-                            <div className="text-white text-lg font-bold text-center">
-                              Purchase previous level first
+                    return (
+                      <div
+                        key={title}
+                        onClick={() => isAvailable && handleLevelClick(level)}
+                        onMouseEnter={() => setHoveredLevel(level)}
+                        onMouseLeave={() => setHoveredLevel(null)}
+                        className={`relative cursor-pointer transition-all duration-200 aspect-[4/3] group w-full ${!isAvailable && 'opacity-50 cursor-not-allowed'}`}
+                      >
+                        <div className={`absolute inset-0 transition-all duration-200 
+                          ${isPurchased ? 'opacity-100' : 'opacity-100'}
+                          border border-[--theme-border-color] rounded-md overflow-hidden
+                          ${hoveredLevel === level ? 'bg-[--theme-hover-color]' : 'bg-[--theme-leaguecard-color]'}`}>
+                          <div className="absolute top-0 left-0 right-0 bg-black bg-opacity-50 p-1 text-white flex justify-between items-center z-10">
+                            <div>
+                              <div className="text-xs font-krungthep">LEVEL {level}</div>
+                              <div className="text-sm font-krungthep">{title}</div>
                             </div>
+                            <div className="text-sm font-krungthep">{cost} Coins</div>
                           </div>
-                        )}
+                          <div className={`absolute inset-0 transition-opacity duration-200 ${hoveredLevel === level ? 'opacity-10' : 'opacity-100'}`}>
+                            <Image
+                              src={image}
+                              alt={title}
+                              layout="fill"
+                              objectFit="contain"
+                              className="rounded-md"
+                            />
+                          </div>
+                          {hoveredLevel === level && group && (
+                            <div className="absolute inset-0 flex items-center justify-center p-4">
+                              <ul className="list-disc text-[--theme-hover-text]">
+                                {group.benefits.map((benefit, index) => (
+                                  <li key={index} className="text-sm">{benefit}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {isPurchased && (
+                            <div className="absolute inset-0 bg-green-500 bg-opacity-50 flex items-center justify-center">
+                              <div className="text-white text-2xl font-bold">Purchased</div>
+                            </div>
+                          )}
+                          {!isPurchased && !isAvailable && (
+                            <div className="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center">
+                              <div className="text-white text-lg font-bold text-center">
+                                Purchase previous level first
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </ScrollArea>
           </div>
