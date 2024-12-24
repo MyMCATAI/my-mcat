@@ -27,15 +27,24 @@ export const FullscreenPrompt = () => {
         if (neverShow === 'true' || sessionDismissed === 'true') return;
         if (excludedPaths.includes(pathname)) return;
 
-        // Add fullscreen change event listener
-        const handleFullscreenChange = () => {
+        // Move isFullscreen check into a function so we can reuse it
+        const checkFullscreen = () => {
             const doc = document as CustomDocument;
-            const isFullscreen = !!(doc.fullscreenElement ||
+            return !!(doc.fullscreenElement ||
                 doc.webkitFullscreenElement ||
                 doc.mozFullScreenElement ||
                 doc.msFullscreenElement);
-            
-            if (isFullscreen) {
+        };
+
+        // Check if already in fullscreen before showing prompt
+        if (checkFullscreen()) {
+            setShowPrompt(false);
+            return;
+        }
+
+        // Add fullscreen change event listener
+        const handleFullscreenChange = () => {
+            if (checkFullscreen()) {
                 setShowPrompt(false);
                 sessionStorage.setItem('fullscreenPrompt-dismissed', 'true');
             }
@@ -46,14 +55,8 @@ export const FullscreenPrompt = () => {
         document.addEventListener('mozfullscreenchange', handleFullscreenChange);
         document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
-        // Check if already in fullscreen
-        const doc = document as CustomDocument;
-        const isFullscreen = !!(doc.fullscreenElement ||
-            doc.webkitFullscreenElement ||
-            doc.mozFullScreenElement ||
-            doc.msFullscreenElement);
-
-        if (!isFullscreen && !isDismissed) {
+        // Only show prompt if NOT in fullscreen
+        if (!checkFullscreen() && !isDismissed) {
             setShowPrompt(true);
             window.dispatchEvent(new CustomEvent('fullscreenPromptChange', { 
                 detail: { isVisible: true } 
@@ -69,6 +72,13 @@ export const FullscreenPrompt = () => {
     }, [isDismissed, pathname]);
 
     const enterFullscreen = () => {
+        const doc = document as CustomDocument;
+        if (doc.fullscreenElement) {
+            // Already in fullscreen, just dismiss the prompt
+            setShowPrompt(false);
+            return;
+        }
+
         const docEl = document.documentElement as HTMLElement & {
             webkitRequestFullscreen?: () => Promise<void>;
             mozRequestFullScreen?: () => Promise<void>;
