@@ -8,7 +8,7 @@ export interface CoinLossEmailData {
 }
 
 export const coinLoss5Template = (data: CoinLossEmailData): TemplateConfig => ({
-  subject: `⚠️ Alert: You've lost 5 coins! Urgent action needed 🪙`,
+  subject: `⚠️ Five coins? You're telling me inactivity on MCAT Prep costed FIVE COINS? 🪙`,
   html: `
     <div style="font-family: Arial, sans-serif; max-width: 37.5rem; margin: 0 auto; padding: 1.25rem;">
       <p style="color: #333333; line-height: 1.6;">
@@ -16,11 +16,11 @@ export const coinLoss5Template = (data: CoinLossEmailData): TemplateConfig => ({
       </p>
       
       <p style="color: #ff4444; line-height: 1.6; font-weight: bold;">
-        This is an urgent notice! You've lost 5 coins due to extended inactivity. You now have ${data.remainingCoins} coins remaining.
+        I really, really miss you. You now have ${data.remainingCoins} coins remaining.
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
-        I'm getting worried about your MCAT prep journey! Losing 5 coins means you haven't logged in for several days, which could seriously impact your study momentum. Remember, consistent studying is crucial for MCAT success.
+        I'm getting worried about your MCAT prep journey! That amount of coins means you haven't logged in for several days, which could seriously impact your study momentum. Remember, consistent studying is crucial for MCAT success. You won't dip below 5 coins, but you can always get it back up!
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
@@ -38,14 +38,10 @@ export const coinLoss5Template = (data: CoinLossEmailData): TemplateConfig => ({
         • <a href="${data.scheduleUrl || 'https://mymcat.ai/home'}" style="color: #2b6cb0; text-decoration: underline; font-weight: bold;">Resume your study schedule immediately</a>
       </p>
 
-      <p style="color: #333333; line-height: 1.6; font-style: italic;">
-        Remember: Each additional day of inactivity will result in further coin loss. Don't let your hard work go to waste!
-      </p>
-
       <p style="color: #333333; line-height: 1.6;">
         We're here to support you!<br>
         Kalypso 🐱<br>
-        MyMCAT AI Tutor
+        Your MCAT Study Buddy
       </p>
 
       <p style="color: #666666; font-size: 0.75rem; margin-top: 1.875rem;">
