@@ -19,9 +19,10 @@ import {
 } from "@/utils/calculateResourceTotals";
 import WelcomeDialog from "./WelcomeDialog";
 import FlashcardsDialog from "./FlashcardsDialog";
-import AfterTestFeed from "./AfterTestFeed";
+import AfterTestFeed, { UserResponseWithCategory } from "./AfterTestFeed";
 import type { UserResponse } from "@prisma/client";
 import { FetchedActivity } from "@/types";
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 const DoctorsOfficePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("doctorsoffice");
@@ -37,10 +38,14 @@ const DoctorsOfficePage: React.FC = () => {
 
   // Flashcards Dialog
   const [isFlashcardsOpen, setIsFlashcardsOpen] = useState(false);
-  const flashcardsDialogRef = useRef<{ open: () => void } | null>(null);
+  const flashcardsDialogRef = useRef<{ open: () => void, setWrongCards: (cards: any[]) => void, setCorrectCount: (count: number) => void } | null>(null);
   const [flashcardRoomId, setFlashcardRoomId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [totalMCQQuestions, setTotalMCQQuestions] = useState(0);
+  const [correctMCQQuestions, setCorrectMCQQuestions] = useState(0);
   // Add this useEffect
+
+  const afterTestFeedRef = useRef<{ setWrongCards: (cards: any[]) => void } | null>(null);
 
   // Game functionality
   const [activeRooms, setActiveRooms] = useState<Set<string>>(() => new Set());
@@ -56,7 +61,7 @@ const DoctorsOfficePage: React.FC = () => {
   };
 
   // User Responses
-  const [userResponses, setUserResponses] = useState<UserResponse[]>([]);
+  const [userResponses, setUserResponses] = useState<UserResponseWithCategory[]>([]);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
   const [testScore, setTestScore] = useState(0);
@@ -101,38 +106,43 @@ const DoctorsOfficePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!isLoading && completeAllRoom) {
-      console.log('Finish all rooms')
-      // Fetch user responses
-      if (currentUserTestId) {
-        fetchUserResponses(currentUserTestId);
+    const finishTest = async () => {
+      if (!isLoading && completeAllRoom) {
+        // Finish all rooms
 
-        // Dummy scoring logic
-        const correctQuestionWeight = 1;
-        const incorrectQuestionWeight = -0.5;
-        let testScore =
-          correctCount * correctQuestionWeight +
-          wrongCount * incorrectQuestionWeight;
-        testScore = Math.max(testScore, 0);
-        setTestScore(testScore);
+        // Fetch user responses
+        if (currentUserTestId) {
+          fetchUserResponses(currentUserTestId);
 
-        // Update the UserTest with score
-        fetch(`/api/user-test/${currentUserTestId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            score: testScore,
-            finishedAt: new Date().toISOString(),
-          }),
-        }).catch(console.error);
+          // Dummy scoring logic
+          const correctQuestionWeight = 1;
+          const incorrectQuestionWeight = -0.5;
+          let testScore =
+            correctCount * correctQuestionWeight +
+            wrongCount * incorrectQuestionWeight;
+          testScore = Math.max(testScore, 0);
+          setTestScore(testScore);
 
-        if (!isFlashcardsOpen && !largeDialogQuit) {
-          setIsAfterTestDialogOpen(true);
+          // Update the UserTest with score
+          fetch(`/api/user-test/${currentUserTestId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              score: testScore,
+              finishedAt: new Date().toISOString(),
+            }),
+          }).catch(console.error);
+
+          if (!isFlashcardsOpen && !largeDialogQuit) {
+            setIsAfterTestDialogOpen(true);
+          }
         }
       }
     }
+
+    finishTest();
   }, [
     currentUserTestId,
     activeRooms.size,
@@ -145,6 +155,33 @@ const DoctorsOfficePage: React.FC = () => {
     largeDialogQuit,
     completeAllRoom
   ]);
+
+  useEffect(() => {
+    const handleCoinReward = async () => {
+      // User get 1 coin for 80% correct MCQs
+      if (completeAllRoom) {
+        if (correctMCQQuestions >= 0.8 * totalMCQQuestions) {
+          const response = await fetch("/api/user-info", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              incrementScore: 1
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to increment coin");
+          }
+
+          toast.success("You earned 1 coin for 80%+ correct MCQs!");
+        } else {
+          toast.error("You did not earn any coin for this test.");
+        }
+      }
+    }
+
+    handleCoinReward();
+  }, [completeAllRoom]);
 
   const createNewUserTest = async () => {
     try {
@@ -199,7 +236,7 @@ const DoctorsOfficePage: React.FC = () => {
         { id: "WaitingRoom1", src: "/game-components/WaitingRoom1.png" },
         { id: "DoctorsOffice1", src: "/game-components/DoctorsOffice1.png" },
       ],
-      cost: 5,
+      cost: 2,
       benefits: [
         "4 patients a day",
         "1 studycoin a day",
@@ -217,7 +254,7 @@ const DoctorsOfficePage: React.FC = () => {
         { id: "Bathroom1", src: "/game-components/Bathroom1.png" },
         { id: "Bathroom2", src: "/game-components/Bathroom1.png" },
       ],
-      cost: 15,
+      cost: 4,
       benefits: [
         "8 patients a day",
         "1 studycoin a day",
@@ -231,7 +268,7 @@ const DoctorsOfficePage: React.FC = () => {
         { id: "HighCare1", src: "/game-components/HighCare1.png" },
         { id: "HighCare2", src: "/game-components/HighCare1.png" },
       ],
-      cost: 25,
+      cost: 6,
       benefits: [
         "10 patients a day",
         "2 studycoins a day",
@@ -246,7 +283,7 @@ const DoctorsOfficePage: React.FC = () => {
         { id: "MedicalCloset1", src: "/game-components/MedicalCloset1.png" },
         { id: "MRIMachine2", src: "/game-components/MRIMachine.png" },
       ],
-      cost: 35,
+      cost: 8,
       benefits: [
         "Quality of Care (QC) = 1.5x",
         "2 studycoins a day",
@@ -256,7 +293,7 @@ const DoctorsOfficePage: React.FC = () => {
     {
       name: "PHYSICIAN LEVEL",
       items: [{ id: "MRIMachine1", src: "/game-components/MRIMachine.png" }],
-      cost: 60,
+      cost: 10,
       benefits: [
         "Quality of Care (QC) = 1.75x",
         "3 studycoins a day",
@@ -270,7 +307,7 @@ const DoctorsOfficePage: React.FC = () => {
         { id: "CATScan1", src: "/game-components/CATScan1.png" },
         { id: "CATScan2", src: "/game-components/CATScan1.png" },
       ],
-      cost: 80,
+      cost: 12,
       benefits: [
         "Quality of Care (QC) = 2x",
         "3 studycoins a day",
@@ -550,6 +587,96 @@ const DoctorsOfficePage: React.FC = () => {
     await fetchData(); // Refetch all data to update scores and other stats
   };
 
+  const handleOpenAfterTestFeed = () => {
+    if(!currentUserTestId) return
+    fetchUserResponses(currentUserTestId);
+    setIsAfterTestDialogOpen(true);
+  };
+
+  const { setIsAutoPlay } = useMusicPlayer();
+
+  useEffect(() => {
+    setIsAutoPlay(true);
+    return () => setIsAutoPlay(false);
+  }, [setIsAutoPlay]);
+
+  const [populateRoomsFn, setPopulateRoomsFn] = useState<(() => void) | null>(null);
+
+  // Create a stable callback for setting the function
+  const handleSetPopulateRooms = useCallback((fn: () => void) => {
+    console.log("Setting new populateRooms function");
+    setPopulateRoomsFn(() => fn);
+  }, []);
+
+  const [isGameInProgress, setIsGameInProgress] = useState(false);
+
+  const handleNewGame = async () => {
+    // Check if user has enough coins
+    if (userScore < 1) {
+      toast.error("You need 1 coin to start a new game!");
+      return;
+    }
+
+    try {
+      // Deduct coin
+      const response = await fetch("/api/user-info", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          decrementScore: 1
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to deduct coin");
+      }
+
+      const { score: updatedScore } = await response.json();
+      setUserScore(updatedScore);
+
+      // Reset all game-related states
+      setActiveRooms(new Set());
+      setCompleteAllRoom(false);
+      setIsAfterTestDialogOpen(false);
+      setLargeDialogQuit(false);
+      setUserResponses([]);
+      setCorrectCount(0);
+      setWrongCount(0);
+      setTestScore(0);
+
+      flashcardsDialogRef.current?.setWrongCards([])
+      flashcardsDialogRef.current?.setCorrectCount(0)
+      afterTestFeedRef.current?.setWrongCards([])
+
+      const userTestId = await createNewUserTest();
+      if (userTestId) {
+        setCurrentUserTestId(userTestId);
+        setIsGameInProgress(true);
+      }
+
+      // Call populateRoomsFn if it exists
+      if (typeof populateRoomsFn === 'function') {
+        populateRoomsFn();
+        toast.success("New game started! 1 coin deducted.");
+      } else {
+        console.error("populateRoomsFn is not a function");
+        toast.error("Failed to start new game. Please try refreshing the page.");
+      }
+    } catch (error) {
+      console.error("Error starting new game:", error);
+      toast.error("Failed to start new game. Please try again.");
+    }
+  };
+
+  const handleMCQAnswer = (isCorrect: boolean) => {
+    if (isCorrect) {
+      setCorrectMCQQuestions(prev => prev + 1);
+    }
+  };
+
+  // Add this state near the top of the component with other state declarations
+  const [isFlashcardsTooltipOpen, setIsFlashcardsTooltipOpen] = useState(false);
+
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
       <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
@@ -564,6 +691,7 @@ const DoctorsOfficePage: React.FC = () => {
         </div>
         <div className="w-3/4 font-krungthep relative rounded-r-lg">
           <OfficeContainer
+            onNewGame={handleSetPopulateRooms}
             setCompleteAllRoom={setCompleteAllRoom}
             visibleImages={visibleImages}
             clinicName={clinicName}
@@ -575,12 +703,46 @@ const DoctorsOfficePage: React.FC = () => {
             toggleGroup={toggleGroup}
             onUpdateUserScore={handleUpdateUserScore}
             setUserRooms={setUserRooms}
-            updateVisibleImages={updateVisibleImages} // Add this line
+            updateVisibleImages={updateVisibleImages}
             activeRooms={activeRooms}
             setActiveRooms={setActiveRooms}
             isFlashcardsOpen={isFlashcardsOpen}
             setIsFlashcardsOpen={setIsFlashcardsOpen}
           />
+          {/* Button on the top left corner */}
+          <div className="absolute top-4 left-4 flex gap-2 z-50">
+            <button
+              onClick={handleNewGame}
+              className="bg-gradient-to-r from-[--theme-gradient-start] to-[--theme-gradient-end] 
+              hover:from-[--theme-hover-color] hover:to-[--theme-hover-color] 
+              text-white px-6 py-3 rounded-lg transition-all duration-300 
+              shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 
+              font-bold text-lg flex items-center gap-2"
+            >
+              <span className="border-r border-white/30 pr-2">New Game</span>
+              <span className="text-red-500">-1</span>
+              <Image
+                src="/game-components/PixelCupcake.png"
+                alt="Coin"
+                width={24}
+                height={24}
+                className="inline-block"
+              />
+            </button>
+            
+            {isGameInProgress && wrongCount>0 && (
+              <button
+                onClick={handleOpenAfterTestFeed}
+                className="bg-gradient-to-r from-blue-500 to-blue-600
+                hover:from-blue-600 hover:to-blue-700
+                text-white px-6 py-3 rounded-lg transition-all duration-300 
+                shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 
+                font-bold text-lg flex items-center gap-2"
+              >
+                <span>Review</span>
+              </button>
+            )}
+          </div>
           {/* Fellowship Level button with coins and patients */}
           <div className="absolute top-4 right-4 z-50 flex items-center">
             {/* Patient count */}
@@ -642,6 +804,7 @@ const DoctorsOfficePage: React.FC = () => {
                     </a>
                   }
                 />
+
                 <FlashcardsDialog
                   ref={flashcardsDialogRef}
                   isOpen={isFlashcardsOpen}
@@ -650,27 +813,43 @@ const DoctorsOfficePage: React.FC = () => {
                   activeRooms={activeRooms}
                   setActiveRooms={setActiveRooms}
                   handleCompleteAllRoom={handleCompleteAllRoom}
+                  onMCQAnswer={handleMCQAnswer}
+                  setTotalMCQQuestions={setTotalMCQQuestions}
                   buttonContent={
-                    <a
-                      href="#"
-                      className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                    <div className="relative">
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setIsFlashcardsTooltipOpen(!isFlashcardsTooltipOpen);
+                        }}
+                        className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
-                        />
-                      </svg>
-                      Flashcards
-                    </a>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
+                          />
+                        </svg>
+                        Flashcards
+                      </a>
+                      <div 
+                        className={`absolute right-full top-1/2 -translate-y-1/2 mr-2 px-4 py-2 w-72 bg-gray-900 text-white text-sm rounded-lg transition-all duration-200 ${
+                          isFlashcardsTooltipOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+                        }`}
+                      >
+                        {"We're working on adding uploadable flashcards later. They'll be auto-tagged and made into multiple choice questions. If you REALLY, REALLY want us to prioritize this over the bajillion other things we gotta do, venmo Prynce $100 at @ShortKingsAnthem and say 'Pretty please uploadable flashcards.'"}
+                        <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                      </div>
+                    </div>
                   }
                   currentUserTestId={currentUserTestId}
                   isLoading={isLoading}
@@ -702,12 +881,12 @@ const DoctorsOfficePage: React.FC = () => {
         </div>
       </div>
       <AfterTestFeed
+        ref={afterTestFeedRef}
         open={isAfterTestDialogOpen}
         onOpenChange={setIsAfterTestDialogOpen}
         userResponses={userResponses}
         correctCount={correctCount}
         wrongCount={wrongCount}
-        testScore={testScore}
         largeDialogQuit={largeDialogQuit}
         setLargeDialogQuit={setLargeDialogQuit}
       ></AfterTestFeed>

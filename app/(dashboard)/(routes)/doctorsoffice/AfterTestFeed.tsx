@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, ReactNode } from 'react';
+import React, { useState, useEffect, useRef, useCallback, ReactNode, forwardRef, useImperativeHandle } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,22 +6,20 @@ import {
 import { motion } from 'framer-motion';
 import AnimatedStar from "./AnimatedStar";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import type { UserResponse } from '@prisma/client';
 import { cleanQuestion } from './FlashcardDeck';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { animated, useSpring } from 'react-spring';
-import prisma from '@/lib/prismadb';
+import ChatBot from "@/components/chatbot/ChatBotFlashcard";
+import { useUser } from "@clerk/nextjs";
 
 interface LargeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title?: string; 
   children?: ReactNode;
-  userResponses: UserResponse[];
+  userResponses: UserResponseWithCategory[];
   correctCount: number;
   wrongCount: number;
-  testScore: number;
   largeDialogQuit: boolean;
   setLargeDialogQuit: (quit: boolean) => void;
 }
@@ -57,7 +55,7 @@ interface Question {
   types: string
 }
 
-interface UserResponseWithCategory {
+export interface UserResponseWithCategory {
   id: string;
   userId?: string | null;
   userTestId?: string | null;
@@ -85,50 +83,72 @@ interface WrongCard {
   types: string; // normal: multiple choice; flashcard: fill in the blank
 }
 
-const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, children, userResponses, correctCount, wrongCount, testScore, largeDialogQuit, setLargeDialogQuit }) => {
-  const [score, setScore] = useState(0);
+interface Review {
+  id: string;
+  tier: number;
+  rating: number;
+  review: string;
+  profilePicture: string;
+}
+
+const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, LargeDialogProps>(({ 
+  open, 
+  onOpenChange, 
+  title, 
+  children, 
+  userResponses, 
+  correctCount, 
+  wrongCount, 
+  largeDialogQuit, 
+  setLargeDialogQuit 
+}, ref) => {
+  const { user } = useUser();
+  const score = correctCount/(correctCount+wrongCount) * 100;
+  const [review, setReview] = useState<Review | null>(null);
+
+  const getStarCount = (score: number): number => {
+    if (score >= 100) return 5;
+    if (score >= 80) return 4;
+    if (score >= 60) return 3;
+    if (score >= 40) return 2;
+    if (score >= 20) return 1;
+    return 0;
+  };
+
+  const fetchReview = async (rating: number): Promise<Review | null> => {
+    try {
+      const url = `/api/reviews?tier=1&rating=${rating}&count=1`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data && data.length > 0) {
+        return data[0];
+      }
+    } catch (error) {
+      console.error("Error fetching review:", error);
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    if (open) {
+      const starCount = getStarCount(score);
+      fetchReview(starCount).then(reviewData => {
+        if (reviewData) {
+          setReview(reviewData);
+        }
+      });
+    }
+  }, [open, score]);
+
   const [showReviewFeed, setShowReviewFeed] = useState(false);
-  const [userQuestion, setUserQuestion] = useState('');
   const [mostMissed, setMostMissed] = useState<ConceptScore>({});
   const [mostCorrect, setMostCorrect] = useState<ConceptScore>({});
-  const [feedItems, setFeedItems] = useState<FeedItem[]>([
-    {
-      id: 1,
-      type: 'Reading',
-      content: {
-        title: 'Amino Acids Overview',
-        text: 'Amino acids are organic compounds that combine to form proteins. They are key elements in the processes of neurotransmitter transport and biosynthesis. There are 20 standard amino acids, each with unique characteristics due to their side chains.'
-      }
-    },
-    {
-      id: 2,
-      type: 'Flashcard',
-      content: {
-        question: 'What is the general structure of an amino acid?',
-        answer: 'An amino acid consists of a central carbon atom (α-carbon) bonded to an amino group (-NH₂), a carboxyl group (-COOH), a hydrogen atom, and an R group (side chain) specific to each amino acid.'
-      }
-    },
-    {
-      id: 3,
-      type: 'Practice Question',
-      content: {
-        question: 'Which of the following is a non-polar amino acid?',
-        options: [
-          { option: 'A', text: 'Serine', isCorrect: false, explanation: 'Serine is a polar amino acid due to its hydroxymethyl side chain.' },
-          { option: 'B', text: 'Leucine', isCorrect: true, explanation: 'Leucine is a non-polar amino acid with an aliphatic isobutyl side chain.' },
-          { option: 'C', text: 'Lysine', isCorrect: false, explanation: 'Lysine is a basic, polar amino acid with an amino side chain.' },
-          { option: 'D', text: 'Glutamine', isCorrect: false, explanation: 'Glutamine is a polar amino acid due to its amide side chain.' },
-        ],
-        correctOption: 'B'
-      }
-    },
-    // Additional dummy items can be added here
-  ]);
 
-  const [showExitConfirmation, setShowExitConfirmation] = useState(false);
-  const [neverShowAgain, setNeverShowAgain] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const observer = useRef<IntersectionObserver | null>(null);
   const [conceptStats, setConceptStats] = useState<ConceptScore>({});
 
   // Add new state for wrong cards
@@ -142,26 +162,38 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
 
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
+  // Add new state for animation control
+  const [showStats, setShowStats] = useState(false);
+
+  const [chatbotContext, setChatbotContext] = useState({
+    contentTitle: "",
+    context: "",
+  });
+
+  useImperativeHandle(ref, () => ({
+    setWrongCards
+  }));
+
   useEffect(() => {
     if (open) {
       // Reset states when dialog opens
-      setScore(0);
       setShowReviewFeed(false);
+      setShowStats(false);
 
+      // Animate score first
       const animateScore = () => {
-        const targetScore = Math.random() * 5;
-        const duration = 2000 + Math.random() * 1000;
+        const duration = 2000;
         const start = Date.now();
 
         const animate = () => {
           const elapsed = Date.now() - start;
           const progress = Math.min(elapsed / duration, 1);
-          const currentScore = progress * targetScore;
-
-          setScore(currentScore);
 
           if (progress < 1) {
             requestAnimationFrame(animate);
+          } else {
+            // Show stats after score animation completes
+            setTimeout(() => setShowStats(true), 500);
           }
         };
 
@@ -177,12 +209,22 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
       <div className="flex justify-center mb-4">
         {[...Array(5)].map((_, i) => {
           const starProgress = Math.max(Math.min(score - i, 1), 0);
+          const delay = i * 200; // Delay each star by 200ms
+
           return (
-            <AnimatedStar
+            <animated.div
               key={i}
-              progress={starProgress}
-              uniqueId={`dialog-star-${i}`}
-            />
+              style={{
+                opacity: starProgress,
+                transform: starProgress ? 'scale(1)' : 'scale(0.5)',
+                transition: `opacity 0.5s ${delay}ms, transform 0.5s ${delay}ms`,
+              }}
+            >
+              <AnimatedStar
+                progress={starProgress}
+                uniqueId={`dialog-star-${i}`}
+              />
+            </animated.div>
           );
         })}
       </div>
@@ -222,22 +264,6 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
 
   const handleGoToReviewFeed = () => {
     setShowReviewFeed(true);
-  };
-
-  const handleQuestionSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Process the question or add it to the feed
-    if (userQuestion.trim() !== '') {
-      const newItem = {
-        id: feedItems.length + 1,
-        type: 'Question',
-        content: {
-          question: userQuestion.trim()
-        }
-      };
-      setFeedItems([newItem, ...feedItems]);
-      setUserQuestion('');
-    }
   };
 
   const cleanAnswer = (text: string): string => {
@@ -354,7 +380,7 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
 
     // Set isDataLoaded to true after all data processing is complete
     setIsDataLoaded(true);
-  }, [userResponses, parseUserResponses, correctCount, wrongCount, testScore]);
+  }, [userResponses, parseUserResponses, correctCount, wrongCount]);
 
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -439,72 +465,10 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
   };
 
   const handleExit = () => {
-    if (neverShowAgain) {
       onOpenChange(false);
       setLargeDialogQuit(true);
-    } else {
-      setShowExitConfirmation(true);
-    }
   };
 
-  const handleConfirmExit = () => {
-    if (neverShowAgain) {
-      // Save this preference to local storage or user settings
-      localStorage.setItem('neverShowExitConfirmation', 'true');
-    }
-    onOpenChange(false);
-  };
-
-  const handleCancelExit = () => {
-    setShowExitConfirmation(false);
-  };
-
-  const renderAminoAcidOverview = () => (
-    <div className="mb-10 p-6 rounded-xl shadow-lg backdrop-filter backdrop-blur-lg bg-opacity-30 border border-opacity-20 bg-red-100 border-red-200 text-[--theme-text-color]">
-      <h2 className="text-2xl font-bold mb-4">Amino Acid Overview</h2>
-      <p className="mb-6 text-opacity-90">
-        Amino acids are organic compounds that combine to form proteins. They are key elements in the processes of neurotransmitter transport and biosynthesis. There are 20 standard amino acids, each with unique characteristics due to their side chains.
-      </p>
-      <form onSubmit={handleQuestionSubmit} className="mt-6">
-        <input
-          type="text"
-          value={userQuestion}
-          onChange={(e) => setUserQuestion(e.target.value)}
-          placeholder="Ask a question about amino acids..."
-          className="w-full p-3 border border-gray-300 rounded-lg text-black bg-white bg-opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-        <Button
-          type="submit"
-          className="mt-3 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] hover:bg-[--theme-hover-color] transition-colors duration-300"
-        >
-          Submit Question
-        </Button>
-      </form>
-    </div>
-  );
-
-  const lastFeedItemRef = useCallback((node: HTMLDivElement | null) => {
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        // Load more items here
-        loadMoreItems();
-      }
-    });
-    if (node) observer.current.observe(node);
-  }, [hasMore]);
-
-  const loadMoreItems = () => {
-    // Simulating loading more items
-    // In a real scenario, you'd fetch more items from an API
-    const newItems: FeedItem[] = [
-      // ... generate new items here ...
-    ];
-    setFeedItems(prevItems => [...prevItems, ...newItems]);
-    if (newItems.length === 0) {
-      setHasMore(false);
-    }
-  };
 
   const handleCardFlip = (index: number) => {
     setWrongCards(cards => 
@@ -514,74 +478,74 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
     );
   };
 
-  const renderKittyLitter = () => (
-    <div className="w-full h-full border-[--theme-border-color] pl-4 flex flex-col">
-      <h3 className="text-lg font-bold mb-4">Kitty Litter</h3>
-      <ScrollArea className="flex-1">
-        <div className="space-y-4 pr-4 pb-4">
-          {wrongCards.map((card, index) => (
-            <animated.div 
-              key={index}
-              style={index === 0 ? springs : undefined}
-              className={`
-                p-4 border border-[--theme-border-color] rounded-md 
-                bg-[--theme-gradient-end] cursor-pointer 
-                transition-all duration-300 hover:shadow-lg
-                h-[300px]
-                ${card.isFlipped ? 'bg-opacity-90' : ''}
-              `}
-              onClick={() => handleCardFlip(index)}
-            >
-              <div className="h-full flex flex-col">
-                <div className="text-sm text-gray-500 mb-2">{card.timestamp}</div>
-                
-                <div className="flex-1 overflow-y-auto">
-                  {!card.isFlipped ? (
-                    // If the question is not multiple choice question, display it in the center of the card
-                    <div className={`${card.types !== 'normal' ? 'h-full flex items-center justify-center' : ''}`}>
-                      <div className={`font-semibold mb-2 ${card.types !== 'normal' ? 'text-center' : ''}`}>
-                        {card.question}
+  const renderReviewSection = () => (
+    <ScrollArea className="h-[calc(90vh-6rem)]">
+      <div className="space-y-4 pr-4 pb-4">
+        {wrongCards.map((card, index) => (
+          <animated.div 
+            key={index}
+            style={index === 0 ? springs : undefined}
+            className={`
+              p-4 border border-[--theme-border-color] rounded-md 
+              bg-[--theme-gradient-end] cursor-pointer 
+              transition-all duration-300 hover:shadow-lg
+              h-[300px]
+              ${card.isFlipped ? 'bg-opacity-90' : ''}
+            `}
+            onClick={() => handleCardFlip(index)}
+          >
+            <div className="h-full flex flex-col">
+              <div className="text-sm text-gray-500 mb-2">{card.timestamp}</div>
+              <div className="flex-1 overflow-y-auto">
+                {!card.isFlipped ? (
+                  <div className={`${card.types !== 'normal' ? 'h-full flex flex-col items-center justify-center' : ''}`}>
+                    <div className={`font-semibold mb-2 ${card.types !== 'normal' ? 'text-center' : ''}`}>
+                      {card.question}
+                    </div>
+                    {card.types === 'normal' && (
+                      <div className="mt-2 space-y-2">
+                        {card.questionOptions.map((option, optIndex) => (
+                          <div 
+                            key={optIndex}
+                            className="p-2 rounded-md bg-opacity-50 bg-gray-100 text-sm"
+                          >
+                            {option}
+                          </div>
+                        ))}
                       </div>
-                      {card.types === 'normal' && (
-                        <div className="mt-2 space-y-2">
-                          {card.questionOptions.map((option, optIndex) => (
-                            <div 
-                              key={optIndex}
-                              className="p-2 rounded-md bg-opacity-50 bg-gray-100 text-sm"
-                            >
-                              {option}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-green-600 font-medium text-center">
-                      <div className="text-sm mb-1">Correct Answer:</div>
-                      <div>{card.answer}</div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="text-xs text-gray-400 mt-4 pt-2 border-t border-gray-200">
-                  {card.isFlipped ? 'Click to hide answer' : 'Click to show answer'}
-                </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center">
+                    <div className="text-sm mb-1 text-green-600">Correct Answer:</div>
+                    <div className="text-green-600 font-medium text-center">{card.answer}</div>
+                  </div>
+                )}
               </div>
-            </animated.div>
-          ))}
-          {wrongCards.length === 0 && (
-            <div className="text-center text-gray-500 italic">
-              No wrong answers to review
+              
+              <div className="text-xs text-gray-400 mt-4 pt-2 border-t border-gray-200">
+                {card.isFlipped ? 'Click to hide answer' : 'Click to show answer'}
+              </div>
             </div>
-          )}
-        </div>
-      </ScrollArea>
-    </div>
+          </animated.div>
+        ))}
+        {wrongCards.length === 0 && (
+          <div className="text-center text-gray-500 italic">
+            No wrong answers to review
+          </div>
+        )}
+      </div>
+    </ScrollArea>
   );
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && wrongCards.length > 0) {
+      // Check if the active element is an input or textarea
+      const isInputActive = document.activeElement?.tagName === 'INPUT' || 
+                           document.activeElement?.tagName === 'TEXTAREA';
+
+      // Only handle space for card flipping if we're not typing in an input
+      if (e.code === 'Space' && wrongCards.length > 0 && !isInputActive) {
         e.preventDefault();
         // Flip the first visible card
         handleCardFlip(0);
@@ -595,103 +559,295 @@ const AfterTestFeed: React.FC<LargeDialogProps> = ({ open, onOpenChange, title, 
   const generateSummaryMessage = (conceptStats: ConceptScore): string => {
     const totalQuestions = correctCount + wrongCount;
     
-    // Get all unique topics
-    const topics = Object.keys(conceptStats);
-    
-    // Find best and worst performing topics
-    const bestTopic = Object.entries(conceptStats)
-      .filter(([topic, [correct, ignored, total]]) => total >= 3) // Only consider topics with at least 3 questions
-      .sort(([topicA, a], [topicB, b]) => (b[0]/b[2]) - (a[0]/a[2]))[0];
+    // Create a map to store category-specific analytics
+    const categoryAnalytics = userResponses.reduce((acc, response) => {
+      const category = response.question.category.conceptCategory;
+      if (!acc[category]) {
+        acc[category] = {
+          totalTime: 0,
+          questionCount: 0,
+          correct: 0,
+          incorrect: 0,
+          types: new Set<string>(),
+          avgTimePerQuestion: 0
+        };
+      }
       
-    const worstTopic = Object.entries(conceptStats)
-      .filter(([topic, [correct, ignored, total]]) => total >= 3)
-      .sort(([topicA, a], [topicB, b]) => (a[0]/a[2]) - (b[0]/b[2]))[0];
+      acc[category].totalTime += response.timeSpent || 0;
+      acc[category].questionCount += 1;
+      acc[category].types.add(response.question.types);
+      if (response.isCorrect) {
+        acc[category].correct += 1;
+      } else {
+        acc[category].incorrect += 1;
+      }
+      
+      // Calculate average time per question for this category
+      acc[category].avgTimePerQuestion = Math.round(acc[category].totalTime / acc[category].questionCount);
+      
+      return acc;
+    }, {} as Record<string, {
+      totalTime: number;
+      questionCount: number;
+      correct: number;
+      incorrect: number;
+      types: Set<string>;
+      avgTimePerQuestion: number;
+    }>);
 
-    let message = `You completed ${totalQuestions} questions covering ${topics.join(', ')}. `;
+    // Calculate overall stats
+    const totalTime = userResponses.reduce((sum, r) => sum + (r.timeSpent || 0), 0);
+    const avgTimePerQuestion = Math.round(totalTime / totalQuestions);
     
-    if (bestTopic) {
-      const [topicName, [correct, _, total]] = bestTopic;
-      if (correct/total > 0.8) {
-        message += `Excellent work on ${topicName}! You got ${correct}/${total} correct. `;
-      }
-    }
+    // Start building the message
+    let message = `You completed ${totalQuestions} questions in ${Math.round(totalTime)} seconds `;
+    message += `(average ${avgTimePerQuestion} seconds per question). \n\n`;
     
-    if (worstTopic) {
-      const [topicName, [correct, _, total]] = worstTopic;
-      if (correct/total < 0.7) {
-        message += `You might want to spend some time reviewing ${topicName} in the Adaptive Tutoring Suite before your next practice session. `;
-      }
+    // Add category-specific performance
+    Object.entries(categoryAnalytics)
+      .sort((a, b) => b[1].correct/b[1].questionCount - a[1].correct/a[1].questionCount)
+      .forEach(([category, stats]) => {
+        const accuracy = Math.round((stats.correct / stats.questionCount) * 100);
+        
+        if (stats.questionCount >= 3) { // Only include categories with enough questions
+          message += `${category}: ${accuracy}% accuracy (${stats.correct}/${stats.questionCount}), `;
+          message += `avg ${stats.avgTimePerQuestion}s per question. `;
+          
+          // Add performance assessment
+          if (accuracy >= 80) {
+            message += `Strong performance! `;
+          } else if (accuracy <= 60) {
+            message += `Consider reviewing this topic. `;
+          }
+          message += '\n';
+        }
+      });
+
+    // Add study recommendations
+    const weakestCategories = Object.entries(categoryAnalytics)
+      .filter(([_, stats]) => stats.questionCount >= 3)
+      .sort((a, b) => (a[1].correct/a[1].questionCount) - (b[1].correct/b[1].questionCount))
+      .slice(0, 2);
+
+    if (weakestCategories.length > 0) {
+      message += '\nRecommended focus areas:\n';
+      weakestCategories.forEach(([category, stats]) => {
+        const accuracy = Math.round((stats.correct / stats.questionCount) * 100);
+        message += `• ${category} (${accuracy}% accuracy) - `;
+        message += `Try practicing with ${Array.from(stats.types).join('/')} questions.\n`;
+      });
     }
 
     return message;
   };
 
+  const replaceNameInReview = (review: string) => {
+    const userName = user
+      ? user.firstName
+        ? user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1)
+        : "Doctor"
+      : "Doctor";
+    return review.replace(/\$NAME/g, userName);
+  };
+
+  const renderInitialScore = () => {
+    const starCount = getStarCount(score);
+    const percentage = Math.round((correctCount / (correctCount + wrongCount)) * 100);
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="text-center"
+      >
+        {review && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-[--theme-flashcard-color] p-6 rounded-xl shadow-lg border border-[--theme-border-color] max-w-2xl mx-auto mb-8"
+          >
+            <div className="flex items-start gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-[--theme-hover-color] flex items-center justify-center">
+                    <span className="text-lg font-bold text-[--theme-text-color]">K</span>
+                  </div>
+                  <div className="text-left">
+                    <div className="font-semibold text-[--theme-text-color]">Kalypso</div>
+                    <div className="text-sm opacity-70 text-[--theme-text-color]">AI Medical Assistant</div>
+                  </div>
+                </div>
+                <p className="text-lg text-[--theme-text-color] leading-relaxed text-left">
+                  {replaceNameInReview(review.review)}
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <img 
+                  src={review.profilePicture}
+                  alt="Profile Picture" 
+                  className="w-20 h-20 rounded-lg object-cover"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mb-6"
+        >
+          <div className="flex justify-center mb-4">
+            {[...Array(5)].map((_, i) => (
+              <AnimatedStar
+                key={i}
+                progress={i < starCount ? 1 : 0}
+                uniqueId={`score-star-${i}`}
+              />
+            ))}
+          </div>
+          <div className="text-4xl font-bold text-[--theme-text-color] mb-2">
+            {percentage}%
+          </div>
+          <div className="text-lg text-[--theme-text-color] opacity-80">
+            {correctCount} correct · {wrongCount} incorrect
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  };
+
+  const renderStats = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="grid grid-cols-2 gap-8 mt-8"
+    >
+      {/* Needs Review Card */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-[--theme-flashcard-color] p-6 rounded-xl shadow-lg border border-[--theme-border-color]"
+      >
+        <h3 className="text-xl font-bold mb-4 text-[--theme-text-color]">
+          Needs Review ({wrongCount})
+        </h3>
+        <ul className="space-y-2">
+          {Object.entries(mostMissed).slice(0, 4).map(([concept, [_, incorrect, total]], index) => (
+            <li key={concept} className="flex justify-between text-[--theme-text-color]">
+              <span>{concept}</span>
+              <span className="text-[--theme-text-color]">{incorrect}/{total}</span>
+            </li>
+          ))}
+        </ul>
+      </motion.div>
+
+      {/* Mastered Card */}
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-[--theme-flashcard-color] p-6 rounded-xl shadow-lg border border-[--theme-border-color]"
+      >
+        <h3 className="text-xl font-bold mb-4 text-[--theme-hover-color]">
+          Proficient ({correctCount})
+        </h3>
+        <ul className="space-y-2">
+          {Object.entries(mostCorrect).slice(0, 4).map(([concept, [correct, _, total]], index) => (
+            <li key={concept} className="flex justify-between text-[--theme-text-color]">
+              <span>{concept}</span>
+              <span className="text-[--theme-hover-color]">{correct}/{total}</span>
+            </li>
+          ))}
+        </ul>
+      </motion.div>
+    </motion.div>
+  );
+
+  // Replace feedItems with a chat-like interface
+  const renderChatInterface = () => (
+    <ChatBot
+      width="100%"
+      height="100%"
+      backgroundColor="var(--theme-mainbox-color)"
+    />
+  );
+
+  useEffect(() => {
+    const contextTitle = "Test Review Summary";
+    const contextIntro = "I just completed a test. Here are the questions I got wrong:";
+    const contextContent = wrongCards.map(card => {
+      if (card.types === 'normal') {
+        return `Question: ${card.question}\nOptions: ${card.questionOptions.join(' | ')}\nCorrect Answer: ${card.answer}`;
+      } else {
+        return `Question: ${card.question}\nAnswer: ${card.answer}`;
+      }
+    }).join('\n\n');
+
+    setChatbotContext({
+      contentTitle: contextTitle,
+      context: contextIntro + contextContent,
+    });
+  }, [wrongCards]);
+
+
+  if(userResponses.length === 0) {
+    return null;
+  }
   return (
     <Dialog open={open} onOpenChange={handleExit}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.3 }}
-      >
-        <DialogContent 
-          className="bg-[--theme-text-color] text-center p-8 bg-[--theme-leaguecard-color] border border-[--theme-border-color] rounded-xl max-w-[90vw] w-[1000px] max-h-[90vh] h-[800px] overflow-hidden flex flex-col"
-          closeButtonClassName="text-[--theme-text-color] hover:text-[--theme-text-color] focus:ring-[--theme-text-color]"
-        >
-          {!showReviewFeed ? (
-            <div className="bg-[--theme-gradient-end] p-4 rounded-lg shadow-lg">
-              {renderStars()}
-              <p className="text-xl font-semibold text-[--theme-text-color] mt-2 mb-4">
-                You answered {correctCount + wrongCount} questions and got a total score of {testScore}!
-              </p>
-              <p className="text-lg text-[--theme-text-color] mb-6">
-                {generateSummaryMessage(conceptStats)}
-              </p>
-              {renderPerformanceSummary()}
+      <DialogContent className="bg-[--theme-mainbox-color] text-center p-8 max-w-[95vw] w-[75rem] h-[90vh] border border-[--theme-border-color] shadow-lg">
+        {!showReviewFeed ? (
+          <div className="h-full flex flex-col justify-center space-y-8">
+            {renderInitialScore()}
+            {showStats && renderStats()}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
               <Button
                 onClick={handleGoToReviewFeed}
-                className="mt-4 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] hover:bg-[--theme-hover-color]"
+                className="mt-8 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] hover:bg-[--theme-hover-color] transition-colors duration-300"
                 disabled={!isDataLoaded}
               >
-                {!isDataLoaded ? 'Loading...' : 'Go to review feed?'}
+                {!isDataLoaded ? 'Loading...' : 'Continue to Review'}
               </Button>
+            </motion.div>
+          </div>
+        ) : (
+          <div className="flex-1 flex gap-4 overflow-hidden">
+            {/* Left Side - Review Section */}
+            <div className="w-[35%] h-full border-r border-[--theme-border-color] pl-4">
+              {renderReviewSection()}
             </div>
-          ) : (
-            <div className="flex-1 flex gap-4 overflow-hidden">
-              {renderKittyLitter()}
-            </div>
-          )}
-          {showExitConfirmation && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-                <h3 className="text-xl font-bold mb-4 text-black">Confirm Exit</h3>
-                <p className="mb-4 text-black">{"You won't be able to see this review page again. Are you sure?"}</p>
-                <div className="flex items-center mb-4">
-                  <Checkbox
-                    id="neverShowAgain"
-                    checked={neverShowAgain}
-                    onCheckedChange={(checked) => setNeverShowAgain(checked as boolean)}
+
+            {/* Right Side - Chat Interface */}
+            <div className="w-[65%] h-full flex flex-col">
+              <h2 className="text-2xl text-[--theme-text-color] font-bold mb-4">Interactive Review</h2>
+              <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0">
+                  <ChatBot
+                    width="100%"
+                    height="100%"
+                    backgroundColor="var(--theme-mainbox-color)"
+                    chatbotContext={chatbotContext}
                   />
-                  <label htmlFor="neverShowAgain" className="ml-2 text-sm text-black">
-                    Never show this again
-                  </label>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button onClick={handleCancelExit} variant="outline">
-                    Cancel
-                  </Button>
-                  <Button onClick={handleConfirmExit} variant="default">
-                    Confirm
-                  </Button>
                 </div>
               </div>
             </div>
-          )}
-          {children}
-        </DialogContent>
-      </motion.div>
+          </div>
+        )}
+        {children}
+      </DialogContent>
     </Dialog>
   );
-};
+});
+
+AfterTestFeed.displayName = 'AfterTestFeed';
 
 export default AfterTestFeed;

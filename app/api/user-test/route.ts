@@ -111,6 +111,7 @@ export async function POST(req: NextRequest) {
     } else if (body && typeof body === 'object' && 'passageId' in body && typeof body.passageId === 'string') {
       data.passageId = body.passageId;
     }
+    console.log("data", data);
 
     const userTest = await prisma.userTest.create({
       data,
