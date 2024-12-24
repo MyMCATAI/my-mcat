@@ -449,10 +449,10 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
       </div>
 
       <div className="flex-grow overflow-y-auto">{SettingsContent()}</div>
-      <ATSSettingsTutorial 
+      {/* <ATSSettingsTutorial 
         showSettingsSteps={showSettingsSteps}
         setShowSettingsSteps={setShowSettingsSteps}
-      />
+      /> */}
     </div>
   );
 };
