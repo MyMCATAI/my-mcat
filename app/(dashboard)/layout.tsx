@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import ThemeInitializer from "@/components/home/ThemeInitializer";
 import Script from 'next/script';
+import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
 
 const checkSubscription = async (): Promise<boolean> => {
   // Implement your subscription check logic here
@@ -72,12 +73,14 @@ const DashboardLayoutContent = ({
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>
-    <Script
-      src="https://tally.so/widgets/embed.js"
-      strategy="lazyOnload"
-    />
-    <ThemeInitializer />
-    <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    <MusicPlayerProvider>
+      <Script
+        src="https://tally.so/widgets/embed.js"
+        strategy="lazyOnload"
+      />
+      <ThemeInitializer />
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </MusicPlayerProvider>
   </ThemeProvider>
 );
 
