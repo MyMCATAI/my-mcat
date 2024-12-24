@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import FlashcardDeck from './FlashcardDeck';
 import { useSpring, animated, config } from '@react-spring/web';
 import { TestTube2 } from 'lucide-react';
-import Interruption from './Interruption';
+// import Interruption from './Interruption';
 import { roomToSubjectMap } from './OfficeContainer';
 interface WrongCard {
   question: string;
@@ -28,9 +28,11 @@ interface FlashcardsDialogProps {
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   handleCompleteAllRoom: () => void;
+  onMCQAnswer: (isCorrect: boolean) => void;
+  setTotalMCQQuestions: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>(({
+const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: any[]) => void, setCorrectCount: (count: number) => void }, FlashcardsDialogProps>(({
   isOpen,
   onOpenChange,
   roomId,
@@ -41,15 +43,17 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
   isLoading,
   setIsLoading,
   handleCompleteAllRoom,
+  onMCQAnswer,
+  setTotalMCQQuestions,
 }, ref) => {
   const [wrongCards, setWrongCards] = useState<WrongCard[]>([]);
   const [correctCount, setCorrectCount] = useState(0);
   const [showPlusOne, setShowPlusOne] = useState(false);
   const [streak, setStreak] = useState(0);
   const [encouragement, setEncouragement] = useState('');
-  const [showInterruption, setShowInterruption] = useState(false);
-  const [isTypingComplete, setIsTypingComplete] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // const [showInterruption, setShowInterruption] = useState(false);
+  // const [isTypingComplete, setIsTypingComplete] = useState(false);
+  // const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [springs, api] = useSpring(() => ({
     from: { x: 0 }
@@ -132,18 +136,18 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
     onOpenChange(open);
   };
 
-  const handleInterruption = () => {
-    setShowInterruption(true);
-  };
+  // const handleInterruption = () => {
+  //   setShowInterruption(true);
+  // };
 
-  const handleKalypsoClick = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-      setIsTypingComplete(false);
-      setShowInterruption(false);
-    }
-  };
+  // const handleKalypsoClick = () => {
+  //   if (audioRef.current) {
+  //     audioRef.current.pause();
+  //     audioRef.current = null;
+  //     setIsTypingComplete(false);
+  //     setShowInterruption(false);
+  //   }
+  // };
 
   const handleClose = useCallback(() => {
     if (correctCount > 0) {
@@ -158,7 +162,9 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
   }, [roomId, setActiveRooms, onOpenChange, correctCount]);
 
   useImperativeHandle(ref, () => ({
-    open: () => onOpenChange(true)
+    open: () => onOpenChange(true),
+    setWrongCards,
+    setCorrectCount
   }));
 
   return (
@@ -176,6 +182,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
                   : roomToSubjectMap[roomId]
                 } flashcards
               </span>
+              {/* Comment out interruption button
               <button 
                 onClick={handleInterruption}
                 className="hover:bg-[--theme-leaguecard-color] rounded-md p-1.5 transition-colors"
@@ -183,6 +190,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
               >
                 <TestTube2 className="h-5 w-5" />
               </button>
+              */}
             </DialogTitle>
           </DialogHeader>
           
@@ -214,11 +222,12 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
               </div>
             </div>
 
-            <div className="w-2/3 pr-2 flex flex-col min-h-0 relative">
-              <div className="flex-grow bg-[--theme-leaguecard-color] p-2 rounded-md flex flex-col min-h-0">
-                <ScrollArea className="flex-grow h-full">
-                  <div className="h-full w-full flex items-center justify-center min-h-[500px]">
+            <div className="w-2/3 pr-2 flex flex-col h-full relative">
+              <div className="flex-grow bg-[--theme-leaguecard-color] p-2 rounded-md flex flex-col h-full">
+                <ScrollArea className="h-full">
+                  <div className="h-full w-full flex items-center justify-center min-h-[60vh]">
                     <FlashcardDeck 
+                      handleCompleteAllRoom={handleCompleteAllRoom}
                       roomId={roomId} 
                       onWrongAnswer={handleWrongCard}
                       onCorrectAnswer={handleCorrectAnswer}
@@ -228,11 +237,14 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
                       isLoading={isLoading}
                       setIsLoading={setIsLoading}
                       onClose={handleClose}
+                      onMCQAnswer={onMCQAnswer}
+                      setTotalMCQQuestions={setTotalMCQQuestions}
                     />
                   </div>
                 </ScrollArea>
               </div>
 
+              {/* Comment out Interruption component
               <Interruption 
                 isVisible={showInterruption}
                 onClose={() => setShowInterruption(false)}
@@ -241,6 +253,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void }, FlashcardsDialogProps>
                 duration={5000}
                 position="top-left"
               />
+              */}
             </div>
             
             <div className="w-1/3 flex flex-col min-h-0">

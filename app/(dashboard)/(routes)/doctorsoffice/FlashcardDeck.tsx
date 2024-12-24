@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Check, X, Undo2, Skull, Dumbbell } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useSpring, animated } from '@react-spring/web'
 import { useDrag } from '@use-gesture/react';
 import ContentRenderer from '@/components/ContentRenderer';
 import { FlattenedQuestionResponse } from '@/lib/question';
 import { roomToSubjectMap } from './OfficeContainer';
 import { roomToContentMap } from './OfficeContainer';
+import toast from 'react-hot-toast';
 
 interface Flashcard {
   questionType: string;
@@ -33,6 +34,9 @@ interface FlashcardDeckProps {
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   onClose: () => void;
+  onMCQAnswer?: (correct: boolean) => void;
+  handleCompleteAllRoom: () => void;
+  setTotalMCQQuestions: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const physics = {
@@ -65,6 +69,20 @@ const shuffleArray = (array: string[]): OptionsArray => {
   return newArray as OptionsArray;
 };
 
+// Create a separate function for shuffling flashcards
+const shuffleFlashcards = (array: Flashcard[]): Flashcard[] => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
+const showAnswerCheckReminder = () => {
+  toast.error("Please check the answer first");
+};
+
 const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   roomId, 
   onWrongAnswer, 
@@ -75,6 +93,9 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   isLoading,
   setIsLoading,
   onClose,
+  onMCQAnswer,
+  handleCompleteAllRoom,
+  setTotalMCQQuestions,
 }) => {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -84,25 +105,35 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   const correctSound = useRef<HTMLAudioElement | null>(null);
   const whooshSound = useRef<HTMLAudioElement | null>(null);
   const [isDeckCompleted, setIsDeckCompleted] = useState(false);
+  const [hasSeenAnswer, setHasSeenAnswer] = useState(false);
+  // whether the user has answered the MCQ question
+  const [answeredMCQ, setAnsweredMCQ] = useState(false);
 
   const flashcardsRef = useRef<Flashcard[]>([]);
   const currentCardIndexRef = useRef<number>(0);
   
   const [shuffledOptions, setShuffledOptions] = useState<{ options: string[], correctIndex: number }>({ options: [], correctIndex: -1 });
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+
 
   useEffect(() => {
     correctSound.current = new Audio('/correct.mp3');
     whooshSound.current = new Audio('/whoosh.mp3');
     
     // Set initial volume for both sounds
-    if (correctSound.current) correctSound.current.volume = 0.3;
-    if (whooshSound.current) whooshSound.current.volume = 0.15;
+    if (correctSound.current) correctSound.current.volume = 0.5;
+    if (whooshSound.current) whooshSound.current.volume = 0.25;
   }, []);
 
   const handleDeckComplete = useCallback(() => {
     if (!isDeckCompleted) {
       setIsDeckCompleted(true);
-      setActiveRooms(prev => new Set([...prev].filter(room => room !== roomId)));
+      const newActiveRooms = new Set([...activeRooms].filter(room => room !== roomId));
+      setActiveRooms(newActiveRooms);
+
+      if (newActiveRooms.size === 0) {
+        handleCompleteAllRoom();
+      }
     }
   }, [roomId, setActiveRooms, isDeckCompleted]);
 
@@ -114,7 +145,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
 
   const playSound = useCallback((sound: HTMLAudioElement) => {
     sound.currentTime = 0; // Reset the playback position
-    sound.volume = 0.5; // Set volume to 30% (adjust this value between 0 and 1 as needed)
     sound.play().catch(e => console.error('Error playing sound:', e));
   }, []);
 
@@ -141,6 +171,9 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
       
       const data = await response.json();
       setCardStartTime(Date.now());
+
+      const MCQquestionCount = data.questions.filter((question: FlattenedQuestionResponse) => question.types === 'normal').length;
+      setTotalMCQQuestions(MCQquestionCount);
 
       const transformedFlashcards = data.questions.map((question: FlattenedQuestionResponse) => {
         let options: string[] = [];
@@ -169,7 +202,9 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
         };
       });
 
-      setFlashcards(transformedFlashcards);
+      // Randomize the flashcards
+      const randomizedFlashcards = shuffleFlashcards(transformedFlashcards);
+      setFlashcards(randomizedFlashcards);
       setIsLoading(false);    
     } catch (error) {
       console.error('Error fetching flashcards:', error);
@@ -183,8 +218,12 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   }, []);
 
   const handleCardClick = useCallback(() => {
+    // Only allow click to reveal for non-MCQ questions
+    if (flashcards[currentCardIndex]?.questionType === 'normal') {
+      return;
+    }
     toggleReveal();
-  }, []);
+  }, [currentCardIndex, flashcards]);
 
   useEffect(() => {
     let mounted = true;
@@ -215,6 +254,10 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
         flashcards[currentCardIndex]?.questionOptions?.length > 0) {
       setShuffledOptions(getShuffledOptions(flashcards[currentCardIndex].questionOptions));
     }
+    setIsRevealed(false);
+    setHasSeenAnswer(false);
+    setSelectedOption(null);
+    setAnsweredMCQ(false);
   }, [currentCardIndex, flashcards]);
 
   const getQuestionContent = () => {
@@ -248,13 +291,13 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     // For normal (multiple choice) questions
     if (currentCard.questionType === 'normal' && currentCard.questionOptions?.length > 0) {
       const correctOption = currentCard.questionOptions[0];
-      return `Correct Answer: ${correctOption}`;
+      return correctOption;
     }
     
     // For flashcard questions
     return cleanAnswer(currentCard.questionContent);
   };
-
+ 
   const handleUserResponse = useCallback(async (action: 'correct' | 'incorrect' | 'weakness' | 'strength') => {
     const currentCard = flashcardsRef.current[currentCardIndexRef.current];
     const isCorrect = action === 'correct' || action === 'strength';
@@ -319,6 +362,11 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   };
 
   const handleSwipe = (direction: string) => {
+    // Add check for revealed answer
+    if (!hasSeenAnswer) {
+      showAnswerCheckReminder();
+      return;
+    }
     
     // Guard against empty flashcards
     if (flashcardsRef.current.length === 0) {
@@ -337,6 +385,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
       onRest: () => {
         setCurrentCardIndex(prevIndex => prevIndex + 1);
         setIsRevealed(false);
+        setSelectedOption(null);
         api.start({ opacity: 1 });
       }
     });
@@ -354,8 +403,20 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   };
 
   const bind = useDrag(({ active, movement: [mx, my], velocity: [vx, vy], event, type }) => {
+    if (flashcards[currentCardIndex]?.questionType === 'normal') {
+      return;
+    }
+
+    // Only check hasSeenAnswer for swipe actions, not clicks
     const dir = getSwipeDirection(mx, my);
     const trigger = dir !== 'none';
+    
+    if (trigger && !hasSeenAnswer) {
+      showAnswerCheckReminder();
+      return;
+    }
+
+    const isSignificantMovement = Math.abs(mx) > 50 || Math.abs(my) > 50;
     
     if (active) {
       if (clickTimeout) {
@@ -364,48 +425,70 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
       }
     } else if (!active && trigger) {
       handleSwipe(dir);
-    } else if (!active && !trigger) {
-      if (type === 'pointerup') {
-        const timeout = setTimeout(() => {
-          handleCardClick();
-        }, 100);
-        setClickTimeout(timeout);
-      }
     }
     
     api.start({
-      opacity: active ? 0.5 : 1,
+      opacity: (active && isSignificantMovement) ? 0.5 : 1,
       config: physics.touchResponsive,
     });
   });
 
   const toggleReveal = () => {
-    setIsRevealed(prevState => !prevState);
+    // Only allow space to reveal for non-MCQ questions
+    if (flashcards[currentCardIndex]?.questionType === 'normal') {
+      return;
+    }
+    setIsRevealed(prev => !prev);
+    setHasSeenAnswer(true);
   };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      const currentCard = flashcards[currentCardIndex];
+      const isMCQ = currentCard?.questionType === 'normal';
+
       switch (event.key) {
         case 'ArrowLeft':
         case 'a':
         case 'A':
-          handleSwipe('left');
+          if (!hasSeenAnswer) {
+            showAnswerCheckReminder();
+            return;
+          }
+          // Only allow marking incorrect if MCQ was wrong
+          if (isMCQ && (selectedOption !== shuffledOptions.correctIndex)) {
+            handleSwipe('left');
+          } else if (!isMCQ) {
+            handleSwipe('left');
+          }
           break;
         case 'ArrowRight':
         case 'd':
         case 'D':
-          handleSwipe('right');
+          if (!hasSeenAnswer) {
+            showAnswerCheckReminder();
+            return;
+          }
+          // Only allow marking correct if MCQ was right
+          if (isMCQ && (selectedOption === shuffledOptions.correctIndex)) {
+            handleSwipe('right');
+          } else if (!isMCQ) {
+            handleSwipe('right');
+          }
           break;
         case ' ':
-          event.preventDefault(); // Prevent page scroll
-          toggleReveal();
+          // Disable spacebar for MCQ questions
+          if (!isMCQ) {
+            event.preventDefault();
+            toggleReveal();
+          }
           break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [hasSeenAnswer, flashcards, currentCardIndex, selectedOption, shuffledOptions.correctIndex]);
 
   useEffect(() => {
     return () => {
@@ -415,7 +498,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     };
   }, [clickTimeout]);
 
-  // Add this new function to handle option shuffling at render time
   const getShuffledOptions = (options: string[]) => {
     const shuffledOptions = shuffleArray([...options]);
     const correctAnswer = options[0]; // First option is always correct
@@ -425,8 +507,25 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     };
   };
 
+  const handleOptionClick = (index: number, e: React.MouseEvent) => {
+    if (answeredMCQ) return;
+    
+    e.stopPropagation();
+    setSelectedOption(index);
+    setIsRevealed(true);
+    setHasSeenAnswer(true);
+    setAnsweredMCQ(true);
+
+    const isCorrect = index === shuffledOptions.correctIndex;
+  
+    // Track MCQ performance - will only be called once due to hasAnswered check
+    if (onMCQAnswer) {
+      onMCQAnswer(isCorrect);
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full">
+    <div className="flex flex-col items-center justify-center w-full h-full relative focus-visible:outline-none">
       {isLoading && flashcards.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[--theme-text-color]" />
@@ -439,7 +538,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
+            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2 focus:outline-none"
           >
             <Check size={18} />
             Continue Learning
@@ -451,7 +550,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
             <animated.div
               className="w-full cursor-pointer"
               style={{ opacity }}
-              onClick={handleCardClick}
+              onClick={handleCardClick}   // Re-enable click event
             >
               {/* Question Section */}
               <div className="w-full mb-8">
@@ -466,16 +565,24 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
                    flashcards[currentCardIndex]?.questionOptions?.length > 0 && (
                     <div className="w-full mt-4 space-y-2">
                       {shuffledOptions.options.map((option: string, index: number) => (
-                        <div 
+                        <button 
                           key={index}
-                          className={`p-3 rounded-lg border ${
-                            isRevealed && index === shuffledOptions.correctIndex
-                              ? 'border-green-500 bg-green-50'
-                              : 'border-gray-200'
-                          }`}
+                          onClick={(e) => handleOptionClick(index, e)}
+                          type="button"
+                          className={`w-full p-3 rounded-lg border transition-colors focus:outline-none
+                            ${answeredMCQ ? 'cursor-default' : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]'} 
+                            ${
+                              isRevealed && index === shuffledOptions.correctIndex
+                                ? 'border-green-500 bg-green-500 text-white'
+                                : isRevealed && index === selectedOption && index !== shuffledOptions.correctIndex
+                                ? 'border-red-500 bg-red-500 text-white'
+                                : 'border-[--theme-border-color]'
+                            }
+                            disabled:cursor-default
+                          `}
                         >
                           {option}
-                        </div>
+                        </button>
                       ))}
                     </div>
                   )}
@@ -490,17 +597,23 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
                 <div className="w-full overflow-y-auto flex flex-col justify-center items-center">
                   {isRevealed && (
                     <>
-                      <div className="text-lg font-semibold mb-2 text-green-600">
-                        {flashcards[currentCardIndex]?.questionType === 'normal' ? 'Correct Answer:' : 'Answer:'}
-                      </div>
-                      <ContentRenderer 
-                        content={getAnswerContent()} 
-                        onLinkClick={handleLinkClick} 
-                      />
+                      {/* Only show "Answer:" header for non-MCQ questions */}
+                      {flashcards[currentCardIndex]?.questionType !== 'normal' && (
+                        <div className="text-lg font-semibold mb-2 text-green-600">
+                          Answer:
+                        </div>
+                      )}
+                      {/* Only show answer content for non-MCQ questions */}
+                      {flashcards[currentCardIndex]?.questionType !== 'normal' && (
+                        <ContentRenderer 
+                          content={getAnswerContent()} 
+                          onLinkClick={handleLinkClick} 
+                        />
+                      )}
+                      {/* Show explanation for MCQ questions */}
                       {flashcards[currentCardIndex]?.questionType === 'normal' && 
                        flashcards[currentCardIndex]?.questionOptions?.length > 0 && (
-                        <div className="mt-4 text-gray-600">
-                          <p className="text-sm">Explanation:</p>
+                        <div className="mt-4 text-[--theme-text-color]">
                           <p>
                             {(() => {
                               try {
@@ -519,6 +632,15 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
               </div>
             </animated.div>
           )}
+          
+          <div className="fixed bottom-1 left-1/2 transform -translate-x-1/2 text-xs text-gray-400">
+            <span className="mr-3">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">Space</kbd> reveal for non-MCQ questions
+            </span>
+            <span>
+              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">←→</kbd> answer
+            </span>
+          </div>
         </div>
       )}
     </div>

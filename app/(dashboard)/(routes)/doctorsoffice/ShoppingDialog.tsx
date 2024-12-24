@@ -11,7 +11,6 @@ import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { useUser } from "@clerk/nextjs";
 import { Mail } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 
 interface ImageItem {
   id: string;
@@ -45,7 +44,6 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
   onOpenChange
 }, ref) => {
   const { user } = useUser();
-  const router = useRouter();
 
   const [hoveredLevel, setHoveredLevel] = useState<number | null>(null);
   const [showMessageForm, setShowMessageForm] = useState(false);
@@ -53,18 +51,12 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
   const [isMounted, setIsMounted] = useState(false);
 
   const levelInfo = [
-    { level: 1, title: "INTERN LEVEL", image: "/game-components/INTERNLEVEL.png", cost: 5 },
-    { level: 2, title: "RESIDENT LEVEL", image: "/game-components/RESIDENTLEVEL.png", cost: 15 },
-    { level: 3, title: "FELLOWSHIP LEVEL", image: "/game-components/FELLOWSHIPLEVEL.png", cost: 25 },
-    { level: 4, title: "ATTENDING LEVEL", image: "/game-components/ATTENDINGLEVEL.png", cost: 35 },
-    { level: 5, title: "PHYSICIAN LEVEL", image: "/game-components/PHYSICIANLEVEL.png", cost: 60 },
-    { level: 6, title: "MEDICAL DIRECTOR LEVEL", image: "/game-components/MEDICALDIRECTORLEVEL.png", cost: 80 },
-  ];
-
-  const additionalItems = [
-    { name: "Team Vacation", cost: 1, benefits: ["Can take a break tomorrow and save your streak."] },
-    { name: "Free Clinic Day", cost: 5, benefits: ["Treat 50 patients", "Double your chances of a 5 star review!"] },
-    { name: "University Sponsorship", cost: 20, benefits: ["2x Boost Your Value for University in a Day"] },
+    { level: 1, title: "INTERN LEVEL", image: "/game-components/INTERNLEVEL.png", cost: 2 },
+    { level: 2, title: "RESIDENT LEVEL", image: "/game-components/RESIDENTLEVEL.png", cost: 4 },
+    { level: 3, title: "FELLOWSHIP LEVEL", image: "/game-components/FELLOWSHIPLEVEL.png", cost: 6 },
+    { level: 4, title: "ATTENDING LEVEL", image: "/game-components/ATTENDINGLEVEL.png", cost: 8 },
+    { level: 5, title: "PHYSICIAN LEVEL", image: "/game-components/PHYSICIANLEVEL.png", cost: 10 },
+    { level: 6, title: "MEDICAL DIRECTOR LEVEL", image: "/game-components/MEDICALDIRECTORLEVEL.png", cost: 12 },
   ];
 
   const handleLevelClick = (level: number) => {
@@ -122,11 +114,7 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
   const handleOpenChange = (open: boolean) => {
     onOpenChange(open);
   };
-  const handleHomeClick = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      router.push('/home');
-    }
-  }, [router]);
+
   useImperativeHandle(ref, () => ({
     open: () => onOpenChange(true)
   }));
@@ -154,14 +142,6 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
               <span>{userScore}</span>
             </div>
             <span className="flex-grow">Marketplace</span>
-            {isMounted && (
-              <button
-                onClick={handleHomeClick}
-                className="ml-4 px-3 py-1 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
-              >
-                Home
-              </button>
-            )}
           </DialogTitle>
         </DialogHeader>
         <div className="flex-grow flex">
@@ -235,58 +215,43 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
           <div className="w-1/3 flex flex-col">
             <div className="flex-grow bg-[--theme-leaguecard-color] p-2 rounded-md mb-2 flex flex-col">
               <h3 className="text-lg font-semibold mb-2">Additional Items</h3>
-              <ScrollArea className="flex-grow mb-2">
-                {additionalItems.map((item, index) => (
-                  <div
-                    key={index}
-                    onClick={() => handleAdditionalItemClick(item.name)}
-                    className="mb-2 p-2 bg-[--theme-doctorsoffice-accent] rounded-md cursor-pointer hover:bg-[--theme-hover-color] transition-colors"
+              <div className="flex-grow flex flex-col items-center justify-center text-center gap-4">
+                <p>Do you want more features? Send us a message! :D</p>
+                {!showMessageForm ? (
+                  <button 
+                    onClick={() => setShowMessageForm(true)}
+                    className="p-2 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded-full hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-opacity"
                   >
-                    <h4 className="font-semibold">{item.name}</h4>
-                    <p className="text-sm">Cost: {item.cost} Coins</p>
-                    <ul className="list-disc pl-4 text-sm">
-                      {item.benefits.map((benefit, benefitIndex) => (
-                        <li key={benefitIndex}>{benefit}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </ScrollArea>
-              {!showMessageForm ? (
-                <button 
-                  onClick={() => setShowMessageForm(true)}
-                  className="w-full py-2 px-4 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded-md hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-opacity mt-auto flex items-center justify-center"
-                >
-                  <Mail className="mr-2" size={20} />
-                  Send a message
-                </button>
-              ) : (
-                <form onSubmit={handleSendMessage} className="mt-auto">
-                  <textarea
-                    placeholder="Your message"
-                    value={messageForm.message}
-                    onChange={(e) => setMessageForm({ message: e.target.value })}
-                    className="w-full p-2 mb-2 rounded resize-none text-gray-800"
-                    required
-                    rows={6}
-                  />
-                  <div className="flex justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setShowMessageForm(false)}
-                      className="py-2 px-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="py-2 px-4 bg-[--theme-hover-color] text-[--theme-hover-text] rounded-md hover:opacity-80 transition-opacity"
-                    >
-                      Send
-                    </button>
-                  </div>
-                </form>
-              )}
+                    <Mail size={24} />
+                  </button>
+                ) : (
+                  <form onSubmit={handleSendMessage} className="w-full">
+                    <textarea
+                      placeholder="Your message"
+                      value={messageForm.message}
+                      onChange={(e) => setMessageForm({ message: e.target.value })}
+                      className="w-full p-2 mb-2 rounded resize-none text-gray-800"
+                      required
+                      rows={6}
+                    />
+                    <div className="flex justify-between">
+                      <button
+                        type="button"
+                        onClick={() => setShowMessageForm(false)}
+                        className="py-2 px-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="py-2 px-4 bg-[--theme-hover-color] text-[--theme-hover-text] rounded-md hover:opacity-80 transition-opacity"
+                      >
+                        Send
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
             </div>
           </div>
         </div>
