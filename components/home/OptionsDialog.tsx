@@ -44,7 +44,7 @@ export const OptionsDialog = ({
   ];
 
   return (
-    <Dialog open={showOptionsModal} onOpenChange={setShowOptionsModal}>
+    <Dialog open={showOptionsModal} onOpenChange={() => {}}>
       <DialogContent className={"max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border-2 border-transparent"}>
         <h2 className={"text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center"}>
           {selectedOption ? selectedOption : "Choose Your Study Path"}
