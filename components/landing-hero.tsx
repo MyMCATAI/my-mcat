@@ -16,7 +16,7 @@ const LandingHero = () => {
   const videoRef2 = useRef<HTMLVideoElement>(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [video2Loaded, setVideo2Loaded] = useState(false);
-  const catContainerRef = useRef(null);
+  const catContainerRef = useRef<HTMLDivElement>(null);
   const [isSafari, setIsSafari] = useState(false);
 
   useEffect(() => {
