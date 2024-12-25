@@ -45,7 +45,6 @@ const sortCategoriesByDiagnosticScores = (
 export async function GET(req: Request) {
   try {
     const { userId } = auth();
-
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
@@ -55,21 +54,32 @@ export async function GET(req: Request) {
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
     const useKnowledgeProfiles = searchParams.get('useKnowledgeProfiles') === 'true';
     const includeCARS = searchParams.get('includeCARS') === 'true';
+    
+    // Add support for specific conceptCategories
+    const conceptCategories = searchParams.get('conceptCategories')?.split(',').map(c => decodeURIComponent(c));
 
     if (useKnowledgeProfiles) {
-      // Get user info for diagnostic scores
       const userInfo = await prisma.userInfo.findUnique({
         where: { userId },
         select: { diagnosticScores: true }
       });
 
-      // Fetch categories with knowledge profiles in a single query
-      let categories = await prisma.category.findMany({
-        where: includeCARS ? undefined : {
+      // Modify the base query to include conceptCategories if provided
+      const baseWhereClause = {
+        ...(includeCARS ? {} : {
           NOT: {
             subjectCategory: "CARs"
           }
-        },
+        }),
+        ...(conceptCategories && conceptCategories.length > 0 ? {
+          conceptCategory: {
+            in: conceptCategories
+          }
+        } : {})
+      };
+
+      let categories = await prisma.category.findMany({
+        where: baseWhereClause,
         include: {
           knowledgeProfiles: {
             where: { userId },
@@ -83,10 +93,9 @@ export async function GET(req: Request) {
         }
       });
 
-      // Transform the data to flatten the structure
-      // Since we have a unique constraint, knowledgeProfiles will have either 0 or 1 item
+      // Transform data (keeping existing logic)
       let sortedCategories = categories.map(category => {
-        const profile = category.knowledgeProfiles[0];  // Will be undefined if no profile exists
+        const profile = category.knowledgeProfiles[0];
         return {
           ...category,
           hasProfile: !!profile,
@@ -95,45 +104,59 @@ export async function GET(req: Request) {
           conceptMastery: profile?.conceptMastery ?? null,
           contentMastery: profile?.contentMastery ?? null,
           isCompleted: !!profile?.completedAt,
-          knowledgeProfiles: undefined // Remove the array since we've flattened it
+          knowledgeProfiles: undefined
         };
       });
 
-      // Updated sorting logic: no profile first, then incomplete, then completed
-      sortedCategories.sort((a, b) => {
-        // First, prioritize categories with no profile
-        if (a.hasProfile !== b.hasProfile) {
-          return a.hasProfile ? 1 : -1;
-        }
-
-        // Then, sort by completion status
-        if (a.isCompleted !== b.isCompleted) {
-          return a.isCompleted ? 1 : -1;
-        }
-        
-        // For items with profiles that are incomplete, sort by concept mastery
-        if (!a.isCompleted && !b.isCompleted && a.hasProfile && b.hasProfile) {
-          if (a.conceptMastery === null && b.conceptMastery === null) return 0;
-          if (a.conceptMastery === null) return 1;
-          if (b.conceptMastery === null) return -1;
-          return a.conceptMastery - b.conceptMastery;
-        }
-        
-        return 0;
-      });
-
-      // Apply diagnostic score sorting only to incomplete items with profiles
-      if (userInfo?.diagnosticScores) {
-        const noProfileCategories = sortedCategories.filter(cat => !cat.hasProfile);
-        const incompleteCategories = sortedCategories.filter(cat => cat.hasProfile && !cat.isCompleted);
-        const completedCategories = sortedCategories.filter(cat => cat.hasProfile && cat.isCompleted);
-        
-        const sortedIncomplete = sortCategoriesByDiagnosticScores(
-          incompleteCategories,
-          userInfo.diagnosticScores
+      // If specific conceptCategories were requested, prioritize their order
+      if (conceptCategories && conceptCategories.length > 0) {
+        // Create a map for quick lookup
+        const categoryMap = new Map(
+          sortedCategories.map(cat => [cat.conceptCategory, cat])
         );
         
-        sortedCategories = [...noProfileCategories, ...sortedIncomplete, ...completedCategories];
+        // Reorder based on requested conceptCategories and filter out any undefined values
+        const orderedCategories = conceptCategories
+          .map(concept => categoryMap.get(concept))
+          .filter((cat): cat is typeof sortedCategories[0] => cat !== undefined);
+        
+        // Add any remaining categories that weren't specifically requested
+        const remainingCategories = sortedCategories.filter(
+          cat => !conceptCategories.includes(cat.conceptCategory)
+        );
+
+        sortedCategories = [...orderedCategories, ...remainingCategories];
+      } else {
+        // Keep existing sorting logic for non-specific requests
+        sortedCategories.sort((a, b) => {
+          if (a.hasProfile !== b.hasProfile) {
+            return a.hasProfile ? 1 : -1;
+          }
+          if (a.isCompleted !== b.isCompleted) {
+            return a.isCompleted ? 1 : -1;
+          }
+          if (!a.isCompleted && !b.isCompleted && a.hasProfile && b.hasProfile) {
+            if (a.conceptMastery === null && b.conceptMastery === null) return 0;
+            if (a.conceptMastery === null) return 1;
+            if (b.conceptMastery === null) return -1;
+            return a.conceptMastery - b.conceptMastery;
+          }
+          return 0;
+        });
+
+        // Apply diagnostic score sorting if available
+        if (userInfo?.diagnosticScores) {
+          const noProfileCategories = sortedCategories.filter(cat => !cat.hasProfile);
+          const incompleteCategories = sortedCategories.filter(cat => cat.hasProfile && !cat.isCompleted);
+          const completedCategories = sortedCategories.filter(cat => cat.hasProfile && cat.isCompleted);
+          
+          const sortedIncomplete = sortCategoriesByDiagnosticScores(
+            incompleteCategories,
+            userInfo.diagnosticScores
+          );
+          
+          sortedCategories = [...noProfileCategories, ...sortedIncomplete, ...completedCategories];
+        }
       }
 
       // Paginate results
@@ -146,7 +169,7 @@ export async function GET(req: Request) {
         currentPage: page
       });
     } else {
-      // Use the existing getCategories function for normal fetching
+      // Use existing getCategories function for normal fetching
       const result = await getCategories({ 
         page, 
         pageSize, 

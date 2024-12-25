@@ -599,7 +599,17 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
                             disabled:cursor-default
                           `}
                         >
-                          {option}
+                          <div className="text-left">
+                            <ContentRenderer 
+                              content={option}
+                              className={`${
+                                isRevealed && (
+                                  index === shuffledOptions.correctIndex || 
+                                  (index === selectedOption && index !== shuffledOptions.correctIndex)
+                                ) ? 'text-white' : ''
+                              }`}
+                            />
+                          </div>
                         </button>
                       ))}
                     </div>
