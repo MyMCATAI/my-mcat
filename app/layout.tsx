@@ -15,8 +15,8 @@ const robotoSlab = Roboto_Slab({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.mymcat.ai'),
-  title: 'My MCAT - Beat The Competition',
-  description: 'Interactive learning platform with AI-powered study tools, practice tests, and personalized feedback.',
+  title: 'mymcat.ai - be better',
+  description: 'interactive learning platform with AI-powered study tools, practice tests, and personalized feedback.',
   keywords: 'MCAT prep, medical school admission, interactive learning, study tools, MCAT practice tests, MyMCAT, AI MCAT Prep, MCAT study platform',
   robots: {
     index: true,
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'My MCAT - Your Path to MCAT Success',
+    title: 'mymcat - be better',
     description: 'Prepare for the MCAT with our innovative, gamified learning platform. Boost your scores and make studying enjoyable.',
     images: [
       {
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'My MCAT - Revolutionary MCAT Preparation',
+    title: 'mymcat - revolutionary MCAT prep',
     description: 'Transform your MCAT study experience with My MCAT. Engaging, effective, and tailored for success.',
     images: ['/knowledge.png'],
   },
