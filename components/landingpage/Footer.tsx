@@ -1,7 +1,7 @@
 'use client';
 
 import React from "react";
-import logo from "../../public/mymcatstudyverse.png";
+import logo from "../../public/landingpage/mymcatstudyverse.png";
 import Image from "next/image";
 import Link from "next/link";
 
