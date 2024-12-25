@@ -437,7 +437,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
 
   return (
     <div
-      className="custom-calendar"
+      className="custom-calendar schedule-content"
       style={{ height: "100%", position: "relative" }}
       onClick={() => {
         const tutorialPart2Played = localStorage.getItem("tutorialPart2Played");
