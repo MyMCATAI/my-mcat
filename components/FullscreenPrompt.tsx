@@ -16,12 +16,12 @@ export const FullscreenPrompt = () => {
     const [neverShowAgain, setNeverShowAgain] = useState(false);
     const pathname = usePathname();
 
-    // List of paths where the prompt should not appear
-    const excludedPaths = ['/', '/preferences', '/intro', '/sign-in', '/sign-up', '/onboarding'];
+    // List of paths where the prompt should appear (instead of exclude list)
+    const allowedPaths = ['/home', '/doctorsoffice'];
     
-    // Function to check if path should be excluded
-    const shouldExcludePath = (path: string) => {
-        return excludedPaths.includes(path) || path.startsWith('/blog');
+    // Function to check if path is allowed
+    const isAllowedPath = (path: string) => {
+        return allowedPaths.includes(path);
     };
 
     useEffect(() => {
@@ -29,7 +29,7 @@ export const FullscreenPrompt = () => {
         const neverShow = localStorage.getItem('fullscreenPrompt-neverShow');
         const sessionDismissed = sessionStorage.getItem('fullscreenPrompt-dismissed');
         if (neverShow === 'true' || sessionDismissed === 'true') return;
-        if (shouldExcludePath(pathname)) return;
+        if (!isAllowedPath(pathname)) return;  // Only show on allowed paths
 
         // Move isFullscreen check into a function so we can reuse it
         const checkFullscreen = () => {

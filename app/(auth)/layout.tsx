@@ -16,7 +16,7 @@ const AuthLayout = ({
                 <>
                     <div 
                         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-80"
-                        style={{ backgroundImage: 'url(/Wallpaperwire.jpg)' }}
+                        style={{ backgroundImage: 'url(/landingpage/Wallpaperwire.jpg)' }}
                     />
                     <div className="absolute inset-0 bg-black/40" />
                 </>

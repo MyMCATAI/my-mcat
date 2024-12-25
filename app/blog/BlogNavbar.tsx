@@ -11,7 +11,7 @@ export const BlogNavbar = () => {
             <div className="flex items-center gap-2">
               <div className="relative w-12 h-12">
                 <Image 
-                  src="/mymcatstudyverseblack.png"
+                  src="/landingpage/mymcatstudyverseblack.png"
                   alt="MyMCAT Study Universe Logo"
                   fill
                   className="object-contain"
