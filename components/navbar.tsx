@@ -1,15 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { useProModal } from "@/hooks/use-pro-modal";
-import { motion } from "framer-motion";
-import axios from "axios";
 import { FaLinkedin, FaInstagram } from 'react-icons/fa';
 import MusicPlayer from "@/components/musicplayer";
 import { useTheme } from '@/contexts/ThemeContext';
@@ -63,7 +58,7 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
       <div className="flex items-center space-x-4 px-4">
         <Link href="/home" className="flex items-center">
           <div className="flex flex-col">
-            <span className="text-xl text-white">MyMCAT.ai</span>
+            <span className="text-xl text-white font-krungthep mb-1">mymcat.ai</span>
           </div>
         </Link>
         <div className="w-48">

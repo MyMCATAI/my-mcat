@@ -1,7 +1,7 @@
 'use client';
 
 import React from "react";
-import logo from "../../public/studyversemedicine.png";
+import logo from "../../public/mymcatstudyverse.png";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -99,10 +99,10 @@ const Footer = () => {
         >
           <div className="mb-6 md:mb-0">
             <a href="#" className="flex flex-col items-center">
-              <p className="text-white text-medium mb-4">MyMCAT is brought to you by:</p>
-              <div className="w-[12rem] sm:w-[14rem] md:w-[16rem] lg:w-[18rem] pl-6">
+              <div className="w-[8rem] sm:w-[11rem] md:w-[11rem] lg:w-[11rem] pl-6">
                 <Image src={logo} alt="Logo" className="w-full h-auto"/>
               </div>
+              <p className="text-white font-krungthep text-3xl ml-6">mymcat.ai</p>
             </a>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-3 px-3">

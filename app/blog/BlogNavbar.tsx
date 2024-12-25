@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FaLinkedin, FaInstagram } from 'react-icons/fa';
+import Image from "next/image";
 
 export const BlogNavbar = () => {
   return (
@@ -7,7 +8,17 @@ export const BlogNavbar = () => {
       <div className="flex items-center space-x-4 px-4">
         <div className="flex space-x-8">
           <Link href="/" className="flex items-center">
-            <span className="text-xl text-black hover:text-blue-400 transition-colors">MyMCAT.ai</span>
+            <div className="flex items-center gap-2">
+              <div className="relative w-12 h-12">
+                <Image 
+                  src="/mymcatstudyverseblack.png"
+                  alt="MyMCAT Study Universe Logo"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              <span className="text-xl text-black hover:text-blue-400 transition-colors font-krungthep">mymcat.ai</span>
+            </div>
           </Link>
         </div>
       </div>
