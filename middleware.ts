@@ -31,6 +31,7 @@ const publicRoutes = [
   "/assets/(.*)",
   "/images/(.*)",
   "/static/(.*)",
+  "/mymcatstudyverse.png",
 ];
 
 const isPublicRoute = createRouteMatcher(publicRoutes);
@@ -93,7 +94,7 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    "/((?!_next/static|_next/image|favicon.ico|public).*)",
+    "/((?!_next/static|_next/image|favicon.ico|public/).*)",
     "/(api|trpc)(.*)"
   ]
 };
