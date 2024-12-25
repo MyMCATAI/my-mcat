@@ -415,11 +415,9 @@ const ChatBot: React.FC<ChatBotProps> = ({
           <Image
             src={avatar}
             alt="Kalypso"
-            layout="responsive"
             width={100}
             height={140}
-            objectFit="cover"
-            objectPosition="top center"
+            className="object-cover object-[top_center]"
             style={{ transform: "scale(2)", transformOrigin: "top center" }}
           />
         </div>
