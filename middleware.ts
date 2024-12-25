@@ -26,6 +26,11 @@ const publicRoutes = [
   "/blog(.*)",
   "/Wallpaperwire.jpg",
   "/kalypsotumble.gif",
+  "/_next/(.*)",
+  "/public/(.*)",
+  "/assets/(.*)",
+  "/images/(.*)",
+  "/static/(.*)",
 ];
 
 const isPublicRoute = createRouteMatcher(publicRoutes);
@@ -60,7 +65,9 @@ export default clerkMiddleware((auth, request) => {
     // Redirect unauthenticated users to sign-in
     if (!auth().userId) {
       const signInUrl = new URL('/sign-in', request.url);
-      signInUrl.searchParams.set('redirect_url', request.url);
+      if (!pathname.includes('/sign-in') && !pathname.includes('/sign-up')) {
+        signInUrl.searchParams.set('redirect_url', request.url);
+      }
       return NextResponse.redirect(signInUrl);
     }
     auth().protect();
@@ -79,7 +86,14 @@ export default clerkMiddleware((auth, request) => {
 // Update the config matcher to explicitly exclude all static assets
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-    '/(api|trpc)(.*)'
-  ],
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    "/((?!_next/static|_next/image|favicon.ico|public).*)",
+    "/(api|trpc)(.*)"
+  ]
 };
