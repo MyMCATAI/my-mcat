@@ -491,7 +491,6 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
       )
     );
   };
-
   const renderReviewSection = () => (
     <ScrollArea className="h-[calc(90vh-6rem)] scrollbar-none">
       <div className="space-y-4 pr-4 pb-4">
@@ -503,13 +502,13 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
               p-4 border border-[--theme-border-color] rounded-md 
               bg-[--theme-flashcard-color] cursor-pointer 
               transition-all duration-300 hover:shadow-lg
-              h-[27rem]
+              min-h-[12rem] max-h-[27rem]
               ${card.isFlipped ? 'bg-opacity-90' : ''}
             `}
             onClick={() => handleCardFlip(index)}
           >
             <div className="h-full flex flex-col">
-              <div className="text-sm text-[--theme-text-color] opacity-50 mb-2">{card.timestamp}</div>
+              <div className="text-xs text-[--theme-text-color] opacity-50 mb-2">{card.timestamp.split(', ')[1]}</div>
               
               <div className="flex-1 overflow-y-auto scrollbar-none">
                 {!card.isFlipped ? (
@@ -892,15 +891,6 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     );
   };
 
-  // Replace feedItems with a chat-like interface
-  const renderChatInterface = () => (
-    <ChatBot
-      width="100%"
-      height="100%"
-      backgroundColor="var(--theme-mainbox-color)"
-    />
-  );
-
   useEffect(() => {
     const contextTitle = "Test Review Summary";
     const contextIntro = "I just completed a test. Here are the questions I got wrong:";
@@ -921,7 +911,16 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   const router = useRouter();
 
   const handleNavigateToTutoring = () => {
-    router.push('/home?tab=AdaptiveTutoringSuite');
+    // Get the top 4 most missed categories
+    const weakestCategories = Object.entries(mostMissed)
+      .slice(0, 4)
+      .map(([concept]) => encodeURIComponent(concept));
+
+    // Create the URL with the categories as a comma-separated list
+    const url = `/home?tab=AdaptiveTutoringSuite&conceptCategories=${weakestCategories.join(',')}`;
+
+    // Open in new tab
+    window.open(url, '_blank');
   };
 
   if(userResponses.length === 0) {

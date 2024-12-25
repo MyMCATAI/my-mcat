@@ -134,13 +134,46 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   });
 
   const [tutorialKey, setTutorialKey] = useState(0);
-
   const [showConfetti, setShowConfetti] = useState(false);
-
   const [lastSelectedCategory, setLastSelectedCategory] = useState<string | null>(
     localStorage.getItem("lastSelectedCategory")
   );
   const { toast } = useToast();
+
+  const fetchCategories = useCallback(
+    async (useKnowledgeProfiles: boolean = false, conceptCategories?: string[]) => {
+      try {
+        setIsLoading(true);
+        const url = new URL("/api/category", window.location.origin);
+        url.searchParams.append("page", "1");
+        url.searchParams.append("pageSize", "7");
+        url.searchParams.append("useDiagnostic", "true");
+        
+        if (useKnowledgeProfiles) {
+          url.searchParams.append("useKnowledgeProfiles", "true");
+        }
+
+        // Add conceptCategories to query if they exist
+        if (conceptCategories?.length) {
+          url.searchParams.append("conceptCategories", conceptCategories.join(','));
+        }
+
+        const response = await fetch(url.toString());
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+
+        const data = await response.json();
+        return data.items;
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        return [];
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
   const [showSettingsSteps, setShowSettingsSteps] = useState(false);
 
@@ -148,32 +181,48 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     async (useKnowledgeProfiles: boolean = false) => {
       setIsLoading(true);
       try {
-        const categoriesData = await fetchCategories(useKnowledgeProfiles);
+        // Get conceptCategories from URL if they exist
+        const searchParams = new URLSearchParams(window.location.search);
+        const conceptCategoryParam = searchParams.get('conceptCategories');
+        const conceptCategories = conceptCategoryParam?.split(',').map(t => decodeURIComponent(t));
+
+        // Fetch categories with conceptCategories if they exist
+        const categoriesData = await fetchCategories(useKnowledgeProfiles, conceptCategories);
         setCategories(categoriesData);
         setInitialCategories(categoriesData);
 
-        // Load checked categories from localStorage
-        const savedCategories = localStorage.getItem("checkedCategories");
-        const parsedCategories = savedCategories 
-          ? JSON.parse(savedCategories) 
-          : categoriesData.slice(0, 6);
-        
-        setCheckedCategories(parsedCategories);
+        // If we have specific conceptCategories, use them directly
+        if (conceptCategories?.length) {
+          setCheckedCategories(categoriesData);
+          localStorage.setItem("checkedCategories", JSON.stringify(categoriesData));
+          
+          // Select the first concept category from the URL
+          const categoryToSelect = categoriesData[0]?.conceptCategory;
+          if (categoryToSelect) {
+            setSelectedCategory(categoryToSelect);
+            localStorage.setItem("lastSelectedCategory", categoryToSelect);
+            await fetchContentAndQuestions(categoryToSelect);
+          }
+        } else {
+          // Original localStorage logic for when no specific categories are requested
+          const savedCategories = localStorage.getItem("checkedCategories");
+          const parsedCategories = savedCategories 
+            ? JSON.parse(savedCategories) 
+            : categoriesData.slice(0, 6);
+          
+          setCheckedCategories(parsedCategories);
 
-        // Set the selected category based on lastSelectedCategory or first checked category
-        const categoryToSelect = lastSelectedCategory && 
-          parsedCategories.find((cat: CategoryWithCompletion) => cat.conceptCategory === lastSelectedCategory)
-            ? lastSelectedCategory
-            : parsedCategories[0]?.conceptCategory;
+          // Set the selected category based on lastSelectedCategory or first checked category
+          const categoryToSelect = lastSelectedCategory && 
+            parsedCategories.find((cat: CategoryWithCompletion) => cat.conceptCategory === lastSelectedCategory)
+              ? lastSelectedCategory
+              : parsedCategories[0]?.conceptCategory;
 
-        if (categoryToSelect) {
-          setSelectedCategory(categoryToSelect);
-          const index = parsedCategories.findIndex(
-            (cat: CategoryWithCompletion) => cat.conceptCategory === categoryToSelect
-          );
+          if (categoryToSelect) {
+            setSelectedCategory(categoryToSelect);
+            await fetchContentAndQuestions(categoryToSelect);
+          }
         }
-
-        await fetchContentAndQuestions(categoryToSelect);
       } catch (error) {
         console.error("Error fetching initial data:", error);
         toast({
@@ -185,7 +234,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         setIsLoading(false);
       }
     },
-    [lastSelectedCategory]
+    [lastSelectedCategory, fetchCategories]
   );
 
   useEffect(() => {
@@ -427,35 +476,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       }
     }
   }, [content]);
-
-  const fetchCategories = useCallback(
-    async (useKnowledgeProfiles: boolean = false) => {
-      try {
-        setIsLoading(true);
-        const url = new URL("/api/category", window.location.origin);
-        url.searchParams.append("page", "1");
-        url.searchParams.append("pageSize", "7");
-        url.searchParams.append("useDiagnostic", "true");
-        if (useKnowledgeProfiles) {
-          url.searchParams.append("useKnowledgeProfiles", "true");
-        }
-
-        const response = await fetch(url.toString());
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-
-        const data = await response.json();
-        return data.items;
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        return [];
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
 
   const handleCameraClick = () => {
     setContentType("video");

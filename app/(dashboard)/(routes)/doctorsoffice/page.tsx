@@ -23,6 +23,8 @@ import AfterTestFeed, { UserResponseWithCategory } from "./AfterTestFeed";
 import type { UserResponse } from "@prisma/client";
 import { FetchedActivity } from "@/types";
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import NewGameButton from "./components/NewGameButton";
+import { imageGroups } from "./constants/imageGroups";
 
 const DoctorsOfficePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("doctorsoffice");
@@ -53,17 +55,16 @@ const DoctorsOfficePage: React.FC = () => {
     null
   );
 
-  // Check for completion
-  // Initialization of activeRooms is done in OfficeContainer.tsx since currentLevelConfig is not available here
-  const handleCompleteAllRoom = () => {
-    setCompleteAllRoom(true);
-  };
-
   // User Responses
   const [userResponses, setUserResponses] = useState<UserResponseWithCategory[]>([]);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
   const [testScore, setTestScore] = useState(0);
+  const [isGameInProgress, setIsGameInProgress] = useState(false);
+
+  const handleCompleteAllRoom = () => {
+    setCompleteAllRoom(true);
+  };
 
   const fetchUserResponses = useCallback(async (testId: string) => {
     try {
@@ -91,17 +92,6 @@ const DoctorsOfficePage: React.FC = () => {
       console.error("Error fetching user responses:", error);
       toast.error("Failed to load test responses");
     }
-  }, []);
-
-  useEffect(() => {
-    const initTest = async () => {
-      const userTestId = await createNewUserTest();
-      if (userTestId) {
-        setCurrentUserTestId(userTestId);
-      }
-    };
-    
-    initTest();
   }, []);
 
   useEffect(() => {
@@ -186,33 +176,9 @@ const DoctorsOfficePage: React.FC = () => {
     handleCoinReward();
   }, [completeAllRoom]);
 
-  const createNewUserTest = async () => {
-    try {
-      const response = await fetch("/api/user-test", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create user test");
-      }
-
-      const data = await response.json();
-      setCurrentUserTestId(data.id);
-      return data.id;
-    } catch (error) {
-      console.error("Error creating user test:", error);
-      toast.error("Failed to start challenge");
-      return null;
-    }
-  };
-
   // Marketplace Dialog
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const marketplaceDialogRef = useRef<{ open: () => void } | null>(null);
-  const [hasOpenedMarketplace, setHasOpenedMarketplace] = useState(false);
 
   const [isWelcomeDialogOpen, setIsWelcomeDialogOpen] = useState(false);
 
@@ -227,90 +193,6 @@ const DoctorsOfficePage: React.FC = () => {
 
   // Add this new state for streak days
   const [streakDays, setStreakDays] = useState(0);
-  // Marketplace State
-  const imageGroups = [
-    {
-      name: "INTERN LEVEL",
-      items: [
-        {
-          id: "ExaminationRoom1",
-          src: "/game-components/ExaminationRoom1.png",
-        },
-        { id: "WaitingRoom1", src: "/game-components/WaitingRoom1.png" },
-        { id: "DoctorsOffice1", src: "/game-components/DoctorsOffice1.png" },
-      ],
-      cost: 2,
-      benefits: [
-        "You are an intern learning the ropes.",
-        "Psychology",
-        "Sociology"
-      ],
-    },
-    {
-      name: "RESIDENT LEVEL",
-      items: [
-        {
-          id: "ExaminationRoom2",
-          src: "/game-components/ExaminationRoom1.png",
-        },
-        { id: "Bathroom1", src: "/game-components/Bathroom1.png" },
-        { id: "Bathroom2", src: "/game-components/Bathroom1.png" },
-      ],
-      cost: 4,
-      benefits: [
-        "You are a doctor in training with Kalypso.",
-        "Biology"
-      ],
-    },
-    {
-      name: "FELLOWSHIP LEVEL",
-      items: [
-        { id: "HighCare1", src: "/game-components/HighCare1.png" },
-        { id: "HighCare2", src: "/game-components/HighCare1.png" },
-      ],
-      cost: 6,
-      benefits: [
-        "You are a physician.",
-        "Advanced Biology"
-      ],
-    },
-    {
-      name: "ATTENDING LEVEL",
-      items: [
-        { id: "OperatingRoom1", src: "/game-components/OperatingRoom1.png" },
-        { id: "MedicalCloset1", src: "/game-components/MedicalCloset1.png" },
-        { id: "MRIMachine2", src: "/game-components/MRIMachine.png" },
-      ],
-      cost: 8,
-      benefits: [
-        "You can do surgeries.",
-        "Biochemistry"
-      ],
-    },
-    {
-      name: "PHYSICIAN LEVEL",
-      items: [{ id: "MRIMachine1", src: "/game-components/MRIMachine.png" }],
-      cost: 10,
-      benefits: [
-        "You can lead teams.",
-        "Physics",
-        "Chemistry"
-      ],
-    },
-    {
-      name: "MEDICAL DIRECTOR LEVEL",
-      items: [
-        { id: "CATScan1", src: "/game-components/CATScan1.png" },
-        { id: "CATScan2", src: "/game-components/CATScan1.png" },
-      ],
-      cost: 12,
-      benefits: [
-        "You are now renowned.",
-        "Advanced Chemistry",
-        "Advanced Physics"
-      ],
-    }
-  ];
 
   const fetchData = async () => {
     try {
@@ -578,69 +460,38 @@ const DoctorsOfficePage: React.FC = () => {
 
   // Create a stable callback for setting the function
   const handleSetPopulateRooms = useCallback((fn: () => void) => {
-    console.log("Setting new populateRooms function");
     setPopulateRoomsFn(() => fn);
   }, []);
 
-  const [isGameInProgress, setIsGameInProgress] = useState(false);
+  // Inside the component, add this new function to reset game state
+  const resetGameState = () => {
+    setActiveRooms(new Set());
+    setCompleteAllRoom(false);
+    setIsAfterTestDialogOpen(false);
+    setLargeDialogQuit(false);
+    setUserResponses([]);
+    setCorrectCount(0);
+    setWrongCount(0);
+    setTestScore(0);
+    setTotalMCQQuestions(0);
+    setCorrectMCQQuestions(0);
 
-  const handleNewGame = async () => {
-    // Check if user has enough coins
-    if (userScore < 1) {
-      toast.error("You need 1 coin to start a new game!");
-      return;
-    }
+    flashcardsDialogRef.current?.setWrongCards([])
+    flashcardsDialogRef.current?.setCorrectCount(0)
+    afterTestFeedRef.current?.setWrongCards([])
+  };
 
-    try {
-      // Deduct coin
-      const response = await fetch("/api/user-info", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          decrementScore: 1
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to deduct coin");
-      }
-
-      const { score: updatedScore } = await response.json();
-      setUserScore(updatedScore);
-
-      // Reset all game-related states
-      setActiveRooms(new Set());
-      setCompleteAllRoom(false);
-      setIsAfterTestDialogOpen(false);
-      setLargeDialogQuit(false);
-      setUserResponses([]);
-      setCorrectCount(0);
-      setWrongCount(0);
-      setTestScore(0);
-      setTotalMCQQuestions(0);
-      setCorrectMCQQuestions(0);
-
-      flashcardsDialogRef.current?.setWrongCards([])
-      flashcardsDialogRef.current?.setCorrectCount(0)
-      afterTestFeedRef.current?.setWrongCards([])
-
-      const userTestId = await createNewUserTest();
-      if (userTestId) {
-        setCurrentUserTestId(userTestId);
-        setIsGameInProgress(true);
-      }
-
-      // Call populateRoomsFn if it exists
-      if (typeof populateRoomsFn === 'function') {
-        populateRoomsFn();
-        toast.success("New game started! 1 coin deducted.");
-      } else {
-        console.error("populateRoomsFn is not a function");
-        toast.error("Failed to start new game. Please try refreshing the page.");
-      }
-    } catch (error) {
-      console.error("Error starting new game:", error);
-      toast.error("Failed to start new game. Please try again.");
+  // Update the handleGameStart function to accept userTestId
+  const handleGameStart = (userTestId: string) => {
+    setIsGameInProgress(true);
+    setCurrentUserTestId(userTestId);
+    
+    // Call populateRoomsFn if it exists
+    if (typeof populateRoomsFn === 'function') {
+      populateRoomsFn();
+    } else {
+      console.error("populateRoomsFn is not a function");
+      toast.error("Failed to start new game. Please try refreshing the page.");
     }
   };
 
@@ -687,25 +538,13 @@ const DoctorsOfficePage: React.FC = () => {
           />
           {/* Button on the top left corner */}
           <div className="absolute top-4 left-4 flex gap-2 z-50">
-            <button
-              onClick={handleNewGame}
-              className="bg-transparent border-2 border-[--theme-border-color] text-[--theme-hover-color]
-                px-6 py-3 rounded-lg transition-all duration-300 
-                shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 
-                font-bold text-lg flex items-center gap-2
-                opacity-90 hover:opacity-100
-                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
-            >
-              <span className="border-r border-[--theme-border-color] hover:border-white/30 pr-2">New Game</span>
-              <span className="text-white">-1</span>
-              <Image
-                src="/game-components/PixelCupcake.png"
-                alt="Coin"
-                width={24}
-                height={24}
-                className="inline-block"
-              />
-            </button>
+            <NewGameButton
+              userScore={userScore}
+              setUserScore={setUserScore}
+              onGameStart={handleGameStart}
+              isGameInProgress={isGameInProgress}
+              resetGameState={resetGameState}
+            />
             {isGameInProgress && totalMCQQuestions>0 && (
               <button
                 onClick={handleOpenAfterTestFeed}
