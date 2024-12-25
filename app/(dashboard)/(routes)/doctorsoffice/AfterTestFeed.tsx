@@ -919,8 +919,8 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     // Create the URL with the categories as a comma-separated list
     const url = `/home?tab=AdaptiveTutoringSuite&conceptCategories=${weakestCategories.join(',')}`;
 
-    // Open in new tab
-    window.open(url, '_blank');
+    // Use router.push instead of window.open
+    router.push(url);
   };
 
   if(userResponses.length === 0) {
