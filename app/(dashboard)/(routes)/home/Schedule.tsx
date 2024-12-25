@@ -53,6 +53,7 @@ import { useOutsideClick } from '@/hooks/use-outside-click';
 import UWorldPopup from '@/components/home/UWorldPopup';
 import CompletionDialog from '@/components/home/CompletionDialog';
 import ScoreDisplay from '@/components/score/ScoreDisplay';
+import { OptionsDialog } from "@/components/home/OptionsDialog";
 
 ChartJS.register(
   CategoryScale,
@@ -126,6 +127,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showUWorldPopup, setShowUWorldPopup] = useState(false);
   const [showTestsDialog, setShowTestsDialog] = useState(false);
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -212,6 +214,17 @@ const Schedule: React.FC<ScheduleProps> = ({
       localStorage.setItem("tutorialPart1Played", "true");
     }
   }, []);
+
+  useEffect(() => {
+    if (!runTutorialPart1 && localStorage.getItem("tutorialPart1Played") === "true" && !localStorage.getItem("optionsDialogShown")) {
+      const timer = setTimeout(() => {
+        setShowOptionsModal(true);
+        localStorage.setItem("optionsDialogShown", "true");
+      }, 10000); // 10 seconds delay
+
+      return () => clearTimeout(timer);
+    }
+  }, [runTutorialPart1]);
 
   useEffect(() => {
     setCurrentDate(new Date());
@@ -603,6 +616,9 @@ const Schedule: React.FC<ScheduleProps> = ({
     });
   };
 
+  const handleTabChange = (tab: string) => {
+    handleSetTab(tab);
+  };
 
   return (
     <div className="grid grid-cols-[25%_75%] h-full relative w-full">
@@ -1188,6 +1204,12 @@ const Schedule: React.FC<ScheduleProps> = ({
       <CompletionDialog 
         isOpen={showCompletionDialog} 
         onClose={() => setShowCompletionDialog(false)}
+      />
+
+      <OptionsDialog 
+        showOptionsModal={showOptionsModal}
+        setShowOptionsModal={setShowOptionsModal}
+        handleTabChange={handleTabChange}
       />
     </div>
   );

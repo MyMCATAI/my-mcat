@@ -14,7 +14,6 @@ export const FullscreenPrompt = () => {
     const [showPrompt, setShowPrompt] = useState(false);
     const [isDismissed, setIsDismissed] = useState(false);
     const [neverShowAgain, setNeverShowAgain] = useState(false);
-    const [showCheckbox, setShowCheckbox] = useState(false);
     const pathname = usePathname();
 
     // List of paths where the prompt should not appear
@@ -41,8 +40,9 @@ export const FullscreenPrompt = () => {
                 doc.msFullscreenElement);
         };
 
-        // Check if already in fullscreen before showing prompt
+        // If already in fullscreen, mark it as dismissed for this session
         if (checkFullscreen()) {
+            sessionStorage.setItem('fullscreenPrompt-dismissed', 'true');
             setShowPrompt(false);
             return;
         }
@@ -102,14 +102,6 @@ export const FullscreenPrompt = () => {
         }
     };
 
-    const handleNoClick = () => {
-        if (showCheckbox) {
-            dismissPrompt();  // If checkbox is already shown, clicking No again should dismiss
-        } else {
-            setShowCheckbox(true);  // First click just shows the checkbox
-        }
-    };
-
     const dismissPrompt = () => {
         if (neverShowAgain) {
             localStorage.setItem('fullscreenPrompt-neverShow', 'true');
@@ -162,22 +154,20 @@ export const FullscreenPrompt = () => {
                     </button>
                     <div className="flex flex-col items-center space-y-2 w-full">
                         <button
-                            onClick={handleNoClick}
+                            onClick={dismissPrompt}
                             className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                         >
                             {"No"}
                         </button>
-                        {showCheckbox && (
-                            <label className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer mt-2">
-                                <input
-                                    type="checkbox"
-                                    checked={neverShowAgain}
-                                    onChange={(e) => setNeverShowAgain(e.target.checked)}
-                                    className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-                                />
-                                <span>{"Don't show again"}</span>
-                            </label>
-                        )}
+                        <label className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer mt-2">
+                            <input
+                                type="checkbox"
+                                checked={neverShowAgain}
+                                onChange={(e) => setNeverShowAgain(e.target.checked)}
+                                className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                            />
+                            <span>{"Don't show again"}</span>
+                        </label>
                     </div>
                 </div>
             </div>

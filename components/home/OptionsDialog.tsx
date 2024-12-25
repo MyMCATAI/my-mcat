@@ -1,6 +1,8 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useRouter } from 'next/navigation';
+import { toast } from "react-hot-toast";
 
 interface OptionsDialogProps {
   showOptionsModal: boolean;
@@ -14,6 +16,54 @@ export const OptionsDialog = ({
   handleTabChange 
 }: OptionsDialogProps) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [userScore, setUserScore] = useState(0);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchUserScore = async () => {
+      try {
+        const response = await fetch("/api/user-info");
+        if (!response.ok) throw new Error("Failed to fetch user score");
+        const data = await response.json();
+        setUserScore(data.score);
+      } catch (error) {
+        console.error("Error fetching user score:", error);
+        toast.error("Failed to fetch user score");
+      }
+    };
+
+    fetchUserScore();
+  }, []);
+
+  const handleStartOption = async (option: any) => {
+    if (option.cost === "5 coins" && userScore < 5) {
+      toast.error("You don't have enough coins!");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/user-info", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: -5 }),
+      });
+
+      if (!response.ok) throw new Error("Failed to deduct coins");
+
+      setUserScore(prev => prev - 5);
+
+      if (option.title === "ANKI GAME") {
+        router.push('/doctorsoffice');
+      } else if (option.title === "ADAPTIVE TUTORING") {
+        handleTabChange("AdaptiveTutoringSuite");
+      }
+
+      setShowOptionsModal(false);
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Failed to start option");
+    }
+  };
 
   const options = [
     {
@@ -44,7 +94,7 @@ export const OptionsDialog = ({
   ];
 
   return (
-    <Dialog open={showOptionsModal} onOpenChange={setShowOptionsModal}>
+    <Dialog open={showOptionsModal} onOpenChange={() => {}}>
       <DialogContent className={"max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border-2 border-transparent"}>
         <h2 className={"text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center"}>
           {selectedOption ? selectedOption : "Choose Your Study Path"}
@@ -90,9 +140,11 @@ export const OptionsDialog = ({
                 </button>
               ))}
             </div>
-            <p className={"text-m text-[--theme-text-color] mb-4 leading-relaxed text-left ml-4"}>
-              Begin your learning journey with adaptive tutoring or flashcards, both accessible with your coins. The more you study, the more coins you can earn.
-              If you&apos;re nearing your test date, consider purchasing coins to gain early access to our advanced test review suite at a discounted rate.
+            <p className={"text-m text-[--theme-text-color] mb-2 leading-relaxed text-center ml-4"}>
+               Congratulations on starting your MCAT Journey!
+            </p>
+            <p className={"text-m text-[--theme-text-color] mb-4 leading-relaxed text-center ml-4"}>
+               Click one of these options to get started in either LEARNING content, PRACTICING content, or TEST REVIEW.
             </p>
           </>
         ) : (
@@ -121,14 +173,20 @@ export const OptionsDialog = ({
               <button
                 onClick={() => {
                   const option = options.find(opt => opt.title === selectedOption);
-                  if (option) {
-                    setShowOptionsModal(false);
-                    handleTabChange(option.tab);
+                  if (option && !option.isPremium) {
+                    handleStartOption(option);
                   }
                 }}
-                className={"flex-1 py-2 px-4 bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color] rounded-lg transition-colors duration-200"}
+                disabled={options.find(opt => opt.title === selectedOption)?.isPremium}
+                className={`flex-1 py-2 px-4 ${
+                  options.find(opt => opt.title === selectedOption)?.isPremium 
+                    ? "bg-gray-500 cursor-not-allowed" 
+                    : "bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color]"
+                } text-[--theme-text-color] rounded-lg transition-colors duration-200`}
               >
-                Start {selectedOption}
+                {options.find(opt => opt.title === selectedOption)?.isPremium 
+                  ? "Coming Soon" 
+                  : `Start ${selectedOption}`}
               </button>
             </div>
           </>
