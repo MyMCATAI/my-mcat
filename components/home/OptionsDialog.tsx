@@ -2,7 +2,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from 'next/navigation';
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 
 interface OptionsDialogProps {
   showOptionsModal: boolean;
@@ -140,9 +140,11 @@ export const OptionsDialog = ({
                 </button>
               ))}
             </div>
-            <p className={"text-m text-[--theme-text-color] mb-4 leading-relaxed text-left ml-4"}>
-              Begin your learning journey with adaptive tutoring or flashcards, both accessible with your coins. The more you study, the more coins you can earn.
-              If you&apos;re nearing your test date, consider purchasing coins to gain early access to our advanced test review suite at a discounted rate.
+            <p className={"text-m text-[--theme-text-color] mb-2 leading-relaxed text-center ml-4"}>
+               Congratulations on starting your MCAT Journey!
+            </p>
+            <p className={"text-m text-[--theme-text-color] mb-4 leading-relaxed text-center ml-4"}>
+               Click one of these options to get started in either LEARNING content, PRACTICING content, or TEST REVIEW.
             </p>
           </>
         ) : (
