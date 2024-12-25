@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export const LandingNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,12 +14,17 @@ export const LandingNavbar = () => {
     <nav className="bg-black p-4 fixed top-0 left-0 w-full z-50 shadow-lg">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link href={"/"}>
-          <div className="flex items-center">
-            <div className="relative">
-              {/* <Image src={logo} alt="Logo" width={48} height={48} /> */}
+          <div className="flex items-center gap-2">
+            <div className="relative w-12 h-12">
+              <Image 
+                src="/mymcatstudyverse.png"
+                alt="MyMCAT Study Universe Logo"
+                fill
+                className="object-contain"
+              />
             </div>
             <div className="flex flex-col">
-              <span className="text-white text-3xl">MyMCAT.ai</span>
+              <span className="text-white text-3xl font-krungthep">mymcat.ai</span>
             </div>
           </div>
         </Link>
