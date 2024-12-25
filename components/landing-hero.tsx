@@ -18,9 +18,16 @@ const LandingHero = () => {
   const [video2Loaded, setVideo2Loaded] = useState(false);
   const catContainerRef = useRef<HTMLDivElement>(null);
   const [isSafari, setIsSafari] = useState(false);
+  const [isFirefox, setIsFirefox] = useState(false);
 
   useEffect(() => {
     setIsSafari(/^((?!chrome|android).)*safari/i.test(navigator.userAgent));
+    setIsFirefox(/firefox/i.test(navigator.userAgent));
+  }, []);
+
+  useEffect(() => {
+    // Check if browser can play WebM
+    const video = document.createElement('video');
   }, []);
 
   useLayoutEffect(() => {
@@ -118,45 +125,15 @@ const LandingHero = () => {
               </div>
               <div className="absolute top-[5%] left-[10%] w-[80%] h-[80%] overflow-hidden">
                 <div ref={catContainerRef} className="w-full h-full opacity-0">
-                  {isSafari ? (
-                    <Image 
-                      src={cat} 
-                      alt="Hero Animation" 
-                      layout="fill" 
-                      objectFit="contain"
-                      priority
-                      unoptimized
-                    />
-                  ) : (
-                    <>
-                      <video
-                        className="w-full h-full object-contain"
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        poster="/video-poster.png"
-                      >
-                        <source src="/hero.webm" type="video/webm" />
-                      </video>
-                      <Image 
-                        src={cat} 
-                        alt="Hero Animation" 
-                        layout="fill" 
-                        objectFit="contain"
-                        priority
-                        unoptimized
-                        style={{ display: 'none' }}
-                        onError={() => {
-                          // Show GIF fallback if video fails
-                          if (catContainerRef.current) {
-                            const imgElement = catContainerRef.current.querySelector('img');
-                            if (imgElement) imgElement.style.display = 'block';
-                          }
-                        }}
-                      />
-                    </>
-                  )}
+                  <Image 
+                    src={cat} 
+                    alt="Hero Animation" 
+                    layout="fill" 
+                    objectFit="contain"
+                    priority
+                    quality={75}
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
                 </div>
               </div>
             </div>
