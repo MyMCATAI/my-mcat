@@ -24,14 +24,16 @@ const publicRoutes = [
   "/icons/(.*)",
   "/landingpage/(.*)",
   "/blog(.*)",
-  "/Wallpaperwire.jpg",
-  "/kalypsotumble.gif",
+  
+  // Consolidated static asset pattern
+  "/(.+)\\.(jpg|jpeg|gif|png|ico|xml|txt|js|css|svg|webm|mp4)$",
+  
+  // Wildcard directories
   "/_next/(.*)",
   "/public/(.*)",
   "/assets/(.*)",
   "/images/(.*)",
   "/static/(.*)",
-  "/mymcatstudyverse.png",
 ];
 
 const isPublicRoute = createRouteMatcher(publicRoutes);
