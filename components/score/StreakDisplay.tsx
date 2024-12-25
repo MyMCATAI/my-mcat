@@ -57,10 +57,8 @@ const StreakPopup = ({ streak, isOpen, onClose }: StreakPopupProps) => {
               <Image
                 src={message.image}
                 alt="Kalypso"
-                layout="fill"
-                objectFit="cover"
-                objectPosition="center -50%"
-                className={message.image.includes('kalypsofloating') ? 'scale-150' : ''}
+                fill
+                className={`object-cover object-[center_-50%] ${message.image.includes('kalypsofloating') ? 'scale-150' : ''}`}
               />
             </div>
             <h2 

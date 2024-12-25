@@ -341,7 +341,7 @@ const MethodologyAndTestimonials = () => {
           >
             {universityLogos.map((logo, index) => (
               <SwiperSlide key={index} className="flex items-center justify-center h-[150px]">
-                <Image src={logo} alt={`University logo ${index + 1}`} width={200} height={200} objectFit="contain" />
+                <Image src={logo} alt={`University logo ${index + 1}`} width={200} height={200} className="object-contain" />
               </SwiperSlide>
             ))}
           </Swiper>
@@ -379,7 +379,14 @@ const MethodologyAndTestimonials = () => {
                       {logo.title}
                     </h3>
                     <div className="flex-grow flex items-center">
-                      <Image src={logo.src} alt={`${logo.title} Pricing`} width={800} height={1200} objectFit="contain" style={{ maxHeight: '100%', width: 'auto' }} />
+                      <Image 
+                        src={logo.src} 
+                        alt={`${logo.title} Pricing`} 
+                        width={800} 
+                        height={1200} 
+                        className="object-contain" 
+                        style={{ maxHeight: '100%', width: 'auto' }} 
+                      />
                     </div>
                   </div>
                 </SwiperSlide>

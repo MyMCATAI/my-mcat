@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import cat from "../public/hero.gif";
 import laptop from "../public/laptop.png";
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import BernieSvg from "../public/Bernie.svg";
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -13,15 +13,15 @@ gsap.registerPlugin(ScrollTrigger);
 const LandingHero = () => {
   const quoteRef = useRef(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const meowSectionRef = useRef(null);
-  const titleRef = useRef(null);
-  const laptopRef = useRef(null);
-  const catGifRef = useRef(null);
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const [laptopLoaded, setLaptopLoaded] = useState(false);
-  const [catGifLoaded, setCatGifLoaded] = useState(false);
   const videoRef2 = useRef<HTMLVideoElement>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const [video2Loaded, setVideo2Loaded] = useState(false);
+  const catContainerRef = useRef(null);
+  const [isSafari, setIsSafari] = useState(false);
+
+  useEffect(() => {
+    setIsSafari(/^((?!chrome|android).)*safari/i.test(navigator.userAgent));
+  }, []);
 
   useLayoutEffect(() => {
     const video = videoRef.current;
@@ -46,27 +46,6 @@ const LandingHero = () => {
   }, [videoLoaded]);
 
   useLayoutEffect(() => {
-    if (laptopLoaded) {
-      gsap.fromTo(laptopRef.current,
-        { opacity: 0 },
-        { 
-          opacity: 1, 
-          duration: 1, 
-          ease: "power2.inOut",
-          onComplete: () => {
-            if (catGifLoaded) {
-              gsap.fromTo(catGifRef.current, 
-                { y: '100%', opacity: 0 },
-                { y: '0%', opacity: 1, duration: 1, ease: "power2.out" }
-              );
-            }
-          }
-        }
-      );
-    }
-  }, [laptopLoaded, catGifLoaded]);
-
-  useLayoutEffect(() => {
     if (video2Loaded && videoRef2.current) {
       gsap.to(videoRef2.current, {
         opacity: 1,
@@ -76,20 +55,38 @@ const LandingHero = () => {
     }
   }, [video2Loaded]);
 
+  useLayoutEffect(() => {
+    // Animate cat container after a short delay
+    gsap.fromTo(catContainerRef.current, 
+      { y: '100%', opacity: 0 },
+      { 
+        y: '0%', 
+        opacity: 1, 
+        duration: 1.2, 
+        ease: "power2.out",
+        delay: 0.5 // Optional: small delay to let the page settle
+      }
+    );
+  }, []); // Run once on mount
+
   return (
     <>
-      <section className="relative h-screen overflow-hidden bg-[#050010]" id="home">
+      <section 
+        className="relative h-screen overflow-hidden" 
+        style={{ backgroundColor: '#171234' }}
+        id="home"
+      >
         <video 
           ref={videoRef}
-          className={`absolute top-0 left-0 w-full h-full object-cover ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className="absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000"
           autoPlay
           loop
           muted
           playsInline
+          style={{ opacity: videoLoaded ? 1 : 0 }}
         >
-          <source src={"https://my-mcat.s3.us-east-2.amazonaws.com/public/brush3.mp4"} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video> 
+          <source src="https://my-mcat.s3.us-east-2.amazonaws.com/public/brush3.mp4" type="video/mp4" />
+        </video>
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10 container mx-auto px-4 h-full flex items-center justify-center">
           <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-10 max-w-6xl w-full">
@@ -111,24 +108,55 @@ const LandingHero = () => {
               </div>
             </div>
             <div className="relative flex justify-center mt-6 lg:mt-0">
-              <div ref={laptopRef} className="w-full opacity-0">
+              <div className="w-full">
                 <Image 
                   src={laptop} 
                   alt="Laptop" 
-                  className="w-full" 
-                  onLoadingComplete={() => setLaptopLoaded(true)}
+                  className="w-full"
+                  priority
                 />
               </div>
               <div className="absolute top-[5%] left-[10%] w-[80%] h-[80%] overflow-hidden">
-                <div ref={catGifRef} className="w-full h-full opacity-0">
-                  <Image 
-                    src={cat} 
-                    alt="GIF" 
-                    layout="fill" 
-                    objectFit="contain" 
-                    unoptimized
-                    onLoadingComplete={() => setCatGifLoaded(true)}
-                  />
+                <div ref={catContainerRef} className="w-full h-full opacity-0">
+                  {isSafari ? (
+                    <Image 
+                      src={cat} 
+                      alt="Hero Animation" 
+                      layout="fill" 
+                      objectFit="contain"
+                      priority
+                      unoptimized
+                    />
+                  ) : (
+                    <>
+                      <video
+                        className="w-full h-full object-contain"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        poster="/video-poster.png"
+                      >
+                        <source src="/hero.webm" type="video/webm" />
+                      </video>
+                      <Image 
+                        src={cat} 
+                        alt="Hero Animation" 
+                        layout="fill" 
+                        objectFit="contain"
+                        priority
+                        unoptimized
+                        style={{ display: 'none' }}
+                        onError={() => {
+                          // Show GIF fallback if video fails
+                          if (catContainerRef.current) {
+                            const imgElement = catContainerRef.current.querySelector('img');
+                            if (imgElement) imgElement.style.display = 'block';
+                          }
+                        }}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
             </div>
