@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import { AnimatePresence } from "framer-motion";
 import FloatingTaskList from './FloatingTaskList';
+import { toast } from "react-hot-toast";
+import { UnlockDialog } from "@/components/shared/UnlockDialog";
 
 interface FloatingButtonProps {
   activities?: any[];
@@ -75,6 +77,8 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
   const tabChangeTimeout = useRef<number | null>(null);
   const router = useRouter();
   const [showTutoringMessage, setShowTutoringMessage] = useState(false);
+  const [showUnlockDialog, setShowUnlockDialog] = useState(false);
+  const [unlockType, setUnlockType] = useState<"game" | "ts" | null>(null);
 
   const handleMouseEnter = () => {
     if (hoverTimeout.current) {
@@ -112,61 +116,85 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
     { top: 30, left: 100 },
   ];
 
-  const handleButtonClick = (tab: string) => {
-    const tabActions = {
-      AdaptiveTutoringSuite: () => {
-        router.push('/home');
-        setActiveTab(tab);
-        onTabChange(tab);
-        setRecentlyChangedTab(true);
-        if (tabChangeTimeout.current) {
-          clearTimeout(tabChangeTimeout.current);
-        }
-        tabChangeTimeout.current = window.setTimeout(() => {
-          setRecentlyChangedTab(false);
-        }, 3000);
-      },
-      doctorsoffice: () => {
-        if (currentPage === 'home') {
-          router.push('/doctorsoffice');
-        } else {
-          router.push('/home');
-        }
-        setActiveTab(tab);
-        onTabChange(tab);
-      },
-      CARS: () => {
-        if (currentPage === 'doctorsoffice') {
-          router.push('/home');
-        }
-        setActiveTab(tab);
-        onTabChange(tab);
-        setRecentlyChangedTab(true);
-        if (tabChangeTimeout.current) {
-          clearTimeout(tabChangeTimeout.current);
-        }
-        tabChangeTimeout.current = window.setTimeout(() => {
-          setRecentlyChangedTab(false);
-        }, 3000);
-      },
-      default: () => {
-        if (currentPage === 'doctorsoffice') {
-          router.push('/home');
-        }
-        setActiveTab(tab);
-        onTabChange(tab);
-        setRecentlyChangedTab(true);
-        if (tabChangeTimeout.current) {
-          clearTimeout(tabChangeTimeout.current);
-        }
-        tabChangeTimeout.current = window.setTimeout(() => {
-          setRecentlyChangedTab(false);
-        }, 3000);
-      }
-    };
+  const handleButtonClick = async (tab: string) => {
+    // First check if user has the required unlock
+    try {
+      const response = await fetch("/api/user-info");
+      if (!response.ok) throw new Error("Failed to fetch user info");
+      const data = await response.json();
+      const unlocks = Array.isArray(data.unlocks) ? data.unlocks : [];
 
-    const action = tabActions[tab as keyof typeof tabActions] || tabActions.default;
-    action();
+      if (tab === "doctorsoffice" && !unlocks.includes("game")) {
+        setUnlockType("game");
+        setShowUnlockDialog(true);
+        return;
+      }
+
+      if (tab === "AdaptiveTutoringSuite" && !unlocks.includes("ts")) {
+        setUnlockType("ts");
+        setShowUnlockDialog(true);
+        return;
+      }
+
+      // If we reach here, user has the required unlock or no unlock is needed
+      const tabActions = {
+        AdaptiveTutoringSuite: () => {
+          router.push('/home');
+          setActiveTab(tab);
+          onTabChange(tab);
+          setRecentlyChangedTab(true);
+          if (tabChangeTimeout.current) {
+            clearTimeout(tabChangeTimeout.current);
+          }
+          tabChangeTimeout.current = window.setTimeout(() => {
+            setRecentlyChangedTab(false);
+          }, 3000);
+        },
+        doctorsoffice: () => {
+          if (currentPage === 'home') {
+            router.push('/doctorsoffice');
+          } else {
+            router.push('/home');
+          }
+          setActiveTab(tab);
+          onTabChange(tab);
+        },
+        CARS: () => {
+          if (currentPage === 'doctorsoffice') {
+            router.push('/home');
+          }
+          setActiveTab(tab);
+          onTabChange(tab);
+          setRecentlyChangedTab(true);
+          if (tabChangeTimeout.current) {
+            clearTimeout(tabChangeTimeout.current);
+          }
+          tabChangeTimeout.current = window.setTimeout(() => {
+            setRecentlyChangedTab(false);
+          }, 3000);
+        },
+        default: () => {
+          if (currentPage === 'doctorsoffice') {
+            router.push('/home');
+          }
+          setActiveTab(tab);
+          onTabChange(tab);
+          setRecentlyChangedTab(true);
+          if (tabChangeTimeout.current) {
+            clearTimeout(tabChangeTimeout.current);
+          }
+          tabChangeTimeout.current = window.setTimeout(() => {
+            setRecentlyChangedTab(false);
+          }, 3000);
+        }
+      };
+
+      const action = tabActions[tab as keyof typeof tabActions] || tabActions.default;
+      action();
+    } catch (error) {
+      console.error("Error checking unlocks:", error);
+      toast.error("Failed to check feature access");
+    }
   };
 
   const labelTexts: Record<string, string> = {
@@ -301,6 +329,17 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
           })}
         </div>
       </span>
+
+      <UnlockDialog
+        isOpen={showUnlockDialog}
+        onClose={() => setShowUnlockDialog(false)}
+        unlockType={unlockType || "game"}
+        title={unlockType === "game" ? "Unlock Anki Clinic" : "Unlock Tutoring Suite"}
+        description={unlockType === "game" 
+          ? "Access the Anki Clinic to practice spaced repetition and master MCAT concepts."
+          : "Access the Adaptive Tutoring Suite to get personalized MCAT guidance."}
+        cost={5}
+      />
     </>
   );
 };
