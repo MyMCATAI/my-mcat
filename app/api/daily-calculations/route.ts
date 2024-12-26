@@ -59,10 +59,8 @@ export async function POST(req: Request) {
     }
 
     const playerLevel = calculatePlayerLevel(clinicRooms);
-    console.log("playerLevel",playerLevel);
     const levelNumber = getLevelNumber(playerLevel);
     
-    console.log("levelNumber",levelNumber);
     const patientsPerDay = getPatientsPerDay(levelNumber);
     const clinicCostPerDay = getClinicCostPerDay(levelNumber);
 
