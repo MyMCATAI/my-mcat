@@ -9,8 +9,9 @@ import { FlattenedQuestionResponse } from '@/lib/question';
 import { roomToSubjectMap } from './OfficeContainer';
 import { roomToContentMap } from './OfficeContainer';
 import toast from 'react-hot-toast';
+import { tutorialQuestions } from './constants/tutorialQuestions';
 
-interface Flashcard {
+export interface Flashcard {
   questionType: string;
   id: string;
   questionContent: string;
@@ -21,7 +22,8 @@ interface Flashcard {
     conceptCategory: string;
   };
   userResponses: Array<{ isCorrect: boolean; timeSpent: number }>;
-  questionAnswerNotes?: string;
+  questionAnswerNotes?: string | string[];
+  links?: string[]
 }
 
 interface FlashcardDeckProps {
@@ -128,6 +130,11 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   const handleDeckComplete = useCallback(() => {
     if (!isDeckCompleted) {
       setIsDeckCompleted(true);
+      
+      if (roomId === 'WaitingRoom1') {
+        return;
+      }
+
       const newActiveRooms = new Set([...activeRooms].filter(room => room !== roomId));
       setActiveRooms(newActiveRooms);
 
@@ -151,6 +158,23 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   const fetchFlashcards = async () => {
     setIsLoading(true);
     try {
+      // Handle tutorial room case
+      if (roomId === 'WaitingRoom1') {
+        const tutorialFlashcards = tutorialQuestions.map(question => ({
+          ...question,
+          difficulty: 1,
+          tags: []
+        }));
+
+        setFlashcards(tutorialFlashcards);
+        setCardStartTime(Date.now());
+        const MCQquestionCount = tutorialFlashcards.filter(q => q.questionType === 'normal').length;
+        setTotalMCQQuestions(MCQquestionCount);
+        setIsLoading(false);
+        return;
+      }
+
+      // Regular room handling
       const subjects = Array.isArray(roomToSubjectMap[roomId]) 
         ? roomToSubjectMap[roomId] 
         : roomToSubjectMap[roomId] || [];
@@ -309,6 +333,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     const timeSpent = Math.floor((Date.now() - cardStartTime)/1000);
     setCardStartTime(Date.now());
 
+    // Handle sound effects and callbacks
     if (isCorrect) {
       onCorrectAnswer();
       if (correctSound.current) {
@@ -322,11 +347,17 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
       );
     }
 
+    // Skip API request for tutorial questions
+    if (roomId === 'WaitingRoom1') {
+      return;
+    }
+
+    // Make API request for non-tutorial questions
     try {
       const requestBody = {
         questionId: currentCard.id,
-        categoryId: currentCard.categoryId,  // Add this line
-        userAnswer: isCorrect ? 'Correct' : 'Incorrect', // currentCard.questionOptions[0], we need to figure out a regex to select the answer from this commented out code
+        categoryId: currentCard.categoryId,
+        userAnswer: isCorrect ? 'Correct' : 'Incorrect',
         isCorrect,
         timeSpent,
         userNotes: `Action: ${action}`,
@@ -342,11 +373,10 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
       if (!response.ok) {
         throw new Error('Failed to save user response');
       }
-
     } catch (error) {
       console.error('Error saving flashcard response:', error);
     }
-  }, [onCorrectAnswer, onWrongAnswer, playSound, cardStartTime]);
+  }, [onCorrectAnswer, onWrongAnswer, playSound, cardStartTime, roomId]);
 
   const [{ opacity }, api] = useSpring(() => ({
     opacity: 1,
@@ -524,24 +554,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     }
   };
 
-  const handleMCQOptionSelect = (index: number) => {
-    if (currentCardIndex >= flashcards.length) return;
-    
-    const currentCard = flashcards[currentCardIndex];
-    if (!currentCard) return;
-
-    setSelectedOption(index);
-    setHasSeenAnswer(true);
-    
-    // Track MCQ questions only when first selecting an answer
-    if (currentCard.questionType === 'normal' && selectedOption === -1) {
-      setTotalMCQQuestions(prev => prev + 1);
-      if (index === (shuffledOptions?.correctIndex ?? -1) && onMCQAnswer) {
-        onMCQAnswer(true);
-      }
-    }
-  };
-
   return (
     <div className="flex flex-col items-center justify-center w-full h-full relative focus-visible:outline-none">
       {isLoading && flashcards.length === 0 ? (
@@ -645,13 +657,45 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
                           <p>
                             {(() => {
                               try {
-                                const notes = JSON.parse(flashcards[currentCardIndex].questionAnswerNotes || '[]');
-                                return Array.isArray(notes) && notes.length > 0 ? notes[0] : 'No additional explanation available.';
+                                const notes = flashcards[currentCardIndex].questionAnswerNotes;
+                                if (Array.isArray(notes)) {
+                                  return notes[0] || 'No additional explanation available.';
+                                }
+                                if (typeof notes === 'string') {
+                                  try {
+                                    const parsedNotes = JSON.parse(notes);
+                                    return Array.isArray(parsedNotes) ? parsedNotes[0] : notes;
+                                  } catch {
+                                    return notes;
+                                  }
+                                }
+                                return 'No additional explanation available.';
                               } catch (e) {
                                 return 'No additional explanation available.';
                               }
                             })()}
                           </p>
+                        </div>
+                      )}
+                      {/* Show links if available */}
+                      {flashcards[currentCardIndex]?.links?.length && (
+                        <div className="mt-4 w-full">
+                          <div className="text-sm font-semibold mb-2 text-[--theme-text-color]">
+                            Additional Resources:
+                          </div>
+                          <ul className="list-disc list-inside space-y-1">
+                            {flashcards[currentCardIndex].links?.map((link, index) => (
+                              <li key={index}>
+                                <a
+                                  href={link}
+                                  onClick={(e) => handleLinkClick(link, e)}
+                                  className="text-blue-500 hover:text-blue-600 underline text-sm"
+                                >
+                                  {link}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       )}
                     </>

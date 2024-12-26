@@ -81,14 +81,14 @@ const NewGameButton: FC<NewGameButtonProps> = ({
     <button
       onClick={handleNewGame}
       disabled={isGameInProgress}
-      className={`bg-transparent border-2 border-[--theme-border-color] 
+      className={`border-2 border-[--theme-border-color] 
         px-6 py-3 rounded-lg transition-all duration-300 
         shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 
         font-bold text-lg flex items-center gap-2
         opacity-90 hover:opacity-100
         ${isGameInProgress 
-          ? 'cursor-not-allowed opacity-50 hover:transform-none hover:shadow-lg' 
-          : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] text-[--theme-hover-color]'
+          ? 'cursor-not-allowed opacity-50 hover:transform-none hover:shadow-lg bg-transparent' 
+          : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] text-[--theme-hover-color] animate-pulse [animation-duration:0.75s] bg-green-500/20'
         }`}
     >
       <span className={`border-r border-[--theme-border-color] ${!isGameInProgress && 'hover:border-white/30'} pr-2`}>
