@@ -12,7 +12,7 @@ export const tutorialQuestions: Flashcard[] = [
       conceptCategory: 'Basic Controls'
     },
     userResponses: [],
-    questionAnswerNotes: ["Press space to reveal, left arrow (←) to mark as review later, and right arrow (→) to mark as correct", "", "", ""]
+    questionAnswerNotes: ["Press space to reveal, left arrow or A (←) to mark as review later, and right arrow or D (→) to mark as correct. Please note, for multiple choice questions, if you get them wrong you CANNOT mark as correct and MUST press A.", "", "", ""]
   },
   {
     questionType: 'normal',
