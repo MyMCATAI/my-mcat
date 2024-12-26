@@ -81,7 +81,7 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { amount, notificationPreference, incrementScore, decrementScore, unlockGame } = body;
+    const { amount, notificationPreference, incrementScore, decrementScore, unlockGame, unlockType } = body;
     if (unlockGame) {
       const userInfo = await prismadb.userInfo.findUnique({
         where: { userId }
@@ -92,24 +92,20 @@ export async function PUT(req: Request) {
       }
 
       const currentUnlocks = Array.isArray(userInfo.unlocks) ? userInfo.unlocks : [];
-
-      let updatedInfo;
-      if (!currentUnlocks.includes('game')) {
-        updatedInfo = await prismadb.userInfo.update({
-          where: { userId },
-          data: {
-            score: userInfo.score - decrementScore,
-            unlocks: [...currentUnlocks, 'game']
-          }
-        });
-      } else {
-        updatedInfo = await prismadb.userInfo.update({
-          where: { userId },
-          data: {
-            score: userInfo.score - decrementScore,
-          }
-        });
+      
+      // Only add the unlock if it's not already present
+      let newUnlocks = currentUnlocks;
+      if (!currentUnlocks.includes(unlockType)) {
+        newUnlocks = [...currentUnlocks, unlockType];
       }
+
+      const updatedInfo = await prismadb.userInfo.update({
+        where: { userId },
+        data: {
+          score: userInfo.score - decrementScore,
+          unlocks: newUnlocks
+        }
+      });
 
       return NextResponse.json(updatedInfo);
     }

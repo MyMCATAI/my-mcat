@@ -36,21 +36,28 @@ export const OptionsDialog = ({
   }, []);
 
   const handleStartOption = async (option: any) => {
-    if (option.cost === "5 coins" && userScore < 5) {
+    const cost = 5; // Since both options cost 5 coins
+    if (userScore < cost) {
       toast.error("You don't have enough coins!");
       return;
     }
 
     try {
+      const unlockType = option.title === "ANKI GAME" ? "game" : "ts";
       const response = await fetch("/api/user-info", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: -5 }),
+        body: JSON.stringify({ 
+          unlockGame: true,
+          decrementScore: cost,
+          unlockType: unlockType
+        }),
       });
 
       if (!response.ok) throw new Error("Failed to deduct coins");
 
-      setUserScore(prev => prev - 5);
+      const data = await response.json();
+      setUserScore(data.score);
 
       if (option.title === "ANKI GAME") {
         router.push('/doctorsoffice');
@@ -59,6 +66,7 @@ export const OptionsDialog = ({
       }
 
       setShowOptionsModal(false);
+      toast.success(`${option.title} unlocked! ${cost} coins deducted`);
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to start option");
