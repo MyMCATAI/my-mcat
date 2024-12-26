@@ -13,7 +13,7 @@ interface QuestionPromptSpriteProps {
   scaleConstant: number;
   zIndex: number;
   roomId: string;
-  onClick: () => void; // Add this prop
+  onClick: () => void;
 }
 
 const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({ 

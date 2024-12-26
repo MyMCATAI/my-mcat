@@ -8,7 +8,6 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import FlashcardDeck from './FlashcardDeck';
 import { useSpring, animated, config } from '@react-spring/web';
-import { TestTube2 } from 'lucide-react';
 // import Interruption from './Interruption';
 import { roomToSubjectMap } from './OfficeContainer';
 interface WrongCard {
@@ -150,15 +149,17 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   // };
 
   const handleClose = useCallback(() => {
+    onOpenChange(false);
+    if (roomId === 'WaitingRoom1') {
+      return;
+    }
     if (correctCount > 0) {
       const newActiveRooms = new Set([...activeRooms].filter(room => room !== roomId));
-      console.log('Updating active rooms');
       if (newActiveRooms.size === 0) {
         handleCompleteAllRoom();
       }
       setActiveRooms(newActiveRooms);
     }
-    onOpenChange(false);
   }, [roomId, setActiveRooms, onOpenChange, correctCount]);
 
   useImperativeHandle(ref, () => ({

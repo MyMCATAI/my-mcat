@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo, use } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Stage, Container, Graphics, Sprite } from '@pixi/react';
 import { Texture, Graphics as PIXIGraphics, utils as PIXIUtils, BaseTexture, Rectangle } from 'pixi.js';
 import { ImageGroup } from './ShoppingDialog';
-import { Button } from '@/components/ui/button';
-import QuestionPromptSprite from './QuestionPromptSprite';
+import QuestionPromptSprite from './components/QuestionPromptSprite';
 
 
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
@@ -21,7 +20,7 @@ interface GridImage {
 
 // Map of images to be used for QuestionPromptSprite
 export const roomToSubjectMap: Record<string, string[]> = {
-  'WaitingRoom1': ['Sociology'],
+  'WaitingRoom1': ['Tutorial'], // this is handled specially as a tutorial room
   'ExaminationRoom1': ['Psychology'],
   'ExaminationRoom2': ['Psychology'],
   'DoctorsOffice1': ['Sociology'],
@@ -38,7 +37,7 @@ export const roomToSubjectMap: Record<string, string[]> = {
 };
 
 export const roomToContentMap: Record<string, string[]> = {
-  'WaitingRoom1': ['8A', '8B', '8C'],
+  'WaitingRoom1': ['Tutorial'],
   'ExaminationRoom1': ['6A', '6B', '6C'],
   'ExaminationRoom2': ['7A', '7B', '7C'],
   'DoctorsOffice1': ['9A', '9B', '10A'],
@@ -195,7 +194,6 @@ const AnimatedSpriteWalking: React.FC<{
 };
 interface OfficeContainerProps {
   onNewGame: (fn: () => void) => void;
-  setCompleteAllRoom: React.Dispatch<React.SetStateAction<boolean>>;
   visibleImages: Set<string>;
   clinicName: string | null;
   userScore: number;
@@ -271,7 +269,6 @@ const RoomSprite: React.FC<{
 
 const OfficeContainer: React.FC<OfficeContainerProps> = ({
   onNewGame,
-  setCompleteAllRoom,
   visibleImages,
   clinicName,
   userScore,
@@ -630,11 +627,19 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   // }, []);
 
   const populateRooms = useCallback(() => {
-    console.log("populateRooms");
     // Get rooms directly from levelConfigurations
     const rooms = levelConfigurations[currentLevel].rooms;
-    setActiveRooms(new Set(rooms.map(room => room.id)));
-  }, [currentLevel]); // Only depend on currentLevel
+    
+    // Randomly select 4 rooms (excluding WaitingRoom1)
+
+    const otherRooms = rooms
+      .filter(room => room.id !== 'WaitingRoom1' && roomToSubjectMap[room.id][0])
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 4);
+    
+    // Set the active rooms (WaitingRoom1 is already active from the useEffect)
+    setActiveRooms(new Set(otherRooms.map(room => room.id)));
+  }, [currentLevel]);
 
   // Pass the stable function reference to parent
   useEffect(() => {
@@ -648,6 +653,12 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   }), [currentLevel]);
 
   const [isLargeDialogOpen, setIsLargeDialogOpen] = useState(false);
+
+  useEffect(() => {
+    // open tutorial room by default and keep it open
+    setActiveRooms(prevRooms => new Set([...prevRooms, 'WaitingRoom1']));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex flex-col w-full h-full relative overflow-hidden">

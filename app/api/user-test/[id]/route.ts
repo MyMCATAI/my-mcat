@@ -76,7 +76,6 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    console.log("userTest", userTest);
     return NextResponse.json(userTest);
   } catch (error) {
     console.error('Error fetching user test:', error);
