@@ -32,9 +32,7 @@ export async function GET(req: Request) {
 
     const playerLevel = calculatePlayerLevel(rooms);
     const levelNumber = getLevelNumber(playerLevel);
-    console.log("levelNumber", levelNumber);
     const patientsPerDay = getPatientsPerDay(levelNumber);
-    console.log("patientsPerDay", patientsPerDay);
     const clinicCostPerDay = getClinicCostPerDay(levelNumber);
     // Get total patients treated
     const totalPatientsTreated = patientRecord?.patientsTreated || 0;

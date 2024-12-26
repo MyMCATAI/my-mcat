@@ -463,7 +463,6 @@ const DoctorsOfficePage: React.FC = () => {
     setPopulateRoomsFn(() => fn);
   }, []);
 
-  // Inside the component, add this new function to reset game state
   const resetGameState = () => {
     setActiveRooms(new Set());
     setCompleteAllRoom(false);
@@ -519,7 +518,6 @@ const DoctorsOfficePage: React.FC = () => {
         <div className="w-3/4 font-krungthep relative rounded-r-lg">
           <OfficeContainer
             onNewGame={handleSetPopulateRooms}
-            setCompleteAllRoom={setCompleteAllRoom}
             visibleImages={visibleImages}
             clinicName={clinicName}
             userScore={userScore}
@@ -538,6 +536,12 @@ const DoctorsOfficePage: React.FC = () => {
           />
           {/* Button on the top left corner */}
           <div className="absolute top-4 left-4 flex gap-2 z-50">
+            {userLevel === "PATIENT LEVEL" 
+            ? 
+            <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
+              <p className="font-medium">{'To play, check out the marketplace! Hover over "PATIENT LEVEL" to see the marketplace. →'}</p>
+            </div>
+            :
             <NewGameButton
               userScore={userScore}
               setUserScore={setUserScore}
@@ -545,6 +549,7 @@ const DoctorsOfficePage: React.FC = () => {
               isGameInProgress={isGameInProgress}
               resetGameState={resetGameState}
             />
+            }
             {isGameInProgress && totalMCQQuestions>0 && (
               <button
                 onClick={handleOpenAfterTestFeed}
@@ -584,7 +589,18 @@ const DoctorsOfficePage: React.FC = () => {
             </div>
             {/* Fellowship Level button with dropdown */}
             <div className="relative group">
-              <button className="flex items-center justify-center px-6 py-3 bg-[--theme-doctorsoffice-accent] border-[--theme-border-color] text-[--theme-text-color] hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] transition-colors text-3xl font-bold uppercase group-hover:text-[--theme-hover-text] group-hover:bg-[--theme-hover-color]">
+              <button className={`flex items-center justify-center px-6 py-3 
+                ${(!userLevel || userLevel === "PATIENT LEVEL") 
+                  ? "bg-green-500 animate-pulse" 
+                  : "bg-[--theme-doctorsoffice-accent]"
+                }
+                border-[--theme-border-color] 
+                text-[--theme-text-color] 
+                hover:text-[--theme-hover-text] 
+                hover:bg-[--theme-hover-color] 
+                transition-colors text-3xl font-bold uppercase 
+                group-hover:text-[--theme-hover-text] 
+                group-hover:bg-[--theme-hover-color]`}>
                 <span>{userLevel || "PATIENT LEVEL"}</span>
               </button>
               <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
