@@ -216,28 +216,25 @@ const Schedule: React.FC<ScheduleProps> = ({
   }, []);
 
   useEffect(() => {
-    const tutorialPart1Played = localStorage.getItem("tutorialPart1Played");
-    const tutorialPart2Played = localStorage.getItem("tutorialPart2Played");
-    const tutorialPart3Played = localStorage.getItem("tutorialPart3Played");
-    const tutorialPart4Played = localStorage.getItem("tutorialPart4Played");
-    const optionsDialogShown = localStorage.getItem("optionsDialogShown");
+    if (
+      localStorage.getItem("tutorialPart1Played") === "true" &&
+      localStorage.getItem("tutorialPart2Played") === "true" &&
+      localStorage.getItem("tutorialPart3Played") === "true" &&
+      localStorage.getItem("tutorialPart4Played") === "true" &&
+      !localStorage.getItem("optionsDialogShown")
+    ) {
+      // Check if all welcome tasks are completed
+      const welcomeTasksCompleted = activities.some(activity => 
+        activity.activityTitle === "Welcome!" && 
+        activity.tasks?.every(task => task.completed)
+      );
 
-    // Check if all tutorial parts are completed
-    const allTutorialsCompleted = 
-      tutorialPart1Played === "true" &&
-      tutorialPart2Played === "true" &&
-      tutorialPart3Played === "true" &&
-      tutorialPart4Played === "true";
-
-    // If all tutorials are done and options dialog hasn't been shown yet
-    if (allTutorialsCompleted && !optionsDialogShown) {
-      // Add a small delay to ensure it shows after tutorial completion
-      setTimeout(() => {
+      if (welcomeTasksCompleted) {
         setShowOptionsModal(true);
         localStorage.setItem("optionsDialogShown", "true");
-      }, 1000);
+      }
     }
-  }, [runTutorialPart4]); // Add runTutorialPart4 as a dependency
+  }, [activities, runTutorialPart1, runTutorialPart2, runTutorialPart3, runTutorialPart4]);
 
   useEffect(() => {
     setCurrentDate(new Date());
