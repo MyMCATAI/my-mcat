@@ -569,7 +569,7 @@ const DoctorsOfficePage: React.FC = () => {
           {/* Fellowship Level button with coins and patients */}
           <div className="absolute top-4 right-4 z-50 flex items-center">
             {/* Patient count */}
-            <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
+            <div className="group relative flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
               <Image
                 src="/game-components/patient.png"
                 alt="Patient"
@@ -577,7 +577,23 @@ const DoctorsOfficePage: React.FC = () => {
                 height={32}
                 className="mr-2"
               />
-              <span className="text-white font-bold">{patientsPerDay}</span>
+              <div className="flex flex-col">
+                <span className="text-[--theme-text-color] font-bold text-lg">{totalPatients}</span>
+              </div>
+              {/* Tooltip */}
+              <div className="absolute top-full left-0 mt-2 w-64 bg-[--theme-leaguecard-color] text-[--theme-text-color] text-sm rounded-lg p-3 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 border border-[--theme-border-color]">
+                <p className="mb-2">Total patients treated: {totalPatients}</p>
+                <p className="mb-2">You treat <span className="text-[--theme-hover-color]">{patientsPerDay} patients per day</span> at your current level.</p>
+                <p>Higher clinic levels allow you to treat more patients daily, which affects your total score.</p>
+                <ul className="text-xs mt-1 space-y-1">
+                  <li>• INTERN: 4/day</li>
+                  <li>• RESIDENT: 8/day</li>
+                  <li>• FELLOWSHIP: 10/day</li>
+                  <li>• ATTENDING: 16/day</li>
+                  <li>• PHYSICIAN: 24/day</li>
+                  <li>• MEDICAL DIRECTOR: 30/day</li>
+                </ul>
+              </div>
             </div>
             {/* Coins display */}
             <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
@@ -588,7 +604,7 @@ const DoctorsOfficePage: React.FC = () => {
                 height={32}
                 className="mr-2"
               />
-              <span className="text-white font-bold">{userScore}</span>
+              <span className="text-[--theme-text-color] font-bold">{userScore}</span>
             </div>
             {/* Fellowship Level button with dropdown */}
             <div className="relative group">
@@ -676,12 +692,12 @@ const DoctorsOfficePage: React.FC = () => {
                         Flashcards
                       </a>
                       <div 
-                        className={`absolute right-full top-1/2 -translate-y-1/2 mr-2 px-4 py-2 w-72 bg-gray-900 text-white text-sm rounded-lg transition-all duration-200 ${
+                        className={`absolute right-full top-1/2 -translate-y-1/2 mr-2 px-4 py-2 w-72 bg-[--theme-leaguecard-color] text-white text-sm rounded-lg transition-all duration-200 ${
                           isFlashcardsTooltipOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
                         }`}
                       >
                         {"We're working on adding uploadable flashcards later. They'll be auto-tagged and made into multiple choice questions. If you REALLY, REALLY want us to prioritize this over the bajillion other things we gotta do, venmo Prynce $100 at @ShortKingsAnthem and say 'Pretty please uploadable flashcards.'"}
-                        <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                        <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-[--theme-leaguecard-color] rotate-45"></div>
                       </div>
                     </div>
                   }
