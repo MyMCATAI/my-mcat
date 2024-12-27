@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { AnimatePresence } from "framer-motion";
 import FloatingTaskList from './FloatingTaskList';
 import { toast } from "react-hot-toast";
-import { UnlockDialog } from "@/components/shared/UnlockDialog";
+import { UnlockDialog } from "@/components/UnlockDialog";
 
 interface FloatingButtonProps {
   activities?: any[];

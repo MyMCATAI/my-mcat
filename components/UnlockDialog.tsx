@@ -70,8 +70,8 @@ export const UnlockDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <div className="p-6">
+      <DialogContent className="bg-white">
+        <div className="p-6 text-black">
           <h2 className="text-2xl font-bold mb-4">{title}</h2>
           <p className="mb-6">{description}</p>
           <div className="flex justify-between items-center">
