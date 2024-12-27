@@ -25,6 +25,7 @@ import { FetchedActivity } from "@/types";
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import NewGameButton from "./components/NewGameButton";
 import { imageGroups } from "./constants/imageGroups";
+import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 
 const DoctorsOfficePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("doctorsoffice");
@@ -193,6 +194,8 @@ const DoctorsOfficePage: React.FC = () => {
 
   // Add this new state for streak days
   const [streakDays, setStreakDays] = useState(0);
+
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -688,6 +691,10 @@ const DoctorsOfficePage: React.FC = () => {
                 />
                 <a
                   href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsTutorialOpen(true);
+                  }}
                   className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
                 >
                   <svg
@@ -734,6 +741,11 @@ const DoctorsOfficePage: React.FC = () => {
         isOpen={isWelcomeDialogOpen}
         onOpenChange={handleWelcomeDialogOpenChange}
         onClinicUnlocked={handleClinicUnlocked}
+      />
+      <TutorialVidDialog
+        isOpen={isTutorialOpen}
+        onClose={() => setIsTutorialOpen(false)}
+        videoUrl="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TutorialAnkiClinic.mp4"
       />
     </div>
   );
