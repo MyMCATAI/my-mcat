@@ -153,7 +153,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   useEffect(() => {
     const eventListener = () => {
-      setTimeout(handleStartTutorialPart4, 10000); // Delay by 10 seconds
+      setTimeout(handleStartTutorialPart4, 4000); // Delay by 10 seconds
     };
 
     window.addEventListener("startTutorialPart4", eventListener);
@@ -216,15 +216,25 @@ const Schedule: React.FC<ScheduleProps> = ({
   }, []);
 
   useEffect(() => {
-    if (!runTutorialPart1 && localStorage.getItem("tutorialPart1Played") === "true" && !localStorage.getItem("optionsDialogShown")) {
-      const timer = setTimeout(() => {
+    if (
+      localStorage.getItem("tutorialPart1Played") === "true" &&
+      localStorage.getItem("tutorialPart2Played") === "true" &&
+      localStorage.getItem("tutorialPart3Played") === "true" &&
+      localStorage.getItem("tutorialPart4Played") === "true" &&
+      !localStorage.getItem("optionsDialogShown")
+    ) {
+      // Check if all welcome tasks are completed
+      const welcomeTasksCompleted = activities.some(activity => 
+        activity.activityTitle === "Welcome!" && 
+        activity.tasks?.every(task => task.completed)
+      );
+
+      if (welcomeTasksCompleted) {
         setShowOptionsModal(true);
         localStorage.setItem("optionsDialogShown", "true");
-      }, 10000); // 10 seconds delay
-
-      return () => clearTimeout(timer);
+      }
     }
-  }, [runTutorialPart1]);
+  }, [activities, runTutorialPart1, runTutorialPart2, runTutorialPart3, runTutorialPart4]);
 
   useEffect(() => {
     setCurrentDate(new Date());
