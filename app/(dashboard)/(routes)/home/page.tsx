@@ -121,6 +121,18 @@ const Page = () => {
         const hasExistingReferral = await checkHasReferrals();
         setHasReferral(hasExistingReferral);
 
+        // Check for streak increase
+        if (userInfo?.streak && userInfo.streak > 1) {
+          const lastSeenStreak = parseInt(localStorage.getItem('lastSeenStreak') || '0');
+          const currentStreak = userInfo.streak;
+          
+          if (currentStreak > lastSeenStreak) {
+            setUserStreak(currentStreak);
+            setShowStreakPopup(true);
+            localStorage.setItem('lastSeenStreak', currentStreak.toString());
+          }
+        }
+
         // Only update knowledge profiles if needed
         if (typeof window !== "undefined" && shouldUpdateKnowledgeProfiles()) {
           const response = await fetch("/api/knowledge-profile/update", {
@@ -139,7 +151,7 @@ const Page = () => {
     };
 
     initializePage();
-  }, [checkHasReferrals, isLoadingUserInfo]);
+  }, [checkHasReferrals, isLoadingUserInfo, userInfo?.streak]);
 
   useEffect(() => {
     updateCalendarChatContext(activities);
