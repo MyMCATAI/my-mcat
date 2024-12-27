@@ -91,14 +91,20 @@ export async function PUT(req: Request) {
         return NextResponse.json({ error: "User not found" }, { status: 404 });
       }
 
+      // Parse existing unlocks array
       const currentUnlocks = Array.isArray(userInfo.unlocks) ? userInfo.unlocks : [];
       
-      // Only add the unlock if it's not already present
-      let newUnlocks = currentUnlocks;
-      if (!currentUnlocks.includes(unlockType)) {
-        newUnlocks = [...currentUnlocks, unlockType];
+      // Check if already unlocked
+      if (currentUnlocks.includes(unlockType)) {
+        return NextResponse.json({ 
+          message: "Already unlocked",
+          unlocks: currentUnlocks,
+          score: userInfo.score 
+        });
       }
 
+      // Add new unlock and decrement score
+      const newUnlocks = [...currentUnlocks, unlockType];
       const updatedInfo = await prismadb.userInfo.update({
         where: { userId },
         data: {

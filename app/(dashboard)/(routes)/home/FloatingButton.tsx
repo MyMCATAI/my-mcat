@@ -124,6 +124,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
       const data = await response.json();
       const unlocks = Array.isArray(data.unlocks) ? data.unlocks : [];
 
+      // Check for required unlocks
       if (tab === "doctorsoffice" && !unlocks.includes("game")) {
         setUnlockType("game");
         setShowUnlockDialog(true);
@@ -136,7 +137,8 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
         return;
       }
 
-      // If we reach here, user has the required unlock or no unlock is needed
+      // If we reach here, user has the required unlock
+      // Execute the navigation logic
       const tabActions = {
         AdaptiveTutoringSuite: () => {
           router.push('/home');

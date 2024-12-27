@@ -17,23 +17,33 @@ export const OptionsDialog = ({
 }: OptionsDialogProps) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [userScore, setUserScore] = useState(0);
+  const [hasUnlocks, setHasUnlocks] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchUserScore = async () => {
+    const fetchUserInfo = async () => {
       try {
         const response = await fetch("/api/user-info");
-        if (!response.ok) throw new Error("Failed to fetch user score");
+        if (!response.ok) throw new Error("Failed to fetch user info");
         const data = await response.json();
         setUserScore(data.score);
+        
+        // Check if user has both unlocks
+        const unlocks = Array.isArray(data.unlocks) ? data.unlocks : [];
+        setHasUnlocks(unlocks.includes('game') && unlocks.includes('ts'));
+        
+        // If user has both unlocks, close the dialog
+        if (unlocks.includes('game') && unlocks.includes('ts')) {
+          setShowOptionsModal(false);
+        }
       } catch (error) {
-        console.error("Error fetching user score:", error);
-        toast.error("Failed to fetch user score");
+        console.error("Error fetching user info:", error);
+        toast.error("Failed to fetch user info");
       }
     };
 
-    fetchUserScore();
-  }, []);
+    fetchUserInfo();
+  }, [setShowOptionsModal]);
 
   const handleStartOption = async (option: any) => {
     const cost = 5; // Since both options cost 5 coins
@@ -102,7 +112,7 @@ export const OptionsDialog = ({
   ];
 
   return (
-    <Dialog open={showOptionsModal} onOpenChange={() => {}}>
+    <Dialog open={showOptionsModal && !hasUnlocks} onOpenChange={() => {}}>
       <DialogContent className={"max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border-2 border-transparent"}>
         <h2 className={"text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center"}>
           {selectedOption ? selectedOption : "Choose Your Study Path"}
