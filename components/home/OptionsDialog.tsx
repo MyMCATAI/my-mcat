@@ -8,17 +8,33 @@ interface OptionsDialogProps {
   showOptionsModal: boolean;
   setShowOptionsModal: (show: boolean) => void;
   handleTabChange: (tab: string) => void;
+  allWelcomeTasksCompleted: boolean;
 }
 
 export const OptionsDialog = ({ 
   showOptionsModal, 
   setShowOptionsModal, 
-  handleTabChange 
+  handleTabChange,
+  allWelcomeTasksCompleted
 }: OptionsDialogProps) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [userScore, setUserScore] = useState(0);
   const [hasUnlocks, setHasUnlocks] = useState(false);
+  const [tutorialsCompleted, setTutorialsCompleted] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const checkTutorials = () => {
+      const tutorial1 = localStorage.getItem('tutorial1-completed');
+      const tutorial2 = localStorage.getItem('tutorial2-completed');
+      const tutorial3 = localStorage.getItem('tutorial3-completed');
+      const tutorial4 = localStorage.getItem('tutorial4-completed');
+      
+      return !!(tutorial1 && tutorial2 && tutorial3 && tutorial4);
+    };
+
+    setTutorialsCompleted(checkTutorials());
+  }, []);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -28,12 +44,10 @@ export const OptionsDialog = ({
         const data = await response.json();
         setUserScore(data.score);
         
-        // Check if user has both unlocks
         const unlocks = Array.isArray(data.unlocks) ? data.unlocks : [];
-        setHasUnlocks(unlocks.includes('game') && unlocks.includes('ts'));
+        setHasUnlocks(unlocks.length === 0);
         
-        // If user has both unlocks, close the dialog
-        if (unlocks.includes('game') && unlocks.includes('ts')) {
+        if (unlocks.length === 0) {
           setShowOptionsModal(false);
         }
       } catch (error) {
@@ -112,7 +126,7 @@ export const OptionsDialog = ({
   ];
 
   return (
-    <Dialog open={showOptionsModal && !hasUnlocks} onOpenChange={() => {}}>
+    <Dialog open={showOptionsModal && hasUnlocks && tutorialsCompleted && allWelcomeTasksCompleted} onOpenChange={() => {}}>
       <DialogContent className={"max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border-2 border-transparent"}>
         <h2 className={"text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center"}>
           {selectedOption ? selectedOption : "Choose Your Study Path"}
