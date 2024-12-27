@@ -30,11 +30,20 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, type, action } = data;
     
-    // For initialSteps tutorial
     if (runPart1 && (status === STATUS.FINISHED || status === STATUS.SKIPPED)) {
       setRunPart1(false);
       localStorage.setItem("initialTutorialPlayed", "true");
+    }
 
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      if (runPart1) {
+        setRunPart1(false);
+        localStorage.setItem("initialTutorialPlayed", "true");
+      }
+      if (runPart4) {
+        setRunPart4(false);
+        localStorage.setItem("atsIconTutorialPlayed", "true");
+      }
     }
   };
 
@@ -108,6 +117,7 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
       ),
       placement: 'bottom',
       spotlightClicks: true,
+      disableBeacon: true,
     },
     {
       target: 'body',
