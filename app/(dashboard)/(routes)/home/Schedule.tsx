@@ -153,7 +153,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   useEffect(() => {
     const eventListener = () => {
-      setTimeout(handleStartTutorialPart4, 10000); // Delay by 10 seconds
+      setTimeout(handleStartTutorialPart4, 4000); // Delay by 10 seconds
     };
 
     window.addEventListener("startTutorialPart4", eventListener);
@@ -216,15 +216,28 @@ const Schedule: React.FC<ScheduleProps> = ({
   }, []);
 
   useEffect(() => {
-    if (!runTutorialPart1 && localStorage.getItem("tutorialPart1Played") === "true" && !localStorage.getItem("optionsDialogShown")) {
-      const timer = setTimeout(() => {
+    const tutorialPart1Played = localStorage.getItem("tutorialPart1Played");
+    const tutorialPart2Played = localStorage.getItem("tutorialPart2Played");
+    const tutorialPart3Played = localStorage.getItem("tutorialPart3Played");
+    const tutorialPart4Played = localStorage.getItem("tutorialPart4Played");
+    const optionsDialogShown = localStorage.getItem("optionsDialogShown");
+
+    // Check if all tutorial parts are completed
+    const allTutorialsCompleted = 
+      tutorialPart1Played === "true" &&
+      tutorialPart2Played === "true" &&
+      tutorialPart3Played === "true" &&
+      tutorialPart4Played === "true";
+
+    // If all tutorials are done and options dialog hasn't been shown yet
+    if (allTutorialsCompleted && !optionsDialogShown) {
+      // Add a small delay to ensure it shows after tutorial completion
+      setTimeout(() => {
         setShowOptionsModal(true);
         localStorage.setItem("optionsDialogShown", "true");
-      }, 10000); // 10 seconds delay
-
-      return () => clearTimeout(timer);
+      }, 1000);
     }
-  }, [runTutorialPart1]);
+  }, [runTutorialPart4]); // Add runTutorialPart4 as a dependency
 
   useEffect(() => {
     setCurrentDate(new Date());

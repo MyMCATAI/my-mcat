@@ -34,17 +34,53 @@ const Tutorial: React.FC<TutorialProps> = ({
   };
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status, type, action } = data;
-    
-    if (type === EVENTS.TOUR_START) {
-      playNotification();
+    const { action, index, status, type } = data;
+
+    if (type === EVENTS.TOUR_END && status === STATUS.FINISHED) {
+      if (runPart1) {
+        setRunPart1(false);
+        localStorage.setItem("tutorialPart1Played", "true");
+        // Start part 2 after a delay
+        setTimeout(() => {
+          setRunPart2(true);
+        }, 1000);
+      } else if (runPart2) {
+        setRunPart2(false);
+        localStorage.setItem("tutorialPart2Played", "true");
+        // Start part 3 after a delay
+        setTimeout(() => {
+          setRunPart3(true);
+        }, 1000);
+      } else if (runPart3) {
+        setRunPart3(false);
+        localStorage.setItem("tutorialPart3Played", "true");
+        // Start part 4 after a delay
+        setTimeout(() => {
+          setRunPart4(true);
+        }, 1000);
+      } else if (runPart4) {
+        setRunPart4(false);
+        localStorage.setItem("tutorialPart4Played", "true");
+      }
     }
 
-    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
-      if (runPart1) setRunPart1(false);
-      if (runPart2) setRunPart2(false);
-      if (runPart3) setRunPart3(false);
-      if (runPart4) setRunPart4(false);
+    if (type === EVENTS.TOUR_END && status === STATUS.SKIPPED) {
+      if (runPart1) {
+        setRunPart1(false);
+        localStorage.setItem("tutorialPart1Played", "true");
+        setRunPart2(true);
+      } else if (runPart2) {
+        setRunPart2(false);
+        localStorage.setItem("tutorialPart2Played", "true");
+        setRunPart3(true);
+      } else if (runPart3) {
+        setRunPart3(false);
+        localStorage.setItem("tutorialPart3Played", "true");
+        setRunPart4(true);
+      } else if (runPart4) {
+        setRunPart4(false);
+        localStorage.setItem("tutorialPart4Played", "true");
+      }
     }
   };
 
@@ -245,7 +281,7 @@ const Tutorial: React.FC<TutorialProps> = ({
     },
     {
       target: ".schedule-content",
-      content: "Just drag activities or enter new ones.",
+      content: "Enter a new activity!",
       placement: "right",
       styles: {
         options: {
