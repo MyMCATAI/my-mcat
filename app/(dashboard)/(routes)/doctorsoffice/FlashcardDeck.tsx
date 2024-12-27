@@ -131,7 +131,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     if (!isDeckCompleted) {
       setIsDeckCompleted(true);
       
-      if (roomId === 'WaitingRoom1') {
+      if (roomId === 'WaitingRoom0') {
         return;
       }
 
@@ -159,7 +159,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     setIsLoading(true);
     try {
       // Handle tutorial room case
-      if (roomId === 'WaitingRoom1') {
+      if (roomId === 'WaitingRoom0') {
         const tutorialFlashcards = tutorialQuestions.map(question => ({
           ...question,
           difficulty: 1,
@@ -348,7 +348,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     }
 
     // Skip API request for tutorial questions
-    if (roomId === 'WaitingRoom1') {
+    if (roomId === 'WaitingRoom0') {
       return;
     }
 
