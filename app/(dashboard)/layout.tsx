@@ -6,6 +6,8 @@ import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import ThemeInitializer from "@/components/home/ThemeInitializer";
 import Script from 'next/script';
 import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
+import { useAuth } from "@clerk/nextjs";
+import { Loader2 } from "lucide-react";
 
 const checkSubscription = async (): Promise<boolean> => {
   // Implement your subscription check logic here
@@ -21,19 +23,28 @@ const DashboardLayoutContent = ({
   const { theme } = useTheme();
   const [isPro, setIsPro] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState('');
+  const { isLoaded, isSignedIn } = useAuth();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const checkProStatus = async () => {
       try {
         const proStatus = await checkSubscription();
         setIsPro(proStatus);
+        setIsInitialized(true);
       } catch (error) {
         console.error('Error checking subscription status:', error);
-        setIsPro(false); // Default to free if there's an error
+        setIsPro(false);
+        setIsInitialized(true);
       }
     };
-    checkProStatus();
 
+    if (isLoaded && isSignedIn) {
+      checkProStatus();
+    }
+  }, [isLoaded, isSignedIn]);
+
+  useEffect(() => {
     const updateBackgroundImage = () => {
       switch (theme) {
         case 'sakuraTrees':
@@ -55,6 +66,14 @@ const DashboardLayoutContent = ({
 
     return () => window.removeEventListener('resize', updateBackgroundImage);
   }, [theme]);
+
+  if (!isLoaded || !isInitialized) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+      </div>
+    );
+  }
 
   const subscription = isPro ? "pro" : "free";
 

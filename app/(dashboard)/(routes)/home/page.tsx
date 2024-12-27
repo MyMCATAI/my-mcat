@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import Schedule from "./Schedule";
 import SideBar from "./SideBar";
 import AdaptiveTutoring from "./AdaptiveTutoring";
@@ -29,6 +29,26 @@ import {
 import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
+import { Loader2 } from "lucide-react";
+
+// Loading component
+const LoadingSpinner = () => (
+  <div className="fixed inset-0 flex justify-center items-center bg-black/50 z-50">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4"></div>
+      <p className="text-sky-300 text-xl">Loading...</p>
+    </div>
+  </div>
+);
+
+// Content wrapper component
+const ContentWrapper = ({ children }: { children: React.ReactNode }) => (
+  <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
+    <div className="text-white flex gap-[1.5rem] overflow-visible">
+      {children}
+    </div>
+  </div>
+);
 
 const Page = () => {
   const searchParams = useSearchParams();
@@ -71,6 +91,9 @@ const Page = () => {
   const [currentStudyActivityId, setCurrentStudyActivityId] = useState<string | null>(null);
   const pathname = usePathname();
 
+  // Combine loading states
+  const isPageLoading = isLoading || isLoadingUserInfo || isUpdatingProfile || isGeneratingActivities;
+
   useEffect(() => {
     // if returning from stripe, show toast depending on payment
     if (!paymentStatus) return;
@@ -78,7 +101,7 @@ const Page = () => {
     if (paymentStatus === "success") {
       toast.success(
         "Payment Successful! Your coins have been added to your account."
-      ); // todo handle different purchases
+      );
     } else if (paymentStatus === "cancelled") {
       toast.error("Payment Cancelled. Your payment was cancelled.");
     }
@@ -86,6 +109,8 @@ const Page = () => {
 
   useEffect(() => {
     const initializePage = async () => {
+      if (isLoadingUserInfo) return; // Wait for user info to be loaded
+      
       setIsLoading(true);
       try {
         await fetchActivities();
@@ -114,7 +139,7 @@ const Page = () => {
     };
 
     initializePage();
-  }, [checkHasReferrals]);
+  }, [checkHasReferrals, isLoadingUserInfo]);
 
   useEffect(() => {
     updateCalendarChatContext(activities);
@@ -170,56 +195,6 @@ const Page = () => {
   };
 
   const renderContent = () => {
-    if (isLoading || isLoadingUserInfo) {
-      return (
-        <div className="flex justify-center items-center h-full">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4"></div>
-            <p className="text-sky-300 text-xl">Loading...</p>
-          </div>
-        </div>
-      );
-    }
-
-    // Check both payment and referral status
-    if (!userInfo?.hasPaid && !hasReferral) {
-      return (
-        <div className="flex justify-center items-center h-full">
-          <div className="bg-[--theme-mainbox-color] rounded-lg p-[2rem] shadow-lg">
-            <div className="text-center max-w-[45rem] mx-auto">
-              <h2 className="text-6xl font-bold text-[--theme-text-color] mb-[3rem] animate-fade-in-up">
-                Welcome to MyMCAT!
-              </h2>
-              <img
-                src="/kalypsodiagnostic.png"
-                alt="Kalypso"
-                className="mx-auto mb-[3rem] max-w-[20rem]"
-              />
-              <div className="mb-[2rem]">
-                <p className="text-[--theme-text-color] text-lg leading-relaxed mb-[2rem]">
-                  {!userInfo?.hasPaid
-                    ? "With 10 coins, you can unlock the Adaptive Tutoring Suite, Calendar, and Daily CARs. With hard work, you can earn coins and unlock more features without having to pay another cent. Please purchase coins to begin your MCAT journey!"
-                    : "Please refer a friend to unlock all features. Share MyMCAT with your study buddies!"}
-                </p>
-
-                <PurchaseButton
-                  text="Get Started with Coins"
-                  className="bg-[--theme-hover-color] !important
-                      px-[2rem] py-[0.75rem] text-lg
-                      text-[--theme-hover-text]
-                      transition-opacity duration-200
-                      rounded-lg
-                      hover:!bg-[--theme-hover-color]
-                      hover:opacity-80"
-                  tooltipText="Purchase coins to begin your MCAT journey"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
     if (isUpdatingProfile || isGeneratingActivities) {
       return (
         <div className="flex justify-center items-center h-full">
@@ -461,8 +436,9 @@ const Page = () => {
   };
 
   return (
-    <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
-      <div className="text-white flex gap-[1.5rem] overflow-visible">
+    <>
+      {(isLoading || isLoadingUserInfo) && <LoadingSpinner />}
+      <ContentWrapper>
         <div className="w-3/4 relative overflow-visible">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
@@ -479,7 +455,6 @@ const Page = () => {
                       : activeTab === "CARS"
                         ? "Daily CARs Practice"
                         : "Home"}
-                {/* {isPro && " Pro"} */}
               </h2>
               <ThemeSwitcher />
             </div>
@@ -513,50 +488,50 @@ const Page = () => {
             />
           </div>
         </div>
-      </div>
+        
+        {/* Score Popup */}
+        <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
+          <DialogContent className="bg-[#001226] text-white border border-sky-500 rounded-lg">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-semibold text-sky-300">
+                Test Completed!
+              </DialogTitle>
+              <DialogDescription className="text-gray-300">
+                Great job on completing the diagnostic test.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-xl">
+                Your Score:{" "}
+                <span className="font-bold text-sky-300">
+                  {testScore.toFixed(2)}%
+                </span>
+              </p>
+            </div>
+            <div className="flex justify-end">
+              <Button
+                onClick={() => setShowScorePopup(false)}
+                className="bg-sky-500 hover:bg-sky-600 text-white"
+                disabled={isUpdatingProfile || isGeneratingActivities}
+              >
+                {isUpdatingProfile || isGeneratingActivities
+                  ? "Processing..."
+                  : "Close"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-      {/* Score Popup */}
-      <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
-        <DialogContent className="bg-[#001226] text-white border border-sky-500 rounded-lg">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold text-sky-300">
-              Test Completed!
-            </DialogTitle>
-            <DialogDescription className="text-gray-300">
-              Great job on completing the diagnostic test.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-xl">
-              Your Score:{" "}
-              <span className="font-bold text-sky-300">
-                {testScore.toFixed(2)}%
-              </span>
-            </p>
-          </div>
-          <div className="flex justify-end">
-            <Button
-              onClick={() => setShowScorePopup(false)}
-              className="bg-sky-500 hover:bg-sky-600 text-white"
-              disabled={isUpdatingProfile || isGeneratingActivities}
-            >
-              {isUpdatingProfile || isGeneratingActivities
-                ? "Processing..."
-                : "Close"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <StreakPopup
-        streak={userStreak}
-        isOpen={showStreakPopup}
-        onClose={() => {
-          console.log("Closing streak popup"); // Debug log
-          setShowStreakPopup(false);
-        }}
-      />
-    </div>
+        <StreakPopup
+          streak={userStreak}
+          isOpen={showStreakPopup}
+          onClose={() => {
+            console.log("Closing streak popup"); // Debug log
+            setShowStreakPopup(false);
+          }}
+        />
+      </ContentWrapper>
+    </>
   );
 };
 
