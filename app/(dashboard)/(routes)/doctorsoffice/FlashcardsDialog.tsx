@@ -150,7 +150,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
-    if (roomId === 'WaitingRoom1') {
+    if (roomId === 'WaitingRoom0') {
       return;
     }
     if (correctCount > 0) {

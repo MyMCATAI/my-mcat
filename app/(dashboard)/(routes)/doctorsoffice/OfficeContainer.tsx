@@ -20,7 +20,8 @@ interface GridImage {
 
 // Map of images to be used for QuestionPromptSprite
 export const roomToSubjectMap: Record<string, string[]> = {
-  'WaitingRoom1': ['Tutorial'], // this is handled specially as a tutorial room
+  'WaitingRoom0': ['Tutorial'],
+  'WaitingRoom1': ['Sociology'],
   'ExaminationRoom1': ['Psychology'],
   'ExaminationRoom2': ['Psychology'],
   'DoctorsOffice1': ['Sociology'],
@@ -37,7 +38,8 @@ export const roomToSubjectMap: Record<string, string[]> = {
 };
 
 export const roomToContentMap: Record<string, string[]> = {
-  'WaitingRoom1': ['Tutorial'],
+  'WaitingRoom0': ['Tutorial'],
+  'WaitingRoom1': ['8A', '8B', '8C'],
   'ExaminationRoom1': ['6A', '6B', '6C'],
   'ExaminationRoom2': ['7A', '7B', '7C'],
   'DoctorsOffice1': ['9A', '9B', '10A'],
@@ -480,7 +482,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     0: {
       canvasSize: { width: 10, height: 10 },
       rooms: [
-        { id: 'WaitingRoom1', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.04, width: 280, height: 268, zIndex: 2, opacity: 1.0},
+        { id: 'WaitingRoom0', src: '/game-components/WaitingRoom1.png', x: 8.0, y: 8.04, width: 280, height: 268, zIndex: 2, opacity: 1.0},
       ]
     },
     1: {
@@ -633,11 +635,10 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     // Randomly select 4 rooms (excluding WaitingRoom1)
 
     const otherRooms = rooms
-      .filter(room => room.id !== 'WaitingRoom1' && roomToSubjectMap[room.id][0])
+      .filter(room => room.id !== 'WaitingRoom0' && roomToSubjectMap[room.id][0])
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
     
-    // Set the active rooms (WaitingRoom1 is already active from the useEffect)
     setActiveRooms(new Set(otherRooms.map(room => room.id)));
   }, [currentLevel]);
 
@@ -652,11 +653,12 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
     y: ((gridHeight * tileHeight) / 4 + zoomLevels[currentLevel].offsetY)
   }), [currentLevel]);
 
-  const [isLargeDialogOpen, setIsLargeDialogOpen] = useState(false);
 
   useEffect(() => {
-    // open tutorial room by default and keep it open
-    setActiveRooms(prevRooms => new Set([...prevRooms, 'WaitingRoom1']));
+    // show tutorial room by default if user is patient level
+    if(currentLevel === 1) {
+      setActiveRooms(prevRooms => new Set([...prevRooms, 'WaitingRoom0']));
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -138,5 +138,18 @@ export const tutorialQuestions: Flashcard[] = [
     },
     userResponses: [],
     questionAnswerNotes: ["Patients are a score influenced by both how often you visit the clinic and the level your rooms are at. It's how we determine your placement on leaderboard rankings! The higher your level, the more patients per day your clinic can treat."]
+  },
+  {
+    questionType: 'flashcard',
+    id: 'tutorial-10',
+    questionContent: 'Great, now how do I actually get started? {{c1::Right now you\'re on the patient level. To start playing, click the button in the top right to go to the marketplace and purchase the intern level. Once you\'ve leveled up, you can start exploring more rooms and practicing real questions!}}',
+    questionOptions: [],
+    categoryId: '1T',
+    category: {
+      subjectCategory: 'Tutorial',
+      conceptCategory: 'Getting Started'
+    },
+    userResponses: [],
+    questionAnswerNotes: ["Right now you're on the patient level. To start playing, click the button in the top right to go to the marketplace and purchase the intern level. Once you've leveled up, you can start exploring more rooms and answering medical questions!"]
   }
 ]; 
