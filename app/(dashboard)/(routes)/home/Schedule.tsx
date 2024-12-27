@@ -128,6 +128,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showTestsDialog, setShowTestsDialog] = useState(false);
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -629,6 +630,26 @@ const Schedule: React.FC<ScheduleProps> = ({
   const handleTabChange = (tab: string) => {
     handleSetTab(tab);
   };
+
+  useEffect(() => {
+    const optionsDialogShown = localStorage.getItem('optionsDialogShown');
+    if (!optionsDialogShown) {
+      setShowOptionsModal(true);
+      localStorage.setItem('optionsDialogShown', 'true');
+    }
+  }, []);
+
+  // Function to check if all welcome tasks are completed
+  const checkAllWelcomeTasksCompleted = () => {
+    const welcomeTasks = todayActivities.flatMap(activity => activity.tasks);
+    const allCompleted = welcomeTasks.every(task => task && task.completed);
+    setAllWelcomeTasksCompleted(allCompleted);
+  };
+
+  // Call this function whenever tasks are updated
+  useEffect(() => {
+    checkAllWelcomeTasksCompleted();
+  }, [todayActivities]);
 
   return (
     <div className="grid grid-cols-[25%_75%] h-full relative w-full">
@@ -1220,6 +1241,7 @@ const Schedule: React.FC<ScheduleProps> = ({
         showOptionsModal={showOptionsModal}
         setShowOptionsModal={setShowOptionsModal}
         handleTabChange={handleTabChange}
+        allWelcomeTasksCompleted={allWelcomeTasksCompleted}
       />
     </div>
   );
