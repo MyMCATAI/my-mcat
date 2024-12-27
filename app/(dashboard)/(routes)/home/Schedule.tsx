@@ -630,6 +630,14 @@ const Schedule: React.FC<ScheduleProps> = ({
     handleSetTab(tab);
   };
 
+  useEffect(() => {
+    const optionsDialogShown = localStorage.getItem('optionsDialogShown');
+    if (!optionsDialogShown) {
+      setShowOptionsModal(true);
+      localStorage.setItem('optionsDialogShown', 'true');
+    }
+  }, []);
+
   return (
     <div className="grid grid-cols-[25%_75%] h-full relative w-full">
       {/* Left Sidebar */}
