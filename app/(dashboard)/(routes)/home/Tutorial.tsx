@@ -245,7 +245,7 @@ const Tutorial: React.FC<TutorialProps> = ({
     },
     {
       target: ".schedule-content",
-      content: "Just drag activities or enter new ones.",
+      content: "Enter a new activity!",
       placement: "right",
       styles: {
         options: {
