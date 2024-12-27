@@ -8,6 +8,7 @@ interface UserInfo {
   firstName: string;
   apiCount: number;
   score: number;
+  streak: number;
   clinicRooms: string;
   hasPaid: boolean;
   subscriptionType: string;
