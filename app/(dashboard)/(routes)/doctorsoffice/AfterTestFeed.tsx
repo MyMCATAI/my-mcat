@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { animated, useSpring } from 'react-spring';
 import ChatBot from "@/components/chatbot/ChatBotFlashcard";
 import { useUser } from "@clerk/nextjs";
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, Cat } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface LargeDialogProps {
@@ -107,6 +107,9 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   const { user } = useUser();
   const score = correctCount/(correctCount+wrongCount) * 100;
   const [review, setReview] = useState<Review | null>(null);
+  const chatbotRef = useRef<{
+    sendMessage: (message: string) => void;
+  }>({ sendMessage: () => {} });
 
   const getStarCount = (score: number): number => {
     if (score >= 100) return 5;
@@ -532,7 +535,24 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-center p-4">
                     <div className="text-sm mb-1 text-[--theme-text-color] opacity-70">Correct Answer:</div>
-                    <div className="text-green-500 font-semibold">{card.answer}</div>
+                    <div className="text-green-500 font-semibold mb-4">{card.answer}</div>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent card from flipping when clicking button
+                        if (chatbotRef.current) {
+                          const cardContext = `Question: ${card.question}\nAnswer: ${card.answer}`;
+                          setChatbotContext(prev => ({
+                            ...prev,
+                            context: cardContext
+                          }));
+                          chatbotRef.current.sendMessage("Can you explain this flashcard to me?");
+                        }
+                      }}
+                      className="h-7 bg-[--theme-doctorsoffice-accent] bg-opacity-10 text-[--theme-text-color] hover:bg-opacity-20 transition-all duration-200 rounded-full flex items-center gap-2 px-3"
+                    >
+                      <Cat className="h-4 w-4" />
+                      <span className="text-xs">Explain</span>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -928,7 +948,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   }
   return (
     <Dialog open={open} onOpenChange={handleExit}>
-      <DialogContent className="bg-[--theme-mainbox-color] text-center p-4 max-w-[95vw] w-[65rem] h-[85vh] shadow-lg border border-transparent">
+      <DialogContent className="bg-[--theme-mainbox-color] text-center p-4 max-w-[95vw] w-[65rem] h-[83vh] shadow-lg border border-transparent">
         {showReviewFeed ? (
           <div className="flex-1 flex gap-4 overflow-hidden relative">
             {/* Back Button - Subtle circular design */}
@@ -967,6 +987,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
                   height="100%"
                   backgroundColor="var(--theme-mainbox-color)"
                   chatbotContext={chatbotContext}
+                  chatbotRef={chatbotRef}
                 />
               </div>
             </div>

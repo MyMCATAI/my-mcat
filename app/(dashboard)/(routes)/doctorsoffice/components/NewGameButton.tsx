@@ -91,10 +91,10 @@ const NewGameButton: FC<NewGameButtonProps> = ({
           : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] text-[--theme-hover-color] animate-pulse [animation-duration:0.75s] bg-green-500/20'
         }`}
     >
-      <span className={`border-r border-[--theme-border-color] ${!isGameInProgress && 'hover:border-white/30'} pr-2`}>
+      <span className={`text-[--theme-hover-color] border-r border-[--theme-border-color] ${!isGameInProgress && 'hover:border-white/30'} pr-2`}>
         New Game
       </span>
-      <span className="text-white">-1</span>
+      <span className="text-[--theme-hover-color]">-1</span>
       <Image
         src="/game-components/PixelCupcake.png"
         alt="Coin"
