@@ -354,7 +354,7 @@ body.theme-sunsetCity * {
   --svg-invert: 0;
   --theme-reddit-color: #3a2963;
   --theme-doctorsoffice-accent: #251648;
-  --theme-flashcard-color: #2c1e4a; /* Matches --theme-mainbox-color for consistency */
+  --theme-flashcard-color: #21133e; /* Matches --theme-mainbox-color for consistency */
   --theme-flashcard-text-color: #ffd1dc; /* Keeping the existing text color for readability */
   --theme-adaptive-tutoring-color: #001226;
   --theme-adaptive-tutoring-boxShadow: 0 0 10px 1px rgba(255, 99, 71, 0.5);
