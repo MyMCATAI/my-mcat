@@ -591,18 +591,6 @@ const DoctorsOfficePage: React.FC = () => {
               resetGameState={resetGameState}
             />
             }
-            {isGameInProgress && totalMCQQuestions>0 && (
-              <button
-                onClick={handleOpenAfterTestFeed}
-                className="bg-gradient-to-r from-blue-500 to-blue-600
-                hover:from-blue-600 hover:to-blue-700
-                text-white px-6 py-3 rounded-lg transition-all duration-300 
-                shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 
-                font-bold text-lg flex items-center gap-2"
-              >
-                <span>Review</span>
-              </button>
-            )}
           </div>
           {/* Fellowship Level button with coins and patients */}
           <div className="absolute top-4 right-4 z-50 flex items-center">
@@ -616,7 +604,7 @@ const DoctorsOfficePage: React.FC = () => {
                 className="mr-2"
               />
               <div className="flex flex-col">
-                <span className="text-[--theme-text-color] font-bold text-lg">{totalPatients}</span>
+                <span className="text-[--theme-hover-color] font-bold text-lg">{totalPatients}</span>
               </div>
               {/* Tooltip */}
               <div className="absolute top-full left-0 mt-2 w-64 bg-[--theme-leaguecard-color] text-[--theme-text-color] text-sm rounded-lg p-3 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 border border-[--theme-border-color]">
@@ -642,7 +630,7 @@ const DoctorsOfficePage: React.FC = () => {
                 height={32}
                 className="mr-2"
               />
-              <span className="text-[--theme-text-color] font-bold">{userScore}</span>
+              <span className="text-[--theme-hover-color] font-bold">{userScore}</span>
             </div>
             {/* Fellowship Level button with dropdown */}
             <div className="relative group">
