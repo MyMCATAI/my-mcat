@@ -10,6 +10,13 @@ import { roomToSubjectMap } from './OfficeContainer';
 import { roomToContentMap } from './OfficeContainer';
 import toast from 'react-hot-toast';
 import { tutorialQuestions } from './constants/tutorialQuestions';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 
 export interface Flashcard {
   questionType: string;
@@ -39,6 +46,7 @@ interface FlashcardDeckProps {
   onMCQAnswer?: (correct: boolean) => void;
   handleCompleteAllRoom: () => void;
   setTotalMCQQuestions: React.Dispatch<React.SetStateAction<number>>;
+  onQuestionChange?: (question: Flashcard | null) => void;
 }
 
 const physics = {
@@ -98,7 +106,8 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   onMCQAnswer,
   handleCompleteAllRoom,
   setTotalMCQQuestions,
-}) => {
+  onQuestionChange,
+}): JSX.Element => {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [cardStartTime, setCardStartTime] = useState<number>(Date.now());
@@ -554,6 +563,12 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (onQuestionChange) {
+      onQuestionChange(flashcards[currentCardIndex] || null);
+    }
+  }, [currentCardIndex, flashcards, onQuestionChange]);
+
   return (
     <div className="flex flex-col items-center justify-center w-full h-full relative focus-visible:outline-none">
       {isLoading && flashcards.length === 0 ? (
@@ -580,7 +595,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
             <animated.div
               className="w-full cursor-pointer"
               style={{ opacity }}
-              onClick={handleCardClick}   // Re-enable click event
+              onClick={handleCardClick}
             >
               {/* Question Section */}
               <div className="w-full mb-8">
