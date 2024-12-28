@@ -47,16 +47,45 @@ export async function POST(req: Request) {
       return new NextResponse("Missing required fields", { status: 400 });
     }
 
-    const activity = await prismadb.userActivity.create({
-      data: {
-        userId,
-        type,
-        location,
-        metadata: metadata || {},
-      },
+    // Use transaction to ensure both operations complete together
+    const result = await prismadb.$transaction(async (tx) => {
+      // Find most recent unfinished activity
+      const lastActivity = await tx.userActivity.findFirst({
+        where: {
+          userId,
+          endTime: null
+        },
+        orderBy: {
+          startTime: 'desc'
+        }
+      });
+
+      // If unfinished activity exists, update it
+      if (lastActivity) {
+        console.log("cleaning up last activity")
+        const now = new Date();
+        await tx.userActivity.update({
+          where: { id: lastActivity.id },
+          data: {
+            endTime: now,
+            duration: Math.floor((now.getTime() - lastActivity.startTime.getTime()) / 1000)
+          }
+        });
+      }
+
+      const newActivity = await tx.userActivity.create({
+        data: {
+          userId,
+          type,
+          location,
+          metadata: metadata || {},
+        }
+      });
+
+      return newActivity;
     });
 
-    return NextResponse.json(activity);
+    return NextResponse.json(result);
   } catch (error) {
     console.error("[USER_ACTIVITY_POST]", error);
     return new NextResponse("Internal error", { status: 500 });
