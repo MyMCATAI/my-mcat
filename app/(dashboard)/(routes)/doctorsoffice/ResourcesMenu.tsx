@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { DoctorOfficeStats, ReportData } from "@/types";
 import { Progress } from "@/components/ui/progress";
-import { FaFire } from "react-icons/fa";
+import { FaFire, FaUserInjured } from "react-icons/fa";
 import {
   calculatePlayerLevel,
   getPatientsPerDay,
@@ -58,33 +58,11 @@ interface LeaderboardEntry {
   streak: number;
 }
 
-// Add this constant outside the component
-const LEADERBOARD_DATA: LeaderboardEntry[] = [
-  {
-    id: 1,
-    name: "Prynce",
-    title: "Inventor",
-    streak: 15
-  },
-  {
-    id: 2,
-    name: "Josh",
-    title: "CTO",
-    streak: 12
-  },
-  {
-    id: 3,
-    name: "Armaan",
-    title: "Developer",
-    streak: 8
-  },
-  {
-    id: 4,
-    name: "Hanis",
-    title: "Developer",
-    streak: 5
-  }
-];
+interface GlobalLeaderboardEntry {
+  id: number;
+  name: string;
+  patientsTreated: number;
+}
 
 const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   reportData,
@@ -99,6 +77,8 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   const [friendEmail, setFriendEmail] = useState("");
   const [isHeadphonesDropdownOpen, setIsHeadphonesDropdownOpen] = useState(false);
   const { isAutoPlay, setIsAutoPlay } = useMusicPlayer();
+  const [globalLeaderboard, setGlobalLeaderboard] = useState<GlobalLeaderboardEntry[]>([]);
+  const [leaderboardType, setLeaderboardType] = useState<"global" | "friends">("global");
 
   const openTutorialDialog = (videoUrl: string) => {
     setTutorialVideoUrl(videoUrl);
@@ -116,10 +96,27 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
     setIsAddFriendOpen(false);
   };
 
-  const showGlobalRankings = () => {
-    // Logic to show global rankings
-    console.log("Showing global rankings");
+  const showGlobalRankings = async () => {
+    setLeaderboardType("global");
   };
+
+  const showFriendsRankings = () => {
+    setLeaderboardType("friends");
+  };
+
+  useEffect(() => {
+    // Fetch global leaderboard data when component mounts
+    const fetchLeaderboard = async () => {
+      try {
+        const response = await fetch('/api/global-leaderboard');
+        const data = await response.json();
+        setGlobalLeaderboard(data);
+      } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+      }
+    };
+    fetchLeaderboard();
+  }, []);
 
   const toggleHeadphonesDropdown = () => {
     setIsHeadphonesDropdownOpen(!isHeadphonesDropdownOpen);
@@ -144,7 +141,28 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
 
   return (
     <div className="h-full">
-      <div className="flex flex-col bg-[--theme-leaguecard-color] text-[--theme-text-color] items-center h-full rounded-lg p-4 overflow-auto relative">
+      <div className="flex flex-col bg-[--theme-leaguecard-color] text-[--theme-text-color] items-center h-full rounded-lg p-4 overflow-auto relative scrollbar-gutter-stable">
+        {/* Prevent layout shift when scrollbar appears/disappears */}
+        <style jsx global>{`
+          .scrollbar-gutter-stable {
+            scrollbar-gutter: stable;
+          }
+          
+          /* Optional: Style the scrollbar to make it less obtrusive */
+          .scrollbar-gutter-stable::-webkit-scrollbar {
+            width: 8px;
+          }
+          
+          .scrollbar-gutter-stable::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          
+          .scrollbar-gutter-stable::-webkit-scrollbar-thumb {
+            background-color: rgba(155, 155, 155, 0.5);
+            border-radius: 4px;
+          }
+        `}</style>
+
         <div className="flex flex-col items-center mb-1 w-full">
           <div className="w-48 h-48 bg-[--theme-doctorsoffice-accent] border-2 border-[--theme-border-color] rounded-lg mb-4 overflow-hidden relative">
             <img
@@ -159,7 +177,8 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
 
         <div className="w-full max-w-md mt-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Friend Leaderboard</h3>
+            <h3 className="text-lg font-semibold">Global Leaderboard</h3>
+            {/* todo: add friend leaderboard */}
             <div className="flex gap-2">
               <Plus
                 className="cursor-pointer text-[--theme-hover-color] hover:opacity-50 transition-opacity duration-200"
@@ -167,9 +186,11 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
                 onClick={toggleAddFriendDropdown}
               />
               <Globe
-                className="cursor-pointer text-[--theme-hover-color] hover:opacity-50 transition-opacity duration-200"
+                className={`cursor-pointer hover:opacity-50 transition-opacity duration-200 ${
+                  leaderboardType === "global" ? "text-[--theme-hover-color]" : "text-[--theme-text-color]"
+                }`}
                 size={20}
-                onClick={showGlobalRankings}
+                onClick={leaderboardType === "global" ? showFriendsRankings : showGlobalRankings}
               />
               <Headphones
                 className="cursor-pointer text-[--theme-hover-color] hover:opacity-50 transition-opacity duration-200"
@@ -208,54 +229,31 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
           )}
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
-                  1
-                </div>
-            </div>
-          </div>
-
-          {isAddFriendOpen && (
-            <div className="mb-4 flex items-center gap-2">
-              <input
-                type="email"
-                value={friendEmail}
-                onChange={(e) => setFriendEmail(e.target.value)}
-                placeholder="Eventually you can add friends..."
-                className="w-full p-2 border rounded"
-              />
-              <button
-                onClick={handleAddFriend}
-                className="bg-[--theme-hover-color] text-[--theme-hover-text] p-2 rounded hover:opacity-50 transition-opacity duration-200"
-              >
-                Send
-              </button>
-            </div>
-          )}
-
-          <div className="space-y-3">
-            {LEADERBOARD_DATA.map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
-                    {entry.id}
+            {leaderboardType === "global" ? (
+              globalLeaderboard.map((entry) => (
+                <div key={entry.id} className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
+                      {entry.id}
+                    </div>
+                    <span className="font-medium">{entry.name}</span>
                   </div>
-                  <span className="font-medium">
-                    {entry.name}
-                    {entry.title && ` (${entry.title})`}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <FaUserInjured className="text-yellow-300" />
+                    <span>{entry.patientsTreated}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <FaFire className="text-yellow-300" />
-                  <span>{entry.streak} days</span>
-                </div>
+              ))
+            ) : (
+              <div className="bg-[--theme-doctorsoffice-accent] p-4 rounded-lg text-center">
+                <p className="text-lg font-medium mb-2">Friends Leaderboard Coming Soon!</p>
+                <p className="text-sm text-gray-400/40">{"You'll soon be able to compete with your friends and see their progress."}</p>
               </div>
-            ))}
+            )}
           </div>
 
           <p className="text-sm text-gray-400/40 mt-4 text-center italic">
-            {"You'll eventually be able to add friends, see their cards, and also check the global rankings."}
+            {"You'll eventually be able to add friends, see their scores, and also check the global rankings."}
           </p>
         </div>
       </div>
@@ -264,7 +262,6 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
         onClose={() => setIsTutorialDialogOpen(false)}
         videoUrl={tutorialVideoUrl}
       />
-    </div>
     </div>
   );
 };
