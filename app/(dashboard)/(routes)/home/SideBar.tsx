@@ -43,7 +43,7 @@ type VideoCategory = 'RBT' | 'RWT' | 'CMP';
 const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, currentPage, chatbotContext, chatbotRef }) => {
   const [activeTab, setActiveTab] = useState("tab1");
   const [tutors, setTutors] = useState<Tutor[]>([
-    { name: "Vivian Z.", university: "CNU Medicine", stars: 5, reviews: 12, price: 120 },
+    { name: "Vivian Z.", university: "MS1 at CNU Medicine", stars: 5, reviews: 12, price: 120 },
     { name: "Prynce K.", university: "Rice University", stars: 5, reviews: 16, price: 50 },
     { name: "Saanvi A.", university: "New York University", stars: 5, reviews: 3, price: 105 },
     { name: "Ethan K.", university: "Univ of Pennsylvania", stars: 4.5, reviews: 8, price: 200 }
