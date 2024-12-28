@@ -43,9 +43,9 @@ type VideoCategory = 'RBT' | 'RWT' | 'CMP';
 const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, currentPage, chatbotContext, chatbotRef }) => {
   const [activeTab, setActiveTab] = useState("tab1");
   const [tutors, setTutors] = useState<Tutor[]>([
+    { name: "Vivian Z.", university: "CNU Medicine", stars: 5, reviews: 12, price: 120 },
     { name: "Prynce K.", university: "Rice University", stars: 5, reviews: 16, price: 50 },
-    { name: "Ali N.", university: "Duke University", stars: 4.5, reviews: 5, price: 150 },
-    { name: "Saanvi A.", university: "New York University", stars: 5, reviews: 3, price: 85 },
+    { name: "Saanvi A.", university: "New York University", stars: 5, reviews: 3, price: 105 },
     { name: "Ethan K.", university: "Univ of Pennsylvania", stars: 4.5, reviews: 8, price: 200 }
   ]);
 
@@ -195,8 +195,8 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
 
   const getTutorDescription = (tutorName: string): string => {
     switch (tutorName) {
-      case "Ali N.":
-        return "Hello hello y'all, I'm Ali! I scored a 520 with a 132 in Bio/Biochem and C/P. At Duke, I played basketball (okay, not for the D1 team, but I was pretty good!). I like to tutor very hands on: my sessions consist of working with you through practice tests and really drilling down into what you do wrong (and right!). I'm a huge fan of soccer and Lil Uzi Vert. Hit me up :)";
+      case "Vivian Z.":
+        return "Hi everyone! I'm Vivian and I'm an MS1. I improved my MCAT score from 495 to 512 by implementing major changes in content review, mindset, self-criticism, and thorough review. I'd love to help you find the strategies and schedule that work best for you to reach your goal score. I also offer advice on med school applications, including personal statements, secondaries, interview prep, and general questions. In my free time, I enjoy Arcane, Attack on Titan, Fortnite, and Maplestory.";
       case "Prynce K.":
         return "S'up. I'm the founder of the website you're on. I scored a 523 overall, with a 132 in CARs, and spent two years tutoring the MCAT at various firms (who all suck imo). My average increase is around 10-15 points, with a lot of students making massive leaps; but, nowdays, I have limited time as I'm making the most beautiful study software in history. If you're a dedicated student who uses this website frequently, then I'm very interested in meeting/working with you.";
       case "Saanvi A.":
@@ -209,7 +209,7 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
   };
 
   const tutorExpertise: Record<string, string[]> = {
-    "Ali N.": ["B/B", "C/P"],
+    "Vivian Z.": ["P/S", "CARS"],
     "Prynce K.": ["CARS"],
     "Saanvi A.": ["P/S"],
     "Ethan K.": ["B/B", "CARS"],
@@ -247,7 +247,10 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
             const firstName = tutor.name.split(/[\s.]/, 1)[0];
             
             return (
-              <div key={index} className="mb-4 p-4 bg-[--theme-leaguecard-color] rounded-lg shadow-md">
+              <div 
+                key={index} 
+                className="mb-4 p-4 bg-[--theme-leaguecard-color] rounded-lg shadow-md"
+              >
                 <div className="flex items-start">
                   <div className="mr-4 flex-shrink-0">
                     <Image
@@ -315,7 +318,10 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
                       <button 
                         className="text-sm font-medium text-blue-500 hover:text-[--theme-hover-color] transition-colors duration-200 underline-offset-4 hover:underline"
                       >
-                        Book (5 coins/meeting)
+                        {tutor.name === "Prynce K." 
+                          ? "Book (5 coins/meeting)"
+                          : `Book ($${tutor.price}/hr)`
+                        }
                       </button>
                     </DialogTrigger>
                     <BookTutorDialog tutor={tutor} />
