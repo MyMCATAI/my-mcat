@@ -35,7 +35,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-
 import { getRelevantTranscript } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -799,6 +798,23 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       setRunTutorialPart1(true);
     }    
   }, [isFirstVisit]);
+  
+  useEffect(() => {
+    if(!selectedCategory || !contentType) return
+    const updateActivity = async () => {
+      await onActivityChange(
+        contentType === 'quiz' ? 'testing' : 'studying', 
+        'AdaptiveTutoringSuite', 
+        {
+          category: selectedCategory,
+          contentType: contentType,
+          timestamp: new Date().toISOString()
+        }
+      );
+    };
+    updateActivity();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentType, selectedCategory])
 
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
