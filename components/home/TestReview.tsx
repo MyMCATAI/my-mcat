@@ -39,7 +39,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
   }
 
   return (
-    <div className="animate-fadeIn h-full p-6">
+    <div className="animate-fadeIn h-full p-6 flex flex-col min-h-0">
       <div className="flex flex-col md:flex-row gap-6 mb-6">
         <div className="w-full md:w-[12rem] h-[12rem] bg-[--theme-leaguecard-color] rounded-2xl shadow-xl overflow-hidden relative">
           <button
@@ -93,10 +93,10 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3 bg-[--theme-leaguecard-color] p-4 rounded-2xl shadow-xl min-h-[10rem]">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 min-h-0 flex-grow">
+        <div className="lg:col-span-3 bg-[--theme-leaguecard-color] p-4 rounded-2xl shadow-xl flex flex-col min-h-0">
           <h3 className="text-xs uppercase tracking-wide opacity-60 mb-3">Kalypso's Analysis</h3>
-          <div className="space-y-4">
+          <div className="space-y-4 flex-grow overflow-y-auto">
             <p className="text-sm leading-relaxed">
               Your performance shows strong understanding in CARS and Bio/Biochem sections. 
               However, theres room for improvement in the Chemistry/Physics section, 
@@ -113,7 +113,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-[--theme-leaguecard-color] p-4 rounded-2xl shadow-xl min-h-[10rem]">
+        <div className="lg:col-span-2 bg-[--theme-leaguecard-color] p-4 rounded-2xl shadow-xl flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs uppercase tracking-wide opacity-60">Weaknesses</h3>
             <div className="relative group">
