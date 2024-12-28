@@ -26,14 +26,6 @@ export const useUserActivity = () => {
   const lastEndCallTime = useRef<number>(0);
 
   useEffect(() => {
-    // Recover activity from localStorage on mount
-    const savedActivity = localStorage.getItem('currentActivity');
-    if (savedActivity) {
-      const parsed = JSON.parse(savedActivity);
-      // If activity exists but wasn't properly ended, end it now
-      endActivity(parsed.id);
-    }
-
     // Handle page unload
     const handleBeforeUnload = () => {
       if (currentActivity) {
@@ -77,7 +69,6 @@ export const useUserActivity = () => {
 
       const activity = await response.json();
       setCurrentActivity(activity);
-      localStorage.setItem('currentActivity', JSON.stringify(activity));
       return activity;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start activity');

@@ -26,8 +26,10 @@ import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import NewGameButton from "./components/NewGameButton";
 import { imageGroups } from "./constants/imageGroups";
 import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
+import { useUserActivity } from '@/hooks/useUserActivity';
 
 const DoctorsOfficePage: React.FC = () => {
+  const { startActivity } = useUserActivity();
   const [activeTab, setActiveTab] = useState("doctorsoffice");
   const [userLevel, setUserLevel] = useState("PATIENT LEVEL");
   const [userScore, setUserScore] = useState(0);
@@ -466,7 +468,17 @@ const DoctorsOfficePage: React.FC = () => {
     setPopulateRoomsFn(() => fn);
   }, []);
 
-  const resetGameState = () => {
+  const resetGameState = async () => {
+    // Start new studying activity
+    await startActivity({
+      type: 'studying',
+      location: 'Game',
+      metadata: {
+        timestamp: new Date().toISOString()
+      }
+    });
+
+
     setActiveRooms(new Set());
     setCompleteAllRoom(false);
     setIsAfterTestDialogOpen(false);
@@ -484,11 +496,21 @@ const DoctorsOfficePage: React.FC = () => {
   };
 
   // Update the handleGameStart function to accept userTestId
-  const handleGameStart = (userTestId: string) => {
+  const handleGameStart = async (userTestId: string) => {
+
+    // Start new testing activity
+    const activity = await startActivity({
+      type: 'testing',
+      location: 'Game',
+      metadata: {
+        userTestId,
+        timestamp: new Date().toISOString()
+      }
+    });
+
     setIsGameInProgress(true);
     setCurrentUserTestId(userTestId);
     
-    // Call populateRoomsFn if it exists
     if (typeof populateRoomsFn === 'function') {
       populateRoomsFn();
     } else {
@@ -505,6 +527,22 @@ const DoctorsOfficePage: React.FC = () => {
 
   // Add this state near the top of the component with other state declarations
   const [isFlashcardsTooltipOpen, setIsFlashcardsTooltipOpen] = useState(false);
+
+  // Add this useEffect for initial activity tracking when loading the page
+  useEffect(() => {
+    const initializeActivity = async () => {
+        await startActivity({
+          type: 'studying',
+          location: 'Game',
+          metadata: {
+            initialLoad: true,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+
+    initializeActivity();
+  }, []);
 
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
