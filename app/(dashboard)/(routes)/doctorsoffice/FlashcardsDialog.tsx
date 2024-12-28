@@ -6,10 +6,20 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import FlashcardDeck from './FlashcardDeck';
+import FlashcardDeck, { Flashcard } from './FlashcardDeck';
 import { useSpring, animated, config } from '@react-spring/web';
-// import Interruption from './Interruption';
 import { roomToSubjectMap } from './OfficeContainer';
+import { ThumbsDown } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import toast from 'react-hot-toast';
+// import Interruption from './Interruption';
+
 interface WrongCard {
   question: string;
   answer: string;
@@ -37,7 +47,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   roomId,
   buttonContent,
   activeRooms,  
-  setActiveRooms , 
+  setActiveRooms, 
   currentUserTestId,
   isLoading,
   setIsLoading,
@@ -53,6 +63,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   // const [showInterruption, setShowInterruption] = useState(false);
   // const [isTypingComplete, setIsTypingComplete] = useState(false);
   // const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<Flashcard | null>(null);
 
   const [springs, api] = useSpring(() => ({
     from: { x: 0 }
@@ -162,6 +173,29 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     }
   }, [roomId, setActiveRooms, onOpenChange, correctCount]);
 
+  const handleDownvote = async () => {
+    if (!currentQuestion) return;
+
+    toast.success("Question reported! Thank you for helping us improve.");
+
+    try {
+      const response = await fetch("/api/send-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: `Question Downvoted\n\nQuestion ID: ${currentQuestion.id}\nQuestion Type: ${currentQuestion.questionType}\nQuestion Content: ${currentQuestion.questionContent}\nRoom ID: ${roomId}\n\nThis question was automatically flagged for review through the downvote system.`,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send downvote message");
+      }
+    } catch (error) {
+      console.error("Error sending downvote:", error);
+      toast.error("Failed to send feedback. Please try again.");
+    }
+  };
+
   useImperativeHandle(ref, () => ({
     open: () => onOpenChange(true),
     setWrongCards,
@@ -183,20 +217,11 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                   : roomToSubjectMap[roomId]
                 } flashcards
               </span>
-              {/* Comment out interruption button
-              <button 
-                onClick={handleInterruption}
-                className="hover:bg-[--theme-leaguecard-color] rounded-md p-1.5 transition-colors"
-                title="Test Interruption"
-              >
-                <TestTube2 className="h-5 w-5" />
-              </button>
-              */}
             </DialogTitle>
           </DialogHeader>
           
           <div className="flex flex-grow min-h-0 relative">
-            <div className="absolute top-4 left-6 z-10">
+            <div className="absolute top-4 left-6 z-10 flex justify-between items-start" style={{ width: 'calc(100% - 33.33% - 2rem)' }}>
               <div className="relative">
                 <animated.div 
                   style={counterSpring}
@@ -221,6 +246,26 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                   </animated.div>
                 )}
               </div>
+
+              {currentQuestion && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleDownvote}
+                        className="hover:bg-transparent text-[--theme-text-color] hover:text-[--theme-hover-color] mr-4 mt-2 transition-colors"
+                      >
+                        <ThumbsDown className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>Report this question</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
 
             <div className="w-2/3 pr-2 flex flex-col h-full relative">
@@ -240,6 +285,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                       onClose={handleClose}
                       onMCQAnswer={onMCQAnswer}
                       setTotalMCQQuestions={setTotalMCQQuestions}
+                      onQuestionChange={setCurrentQuestion}
                     />
                   </div>
                 </ScrollArea>
