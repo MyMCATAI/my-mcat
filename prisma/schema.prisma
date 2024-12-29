@@ -24,6 +24,7 @@ model UserInfo {
   streak                 Int      @default(0)
   notificationPreference String   @default("all")
   unlocks                Json?    @default("[]")
+  patientRecord         PatientRecord?
 }
 
 model UserSubscription {
@@ -252,10 +253,11 @@ model Review {
 }
 
 model PatientRecord {
-  id              String   @id @default(cuid())
-  userId          String   @unique
+  id              String    @id @default(cuid())
+  userId          String    @unique
   patientsTreated Int      @default(0)
-  lastUpdated     DateTime @updatedAt
+  lastUpdated     DateTime  @updatedAt
+  userInfo        UserInfo? @relation(fields: [userId], references: [userId])
 
   @@index([userId])
 }
