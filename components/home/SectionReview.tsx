@@ -80,7 +80,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
         <div className="flex-grow bg-[--theme-leaguecard-color] shadow-xl rounded-2xl p-5">
           <div className="flex gap-4 h-full">
             <div className="flex-grow flex flex-col">
-              <span className="text-xs uppercase tracking-wide opacity-60">Kalypso's Advice</span>
+              <span className="text-xs uppercase tracking-wide opacity-60">Kalypso&apos;s Analysis</span>
               <div className="flex-grow flex items-center justify-center text-sm opacity-50">
                 Coming soon...
               </div>

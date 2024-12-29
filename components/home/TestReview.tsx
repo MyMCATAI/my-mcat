@@ -95,7 +95,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 min-h-0 flex-grow">
         <div className="lg:col-span-3 bg-[--theme-leaguecard-color] p-4 rounded-2xl shadow-xl flex flex-col min-h-0">
-          <h3 className="text-xs uppercase tracking-wide opacity-60 mb-3">Kalypso's Analysis</h3>
+          <h3 className="text-xs uppercase tracking-wide opacity-60 mb-3">Kalypso&apos;s Analysis</h3>
           <div className="space-y-4 flex-grow overflow-y-auto">
             <p className="text-sm leading-relaxed">
               Your performance shows strong understanding in CARS and Bio/Biochem sections. 

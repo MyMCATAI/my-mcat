@@ -496,7 +496,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
                   
                   {newTest.useRecommendedDate ? (
                     <div className="text-sm text-gray-600 italic p-2 bg-gray-50 rounded text-center">
-                      We'll recommend the next available test date based on your study schedule
+                      We&apos;ll recommend the next available test date based on your study schedule
                     </div>
                   ) : (
                     <div className="flex justify-center">
