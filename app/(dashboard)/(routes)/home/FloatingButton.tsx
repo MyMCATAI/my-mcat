@@ -300,6 +300,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
                     alt={pos.tab} 
                     width={isActive ? 44 : 32} 
                     height={isActive ? 44 : 32} 
+                    className="text-white"
                   />
                 </button>
                 <span
