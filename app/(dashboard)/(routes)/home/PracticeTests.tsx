@@ -138,7 +138,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
       name: `FL${newTest.testNumber}`,
       company: newTest.company,
       status: "Not Started",
-      calendarDate: parseInt(newTest.date),
+      calendarDate: newTest.date?.getDate() ?? 1,
     };
 
     setScheduledTests([...scheduledTests, newTestEntry]);
@@ -186,7 +186,13 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
             // When a test is active, it takes up the full container
             <div className="h-full px-4">
               <TestReview 
-                test={activeTest} 
+                test={{ 
+                  ...activeTest, 
+                  testNumber: (activeTest as any).testNumber || "",
+                  score: (activeTest as any).score || 0,
+                  breakdown: (activeTest as any).breakdown || "",
+                  dateTaken: (activeTest as any).dateTaken || "",
+                }} 
                 onBack={() => setActiveTest(null)} 
               />
             </div>
@@ -348,7 +354,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({ className }) => {
                         boxShadow: 'var(--theme-button-boxShadow)',
                         height: '15vh',
                       }}
-                      onClick={() => setActiveTest(test)}
+                      onClick={() => setActiveTest({ ...test, id: String(index), name: `${test.company} ${test.testNumber}`, status: 'completed' })}
                     >
                       <div className="h-full flex flex-col">
                         {/* Company and Date - Always visible but muted */}
