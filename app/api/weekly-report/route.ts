@@ -12,11 +12,10 @@ export const revalidate = 0;
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-  //   return new Response("Unauthorized", { status: 401 });
+    return new Response("Unauthorized", { status: 401 });
   }
 
   try {
-    // Get date from one week ago
     const oneWeekAgo = subWeeks(new Date(), 1);
 
     // Only get users who:
@@ -54,7 +53,7 @@ export async function GET(request: Request) {
             userName: user.firstName || "there",
             ...reportData,
             dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-            settingsUrl: `${process.env.NEXT_PUBLIC_APP_URL}/settings`
+            settingsUrl: `${process.env.NEXT_PUBLIC_APP_URL}/preferences`
           });
           
           if (success) {

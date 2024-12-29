@@ -34,7 +34,7 @@ export const streakLossTemplate = (data: StreakLossEmailData): TemplateConfig =>
       </p>
 
       <p style="color: #666666; font-size: 0.75rem; margin-top: 1.875rem;">
-        Want to adjust your notification settings? <a href="${data.settingsUrl || 'https://mymcat.ai/home'}" style="color: #2b6cb0; text-decoration: underline;">Click here</a>
+        Want to adjust your notification settings? <a href="${data.settingsUrl || 'https://mymcat.ai/preferences'}" style="color: #2b6cb0; text-decoration: underline;">Click here</a>
       </p>
     </div>
   `
