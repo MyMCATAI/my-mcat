@@ -45,6 +45,7 @@ import { toast } from "react-hot-toast";
 import {
   Calendar as CalendarIcon,
   BarChart as AnalyticsIcon,
+  AlertTriangle,
 } from "lucide-react";
 import { FaCheckCircle } from "react-icons/fa";
 import HelpContentSchedule from "./HelpContentSchedule";
@@ -1270,9 +1271,9 @@ const Schedule: React.FC<ScheduleProps> = ({
         onClose={() => setShowCompletionDialog(false)}
       />
 
-      <OptionsDialog 
-        showOptionsModal={showOptionsModal}
-        setShowOptionsModal={setShowOptionsModal}
+      <CompletionDialog 
+        isOpen={showOptionsModal}
+        onClose={() => setShowOptionsModal(false)}
         handleTabChange={handleTabChange}
         allWelcomeTasksCompleted={allWelcomeTasksCompleted}
       />

@@ -11,6 +11,8 @@ import {
 interface CompletionDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  handleTabChange?: (tab: string) => void;
+  allWelcomeTasksCompleted?: boolean;
 }
 
 const CompletionDialog: React.FC<CompletionDialogProps> = ({ isOpen, onClose }) => {

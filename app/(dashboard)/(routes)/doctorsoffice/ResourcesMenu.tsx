@@ -230,20 +230,24 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
 
           <div className="space-y-3">
             {leaderboardType === "global" ? (
-              globalLeaderboard.map((entry) => (
-                <div key={entry.id} className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
-                      {entry.id}
+              globalLeaderboard?.length > 0 ? (
+                globalLeaderboard.map((entry) => (
+                  <div key={entry.id} className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
+                        {entry.id}
+                      </div>
+                      <span className="font-medium">{entry.name}</span>
                     </div>
-                    <span className="font-medium">{entry.name}</span>
+                    <div className="flex items-center gap-2">
+                      <FaUserInjured className="text-yellow-300" />
+                      <span>{entry.patientsTreated}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <FaUserInjured className="text-yellow-300" />
-                    <span>{entry.patientsTreated}</span>
-                  </div>
-                </div>
-              ))
+                ))
+              ) : (
+                <div className="text-center p-4">No leaderboard data available</div>
+              )
             ) : (
               <div className="bg-[--theme-doctorsoffice-accent] p-4 rounded-lg text-center">
                 <p className="text-lg font-medium mb-2">Friends Leaderboard Coming Soon!</p>
