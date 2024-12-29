@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { startOfWeek, endOfWeek } from "date-fns";
+import { startOfWeek, endOfWeek, subWeeks } from "date-fns";
 import { categoryMapping } from '@/constants/categoryMappings';
 
 const prisma = new PrismaClient();
@@ -21,8 +21,9 @@ export interface WeeklyReportData {
 }
 
 export async function generateWeeklyReport(userId: string): Promise<WeeklyReportData> {
-  const weekStart = startOfWeek(new Date(), { weekStartsOn: 0 });
-  const weekEnd = endOfWeek(new Date(), { weekStartsOn: 0 });
+  const now = new Date();
+  const weekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 0 });
 
   // Get user responses from the past week
   const weeklyResponses = await prisma.userResponse.findMany({
