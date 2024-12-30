@@ -3,7 +3,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ProductType } from "@/types";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
 
@@ -13,6 +13,8 @@ interface PurchaseButtonProps {
   tooltipText?: string;
   children?: React.ReactNode;
   showMDPremium?: boolean;
+  autoOpen?: boolean;
+  userCoinCount?: number;
 }
 
 export function PurchaseButton({ 
@@ -20,10 +22,24 @@ export function PurchaseButton({
   className = "bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color]",
   tooltipText = "Purchase additional coins to access more features",
   children,
-  showMDPremium = false
+  showMDPremium = false,
+  autoOpen = false,
+  userCoinCount = 1
 }: PurchaseButtonProps) {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(autoOpen);
+
+  useEffect(() => {
+    setIsModalOpen(autoOpen);
+  }, [autoOpen]);
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open && userCoinCount > 0) {
+      setIsModalOpen(false);
+    } else if (open) {
+      setIsModalOpen(true);
+    }
+  };
 
   const handlePurchase = async (productType: ProductType) => {
     try {
@@ -101,8 +117,23 @@ export function PurchaseButton({
         </Tooltip>
       </TooltipProvider>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border border-transparent">
+      <Dialog 
+        open={isModalOpen} 
+        onOpenChange={handleOpenChange}
+      >
+        <DialogContent 
+          className="max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border border-transparent"
+          onPointerDownOutside={(e) => {
+            if (userCoinCount === 0) {
+              e.preventDefault();
+            }
+          }}
+          onEscapeKeyDown={(e) => {
+            if (userCoinCount === 0) {
+              e.preventDefault();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-center mb-4 text-[--theme-text-color]">
               Purchase Options
