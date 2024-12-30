@@ -299,7 +299,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
             }}
           >
             <h3
-              className="text-m font-semibold mt-3 mb-3 text-center"
+              className="text-xs mb-6 opacity-60 uppercase tracking-wide text-center"
               style={{ color: "var(--theme-text-color)" }}
             >
               CARs Tests
