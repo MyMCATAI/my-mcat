@@ -2,10 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
-import { Prisma } from '@prisma/client';
-import { checkAllActivitiesComplete } from "@/lib/utils";
-import { UserService } from '@/services/user/UserService';
-import { emailService } from '@/services/email/EmailService';
+import { Prisma } from '@prisma/client';;
 
 export async function POST(req: NextRequest) {
 
