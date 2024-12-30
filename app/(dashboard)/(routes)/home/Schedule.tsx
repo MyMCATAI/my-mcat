@@ -123,7 +123,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showBreaksDialog, setShowBreaksDialog] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showUWorldPopup, setShowUWorldPopup] = useState(false);
-  const [showTestsDialog, setShowTestsDialog] = useState(false);
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
@@ -360,7 +359,8 @@ const Schedule: React.FC<ScheduleProps> = ({
       case "Adaptive Tutoring Suite":
         handleSetTab("AdaptiveTutoringSuite");
         break;
-      case "AAMC Materials":
+      case "Tests":
+        handleSetTab("Tests");
         break;
       case "UWorld":
         setShowUWorldPopup(true);

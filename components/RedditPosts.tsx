@@ -152,7 +152,14 @@ const RedditPosts: React.FC = () => {
       </div>
 
       {/* Post Content */}
-      <div className="flex-grow overflow-y-auto">
+      <div 
+        className="flex-grow overflow-y-auto"
+        style={{ 
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch'
+        }}
+      >
         {loading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, index) => (
