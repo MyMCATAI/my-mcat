@@ -12,11 +12,10 @@ export const revalidate = 0;
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-  //   return new Response("Unauthorized", { status: 401 });
+    return new Response("Unauthorized", { status: 401 });
   }
 
   try {
-    // Get date from one week ago
     const oneWeekAgo = subWeeks(new Date(), 1);
 
     // Only get users who:
@@ -25,7 +24,7 @@ export async function GET(request: Request) {
     // 3. Created their account at least a week ago
     const paidUsers = await prisma.userInfo.findMany({
       where: {
-        hasPaid: true,
+        // hasPaid: true, // uncomment to send to paid users only
         notificationPreference: {
           in: ["all", "important"]
         },
@@ -38,35 +37,40 @@ export async function GET(request: Request) {
       }
     });
 
+    console.log('\n=== Weekly Report Run ===');
+    console.log(`Found ${paidUsers.length} eligible users for weekly report`);
+
     let successCount = 0;
     let failureCount = 0;
-
-    console.log(`Found ${paidUsers.length} eligible users for weekly report`);
 
     for (const user of paidUsers) {
       try {
         const userEmail = await getUserEmail(user.userId);
+        console.log(`\nProcessing user: ${user.firstName} (${user.userId})`);
         
         if (userEmail) {
           const reportData = await generateWeeklyReport(user.userId);
+          console.log('Sending report to:', userEmail);
           
           const success = await sendWeeklyReportEmail(userEmail, {
             userName: user.firstName || "there",
             ...reportData,
             dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-            settingsUrl: `${process.env.NEXT_PUBLIC_APP_URL}/settings`
+            settingsUrl: `${process.env.NEXT_PUBLIC_APP_URL}/preferences`
           });
-          
+
           if (success) {
             successCount++;
+            console.log('Email sent successfully');
           } else {
             failureCount++;
+            console.log('Failed to send email');
           }
         }
       } catch (error) {
         console.error(`Failed to process weekly report for user ${user.userId}:`, error);
         failureCount++;
-        continue; // Continue with next user
+        continue;
       }
     }
 

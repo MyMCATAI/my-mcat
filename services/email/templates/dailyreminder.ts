@@ -24,7 +24,9 @@ export const dailyReminderTemplate = (data: DailyReminderEmailData): TemplateCon
       <p>Waiting eagerly for your return,</p>
       <p>Kalypso, Your Concerned MCAT Study Buddy 🐱</p>
       <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #e5e7eb;">
-      <p style="font-size: 0.875rem; color: #6b7280;">Want to change how often you receive these reminders? <a href="https://mymcat.ai/preferences" style="color: #2563eb; text-decoration: underline;">Update your notification settings</a></p>
+      <p style="font-size: 0.875rem; color: #6b7280;">
+        Want to change how often you receive these reminders? <a href="https://mymcat.ai/preferences" style="color: #2563eb; text-decoration: underline;">Update your notification settings</a>
+      </p>
     </div>
   `
 });

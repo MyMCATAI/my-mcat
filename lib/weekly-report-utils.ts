@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { startOfWeek, endOfWeek } from "date-fns";
+import { startOfWeek, endOfWeek, subWeeks } from "date-fns";
 import { categoryMapping } from '@/constants/categoryMappings';
 
 const prisma = new PrismaClient();
@@ -18,11 +18,89 @@ export interface WeeklyReportData {
   averageTestScore: number;
   totalTimeSpent: number;
   totalPatientsCount: number;
+  testsCompleted: number;
+  completedActivities: number;
+  studyCompletionRate: number;
+  topPerformingSubjects: string[];
+}
+
+interface WeeklyPerformanceMetrics {
+  testsCompleted: number;
+  averageTestScore: number;
+  completedActivities: number;
+  studyCompletionRate: number;
+  topPerformingSubjects: string[];
+}
+
+async function getWeeklyPerformanceMetrics(userId: string, oneWeekAgo: Date): Promise<WeeklyPerformanceMetrics> {
+  // Get weekly test performance
+  const weeklyTests = await prisma.userTest.findMany({
+    where: {
+      userId,
+      startedAt: {
+        gte: oneWeekAgo
+      },
+      finishedAt: {
+        not: null
+      }
+    }
+  });
+
+  const testsCompleted = weeklyTests.length;
+  const averageTestScore = testsCompleted > 0
+    ? weeklyTests.reduce((sum, test) => sum + (test.score || 0), 0) / testsCompleted
+    : 0;
+
+  // Get weekly study activities
+  const weeklyActivities = await prisma.calendarActivity.findMany({
+    where: {
+      userId,
+      scheduledDate: {
+        gte: oneWeekAgo,
+        lte: new Date(),
+      },
+    }
+  });
+
+  const completedActivities = weeklyActivities.filter(activity => activity.status === "Complete").length;
+  const totalActivities = weeklyActivities.length;
+  const studyCompletionRate = totalActivities > 0 ? (completedActivities / totalActivities) * 100 : 0;
+
+  // Get top 3 performing subjects
+  const topSubjects = await prisma.knowledgeProfile.findMany({
+    where: {
+      userId,
+      totalAttempts: {
+        gt: 0 // Only include subjects they've actually worked on
+      }
+    },
+    orderBy: {
+      conceptMastery: 'desc'
+    },
+    take: 3,
+    include: {
+      category: true
+    }
+  });
+
+  const topPerformingSubjects = topSubjects
+    .filter(subject => subject.category?.conceptCategory)
+    .map(subject => subject.category.conceptCategory);
+
+  return {
+    testsCompleted,
+    averageTestScore,
+    completedActivities,
+    studyCompletionRate: Math.round(studyCompletionRate),
+    topPerformingSubjects
+  };
 }
 
 export async function generateWeeklyReport(userId: string): Promise<WeeklyReportData> {
-  const weekStart = startOfWeek(new Date(), { weekStartsOn: 0 });
-  const weekEnd = endOfWeek(new Date(), { weekStartsOn: 0 });
+  const now = new Date();
+  const weekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 0 });
+  const oneWeekAgo = subWeeks(now, 1);
 
   // Get user responses from the past week
   const weeklyResponses = await prisma.userResponse.findMany({
@@ -149,16 +227,16 @@ export async function generateWeeklyReport(userId: string): Promise<WeeklyReport
   if (averageTestScore > 70) improvements.push("Strong test performance");
   if (flashcardsReviewed > 20) improvements.push("Consistent flashcard review");
 
-  // Get user's current coin balance
+  // Get user's current coin balance and patient count
   const userInfo = await prisma.userInfo.findUnique({
     where: { userId },
-    select: { score: true }
+    include: {
+      patientRecord: true
+    }
   });
 
-  // Get patient record count
-  const patientRecord = await prisma.patientRecord.findUnique({
-    where: { userId }
-  });
+  // Get weekly performance metrics
+  const performanceMetrics = await getWeeklyPerformanceMetrics(userId, oneWeekAgo);
 
   return {
     dailyActivity,
@@ -173,6 +251,10 @@ export async function generateWeeklyReport(userId: string): Promise<WeeklyReport
     testScores,
     averageTestScore,
     totalTimeSpent,
-    totalPatientsCount: patientRecord?.patientsTreated || 0
+    totalPatientsCount: userInfo?.patientRecord?.patientsTreated || 0,
+    testsCompleted: performanceMetrics.testsCompleted,
+    completedActivities: performanceMetrics.completedActivities,
+    studyCompletionRate: performanceMetrics.studyCompletionRate,
+    topPerformingSubjects: performanceMetrics.topPerformingSubjects
   };
 } 

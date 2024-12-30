@@ -16,9 +16,33 @@ export async function getUserEmail(userId: string) {
   }
 }
 
+async function isBreakDay(userId: string, date: Date): Promise<boolean> {
+  // Get most recent study plan
+  const studyPlan = await prisma.studyPlan.findFirst({
+    where: { userId },
+    orderBy: { creationDate: 'desc' }
+  });
+
+  if (!studyPlan) return false;
+
+  // Get day of week (0 = Sunday, 1 = Monday, etc.)
+  const dayOfWeek = date.getDay();
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayName = days[dayOfWeek];
+
+  // Parse hoursPerDay JSON and check if it's a break day (0 hours)
+  const hoursPerDay = studyPlan.hoursPerDay as Record<string, string>;
+  return hoursPerDay[dayName] === "0";
+}
+
 export async function checkUserActivity(userId: string, daysToCheck: number = 1): Promise<boolean> {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - daysToCheck);
+
+  // If checking past day activity and it's a break day, return true
+  if (daysToCheck === 1 && await isBreakDay(userId, cutoffDate)) {
+    return true;
+  }
 
   // Check calendar activities
   const recentActivities = await prisma.calendarActivity.findMany({
