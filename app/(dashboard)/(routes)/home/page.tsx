@@ -29,7 +29,8 @@ import {
 import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
-import { Loader2 } from "lucide-react";
+import { Loader2, ClipboardList } from "lucide-react";
+import PracticeTests from "./PracticeTests";
 
 // Loading component
 const LoadingSpinner = () => (
@@ -90,6 +91,7 @@ const Page = () => {
   const { startActivity, endActivity,updateActivityEndTime } = useUserActivity();
   const [currentStudyActivityId, setCurrentStudyActivityId] = useState<string | null>(null);
   const pathname = usePathname();
+  const [showPracticeTests, setShowPracticeTests] = useState(false);
 
   // Combine loading states
   const isPageLoading = isLoading || isLoadingUserInfo || isUpdatingProfile || isGeneratingActivities;
@@ -469,6 +471,16 @@ const Page = () => {
                         : "Home"}
               </h2>
               <ThemeSwitcher />
+              <button
+                onClick={() => setShowPracticeTests(true)}
+                className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                  border-2 border-[--theme-border-color] 
+                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                  shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
+              >
+                <ClipboardList className="w-8 h-8" />
+                <span className="text-xs font-medium">Tests</span>
+              </button>
             </div>
           </div>
           <div className="relative overflow-visible">
@@ -542,6 +554,15 @@ const Page = () => {
             setShowStreakPopup(false);
           }}
         />
+
+        {/* Practice Tests Dialog */}
+        <Dialog open={showPracticeTests} onOpenChange={setShowPracticeTests}>
+          <DialogContent className="max-w-[80vw] h-[80vh] p-0 bg-transparent border-none">
+            <div className="w-full h-full">
+              <PracticeTests />
+            </div>
+          </DialogContent>
+        </Dialog>
       </ContentWrapper>
     </>
   );

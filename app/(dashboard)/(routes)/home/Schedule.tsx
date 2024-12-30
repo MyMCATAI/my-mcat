@@ -1005,7 +1005,7 @@ const Schedule: React.FC<ScheduleProps> = ({
               </div>
             </div>
 
-            {/* Practice Tests View */}
+            {/* Practice Tests View
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
                 currentView === "tests"
@@ -1014,7 +1014,7 @@ const Schedule: React.FC<ScheduleProps> = ({
               } flex flex-col overflow-auto`}
             >
               <PracticeTests />
-            </div>
+            </div> */}
           </div>
 
           {/* View Toggle Buttons */}
