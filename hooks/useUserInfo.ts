@@ -50,8 +50,6 @@ interface UseUserInfoReturn {
   isLoadingReferrals: boolean;
   fetchReferrals: () => Promise<void>;
   createReferral: (data: {
-    referrerName?: string;
-    referrerEmail?: string;
     friendEmail: string;
   }) => Promise<void>;
   checkHasReferrals: () => Promise<boolean>;
@@ -225,8 +223,6 @@ export function useUserInfo(): UseUserInfoReturn {
 
   const createReferral = useCallback(
     async (data: {
-      referrerName?: string;
-      referrerEmail?: string;
       friendEmail: string;
     }) => {
       try {
@@ -242,7 +238,7 @@ export function useUserInfo(): UseUserInfoReturn {
 
         const newReferral = await response.json();
         setReferrals((prev) => [newReferral, ...prev]);
-        toast.success("Referral created successfully");
+        toast.success("Referral sent successfully");
       } catch (err) {
         toast.error("Failed to create referral");
         throw err;
@@ -315,3 +311,4 @@ export function useUserInfo(): UseUserInfoReturn {
     unlockGame,
   };
 }
+

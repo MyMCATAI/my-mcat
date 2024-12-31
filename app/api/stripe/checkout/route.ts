@@ -84,6 +84,45 @@ export async function POST(request: Request) {
               friendEmail,
             },
           });
+
+          const REFERRAL_REWARD = 10;
+          // Update joinedAt and friendUserId for all referrals if friendUserId is null
+          await prismadb.referral.updateMany({
+            where: {
+              friendEmail: userEmail,
+              friendUserId: null
+            },
+            data: {
+              joinedAt: new Date(),
+              friendUserId: userId
+            }
+          });
+
+          // Get the oldest referral record for this userEmail
+          const referral = await prismadb.referral.findFirst({
+            where: {
+              friendEmail: userEmail
+            },
+            orderBy: {
+              createdAt: 'asc'
+            }
+          })
+
+          if (referral) {
+            // Referral user get REFERRAL_REWARD coins
+            const referralUserId = referral.userId;
+
+            if (referralUserId !== userId) {
+              await prismadb.userInfo.update({
+                where: { userId: referralUserId },
+                data: {
+                  score: {
+                    increment: REFERRAL_REWARD
+                  }
+                }
+              })
+            }
+          }
         } catch (error) {
           console.error("Error creating referral:", error);
           // Continue execution even if referral creation fails
