@@ -14,7 +14,7 @@ import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../styles/CustomCalendar.css";
 import { addDays, format, isTomorrow, isSameDay, isToday } from 'date-fns';
-import { Plus } from 'lucide-react';
+import { Plus, Coffee } from 'lucide-react';
 
 import { useUser } from "@clerk/nextjs";
 import AddEventModal from "./AddEventModal";
@@ -99,10 +99,22 @@ interface DayCardProps {
 const DayCard: React.FC<DayCardProps> = ({ date, events, onEventClick, onAddEvent }) => {
   const totalHours = events.reduce((sum, event) => sum + event.hours, 0);
   
+  const handleAddBreak = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Create a break event with default values
+    const breakEvent: CalendarActivityData = {
+      activityTitle: "Break",
+      activityText: "Taking a break",
+      hours: 0.5,
+      activityType: "Break",
+      scheduledDate: date.toISOString()
+    };
+  };
+  
   return (
     <div className="day-card">
       <div className="day-header">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {isTomorrow(date) ? 'Tomorrow' : format(date, 'EEE, MMM d')}
           <button 
             onClick={(e) => {
@@ -112,6 +124,13 @@ const DayCard: React.FC<DayCardProps> = ({ date, events, onEventClick, onAddEven
             className="p-1 rounded-full hover:bg-[--theme-hover-color] transition-colors"
           >
             <Plus className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={handleAddBreak}
+            className="p-1 rounded-full hover:bg-[--theme-hover-color] transition-colors"
+            title="Add break"
+          >
+            <Coffee className="w-4 h-4" />
           </button>
         </div>
         <span className="total-hours">{totalHours} hours total</span>
@@ -492,19 +511,20 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
 
   return (
     <div className="custom-calendar schedule-content">
-      <div className="bg-[--theme-leaguecard-color] rounded-lg p-3 ml-4 mr-4 shadow-sm">
+      <div className="bg-[--theme-leaguecard-color] rounded-lg p-3 ml-4 mb-2 mr-4 shadow-sm">
         <div className="flex justify-center items-center">
-          <div className="text-sm font-medium tracking-wide">
+          <div className="text-sm tracking-wide">
             {events.some(event => event.activityType === 'Exam' && event.start > new Date()) ? (
               <>
-                NEXT FULL LENGTH DATE:{' '}
-                <span className="text-[--theme-hover-color] ml-1">
-                  {format(
-                    events
+                Next Exam in
+                <span className="text-[--theme-emphasis-color] text-sm font-semibold ml-1">
+                  {(() => {
+                    const nextExam = events
                       .filter(event => event.activityType === 'Exam' && event.start > new Date())
-                      .sort((a, b) => a.start.getTime() - b.start.getTime())[0].start,
-                    'MMM d, yyyy'
-                  )}
+                      .sort((a, b) => a.start.getTime() - b.start.getTime())[0];
+                    const daysLeft = Math.ceil((nextExam.start.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                    return `${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
+                  })()}
                 </span>
               </>
             ) : (
