@@ -48,7 +48,7 @@ export const GameOverDialog: React.FC<GameOverDialogProps> = ({ userCoinCount })
           </motion.h2>
           
           <p className="text-center text-[--theme-text-color] text-lg">
-            You've run out of coins! Purchase more to continue your MCAT journey.
+            {"You've run out of coins! Purchase more to continue your MCAT journey."}
           </p>
 
           <div className="flex flex-col gap-4 w-full max-w-sm">
