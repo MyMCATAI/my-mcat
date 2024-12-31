@@ -105,7 +105,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
     } else {
       hoverTimeout.current = window.setTimeout(() => {
         setIsHovered(false);
-      }, 300);
+      }, 500);
     }
   };
 

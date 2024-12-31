@@ -155,9 +155,21 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
         setIsHovered(true);
         onHover(true);
       }}
-      onMouseLeave={() => {
-        setIsHovered(false);
-        onHover(false);
+      onMouseLeave={(e) => {
+        // Add buffer zone check
+        const rect = e.currentTarget.getBoundingClientRect();
+        const buffer = 32; // 2rem buffer zone
+        
+        const isInBufferZone = 
+          e.clientX >= rect.left - buffer &&
+          e.clientX <= rect.right + buffer &&
+          e.clientY >= rect.top - buffer &&
+          e.clientY <= rect.bottom + buffer;
+
+        if (!isInBufferZone) {
+          setIsHovered(false);
+          onHover(false);
+        }
       }}
     >
       <div 
@@ -169,7 +181,7 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
           transition: 'box-shadow 0.3s ease',
         }}
       >
-        <div className="absolute inset-[-2rem] z-[-1] pointer-events-none" />
+        <div className="absolute inset-[-2rem] z-[-1] pointer-events-auto" />
 
         <div className="p-2 border-b border-white/10 flex justify-between items-center">
           <h2 className="text-xs ml-5 opacity-60 uppercase tracking-wide">Current Task</h2>
