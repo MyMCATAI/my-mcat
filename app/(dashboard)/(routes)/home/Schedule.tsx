@@ -664,7 +664,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   }, [userCoinCount]);
 
   return (
-    <div className="grid grid-cols-[28%_72%] h-full relative w-full">
+    <div className="grid grid-cols-[25%_75%] h-full relative w-full">
       {/* Left Sidebar */}
       <div 
         className="w-full p-5 flex flex-col ml-2.5 mt-2.5 mb-2.5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
@@ -700,31 +700,31 @@ const Schedule: React.FC<ScheduleProps> = ({
             }
           `}</style>
           {/* Today's Activities Section */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             {todayActivities.map((activity) => (
-              <div key={activity.id} className="space-y-2">
+              <div key={activity.id} className="mb-6">
                 <button
-                  className={`w-full py-4 px-5 
+                  className={`w-full py-2 px-3 
                     ${
                       isActivityCompleted(activity)
                         ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                        : "bg-[--theme-button-color]"
+                        : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
                     }
                     border-2 border-[--theme-border-color]
                     hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
-                    font-normal shadow-md rounded-lg transition relative flex items-center justify-between
-                    text-sm tracking-wide`}
+                    font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
+                    text-sm`}
                   onClick={() => handleButtonClick(activity.activityTitle)}
                 >
                   <span>{activity.activityTitle}</span>
                   {isActivityCompleted(activity) ? (
                     <FaCheckCircle
-                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem] opacity-90"
+                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
                       style={{ color: "var(--theme-hover-text)" }}
                     />
                   ) : (
                     <svg
-                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem] opacity-90"
+                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -733,22 +733,17 @@ const Schedule: React.FC<ScheduleProps> = ({
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeWidth={1.5}
+                        strokeWidth={2}
                         d="M9 5l7 7-7 7"
                       />
                     </svg>
                   )}
                 </button>
 
-                <div className="bg-[--theme-leaguecard-color] shadow-md p-5 mt-3 space-y-3 rounded-lg">
+                <div className="bg-[--theme-leaguecard-color] shadow-md p-3 mt-2 space-y-2 rounded-lg">
                   {activity.tasks && activity.tasks.length > 0 ? (
                     activity.tasks.map((task, index) => (
-                      <div 
-                        key={index} 
-                        className={`flex items-center gap-3 ${
-                          task.completed ? 'opacity-70' : 'opacity-100'
-                        }`}
-                      >
+                      <div key={index} className="flex items-center gap-2">
                         <Checkbox
                           id={`task-${activity.id}-${index}`}
                           checked={task.completed}
@@ -762,16 +757,14 @@ const Schedule: React.FC<ScheduleProps> = ({
                         />
                         <label
                           htmlFor={`task-${activity.id}-${index}`}
-                          className={`text- tracking-wide leading-tight cursor-pointer flex-grow ${
-                            task.completed ? 'line-through opacity-70' : ''
-                          }`}
+                          className="text-sm leading-tight cursor-pointer flex-grow"
                         >
                           {task.text}
                         </label>
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm tracking-wide italic font-normal">No tasks for this activity</p>
+                    <p className="text-sm italic">No tasks for this activity</p>
                   )}
                 </div>
               </div>
