@@ -2,12 +2,16 @@ import { Dialog, DialogContent, DialogOverlay } from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
 import { PurchaseButton } from "@/components/purchase-button";
 import Image from "next/image";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface GameOverDialogProps {
   userCoinCount: number;
 }
 
 export const GameOverDialog: React.FC<GameOverDialogProps> = ({ userCoinCount }) => {
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+
   return (
     <Dialog open={true}>
       <DialogOverlay 
@@ -58,7 +62,15 @@ export const GameOverDialog: React.FC<GameOverDialogProps> = ({ userCoinCount })
               tooltipText="Purchase coins to continue your journey"
               showMDPremium={true}
               userCoinCount={userCoinCount}
-            />
+              autoOpen={showPurchaseModal}
+            >
+              <Button 
+                onClick={() => setShowPurchaseModal(true)}
+                className="w-full py-4 text-lg font-bold bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color]"
+              >
+                Purchase More Coins
+              </Button>
+            </PurchaseButton>
           </div>
         </motion.div>
       </DialogContent>
