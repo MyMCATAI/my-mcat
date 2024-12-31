@@ -652,7 +652,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   }, [todayActivities]);
 
   return (
-    <div className="grid grid-cols-[25%_75%] h-full relative w-full">
+    <div className="grid grid-cols-[28%_72%] h-full relative w-full">
       {/* Left Sidebar */}
       <div 
         className="w-full p-5 flex flex-col ml-2.5 mt-2.5 mb-2.5 space-y-4 rounded-[10px] overflow-hidden daily-todo-list"
