@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PurchaseButton } from "@/components/purchase-button";
 import { toast } from "react-hot-toast";
 import { Coins } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface TestIntroModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export function TestIntroModal({
   userScore,
 }: TestIntroModalProps) {
   const [isStarting, setIsStarting] = useState(false);
+  const router = useRouter();
 
   const handleStartTest = async () => {
     try {
@@ -91,7 +93,17 @@ export function TestIntroModal({
             </p>
           </div>
 
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center gap-4 pt-4">
+            <Button
+              onClick={() => {
+                router.push("/home?tab=CARS");
+                onClose();
+              }}
+              variant="outline"
+              className="border-[--theme-doctorsoffice-accent] text-[--theme-text-color] min-w-[200px]"
+            >
+              Return to Home
+            </Button>
             {userScore >= 1 ? (
               <Button
                 onClick={handleStartTest}

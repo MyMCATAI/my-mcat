@@ -40,7 +40,7 @@ interface TestListingProps {
 const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCompletedToday }) => {
   const { user } = useUser();
   const searchParams = useSearchParams();
-  const defaultTab = searchParams.get('activeTab') || 'past';
+  const defaultTab = searchParams.get('activeTab') || 'upcoming';
   const [userTests, setUserTests] = useState<UserTest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
