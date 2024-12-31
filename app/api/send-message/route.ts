@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     await transporter.sendMail({
       from: userEmail,
-      to: 'kalypso@mymcat.ai',
+      to: 'vivian@mymcat.ai',
       subject: `New message from ${user.firstName} ${user.lastName}`,
       text: `Name: ${user.firstName} ${user.lastName}\nEmail: ${userEmail}\n\nMessage:\n${message}`,
       html: `<p><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
