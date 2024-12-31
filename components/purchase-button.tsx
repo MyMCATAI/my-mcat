@@ -122,7 +122,7 @@ export function PurchaseButton({
         onOpenChange={handleOpenChange}
       >
         <DialogContent 
-          className="max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border border-transparent"
+          className="max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border border-transparent z-[102]"
           onPointerDownOutside={(e) => {
             if (userCoinCount === 0) {
               e.preventDefault();
