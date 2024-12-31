@@ -154,14 +154,14 @@ const DoctorsOfficePage: React.FC = () => {
       if (completeAllRoom) {
         const mcqQuestions = totalMCQQuestions;
         const mcqCorrect = correctMCQQuestions;
-        const mcqPercentage = mcqQuestions > 0 ? (mcqCorrect / mcqQuestions) * 100 : 0;
-
+        const mcqPercentage = mcqQuestions > 0 ? Math.round((mcqCorrect / mcqQuestions) * 100) : 0;
+        
         if (mcqQuestions > 0 && mcqPercentage >= 80) {
           const response = await fetch("/api/user-info", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
-              incrementScore: 1
+              incrementScore: true
             }),
           });
 
