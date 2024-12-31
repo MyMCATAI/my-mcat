@@ -13,13 +13,14 @@ import {
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../styles/CustomCalendar.css";
+import { addDays, format, isTomorrow, isSameDay, isToday } from 'date-fns';
+import { Plus } from 'lucide-react';
 
 import { useUser } from "@clerk/nextjs";
 import AddEventModal from "./AddEventModal";
 import EditEventModal from "./EditEventModal";
 import ErrorModal from "@/components/calendar/ErrorModal";
 import ConfirmModal from "@/components/calendar/ConfirmModal";
-import { isSameDay, isToday } from "date-fns";
 
 // Assuming you have a types file with this interface
 interface FetchedActivity {
@@ -88,6 +89,45 @@ const convertToCalendarEvent = (activity: any): CalendarEvent => {
   };
 };
 
+interface DayCardProps {
+  date: Date;
+  events: CalendarEvent[];
+  onEventClick: (event: CalendarEvent) => void;
+  onAddEvent: (date: Date) => void;
+}
+
+const DayCard: React.FC<DayCardProps> = ({ date, events, onEventClick, onAddEvent }) => {
+  const totalHours = events.reduce((sum, event) => sum + event.hours, 0);
+  
+  return (
+    <div className="day-card">
+      <div className="day-header">
+        <div className="flex items-center gap-2">
+          {isTomorrow(date) ? 'Tomorrow' : format(date, 'EEE, MMM d')}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddEvent(date);
+            }}
+            className="p-1 rounded-full hover:bg-[--theme-hover-color] transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+        <span className="total-hours">{totalHours} hours total</span>
+      </div>
+      <div className="events-list">
+        {events.map((event) => (
+          <div key={event.id} className="event-item" onClick={() => onEventClick(event)}>
+            <h4>{event.title}</h4>
+            <p>{event.hours} hours - {event.activityType}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   currentDate,
   activities,
@@ -101,7 +141,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   updateTodaySchedule,
 }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [view, setView] = useState<View>("month");
+  const [view, setView] = useState<View>("week");
   const { user } = useUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEventStart, setNewEventStart] = useState<Date | null>(null);
@@ -114,6 +154,8 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
+
+  const next7Days = Array.from({length: 14}, (_, i) => addDays(new Date(), i + 1));
 
   useEffect(() => {
     fetchActivities();
@@ -435,47 +477,59 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   // const HARDCODED_TODAY = new Date('2024-10-30');
   // HARDCODED_TODAY.setHours(0, 0, 0, 0);
 
-  return (
-    <div
-      className="custom-calendar schedule-content"
-      style={{ height: "100%", position: "relative" }}
-      onClick={() => {
-        const tutorialPart2Played = localStorage.getItem("tutorialPart2Played");
-        const tutorialPart3Played = localStorage.getItem("tutorialPart3Played");
+  // Set initial date to tomorrow
+  useEffect(() => {
+    const tomorrow = addDays(new Date(), 1);
+    setDate(tomorrow);
+    onDateChange(tomorrow);
+  }, [onDateChange]);
 
-        if (
-          tutorialPart2Played === "true" &&
-          (!tutorialPart3Played || tutorialPart3Played === "false") &&
-          !localStorage.getItem("tutorialPart3Started")
-        ) {
-          localStorage.setItem("tutorialPart3Started", "true");
-          setTimeout(() => {
-            setRunTutorialPart3(true);
-            localStorage.setItem("tutorialPart3Played", "true");
-          }, 10000);
-        }
-      }}
-    >
-      <Calendar
-        className="custom-calendar"
-        date={date}
-        onNavigate={handleNavigate}
-        view="month"
-        views={["month"]}
-        events={events}
-        localizer={localizer}
-        selectable
-        onSelectSlot={handleSelect}
-        onSelectEvent={handleEventClick}
-        style={{ height: "100%" }}
-        eventPropGetter={eventStyleGetter}
-        length={daysInMonth}
-        endAccessor={(event) => {
-          const eventEnd = moment(event.end);
-          const monthEnd = moment(date).endOf("month");
-          return eventEnd.isAfter(monthEnd) ? monthEnd.toDate() : event.end;
-        }}
-      />
+  const handleAddEvent = (date: Date) => {
+    setNewEventStart(date);
+    setNewEventEnd(date);
+    setIsModalOpen(true);
+  };
+
+  return (
+    <div className="custom-calendar schedule-content">
+      <div className="bg-[--theme-leaguecard-color] rounded-lg p-3 ml-4 mr-4 shadow-sm">
+        <div className="flex justify-center items-center">
+          <div className="text-sm font-medium tracking-wide">
+            {events.some(event => event.activityType === 'Exam' && event.start > new Date()) ? (
+              <>
+                NEXT FULL LENGTH DATE:{' '}
+                <span className="text-[--theme-hover-color] ml-1">
+                  {format(
+                    events
+                      .filter(event => event.activityType === 'Exam' && event.start > new Date())
+                      .sort((a, b) => a.start.getTime() - b.start.getTime())[0].start,
+                    'MMM d, yyyy'
+                  )}
+                </span>
+              </>
+            ) : (
+              'No upcoming full-length exams scheduled'
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="days-container">
+        {next7Days.map((date) => {
+          const dayEvents = events.filter(event => 
+            isSameDay(new Date(event.start), date)
+          );
+          return (
+            <DayCard 
+              key={date.toISOString()} 
+              date={date} 
+              events={dayEvents}
+              onEventClick={handleEventClick}
+              onAddEvent={handleAddEvent}
+            />
+          );
+        })}
+      </div>
+      
       <AddEventModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
