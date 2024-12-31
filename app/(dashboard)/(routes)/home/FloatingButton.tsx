@@ -93,14 +93,20 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
     }
     hoverTimeout.current = window.setTimeout(() => {
       setIsHovered(false);
-    }, 200);
+    }, 300);
   };
 
   const handleTaskListHover = (hovering: boolean) => {
     if (hoverTimeout.current) {
       clearTimeout(hoverTimeout.current);
     }
-    setIsHovered(hovering);
+    if (hovering) {
+      setIsHovered(true);
+    } else {
+      hoverTimeout.current = window.setTimeout(() => {
+        setIsHovered(false);
+      }, 300);
+    }
   };
 
   const buttonPositions: ButtonPosition[] = [

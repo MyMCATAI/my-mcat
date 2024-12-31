@@ -14,7 +14,7 @@ const TutorialContent: React.FC = () => {
             <div className="flex flex-col items-center gap-4">
               <HelpCircle className="w-12 h-12" />
               <p className="text-center">On the top right of every page, click the help button for information on how to use the website.</p>
-              <p className="text-center text-xs">Alternatively, contact us with the buttons below:</p>
+              <p className="text-center text-sm">Alternatively, contact us with the buttons below:</p>
             </div>
             
             <div className="flex flex-col gap-4 w-full">
