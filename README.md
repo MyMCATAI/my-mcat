@@ -84,16 +84,29 @@ See data (this is mostly safe, and will allow you to view and update records one
 npm run "script-name"
 ```
 
-### Todo
-- Implement calendar FE algos
-- Implement calendar BE algos
-- etc.
+
+## How to view/edit content
+
+To update content/questions, etc. we can open prisma studio. to do this run
+
+```
+npx prisma studio
+```
+
+in your terminal.
 
 
+Sometimes we update the backend content system, when this happens, you need to run a quick update to access it. (Also try this if you run into any errors with Prisma)
 
-todo
-- set up cron stuff
-- set up stripe algos
-- set up collecting data
-- workign coin economy
 
+Run
+
+```
+git pull
+```
+Then run:
+```
+npx prisma generate
+```
+
+in your terminal.
