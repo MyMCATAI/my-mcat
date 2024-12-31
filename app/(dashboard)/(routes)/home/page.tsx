@@ -30,6 +30,7 @@ import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { Loader2 } from "lucide-react";
+import { GameOverDialog } from '@/components/home/GameOverDialog';
 
 // Loading component
 const LoadingSpinner = () => (
@@ -450,6 +451,9 @@ const Page = () => {
   return (
     <>
       {(isLoading || isLoadingUserInfo) && <LoadingSpinner />}
+      {!isLoadingUserInfo && userInfo?.score === 0 && (
+        <GameOverDialog userCoinCount={userInfo.score} />
+      )}
       <ContentWrapper>
         <div className="w-3/4 relative overflow-visible">
           <div className="flex justify-between items-center">
