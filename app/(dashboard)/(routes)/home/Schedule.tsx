@@ -129,6 +129,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
+  const [isCoinsLoading, setIsCoinsLoading] = useState(true);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -374,15 +375,17 @@ const Schedule: React.FC<ScheduleProps> = ({
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
+        setIsCoinsLoading(true);
         const response = await fetch("/api/user-info");
         if (response.ok) {
           const data = await response.json();
-
           setUserCoinCount(data.score);
-          setUserStreak(data.streak)
+          setUserStreak(data.streak);
         }
       } catch (error) {
         console.error("Error fetching user coin count:", error);
+      } finally {
+        setIsCoinsLoading(false);
       }
     };
 
@@ -651,6 +654,15 @@ const Schedule: React.FC<ScheduleProps> = ({
     checkAllWelcomeTasksCompleted();
   }, [todayActivities]);
 
+  useEffect(() => {
+    if (userCoinCount === 0) {
+      const purchaseButton = document.querySelector('.purchase-button');
+      if (purchaseButton instanceof HTMLElement) {
+        purchaseButton.click();
+      }
+    }
+  }, [userCoinCount]);
+
   return (
     <div className="grid grid-cols-[28%_72%] h-full relative w-full">
       {/* Left Sidebar */}
@@ -779,31 +791,38 @@ const Schedule: React.FC<ScheduleProps> = ({
         {/* Purchase Button */}
         {showAnalytics && !selectedSubject && (
           <div className="absolute top-6 left-8 z-30">
-            <div className="pointer-events-auto flex items-center gap-2">
-              <PurchaseButton tooltipText="Click to purchase more coins!">
-                <button className="hover:opacity-80 transition-opacity">
-                  <ScoreDisplay score={userCoinCount} />
-                </button>
-              </PurchaseButton>
-              
-              {userCoinCount <= 3 && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <div className="animate-vibrate">
-                        <AlertTriangle 
-                          className="h-6 w-6 text-red-500 drop-shadow-glow" 
-                          strokeWidth={3}
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-red-500 text-white border-red-600">
-                      <p>Low coin balance! Purchase more coins to continue accessing our features.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
+            {!isCoinsLoading && (
+              <div className="pointer-events-auto flex items-center gap-2">
+                <PurchaseButton 
+                  tooltipText="Click to purchase more coins!"
+                  autoOpen={false}
+                  userCoinCount={userCoinCount}
+                  className="purchase-button"
+                >
+                  <button className="hover:opacity-80 transition-opacity">
+                    <ScoreDisplay score={userCoinCount} />
+                  </button>
+                </PurchaseButton>
+                
+                {userCoinCount <= 3 && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <div className="animate-vibrate">
+                          <AlertTriangle 
+                            className="h-6 w-6 text-red-500 drop-shadow-glow" 
+                            strokeWidth={3}
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-red-500 text-white border-red-600">
+                        <p>Low coin balance! Purchase more coins to continue accessing our features.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+            )}
           </div>
         )}
 
