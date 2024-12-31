@@ -16,6 +16,22 @@ export async function getUserEmail(userId: string) {
   }
 }
 
+export async function getUserIdByEmail(email: string) {
+  try {
+    const users = await clerkClient().users.getUserList({
+      emailAddress: [email],
+    });
+    
+    if (users.totalCount>0) {
+      return users.data[0].id // return the id of the first user found
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching user by email:", email);
+    return null;
+  }
+}
+
 async function isBreakDay(userId: string, date: Date): Promise<boolean> {
   // Get most recent study plan
   const studyPlan = await prisma.studyPlan.findFirst({
