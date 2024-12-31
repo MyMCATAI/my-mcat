@@ -26,7 +26,7 @@ export const GameOverDialog: React.FC<GameOverDialogProps> = ({ userCoinCount })
           transition={{ type: "spring", duration: 0.5 }}
           className="flex flex-col items-center gap-6"
         >
-          <div className="relative w-32 h-32 mb-4">
+          <div className="relative w-32 h-32 mb-1">
             <Image
               src="/game-components/CupcakeCoin.gif"
               alt="Empty Coin"
