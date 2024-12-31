@@ -127,7 +127,7 @@
 
 .rbc-event-content {
   color: black !important; /* Ensure text is readable on the colored background */
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Style for selected events */
@@ -209,7 +209,7 @@
 }
 
 .custom-calendar .rbc-agenda-event-cell {
-  font-weight: 400;
+  font-weight: 500;
   color: var(--theme-text-color);
   background-color: transparent;
   padding: 1rem !important;
@@ -353,14 +353,14 @@
 
 /* Make "Tomorrow" more prominent */
 .custom-calendar .rbc-agenda-date-cell:first-of-type {
-  font-weight: 700;
+  font-weight: 800;
   color: var(--theme-text-color);
   font-size: 1.1rem;
 }
 
 /* Style event cells */
 .custom-calendar .rbc-agenda-event-cell {
-  font-weight: 400;
+  font-weight: 500;
   color: var(--theme-text-color);
   background-color: transparent;
   padding: 1rem !important;
