@@ -688,20 +688,20 @@ const Schedule: React.FC<ScheduleProps> = ({
             }
           `}</style>
           {/* Today's Activities Section */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {todayActivities.map((activity) => (
-              <div key={activity.id} className="mb-6">
+              <div key={activity.id} className="space-y-2">
                 <button
-                  className={`w-full py-2 px-3 
+                  className={`w-full py-2.5 px-4 
                     ${
                       isActivityCompleted(activity)
                         ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                        : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
+                        : "bg-[--theme-button-color]"
                     }
-                    border-2 border-[--theme-border-color]
+                    border border-[--theme-border-color]
                     hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
-                    font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
-                    text-sm`}
+                    font-medium rounded-lg transition-all duration-200 relative flex items-center justify-between
+                    text-sm shadow-sm hover:shadow-md transform hover:translate-x-1`}
                   onClick={() => handleButtonClick(activity.activityTitle)}
                 >
                   <span>{activity.activityTitle}</span>
@@ -728,10 +728,15 @@ const Schedule: React.FC<ScheduleProps> = ({
                   )}
                 </button>
 
-                <div className="bg-[--theme-leaguecard-color] shadow-md p-3 mt-2 space-y-2 rounded-lg">
+                <div className="bg-[--theme-leaguecard-color] shadow-sm hover:shadow-md transition-all duration-200 p-4 rounded-lg space-y-2">
                   {activity.tasks && activity.tasks.length > 0 ? (
                     activity.tasks.map((task, index) => (
-                      <div key={index} className="flex items-center gap-2">
+                      <div 
+                        key={index} 
+                        className={`flex items-start gap-3 p-2 rounded transition-colors duration-200 hover:bg-[--theme-button-color] ${
+                          task.completed ? 'opacity-70' : 'opacity-100'
+                        }`}
+                      >
                         <Checkbox
                           id={`task-${activity.id}-${index}`}
                           checked={task.completed}
@@ -742,17 +747,20 @@ const Schedule: React.FC<ScheduleProps> = ({
                               checked as boolean
                             )
                           }
+                          className="mt-0.5"
                         />
                         <label
                           htmlFor={`task-${activity.id}-${index}`}
-                          className="text-sm leading-tight cursor-pointer flex-grow"
+                          className={`text-sm leading-tight cursor-pointer flex-grow ${
+                            task.completed ? 'line-through opacity-70' : ''
+                          }`}
                         >
                           {task.text}
                         </label>
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm italic">No tasks for this activity</p>
+                    <p className="text-sm italic opacity-70">No tasks for this activity</p>
                   )}
                 </div>
               </div>
