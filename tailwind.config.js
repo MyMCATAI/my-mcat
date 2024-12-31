@@ -75,12 +75,15 @@ module.exports = {
       },
       fontSize: {
         root: '13px',
-        sm: '14px',
-        md: '15px',
-        lg: '16px',
-        xl: '17px',
-        '2xl': '18px',
-        '3xl': '20px',
+        xs: '0.75rem',     // 12px
+        '2xs': '0.8125rem', // 13px
+        '3xs': '0.875rem',  // 14px
+        sm: '0.96rem',      // ~14.4px
+        base: '0.96rem',      // 16px
+        lg: '1.125rem',    // 18px
+        xl: '1.25rem',     // 20px
+        '2xl': '1.5rem',   // 24px
+        '3xl': '1.875rem', // 30px
       },
       screens: {
         'sm': '640px',

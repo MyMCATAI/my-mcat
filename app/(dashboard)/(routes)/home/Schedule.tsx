@@ -688,31 +688,31 @@ const Schedule: React.FC<ScheduleProps> = ({
             }
           `}</style>
           {/* Today's Activities Section */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {todayActivities.map((activity) => (
-              <div key={activity.id} className="mb-6">
+              <div key={activity.id} className="space-y-2">
                 <button
-                  className={`w-full py-2 px-3 
+                  className={`w-full py-4 px-5 
                     ${
                       isActivityCompleted(activity)
                         ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                        : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
+                        : "bg-[--theme-button-color]"
                     }
                     border-2 border-[--theme-border-color]
                     hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
-                    font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
-                    text-sm`}
+                    font-normal shadow-md rounded-lg transition relative flex items-center justify-between
+                    text-sm tracking-wide`}
                   onClick={() => handleButtonClick(activity.activityTitle)}
                 >
                   <span>{activity.activityTitle}</span>
                   {isActivityCompleted(activity) ? (
                     <FaCheckCircle
-                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem] opacity-90"
                       style={{ color: "var(--theme-hover-text)" }}
                     />
                   ) : (
                     <svg
-                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem] opacity-90"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -721,17 +721,22 @@ const Schedule: React.FC<ScheduleProps> = ({
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeWidth={2}
+                        strokeWidth={1.5}
                         d="M9 5l7 7-7 7"
                       />
                     </svg>
                   )}
                 </button>
 
-                <div className="bg-[--theme-leaguecard-color] shadow-md p-3 mt-2 space-y-2 rounded-lg">
+                <div className="bg-[--theme-leaguecard-color] shadow-md p-5 mt-3 space-y-3 rounded-lg">
                   {activity.tasks && activity.tasks.length > 0 ? (
                     activity.tasks.map((task, index) => (
-                      <div key={index} className="flex items-center gap-2">
+                      <div 
+                        key={index} 
+                        className={`flex items-center gap-3 ${
+                          task.completed ? 'opacity-70' : 'opacity-100'
+                        }`}
+                      >
                         <Checkbox
                           id={`task-${activity.id}-${index}`}
                           checked={task.completed}
@@ -745,14 +750,16 @@ const Schedule: React.FC<ScheduleProps> = ({
                         />
                         <label
                           htmlFor={`task-${activity.id}-${index}`}
-                          className="text-sm leading-tight cursor-pointer flex-grow"
+                          className={`text- tracking-wide leading-tight cursor-pointer flex-grow ${
+                            task.completed ? 'line-through opacity-70' : ''
+                          }`}
                         >
                           {task.text}
                         </label>
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm italic">No tasks for this activity</p>
+                    <p className="text-sm tracking-wide italic font-normal">No tasks for this activity</p>
                   )}
                 </div>
               </div>

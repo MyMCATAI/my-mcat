@@ -127,7 +127,7 @@
 
 .rbc-event-content {
   color: black !important; /* Ensure text is readable on the colored background */
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Style for selected events */
@@ -209,7 +209,7 @@
 }
 
 .custom-calendar .rbc-agenda-event-cell {
-  font-weight: 400;
+  font-weight: 500;
   color: var(--theme-text-color);
   background-color: transparent;
   padding: 1rem !important;
@@ -353,14 +353,14 @@
 
 /* Make "Tomorrow" more prominent */
 .custom-calendar .rbc-agenda-date-cell:first-of-type {
-  font-weight: 700;
+  font-weight: 800;
   color: var(--theme-text-color);
   font-size: 1.1rem;
 }
 
 /* Style event cells */
 .custom-calendar .rbc-agenda-event-cell {
-  font-weight: 400;
+  font-weight: 500;
   color: var(--theme-text-color);
   background-color: transparent;
   padding: 1rem !important;
@@ -466,20 +466,20 @@
 }
 
 .agenda-day {
-  font-size: 0.9rem;
+  font-size: 1.0rem;
   font-weight: 500;
   color: color-mix(in srgb, var(--theme-text-color) 90%, transparent);
 }
 
 .agenda-date {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   color: color-mix(in srgb, var(--theme-text-color) 45%, transparent);
 }
 
 .days-container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 2rem;
   padding: 1rem;
   height: 100%;
   overflow-y: auto;
@@ -491,6 +491,7 @@
   padding: 1rem;
   transition: all 0.3s;
   cursor: pointer;
+  box-shadow: 0 4px 6px -3px rgb(0 0 0 / 0.1), 0 4px 4px -4px rgb(0 0 0 / 0.1);
 }
 
 .day-card:hover {
