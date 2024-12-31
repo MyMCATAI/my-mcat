@@ -4,6 +4,7 @@ import { PurchaseButton } from "@/components/purchase-button";
 import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { GiWallet } from 'react-icons/gi';
 
 interface GameOverDialogProps {
   userCoinCount: number;
@@ -15,12 +16,12 @@ export const GameOverDialog: React.FC<GameOverDialogProps> = ({ userCoinCount })
   return (
     <Dialog open={true}>
       <DialogOverlay 
-        className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100]" 
+        className="fixed inset-0 bg-black/95 backdrop-blur-sm z-[100]" 
       />
       <DialogContent 
         className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-        bg-[--theme-leaguecard-color] p-8 rounded-lg shadow-xl max-w-md w-full z-[101]
-        border-2 border-[--theme-border-color]"
+        bg-black/95 p-8 rounded-lg shadow-xl max-w-md w-full z-[101]
+        border-2 border-transparent"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -30,35 +31,25 @@ export const GameOverDialog: React.FC<GameOverDialogProps> = ({ userCoinCount })
           transition={{ type: "spring", duration: 0.5 }}
           className="flex flex-col items-center gap-6"
         >
-          <div className="relative w-32 h-32 mb-1">
-            <Image
-              src="/game-components/CupcakeCoin.gif"
-              alt="Empty Coin"
-              layout="fill"
-              objectFit="contain"
-              className="opacity-50"
-            />
-          </div>
-
-          <motion.h2 
-            className="text-4xl font-bold text-[--theme-text-color]"
-            animate={{ 
-              scale: [1, 1.2, 1],
-              color: ['#ff0000', '#ffffff', '#ff0000'] 
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
+          <motion.div 
+            className="text-center"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", duration: 0.8 }}
           >
-            GAME OVER!
-          </motion.h2>
-          
-          <p className="text-center text-[--theme-text-color] text-lg">
-            {"You've run out of coins! Purchase more to continue your MCAT journey."}
+            <h1 className="text-7xl font-bold text-red-500">
+              UH OH!
+            </h1>
+          </motion.div>
+
+          <p className="text-center text-white text-lg">
+            {"You ran out of coins. We believe that you can do better. Want to try again?"}
           </p>
 
           <div className="flex flex-col gap-4 w-full max-w-sm">
             <PurchaseButton 
               text="Purchase More Coins"
-              className="w-full py-4 text-lg font-bold bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color]"
+              className="w-full py-4 text-lg font-bold bg-red-500 hover:bg-red-600 text-white"
               tooltipText="Purchase coins to continue your journey"
               showMDPremium={true}
               userCoinCount={userCoinCount}
@@ -66,7 +57,7 @@ export const GameOverDialog: React.FC<GameOverDialogProps> = ({ userCoinCount })
             >
               <Button 
                 onClick={() => setShowPurchaseModal(true)}
-                className="w-full py-4 text-lg font-bold bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color]"
+                className="w-full py-4 text-lg font-bold bg-red-500 hover:bg-red-600 text-white"
               >
                 Purchase More Coins
               </Button>
