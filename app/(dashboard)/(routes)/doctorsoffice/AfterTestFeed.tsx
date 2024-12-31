@@ -13,6 +13,7 @@ import ChatBot from "@/components/chatbot/ChatBotFlashcard";
 import { useUser } from "@clerk/nextjs";
 import { GraduationCap, Cat } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 
 interface LargeDialogProps {
   open: boolean;
@@ -708,6 +709,37 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
         levelUpSound.current?.play();
       }
     }
+  }, [open, userResponses]);
+
+  useEffect(() => {
+    const handleCoinReward = async () => {
+      if (open) {
+        const mcqResponses = userResponses.filter(r => r.question.types === 'normal');
+        const mcqCorrect = mcqResponses.filter(r => r.isCorrect).length;
+        const mcqTotal = mcqResponses.length;
+        const mcqPercentage = mcqTotal > 0 ? Math.round((mcqCorrect / mcqTotal) * 100) : 0;
+        
+        if (mcqTotal > 0 && mcqPercentage >= 80) {
+          const response = await fetch("/api/user-info", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              incrementScore: true
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to increment coin");
+          }
+
+          toast.success("You earned 1 coin for 80%+ correct MCQs!");
+        } else if (mcqTotal > 0) {
+          toast.error(`You need 80% correct MCQs to earn a coin. You got ${mcqPercentage.toFixed(1)}%`);
+        }
+      }
+    };
+
+    handleCoinReward();
   }, [open, userResponses]);
 
   const renderInitialScore = () => {
