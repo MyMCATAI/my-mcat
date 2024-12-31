@@ -38,7 +38,7 @@ export const GameOverDialog: React.FC<GameOverDialogProps> = ({ userCoinCount })
             transition={{ type: "spring", duration: 0.8 }}
           >
             <h1 className="text-7xl font-bold text-red-500">
-              MEOWTCH!
+              MEOWCH!
             </h1>
           </motion.div>
 

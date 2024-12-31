@@ -710,7 +710,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                         ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
                         : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
                     }
-                    border-2 border-[--theme-border-color]
+                    border border-[--theme-border-color]
                     hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
                     font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
                     text-sm`}
