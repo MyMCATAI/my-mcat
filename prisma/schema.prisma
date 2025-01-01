@@ -179,25 +179,26 @@ model StudyPlan {
 }
 
 model CalendarActivity {
-  id            String    @id @default(cuid())
+  id            String         @id @default(cuid())
   userId        String
   studyPlanId   String
   categoryId    String?
-  activityText  String    @db.Text
+  activityText  String        @db.Text
   activityTitle String
   hours         Float
   activityType  String
   link          String?
   scheduledDate DateTime
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  status        String    @default("Not Started")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  status        String        @default("Not Started")
   contentId     String?
   tasks         Json?
-  source        String    @default("")
-  studyPlan     StudyPlan @relation(fields: [studyPlanId], references: [id])
-  category      Category? @relation(fields: [categoryId], references: [id])
-  content       Content?  @relation(fields: [contentId], references: [id])
+  source        String        @default("")
+  studyPlan     StudyPlan     @relation(fields: [studyPlanId], references: [id])
+  category      Category?     @relation(fields: [categoryId], references: [id])
+  content       Content?      @relation(fields: [contentId], references: [id])
+  fullLengthExam FullLengthExam?
 
   @@index([userId])
   @@index([studyPlanId])
@@ -277,17 +278,41 @@ model Referral {
 }
 
 model DataPulse {
-  id        String   @id @default(cuid())
-  name      String
-  level     String   @default("conceptCategory")
-  weight    Float    @default(1)
-  source    String   @default("")
-  notes     String?  @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  negative  Int      @default(0)
-  positive  Int      @default(0)
-  userId    String
+  id                    String          @id @default(cuid())
+  name                  String
+  level                 String          @default("conceptCategory")
+  weight                Float           @default(1)
+  source                String          @default("")
+  notes                 String?         @db.Text
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  negative              Int             @default(0)
+  positive              Int             @default(0)
+  userId                String
+  questionText          String?         @db.Text
+  answerText            String?         @db.Text
+  answerExplanation     String?         @db.Text
+  originalThoughtProcess String?        @db.Text
+  correctedThoughtProcess String?       @db.Text
+  errorType             String?
+  fullLengthExamId      String?
+  fullLengthExam        FullLengthExam? @relation(fields: [fullLengthExamId], references: [id])
+
+  @@index([fullLengthExamId])
+}
+
+model FullLengthExam {
+  id                 String             @id @default(cuid())
+  userId             String
+  title              String
+  dataPulses         DataPulse[]
+  calendarActivityId String?            @unique
+  calendarActivity   CalendarActivity?  @relation(fields: [calendarActivityId], references: [id])
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([calendarActivityId])
 }
 
 model UserActivity {
