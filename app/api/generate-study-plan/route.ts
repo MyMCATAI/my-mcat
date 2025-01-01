@@ -237,6 +237,35 @@ async function generateStudySchedule(
   }
 
   let examSchedule: { date: Date; examName: string }[] = [];
+
+  // Helper function to check if a date has enough spacing from existing exams
+  function hasEnoughSpacing(date: Date, schedule: { date: Date; examName: string }[]): boolean {
+    return schedule.every(exam => {
+      const daysBetween = Math.abs(
+        Math.floor((date.getTime() - exam.date.getTime()) / (1000 * 60 * 60 * 24))
+      );
+      return daysBetween >= MINIMUM_DAYS_BETWEEN_EXAMS;
+    });
+  }
+
+  // Helper function to find next valid date
+  function findNextValidDate(startFrom: Date, schedule: { date: Date; examName: string }[]): Date | null {
+    let currentDate = new Date(startFrom);
+    let attempts = 0;
+    const maxAttempts = 30; // Prevent infinite loop
+
+    while (attempts < maxAttempts) {
+      if (
+        fullLengthDays.includes(daysOfWeek[currentDate.getDay()]) &&
+        hasEnoughSpacing(currentDate, schedule)
+      ) {
+        return new Date(currentDate);
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+      attempts++;
+    }
+    return null;
+  }
   
   if (fullLengthDays.length > 0) {
     // Calculate study period boundaries
