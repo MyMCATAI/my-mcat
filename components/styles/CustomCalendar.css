@@ -665,3 +665,59 @@
   .react-calendar__navigation__arrow {
   font-size: 12px;
   }  
+
+/* Calendar base styles */
+.react-calendar {
+  background: transparent !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid color-mix(in srgb, var(--theme-border-color) 15%, transparent);
+  border-radius: 0.5rem;
+}
+
+/* Calendar tile (day) styles */
+.react-calendar__tile {
+  color: var(--theme-text-color) !important;
+  background: transparent !important;
+  transition: all 0.2s ease;
+}
+
+/* Today's date highlight */
+.react-calendar__tile--now {
+  background: color-mix(in srgb, var(--theme-hover-color) 20%, transparent) !important;
+  color: var(--theme-text-color) !important;
+  font-weight: 600;
+}
+
+/* Selected date styles */
+.react-calendar__tile--active {
+  background: color-mix(in srgb, var(--theme-hover-color) 40%, transparent) !important;
+  color: var(--theme-text-color) !important;
+  font-weight: 600;
+}
+
+/* Navigation buttons and month/year label */
+.react-calendar__navigation button {
+  color: var(--theme-text-color) !important;
+  transition: all 0.2s ease;
+}
+
+.react-calendar__navigation__label {
+  color: var(--theme-text-color) !important;
+  font-weight: 600;
+}
+
+/* Month and weekday headers */
+.react-calendar__month-view__weekdays {
+  color: color-mix(in srgb, var(--theme-text-color) 75%, transparent) !important;
+  font-size: 0.9rem;
+}
+
+/* Hover effects */
+.react-calendar__tile:hover {
+  background: color-mix(in srgb, var(--theme-hover-color) 15%, transparent) !important;
+  transform: scale(1.1);
+}
+
+.react-calendar__navigation button:hover {
+  background: color-mix(in srgb, var(--theme-hover-color) 15%, transparent) !important;
+}  
