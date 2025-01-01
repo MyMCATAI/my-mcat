@@ -127,7 +127,7 @@
 
 .rbc-event-content {
   color: black !important; /* Ensure text is readable on the colored background */
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Style for selected events */
@@ -154,3 +154,570 @@
   color: var(--theme-hover-text);
   outline: none;
 }
+
+.custom-calendar .rbc-agenda-view {
+  margin: 0;
+  padding: 1.5rem;
+  background: transparent;
+  border-radius: 1rem;
+}
+
+/* Hide all time-related elements */
+.custom-calendar .rbc-agenda-time-cell,
+.custom-calendar .rbc-header.rbc-time,
+.custom-calendar th.rbc-header {
+  display: none !important;
+}
+
+.custom-calendar .rbc-agenda-table {
+  border: none;
+  width: 100%;
+  border-radius: 0.5rem;
+  background-color: transparent;
+}
+
+.custom-calendar .rbc-agenda-date-cell,
+.custom-calendar .rbc-agenda-event-cell {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-border-color) 15%, transparent);
+  transition: all 0.2s ease-in-out;
+}
+
+.custom-calendar .rbc-agenda-date-cell {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--theme-text-color) 85%, transparent);
+  background-color: transparent;
+  width: 20%;
+  font-size: 1rem;
+  border-right: none;
+  padding: 1rem !important;
+  white-space: pre-line !important;
+}
+
+.custom-calendar .rbc-agenda-date-cell::before {
+  content: attr(data-day);
+  font-size: 1rem;
+  display: block;
+}
+
+.custom-calendar .rbc-agenda-date-cell::after {
+  content: attr(data-date);
+  font-size: 0.75rem;
+  color: var(--theme-hover-color);
+  opacity: 0.8;
+  display: block;
+}
+
+.custom-calendar .rbc-agenda-event-cell {
+  font-weight: 500;
+  color: var(--theme-text-color);
+  background-color: transparent;
+  padding: 1rem !important;
+  font-size: 1rem;
+}
+
+/* Remove thead completely since we don't need headers */
+.custom-calendar .rbc-agenda-table thead {
+  display: none;
+}
+
+/* Remove borders from the last row */
+.custom-calendar .rbc-agenda-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Hover effect on rows */
+.custom-calendar .rbc-agenda-table tbody tr {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Remove the row hover effect */
+.custom-calendar .rbc-agenda-table tbody tr:hover {
+  background-color: transparent;
+}
+
+/* Apply hover effect only to event cell */
+.custom-calendar .rbc-agenda-table tbody tr .rbc-agenda-event-cell {
+  transition: all 0.2s ease-in-out;
+}
+
+.custom-calendar .rbc-agenda-table tbody tr .rbc-agenda-event-cell:hover {
+  cursor: pointer;
+  color: var(--theme-hover-color);
+  transform: translateX(0.25rem);
+}
+
+/* Remove the date cell hover effect */
+.custom-calendar .rbc-agenda-table tbody tr:hover .rbc-agenda-date-cell {
+  color: inherit;
+}
+
+/* Make the date column sticky */
+.custom-calendar .rbc-agenda-date-cell {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+/* Style the events to look more like modern UI items */
+.custom-calendar .rbc-event {
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0.5rem 1rem;
+  margin: 0.25rem 0;
+  color: var(--theme-text-color);
+  transition: all 0.2s ease-in-out;
+}
+
+.custom-calendar .rbc-event:hover {
+  transform: translateX(0.25rem);
+}
+
+/* Add these new styles */
+.rbc-agenda-view {
+  background-color: transparent !important;
+}
+
+.rbc-agenda-view table {
+  background-color: transparent !important;
+}
+
+.rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+  background-color: transparent !important;
+}
+
+.rbc-agenda-view table.rbc-agenda-table tbody > tr:hover > td {
+  background-color: transparent !important;
+}
+
+/* Override any default backgrounds */
+.rbc-calendar, 
+.rbc-agenda-content tr {
+  background-color: transparent !important;
+}
+
+/* Override default borders */
+.rbc-calendar,
+.rbc-agenda-view,
+.rbc-agenda-content {
+  border: none !important;
+}
+
+.rbc-agenda-table {
+  border: none !important;
+}
+
+.rbc-agenda-table td {
+  border: none !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-border-color) 15%, transparent) !important;
+}
+
+.rbc-agenda-table tr:last-child td {
+  border-bottom: none !important;
+}
+
+/* Hover effect */
+.rbc-agenda-view table.rbc-agenda-table tbody > tr:hover > td {
+  background-color: transparent !important;
+}
+
+/* Hide default scrollbars */
+.rbc-calendar *::-webkit-scrollbar {
+  display: none;
+}
+
+.rbc-calendar * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Add themed scrollbar to specific elements that need it */
+.rbc-agenda-content {
+  scrollbar-width: thin;
+  -ms-overflow-style: auto;
+}
+
+.rbc-agenda-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.rbc-agenda-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rbc-agenda-content::-webkit-scrollbar-thumb {
+  background-color: var(--theme-hover-color);
+  border-radius: 3px;
+}
+
+/* Make "Tomorrow" more prominent */
+.custom-calendar .rbc-agenda-date-cell:first-of-type {
+  font-weight: 800;
+  color: var(--theme-text-color);
+  font-size: 1.1rem;
+}
+
+/* Style event cells */
+.custom-calendar .rbc-agenda-event-cell {
+  font-weight: 500;
+  color: var(--theme-text-color);
+  background-color: transparent;
+  padding: 1rem !important;
+  font-size: 1rem;
+}
+
+/* Subtle row separators */
+.custom-calendar .rbc-agenda-date-cell,
+.custom-calendar .rbc-agenda-event-cell {
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-border-color) 8%, transparent);
+}
+
+/* More subtle hover effect */
+.custom-calendar .rbc-agenda-table tbody tr:hover {
+  background-color: transparent;
+}
+
+/* Increase spacing between rows */
+.custom-calendar .rbc-agenda-table tbody tr {
+  line-height: 1.4;
+}
+
+/* Navigation buttons */
+.rbc-btn-group button {
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* Date cell styling for day and date display */
+.custom-calendar .rbc-agenda-date-cell {
+  white-space: pre-line !important;
+  line-height: 1.1;
+}
+
+/* Style for the day name (first line) */
+.custom-calendar .rbc-agenda-date-cell:first-line {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--theme-text-color) 90%, transparent);
+}
+
+/* Style for the date text (MMM D) */
+.custom-calendar .rbc-agenda-date-cell {
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--theme-text-color) 45%, transparent);
+  line-height: 1.4;
+}
+
+/* Make "Tomorrow" more prominent but keep it clean */
+.custom-calendar .rbc-agenda-date-cell:first-of-type {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--theme-hover-color);
+}
+
+.agenda-day {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--theme-text-color) 90%, transparent);
+}
+
+.agenda-date {
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--theme-text-color) 45%, transparent);
+}
+
+/* Event cell styling */
+.custom-calendar .rbc-agenda-event-cell {
+  font-weight: 400;
+  color: color-mix(in srgb, var(--theme-text-color) 85%, transparent);
+  background-color: transparent;
+  padding: 1rem !important;
+  font-size: 0.9rem;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hover effect for event cells */
+.custom-calendar .rbc-agenda-table tbody tr .rbc-agenda-event-cell:hover {
+  background-color: transparent;
+  color: var(--theme-hover-color);
+  transform: translateX(0.25rem);
+}
+
+/* Subtle row separators */
+.custom-calendar .rbc-agenda-date-cell,
+.custom-calendar .rbc-agenda-event-cell {
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-border-color) 12%, transparent);
+}
+
+/* Background colors */
+.rbc-agenda-view {
+  background-color: transparent !important;
+}
+
+.rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+  background-color: transparent !important;
+}
+
+/* Hover states */
+.rbc-agenda-view table.rbc-agenda-table tbody > tr:hover > td {
+  background-color: transparent !important;
+}
+
+.agenda-day {
+  font-size: 1.0rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--theme-text-color) 90%, transparent);
+}
+
+.agenda-date {
+  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--theme-text-color) 45%, transparent);
+}
+
+.days-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.day-card {
+  background: var(--theme-leaguecard-color);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  transition: all 0.3s;
+  cursor: pointer;
+  box-shadow: 0 4px 6px -3px rgb(0 0 0 / 0.1), 0 4px 4px -4px rgb(0 0 0 / 0.1);
+}
+
+.day-card:hover {
+  transform: scale(1.02);
+  box-shadow: var(--theme-button-boxShadow-hover);
+}
+
+.day-card:hover .event-item {
+  opacity: 1;
+}
+
+.day-card:hover .day-header {
+  opacity: 1;
+}
+
+.day-card:hover .event-item:hover h4,
+.day-card:hover .event-item:hover p {
+  color: var(--theme-hover-color);
+}
+
+.day-header {
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.total-hours {
+  color: color-mix(in srgb, var(--theme-text-color) 45%, transparent);
+  font-size: 0.7rem;
+}
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.event-item {
+  padding: 0.75rem;
+  background: var(--theme-button-color);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  opacity: 0.7;
+}
+
+.event-item h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--theme-text-color) 85%, transparent);
+}
+
+.event-item:hover {
+  color: var(--theme-hover-color);
+  opacity: 1;
+}
+
+.event-item p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--theme-text-color) 45%, transparent);
+}
+
+/* Add this new class */
+.calendar-container {
+  position: relative;
+  height: 100%;
+}
+
+.calendar-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 5rem;
+  background: linear-gradient(to bottom, 
+    rgba(0, 0, 0, 0),
+    color-mix(in srgb, var(--theme-gradient-end) 70%, transparent)
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+.exam-day {
+  background: color-mix(in srgb, var(--theme-leaguecard-color) 97%, var(--theme-emphasis-color));
+  border-left: 0.25rem solid var(--theme-emphasis-color);
+  padding-left: 0.75rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.exam-day:hover {
+  background: color-mix(in srgb, var(--theme-leaguecard-color) 95%, var(--theme-emphasis-color));
+  transform: scale(1.02) translateX(0.25rem);
+}
+
+.exam-day .day-header {
+  color: var(--theme-emphasis-color);
+  font-weight: 600;
+}
+
+.exam-day .total-hours {
+  color: color-mix(in srgb, var(--theme-emphasis-color) 75%, transparent);
+}
+
+.break-only-day {
+  opacity: 0.5;
+  background: color-mix(in srgb, var(--theme-leaguecard-color) 50%, transparent);
+  filter: grayscale(0.7);
+  transform: scale(0.98);
+}
+
+.break-only-day:hover {
+  opacity: 0.7;
+  transform: scale(1.0);
+  filter: grayscale(0.3);
+}
+
+.break-only-day .day-header {
+  opacity: 0.5;
+}
+
+.break-only-day .event-item {
+  background: color-mix(in srgb, var(--theme-button-color) 70%, transparent);
+}
+
+.break-only-day .event-item:hover {
+  background: var(--theme-button-color);
+  opacity: 0.8;
+}
+
+.break-only-day .total-hours {
+  opacity: 0.5;
+}
+
+.react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  }
+  
+  .react-calendar__navigation button {
+  min-width: 24px;
+  background: none;
+  font-size: 12px;
+  padding: 2px;
+  }
+  
+  .react-calendar__navigation__label {
+  flex-grow: 1;
+  font-weight: bold;
+  font-size: 18px;
+  color: #000;
+  text-align: center;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 4px;
+  }
+  
+  .react-calendar__navigation__arrow {
+  font-size: 12px;
+  }  
+
+/* Calendar base styles */
+.react-calendar {
+  background: transparent !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid color-mix(in srgb, var(--theme-border-color) 15%, transparent);
+  border-radius: 0.5rem;
+}
+
+/* Calendar tile (day) styles */
+.react-calendar__tile {
+  color: var(--theme-text-color) !important;
+  background: transparent !important;
+  transition: all 0.2s ease;
+}
+
+/* Today's date highlight */
+.react-calendar__tile--now {
+  background: color-mix(in srgb, var(--theme-hover-color) 20%, transparent) !important;
+  color: var(--theme-text-color) !important;
+  font-weight: 600;
+}
+
+/* Selected date styles */
+.react-calendar__tile--active {
+  background: color-mix(in srgb, var(--theme-hover-color) 40%, transparent) !important;
+  color: var(--theme-text-color) !important;
+  font-weight: 600;
+}
+
+/* Navigation buttons and month/year label */
+.react-calendar__navigation button {
+  color: var(--theme-text-color) !important;
+  transition: all 0.2s ease;
+}
+
+.react-calendar__navigation__label {
+  color: var(--theme-text-color) !important;
+  font-weight: 600;
+}
+
+/* Month and weekday headers */
+.react-calendar__month-view__weekdays {
+  color: color-mix(in srgb, var(--theme-text-color) 75%, transparent) !important;
+  font-size: 0.9rem;
+}
+
+/* Hover effects */
+.react-calendar__tile:hover {
+  background: color-mix(in srgb, var(--theme-hover-color) 15%, transparent) !important;
+  transform: scale(1.1);
+}
+
+.react-calendar__navigation button:hover {
+  background: color-mix(in srgb, var(--theme-hover-color) 15%, transparent) !important;
+}  

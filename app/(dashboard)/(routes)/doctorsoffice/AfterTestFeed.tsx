@@ -13,6 +13,7 @@ import ChatBot from "@/components/chatbot/ChatBotFlashcard";
 import { useUser } from "@clerk/nextjs";
 import { GraduationCap, Cat } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 
 interface LargeDialogProps {
   open: boolean;
@@ -245,7 +246,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
           <li>No missed questions!</li>
         ) : (
           <>
-            {Object.entries(mostMissed).slice(0, 4).map(([concept, [correct, incorrect, total]], index) => (
+            {Object.entries(mostMissed).slice(0, 3).map(([concept, [correct, incorrect, total]], index) => (
               <li key={concept}>{concept} ({incorrect}/{total})</li>
             ))}
           </>
@@ -258,7 +259,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
           <li>No mastered questions!</li>
         ) : (
           <>
-            {Object.entries(mostCorrect).slice(0, 4).map(([concept, [correct, incorrect, total]], index) => (
+            {Object.entries(mostCorrect).slice(0, 3).map(([concept, [correct, incorrect, total]], index) => (
               <li key={concept}>{concept} ({correct}/{total})</li>
             ))}
           </>
@@ -710,6 +711,37 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     }
   }, [open, userResponses]);
 
+  useEffect(() => {
+    const handleCoinReward = async () => {
+      if (open) {
+        const mcqResponses = userResponses.filter(r => r.question.types === 'normal');
+        const mcqCorrect = mcqResponses.filter(r => r.isCorrect).length;
+        const mcqTotal = mcqResponses.length;
+        const mcqPercentage = mcqTotal > 0 ? Math.round((mcqCorrect / mcqTotal) * 100) : 0;
+        
+        if (mcqTotal > 0 && mcqPercentage >= 80) {
+          const response = await fetch("/api/user-info", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              incrementScore: true
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to increment coin");
+          }
+
+          toast.success("You earned 1 coin for 80%+ correct MCQs!");
+        } else if (mcqTotal > 0) {
+          toast.error(`You need 80% correct MCQs to earn a coin. You got ${mcqPercentage.toFixed(1)}%`);
+        }
+      }
+    };
+
+    handleCoinReward();
+  }, [open, userResponses]);
+
   const renderInitialScore = () => {
     const mcqResponses = userResponses.filter(r => r.question.types === 'normal');
     const mcqCorrect = mcqResponses.filter(r => r.isCorrect).length;
@@ -717,6 +749,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     const mcqPercentage = mcqTotal > 0 ? Math.round((mcqCorrect / mcqTotal) * 100) : 0;
     
     return (
+      
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -745,6 +778,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
           )}
         </motion.div>
 
+ 
         {/* Top Section - Score and Review */}
         <div className="flex gap-6">
           {/* Left - Review Card */}
@@ -853,7 +887,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
               </div>
             </div>
             <div className="space-y-3">
-              {Object.entries(mostMissed).slice(0, 4).map(([concept, [_, incorrect, total]], index) => (
+              {Object.entries(mostMissed).slice(0, 2).map(([concept, [_, incorrect, total]], index) => (
                 <div key={concept} 
                   className="flex justify-between items-center p-3 rounded-lg bg-[--theme-doctorsoffice-accent] bg-opacity-10 hover:bg-opacity-20 transition-all"
                 >
@@ -878,7 +912,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
               </span>
             </h3>
             <div className="space-y-3">
-              {Object.entries(mostCorrect).slice(0, 4).map(([concept, [correct, _, total]], index) => (
+              {Object.entries(mostCorrect).slice(0, 2).map(([concept, [correct, _, total]], index) => (
                 <div key={concept} 
                   className="flex justify-between items-center p-3 rounded-lg bg-[--theme-hover-color] bg-opacity-10 hover:bg-opacity-20 transition-all"
                 >
@@ -890,8 +924,8 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
           </motion.div>
         </div>
 
-        {/* Continue Button */}
-        <motion.div
+       {/* Continue Button */}
+       <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}

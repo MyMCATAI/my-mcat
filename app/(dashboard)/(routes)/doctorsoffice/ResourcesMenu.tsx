@@ -110,9 +110,10 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
       try {
         const response = await fetch('/api/global-leaderboard');
         const data = await response.json();
-        setGlobalLeaderboard(data);
+        setGlobalLeaderboard(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching leaderboard:', error);
+        setGlobalLeaderboard([]);
       }
     };
     fetchLeaderboard();

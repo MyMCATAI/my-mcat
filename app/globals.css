@@ -198,8 +198,8 @@ body.theme-sunsetCity * {
     --theme-adaptive-tutoring-color: #001226;
     --theme-adaptive-tutoring-boxShadow: 0 0 8px 2px rgba(0, 123, 255, 0.5);
     --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 4px rgba(0, 123, 255, 0.8);
-    --theme-calendar-color: #87f8a0; /* Bright cyber green to contrast with blue */
-    --theme-button-color: #001a3ae6; /* Slightly lighter than leaguecard-color: #000e2de6 */
+    --theme-emphasis-color: #6af8e8; /* Bright cyber green to contrast with blue */
+    --theme-button-color: #011c3ce6; /* Slightly lighter than leaguecard-color: #000e2de6 */
     --theme-button-boxShadow: 0 0 2px 1px rgba(0, 123, 255, 0.5);
     --theme-button-boxShadow-hover: 0 0 9px 3px rgba(0, 123, 255, 0.7);
   }
@@ -308,7 +308,7 @@ body.theme-sunsetCity * {
   --theme-gradient-endstreak: #b479ab;
   --theme-text-color: #4a0e37; /* Darker pink for better contrast */
   --theme-svg-color: #4a0e37; /* Matching text color */
-  --theme-hover-color: #c17891; /* Pale violet red */
+  --theme-hover-color: #c17891;
   --theme-botchatbox-color: #dcdcdc; /* Transparent pale violet red */
   --theme-hover-text: #ffffff;
   --theme-border-color: rgba(184, 84, 117, 0.4); /* Subtle pink */
@@ -324,8 +324,8 @@ body.theme-sunsetCity * {
   --theme-adaptive-tutoring-boxShadow: 0 0 5px 2px rgba(255, 0, 89, 0.5);
   --theme-adaptive-tutoring-boxShadow-hover: 0 0 10px 4px rgba(255, 0, 89, 0.8);
   --theme-button-boxShadow: 0 0 2px 1px rgba(255, 0, 89, 0.4);
-  --theme-calendar-color: #FCB5AC; /* Vibrant pink to contrast with soft pink */
-  --theme-button-color: #fff5f8e6; /* Slightly darker than leaguecard-color: #ffffffe6 */
+  --theme-emphasis-color: #b41500; /* Vibrant pink to contrast with soft pink */
+  --theme-button-color: #fbf0f3e6; /* Slightly darker than leaguecard-color: #ffffffe6 */
   --theme-button-boxShadow-hover: 0 0 8px 2px rgba(255, 0, 89, 0.6);
 }
 
@@ -363,7 +363,7 @@ body.theme-sunsetCity * {
   --theme-adaptive-tutoring-boxShadow: 0 0 10px 1px rgba(255, 99, 71, 0.5);
   --theme-button-boxShadow: 0 0 2px 1px rgba(255, 99, 71, 0.3);
   --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 5px rgba(255, 99, 71, 0.8);
-  --theme-calendar-color: #ff9f7d; /* Changed from #ffeef6 to a warm coral color that matches the sunset theme */
+  --theme-emphasis-color: #f8a789; /* Changed from #ffeef6 to a warm coral color that matches the sunset theme */
   --theme-button-color: #261741; /* Slightly lighter than leaguecard-color: #231639 */
   --theme-button-boxShadow-hover: 0 0 8px 3px rgba(255, 99, 71, 0.6);
 }
@@ -653,7 +653,7 @@ body {
   --theme-botchatbox-color: #e8e9ea;
   --theme-hover-text: #ffffff;
   --theme-border-color: rgba(76, 181, 230, 0.4); /* Subtle blue */
-  --theme-leaguecard-color: rgba(255, 255, 255, 0.9);
+  --theme-leaguecard-color: rgba(231, 250, 251, 0.9);
   --theme-leaguecard-accent: rgba(184, 225, 248, 0.449);
   --theme-navbutton-color: #1e81b0;
   --svg-invert: 0;
@@ -664,8 +664,8 @@ body {
   --theme-adaptive-tutoring-color: #f0f9fc;
   --theme-adaptive-tutoring-boxShadow: 0 0 8px 3px rgba(63, 194, 255, 0.5);
   --theme-adaptive-tutoring-boxShadow-hover: 0 0 11px 5px rgba(76, 181, 230, 0.8);
-  --theme-calendar-color: #B2E0D0; /* Warm orange to contrast with blue */
-  --theme-button-color: rgba(240, 245, 247, 0.9); /* Slightly lighter than leaguecard-color: rgba(255, 255, 255, 0.9) */
+  --theme-emphasis-color: #007c85d1; /* Warm orange to contrast with blue */
+  --theme-button-color: rgba(252, 254, 255, 0.9); /* Slightly lighter than leaguecard-color: rgba(255, 255, 255, 0.9) */
   --theme-button-boxShadow: 0 0 4px 3px rgba(66, 163, 208, 0.497); /* Increased spread/blur, reduced alpha by 18% from 0.5 */
   --theme-button-boxShadow-hover: 0 0 8px 4px rgba(4, 149, 216, 0.595); /* Increased spread/blur, reduced alpha by 18% from 0.6 */
 }
