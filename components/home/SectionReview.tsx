@@ -2,20 +2,30 @@ import React, { useState } from 'react';
 import { ArrowLeft, Plus, Trash2, Edit2, Flag, XCircle, CheckCircle2, BookOpen } from 'lucide-react';
 import QuestionAddModal from './QuestionAddModal';
 
+type QuestionStatus = 'wrong' | 'flagged' | 'correct';
+
 interface Question {
   id: string;
   number: string;
   category: string;
   mistake: string;
   improvement: string;
-  status: 'wrong' | 'flagged' | 'correct';
+  status: QuestionStatus;
+}
+
+interface Section {
+  name: string;
+  score: number;
+}
+
+interface TopicStats {
+  total: number;
+  wrong: number;
+  flagged: number;
 }
 
 interface SectionReviewProps {
-  section: {
-    name: string;
-    score: number;
-  };
+  section: Section;
   onBack: () => void;
   isCompleted: boolean;
   onComplete: () => void;
@@ -34,7 +44,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
   const flaggedCount = listOfQuestions.filter(q => q.status === 'flagged').length;
   const wrongCount = listOfQuestions.filter(q => q.status === 'wrong').length;
 
-  const topicStats = listOfQuestions.reduce((acc, question) => {
+  const topicStats = listOfQuestions.reduce<Record<string, TopicStats>>((acc, question) => {
     if (!question.category) return acc;
     
     if (!acc[question.category]) {
@@ -50,15 +60,23 @@ const SectionReview: React.FC<SectionReviewProps> = ({
     if (question.status === 'flagged') acc[question.category].flagged += 1;
     
     return acc;
-  }, {} as Record<string, { total: number; wrong: number; flagged: number }>);
+  }, {});
 
   const sortedTopics = Object.entries(topicStats)
     .sort((a, b) => b[1].total - a[1].total)
     .slice(0, 3);
 
-  const keyTopics = Array.from(new Set(listOfQuestions.map(q => q.category)))
-    .filter(Boolean)
-    .slice(0, 3);
+  const handleQuestionAdd = (question: Question) => {
+    if (editingQuestion) {
+      setListOfQuestions(questions => 
+        questions.map(q => q.id === editingQuestion.id ? question : q)
+      );
+    } else {
+      setListOfQuestions(prev => [...prev, question]);
+    }
+    setEditingQuestion(null);
+    setIsAddingQuestion(false);
+  };
 
   return (
     <div className="animate-fadeIn h-full p-6 flex flex-col">
@@ -139,7 +157,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
 
               <button
                 onClick={() => setIsAddingQuestion(true)}
-                className="flex items-center px-2 py-2 rounded-full bg-[--theme-leaguecard-accent] hover:bg-[--theme-hover-color] transition-all duration-200"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[--theme-leaguecard-accent] hover:bg-[--theme-hover-color] transition-all duration-200"
               >
                 <Plus className="h-4 w-4" />
                 <span className="text-sm">Add Question</span>
@@ -177,16 +195,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
           setIsAddingQuestion(false);
           setEditingQuestion(null);
         }}
-        onAdd={(question) => {
-          if (editingQuestion) {
-            setListOfQuestions(questions => 
-              questions.map(q => q.id === editingQuestion.id ? question : q)
-            );
-          } else {
-            setListOfQuestions(prev => [...prev, question]);
-          }
-          setEditingQuestion(null);
-        }}
+        onAdd={handleQuestionAdd}
         editingQuestion={editingQuestion}
       />
     </div>

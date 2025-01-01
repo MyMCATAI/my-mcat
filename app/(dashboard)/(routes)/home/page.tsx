@@ -28,9 +28,8 @@ import {
 import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
-import { Loader2 } from "lucide-react";
-import PracticeTests from "./PracticeTests";
 import { GameOverDialog } from '@/components/home/GameOverDialog';
+import PracticeTests from "./PracticeTests";
 
 // Loading component
 const LoadingSpinner = () => (
@@ -45,7 +44,7 @@ const LoadingSpinner = () => (
 // Content wrapper component
 const ContentWrapper = ({ children }: { children: React.ReactNode }) => (
   <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
-    <div className="text-[--theme-text-color] flex gap-[1.5rem] overflow-visible">
+    <div className="text-white flex gap-[1.5rem] overflow-visible">
       {children}
     </div>
   </div>
@@ -234,7 +233,6 @@ const Page = () => {
             onActivitiesUpdate={() => {
               fetchActivities();
             }}
-            initialView={searchParams?.get("view") as 'calendar' | 'analytics' || 'analytics'}
           />
         );
         break;
@@ -259,9 +257,9 @@ const Page = () => {
       case "flashcards":
         content = <FlashcardDeck />;
         break;
-      case "Tests":
-        content = <PracticeTests handleSetTab={handleTabChange} />;
-        break;
+        case "Tests":
+          content = <PracticeTests handleSetTab={handleTabChange} />;
+          break;
       default:
         content = null;
     }

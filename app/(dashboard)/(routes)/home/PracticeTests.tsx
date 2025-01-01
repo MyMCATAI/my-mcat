@@ -1,5 +1,5 @@
 // app/(dashboard)/(routes)/home/PracticeTests.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronRight, Plus, GripVertical, CalendarIcon, BarChart as AnalyticsIcon, ClipboardList } from "lucide-react";
 import {
   DragDropContext,
@@ -20,6 +20,8 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import TestReview from '@/components/home/TestReview';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import PracticeTestCompleteDialog from '@/components/PracticeTestCompleteDialog';
+import { toast } from "react-hot-toast";
 
 interface PracticeTestsProps {
   className?: string;
@@ -28,12 +30,16 @@ interface PracticeTestsProps {
 
 interface Test {
   id: string;
-  name: string;
-  company: string;
+  activityTitle: string;
+  activityText: string;
   status: string;
-  calendarDate?: number;
-  score?: number;
-  breakdown?: string;
+  scheduledDate: Date;
+  fullLengthExam?: {
+    dataPulses: Array<{
+      positive: number;
+      name: string;
+    }>;
+  };
 }
 
 interface StudentStats {
@@ -73,7 +79,13 @@ const COMPANY_INFO = {
 } as const;
 
 type ValuePiece = Date | null;
-type Value = ValuePiece | [ValuePiece, ValuePiece];
+
+interface NewTest {
+  company: Company;
+  testNumber: string;
+  date: Date | null;
+  useRecommendedDate: boolean;
+}
 
 const PracticeTests: React.FC<PracticeTestsProps> = ({ 
   className,
@@ -88,62 +100,107 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     | "section"
     | null
   >(null);
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date>(new Date());
   const [studentStats] = useState<StudentStats>({
-    averageScore: 85, // Example value - replace with actual data
-    testsTaken: 3, // Example value - replace with actual data
-    testsRemaining: 8, // Example value - replace with actual data
+    averageScore: 85,
+    testsTaken: 3,
+    testsRemaining: 8,
   });
+  const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
+  const [selectedTest, setSelectedTest] = useState<Test | null>(null);
+  const [scheduledTests, setScheduledTests] = useState<Test[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [scheduledTests, setScheduledTests] = useState<Test[]>([
-    {
-      id: "1",
-      name: "Full Length 1",
-      company: "AAMC",
-      status: "Not Started",
-      calendarDate: 12,
-    },
-    {
-      id: "2",
-      name: "Sample Unscored",
-      company: "AAMC",
-      status: "Not Started",
-      calendarDate: 15,
-    },
-    {
-      id: "3",
-      name: "Full Length 3",
-      company: "Blueprint",
-      status: "Not Started",
-      calendarDate: 20,
-    },
-    {
-      id: "4",
-      name: "Full Length 4",
-      company: "AAMC",
-      status: "Not Started",
-      calendarDate: 25,
-    },
-  ]);
+  // Fetch exam activities on component mount
+  useEffect(() => {
+    const fetchExamActivities = async () => {
+      try {
+        const response = await fetch('/api/calendar/exam-activities');
+        if (!response.ok) {
+          throw new Error('Failed to fetch exam activities');
+        }
+        const activities = await response.json();
+        
+        // Transform calendar activities into the Test format
+        const transformedTests = activities.map((activity: any) => ({
+          id: activity.id,
+          activityTitle: activity.activityTitle,
+          activityText: activity.activityText,
+          status: activity.status,
+          scheduledDate: new Date(activity.scheduledDate),
+          fullLengthExam: activity.fullLengthExam,
+        }));
+
+        setScheduledTests(transformedTests);
+      } catch (error) {
+        console.error('Error fetching exam activities:', error);
+        toast.error('Failed to load scheduled exams');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchExamActivities();
+  }, []);
+
+  // Helper function to get score breakdown from data pulses
+  const getScoreBreakdown = (dataPulses: Array<{ positive: number; name: string }> | undefined) => {
+    if (!dataPulses) return '';
+    
+    const scores = {
+      cp: 0,
+      cars: 0,
+      bb: 0,
+      ps: 0
+    };
+
+    dataPulses.forEach(pulse => {
+      if (pulse.name.includes('Chemical')) scores.cp = pulse.positive;
+      else if (pulse.name.includes('Critical')) scores.cars = pulse.positive;
+      else if (pulse.name.includes('Biological')) scores.bb = pulse.positive;
+      else if (pulse.name.includes('Psychological')) scores.ps = pulse.positive;
+    });
+
+    return `${scores.cp}/${scores.cars}/${scores.bb}/${scores.ps}`;
+  };
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newTest, setNewTest] = useState({
+  const [newTest, setNewTest] = useState<NewTest>({
     company: "" as Company,
     testNumber: "",
-    date: null as Date | null,
+    date: null,
     useRecommendedDate: true
   });
 
   const [activeTest, setActiveTest] = useState<Test | null>(null);
 
+  // Helper function to format dates consistently
+  const formatDate = (date: Date | null | undefined): string => {
+    if (!date) return "";
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  // Helper function to get recommended test date
+  const getRecommendedTestDate = (): Date => {
+    const recommendedDate = new Date();
+    recommendedDate.setDate(recommendedDate.getDate() + 7); // Set to 1 week from now
+    return recommendedDate;
+  };
+
   const handleAddTest = () => {
     const testId = `${scheduledTests.length + 1}`;
+    const testDate = newTest.useRecommendedDate ? getRecommendedTestDate() : newTest.date;
+    
     const newTestEntry: Test = {
       id: testId,
       name: `FL${newTest.testNumber}`,
       company: newTest.company,
       status: "Not Started",
-      calendarDate: parseInt(newTest.date),
+      calendarDate: testDate || new Date(), // Fallback to current date if no date is selected
     };
 
     setScheduledTests([...scheduledTests, newTestEntry]);
@@ -168,19 +225,40 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     ["17", "18", "19", "20", "21", "22", "23"],
     ["24", "25", "26", "27", "28", "29", "30"],
     ["31", "1", "2", "3", "4", "5", "6"],
-  ];
+  ] as const;
 
   const isTestDate = (day: string) => {
-    return scheduledTests.some((test) => test.calendarDate === parseInt(day));
+    // Only process days that are valid numbers
+    if (!/^\d+$/.test(day)) return false;
+    
+    const dayNum = parseInt(day);
+    return scheduledTests.some((test) => {
+      if (!test.calendarDate) return false;
+      return test.calendarDate.getDate() === dayNum;
+    });
   };
 
-  const formatDate = (date: Date | null): string => {
-    if (!date) return "";
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+  const handleCompleteTest = (test: Test) => {
+    setSelectedTest(test);
+    setIsCompleteDialogOpen(true);
+  };
+
+  const handleSubmitScores = (scores: { total: number; cp: number; cars: number; bb: number; ps: number; }) => {
+    if (!selectedTest) return;
+
+    const updatedTest = {
+      ...selectedTest,
+      status: "Completed",
+      score: scores.total,
+      breakdown: `${scores.cp}/${scores.cars}/${scores.bb}/${scores.ps}`,
+      dateTaken: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    };
+
+    setScheduledTests(prev => prev.map(t => 
+      t.id === selectedTest.id ? updatedTest : t
+    ));
+
+    setSelectedTest(null);
   };
 
   return (
@@ -231,18 +309,32 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                           <div className="flex-1 grid grid-rows-6 min-h-0">
                             {calendarDays.map((week, weekIndex) => (
                               <div key={weekIndex} className="grid grid-cols-7">
-                                {week.map((day, dayIndex) => (
-                                  <div
-                                    key={`${weekIndex}-${dayIndex}`}
-                                    className={`h-full flex items-center justify-center text-[min(0.7rem,1.8vh)] p-0.5
-                                      ${parseInt(day) > 0 && parseInt(day) <= 31 ? "hover:bg-[--theme-hover-color] cursor-pointer" : "opacity-30"}
-                                      ${date?.getDate() === parseInt(day) ? "bg-[--theme-hover-color] text-[--theme-hover-text]" : ""}
-                                      ${isTestDate(day) ? "bg-[--theme-calendar-color] text-[--theme-text-color] font-bold" : ""}
-                                    `}
-                                  >
-                                    {day}
-                                  </div>
-                                ))}
+                                {week.map((day, dayIndex) => {
+                                  const dayNum = parseInt(day);
+                                  const isValidDay = !isNaN(dayNum) && dayNum > 0 && dayNum <= 31;
+                                  const isCurrentDay = date.getDate() === dayNum;
+                                  const hasTest = isTestDate(day);
+
+                                  return (
+                                    <div
+                                      key={`${weekIndex}-${dayIndex}`}
+                                      className={`h-full flex items-center justify-center text-[min(0.7rem,1.8vh)] p-0.5
+                                        ${isValidDay ? "hover:bg-[--theme-hover-color] cursor-pointer" : "opacity-30"}
+                                        ${isCurrentDay ? "bg-[--theme-hover-color] text-[--theme-hover-text]" : ""}
+                                        ${hasTest ? "bg-[--theme-calendar-color] text-[--theme-text-color] font-bold" : ""}
+                                      `}
+                                      onClick={() => {
+                                        if (isValidDay) {
+                                          const newDate = new Date(date);
+                                          newDate.setDate(dayNum);
+                                          setDate(newDate);
+                                        }
+                                      }}
+                                    >
+                                      {day}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             ))}
                           </div>
@@ -256,69 +348,83 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                         Scheduled Tests
                       </h3>
                       <div className="flex-1 overflow-auto px-2">
-                        <Droppable droppableId="droppable-tests">
-                          {(provided) => (
-                            <div
-                              {...provided.droppableProps}
-                              ref={provided.innerRef}
-                              className="space-y-2 pb-2"
-                            >
-                              {scheduledTests.map((test, index) => (
-                                <Draggable
-                                  key={test.id}
-                                  draggableId={test.id}
-                                  index={index}
-                                >
-                                  {(provided, snapshot) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      className={`flex items-center p-3 bg-[--theme-leaguecard-accent] rounded-lg 
-                                        transition-all duration-200
-                                        ${snapshot.isDragging ? "opacity-75" : ""}
-                                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]`}
-                                      style={{
-                                        ...provided.draggableProps.style,
-                                      }}
-                                    >
+                        {isLoading ? (
+                          <div className="flex items-center justify-center h-full">
+                            <div className="text-sm text-gray-500">Loading scheduled exams...</div>
+                          </div>
+                        ) : (
+                          <Droppable droppableId="droppable-tests">
+                            {(provided) => (
+                              <div
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                                className="space-y-2 pb-2"
+                              >
+                                {scheduledTests.map((test, index) => (
+                                  <Draggable
+                                    key={test.id}
+                                    draggableId={test.id}
+                                    index={index}
+                                  >
+                                    {(provided, snapshot) => (
                                       <div
-                                        {...provided.dragHandleProps}
-                                        className="mr-2 cursor-grab active:cursor-grabbing"
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        className={`flex items-center p-3 bg-[--theme-leaguecard-accent] rounded-lg 
+                                          transition-all duration-200
+                                          ${snapshot.isDragging ? "opacity-75" : ""}
+                                          hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]`}
+                                        style={{
+                                          ...provided.draggableProps.style,
+                                        }}
                                       >
-                                        <GripVertical className="w-4 h-4 opacity-50" />
-                                      </div>
-                                      <div className="flex-grow">
-                                        <h4 className="text-sm font-medium">
-                                          {test.name}
-                                        </h4>
-                                        <p className="text-xs opacity-70">
-                                          {test.company}
-                                        </p>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <button
-                                          className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
-                                            hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                                            transition-colors duration-200"
+                                        <div
+                                          {...provided.dragHandleProps}
+                                          className="mr-2 cursor-grab active:cursor-grabbing"
                                         >
-                                          Set Date
-                                        </button>
-                                        <button
-                                          className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
-                                            hover:bg-green-500 hover:text-white
-                                            transition-colors duration-200"
-                                        >
-                                          Complete
-                                        </button>
+                                          <GripVertical className="w-4 h-4 opacity-50" />
+                                        </div>
+                                        <div className="flex-grow">
+                                          <h4 className="text-sm font-medium">
+                                            {test.activityTitle}
+                                          </h4>
+                                          <p className="text-xs opacity-70">
+                                            {test.activityText}
+                                          </p>
+                                          {test.fullLengthExam && (
+                                            <p className="text-xs mt-1">
+                                              Score: {getScoreBreakdown(test.fullLengthExam.dataPulses)}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <button
+                                            className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
+                                              hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                                              transition-colors duration-200"
+                                          >
+                                            Set Date
+                                          </button>
+                                          {test.status !== "Completed" && (
+                                            <button
+                                              onClick={() => handleCompleteTest(test)}
+                                              className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
+                                                hover:bg-green-500 hover:text-white
+                                                transition-colors duration-200"
+                                            >
+                                              Complete
+                                            </button>
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
-                                  )}
-                                </Draggable>
-                              ))}
-                              {provided.placeholder}
-                            </div>
-                          )}
-                        </Droppable>
+                                    )}
+                                  </Draggable>
+                                ))}
+                                {provided.placeholder}
+                              </div>
+                            )}
+                          </Droppable>
+                        )}
                       </div>
 
                       <button
@@ -338,14 +444,54 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
               <div className="flex-grow px-4">
                 <div className="grid grid-cols-5 gap-4 h-full">
                   {[
-                    { company: "AAMC", testNumber: "FL1", score: 527, breakdown: "132/132/132/131", dateTaken: "Dec 15" },
-                    { company: "Blueprint", testNumber: "FL2", score: 515, breakdown: "129/128/129/129", dateTaken: "Dec 10" },
-                    { company: "AAMC", testNumber: "FL3", score: 508, breakdown: "127/127/127/127", dateTaken: "Dec 5" },
-                    { company: "Jack Westin", testNumber: "FL1", score: 498, breakdown: "124/124/125/125", dateTaken: "Nov 30" },
-                    { company: "Altius", testNumber: "FL4", score: 522, breakdown: "131/130/131/130", dateTaken: "Nov 25" },
-                  ].map((test, index) => (
+                    { 
+                      id: "past-1",
+                      name: "FL1",
+                      company: "AAMC",
+                      status: "Completed",
+                      score: 527,
+                      breakdown: "132/132/132/131",
+                      dateTaken: "Dec 15"
+                    },
+                    { 
+                      id: "past-2",
+                      name: "FL2",
+                      company: "Blueprint",
+                      status: "Completed",
+                      score: 515,
+                      breakdown: "129/128/129/129",
+                      dateTaken: "Dec 10"
+                    },
+                    { 
+                      id: "past-3",
+                      name: "FL3",
+                      company: "AAMC",
+                      status: "Completed",
+                      score: 508,
+                      breakdown: "127/127/127/127",
+                      dateTaken: "Dec 5"
+                    },
+                    { 
+                      id: "past-4",
+                      name: "FL1",
+                      company: "Jack Westin",
+                      status: "Completed",
+                      score: 498,
+                      breakdown: "124/124/125/125",
+                      dateTaken: "Nov 30"
+                    },
+                    { 
+                      id: "past-5",
+                      name: "FL4",
+                      company: "Altius",
+                      status: "Completed",
+                      score: 522,
+                      breakdown: "131/130/131/130",
+                      dateTaken: "Nov 25"
+                    }
+                  ].map((test) => (
                     <div
-                      key={index}
+                      key={test.id}
                       className="h-full p-3 rounded-lg bg-opacity-50 bg-[--theme-leaguecard-accent] 
                         transition-all duration-300 cursor-pointer group
                         hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] hover:transform hover:scale-[1.02]"
@@ -362,13 +508,11 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                       }}
                     >
                       <div className="h-full flex flex-col">
-                        {/* Company and Date - Updated to use hover text color */}
                         <div className="flex justify-between text-[10px] mb-1 opacity-40 group-hover:opacity-100 group-hover:text-[--theme-hover-text] transition-opacity">
-                          <span className="text-[10px] opacity-75">{test.company} {test.testNumber}</span>
+                          <span className="text-[10px] opacity-75">{test.company} {test.name}</span>
                           <span className="text-[10px] opacity-75">{test.dateTaken}</span>
                         </div>
 
-                        {/* Score - Updated color transitions */}
                         <div className="flex-grow flex items-center justify-center">
                           <span 
                             className={`text-4xl font-bold leading-none transition-all duration-300
@@ -378,7 +522,6 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                           </span>
                         </div>
 
-                        {/* Breakdown - Updated to use hover text color */}
                         <div className="flex justify-center text-[10px] mt-1 opacity-0 group-hover:opacity-100 group-hover:text-[--theme-hover-text] transition-opacity">
                           <span className="opacity-75">
                             {test.breakdown}
@@ -565,6 +708,13 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      <PracticeTestCompleteDialog
+        isOpen={isCompleteDialogOpen}
+        onClose={() => setIsCompleteDialogOpen(false)}
+        onSubmit={handleSubmitScores}
+        testTitle={selectedTest?.name || "Practice Test"}
+      />
     </div>
   );
 };

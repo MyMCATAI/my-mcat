@@ -3,21 +3,31 @@ import { ArrowLeft, CheckCircle2, Circle, GraduationCap } from 'lucide-react';
 import SectionReview from './SectionReview';
 import { Button } from "@/components/ui/button";
 
+interface Section {
+  name: string;
+  score: number;
+}
+
 interface TestReviewProps {
   test: {
+    id: string;
+    name: string;
     company: string;
-    testNumber: string;
-    score: number;
-    breakdown: string;
-    dateTaken: string;
+    status: string;
+    calendarDate?: Date;
+    score?: number;
+    breakdown?: string;
+    dateTaken?: string;
   };
   onBack: () => void;
 }
 
 const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
-  const [chem, cars, bio, psych] = test.breakdown.split('/').map(Number);
   const [completedSections, setCompletedSections] = useState<string[]>([]);
-  const [activeSection, setActiveSection] = useState<{name: string, score: number} | null>(null);
+  const [activeSection, setActiveSection] = useState<Section | null>(null);
+
+  // Safely handle potentially undefined breakdown
+  const [chem, cars, bio, psych] = (test.breakdown?.split('/').map(Number) || [0, 0, 0, 0]);
 
   const handleSectionComplete = (sectionName: string) => {
     setCompletedSections(prev => 
@@ -38,6 +48,15 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
     );
   }
 
+  // Early return if score is not available
+  if (!test.score) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-lg opacity-60">No score available for this test</p>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-fadeIn h-full p-6 flex flex-col min-h-0">
       <div className="flex flex-col md:flex-row gap-6 mb-6">
@@ -49,7 +68,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
             <ArrowLeft className="h-5 w-5 text-[--theme-text-color]" />
           </button>
           <div className="h-full flex flex-col items-center justify-center space-y-2">
-            <span className="text-sm uppercase tracking-wide opacity-60">{test.company} {test.testNumber}</span>
+            <span className="text-sm uppercase tracking-wide opacity-60">{test.company} {test.name}</span>
             <span className={`text-6xl font-bold transition-all duration-300 hover:scale-110
               ${test.score < 500 ? 'text-red-500' : ''}
               ${test.score >= 500 && test.score < 510 ? 'text-yellow-500' : ''}
@@ -60,7 +79,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
             `}>
               {test.score}
             </span>
-            <span className="text-xs opacity-50">{test.dateTaken}</span>
+            <span className="text-xs opacity-50">{test.dateTaken || formatDate(test.calendarDate)}</span>
           </div>
         </div>
 
@@ -155,6 +174,16 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
       </div>
     </div>
   );
+};
+
+// Helper function to format dates consistently
+const formatDate = (date: Date | undefined): string => {
+  if (!date) return "";
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
 };
 
 export default TestReview;
