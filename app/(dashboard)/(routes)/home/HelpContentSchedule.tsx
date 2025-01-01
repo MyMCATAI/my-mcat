@@ -316,7 +316,7 @@ const HelpContentSchedule: React.FC<HelpContentScheduleProps> = ({ onClose, onRe
               <div className="flex justify-center gap-4">
                 <MessageButton iconOnly withShadow />
                 <a 
-                  href="https://discord.gg/rTxN7wkh6e"
+                  href="https://discord.gg/PkRbV5nw"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 flex items-center justify-center rounded-md border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg"

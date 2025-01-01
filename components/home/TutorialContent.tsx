@@ -21,7 +21,7 @@ const TutorialContent: React.FC = () => {
               <div className="flex gap-4 justify-center">
                 <MessageButton iconOnly />
                 <a 
-                  href="https://discord.gg/rTxN7wkh6e"
+                  href="https://discord.gg/PkRbV5nw"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 flex items-center justify-center rounded-md border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors duration-200"
