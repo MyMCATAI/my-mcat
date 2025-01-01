@@ -69,34 +69,16 @@ export async function GET(req: NextRequest) {
 
     const totalTestTime = completedTests.reduce((sum, test) => {
       if (test.startedAt && test.finishedAt) {
-        const startTime = new Date(test.startedAt).getTime();
-        const endTime = new Date(test.finishedAt).getTime();
-        const timeDiff = endTime - startTime;
-        console.log('Test timing:', {
-          testId: test.id,
-          startedAt: test.startedAt,
-          finishedAt: test.finishedAt,
-          startTime,
-          endTime,
-          timeDiff,
-          timeDiffMinutes: timeDiff / 60000
-        });
-        return sum + (timeDiff > 0 ? timeDiff : 0);
+        return sum + (new Date(test.finishedAt).getTime() - new Date(test.startedAt).getTime());
       }
       return sum;
     }, 0);
 
-    const averageTimePerTest = totalTestsTaken > 0 ? Math.max(0, totalTestTime / totalTestsTaken) : 0;
-    console.log('Average time per test:', {
-      totalTestTime,
-      totalTestsTaken,
-      averageTimePerTest,
-      averageTimePerTestMinutes: averageTimePerTest / 60000
-    });
+    const averageTimePerTest = totalTestsTaken > 0 ? totalTestTime / totalTestsTaken : 0;
 
     // Group questions by category and calculate accuracy
-    const categoryAccuracy = completedTests.reduce((acc: Record<string, { correct: number; total: number }>, test: { responses: Array<{ categoryId: string | null; isCorrect: boolean }> }) => {
-      test.responses.forEach((response: { categoryId: string | null; isCorrect: boolean }) => {
+    const categoryAccuracy = completedTests.reduce((acc, test) => {
+      test.responses.forEach(response => {
         if (response.categoryId) {
           if (!acc[response.categoryId]) {
             acc[response.categoryId] = { correct: 0, total: 0 };
@@ -110,10 +92,10 @@ export async function GET(req: NextRequest) {
       return acc;
     }, {} as Record<string, { correct: number; total: number }>);
 
-    const categoryAccuracyPercentages = Object.entries(categoryAccuracy).reduce<Record<string, number>>((acc, [categoryId, data]) => {
+    const categoryAccuracyPercentages = Object.entries(categoryAccuracy).reduce((acc, [categoryId, data]) => {
       acc[categoryId] = (data.correct / data.total) * 100;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
 
     return NextResponse.json({
       userScore: userInfo?.score || 0,

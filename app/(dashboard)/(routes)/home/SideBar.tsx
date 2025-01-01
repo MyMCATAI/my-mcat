@@ -3,7 +3,7 @@ import Image from "next/image";
 import { FetchedActivity } from '@/types';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, HelpCircle, CheckCircle } from 'lucide-react';
 import { FaCheckCircle, FaYoutube } from 'react-icons/fa';
 import { toast } from "react-hot-toast";
 import { isToday, isSameDay, isTomorrow, format } from "date-fns";
@@ -16,7 +16,7 @@ import ChatBot from "@/components/chatbot/ChatBot";
 import { useUser } from "@clerk/nextjs";
 import { Star, StarHalf } from 'lucide-react';
 import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import BlogPosts from "@/components/home/BlogPosts";
+import { Tutor, tutors as initialTutors, tutorExpertise, getTutorDescription } from "@/constants/tutors";
 import { Checkbox } from "@/components/ui/checkbox";
 import CompletionDialog from "@/components/home/CompletionDialog";
 import { useRouter } from "next/navigation";
@@ -46,14 +46,7 @@ interface SideBarProps {
   chatbotRef: React.MutableRefObject<{
     sendMessage: (message: string) => void;
   }>;
-}
-
-interface Tutor {
-  name: string;
-  university: string;
-  stars: number;
-  reviews: number;
-  price: number;
+  handleSetTab: (tab: string) => void;
 }
 
 type TabContent = 
@@ -89,12 +82,7 @@ const SideBar: React.FC<SideBarProps> = ({
     setActiveTab(getInitialActiveTab());
   }, [currentPage]);
 
-  const [tutors, setTutors] = useState<Tutor[]>([
-    { name: "Prynce K.", university: "Rice University", stars: 5, reviews: 16, price: 50 },
-    { name: "Ali N.", university: "Duke University", stars: 4.5, reviews: 5, price: 150 },
-    { name: "Saanvi A.", university: "New York University", stars: 5, reviews: 3, price: 85 },
-    { name: "Ethan K.", university: "Univ of Pennsylvania", stars: 4.5, reviews: 8, price: 200 }
-  ]);
+  const [tutors, setTutors] = useState<Tutor[]>(initialTutors);
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<VideoCategory>('RBT');
@@ -173,149 +161,104 @@ const SideBar: React.FC<SideBarProps> = ({
   };
 
   const renderInsights = () => {
-    if (currentPage === "Tests") {
+    if (currentPage !== "CARS") {
       return (
-        <div className="h-[calc(100vh-11.6rem)] flex flex-col space-y-4 overflow-auto">
-          <Card className="flex-grow overflow-hidden">
-            <CardContent className="p-4 h-full overflow-hidden">
-              <div className="flex items-center justify-center">
-                <span className="text-xs mb-2 opacity-60 uppercase tracking-wide text-[--theme-text-color]">Strategy</span>
-              </div>
-              <div 
-                className="h-full overflow-auto"
-                style={{ 
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none',
-                  WebkitOverflowScrolling: 'touch'
-                }}
-              >
-                <BlogPosts />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    } else if (currentPage === "CARS") {
-      return (
-        <div className="h-[calc(100vh-11.6rem)] flex flex-col space-y-4 overflow-auto">
-          <Card className="flex-shrink-0">
-            <CardContent className="p-4 relative">
-              <div className="flex items-center mb-4">
-                <FaYoutube className="text-3xl text-red-600 mr-2" />
-                <span className="font-semibold text-lg text-[--theme-text-color]">Videos from YouTube</span>
-              </div>
-              <div className="relative aspect-video group">
-                <iframe
-                  width="100%"
-                  height="100%"
-                  src={`https://www.youtube.com/embed/${videos[currentVideoIndex].id}`}
-                  title={videos[currentVideoIndex].title}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute inset-0"
-                ></iframe>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white z-10"
-                  onClick={() => setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length)}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white z-10"
-                  onClick={() => setCurrentVideoIndex((prev) => (prev + 1) % videos.length)}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="flex-grow overflow-hidden">
-            <CardContent className="p-4 h-full overflow-hidden">
-              <div className="h-full overflow-auto">
-                <RedditPosts />
-              </div>
-            </CardContent>
-          </Card>
+        <div className="h-[calc(100vh-11.6rem)] flex flex-col">
+          <div className="flex-1 min-h-0">
+            <ChatBot
+              chatbotRef={chatbotRef}
+              chatbotContext={chatbotContext}
+              width="100%"
+              height="100%"
+              backgroundColor="transparent"
+              avatar="/kalypsoend.gif"
+            />
+          </div>
         </div>
       );
     }
 
     return (
-      <div className="h-[calc(100vh-11.6rem)] flex flex-col">
-        <div className="flex-1 min-h-0">
-          <ChatBot
-            chatbotRef={chatbotRef}
-            chatbotContext={chatbotContext}
-            width="100%"
-            height="100%"
-            backgroundColor="transparent"
-            avatar="/kalypsoend.gif"
-          />
-        </div>
+      <div className="h-[calc(100vh-11.6rem)] flex flex-col space-y-4 overflow-auto">
+        <Card className="flex-shrink-0">
+          <CardContent className="p-4 relative">
+            <div className="flex items-center mb-4">
+              <FaYoutube className="text-3xl text-red-600 mr-2" />
+              <span className="font-semibold text-lg text-[--theme-text-color]">Videos from YouTube</span>
+            </div>
+            <HelpCircle 
+              className="absolute top-2 right-2 text-[--theme-border-color] hover:text-gray-200 transition-colors duration-200 cursor-pointer" 
+              size={20}
+              onClick={() => openTutorialDialog('https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/KnowledgeProfileInformation.mp4')}
+            />
+            <div className="relative aspect-video group">
+              <iframe
+                width="100%"
+                height="100%"
+                src={`https://www.youtube.com/embed/${videos[currentVideoIndex].id}`}
+                title={videos[currentVideoIndex].title}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0"
+              ></iframe>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white z-10"
+                onClick={() => setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 hover:bg-opacity-75 text-white z-10"
+                onClick={() => setCurrentVideoIndex((prev) => (prev + 1) % videos.length)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="flex-grow overflow-hidden">
+          <CardContent className="p-4 h-full overflow-hidden">
+            <div className="h-full overflow-auto">
+              <RedditPosts />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   };
 
-  const getTutorDescription = (tutorName: string): string => {
-    switch (tutorName) {
-      case "Ali N.":
-        return "Hello hello y'all, I'm Ali! I scored a 520 with a 132 in Bio/Biochem and C/P. At Duke, I played basketball (okay, not for the D1 team, but I was pretty good!). I like to tutor very hands on: my sessions consist of working with you through practice tests and really drilling down into what you do wrong (and right!). I'm a huge fan of soccer and Lil Uzi Vert. Hit me up :)";
-      case "Prynce K.":
-        return "S'up. I'm the founder of the website you're on. I scored a 523 overall, with a 132 in CARs, and spent two years tutoring the MCAT at various firms (who all suck imo). My average increase is around 10-15 points, with a lot of students making massive leaps; but, nowdays, I have limited time as I'm making the most beautiful study software in history. If you're a dedicated student who uses this website frequently, then I'm very interested in meeting/working with you.";
-      case "Saanvi A.":
-        return "I'm Saanvi. My MCAT journey was a bit unconventional and a little embarassing: I actually scored a 492 on my first exam. Eventually, I worked hard to earn a 516 but I learned A LOT about what you should and shouldn't do. I really like working with non-trad students since I emphathize with the struggles you face. Recently, I graduated NYU and work as a Clinic Research Coordinator at Einstein.";
-      case "Ethan K.":
-        return "I'm a grad student at UPenn and I'm passionate about helping others succeed in CARs and Bio/Biochem. With my 525 score, I've developed a range of strategies to tackle the toughest passages and questions, and I'd love to share them with you. Let's work together to master the MCAT.";
-      default:
-        return "This tutor boasts a unique and spirited teaching style with its own fascinating history. From its origins to its current incarnation, the tutor embodies the values, traditions, and spirit of the institution. It serves as a rallying point for students, alumni, and fans, creating a sense of unity and pride on campus and beyond.";
-    }
-  };
-
-  const tutorExpertise: Record<string, string[]> = {
-    "Ali N.": ["B/B", "C/P"],
-    "Prynce K.": ["CARS"],
-    "Saanvi A.": ["P/S"],
-    "Ethan K.": ["B/B", "CARS"],
-  };
-
   const renderTutors = (tutors: Tutor[]) => (
     <div className="h-[calc(100vh-12.3rem)] flex flex-col">
-      <div 
-        className="flex-grow pr-4 pb-4 overflow-y-auto"
-        style={{ 
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          WebkitOverflowScrolling: 'touch'
-        }}
-      >
-        <div className="mb-3 flex justify-center">
-          <Dialog>
-            <DialogTrigger asChild>
-              <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-opacity">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-                <span className="text-sm font-medium">Add yourself to the tutoring board</span>
-              </button>
-            </DialogTrigger>
-            <AddTutorDialog />
-          </Dialog>
-        </div>
+      <ScrollArea className="flex-grow">
+        <div className="pr-4 pb-4">
+          <div className="mb-3 flex justify-center">
+            <Dialog>
+              <DialogTrigger asChild>
+                <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-opacity">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                  <span className="text-sm font-medium">Add yourself to the tutoring board</span>
+                </button>
+              </DialogTrigger>
+              <AddTutorDialog />
+            </Dialog>
+          </div>
 
           {tutors.map((tutor, index) => {
             const firstName = tutor.name.split(/[\s.]/, 1)[0];
