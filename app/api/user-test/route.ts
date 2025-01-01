@@ -15,14 +15,29 @@ export async function GET(req: NextRequest) {
   const skip = (page - 1) * limit;
 
   try {
+    const whereClause = {
+      userId,
+      finishedAt: { not: null },
+      testId: { not: null },
+      test: {
+        questions: {
+          some: {
+            question: {
+              category: {
+                subjectCategory: "CARs"
+              }
+            }
+          }
+        }
+      }
+    };
+
     const userTests = await prisma.userTest.findMany({
-      where: {
-        userId,
-        finishedAt: { not: null }, // This ensures only completed tests are returned
-      },
+      where: whereClause,
       include: {
         test: {
           select: {
+            id: true,
             title: true,
             description: true,
           },
@@ -39,26 +54,30 @@ export async function GET(req: NextRequest) {
       take: limit,
     });
 
+    const problematicTests = userTests.filter(test => !test.test?.title);
+    if (problematicTests.length > 0) {
+      console.error("Found tests without titles:", problematicTests.map(t => ({id: t.id, testId: t.testId})));
+    }
+
     const totalCount = await prisma.userTest.count({
-      where: {
-        userId,
-        finishedAt: { not: null },
-      },
+      where: whereClause
     });
 
-    const userTestsWithCounts = userTests.map((test) => ({
-      id: test.id,
-      userId: test.userId,
-      testId: test.testId,
-      passageId: test.passageId,
-      startedAt: test.startedAt,
-      finishedAt: test.finishedAt,
-      score: test.score,
-      test: test.test,
-      totalResponses: test.responses.length,
-      reviewedResponses: test.responses.filter(r => r.isReviewed).length,
-      isCompleted: true, // All tests returned are completed
-    }));
+    const userTestsWithCounts = userTests
+      .filter((userTest) => userTest.test?.title)
+      .map((userTest) => ({
+        id: userTest.id,
+        userId: userTest.userId,
+        testId: userTest.testId,
+        passageId: userTest.passageId,
+        startedAt: userTest.startedAt,
+        finishedAt: userTest.finishedAt,
+        score: userTest.score,
+        test: userTest.test,
+        totalResponses: userTest.responses.length,
+        reviewedResponses: userTest.responses.filter((response) => response.isReviewed).length,
+        isCompleted: true,
+      }));
 
     return NextResponse.json({
       userTests: userTestsWithCounts,
