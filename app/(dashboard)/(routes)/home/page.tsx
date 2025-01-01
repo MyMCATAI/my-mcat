@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import { checkProStatus } from "@/lib/utils";
 import FlashcardDeck from "./FlashcardDeck";
 import { toast } from "react-hot-toast";
-import { PurchaseButton } from "@/components/purchase-button";
 import { isToday } from "date-fns";
 import {
   shouldUpdateKnowledgeProfiles,
@@ -31,6 +30,7 @@ import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { Loader2 } from "lucide-react";
 import PracticeTests from "./PracticeTests";
+import { GameOverDialog } from '@/components/home/GameOverDialog';
 
 // Loading component
 const LoadingSpinner = () => (
