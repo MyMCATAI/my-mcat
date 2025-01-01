@@ -280,14 +280,35 @@ const SettingContent: React.FC<SettingContentProps> = ({
     const oneYearFromNow = new Date();
     oneYearFromNow.setFullYear(today.getFullYear() + 1);
     
-    if (calendarValue && calendarValue < today) {
+    if (!calendarValue || !(calendarValue instanceof Date)) {
+      toast.error("Please select a valid exam date");
+      setIsGenerating(false);
+      return;
+    }
+
+    // Ensure we're working with dates at the start of the day to avoid timezone issues
+    const examDateStartOfDay = new Date(calendarValue.setHours(0, 0, 0, 0));
+    const todayStartOfDay = new Date(today.setHours(0, 0, 0, 0));
+
+    if (examDateStartOfDay < todayStartOfDay) {
       toast.error("Exam date cannot be in the past");
       setIsGenerating(false);
       return;
     }
 
-    if (calendarValue && calendarValue > oneYearFromNow) {
+    if (examDateStartOfDay > oneYearFromNow) {
       toast.error("Exam date cannot be more than 1 year in the future");
+      setIsGenerating(false);
+      return;
+    }
+
+    // Validate full length days are selected
+    const selectedFullLengthDays = Object.entries(fullLengthDays)
+      .filter(([_, value]) => value)
+      .map(([day]) => day);
+
+    if (selectedFullLengthDays.length === 0) {
+      toast.error("Please select at least one day for full-length exams");
       setIsGenerating(false);
       return;
     }
@@ -296,21 +317,15 @@ const SettingContent: React.FC<SettingContentProps> = ({
     const loadingToastId = showLoadingToast();
     
     const studyPlanData = {
-      examDate: calendarValue,
+      examDate: examDateStartOfDay.toISOString(),
       resources: {
-        hasUWorld: selectedResources["UWorld"] || false,
-        hasAAMC: selectedResources["AAMC"] || false,
-        hasAdaptiveTutoringSuite: true, // Assuming this is always available
-        hasAnki: true, // Assuming this is always available
+        hasUWorld: true,  // Always true for now
+        hasAAMC: true,    // Always true for now
+        hasAdaptiveTutoringSuite: true,
+        hasAnki: true,
       },
       hoursPerDay,
-      fullLengthDays: Object.entries(fullLengthDays)
-        .filter(([_, value]) => value)
-        .map(([day]) => day),
-      contentReviewRatio: reviewPracticeBalance / 100,
-      useKnowledgeProfile: false, // You might want to add a toggle for this in the UI
-      alternateStudyPractice: true, // You might want to add a toggle for this in the UI
-      includeSpecificContent: false, // You might want to add a toggle for this in the UI
+      fullLengthDays: selectedFullLengthDays,
     };
 
     try {
@@ -323,22 +338,24 @@ const SettingContent: React.FC<SettingContentProps> = ({
       // Dismiss the loading toast
       toast.dismiss(loadingToastId);
       
-      if (response.ok) {
-        // Add a 2-second delay before showing success message and running callbacks
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to generate study plan");
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
         toast.success("Study plan generated successfully!");
         if (onStudyPlanSaved) onStudyPlanSaved();
         if (onActivitiesUpdate) onActivitiesUpdate();
       } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || "Failed to generate study plan");
+        throw new Error("Failed to generate study plan");
       }
     } catch (error) {
-      // Dismiss the loading toast
       toast.dismiss(loadingToastId);
       console.error('Error generating study plan:', error);
-      toast.error("An error occurred while generating the study plan");
+      toast.error(error instanceof Error ? error.message : "An error occurred while generating the study plan");
     } finally {
       setIsGenerating(false);
     }
@@ -408,6 +425,27 @@ const SettingContent: React.FC<SettingContentProps> = ({
     );
   };
 
+  const handleWeeklyHoursChange = (value: number) => {
+    const validValue = Math.min(168, Math.max(0, value));
+    setWeeklyHours(validValue);
+    
+    // Distribute hours across days, prioritizing weekdays
+    const weekdayHours = Math.min(5, Math.floor(validValue / 7));
+    const weekendHours = Math.min(8, Math.floor((validValue - (weekdayHours * 5)) / 2));
+    
+    const newHoursPerDay = {
+      Monday: weekdayHours.toString(),
+      Tuesday: weekdayHours.toString(),
+      Wednesday: weekdayHours.toString(),
+      Thursday: weekdayHours.toString(),
+      Friday: weekdayHours.toString(),
+      Saturday: weekendHours.toString(),
+      Sunday: weekendHours.toString(),
+    };
+    
+    setHoursPerDay(newHoursPerDay);
+  };
+
   const renderStep = (step: number) => {
     switch (step) {
       case 0:
@@ -424,16 +462,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
                     inputMode="numeric"
                     pattern="[0-9]*"
                     value={weeklyHours}
-                    onChange={(e) => {
-                      const value = Math.min(168, Math.max(0, Number(e.target.value) || 0));
-                      setWeeklyHours(value);
-                      const perDay = Math.floor(value / 7);
-                      const newHoursPerDay = days.reduce((acc, day) => ({
-                        ...acc,
-                        [day]: perDay.toString()
-                      }), {});
-                      setHoursPerDay(newHoursPerDay);
-                    }}
+                    onChange={(e) => handleWeeklyHoursChange(Number(e.target.value) || 0)}
                     className="w-full text-6xl font-bold text-center bg-transparent border-b-2 border-[--theme-border-color] text-[--theme-text-color] focus:outline-none focus:border-[--theme-hover-color] transition-all py-2"
                     placeholder="0"
                   />
@@ -552,7 +581,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
               <div className="flex gap-4">
                 <button
                   onClick={handleRecommendTestDate}
-                  className="flex-1 bg-transparent hover:bg-[--theme-hover-color] text-[--theme-text-color] py-3 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 border border-[--theme-border-color]/30 hover:text-[--theme-hover-text]"
+                  className="flex-1 bg-[--theme-button-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] py-3 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 border border-[--theme-border-color] hover:text-[--theme-hover-text]"
                 >
                   <svg 
                     className="w-4 h-4 opacity-70" 
@@ -569,7 +598,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
                   href="https://students-residents.aamc.org/register-mcat-exam/register-mcat-exam"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 bg-transparent hover:bg-[--theme-hover-color] text-[--theme-text-color] py-3 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 border border-[--theme-border-color]/30 hover:text-[--theme-hover-text]"
+                  className="flex-1 bg-[--theme-button-color] hover:bg-[--theme-hover-color] text-[--theme-text-color] py-3 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 border border-[--theme-border-color] hover:text-[--theme-hover-text]"
                 >
                   Register
                 </a>
@@ -579,7 +608,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
         );
     }
   };
-
+ 
   return (
     <div 
       className={`
