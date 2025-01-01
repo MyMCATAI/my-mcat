@@ -252,11 +252,6 @@ export async function POST(req: Request) {
       resources,
       hoursPerDay,
       fullLengthDays,
-      contentReviewRatio,
-      knowledgeProfiles,
-      contentItems,
-      alternateStudyPractice,
-      includeSpecificContent,
       today
     );
     console.log("Finished generating study schedule");
@@ -306,241 +301,91 @@ async function generateStudySchedule(
   resources: Resources,
   hoursPerDay: { [key: string]: string },
   fullLengthDays: string[],
-  contentReviewRatio: number,
-  knowledgeProfiles: KnowledgeProfile[],
-  contentItems: ContentItem[],
-  alternateStudyPractice: boolean,
-  includeSpecificContent: boolean,
   startDate: Date = new Date()
 ): Promise<CalendarActivity[]> {
   const activities: CalendarActivity[] = [];
-  const today = new Date();
-  today.setHours(12, 0, 0, 0);
+  const examDate = new Date(studyPlan.examDate);
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  const welcomeActivity = createWelcomeActivity(studyPlan, today);
+  // Add welcome activity on first day
+  const welcomeActivity = createWelcomeActivity(studyPlan, startDate);
   activities.push(welcomeActivity);
 
-  const examDate = new Date(studyPlan.examDate);
-  const totalDays = Math.ceil((examDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
-  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  let isStudySession = true;
-
-  let totalAvailableHours = calculateTotalAvailableHours(hoursPerDay, studyPlan);
-
-  // Allocate study time per category if using knowledge profiles
-  let categoryAllocations: CategoryAllocation[] = [];
-  if (knowledgeProfiles.length > 0) {
-    categoryAllocations = allocateStudyTime(knowledgeProfiles, totalAvailableHours);
-  }
-
-  // Select content per category if including specific content items
-  let selectedContent: { category: Category; content: SelectedContentItem[] }[] = [];
-  if (includeSpecificContent && categoryAllocations.length > 0) {
-    selectedContent = selectContent(categoryAllocations, contentItems);
-  }
-
-  // Calculate exam schedule if more than 70 days until exam
-  const availableExams = [...THIRD_PARTY_EXAMS];
-  if (resources.hasAAMC) {
-    availableExams.push(...AAMC_EXAMS);
-  }
-  
-  // Handle full length exams
+  const availableExams = [
+    "AAMC Unscored Sample",
+    "AAMC Full Length Exam 1",
+    "AAMC Full Length Exam 2",
+    "AAMC Full Length Exam 3",
+    "AAMC Full Length Exam 4",
+    "AAMC Sample Scored (FL5)"
+  ];
   let examSchedule: { date: Date; examName: string }[] = [];
-  const daysForFLExams = Math.min(totalDays, 70);
-  const daysBeforeLastExam = 5; // Buffer before final exam
-  const examInterval = Math.floor((daysForFLExams - daysBeforeLastExam) / availableExams.length);
-  
-  // Schedule exams backwards from the exam date
-  let currentExamDate = new Date(examDate);
-  currentExamDate.setDate(currentExamDate.getDate() - daysBeforeLastExam);
   
   if (fullLengthDays.length > 0) {
-    for (let i = availableExams.length - 1; i >= 0; i--) {
-      // Find the next available full length day
-      while (!fullLengthDays.includes(daysOfWeek[currentExamDate.getDay()])) {
-        currentExamDate.setDate(currentExamDate.getDate() - 1);
-      }
-      
-      examSchedule.unshift({
-        date: (() => {
-          const date = new Date(currentExamDate);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        })(),
-        examName: availableExams[i]
-      });
-      
-      currentExamDate.setDate(currentExamDate.getDate() - examInterval);
+    // Schedule Unscored Sample on first available day
+    let firstExamDate = new Date(startDate);
+    while (!fullLengthDays.includes(daysOfWeek[firstExamDate.getDay()])) {
+      firstExamDate.setDate(firstExamDate.getDate() + 1);
     }
-  }
-
-  // Handle CARs schedule
-  // P(i) = i^exponent / sum of all weights
-  // weights = [i**exponent for i in range(1, total_days + 1)]
-  // Generate AAMC CARS schedule after exam schedule is created
-  const NUM_AAMC_CARS = 18;
-  const CARS_EXPONENT = 4;
-  
-  // Create array of available days (excluding exam days)
-  const availableDays: Date[] = [];
-  let tempDate = new Date(startDate);
-  while (tempDate < examDate) {
-    // Check if this day isn't a full-length exam day
-    if (!examSchedule.some(exam => exam.date.getTime() === tempDate.getTime())) {
-      availableDays.push(new Date(tempDate));
-    }
-    tempDate.setDate(tempDate.getDate() + 1);
-  }
-
-
-  const n = availableDays.length;
-
-  // For x^4: sum = (n(n+1)(2n+1)(3n^2 + 3n - 1))/30
-  const totalWeight = (n * (n + 1) * (2 * n + 1) * (3 * n * n + 3 * n - 1)) / 30;
-
-  const cumulativeProbabilities = new Array(n);
-  let cumSum = 0;
-  for (let i = 0; i < n; i++) {
-    cumSum += Math.pow(i + 1, CARS_EXPONENT) / totalWeight;
-    cumulativeProbabilities[i] = Number(cumSum.toFixed(3));
-  }
-
-  const aamcCarsDays = new Set<number>();
-  const availableIndices = new Set(Array.from({ length: n }, (_, i) => i));
-
-  // Select NUM_AAMC_CARS days using optimized binary search
-  while (aamcCarsDays.size < NUM_AAMC_CARS && availableIndices.size > 0) {
-    // Skew probability distribution towards 1
-    const r = Math.pow(Math.random(), 2/CARS_EXPONENT);
-    
-    let left = 0;
-    let right = n - 1;
-    let selectedIdx = right;
-    
-    if (r <= cumulativeProbabilities[0]) {
-      selectedIdx = 0;
-    } else if (r >= cumulativeProbabilities[right]) {
-      selectedIdx = right;
-    } else {
-      while (right - left > 1) {
-        const mid = (left + right) >> 1;
-        if (cumulativeProbabilities[mid] > r) {
-          right = mid;
-        } else {
-          left = mid;
-        }
-      }
-      selectedIdx = right;
-    }
-    
-    // Find next available index if current is used
-    while (!availableIndices.has(selectedIdx) && selectedIdx < n) {
-      selectedIdx++;
-    }
-    if (selectedIdx >= n) {
-      selectedIdx = Math.max(...Array.from(availableIndices));
-    }
-    
-    aamcCarsDays.add(selectedIdx);
-    availableIndices.delete(selectedIdx);
-  }
-
-  const aamcCarsSchedule = new Set(
-    Array.from(aamcCarsDays).map(index => availableDays[index].getTime())
-  );
-
-  // Calculate initial content review ratio (80/20)
-  // Probably use contentReviewRatio
-  let currentReviewRatio = 0.8;
-  const ratioChangePerDay = (0.8 - 0.2) / totalDays; // Linear progression from 80/20 to 20/80
-
-  let currentDate = new Date(startDate);
-  let takeUpExamDate: Date | null = null;
-
-  while (currentDate < examDate) {
-    const dayOfWeek = currentDate.getDay();
-    const dayName = daysOfWeek[dayOfWeek];
-    const availableHours = parseInt(hoursPerDay[dayName]) || 0;
-    
-    const scheduledTasksForDay = new Set<string>();
-
-    // Check if there's a scheduled exam for this day
-    const scheduledExam = examSchedule.find(exam => {
-      const examDate = new Date(exam.date);
-      examDate.setHours(0, 0, 0, 0);
-      const compareDate = new Date(currentDate);
-      compareDate.setHours(0, 0, 0, 0);
-      return examDate.getTime() === compareDate.getTime();
+    examSchedule.push({
+      date: new Date(firstExamDate),
+      examName: availableExams[0] // Unscored Sample
     });
 
-    if (scheduledExam) {
-      // Schedule full length exam
-      const examActivity = createActivity(
-        studyPlan,
-        scheduledExam.examName,
-        'Exam',
-        8,
-        currentDate
-      );
-      activities.push(examActivity);
+    // Schedule FL5 on last possible day (at least 5 days before exam)
+    let lastExamDate = new Date(examDate);
+    lastExamDate.setDate(lastExamDate.getDate() - 5); // 5 days buffer
+    while (!fullLengthDays.includes(daysOfWeek[lastExamDate.getDay()])) {
+      lastExamDate.setDate(lastExamDate.getDate() - 1);
+    }
+    examSchedule.push({
+      date: new Date(lastExamDate),
+      examName: availableExams[5] // FL5
+    });
 
-      // Schedule take-up exam for the following days
-      takeUpExamDate = await scheduleTakeUpExam(activities, studyPlan, currentDate, hoursPerDay);
-    } else {
-      if (availableHours === 0) {
-        currentDate.setDate(currentDate.getDate() + 1);
-        continue;
-      }
-
-      let remainingHours = availableHours;
-      let activityScheduled = false;
-
-      if (includeSpecificContent && selectedContent.length > 0) {
-        const contentActivity = getNextContentActivity(selectedContent, currentDate, isStudySession, studyPlan);
-        if (contentActivity && contentActivity.hours <= remainingHours && !scheduledTasksForDay.has(contentActivity.activityTitle)) {
-          activities.push(contentActivity);
-          scheduledTasksForDay.add(contentActivity.activityTitle);
-          remainingHours -= contentActivity.hours;
-          activityScheduled = true;
+    // Calculate available time between first and last exam
+    const daysAvailable = Math.ceil(
+      (lastExamDate.getTime() - firstExamDate.getTime()) / (1000 * 3600 * 24)
+    );
+    
+    // Determine how many middle exams we can fit (minimum 4 days between exams)
+    const possibleExams = Math.min(4, Math.floor(daysAvailable / 4) - 1);
+    
+    if (possibleExams > 0) {
+      const examInterval = Math.floor(daysAvailable / (possibleExams + 1));
+      let currentExamDate = new Date(firstExamDate);
+      
+      // Schedule only the latest possible FLs based on available time
+      // e.g., if we can fit 2 exams, use FL4 and FL3
+      for (let i = 0; i < possibleExams; i++) {
+        currentExamDate.setDate(currentExamDate.getDate() + examInterval);
+        while (!fullLengthDays.includes(daysOfWeek[currentExamDate.getDay()])) {
+          currentExamDate.setDate(currentExamDate.getDate() + 1);
+        }
+        
+        if (currentExamDate.getTime() < lastExamDate.getTime()) {
+          examSchedule.push({
+            date: new Date(currentExamDate),
+            examName: availableExams[5 - possibleExams + i] // Start from highest FL number available
+          });
         }
       }
-
-      if (alternateStudyPractice) {
-        isStudySession = !isStudySession;
-      }
-
-      // Get available tasks for the day(either review or practice)
-      const dayTasks = getAvailableTasks(
-        resources,
-        currentReviewRatio,
-        scheduledTasksForDay,
-        totalAvailableHours,
-        totalDays,
-        aamcCarsSchedule,
-        currentDate,
-        availableHours,
-        takeUpExamDate
-      );
-
-      // Schedule each task according to available hours
-      for (const task of dayTasks) {
-        const activity = createActivity(
-          studyPlan,
-          task.name,
-          task.type || 'Study',
-          task.duration,
-          currentDate
-        );
-        activities.push(activity);
-        scheduledTasksForDay.add(task.name);
-      }
     }
-
-    totalAvailableHours -= availableHours;
-    currentReviewRatio -= ratioChangePerDay;
-    currentDate.setDate(currentDate.getDate() + 1);
   }
+
+  // Sort exams by date
+  examSchedule.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  // Create activities for each scheduled exam
+  examSchedule.forEach(({ date, examName }) => {
+    activities.push(createActivity(
+      studyPlan,
+      examName,
+      'Exam',
+      8,
+      date
+    ));
+  });
 
   return activities;
 }
@@ -877,11 +722,11 @@ const THIRD_PARTY_EXAMS = [
 ];
 
 const AAMC_EXAMS = [
-  "AAMC full Length Exam 1",
-  "AAMC full Length Exam 2",
-  "AAMC full Length Exam 3",
-  "AAMC full Length Exam 4",
-  "AAMC full Length Exam 5",
-  "AAMC full Length Exam 6",
+  "AAMC Unscored Sample",
+  "AAMC Full Length Exam 1",
+  "AAMC Full Length Exam 2",
+  "AAMC Full Length Exam 3",
+  "AAMC Full Length Exam 4",
+  "AAMC Sample Scored (FL5)"
 ];
 

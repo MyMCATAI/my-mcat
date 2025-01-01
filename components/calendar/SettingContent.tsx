@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "react-hot-toast";
-import "./style.css";
+import "@/components/styles/CustomCalendar.css";
 import { showLoadingToast } from "@/components/calendar/loading-toast";
 
 type ValuePiece = Date | null;
@@ -22,10 +22,9 @@ interface Option {
 }
 
 const options: Option[] = [
-  { id: "option1", label: "How many hours can you study each day? (We recommend 2-4 hours for each study day with a day at 0)" },
-  { id: "option2", label: "Which days do you have 8 hours for full-length exams?" },
+  { id: "option1", label: "How many hours can you study each day?" },
+  { id: "option2", label: "Which days can you take 8-hour full-length exams?" },
   { id: "option3", label: "When is your test?" },
-  { id: "option4", label: "What resources do you want to use?" },
 ];
 
 const days: string[] = [
@@ -78,6 +77,7 @@ interface SettingContentProps {
   onToggleCalendarView?: () => void;
   onClose?: () => void;
   onActivitiesUpdate?: () => void;
+  isInitialSetup?: boolean;
 }
 
 const SettingContent: React.FC<SettingContentProps> = ({
@@ -85,6 +85,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
   onToggleCalendarView,
   onClose,
   onActivitiesUpdate,
+  isInitialSetup = false,
 }) => {
   // default date is 3 months from now
   const defaultDate = new Date();
@@ -207,17 +208,15 @@ const SettingContent: React.FC<SettingContentProps> = ({
     const studyPlanData = {
       examDate: calendarValue,
       resources: {
-        hasUWorld: selectedResources["UWorld"] || false,
-        hasAAMC: selectedResources["AAMC"] || false,
+        hasUWorld: true, // i temporarily set this to true along with aamc
+        hasAAMC: true,
         hasAdaptiveTutoringSuite: true,
         hasAnki: true,
-        hasKaplanBooks: selectedResources["Kaplan Books"] || false,
-        hasThirdPartyFLs: selectedResources["3rd Party FLs"] || false,
       },
       hoursPerDay,
-      fullLengthDays,
-      thirdPartyFLCount,
-      reviewPracticeBalance,
+      fullLengthDays: Object.entries(fullLengthDays)
+        .filter(([_, value]) => value)
+        .map(([day]) => day),
     };
 
     try {
@@ -401,9 +400,6 @@ const SettingContent: React.FC<SettingContentProps> = ({
   const renderOptionContent = (optionId: string) => {
     switch (optionId) {
       case "option1":
-        const totalWeeklyHours = Object.values(hoursPerDay)
-          .reduce((sum, hours) => sum + Number(hours), 0);
-        
         return (
           <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-md">
             {days.map((day) => (
@@ -422,19 +418,6 @@ const SettingContent: React.FC<SettingContentProps> = ({
                 />
               </div>
             ))}
-            <div className="mt-2 text-[--theme-text-color] text-sm text-center">
-              Total weekly hours: {totalWeeklyHours}
-            </div>
-            {totalWeeklyHours > 30 && (
-              <div className="mt-1 text-red-500 text-sm text-center">
-                Be realistic about the amount of hours you can study a week
-              </div>
-            )}
-            {totalWeeklyHours < 12 && (
-              <div className="mt-1 text-red-500 text-sm text-center">
-                Don&apos;t do less than 12 hours if your test is less than 6 months away
-              </div>
-            )}
           </div>
         );
       case "option2":
@@ -483,136 +466,77 @@ const SettingContent: React.FC<SettingContentProps> = ({
             </div>
           </div>
         );
-      case "option4":
-        return (
-          <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-md">
-            {resources.map((resource) => (
-              <div key={resource} className="flex items-center mb-2">
-                <input
-                  type="checkbox"
-                  checked={selectedResources[resource] || false}
-                  onChange={(e) =>
-                    setSelectedResources({
-                      ...selectedResources,
-                      [resource]: e.target.checked,
-                    })
-                  }
-                />
-                <span className="ml-2 text-[--theme-text-color]">
-                  {resource}
-                </span>
-                {resource === "3rd Party FLs" &&
-                  selectedResources[resource] && (
-                    <div className="ml-4 flex items-center">
-                      <button
-                        className="px-2 py-1 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded"
-                        onClick={() =>
-                          setThirdPartyFLCount(
-                            Math.max(0, thirdPartyFLCount - 1)
-                          )
-                        }
-                      >
-                        -
-                      </button>
-                      <span className="mx-2 text-[--theme-text-color]">
-                        {thirdPartyFLCount}
-                      </span>
-                      <button
-                        className="px-2 py-1 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded"
-                        onClick={() =>
-                          setThirdPartyFLCount(thirdPartyFLCount + 1)
-                        }
-                      >
-                        +
-                      </button>
-                    </div>
-                  )}
-              </div>
-            ))}
-          </div>
-        );
       default:
         return null;
     }
   };
 
   return (
-    <div className="bg-[--theme-leaguecard-color] rounded-lg border-[--theme-border-color] border-2 shadow-lg absolute right-[2rem] w-[36rem]">
-      <div className="bg-[--theme-leaguecard-color] rounded-lg overflow-hidden flex flex-col max-h-[calc(100vh-10rem)]">
-        <div className="p-4 space-y-4 flex-grow overflow-y-auto">
-          {options.map((option) => (
-            <div key={option.id} className="relative">
-              <button
-                className={`w-full text-left p-3 rounded-lg transition-colors duration-200 ${
-                  activeOptions.includes(option.id)
-                    ? "bg-[--theme-doctorsoffice-accent] text-[--theme-text-color]"
-                    : "bg-transparent text-[--theme-text-color] hover:bg-[--theme-doctorsoffice-accent]"
-                }`}
-                onClick={() => handleOptionClick(option.id)}
-              >
-                <div className="flex justify-between items-center">
-                  <span>{option.label}</span>
-                  {option.id === "option3" && calendarValue instanceof Date && (
-                    <span className="text-sm font-medium">
-                      {formatDate(calendarValue)}
-                    </span>
-                  )}
-                </div>
-              </button>
-              {activeOptions.includes(option.id) && (
-                <div className="mt-2 bg-[--theme-leaguecard-color] p-3 rounded-lg shadow-md">
-                  {renderOptionContent(option.id)}
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* Commented out slider section
-          <TooltipProvider>
-            <div className="bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-md relative">
-              <div className="relative">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={reviewPracticeBalance}
-                      onChange={(e) =>
-                        setReviewPracticeBalance(Number(e.target.value))
-                      }
-                      className="w-full"
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="top"
-                    align="center"
-                    className="bg-gray-800 text-white p-2 rounded"
-                  >
-                    <p>
-                      We recommend doing more practice than review closer to
-                      your test date.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
+    <div 
+      className={`
+        ${isInitialSetup 
+          ? 'w-full bg-[transparent]' 
+          : 'bg-[--theme-leaguecard-color] rounded-2xl shadow-xl absolute right-[2rem] w-[40rem] h-[40rem]'
+        }
+      `}
+    >
+      <div 
+        className={`
+          ${isInitialSetup 
+            ? 'flex flex-col h-[48rem]' 
+            : 'rounded-2xl overflow-hidden flex flex-col h-full'
+          }
+          ${isInitialSetup ? 'bg-transparent' : 'bg-[--theme-leaguecard-color]'}
+        `}
+      >
+        {isInitialSetup && (
+          <div className="text-center py-8">
+            <h2 className="text-4xl font-bold text-[--theme-text-color] mb-4">Welcome to MyMCAT.ai!</h2>
+            <p className="text-[--theme-text-color] opacity-80 text-xl">Let's set up your personalized study plan. Please answer a few questions to get started.</p>
+          </div>
+        )}
+        
+        <div className={`
+          ${isInitialSetup ? 'w-full px-6' : 'px-6'} 
+          flex-1 overflow-y-auto scrollbar-hide
+        `}>
+          <div className="space-y-6 pb-6">
+            {options.map((option) => (
+              <div key={option.id} className="relative">
+                <button
+                  className={`w-full text-left p-5 rounded-xl transition-all duration-200 ${
+                    activeOptions.includes(option.id)
+                      ? "bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] shadow-lg"
+                      : "bg-[--theme-leaguecard-color]/50 text-[--theme-text-color] hover:bg-[--theme-doctorsoffice-accent]/70"
+                  }`}
+                  onClick={() => handleOptionClick(option.id)}
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-xl font-medium">{option.label}</span>
+                    {option.id === "option3" && calendarValue instanceof Date && (
+                      <span className="text-lg font-medium">
+                        {formatDate(calendarValue)}
+                      </span>
+                    )}
+                  </div>
+                </button>
+                {activeOptions.includes(option.id) && (
+                  <div className="mt-4 bg-[--theme-leaguecard-color]/30 p-5 rounded-xl backdrop-blur-sm">
+                    {renderOptionContent(option.id)}
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between mt-2">
-                <span className="text-[--theme-text-color] text-sm">
-                  Review: {reviewPracticeBalance}%
-                </span>
-                <span className="text-[--theme-text-color] text-sm">
-                  Practice: {100 - reviewPracticeBalance}%
-                </span>
-              </div>
-            </div>
-          </TooltipProvider>
-          */}
+            ))}
+          </div>
         </div>
 
-        <div className="p-4 border-t border-[--theme-border-color]">
+        <div className={`
+          ${isInitialSetup ? 'w-full' : ''} 
+          p-6 bg-[--theme-leaguecard-color]/30 backdrop-blur-sm mt-auto
+        `}>
           {existingStudyPlan ? (
             <Button
-              className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] py-2 px-4 rounded-lg hover:opacity-80 transition duration-200 flex items-center justify-center gap-2"
+              className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] py-4 px-6 rounded-xl hover:opacity-90 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg text-lg font-medium"
               onClick={() => {
                 handleSave();
                 handleGenerateStudyPlan();
@@ -620,26 +544,26 @@ const SettingContent: React.FC<SettingContentProps> = ({
               disabled={isSaving}
             >
               {isSaving && (
-                <div className="h-4 w-4 border-2 border-t-transparent rounded-full animate-spin" />
+                <div className="h-5 w-5 border-2 border-t-transparent rounded-full animate-spin" />
               )}
-              {isSaving ? "Saving..." : "Update Study Plan"}
+              {isSaving ? "Saving..." : isInitialSetup ? "Create Study Plan" : "Update Study Plan"}
             </Button>
           ) : (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] py-2 px-4 rounded-lg hover:opacity-80 transition duration-200 flex items-center justify-center gap-2"
+                    className="w-full text-[--theme-hover-text] bg-[--theme-hover-color] py-4 px-6 rounded-xl hover:opacity-90 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg text-lg font-medium"
                     onClick={handleGenerateStudyPlan}
                     disabled={isGenerating}
                   >
                     {isGenerating && (
-                      <div className="h-4 w-4 border-2 border-t-transparent rounded-full animate-spin" />
+                      <div className="h-5 w-5 border-2 border-t-transparent rounded-full animate-spin" />
                     )}
-                    {isGenerating ? 'Generating...' : 'Generate Study Plan'}
+                    {isGenerating ? 'Generating...' : isInitialSetup ? 'Create Study Plan' : 'Generate Study Plan'}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="bg-gray-800 text-white p-2 rounded">
+                <TooltipContent side="top" className="bg-gray-800 text-white p-2 rounded-xl">
                   <p>Generation may take a few minutes. Please wait while we create your personalized study plan.</p>
                 </TooltipContent>
               </Tooltip>
