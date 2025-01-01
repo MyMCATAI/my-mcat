@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import { isSameDay, isToday, isTomorrow } from "date-fns";
-import SettingContent from "./SettingContent";
+import SettingContent from "../../../../components/calendar/SettingContent";
 import { NewActivity, FetchedActivity } from "@/types";
 import { DialogHeader } from "@/components/ui/dialog";
 import {
@@ -269,10 +269,10 @@ const Schedule: React.FC<ScheduleProps> = ({
   }, [getActivitiesText, runTutorialPart1, tutorialStep]);
 
   const handleStudyPlanSaved = useCallback(() => {
+    setIsInitialSetupComplete(true);
     setShowSettings(false);
-    setShowAnalytics(false); // Switch to calendar mode
+    setShowAnalytics(false);
 
-    // Only start Part 2 if it hasn't been played yet
     if (
       !localStorage.getItem("tutorialPart2Played") ||
       localStorage.getItem("tutorialPart2Played") === "false"
@@ -1059,49 +1059,49 @@ const Schedule: React.FC<ScheduleProps> = ({
         </div>
       )}
 
-      <Dialog open={showRewardDialog} onOpenChange={setShowRewardDialog}>
-        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
-          <DialogHeader className="text-center">
-            <DialogTitle className="text-center text-black">
-              Congratulations!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col items-center justify-center p-4 space-y-2">
-            <div className="relative w-64 h-64">
-              <Image
-                src="/game-components/CupcakeCoin.gif"
-                alt="Reward"
-                layout="fill"
-                objectFit="contain"
-              />
-            </div>
-            <p className="text-center text-lg text-black">
-              You&apos;ve completed all tasks in the{" "}
-              {rewardSection && buttonLabels[rewardSection as Section]}!
-            </p>
-            <p className="text-center text-lg text-black">
-              You&apos;ve earned{" "}
-              <span className="font-bold">1 studycoin</span> for your hard
-              work!
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+          <Dialog open={showRewardDialog} onOpenChange={setShowRewardDialog}>
+            <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+            <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
+              <DialogHeader className="text-center">
+                <DialogTitle className="text-center text-black">
+                  Congratulations!
+                </DialogTitle>
+              </DialogHeader>
+              <div className="flex flex-col items-center justify-center p-4 space-y-2">
+                <div className="relative w-64 h-64">
+                  <Image
+                    src="/game-components/CupcakeCoin.gif"
+                    alt="Reward"
+                    layout="fill"
+                    objectFit="contain"
+                  />
+                </div>
+                <p className="text-center text-lg text-black">
+                  You&apos;ve completed all tasks in the{" "}
+                  {rewardSection && buttonLabels[rewardSection as Section]}!
+                </p>
+                <p className="text-center text-lg text-black">
+                  You&apos;ve earned{" "}
+                  <span className="font-bold">1 studycoin</span> for your hard
+                  work!
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
 
-      <audio ref={audioRef} src="/levelup.mp3" />
-      <audio ref={fanfareRef} src="/fanfare.mp3" />
+          <audio ref={audioRef} src="/levelup.mp3" />
+          <audio ref={fanfareRef} src="/fanfare.mp3" />
 
-      <Tutorial
-        runPart1={runTutorialPart1}
-        setRunPart1={setRunTutorialPart1}
-        runPart2={runTutorialPart2}
-        setRunPart2={setRunTutorialPart2}
-        runPart3={runTutorialPart3}
-        setRunPart3={setRunTutorialPart3}
-        runPart4={runTutorialPart4}
-        setRunPart4={setRunTutorialPart4}
-      />
+          <Tutorial
+            runPart1={runTutorialPart1}
+            setRunPart1={setRunTutorialPart1}
+            runPart2={runTutorialPart2}
+            setRunPart2={setRunTutorialPart2}
+            runPart3={runTutorialPart3}
+            setRunPart3={setRunTutorialPart3}
+            runPart4={runTutorialPart4}
+            setRunPart4={setRunTutorialPart4}
+          />
 
       <Dialog open={showBreaksDialog} onOpenChange={setShowBreaksDialog}>
         <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
@@ -1143,17 +1143,26 @@ const Schedule: React.FC<ScheduleProps> = ({
         tasks={uWorldTasks}
       />
 
-      <CompletionDialog 
-        isOpen={showCompletionDialog} 
-        onClose={() => setShowCompletionDialog(false)}
-      />
+          <UWorldPopup
+            isOpen={showUWorldPopup}
+            onClose={() => setShowUWorldPopup(false)}
+            onScoreSubmit={handleUWorldScoreSubmit}
+            tasks={uWorldTasks}
+          />
 
-      <OptionsDialog 
-        showOptionsModal={showOptionsModal}
-        setShowOptionsModal={setShowOptionsModal}
-        handleTabChange={handleTabChange}
-        allWelcomeTasksCompleted={allWelcomeTasksCompleted}
-      />
+          <CompletionDialog 
+            isOpen={showCompletionDialog} 
+            onClose={() => setShowCompletionDialog(false)}
+          />
+
+          <OptionsDialog 
+            showOptionsModal={showOptionsModal}
+            setShowOptionsModal={setShowOptionsModal}
+            handleTabChange={handleTabChange}
+            allWelcomeTasksCompleted={allWelcomeTasksCompleted}
+          />
+        </>
+      )}
     </div>
   );
 

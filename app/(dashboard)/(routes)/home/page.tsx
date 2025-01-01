@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import { checkProStatus } from "@/lib/utils";
 import FlashcardDeck from "./FlashcardDeck";
 import { toast } from "react-hot-toast";
-import { PurchaseButton } from "@/components/purchase-button";
 import { isToday } from "date-fns";
 import {
   shouldUpdateKnowledgeProfiles,
