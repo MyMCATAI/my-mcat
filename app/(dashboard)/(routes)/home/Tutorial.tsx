@@ -150,62 +150,6 @@ const Tutorial: React.FC<TutorialProps> = ({
     </div>
   );
 
-  const tutorialPart2Content = (
-    <div className="space-y-6 text-black w-full">
-      <h1 className="text-3xl font-bold text-center mb-4">
-        Customize Your Schedule
-      </h1>
-
-      <div className="bg-white p-4 rounded-lg shadow-lg">
-        <p className="text-lg mb-6">
-          We calculate the best time to take FLs, do AAMC, and use 3rd party
-          resources.
-        </p>
-        <div className="mb-4 max-w-[35rem] mx-auto">
-          <video 
-            src="https://my-mcat.s3.us-east-2.amazonaws.com/public/CalendarReview.mp4"
-            autoPlay
-            loop
-            muted
-            className="w-full rounded-lg"
-          />
-        </div>
-        <p className="text-lg mt-6">Click a cell and add an activity to your calendar.</p>
-      </div>
-    </div>
-  );
-
-  const tutorialPart3Content = (
-    <div className="space-y-6 text-black">
-      <h1 className="text-3xl font-bold text-center mb-4">Ask Kalypso</h1>
-
-      <div className="bg-white p-4 rounded-lg shadow-lg">
-        <p className="text-lg">
-          {
-            "Great job! Now, let's wake up Kalypso and ask him a question about your schedule."
-          }
-        </p>
-        <p className="text-lg mt-5"></p>
-      </div>
-    </div>
-  );
-
-  const tutorialPart4Content = (
-    <div className="space-y-6 text-black">
-      <h1 className="text-3xl font-bold text-center mb-4">
-        Complete Your First Task
-      </h1>
-
-      <div className="bg-white p-4 rounded-lg shadow-lg">
-        <p className="text-lg">
-          {
-            "Yay! You've mastered the dashboard! Go ahead and checkmark it off in your Daily To-Do List!"
-          }
-        </p>
-      </div>
-    </div>
-  );
-
   const part1Steps: Step[] = [
     {
       target: "body",
@@ -231,69 +175,6 @@ const Tutorial: React.FC<TutorialProps> = ({
     },
   ];
 
-  const part2Steps: Step[] = [
-    {
-      target: "body",
-      content: tutorialPart2Content,
-      placement: "center",
-      disableBeacon: true,
-      styles: {
-        options: {
-          width: 700,
-        },
-      },
-    },
-    {
-      target: ".schedule-content",
-      content: "Enter a new activity!",
-      placement: "right",
-      styles: {
-        options: {
-          width: 200,
-        },
-      },
-    },
-  ];
-
-  const part3Steps: Step[] = [
-    {
-      target: "body",
-      content: tutorialPart3Content,
-      placement: "center",
-      disableBeacon: true,
-    },
-    {
-      target: ".knowledge-profile-component",
-      content:
-        "Ask Kalypso your question here (you can also enable voice up top!)",
-      placement: "left",
-      styles: {
-        options: {
-          width: 300,
-        },
-      },
-    },
-  ];
-
-  const part4Steps: Step[] = [
-    {
-      target: "body",
-      content: tutorialPart4Content,
-      placement: "center",
-      disableBeacon: true,
-    },
-    {
-      target: ".daily-todo-list",
-      content: "Check off tutorial tasks here!",
-      placement: "right",
-      styles: {
-        options: {
-          width: 300,
-        },
-      },
-    },
-  ];
-
   return (
     <>
       <audio ref={audioRef} src="/notification.mp3" />
@@ -312,66 +193,6 @@ const Tutorial: React.FC<TutorialProps> = ({
             backgroundColor: "#ffffff",
             textColor: "black",
             primaryColor: "var(--theme-hover-color)",
-            overlayColor: "rgba(0, 0, 0, 0.5)",
-            zIndex: 1000,
-          },
-        }}
-      />
-      <Joyride
-        callback={handleJoyrideCallback}
-        continuous
-        hideCloseButton
-        run={runPart2}
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        steps={part2Steps}
-        spotlightClicks={true}
-        styles={{
-          options: {
-            backgroundColor: "#ffffff",
-            textColor: "#000000",
-            primaryColor: "var(--theme-hover-color)",
-            overlayColor: "rgba(0, 0, 0, 0.5)",
-            zIndex: 1000,
-          },
-        }}
-      />
-      <Joyride
-        callback={handleJoyrideCallback}
-        continuous
-        hideCloseButton
-        run={runPart3}
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        steps={part3Steps}
-        spotlightClicks={true}
-        styles={{
-          options: {
-            backgroundColor: "#ffffff",
-            textColor: "black",
-            primaryColor: "var(--theme-hover-color)",
-            overlayColor: "rgba(0, 0, 0, 0.5)",
-            zIndex: 1000,
-          },
-        }}
-      />
-      <Joyride
-        callback={handleJoyrideCallback}
-        continuous
-        hideCloseButton
-        run={runPart4}
-        scrollToFirstStep
-        showProgress
-        showSkipButton
-        steps={part4Steps}
-        spotlightClicks={true}
-        styles={{
-          options: {
-            backgroundColor: "#ffffff",
-            textColor: "black",
-            primaryColor: "var(--theme-border-color)",
             overlayColor: "rgba(0, 0, 0, 0.5)",
             zIndex: 1000,
           },
