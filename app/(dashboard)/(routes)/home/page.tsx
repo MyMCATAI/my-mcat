@@ -501,6 +501,7 @@ const Page = () => {
               currentPage={currentPage}
               chatbotContext={chatbotContext}
               chatbotRef={chatbotRef}
+              handleSetTab={handleTabChange}
             />
           </div>
         </div>

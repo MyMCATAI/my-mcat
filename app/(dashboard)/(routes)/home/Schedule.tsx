@@ -844,7 +844,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                     >
                       <div className="absolute left-4 bottom-4 max-w-xs bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-lg">
                         <p className="text-sm text-[--theme-text-color]">
-                          Greetings. We're doing some reupholstering for MyMCAT V2.0 which is launching on January 10th. You'll experience some changes to your service until then. For more information regarding changes and timeline, please join our <a 
+                          Greetings. We&re doing some reupholstering for MyMCAT V2.0 which is launching on January 10th. You&ll experience some changes to your service until then. For more information regarding changes and timeline, please join our <a 
                             href="https://discord.gg/CcxcZxB6"
                             target="_blank"
                             rel="noopener noreferrer"
@@ -1130,7 +1130,7 @@ const Schedule: React.FC<ScheduleProps> = ({
           </DialogHeader>
           <div className="p-4">
             <p className="text-center text-black">
-              Tests will allow you to manage AAMC and third party tests, review them in an intelligent suite, and glean insights on strategic changes to improve performance. It's launching on January 10th.
+              {"Tests will allow you to manage AAMC and third party tests, review them in an intelligent suite, and glean insights on strategic changes to improve performance. It's launching on January 10th."}
             </p>
           </div>
         </DialogContent>
