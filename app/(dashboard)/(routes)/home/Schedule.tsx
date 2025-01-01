@@ -128,7 +128,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
   const [isCoinsLoading, setIsCoinsLoading] = useState(true);
   const [isInitialSetupComplete, setIsInitialSetupComplete] = useState<boolean>(false);
-  const [showTestsDialog, setShowTestsDialog] = useState(false);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -816,7 +815,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                   </p>
                 )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Right Content */}
@@ -1261,38 +1260,38 @@ const Schedule: React.FC<ScheduleProps> = ({
             setRunPart4={setRunTutorialPart4}
           />
 
-      <Dialog open={showBreaksDialog} onOpenChange={setShowBreaksDialog}>
-        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
-          <DialogHeader>
-            <DialogTitle className="text-center text-black">
-              Breaks Coming Soon!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-center text-black">
-              Toggle holidays. Add difficult weeks in school. Ask for a break.
-              Your schedule will be updated automatically.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+          <Dialog open={showBreaksDialog} onOpenChange={setShowBreaksDialog}>
+            <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+            <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
+              <DialogHeader>
+                <DialogTitle className="text-center text-black">
+                  Breaks Coming Soon!
+                </DialogTitle>
+              </DialogHeader>
+              <div className="p-4">
+                <p className="text-center text-black">
+                  Toggle holidays. Add difficult weeks in school. Ask for a break.
+                  Your schedule will be updated automatically.
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
 
-      <Dialog open={showTestsDialog} onOpenChange={setShowTestsDialog}>
-        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
-          <DialogHeader>
-            <DialogTitle className="text-center text-black">
-              Test Management Coming Soon!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-center text-black">
-              Tests will allow you to manage AAMC and third party tests, review them in an intelligent suite, and glean insights on strategic changes to improve performance. For early access, email prynce@mymcat.ai.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+          <Dialog open={showTestsDialog} onOpenChange={setShowTestsDialog}>
+            <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+            <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
+              <DialogHeader>
+                <DialogTitle className="text-center text-black">
+                  Test Management Coming Soon!
+                </DialogTitle>
+              </DialogHeader>
+              <div className="p-4">
+                <p className="text-center text-black">
+                  Tests will allow you to manage AAMC and third party tests, review them in an intelligent suite, and glean insights on strategic changes to improve performance. For early access, email prynce@mymcat.ai.
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <UWorldPopup
             isOpen={showUWorldPopup}
