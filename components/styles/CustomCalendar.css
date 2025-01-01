@@ -479,7 +479,7 @@
 .days-container {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
   padding: 1rem;
   height: 100%;
   overflow-y: auto;
@@ -561,3 +561,107 @@
   font-size: 0.8rem;
   color: color-mix(in srgb, var(--theme-text-color) 45%, transparent);
 }
+
+/* Add this new class */
+.calendar-container {
+  position: relative;
+  height: 100%;
+}
+
+.calendar-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 5rem;
+  background: linear-gradient(to bottom, 
+    rgba(0, 0, 0, 0),
+    color-mix(in srgb, var(--theme-gradient-end) 70%, transparent)
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+.exam-day {
+  background: color-mix(in srgb, var(--theme-leaguecard-color) 97%, var(--theme-emphasis-color));
+  border-left: 0.25rem solid var(--theme-emphasis-color);
+  padding-left: 0.75rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.exam-day:hover {
+  background: color-mix(in srgb, var(--theme-leaguecard-color) 95%, var(--theme-emphasis-color));
+  transform: scale(1.02) translateX(0.25rem);
+}
+
+.exam-day .day-header {
+  color: var(--theme-emphasis-color);
+  font-weight: 600;
+}
+
+.exam-day .total-hours {
+  color: color-mix(in srgb, var(--theme-emphasis-color) 75%, transparent);
+}
+
+.break-only-day {
+  opacity: 0.5;
+  background: color-mix(in srgb, var(--theme-leaguecard-color) 50%, transparent);
+  filter: grayscale(0.7);
+  transform: scale(0.98);
+}
+
+.break-only-day:hover {
+  opacity: 0.7;
+  transform: scale(1.0);
+  filter: grayscale(0.3);
+}
+
+.break-only-day .day-header {
+  opacity: 0.5;
+}
+
+.break-only-day .event-item {
+  background: color-mix(in srgb, var(--theme-button-color) 70%, transparent);
+}
+
+.break-only-day .event-item:hover {
+  background: var(--theme-button-color);
+  opacity: 0.8;
+}
+
+.break-only-day .total-hours {
+  opacity: 0.5;
+}
+
+.react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  }
+  
+  .react-calendar__navigation button {
+  min-width: 24px;
+  background: none;
+  font-size: 12px;
+  padding: 2px;
+  }
+  
+  .react-calendar__navigation__label {
+  flex-grow: 1;
+  font-weight: bold;
+  font-size: 18px;
+  color: #000;
+  text-align: center;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 4px;
+  }
+  
+  .react-calendar__navigation__arrow {
+  font-size: 12px;
+  }  

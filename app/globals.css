@@ -197,7 +197,7 @@ body.theme-sunsetCity * {
     --theme-adaptive-tutoring-color: #001226;
     --theme-adaptive-tutoring-boxShadow: 0 0 8px 2px rgba(0, 123, 255, 0.5);
     --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 4px rgba(0, 123, 255, 0.8);
-    --theme-emphasis-color: #87f8a0; /* Bright cyber green to contrast with blue */
+    --theme-emphasis-color: #6af8e8; /* Bright cyber green to contrast with blue */
     --theme-button-color: #011c3ce6; /* Slightly lighter than leaguecard-color: #000e2de6 */
     --theme-button-boxShadow: 0 0 2px 1px rgba(0, 123, 255, 0.5);
     --theme-button-boxShadow-hover: 0 0 9px 3px rgba(0, 123, 255, 0.7);
@@ -307,7 +307,7 @@ body.theme-sunsetCity * {
   --theme-gradient-endstreak: #b479ab;
   --theme-text-color: #4a0e37; /* Darker pink for better contrast */
   --theme-svg-color: #4a0e37; /* Matching text color */
-  --theme-hover-color: #c17891; /* Pale violet red */
+  --theme-hover-color: #c17891;
   --theme-botchatbox-color: #dcdcdc; /* Transparent pale violet red */
   --theme-hover-text: #ffffff;
   --theme-border-color: rgba(184, 84, 117, 0.4); /* Subtle pink */
@@ -650,7 +650,7 @@ body {
   --theme-botchatbox-color: #e8e9ea;
   --theme-hover-text: #ffffff;
   --theme-border-color: rgba(76, 181, 230, 0.4); /* Subtle blue */
-  --theme-leaguecard-color: rgba(255, 255, 255, 0.9);
+  --theme-leaguecard-color: rgba(231, 250, 251, 0.9);
   --theme-navbutton-color: #1e81b0;
   --svg-invert: 0;
   --theme-reddit-color: #f0f8ff;
