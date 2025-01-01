@@ -234,7 +234,6 @@ const Page = () => {
             onActivitiesUpdate={() => {
               fetchActivities();
             }}
-            initialView={searchParams?.get("view") as 'calendar' | 'analytics' || 'analytics'}
           />
         );
         break;
@@ -386,14 +385,24 @@ const Page = () => {
       return;
     }
 
-    setActiveTab(newTab);
-    setCurrentPage(newTab);
+    // Handle tab with view parameter
+    const [tab, params] = newTab.split('?');
+    const searchParams = new URLSearchParams(params);
+    const view = searchParams.get('view');
 
-    if (newTab !== "AdaptiveTutoringSuite"){
-    handleActivityChange('studying', newTab)}
+    setActiveTab(tab);
+    setCurrentPage(tab);
 
-    if (newTab === "Schedule") {
+    if (tab !== "AdaptiveTutoringSuite") {
+      handleActivityChange('studying', tab);
+    }
+
+    if (tab === "Schedule") {
       updateCalendarChatContext(activities);
+      // Update URL with view parameter if present
+      if (view) {
+        router.push(`/home?tab=Schedule&view=${view}`);
+      }
     }
   };
 

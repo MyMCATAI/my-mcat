@@ -12,7 +12,7 @@ import {
 } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import "../styles/CustomCalendar.css";
+import "@/components/styles/AgendaCalender.css";
 import { addDays, format, isTomorrow, isSameDay, isToday } from 'date-fns';
 import { Plus } from 'lucide-react';
 

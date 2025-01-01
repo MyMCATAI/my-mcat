@@ -70,18 +70,20 @@ const TEST_DATES = [
 ];
 
 interface SettingContentProps {
-  onStudyPlanSaved?: () => void;
-  onToggleCalendarView?: () => void;
-  onClose?: () => void;
-  onActivitiesUpdate?: () => void;
+  onComplete?: (result: {
+    success: boolean;
+    action: 'generate' | 'save';
+    data?: {
+      examDate: Date;
+      hoursPerDay: Record<string, string>;
+      fullLengthDays: string[];
+    };
+  }) => void;
   isInitialSetup?: boolean;
 }
 
 const SettingContent: React.FC<SettingContentProps> = ({
-  onStudyPlanSaved,
-  onToggleCalendarView,
-  onClose,
-  onActivitiesUpdate,
+  onComplete,
   isInitialSetup = false,
 }) => {
   // default date is 3 months from now
@@ -248,8 +250,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
       if (response.ok) {
         const updatedPlan = await response.json();
         setExistingStudyPlan(updatedPlan);
-        if (onToggleCalendarView) onToggleCalendarView();
-        if (onClose) onClose(); // Close the settings window
+        if (onComplete) onComplete({ success: true, action: 'save' });
       } else {
         // Create new study plan
         const response = await fetch("/api/study-plan", {
@@ -260,9 +261,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
         if (response.ok) {
           const newPlan = await response.json();
           setExistingStudyPlan(newPlan);
-          if (onStudyPlanSaved) onStudyPlanSaved();
-          if (onToggleCalendarView) onToggleCalendarView();
-          if (onClose) onClose(); // Close the settings window
+          if (onComplete) onComplete({ success: true, action: 'save' });
         }
       }
     } catch (error) {
@@ -379,8 +378,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
       
       if (data.success) {
         toast.success("Study plan generated successfully!");
-        if (onStudyPlanSaved) onStudyPlanSaved();
-        if (onActivitiesUpdate) onActivitiesUpdate();
+        if (onComplete) onComplete({ success: true, action: 'generate' });
       } else {
         throw new Error("Failed to generate study plan");
       }

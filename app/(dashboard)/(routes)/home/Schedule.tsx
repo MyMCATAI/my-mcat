@@ -35,7 +35,7 @@ import {
   Tooltip as ChartTooltip,
 } from "chart.js";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Tutorial from "./Tutorial";
 import { Checkbox } from "@/components/ui/checkbox";
 import Statistics from "@/components/Statistics";
@@ -131,6 +131,15 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [isCoinsLoading, setIsCoinsLoading] = useState(true);
   const [isInitialSetupComplete, setIsInitialSetupComplete] = useState<boolean>(false);
   const [showTestsDialog, setShowTestsDialog] = useState(false);
+  const searchParams = useSearchParams();
+  const view = searchParams?.get("view");
+
+  // Set initial view based on URL parameter
+  useEffect(() => {
+    if (view) {
+      setShowAnalytics(view === 'analytics');
+    }
+  }, [view]);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -686,20 +695,31 @@ const Schedule: React.FC<ScheduleProps> = ({
       {!isInitialSetupComplete ? (
         <div className="col-span-2 w-full h-full">
           <div 
-            className="w-full h-full flex items-center rounded-lg justify-center"
+            className="w-full h-full flex items-center justify-center"
             style={{
-              backgroundSize: "cover",
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "center",
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
               backgroundColor: "var(--theme-mainbox-color)",
             }}
           >
-            <div className="w-full max-w-4xl px-6">
+            <div className="w-full max-w-4xl">
               <SettingContent
-                onStudyPlanSaved={handleStudyPlanSaved}
-                onToggleCalendarView={handleToggleView}
-                onClose={toggleSettings}
-                onActivitiesUpdate={onActivitiesUpdate}
+                onComplete={({ success, action }) => {
+                  if (success && action === 'generate') {
+                    handleSetTab('Tests');
+                  }
+                  if (success) {
+                    handleStudyPlanSaved();
+                    if (action === 'generate') {
+                      handleToggleView();
+                    }
+                    toggleSettings();
+                    onActivitiesUpdate();
+                  }
+                }}
                 isInitialSetup={true}
               />
             </div>
@@ -941,10 +961,19 @@ const Schedule: React.FC<ScheduleProps> = ({
                   className="absolute top-8 right-2 w-80 bg-white rounded-lg shadow-lg z-50"
                 >
                   <SettingContent
-                    onStudyPlanSaved={handleStudyPlanSaved}
-                    onToggleCalendarView={handleToggleView}
-                    onClose={toggleSettings}
-                    onActivitiesUpdate={onActivitiesUpdate}
+                    onComplete={({ success, action }) => {
+                      if (success && action === 'generate') {
+                        handleSetTab('Tests');
+                      }
+                      if (success) {
+                        handleStudyPlanSaved();
+                        if (action === 'generate') {
+                          handleToggleView();
+                        }
+                        toggleSettings();
+                        onActivitiesUpdate();
+                      }
+                    }}
                     isInitialSetup={false}
                   />
                 </motion.div>
@@ -1085,7 +1114,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
-                        onClick={() => setShowTestsDialog(true)}
+                        onClick={() => handleButtonClick("Tests")}
                         className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                           border-2 border-[--theme-border-color] 
                           hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
@@ -1263,38 +1292,38 @@ const Schedule: React.FC<ScheduleProps> = ({
             setRunPart4={setRunTutorialPart4}
           />
 
-      <Dialog open={showBreaksDialog} onOpenChange={setShowBreaksDialog}>
-        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
-          <DialogHeader>
-            <DialogTitle className="text-center text-black">
-              Breaks Coming Soon!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-center text-black">
-              Toggle holidays. Add difficult weeks in school. Ask for a break.
-              Your schedule will be updated automatically.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+          <Dialog open={showBreaksDialog} onOpenChange={setShowBreaksDialog}>
+            <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+            <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
+              <DialogHeader>
+                <DialogTitle className="text-center text-black">
+                  Breaks Coming Soon!
+                </DialogTitle>
+              </DialogHeader>
+              <div className="p-4">
+                <p className="text-center text-black">
+                  Toggle holidays. Add difficult weeks in school. Ask for a break.
+                  Your schedule will be updated automatically.
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
 
-      <Dialog open={showTestsDialog} onOpenChange={setShowTestsDialog}>
-        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
-          <DialogHeader>
-            <DialogTitle className="text-center text-black">
-              Test Management Coming Soon!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-center text-black">
-              Tests will allow you to manage AAMC and third party tests, review them in an intelligent suite, and glean insights on strategic changes to improve performance. For early access, email prynce@mymcat.ai.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+          <Dialog open={showTestsDialog} onOpenChange={setShowTestsDialog}>
+            <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+            <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
+              <DialogHeader>
+                <DialogTitle className="text-center text-black">
+                  Test Management Coming Soon!
+                </DialogTitle>
+              </DialogHeader>
+              <div className="p-4">
+                <p className="text-center text-black">
+                  Tests will allow you to manage AAMC and third party tests, review them in an intelligent suite, and glean insights on strategic changes to improve performance. For early access, email prynce@mymcat.ai.
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <UWorldPopup
             isOpen={showUWorldPopup}

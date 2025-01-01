@@ -1,6 +1,6 @@
 // app/(dashboard)/(routes)/home/PracticeTests.tsx
-import React, { useState } from "react";
-import { ChevronRight, Plus, GripVertical, CalendarIcon, BarChart as AnalyticsIcon, ClipboardList } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ChevronRight, Plus, GripVertical, CalendarIcon, BarChart as AnalyticsIcon, ClipboardList, ChevronLeft } from "lucide-react";
 import {
   DragDropContext,
   Droppable,
@@ -16,10 +16,47 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import { Calendar, dateFnsLocalizer, ToolbarProps, View } from 'react-big-calendar';
+import format from 'date-fns/format';
+import parse from 'date-fns/parse';
+import startOfWeek from 'date-fns/startOfWeek';
+import getDay from 'date-fns/getDay';
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "@/components/styles/CustomCalendar.css";
 import TestReview from '@/components/home/TestReview';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import axios from "axios";
+
+const locales = {
+  'en-US': require('date-fns/locale/en-US'),
+}
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek,
+  getDay,
+  locales,
+});
+
+interface CalendarActivity {
+  id: string;
+  scheduledDate: Date;
+  activityTitle: string;
+  activityType: string;
+  status: string;
+  hours: number;
+}
+
+interface CalendarEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  allDay?: boolean;
+  resource?: any;
+}
 
 interface PracticeTestsProps {
   className?: string;
@@ -34,6 +71,18 @@ interface Test {
   calendarDate?: number;
   score?: number;
   breakdown?: string;
+  startedAt?: string;
+}
+
+interface UserTest {
+  id: string;
+  name: string;
+  company: string;
+  status: string;
+  score: number;
+  breakdown: string;
+  startedAt: string;
+  isCompleted?: boolean;
 }
 
 interface StudentStats {
@@ -75,6 +124,66 @@ const COMPANY_INFO = {
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
 
+interface CustomToolbarProps extends ToolbarProps<CalendarEvent, object> {
+  events: CalendarEvent[];
+}
+
+// Base toolbar component that accepts only ToolbarProps
+const BaseToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = (props) => {
+  const { onNavigate, label } = props;
+
+  return (
+    <div className="flex items-center gap-2">
+      <button 
+        onClick={() => onNavigate('PREV')}
+        className="p-1.5 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-all duration-200"
+      >
+        <ChevronLeft className="w-3.5 h-3.5" />
+      </button>
+      <span className="text-sm font-medium">{label}</span>
+      <button 
+        onClick={() => onNavigate('NEXT')}
+        className="p-1.5 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-all duration-200"
+      >
+        <ChevronRight className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+};
+
+// Wrapper component that adds the countdown
+const CustomToolbarWithEvents: React.FC<{
+  calendarEvents: CalendarEvent[];
+  toolbarProps: ToolbarProps<CalendarEvent, object>;
+}> = ({ calendarEvents, toolbarProps }) => {
+  // Get the next test date from calendar events
+  const nextTestDate = calendarEvents
+    .map(event => event.start)
+    .filter(date => date > new Date())
+    .sort((a, b) => a.getTime() - b.getTime())[0];
+
+  // Calculate days until next test
+  const daysUntilNextTest = nextTestDate
+    ? Math.ceil((nextTestDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  return (
+    <div className="rbc-toolbar flex flex-col items-center gap-2 pb-2">
+      <BaseToolbar {...toolbarProps} />
+      {daysUntilNextTest !== null && (
+        <div className="flex items-center gap-1.5 text-sm">
+          <span className="font-medium text-[--theme-emphasis-color]">
+            {daysUntilNextTest} days
+          </span>
+          <span className="text-[--theme-text-color] opacity-70">
+            until next FL
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const PracticeTests: React.FC<PracticeTestsProps> = ({ 
   className,
   handleSetTab 
@@ -88,12 +197,90 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     | "section"
     | null
   >(null);
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date>(new Date());
   const [studentStats] = useState<StudentStats>({
     averageScore: 85, // Example value - replace with actual data
     testsTaken: 3, // Example value - replace with actual data
     testsRemaining: 8, // Example value - replace with actual data
   });
+  const [calendarActivities, setCalendarActivities] = useState<CalendarActivity[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch calendar activities
+  useEffect(() => {
+    const fetchCalendarActivities = async () => {
+      try {
+        const response = await axios.get('/api/calendar-activity');
+        const activities = response.data.filter((activity: CalendarActivity) => 
+          activity.activityType === 'Exam'
+        );
+        setCalendarActivities(activities);
+        
+        // Convert activities to calendar events
+        const events = activities.map((activity: CalendarActivity) => ({
+          id: activity.id,
+          title: activity.activityTitle,
+          start: new Date(activity.scheduledDate),
+          end: new Date(activity.scheduledDate),
+          allDay: true,
+          resource: activity
+        }));
+        setCalendarEvents(events);
+      } catch (error) {
+        console.error('Error fetching calendar activities:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCalendarActivities();
+  }, []);
+
+  // Helper function to check if a date has a test
+  const isTestDate = (date: Date) => {
+    if (!calendarActivities.length) return false;
+    
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    
+    return calendarActivities.some(activity => {
+      const activityDate = new Date(activity.scheduledDate);
+      activityDate.setHours(0, 0, 0, 0);
+      return activityDate.getTime() === checkDate.getTime();
+    });
+  };
+
+  // Get tests for a specific date
+  const getTestsForDate = (date: Date): CalendarActivity[] => {
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    
+    return calendarActivities.filter(activity => {
+      const activityDate = new Date(activity.scheduledDate);
+      activityDate.setHours(0, 0, 0, 0);
+      return activityDate.getTime() === checkDate.getTime();
+    });
+  };
+
+  // Custom tile content for calendar
+  const tileContent = ({ date, view }: { date: Date; view: string }) => {
+    if (view !== 'month') return null;
+    const tests = getTestsForDate(date);
+    if (tests.length === 0) return null;
+
+    return (
+      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full" />
+    );
+  };
+
+  // Custom tile className for calendar
+  const tileClassName = ({ date, view }: { date: Date; view: string }) => {
+    if (view !== 'month') return '';
+    const hasTest = isTestDate(date);
+    
+    return `relative ${hasTest ? 'bg-[--theme-calendar-color] font-semibold hover:bg-[--theme-hover-color]' : ''}`;
+  };
 
   const [scheduledTests, setScheduledTests] = useState<Test[]>([
     {
@@ -134,7 +321,31 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     useRecommendedDate: true
   });
 
-  const [activeTest, setActiveTest] = useState<Test | null>(null);
+  const [activeTest, setActiveTest] = useState<UserTest | null>(null);
+
+  const [userTests, setUserTests] = useState<UserTest[]>([
+    {
+      id: "past1",
+      name: "AAMC FL1",
+      company: "AAMC",
+      status: "Completed",
+      score: 527,
+      breakdown: "132/132/132/131",
+      startedAt: "2023-12-15",
+      isCompleted: true
+    },
+    {
+      id: "past2",
+      name: "Blueprint FL2",
+      company: "Blueprint",
+      status: "Completed",
+      score: 515,
+      breakdown: "129/128/129/129",
+      startedAt: "2023-12-10",
+      isCompleted: true
+    },
+    // Add more past tests as needed
+  ]);
 
   const handleAddTest = () => {
     const testId = `${scheduledTests.length + 1}`;
@@ -143,7 +354,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
       name: `FL${newTest.testNumber}`,
       company: newTest.company,
       status: "Not Started",
-      calendarDate: parseInt(newTest.date),
+      calendarDate: newTest.date ? newTest.date.getDate() : undefined,
     };
 
     setScheduledTests([...scheduledTests, newTestEntry]);
@@ -161,19 +372,6 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     setScheduledTests(items);
   };
 
-  const calendarDays = [
-    ["26", "27", "28", "29", "30", "1", "2"],
-    ["3", "4", "5", "6", "7", "8", "9"],
-    ["10", "11", "12", "13", "14", "15", "16"],
-    ["17", "18", "19", "20", "21", "22", "23"],
-    ["24", "25", "26", "27", "28", "29", "30"],
-    ["31", "1", "2", "3", "4", "5", "6"],
-  ];
-
-  const isTestDate = (day: string) => {
-    return scheduledTests.some((test) => test.calendarDate === parseInt(day));
-  };
-
   const formatDate = (date: Date | null): string => {
     if (!date) return "";
     return date.toLocaleDateString('en-US', {
@@ -183,79 +381,122 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     });
   };
 
+  // Handle calendar event selection
+  const handleSelectEvent = (event: CalendarEvent) => {
+    const activity = event.resource as CalendarActivity;
+    console.log('Selected activity:', activity);
+    // Handle event selection logic here
+  };
+
+  // Custom event styling
+  const eventStyleGetter = (event: CalendarEvent) => {
+    return {
+      style: {
+        backgroundColor: 'var(--theme-emphasis-color)',
+        border: 'none',
+      }
+    };
+  };
+
+  // Add onNavigate handler
+  const handleNavigate = (newDate: Date) => {
+    setDate(newDate);
+  };
+
   return (
     <div className={`flex flex-col ${className}`}>
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex flex-col h-[calc(100vh-8.3rem)]">
           {activeTest ? (
-            // When a test is active, it takes up the full container
-            <div className="h-full px-4 ">
+            <div className="h-full px-4">
               <TestReview 
-                test={activeTest} 
+                test={{
+                  company: activeTest.company,
+                  testNumber: activeTest.name.split(' ').pop() || '',
+                  score: activeTest.score,
+                  breakdown: activeTest.breakdown,
+                  dateTaken: new Date(activeTest.startedAt).toLocaleDateString()
+                }}
                 onBack={() => setActiveTest(null)} 
               />
             </div>
           ) : (
-            // Original layout with calendar and tests
-            <>
-              {/* Calendar + Scheduled Tests Section */}
-              <div className="h-[70%] min-h-0 mb-4">
-                <div
-                  className="bg-[--theme-leaguecard-color] rounded-xl p-4 sm:p-6 lg:p-8 mx-4 h-full overflow-hidden"
-                  style={{
-                    boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
-                  }}
-                >
-                  <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full">
-                    {/* Calendar Side - Add overflow handling */}
-                    <div className="flex flex-col h-full overflow-hidden">
-                      <div className="text-lg font-medium mb-1 text-center">
-                        December 2024
-                      </div>
-                      <div className="flex-1 overflow-auto px-2">
-                        {/* Calendar Grid Container */}
-                        <div className="h-full flex flex-col">
-                          {/* Header Row - Updated with more responsive text sizes */}
-                          <div className="grid grid-cols-7 mb-0.5">
-                            {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-                              <div
-                                key={day}
-                                className="text-center text-[min(0.6rem,1.5vh)] font-medium truncate"
-                              >
-                                {day}
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Calendar Grid - Updated cell styling with responsive text */}
-                          <div className="flex-1 grid grid-rows-6 min-h-0">
-                            {calendarDays.map((week, weekIndex) => (
-                              <div key={weekIndex} className="grid grid-cols-7">
-                                {week.map((day, dayIndex) => (
-                                  <div
-                                    key={`${weekIndex}-${dayIndex}`}
-                                    className={`h-full flex items-center justify-center text-[min(0.7rem,1.8vh)] p-0.5
-                                      ${parseInt(day) > 0 && parseInt(day) <= 31 ? "hover:bg-[--theme-hover-color] cursor-pointer" : "opacity-30"}
-                                      ${date?.getDate() === parseInt(day) ? "bg-[--theme-hover-color] text-[--theme-hover-text]" : ""}
-                                      ${isTestDate(day) ? "bg-[--theme-calendar-color] text-[--theme-text-color] font-bold" : ""}
-                                    `}
-                                  >
-                                    {day}
-                                  </div>
-                                ))}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
+            <div className="h-full">
+              <div
+                className="bg-[--theme-leaguecard-color] rounded-xl p-4 sm:p-6 lg:p-8 mx-4 h-full overflow-hidden"
+                style={{
+                  boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                }}
+              >
+                <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full">
+                  {/* Calendar Side */}
+                  <div className="flex flex-col h-full overflow-hidden">
+                    <div className="flex-1 flex items-center justify-center">
+                      <Calendar
+                        localizer={localizer}
+                        events={calendarEvents}
+                        startAccessor="start"
+                        endAccessor="end"
+                        className="custom-calendar w-full max-w-full bg-transparent"
+                        views={['month']}
+                        defaultView="month"
+                        date={date}
+                        onNavigate={handleNavigate}
+                        toolbar={true}
+                        popup
+                        selectable
+                        onSelectEvent={handleSelectEvent}
+                        eventPropGetter={eventStyleGetter}
+                        components={{
+                          toolbar: (props) => (
+                            <CustomToolbarWithEvents
+                              calendarEvents={calendarEvents}
+                              toolbarProps={props}
+                            />
+                          ),
+                        }}
+                      />
                     </div>
+                  </div>
 
-                    {/* Scheduled Tests Side - Add overflow handling */}
-                    <div className="flex flex-col h-full overflow-hidden">
-                      <h3 className="text-sm font-medium text-[--theme-text-color] opacity-60 uppercase tracking-wide mb-4 text-center">
-                        Scheduled Tests
-                      </h3>
-                      <div className="flex-1 overflow-auto px-2">
+                  {/* Tests Side with Tabs */}
+                  <div className="flex flex-col h-full overflow-hidden relative">
+                    <Tabs defaultValue="upcoming" className="w-full h-full">
+                      <TabsList className="grid w-full grid-cols-2 mb-4">
+                        <TabsTrigger value="past">Past Tests</TabsTrigger>
+                        <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="past" className="flex-1 overflow-auto">
+                        <div className="space-y-2 pb-2">
+                          {userTests.map((test: UserTest, index: number) => (
+                            <div
+                              key={test.id}
+                              className="flex items-center p-3 bg-[--theme-leaguecard-accent] rounded-lg 
+                                transition-all duration-200
+                                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
+                                cursor-pointer"
+                              onClick={() => setActiveTest(test)}
+                            >
+                              {test.score && (
+                                <div className="text-xl font-bold mr-4">
+                                  {test.score}
+                                </div>
+                              )}
+                              <div className="flex-grow text-right">
+                                <h4 className="text-sm font-medium">
+                                  {test.name}
+                                </h4>
+                                <p className="text-xs opacity-70">
+                                  {test.company}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="upcoming" className="flex-1 overflow-auto">
                         <Droppable droppableId="droppable-tests">
                           {(provided) => (
                             <div
@@ -319,100 +560,62 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                             </div>
                           )}
                         </Droppable>
-                      </div>
 
-                      <button
-                        onClick={() => setIsAddDialogOpen(true)}
-                        className="mt-4 w-full py-2 px-4 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                          rounded-lg transition-colors duration-200 text-sm font-medium flex items-center justify-center gap-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add Practice Test
-                      </button>
+                        <button
+                          onClick={() => setIsAddDialogOpen(true)}
+                          className="mt-4 w-full py-2 px-4 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                            rounded-lg transition-colors duration-200 text-sm font-medium flex items-center justify-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add Practice Test
+                        </button>
+                      </TabsContent>
+                    </Tabs>
+
+                    {/* View Toggle Buttons - Made Larger */}
+                    <div className="absolute bottom-4 right-4 flex items-center gap-4">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => handleSetTab && handleSetTab("Schedule?view=calendar")}
+                              className="group w-16 h-16 p-3 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                                border-2 border-[--theme-border-color] 
+                                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                                shadow-md rounded-full transition flex flex-col items-center justify-center"
+                            >
+                              <CalendarIcon className="w-8 h-8" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Switch to Calendar View</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => handleSetTab && handleSetTab("Schedule?view=analytics")}
+                              className="group w-16 h-16 p-3 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                                border-2 border-[--theme-border-color] 
+                                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                                shadow-md rounded-full transition flex flex-col items-center justify-center"
+                            >
+                              <AnalyticsIcon className="w-8 h-8" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Switch to Analytics View</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* Previous Practice Tests Section */}
-              <div className="flex-grow px-4">
-                <div className="grid grid-cols-5 gap-4 h-full">
-                  {[
-                    { company: "AAMC", testNumber: "FL1", score: 527, breakdown: "132/132/132/131", dateTaken: "Dec 15" },
-                    { company: "Blueprint", testNumber: "FL2", score: 515, breakdown: "129/128/129/129", dateTaken: "Dec 10" },
-                    { company: "AAMC", testNumber: "FL3", score: 508, breakdown: "127/127/127/127", dateTaken: "Dec 5" },
-                    { company: "Jack Westin", testNumber: "FL1", score: 498, breakdown: "124/124/125/125", dateTaken: "Nov 30" },
-                    { company: "Altius", testNumber: "FL4", score: 522, breakdown: "131/130/131/130", dateTaken: "Nov 25" },
-                  ].map((test, index) => (
-                    <div
-                      key={index}
-                      className="h-full p-3 rounded-lg bg-opacity-50 bg-[--theme-leaguecard-accent] 
-                        transition-all duration-300 cursor-pointer group
-                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] hover:transform hover:scale-[1.02]"
-                      style={{
-                        boxShadow: 'var(--theme-button-boxShadow)',
-                        height: '15vh',
-                      }}
-                      onClick={() => setActiveTest(test)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow-hover)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow)';
-                      }}
-                    >
-                      <div className="h-full flex flex-col">
-                        {/* Company and Date - Updated to use hover text color */}
-                        <div className="flex justify-between text-[10px] mb-1 opacity-40 group-hover:opacity-100 group-hover:text-[--theme-hover-text] transition-opacity">
-                          <span className="text-[10px] opacity-75">{test.company} {test.testNumber}</span>
-                          <span className="text-[10px] opacity-75">{test.dateTaken}</span>
-                        </div>
-
-                        {/* Score - Updated color transitions */}
-                        <div className="flex-grow flex items-center justify-center">
-                          <span 
-                            className={`text-4xl font-bold leading-none transition-all duration-300
-                              opacity-40 group-hover:opacity-100 group-hover:text-[--theme-hover-text]`}
-                          >
-                            {test.score}
-                          </span>
-                        </div>
-
-                        {/* Breakdown - Updated to use hover text color */}
-                        <div className="flex justify-center text-[10px] mt-1 opacity-0 group-hover:opacity-100 group-hover:text-[--theme-hover-text] transition-opacity">
-                          <span className="opacity-75">
-                            {test.breakdown}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* View Toggle Buttons - Positioned like in Schedule.tsx */}
-              <div className="flex justify-end px-4 mr-2.5">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => handleSetTab?.("Schedule")}
-                        className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                          border-2 border-[--theme-border-color] 
-                          hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                          shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
-                      >
-                        <AnalyticsIcon className="w-8 h-8" />
-                        <span className="text-xs font-medium">Stats</span>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Switch to Stats View</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </>
+            </div>
           )}
         </div>
       </DragDropContext>
@@ -524,16 +727,16 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                       We&apos;ll recommend the next available test date based on your study schedule
                     </div>
                   ) : (
-                    <div className="flex justify-center">
-                      <Calendar
-                        onChange={(value) => setNewTest({ ...newTest, date: value as Date })}
-                        value={newTest.date}
-                        className="w-fit bg-white rounded-lg shadow-sm"
-                        tileClassName="text-gray-700"
-                        minDate={new Date()}
-                        formatMonthYear={(locale, date) => {
-                          return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="date"
+                        value={newTest.date ? newTest.date.toISOString().split('T')[0] : ''}
+                        min={new Date().toISOString().split('T')[0]}
+                        onChange={(e) => {
+                          const date = e.target.value ? new Date(e.target.value) : null;
+                          setNewTest({ ...newTest, date });
                         }}
+                        className="w-full p-2 rounded-lg border border-gray-300 bg-white"
                       />
                     </div>
                   )}
