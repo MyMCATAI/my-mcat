@@ -125,7 +125,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
             )}
             <div className="flex gap-2">
               <a 
-                href="https://discord.gg/rTxN7wkh6e" 
+                href="https://discord.gg/PkRbV5nw" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1"

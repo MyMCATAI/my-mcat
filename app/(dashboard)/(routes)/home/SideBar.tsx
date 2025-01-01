@@ -3,19 +3,41 @@ import Image from "next/image";
 import { FetchedActivity } from '@/types';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import RedditPosts from "../../../../components/RedditPosts";
+import { ChevronLeft, ChevronRight, HelpCircle, CheckCircle } from 'lucide-react';
+import { FaCheckCircle, FaYoutube } from 'react-icons/fa';
+import { toast } from "react-hot-toast";
+import { isToday, isSameDay, isTomorrow, format } from "date-fns";
+import RedditPosts from "@/components/RedditPosts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FaYoutube } from 'react-icons/fa';
-import TutorialContent from "../../../../components/home/TutorialContent";
-import TutorialVidDialog from '../../../../components/ui/TutorialVidDialog';
+import TutorialContent from "@/components/home/TutorialContent";
+import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 import ChatBot from "@/components/chatbot/ChatBot";
-import { useUser } from "@clerk/clerk-react";
-import toast from "react-hot-toast";
+import { useUser } from "@clerk/nextjs";
 import { Star, StarHalf } from 'lucide-react';
 import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import BlogPosts from "@/components/home/BlogPosts";
+import { Tutor, tutors as initialTutors, tutorExpertise, getTutorDescription } from "@/constants/tutors";
+import { Checkbox } from "@/components/ui/checkbox";
+import CompletionDialog from "@/components/home/CompletionDialog";
+import { useRouter } from "next/navigation";
+import UWorldPopup from '@/components/home/UWorldPopup';
+
+interface Task {
+  text: string;
+  completed: boolean;
+}
+
+interface Activity {
+  id: string;
+  scheduledDate: string;
+  activityTitle: string;
+  activityText: string;
+  hours: number;
+  activityType: string;
+  link?: string | null;
+  tasks?: Task[];
+  source?: string;
+}
 
 interface SideBarProps {
   activities: FetchedActivity[];
@@ -24,6 +46,7 @@ interface SideBarProps {
   chatbotRef: React.MutableRefObject<{
     sendMessage: (message: string) => void;
   }>;
+  handleSetTab: (tab: string) => void;
 }
 
 interface Tutor {
@@ -37,21 +60,44 @@ interface Tutor {
 type TabContent = 
   | { type: 'insights'; videos: { id: string; title: string }[] }
   | { type: 'tutors'; schools: Tutor[] }
-  | { type: 'tutorial' };
+  | { type: 'tutorial' }
+  | { type: 'tasks' };
 
 type VideoCategory = 'RBT' | 'RWT' | 'CMP';
 
-const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, currentPage, chatbotContext, chatbotRef }) => {
-  const [activeTab, setActiveTab] = useState("tab1");
-  const [tutors, setTutors] = useState<Tutor[]>([
-    { name: "Prynce K.", university: "Rice University", stars: 5, reviews: 16, price: 50 },
-    { name: "Ali N.", university: "Duke University", stars: 4.5, reviews: 5, price: 150 },
-    { name: "Saanvi A.", university: "New York University", stars: 5, reviews: 3, price: 85 },
-    { name: "Ethan K.", university: "Univ of Pennsylvania", stars: 4.5, reviews: 8, price: 200 }
-  ]);
+const SideBar: React.FC<SideBarProps> = ({ 
+  activities: initialActivities, 
+  currentPage, 
+  chatbotContext, 
+  chatbotRef,
+  handleSetTab 
+}) => {
+  const getInitialActiveTab = () => {
+    switch (currentPage) {
+      case "Schedule":
+        return "tab2"; // Tasks tab
+      case "CARS":
+      case "AdaptiveTutoringSuite":
+        return "tab1"; // Insights tab
+      default:
+        return "tab1";
+    }
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialActiveTab());
+  
+  useEffect(() => {
+    setActiveTab(getInitialActiveTab());
+  }, [currentPage]);
+
+  const [tutors, setTutors] = useState<Tutor[]>(initialTutors);
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<VideoCategory>('RBT');
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Add task-related state
+  const [todayActivities, setTodayActivities] = useState<Activity[]>([]);
 
   const firstVideo = { id: "gn10W2awwqw", title: "Scaffolding Strategy " };
 
@@ -352,6 +398,127 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
     </div>
   );
 
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const renderTasks = () => (
+    <div className="h-[calc(100vh-12.3rem)] flex flex-col">
+      <div className="flex items-center justify-between px-4 py-2 bg-[--theme-leaguecard-color] rounded-lg mb-4">
+        <button
+          onClick={() => {
+            const newDate = new Date(currentDate);
+            newDate.setDate(newDate.getDate() - 1);
+            setCurrentDate(newDate);
+          }}
+          className="p-2 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-colors"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <span className="font-medium">
+          {isToday(currentDate) 
+            ? "Today"
+            : isTomorrow(currentDate)
+              ? "Tomorrow"
+              : format(currentDate, 'EEEE, MMMM d')}
+        </span>
+        <button
+          onClick={() => {
+            const newDate = new Date(currentDate);
+            newDate.setDate(newDate.getDate() + 1);
+            setCurrentDate(newDate);
+          }}
+          className="p-2 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-colors"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+      <ScrollArea className="flex-grow">
+        <div className="px-4 space-y-6">
+          {todayActivities.map((activity) => (
+            <div key={activity.id} className="mb-6">
+              <button
+                className={`w-full py-2 px-3 
+                  ${
+                    isActivityCompleted(activity)
+                      ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
+                      : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
+                  }
+                  border border-[--theme-border-color]
+                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
+                  font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
+                  text-sm`}
+                onClick={() => handleButtonClick(activity.activityTitle)}
+              >
+                <span>{activity.activityTitle}</span>
+                {isActivityCompleted(activity) ? (
+                  <FaCheckCircle
+                    className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                    style={{ color: "var(--theme-hover-text)" }}
+                  />
+                ) : (
+                  <svg
+                    className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                )}
+              </button>
+
+              <div className="bg-[--theme-leaguecard-color] shadow-md p-3 mt-2 space-y-2 rounded-lg">
+                {activity.tasks && activity.tasks.length > 0 ? (
+                  activity.tasks.map((task, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`task-${activity.id}-${index}`}
+                        checked={task.completed}
+                        onCheckedChange={(checked) =>
+                          isToday(currentDate)
+                            ? handleTaskCompletion(
+                                activity.id,
+                                index,
+                                checked as boolean
+                              )
+                            : null
+                        }
+                        disabled={!isToday(currentDate)}
+                        className={!isToday(currentDate) ? "opacity-50 cursor-not-allowed" : ""}
+                      />
+                      <label
+                        htmlFor={`task-${activity.id}-${index}`}
+                        className={`text-sm leading-tight cursor-pointer flex-grow ${
+                          !isToday(currentDate) ? "opacity-50" : ""
+                        }`}
+                      >
+                        {task.text}
+                      </label>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm italic">No tasks for this activity</p>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {todayActivities.length === 0 && (
+            <p className="text-center italic">
+              No activities scheduled for this day
+            </p>
+          )}
+        </div>
+      </ScrollArea>
+      <audio ref={audioRef} src="/levelup.mp3" />
+    </div>
+  );
+
   const renderContent = (content: TabContent) => {
     if (content.type === 'insights') {
       return renderInsights();
@@ -359,14 +526,17 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
       return renderTutors(content.schools);
     } else if (content.type === 'tutorial') {
       return <TutorialContent />;
+    } else if (content.type === 'tasks') {
+      return renderTasks();
     }
     return null;
   };
 
   const tabs: { id: string; label: string; content: TabContent }[] = [
     { id: "tab1", label: "Insights", content: { type: 'insights', videos: videos } },
-    { id: "tab2", label: "Tutors", content: { type: 'tutors', schools: tutors } },
-    { id: "tab3", label: "Help", content: { type: 'tutorial' } },
+    { id: "tab2", label: "Tasks", content: { type: 'tasks' } },
+    { id: "tab3", label: "Tutors", content: { type: 'tutors', schools: tutors } },
+    { id: "tab4", label: "Help", content: { type: 'tutorial' } },
   ];
 
   const AddTutorDialog = () => (
@@ -486,6 +656,152 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
     );
   };
 
+  useEffect(() => {
+    const activitiesForDate = initialActivities.filter((activity: Activity) => 
+      isSameDay(new Date(activity.scheduledDate), currentDate)
+    );
+    setTodayActivities(activitiesForDate);
+  }, [initialActivities, currentDate]);
+
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const fanfareRef = useRef<HTMLAudioElement>(null);
+
+  const handleTaskCompletion = async (activityId: string, taskIndex: number, completed: boolean) => {
+    try {
+      const activity = todayActivities.find((a: Activity) => a.id === activityId);
+      if (!activity || !activity.tasks) return;
+
+      // If task is already completed, prevent unchecking
+      if (activity.tasks[taskIndex].completed) {
+        return;
+      }
+
+      const updatedTasks = activity.tasks.map((task: Task, index: number) =>
+        index === taskIndex ? { ...task, completed: true } : task
+      );
+
+      // Update backend
+      const response = await fetch(`/api/calendar-activity`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: activityId,
+          tasks: updatedTasks,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update task");
+
+      // Update local state
+      const updatedActivities = todayActivities.map((a) =>
+        a.id === activityId ? { ...a, tasks: updatedTasks } : a
+      );
+      setTodayActivities(updatedActivities);
+
+      // Check if all tasks are completed for this activity
+      const allTasksCompleted = updatedTasks.every((task) => task.completed);
+      if (allTasksCompleted) {
+        // Play success sound
+        if (audioRef.current) {
+          audioRef.current.play().catch(console.error);
+        }
+
+        // Get activity details from backend
+        const activityResponse = await fetch(`/api/calendar-activity`);
+        const activities = await activityResponse.json();
+        const completedActivity = activities.find((a: Activity) => a.id === activityId);
+
+        if (completedActivity.source === "generated" && isToday(new Date(completedActivity.scheduledDate))) {
+          // Update user coin count
+          await fetch("/api/user-info", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amount: 1 }),
+          });
+          
+          toast.success(
+            `You've completed all tasks for ${activity.activityTitle}! You earned a coin!`
+          );
+        } else {
+          toast.success(
+            `You've completed all tasks for ${activity.activityTitle}!`
+          );
+        }
+      }
+
+      // Check if ALL activities have ALL tasks completed
+      const areAllTasksCompleted = updatedActivities.every((activity) => 
+        activity.tasks?.every((task) => task.completed)
+      );
+
+      // If everything is complete, play fanfare and show completion dialog
+      if (areAllTasksCompleted) {
+        if (fanfareRef.current) {
+          fanfareRef.current.play().catch(console.error);
+        }
+        setShowCompletionDialog(true);
+      }
+    } catch (error) {
+      console.error("Error updating task:", error);
+      toast.error("Failed to update task");
+    }
+  };
+
+  const isActivityCompleted = (activity: Activity) => {
+    return (
+      activity.tasks &&
+      activity.tasks.length > 0 &&
+      activity.tasks.every((task) => task.completed)
+    );
+  };
+
+  function getUWorldTasks() {
+    const uWorldActivity = todayActivities.find(activity => activity.activityTitle === "UWorld");
+    if (!uWorldActivity?.tasks) return [];
+    
+    return uWorldActivity.tasks
+      .filter(task => {
+        // Only include tasks that match the format "X Q UWorld - Subject"
+        const pattern = /^\d+\s*Q\s*UWorld\s*-\s*.+$/i;
+        return pattern.test(task.text);
+      })
+      .map(task => ({
+        text: task.text,
+        completed: task.completed,
+        subject: task.text.split(' - ')[1]?.trim()
+      }));
+  }
+
+  const router = useRouter();
+
+  const handleButtonClick = (section: string) => {
+    switch (section) {
+      case "MyMCAT Daily CARs":
+        handleSetTab("CARS");
+        break;
+      case "Anki Clinic":
+        router.push("/doctorsoffice");
+        break;
+      case "Adaptive Tutoring Suite":
+        handleSetTab("AdaptiveTutoringSuite");
+        break;
+      case "AAMC Materials":
+        break;
+      case "UWorld":
+        setShowUWorldPopup(true);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const [showUWorldPopup, setShowUWorldPopup] = useState(false);
+
+  const handleUWorldScoreSubmit = (scores: number[]) => {
+    console.log("UWorld scores:", scores);
+    // You can add additional score handling logic here if needed
+  };
+
   return (
     <div className="relative p-2 overflow-hidden h-[calc(100vh-3.9rem)]">
       <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
@@ -504,14 +820,33 @@ const SideBar: React.FC<SideBarProps> = ({ activities: initialActivities, curren
             </button>
           ))}
         </div>
-        <div className={`mt-4 ${activeTab === 'tab2' ? 'bg-transparent' : 'bg-[--theme-mainbox-color]'} flex-1 min-h-0 mb-8 overflow-hidden relative rounded-lg`}>
+        <div className={`mt-4 ${
+          activeTab === 'tab3'
+            ? 'bg-transparent' 
+            : 'bg-[--theme-mainbox-color]'
+          } flex-1 min-h-0 mb-8 overflow-hidden relative rounded-lg`}>
           {renderContent(tabs.find(tab => tab.id === activeTab)!.content)}
         </div>
       </div>
+      <audio ref={audioRef} src="/levelup.mp3" />
+      <audio ref={fanfareRef} src="/fanfare.mp3" />
+      
+      <CompletionDialog 
+        isOpen={showCompletionDialog} 
+        onClose={() => setShowCompletionDialog(false)}
+      />
+      
       <TutorialVidDialog
         isOpen={isTutorialDialogOpen}
         onClose={() => setIsTutorialDialogOpen(false)}
         videoUrl={tutorialVideoUrl}
+      />
+      
+      <UWorldPopup
+        isOpen={showUWorldPopup}
+        onClose={() => setShowUWorldPopup(false)}
+        onScoreSubmit={handleUWorldScoreSubmit}
+        tasks={getUWorldTasks()}
       />
     </div>
   );

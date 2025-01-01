@@ -241,8 +241,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
 
       <AnimatePresence>
         {isHovered && 
-         activeTab !== "Schedule" && 
-         currentPage !== "Schedule" && 
+         currentPage === "doctorsoffice" && 
          !recentlyChangedTab && (
           <FloatingTaskList 
             activities={activities}

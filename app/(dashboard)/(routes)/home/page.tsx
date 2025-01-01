@@ -29,7 +29,6 @@ import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { Loader2 } from "lucide-react";
-import PracticeTests from "./PracticeTests";
 import { GameOverDialog } from '@/components/home/GameOverDialog';
 
 // Loading component
@@ -505,6 +504,7 @@ const Page = () => {
               currentPage={currentPage}
               chatbotContext={chatbotContext}
               chatbotRef={chatbotRef}
+              handleSetTab={handleTabChange}
             />
           </div>
         </div>

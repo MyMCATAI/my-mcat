@@ -37,7 +37,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Tutorial from "./Tutorial";
-import { Checkbox } from "@/components/ui/checkbox";
 import Statistics from "@/components/Statistics";
 import DonutChart from "./DonutChart";
 import { PurchaseButton } from "@/components/purchase-button";
@@ -46,7 +45,6 @@ import {
   Calendar as CalendarIcon,
   BarChart as AnalyticsIcon,
 } from "lucide-react";
-import { FaCheckCircle } from "react-icons/fa";
 import HelpContentSchedule from './HelpContentSchedule';
 import { HelpCircle, Bell, Coffee, ClipboardList, AlertTriangle } from 'lucide-react';
 import { useOutsideClick } from '@/hooks/use-outside-click';
@@ -54,6 +52,8 @@ import UWorldPopup from '@/components/home/UWorldPopup';
 import CompletionDialog from '@/components/home/CompletionDialog';
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { OptionsDialog } from "@/components/home/OptionsDialog";
+import { FaCheckCircle } from "react-icons/fa";
+import { Checkbox } from "@/components/ui/checkbox";
 
 ChartJS.register(
   CategoryScale,
@@ -860,6 +860,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                 )}
               </div>
             )}
+          </div>
 
             {/* Settings and Help Buttons */}
             <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
@@ -1217,7 +1218,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                 </div>
               </div>
             )}
-          </div>
+
 
           <Dialog open={showRewardDialog} onOpenChange={setShowRewardDialog}>
             <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
@@ -1263,38 +1264,38 @@ const Schedule: React.FC<ScheduleProps> = ({
             setRunPart4={setRunTutorialPart4}
           />
 
-      <Dialog open={showBreaksDialog} onOpenChange={setShowBreaksDialog}>
-        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
-          <DialogHeader>
-            <DialogTitle className="text-center text-black">
-              Breaks Coming Soon!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-center text-black">
-              Toggle holidays. Add difficult weeks in school. Ask for a break.
-              Your schedule will be updated automatically.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+          <Dialog open={showBreaksDialog} onOpenChange={setShowBreaksDialog}>
+            <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+            <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
+              <DialogHeader>
+                <DialogTitle className="text-center text-black">
+                  Breaks Coming Soon!
+                </DialogTitle>
+              </DialogHeader>
+              <div className="p-4">
+                <p className="text-center text-black">
+                  Toggle holidays. Add difficult weeks in school. Ask for a break.
+                  Your schedule will be updated automatically.
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
 
-      <Dialog open={showTestsDialog} onOpenChange={setShowTestsDialog}>
-        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
-          <DialogHeader>
-            <DialogTitle className="text-center text-black">
-              Test Management Coming Soon!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-center text-black">
-              Tests will allow you to manage AAMC and third party tests, review them in an intelligent suite, and glean insights on strategic changes to improve performance. For early access, email prynce@mymcat.ai.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+          <Dialog open={showTestsDialog} onOpenChange={setShowTestsDialog}>
+            <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+            <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
+              <DialogHeader>
+                <DialogTitle className="text-center text-black">
+                  Test Management Coming Soon!
+                </DialogTitle>
+              </DialogHeader>
+              <div className="p-4">
+                <p className="text-center text-black">
+                  Tests will allow you to manage AAMC and third party tests, review them in an intelligent suite, and glean insights on strategic changes to improve performance. For early access, email prynce@mymcat.ai.
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <UWorldPopup
             isOpen={showUWorldPopup}
