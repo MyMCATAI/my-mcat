@@ -197,6 +197,7 @@ async function generateStudySchedule(
   const examDate = new Date(studyPlan.examDate);
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const MINIMUM_DAYS_BETWEEN_EXAMS = 5;
+  const INITIAL_BUFFER_DAYS = 3; // Buffer before first exam
 
   // Ensure dates are at start of day
   startDate.setHours(0, 0, 0, 0);
@@ -210,96 +211,115 @@ async function generateStudySchedule(
     "AAMC Full Length Exam 4",
     "AAMC Sample Scored (FL5)"  // Always last
   ];
-  let examSchedule: { date: Date; examName: string }[] = [];
 
-  // Helper function to check if a date has enough spacing from existing exams
-  function hasEnoughSpacing(date: Date, schedule: { date: Date; examName: string }[]): boolean {
-    return schedule.every(exam => {
-      const daysBetween = Math.abs(
-        Math.floor((date.getTime() - exam.date.getTime()) / (1000 * 60 * 60 * 24))
-      );
-      return daysBetween >= MINIMUM_DAYS_BETWEEN_EXAMS;
+  // Helper function to get all valid exam dates between two dates
+  function getValidDates(start: Date, end: Date): Date[] {
+    const dates: Date[] = [];
+    let current = new Date(start);
+    while (current <= end) {
+      if (fullLengthDays.includes(daysOfWeek[current.getDay()])) {
+        dates.push(new Date(current));
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    return dates;
+  }
+
+  // Helper function to find nearest valid date to a target date
+  function findNearestValidDate(targetDate: Date, validDates: Date[]): Date | null {
+    if (validDates.length === 0) return null;
+    
+    return validDates.reduce((nearest, date) => {
+      const currentDiff = Math.abs(date.getTime() - targetDate.getTime());
+      const nearestDiff = Math.abs(nearest.getTime() - targetDate.getTime());
+      return currentDiff < nearestDiff ? date : nearest;
     });
   }
 
-  // Helper function to find next valid date
-  function findNextValidDate(startFrom: Date, schedule: { date: Date; examName: string }[]): Date | null {
-    let currentDate = new Date(startFrom);
-    let attempts = 0;
-    const maxAttempts = 30; // Prevent infinite loop
-
-    while (attempts < maxAttempts) {
-      if (
-        fullLengthDays.includes(daysOfWeek[currentDate.getDay()]) &&
-        hasEnoughSpacing(currentDate, schedule)
-      ) {
-        return new Date(currentDate);
-      }
-      currentDate.setDate(currentDate.getDate() + 1);
-      attempts++;
-    }
-    return null;
-  }
+  let examSchedule: { date: Date; examName: string }[] = [];
   
   if (fullLengthDays.length > 0) {
-    // Schedule Unscored Sample on first available day
-    const firstValidDate = findNextValidDate(startDate, examSchedule);
-    if (firstValidDate) {
-      examSchedule.push({
-        date: firstValidDate,
-        examName: availableExams[0] // Unscored Sample
-      });
-    }
-
-    // Schedule FL5 on last possible day (at least 4 days before exam)
-    let lastExamDate = new Date(examDate);
-    lastExamDate.setDate(lastExamDate.getDate() - MINIMUM_DAYS_BETWEEN_EXAMS);
+    // Calculate study period boundaries
+    let firstPossibleDate = new Date(startDate);
+    firstPossibleDate.setDate(firstPossibleDate.getDate() + INITIAL_BUFFER_DAYS);
     
-    // Start from the exam date and work backwards to find the latest valid date
-    let latestValidDate = null;
-    let currentDate = new Date(examDate);
-    currentDate.setDate(currentDate.getDate() - MINIMUM_DAYS_BETWEEN_EXAMS); // Start at least 4 days before
+    let lastPossibleDate = new Date(examDate);
+    lastPossibleDate.setDate(lastPossibleDate.getDate() - MINIMUM_DAYS_BETWEEN_EXAMS);
 
-    while (!latestValidDate && currentDate > firstValidDate!) {
-      if (fullLengthDays.includes(daysOfWeek[currentDate.getDay()]) && 
-          hasEnoughSpacing(currentDate, examSchedule)) {
-        latestValidDate = new Date(currentDate);
-        break;
-      }
-      currentDate.setDate(currentDate.getDate() - 1);
+    // Get all valid dates in the study period
+    const validDates = getValidDates(firstPossibleDate, lastPossibleDate);
+
+    if (validDates.length === 0) {
+      return activities; // No valid dates available
     }
 
-    if (latestValidDate) {
-      examSchedule.push({
-        date: latestValidDate,
-        examName: availableExams[5] // FL5
-      });
+    // Schedule Unscored Sample near start
+    const firstExamDate = validDates[0];
+    examSchedule.push({
+      date: firstExamDate,
+      examName: availableExams[0]
+    });
 
-      // Calculate available days between first and last exam
-      const daysAvailable = Math.floor(
-        (latestValidDate.getTime() - firstValidDate!.getTime()) / (1000 * 3600 * 24)
-      );
+    // Schedule FL5 near end
+    const lastExamDate = validDates[validDates.length - 1];
+    examSchedule.push({
+      date: lastExamDate,
+      examName: availableExams[5]
+    });
 
-      // If we have enough days, try to fit FL4 through FL1 in reverse order
-      if (daysAvailable >= MINIMUM_DAYS_BETWEEN_EXAMS * 2) {
-        const remainingExams = ["AAMC Full Length Exam 4", "AAMC Full Length Exam 3", "AAMC Full Length Exam 2", "AAMC Full Length Exam 1"];
-        let currentDate = new Date(latestValidDate);
+    // Calculate ideal spacing for remaining exams
+    const totalDays = Math.floor((lastExamDate.getTime() - firstExamDate.getTime()) / (1000 * 60 * 60 * 24));
+    const remainingExams = [
+      "AAMC Full Length Exam 1",
+      "AAMC Full Length Exam 2", 
+      "AAMC Full Length Exam 3", 
+      "AAMC Full Length Exam 4"
+    ]; // Changed order to be sequential
+
+    if (totalDays >= MINIMUM_DAYS_BETWEEN_EXAMS * 2) {
+      // Calculate spacing to distribute exams evenly
+      const numberOfGaps = remainingExams.length + 1; // gaps between all exams including first and last
+      const idealSpacing = Math.max(MINIMUM_DAYS_BETWEEN_EXAMS, Math.floor(totalDays / numberOfGaps));
+      
+      let currentDate = new Date(firstExamDate);
+      let lastScheduledDate = new Date(firstExamDate);
+      
+      for (const exam of remainingExams) {
+        // Calculate ideal date for this exam
+        currentDate = new Date(lastScheduledDate);
+        currentDate.setDate(currentDate.getDate() + idealSpacing);
         
-        for (const exam of remainingExams) {
-          currentDate.setDate(currentDate.getDate() - MINIMUM_DAYS_BETWEEN_EXAMS);
-          const nextValidDate = findNextValidDate(currentDate, examSchedule);
+        // Find nearest valid date that maintains minimum spacing
+        const validDatesForExam = validDates.filter(date => {
+          // Must be after last scheduled exam + minimum days
+          const minDate = new Date(lastScheduledDate);
+          minDate.setDate(minDate.getDate() + MINIMUM_DAYS_BETWEEN_EXAMS);
+          if (date < minDate) return false;
 
-          if (nextValidDate && 
-              nextValidDate > firstValidDate! && 
-              nextValidDate < latestValidDate) {
-            examSchedule.push({
-              date: nextValidDate,
-              examName: exam
-            });
-            currentDate = new Date(nextValidDate);
-          } else {
-            break; // Stop if we can't fit more exams
-          }
+          // Must maintain spacing from all scheduled exams
+          return examSchedule.every(scheduled => {
+            const daysBetween = Math.abs(
+              Math.floor((date.getTime() - scheduled.date.getTime()) / (1000 * 60 * 60 * 24))
+            );
+            return daysBetween >= MINIMUM_DAYS_BETWEEN_EXAMS;
+          });
+        });
+
+        const nearestDate = findNearestValidDate(currentDate, validDatesForExam);
+        if (nearestDate && 
+            nearestDate > firstExamDate && 
+            nearestDate < lastExamDate) {
+          examSchedule.push({
+            date: nearestDate,
+            examName: exam
+          });
+          lastScheduledDate = new Date(nearestDate);
+          
+          // Log the scheduled exam
+          console.log(`Scheduled ${exam} for ${nearestDate.toISOString().split('T')[0]}`);
+        } else {
+          console.log(`Could not schedule ${exam} - no valid dates available`);
+          break; // Stop if we can't fit more exams
         }
       }
     }

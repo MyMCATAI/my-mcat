@@ -273,6 +273,38 @@ const SettingContent: React.FC<SettingContentProps> = ({
     }
   };
 
+  const convertWeeklyToDaily = (weeklyHours: number) => {
+    // Calculate base hours per day (rounded down)
+    const baseHoursPerDay = Math.floor(weeklyHours / 7);
+    
+    // Calculate remaining hours to distribute
+    let remainingHours = weeklyHours - (baseHoursPerDay * 7);
+    
+    // Distribute remaining hours, prioritizing weekend days
+    const hoursPerDay: Record<string, string> = {
+      Monday: baseHoursPerDay.toString(),
+      Tuesday: baseHoursPerDay.toString(),
+      Wednesday: baseHoursPerDay.toString(),
+      Thursday: baseHoursPerDay.toString(),
+      Friday: baseHoursPerDay.toString(),
+      Saturday: baseHoursPerDay.toString(),
+      Sunday: baseHoursPerDay.toString(),
+    };
+
+    // Add extra hours to weekend days first, then weekdays if needed
+    const daysForExtra = ['Saturday', 'Sunday', 'Friday', 'Wednesday', 'Monday', 'Thursday', 'Tuesday'];
+    let dayIndex = 0;
+    
+    while (remainingHours > 0 && dayIndex < daysForExtra.length) {
+      const day = daysForExtra[dayIndex];
+      hoursPerDay[day] = (parseInt(hoursPerDay[day]) + 1).toString();
+      remainingHours--;
+      dayIndex++;
+    }
+
+    return hoursPerDay;
+  };
+
   const handleGenerateStudyPlan = async () => {
     setIsGenerating(true);
     
@@ -324,7 +356,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
         hasAdaptiveTutoringSuite: true,
         hasAnki: true,
       },
-      hoursPerDay,
+      hoursPerDay: convertWeeklyToDaily(weeklyHours),
       fullLengthDays: selectedFullLengthDays,
     };
 
@@ -608,7 +640,17 @@ const SettingContent: React.FC<SettingContentProps> = ({
         );
     }
   };
- 
+
+  const hasSelectedFullLengthDay = Object.values(fullLengthDays).some(value => value);
+
+  const handleNextStep = () => {
+    if (currentStep === 1 && !hasSelectedFullLengthDay) {
+      toast.error("Please select at least one day for full-length exams");
+      return;
+    }
+    setCurrentStep(Math.min(steps.length - 1, currentStep + 1));
+  };
+
   return (
     <div 
       className={`
@@ -689,8 +731,9 @@ const SettingContent: React.FC<SettingContentProps> = ({
             </Button>
           ) : (
             <Button
-              className="px-6 py-3 rounded-xl text-[--theme-hover-text] bg-[--theme-hover-color] hover:opacity-90"
-              onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+              className="px-6 py-3 rounded-xl text-[--theme-hover-text] bg-[--theme-hover-color] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleNextStep}
+              disabled={currentStep === 1 && !hasSelectedFullLengthDay}
             >
               Next
             </Button>
