@@ -127,6 +127,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
   const [isCoinsLoading, setIsCoinsLoading] = useState(true);
+  const [isInitialSetupComplete, setIsInitialSetupComplete] = useState<boolean>(false);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -661,6 +662,22 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   }, [userCoinCount]);
 
+  useEffect(() => {
+    const checkInitialSetup = async () => {
+      try {
+        const response = await fetch('/api/study-plan');
+        if (response.ok) {
+          const data = await response.json();
+          setIsInitialSetupComplete(data.studyPlans && data.studyPlans.length > 0);
+        }
+      } catch (error) {
+        console.error("Error checking initial setup:", error);
+      }
+    };
+    
+    checkInitialSetup();
+  }, []);
+
   return (
     <div className="w-full relative">
       {/* Purchase Button */}
@@ -1103,22 +1120,22 @@ const Schedule: React.FC<ScheduleProps> = ({
             setRunPart4={setRunTutorialPart4}
           />
 
-      <Dialog open={showBreaksDialog} onOpenChange={setShowBreaksDialog}>
-        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
-          <DialogHeader>
-            <DialogTitle className="text-center text-black">
-              Breaks Coming Soon!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-center text-black">
-              Toggle holidays. Add difficult weeks in school. Ask for a break.
-              Your schedule will be updated automatically.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+          <Dialog open={showBreaksDialog} onOpenChange={setShowBreaksDialog}>
+            <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+            <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
+              <DialogHeader>
+                <DialogTitle className="text-center text-black">
+                  Breaks Coming Soon!
+                </DialogTitle>
+              </DialogHeader>
+              <div className="p-4">
+                <p className="text-center text-black">
+                  Toggle holidays. Add difficult weeks in school. Ask for a break.
+                  Your schedule will be updated automatically.
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
 
       <Dialog open={showTestsDialog} onOpenChange={setShowTestsDialog}>
         <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
@@ -1136,12 +1153,12 @@ const Schedule: React.FC<ScheduleProps> = ({
         </DialogContent>
       </Dialog>
 
-      <UWorldPopup
-        isOpen={showUWorldPopup}
-        onClose={() => setShowUWorldPopup(false)}
-        onScoreSubmit={handleUWorldScoreSubmit}
-        tasks={uWorldTasks}
-      />
+          <UWorldPopup
+            isOpen={showUWorldPopup}
+            onClose={() => setShowUWorldPopup(false)}
+            onScoreSubmit={handleUWorldScoreSubmit}
+            tasks={uWorldTasks}
+          />
 
           <UWorldPopup
             isOpen={showUWorldPopup}
