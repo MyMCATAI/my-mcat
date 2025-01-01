@@ -21,7 +21,7 @@ export const referralLinkTemplate = (data: any): TemplateConfig => ({
         <br><br>
         • Visit our platform: <a href="https://mymcat.ai" style="color: #2b6cb0;">mymcat.ai</a>
         <br>
-        • Join our study group: <a href="https://discord.gg/rTxN7wkh6e" style="color: #2b6cb0;">Discord</a>
+        • Join our study group: <a href="https://discord.gg/PkRbV5nw" style="color: #2b6cb0;">Discord</a>
       </p>
 
       <p style="color: #333333; line-height: 1.6;">
