@@ -35,9 +35,10 @@ interface TestListingProps {
   tests: Test[];
   testsCompletedToday: number;
   onAssistantResponse: (message: string, dismissFunc: () => void) => void;
+  onResetDailyTests: () => void;
 }
 
-const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCompletedToday }) => {
+const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCompletedToday, onResetDailyTests }) => {
   const { user } = useUser();
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get('activeTab') || 'upcoming';
@@ -329,6 +330,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                   loading={loading} 
                   testsAvailableToday={MAX_TESTS_PER_DAY}
                   testsCompletedToday={testsCompletedToday}
+                  onResetDailyTests={onResetDailyTests}
                 />
               </TabsContent>
             </Tabs>

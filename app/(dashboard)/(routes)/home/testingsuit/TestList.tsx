@@ -19,6 +19,7 @@ interface TestListProps {
   loading?: boolean;
   testsAvailableToday?: number;
   testsCompletedToday?: number;
+  onResetDailyTests?: () => void;
 }
 
 const MAX_TESTS_PER_DAY = 2;
@@ -42,6 +43,7 @@ const TestList: React.FC<TestListProps> = ({
   loading = false,
   testsAvailableToday = MAX_TESTS_PER_DAY,
   testsCompletedToday: initialTestsCompleted = 0,
+  onResetDailyTests,
 }) => {
   const { theme } = useTheme();
   const [userScore, setUserScore] = useState<number | null>(null);
@@ -140,8 +142,17 @@ const TestList: React.FC<TestListProps> = ({
         )}
 
         {isTestDisabled && (
-          <div className="text-center text-sm text-gray-500 mb-4">
-            You&apos;ve completed {initialTestsCompleted} out of {MAX_TESTS_PER_DAY} tests today. Check back tomorrow for more tests!
+          <div className="text-center mb-4">
+            <div className="text-sm text-gray-500 mb-2">
+              You&apos;ve completed {initialTestsCompleted} out of {MAX_TESTS_PER_DAY} tests today. Check back tomorrow for more tests!
+            </div>
+            <Button
+              onClick={onResetDailyTests}
+              variant="outline"
+              className="mt-2 text-sm border-[--theme-doctorsoffice-accent] text-[--theme-text-color]"
+            >
+              Reset Daily Limit (1 Coin)
+            </Button>
           </div>
         )}
 

@@ -113,6 +113,44 @@ const TestingSuit: React.FC = () => {
     setShowHelp((prev) => !prev);
   };
 
+  const resetDailyTests = async () => {
+    try {
+      const response = await fetch('/api/user-test/reset-limit', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        if (data.error === "Insufficient coins") {
+          toast({
+            title: "Error",
+            description: "You need at least 1 coin to reset your daily tests.",
+            variant: "destructive",
+          });
+        } else {
+          throw new Error(data.error || "Failed to reset test limit");
+        }
+        return;
+      }
+
+      // After successful reset, refetch the tests to get updated count
+      await fetchTests(true);
+      
+      toast({
+        title: "Success",
+        description: "Daily test limit has been reset! You can now take more tests.",
+      });
+
+    } catch (error) {
+      console.error("Error resetting test limit:", error);
+      toast({
+        title: "Error",
+        description: "Failed to reset test limit. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const tabs = [
     { 
       label: "Exams", 
@@ -126,6 +164,7 @@ const TestingSuit: React.FC = () => {
             tests={tests} 
             onAssistantResponse={handleAssistantResponse} 
             testsCompletedToday={testsCompletedToday}
+            onResetDailyTests={resetDailyTests}
           />
         )
       ) 
