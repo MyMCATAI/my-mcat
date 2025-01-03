@@ -844,7 +844,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                     >
                       <div className="absolute left-4 bottom-4 max-w-xs bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-lg">
                         <p className="text-sm text-[--theme-text-color]">
-                          Greetings. We are doing some reupholstering for MyMCAT V2.0 which is launching on January 10th. You will experience some changes to your service until then. For more information regarding changes and timeline, please join our <a 
+                          Greetings. Our site is going for a major overhaul for MyMCAT V2.0 which is launching on January 10th. Stuff might break on you. For more information regarding changes and timeline, please join our <a 
                             href="https://discord.gg/CcxcZxB6"
                             target="_blank"
                             rel="noopener noreferrer"
