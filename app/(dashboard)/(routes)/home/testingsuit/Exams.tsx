@@ -21,9 +21,6 @@ const ChatBotWidgetNoChatBot = dynamic(
   }
 );
 
-// Add this constant at the top of the file, after the imports
-const MAX_TESTS_PER_DAY = 2;
-
 // Add this helper function at the top of the file (after imports)
 const getDifficultyColor = (difficulty: number) => {
   if (difficulty < 3) return "text-green-500";
@@ -100,7 +97,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
       testsCompletedToday
     );
 
-    if (tests.length > 0 && testsCompletedToday < MAX_TESTS_PER_DAY) {
+    if (tests.length > 0) {
       const fullText = welcomeText + (tests[0].description || "");
       let index = 0;
 
@@ -138,11 +135,6 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
 
   const getWelcomeMessage = (userName: string, streak: number, testsCompletedToday: number) => {
     const name = userName.charAt(0).toUpperCase() + userName.slice(1);
-    
-    if (testsCompletedToday >= MAX_TESTS_PER_DAY) {
-      return `Hey! You've reached your limit of ${MAX_TESTS_PER_DAY} tests for today. Come back tomorrow for more tests!`;
-    }
-    
     return `Hey ${name}! `;
   };
 
@@ -253,7 +245,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
               >
                 {welcomeAndTestMessage}
               </div>
-              {welcomeComplete && testsCompletedToday < MAX_TESTS_PER_DAY && tests.length > 0 && (
+              {welcomeComplete && tests.length > 0 && (
                 <div className="flex flex-col mt-8 ml-2">
                   <Link href={`/test/testquestions?id=${tests[0].id}`} className="w-full max-w-[28rem]">
                     <Button className="w-full" variant="default">
@@ -327,7 +319,7 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                   items={tests} 
                   type="upcoming" 
                   loading={loading} 
-                  testsAvailableToday={MAX_TESTS_PER_DAY}
+                  // testsAvailableToday={MAX_TESTS_PER_DAY}
                   testsCompletedToday={testsCompletedToday}
                 />
               </TabsContent>
