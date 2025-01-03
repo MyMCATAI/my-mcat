@@ -1,55 +1,162 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { XCircle, Flag, CheckCircle2, HelpCircle } from 'lucide-react';
+import { XCircle, Flag, CheckCircle2, HelpCircle, ChevronRight } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCategories } from '@/hooks/useCategories';
+import { DISPLAY_TO_FULL_SECTION, DISPLAY_TO_SHORT_SECTION } from '@/lib/constants';
+import { toast } from "react-hot-toast";
+import {  ExamQuestion } from '@/hooks/useExamQuestions';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface QuestionAddModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (question: {
-    id: string;
-    number: string;
-    category: string;
-    mistake: string;
-    improvement: string;
-    status: 'wrong' | 'flagged' | 'correct';
-  }) => void;
-  editingQuestion?: any;
+  examId: string;
+  editingQuestion?: ExamQuestion;
+  sectionName: keyof typeof DISPLAY_TO_FULL_SECTION;
+  createQuestion: (params: any) => Promise<any>;
+  updateQuestion: (params: any) => Promise<any>;
+  onQuestionSaved: () => Promise<void>;
 }
+
+const groupCategories = (categories: any[]) => {
+  // Get unique content categories and sort them alphabetically
+  const uniqueContentCategories = Array.from(new Set(
+    categories.map(cat => cat.contentCategory)
+  )).sort((a, b) => a.localeCompare(b));
+  
+  // Create array of objects with id and contentCategory
+  const result = uniqueContentCategories.map(contentCategory => {
+    // Find first category with this contentCategory to use its ID
+    const category = categories.find(cat => cat.contentCategory === contentCategory);
+    return {
+      id: category?.id,
+      contentCategory,
+      section: category?.section
+    };
+  });
+
+  return result;
+};
 
 const QuestionAddModal: React.FC<QuestionAddModalProps> = ({ 
   isOpen, 
   onClose, 
-  onAdd,
-  editingQuestion 
+  examId,
+  editingQuestion,
+  sectionName,
+  createQuestion,
+  updateQuestion,
+  onQuestionSaved
 }) => {
+  const name = DISPLAY_TO_FULL_SECTION[sectionName];
+  const shortName = DISPLAY_TO_SHORT_SECTION[sectionName];
+  const { categories, loading: categoriesLoading } = useCategories(name);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [question, setQuestion] = useState({
-    id: editingQuestion?.id || '',
-    number: editingQuestion?.number || '',
-    category: editingQuestion?.category || '',
-    mistake: editingQuestion?.mistake || '',
-    improvement: editingQuestion?.improvement || '',
-    status: editingQuestion?.status || 'wrong' as 'wrong' | 'flagged' | 'correct'
+    id: '',
+    number: '',
+    categoryId: '',
+    mistake: '',
+    improvement: '',
+    status: 'wrong' as 'wrong' | 'flagged' | 'correct',
+    questionText: '',
+    answerText: ''
   });
 
-  const handleSubmit = () => {
-    onAdd({
-      ...question,
-      id: question.id || Date.now().toString()
-    });
-    onClose();
+  // Reset form when opening/closing or switching questions
+  useEffect(() => {
+    if (isOpen) {
+      if (editingQuestion) {
+        // Find the category ID from the content category name
+        const categoryId = categories.find(cat => cat.contentCategory === editingQuestion.name)?.id || '';
+        
+        setQuestion({
+          id: editingQuestion.id,
+          number: editingQuestion.questionText || '',
+          categoryId,
+          mistake: editingQuestion.originalThoughtProcess || '',
+          improvement: editingQuestion.correctedThoughtProcess || '',
+          status: editingQuestion.positive === 1 ? 'correct' : 
+                 editingQuestion.negative === 1 ? 'wrong' : 'flagged',
+          questionText: editingQuestion.questionText || '',
+          answerText: editingQuestion.answerText || ''
+        });
+      } else {
+        setQuestion({
+          id: '',
+          number: '',
+          categoryId: '',
+          mistake: '',
+          improvement: '',
+          status: 'wrong',
+          questionText: '',
+          answerText: ''
+        });
+      }
+    }
+  }, [isOpen, editingQuestion, categories]);
+
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+
+      if (!examId) {
+        toast.error('Missing exam ID');
+        return;
+      }
+
+      const params = {
+        examId,
+        questionNumber: question.number,
+        categoryId: question.categoryId,
+        mistake: question.mistake,
+        improvement: question.improvement,
+        status: question.status,
+        questionText: question.questionText,
+        answerText: question.answerText,
+        level: 'contentCategory'
+      };
+
+
+      if (editingQuestion) {
+        await updateQuestion({ ...params, id: editingQuestion.id });
+        toast.success('Question updated successfully');
+      } else {
+        const result = await createQuestion(params);
+        toast.success('Question added successfully');
+      }
+
+      // Wait for questions to be refreshed before closing
+      await onQuestionSaved();
+      onClose();
+    } catch (error) {
+      console.error('Failed to save question:', error);
+      toast.error(editingQuestion ? 'Failed to update question' : 'Failed to add question');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCategorySelect = (categoryId: string) => {
+    setQuestion(prev => ({
+      ...prev,
+      categoryId
+    }));
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[45vw] bg-[--theme-leaguecard-color] border-[--theme-border-color]">
         <h3 className="text-sm uppercase tracking-wide opacity-60 mb-6 text-center">
-          Add Question Review
+          {editingQuestion ? 'Edit' : 'Add'} Question Review
         </h3>
 
-        {/* Status Selection - Adjusted to maintain size better */}
+        {/* Status Selection */}
         <div className="grid grid-cols-3 gap-4 mb-6 min-h-[4.5rem]">
           <button
-            onClick={() => setQuestion({ ...question, status: 'wrong' })}
+            onClick={() => setQuestion(prev => ({ ...prev, status: 'wrong' }))}
             className={`p-3 rounded-lg flex flex-col items-center gap-2 transition-all duration-200
               ${question.status === 'wrong' 
                 ? 'bg-red-500/20 text-red-500' 
@@ -59,7 +166,7 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
             <span className="text-xs">Wrong</span>
           </button>
           <button
-            onClick={() => setQuestion({ ...question, status: 'flagged' })}
+            onClick={() => setQuestion(prev => ({ ...prev, status: 'flagged' }))}
             className={`p-3 rounded-lg flex flex-col items-center gap-2 transition-all duration-200
               ${question.status === 'flagged' 
                 ? 'bg-yellow-500/20 text-yellow-500' 
@@ -69,7 +176,7 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
             <span className="text-xs">Flag</span>
           </button>
           <button
-            onClick={() => setQuestion({ ...question, status: 'correct' })}
+            onClick={() => setQuestion(prev => ({ ...prev, status: 'correct' }))}
             className={`p-3 rounded-lg flex flex-col items-center gap-2 transition-all duration-200
               ${question.status === 'correct' 
                 ? 'bg-green-500/20 text-green-500' 
@@ -88,7 +195,7 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
               </label>
               <input
                 value={question.number}
-                onChange={e => setQuestion({ ...question, number: e.target.value })}
+                onChange={e => setQuestion(prev => ({ ...prev, number: e.target.value }))}
                 className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color]"
                 placeholder="e.g., 12"
               />
@@ -97,29 +204,87 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
               <label className="text-sm uppercase tracking-wide opacity-60 block mb-1.5 text-[--theme-text-color]">
                 Category
               </label>
-              <input
-                value={question.category}
-                onChange={e => setQuestion({ ...question, category: e.target.value })}
-                className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color]"
-                placeholder="e.g., Kinematics"
-              />
+              <Select
+                value={question.categoryId}
+                onValueChange={handleCategorySelect}
+              >
+                <SelectTrigger className="w-full bg-[--theme-mainbox-color] border-[--theme-border-color]">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[200px]">
+                  <div className="max-h-[200px] overflow-y-auto">
+                    {categoriesLoading ? (
+                      <SelectItem value="loading" disabled>Loading categories...</SelectItem>
+                    ) : (
+                      groupCategories(categories).map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.contentCategory}
+                        </SelectItem>
+                      ))
+                    )}
+                  </div>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          {/* Adjusted textarea heights to use relative units */}
+          <Collapsible className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-sm uppercase tracking-wide opacity-60 text-[--theme-text-color]">
+                Question Text (Optional)
+              </label>
+              <CollapsibleTrigger className="hover:opacity-100 opacity-60 transition-opacity flex items-center [&[data-state=open]>svg]:rotate-90">
+                <ChevronRight className="h-4 w-4 ml-2 text-black transition-transform" />
+              </CollapsibleTrigger>
+            </div>
+            <CollapsibleContent>
+              <textarea
+                value={question.questionText}
+                onChange={e => setQuestion(prev => ({ ...prev, questionText: e.target.value }))}
+                className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[4rem]"
+                placeholder="Enter the actual question text here..."
+              />
+            </CollapsibleContent>
+          </Collapsible>
+
+          <Collapsible className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-sm uppercase tracking-wide opacity-60 text-[--theme-text-color]">
+                Answer (Optional)
+              </label>
+              <CollapsibleTrigger className="hover:opacity-100 opacity-60 transition-opacity flex items-center [&[data-state=open]>svg]:rotate-90">
+                <ChevronRight className="h-4 w-4 ml-2 text-black transition-transform" />
+              </CollapsibleTrigger>
+            </div>
+            <CollapsibleContent>
+              <textarea
+                value={question.answerText}
+                onChange={e => setQuestion(prev => ({ ...prev, answerText: e.target.value }))}
+                className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[4rem]"
+                placeholder="Enter the correct answer here..."
+              />
+            </CollapsibleContent>
+          </Collapsible>
+
           <div>
+            <label className="text-sm uppercase tracking-wide opacity-60 block mb-1.5 text-[--theme-text-color]">
+              Mistake Analysis
+            </label>
             <textarea
               value={question.mistake}
-              onChange={e => setQuestion({ ...question, mistake: e.target.value })}
+              onChange={e => setQuestion(prev => ({ ...prev, mistake: e.target.value }))}
               className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[8rem]"
               placeholder="Why was I wrong? What was your logical error?"
             />
           </div>
 
           <div>
+            <label className="text-sm uppercase tracking-wide opacity-60 block mb-1.5 text-[--theme-text-color]">
+              Improvement Plan
+            </label>
             <textarea
               value={question.improvement}
-              onChange={e => setQuestion({ ...question, improvement: e.target.value })}
+              onChange={e => setQuestion(prev => ({ ...prev, improvement: e.target.value }))}
               className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[8rem]"
               placeholder="How could I be right? What would the correct approach have been?"
             />
@@ -127,7 +292,6 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
         </div>
 
         <div className="flex justify-between items-center mt-6">
-          {/* Help Icon */}
           <button
             className="p-2 hover:bg-[--theme-hover-color] rounded-full transition-colors duration-200"
             onClick={() => {/* TODO: Add help functionality */}}
@@ -135,19 +299,20 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
             <HelpCircle className="h-5 w-5 text-[--theme-text-color] opacity-60" />
           </button>
 
-          {/* Existing buttons */}
           <div className="flex gap-2">
             <button
               onClick={onClose}
               className="px-4 py-2 rounded-lg hover:bg-[--theme-hover-color] transition-all duration-200 text-[--theme-text-color]"
+              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              className="px-4 py-2 rounded-lg bg-[--theme-leaguecard-accent] hover:bg-[--theme-hover-color] transition-all duration-200 text-[--theme-text-color]"
+              disabled={!question.categoryId || !question.number || isSubmitting}
+              className="px-4 py-2 rounded-lg bg-[--theme-leaguecard-accent] hover:bg-[--theme-hover-color] transition-all duration-200 text-[--theme-text-color] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {editingQuestion ? 'Update' : 'Add'} Question
+              {isSubmitting ? 'Saving...' : editingQuestion ? 'Update' : 'Add'} Question
             </button>
           </div>
         </div>

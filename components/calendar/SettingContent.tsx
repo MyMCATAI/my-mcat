@@ -70,18 +70,20 @@ const TEST_DATES = [
 ];
 
 interface SettingContentProps {
-  onStudyPlanSaved?: () => void;
-  onToggleCalendarView?: () => void;
-  onClose?: () => void;
-  onActivitiesUpdate?: () => void;
+  onComplete?: (result: {
+    success: boolean;
+    action: 'generate' | 'save';
+    data?: {
+      examDate: Date;
+      hoursPerDay: Record<string, string>;
+      fullLengthDays: string[];
+    };
+  }) => void;
   isInitialSetup?: boolean;
 }
 
 const SettingContent: React.FC<SettingContentProps> = ({
-  onStudyPlanSaved,
-  onToggleCalendarView,
-  onClose,
-  onActivitiesUpdate,
+  onComplete,
   isInitialSetup = false,
 }) => {
   // default date is 3 months from now
@@ -100,7 +102,14 @@ const SettingContent: React.FC<SettingContentProps> = ({
   });
   const [selectedResources, setSelectedResources] = useState<
     Record<string, boolean>
-  >({});
+  >({
+    UWorld: false,
+    AAMC: false,
+    'Third Party FLs': false,
+    'Anki': false,
+    'Kaplan Books': false,
+    'Princeton Review': false
+  });
   const [existingStudyPlan, setExistingStudyPlan] = useState<StudyPlan | null>(
     null
   );
@@ -116,27 +125,28 @@ const SettingContent: React.FC<SettingContentProps> = ({
       Sunday: false,
     }
   );
-  const [thirdPartyFLCount, setThirdPartyFLCount] = useState<number>(0);
-  const [reviewPracticeBalance, setReviewPracticeBalance] =
-    useState<number>(50);
+
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState(0);
-  const [isRecommending, setIsRecommending] = useState(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState<number>(0);
   
   const steps = [
     {
       title: "Study Time",
-      subtitle: "Let's figure out your weekly commitment"
+      subtitle: existingStudyPlan ? "Update your weekly commitment" : "Let's figure out your weekly commitment"
     },
     {
       title: "Full Length Exams",
-      subtitle: "Select days for practice tests"
+      subtitle: existingStudyPlan ? "Update practice test days" : "Select days for practice tests"
+    },
+    {
+      title: "Resources",
+      subtitle: existingStudyPlan ? "Update your study resources" : "Tell us what you have access to"
     },
     {
       title: "Test Date",
-      subtitle: "Choose when you'll take the MCAT"
+      subtitle: existingStudyPlan ? "Update your MCAT date" : "Choose when you'll take the MCAT"
     }
   ];
 
@@ -147,41 +157,56 @@ const SettingContent: React.FC<SettingContentProps> = ({
   const fetchExistingStudyPlan = async () => {
     try {
       const response = await fetch('/api/study-plan');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.studyPlans && data.studyPlans.length > 0) {
-          // Get the most recent study plan (should be first due to orderBy desc)
-          const plan = data.studyPlans[0];
-          setExistingStudyPlan(plan);
-          
-          // Update exam date
-          setCalendarValue(new Date(plan.examDate));
-          
-          // Update resources with all options
-          const resources = plan.resources as {
-            hasAAMC: boolean;
-            hasAnki: boolean;
-            hasUWorld: boolean;
-            hasAdaptiveTutoringSuite: boolean;
-            hasKaplanBooks?: boolean;
-            hasThirdPartyFLs?: boolean;
-          };
-          setSelectedResources({
-            'UWorld': resources.hasUWorld,
-            'AAMC': resources.hasAAMC,
-            '3rd Party FLs': resources.hasThirdPartyFLs || false,
-          });
-          
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch study plan');
+      }
+
+      if (data.studyPlans && data.studyPlans.length > 0) {
+        // Get the most recent study plan
+        const plan = data.studyPlans[0];
+        setExistingStudyPlan(plan);
+        
+        // Update exam date
+        setCalendarValue(new Date(plan.examDate));
+        
+        // Update resources
+        const resources = plan.resources as {
+          hasAAMC: boolean;
+          hasAnki: boolean;
+          hasUWorld: boolean;
+          hasAdaptiveTutoringSuite: boolean;
+          hasKaplanBooks?: boolean;
+          hasThirdPartyFLs?: boolean;
+        };
+
+        setSelectedResources({
+          'UWorld': resources.hasUWorld || false,
+          'AAMC': resources.hasAAMC || false,
+          '3rd Party FLs': resources.hasThirdPartyFLs || false,
+          'Anki': resources.hasAnki || false,
+          'Kaplan Books': resources.hasKaplanBooks || false,
+        });
+        
+        // Update hours per day
+        if (plan.hoursPerDay) {
           setHoursPerDay(plan.hoursPerDay as Record<string, string>);
           
-          // Update full length days
+          // Calculate total weekly hours
+          const totalHours = Object.values(plan.hoursPerDay as Record<string, string>)
+            .reduce((sum, hours) => sum + parseInt(hours || '0'), 0);
+          setWeeklyHours(totalHours);
+        }
+        
+        // Update full length days
+        if (plan.fullLengthDays) {
           const fullLengthDaysObj = days.reduce((acc, day) => ({
             ...acc,
             [day]: (plan.fullLengthDays as string[]).includes(day)
           }), {});
           setFullLengthDays(fullLengthDaysObj);
         }
-      }
+      } 
     } catch (error) {
       console.error("Error fetching existing study plan:", error);
       toast.error("Failed to load study plan");
@@ -215,62 +240,6 @@ const SettingContent: React.FC<SettingContentProps> = ({
     return `${
       months[date.getMonth()]
     } ${date.getDate()}, ${date.getFullYear()}`;
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    const studyPlanData = {
-      examDate: calendarValue,
-      resources: {
-        hasUWorld: true, // i temporarily set this to true along with aamc
-        hasAAMC: true,
-        hasAdaptiveTutoringSuite: true,
-        hasAnki: true,
-      },
-      hoursPerDay,
-      fullLengthDays: Object.entries(fullLengthDays)
-        .filter(([_, value]) => value)
-        .map(([day]) => day),
-    };
-
-    try {
-      const method = existingStudyPlan ? "PUT" : "POST";
-      const body = existingStudyPlan
-        ? JSON.stringify({ ...studyPlanData, id: existingStudyPlan.id })
-        : JSON.stringify(studyPlanData);
-
-      const response = await fetch("/api/study-plan", {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body,
-      });
-
-      if (response.ok) {
-        const updatedPlan = await response.json();
-        setExistingStudyPlan(updatedPlan);
-        if (onToggleCalendarView) onToggleCalendarView();
-        if (onClose) onClose(); // Close the settings window
-      } else {
-        // Create new study plan
-        const response = await fetch("/api/study-plan", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(studyPlanData),
-        });
-        if (response.ok) {
-          const newPlan = await response.json();
-          setExistingStudyPlan(newPlan);
-          if (onStudyPlanSaved) onStudyPlanSaved();
-          if (onToggleCalendarView) onToggleCalendarView();
-          if (onClose) onClose(); // Close the settings window
-        }
-      }
-    } catch (error) {
-      console.error("Error saving study plan:", error);
-      alert("Error saving study plan. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   const convertWeeklyToDaily = (weeklyHours: number) => {
@@ -351,10 +320,12 @@ const SettingContent: React.FC<SettingContentProps> = ({
     const studyPlanData = {
       examDate: examDateStartOfDay.toISOString(),
       resources: {
-        hasUWorld: true,  // Always true for now
-        hasAAMC: true,    // Always true for now
-        hasAdaptiveTutoringSuite: true,
-        hasAnki: true,
+        hasUWorld: selectedResources.UWorld,
+        hasAAMC: selectedResources.AAMC,
+        hasThirdPartyFLs: selectedResources['Third Party FLs'],
+        hasAnki: selectedResources.Anki,
+        hasKaplanBooks: selectedResources['Kaplan Books'],
+        hasPrincetonReview: selectedResources['Princeton Review'],
       },
       hoursPerDay: convertWeeklyToDaily(weeklyHours),
       fullLengthDays: selectedFullLengthDays,
@@ -379,8 +350,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
       
       if (data.success) {
         toast.success("Study plan generated successfully!");
-        if (onStudyPlanSaved) onStudyPlanSaved();
-        if (onActivitiesUpdate) onActivitiesUpdate();
+        if (onComplete) onComplete({ success: true, action: 'generate' });
       } else {
         throw new Error("Failed to generate study plan");
       }
@@ -391,20 +361,6 @@ const SettingContent: React.FC<SettingContentProps> = ({
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  const handleSliderMouseEnter = () => {
-    setShowTooltip(true);
-  };
-
-  const handleSliderMouseLeave = () => {
-    setShowTooltip(false);
-  };
-
-  const handleSliderMouseMove = (e: React.MouseEvent<HTMLInputElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const position = ((e.clientX - rect.left) / rect.width) * 100;
-    setTooltipPosition(position);
   };
 
   const handleRecommendTestDate = () => {
@@ -513,12 +469,12 @@ const SettingContent: React.FC<SettingContentProps> = ({
               )}
               {weeklyHours >= 22 && weeklyHours <= 29 && (
                 <p className="text-sm text-[--theme-text-color] opacity-70 mt-4 text-center">
-                  Don't lie to yourself.
+                  {"Don't lie to yourself."}
                 </p>
               )}
               {weeklyHours >= 30 && (
                 <p className="text-sm text-[--theme-text-color] opacity-70 mt-4 text-center">
-                  Please be realistic.
+                  {"Please be realistic."}
                 </p>
               )}
             </div>
@@ -567,6 +523,43 @@ const SettingContent: React.FC<SettingContentProps> = ({
           </div>
         );
       case 2:
+        return (
+          <div className="flex flex-col items-center space-y-4">
+            <div className="text-center space-y-2">
+              <h3 className="text-2xl text-[--theme-text-color]">What resources do you have access to?</h3>
+              <p className="text-[--theme-text-color] opacity-70">Select all that apply</p>
+            </div>
+            <div className="w-full max-w-md p-8 rounded-2xl">
+              <div className="grid grid-cols-1 gap-4">
+                {Object.keys(selectedResources).map((resource) => (
+                  <div key={resource} 
+                    className="flex items-center p-4 rounded-xl transition-all hover:bg-[--theme-button-color]"
+                  >
+                    <input
+                      type="checkbox"
+                      id={`resource-${resource}`}
+                      checked={selectedResources[resource]}
+                      onChange={(e) =>
+                        setSelectedResources({
+                          ...selectedResources,
+                          [resource]: e.target.checked,
+                        })
+                      }
+                      className="w-5 h-5 rounded border-2 border-[--theme-text-color] checked:bg-[--theme-text-color]"
+                    />
+                    <label 
+                      htmlFor={`resource-${resource}`}
+                      className="ml-4 text-lg text-[--theme-text-color] font-medium cursor-pointer flex-grow"
+                    >
+                      {resource}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      case 3:
         return (
           <div className="flex flex-col items-center space-y-4">
             <div className="text-center mb-4">
@@ -648,6 +641,10 @@ const SettingContent: React.FC<SettingContentProps> = ({
       toast.error("Please select at least one day for full-length exams");
       return;
     }
+    if (currentStep === 2 && !Object.values(selectedResources).some(value => value)) {
+      toast.error("Please select at least one resource");
+      return;
+    }
     setCurrentStep(Math.min(steps.length - 1, currentStep + 1));
   };
 
@@ -669,7 +666,13 @@ const SettingContent: React.FC<SettingContentProps> = ({
           ${isInitialSetup ? 'bg-transparent' : 'bg-[--theme-leaguecard-color]'}
         `}
       >
-        <div className="flex items-center justify-center mb-8">
+        {existingStudyPlan && (
+          <div className="bg-[--theme-hover-color] text-[--theme-hover-text] px-4 py-2 text-center text-sm">
+            {"You're updating your existing study plan"}
+          </div>
+        )}
+        
+        <div className="flex items-center justify-center mb-8 mt-4">
           <div className="flex items-center space-x-4">
             {steps.map((step, index) => (
               <React.Fragment key={index}>
@@ -723,10 +726,10 @@ const SettingContent: React.FC<SettingContentProps> = ({
               {isGenerating ? (
                 <>
                   <div className="h-5 w-5 border-2 border-t-transparent rounded-full animate-spin mr-2" />
-                  Generating...
+                  {existingStudyPlan ? 'Updating...' : 'Generating...'}
                 </>
               ) : (
-                'Create Study Plan'
+                existingStudyPlan ? 'Update Study Plan' : 'Create Study Plan'
               )}
             </Button>
           ) : (

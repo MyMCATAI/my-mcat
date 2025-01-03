@@ -139,14 +139,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Delete existing activities and study plan
+    // Delete existing activities
     await prisma.calendarActivity.deleteMany({
       where: { userId }
     });
 
-    // Create new study plan
-    const studyPlan = await prisma.studyPlan.create({
-      data: {
+    // Find existing study plan
+    const existingStudyPlan = await prisma.studyPlan.findFirst({
+      where: { userId }
+    });
+
+    // Update existing or create new study plan
+    const studyPlan = await prisma.studyPlan.upsert({
+      where: {
+        id: existingStudyPlan?.id || '',
+      },
+      update: {
+        examDate: new Date(examDate),
+        resources,
+        hoursPerDay,
+        fullLengthDays,
+      },
+      create: {
         userId,
         examDate: new Date(examDate),
         resources,
@@ -211,32 +225,6 @@ async function generateStudySchedule(
     "AAMC Full Length Exam 4",
     "AAMC Sample Scored (FL5)"  // Always last
   ];
-
-  // Helper function to get all valid exam dates between two dates
-  function getValidDates(start: Date, end: Date): Date[] {
-    const dates: Date[] = [];
-    let current = new Date(start);
-    while (current <= end) {
-      if (fullLengthDays.includes(daysOfWeek[current.getDay()])) {
-        dates.push(new Date(current));
-      }
-      current.setDate(current.getDate() + 1);
-    }
-    return dates;
-  }
-
-  // Helper function to find nearest valid date to a target date
-  function findNearestValidDate(targetDate: Date, validDates: Date[]): Date | null {
-    if (validDates.length === 0) return null;
-    
-    return validDates.reduce((nearest, date) => {
-      const currentDiff = Math.abs(date.getTime() - targetDate.getTime());
-      const nearestDiff = Math.abs(nearest.getTime() - targetDate.getTime());
-      return currentDiff < nearestDiff ? date : nearest;
-    });
-  }
-
-  let examSchedule: { date: Date; examName: string }[] = [];
 
   // Helper function to get all valid exam dates between two dates
   function getValidDates(start: Date, end: Date): Date[] {
@@ -367,4 +355,3 @@ async function generateStudySchedule(
 
   return activities;
 }
-

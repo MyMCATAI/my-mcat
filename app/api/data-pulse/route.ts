@@ -141,3 +141,40 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+// PATCH - Update reviewed status for data pulse
+export async function PATCH(req: Request) {
+  const { userId } = auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json();
+    const { dataPulseId } = body;
+
+    if (!dataPulseId) {
+      return NextResponse.json({ error: "Missing required field: dataPulseId" }, { status: 400 });
+    }
+
+    // Update the specific data pulse
+    const updatedPulse = await prisma.dataPulse.update({
+      where: {
+        id: dataPulseId,
+        userId, // Ensure user can only update their own records
+      },
+      data: {
+        reviewed: true,
+        updatedAt: new Date()
+      }
+    });
+
+    return NextResponse.json({
+      message: "Data pulse updated successfully",
+      dataPulse: updatedPulse
+    });
+  } catch (error) {
+    console.error('Error updating data pulse:', error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

@@ -1,7 +1,7 @@
 'use server';
 
-import { auth } from "@clerk/nextjs";
-import prisma from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
+import prisma from "@/lib/prismadb";
 
 export async function GET(req: Request) {
   try {
@@ -63,6 +63,7 @@ export async function POST(req: Request) {
               userId,
               name: "Chemical and Physical Foundations",
               level: "section",
+              section: "C/P",
               source: "full_length_exam",
               positive: cp,
               weight: 1,
@@ -72,6 +73,7 @@ export async function POST(req: Request) {
               name: "Critical Analysis and Reasoning",
               level: "section",
               source: "full_length_exam",
+              section: "CARs",
               positive: cars,
               weight: 1,
             },
@@ -80,6 +82,7 @@ export async function POST(req: Request) {
               name: "Biological and Biochemical Foundations",
               level: "section",
               source: "full_length_exam",
+              section: "B/B",
               positive: bb,
               weight: 1,
             },
@@ -88,6 +91,7 @@ export async function POST(req: Request) {
               name: "Psychological, Social, and Biological Foundations",
               level: "section",
               source: "full_length_exam",
+              section: "P/S",
               positive: ps,
               weight: 1,
             }

@@ -359,7 +359,8 @@ const Schedule: React.FC<ScheduleProps> = ({
       case "Adaptive Tutoring Suite":
         handleSetTab("AdaptiveTutoringSuite");
         break;
-      case "AAMC Materials":
+      case "Tests":
+        handleSetTab("Tests");
         break;
       case "UWorld":
         setShowUWorldPopup(true);
@@ -451,6 +452,102 @@ const Schedule: React.FC<ScheduleProps> = ({
     fetchTasksForToday();
   }, [activities]);
 
+  const handleTaskCompletion = async (
+    activityId: string,
+    taskIndex: number,
+    completed: boolean
+  ) => {
+    try {
+      const activity = todayActivities.find((a) => a.id === activityId);
+      if (!activity || !activity.tasks) return;
+
+      // If task is already completed, prevent unchecking
+      if (activity.tasks[taskIndex].completed) {
+        return;
+      }
+
+      const updatedTasks = activity.tasks.map((task, index) =>
+        index === taskIndex ? { ...task, completed: true } : task
+      );
+
+      // Update backend
+      const response = await fetch(`/api/calendar-activity`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: activityId,
+          tasks: updatedTasks,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update task");
+
+      // Update local state
+      const updatedActivities = todayActivities.map((a) =>
+        a.id === activityId ? { ...a, tasks: updatedTasks } : a
+      );
+      setTodayActivities(updatedActivities);
+
+      // Call onActivitiesUpdate to refresh parent state
+      onActivitiesUpdate();
+
+      // Check if all tasks are completed for this activity
+      const allTasksCompleted = updatedTasks.every((task) => task.completed);
+      if (allTasksCompleted) {
+        // Play success sound
+        if (audioRef.current) {
+          audioRef.current.play().catch(console.error);
+        }
+
+        // Get activity details from backend
+        const activityResponse = await fetch(`/api/calendar-activity`);
+        const activities = await activityResponse.json();
+        const completedActivity = activities.find((a: FetchedActivity) => a.id === activityId);
+
+        if (completedActivity.source === "generated" && isToday(new Date(completedActivity.scheduledDate))) {
+          await updateUserCoinCount();
+          try {
+            const response = await fetch("/api/user-info");
+            if (response.ok) {
+              const data = await response.json();
+              setUserCoinCount(data.score);
+            }
+          } catch (error) {
+            console.error("Error fetching user score:", error);
+          }
+        }
+
+        // Show success toast for individual activity
+        if (completedActivity.source === "generated") {
+          toast.success(
+            `You've completed all tasks for ${activity.activityTitle}! You earned a coin!`
+          );
+        } else {
+          toast.success(
+            `You've completed all tasks for ${activity.activityTitle}!`
+          );
+        }
+      }
+
+      // Check if ALL activities have ALL tasks completed using the updated activities array
+      const areAllTasksCompleted = updatedActivities.every((activity) => 
+        activity.tasks?.every((task) => task.completed)
+      );
+
+      // If everything is complete, play fanfare and show completion dialog
+      if (areAllTasksCompleted) {
+        if (fanfareRef.current) {
+          fanfareRef.current.play().catch(console.error);
+        }
+        setShowCompletionDialog(true);
+      }
+
+    } catch (error) {
+      console.error("Error updating task:", error);
+      toast.error("Failed to update task");
+    }
+  };
+
   const handleTasksUpdate = (eventId: string, updatedTasks: Task[]) => {
     // Update local state
     setTodayActivities((current) =>
@@ -475,6 +572,36 @@ const Schedule: React.FC<ScheduleProps> = ({
     setTodayActivities(todaysScheduleActivities);
   };
 
+  const handleResetTutorial = () => {
+    // Reset localStorage values
+    localStorage.setItem("tutorialPart1Played", "false");
+    localStorage.setItem("tutorialPart2Played", "false");
+    localStorage.setItem("tutorialPart3Played", "false");
+    localStorage.setItem("tutorialPart4Played", "false");
+
+    // Reset tutorial states
+    setRunTutorialPart1(true);
+    setRunTutorialPart2(false);
+    setRunTutorialPart3(false);
+    setRunTutorialPart4(false);
+
+    // Play notification sound
+    if (audioRef.current) {
+      audioRef.current
+        .play()
+        .catch((error) => console.error("Audio playback failed:", error));
+    }
+  };
+
+  // Update the helper function to safely check tasks
+  const isActivityCompleted = (activity: Activity) => {
+    return (
+      activity.tasks &&
+      activity.tasks.length > 0 &&
+      activity.tasks.every((task) => task.completed)
+    );
+  };
+
   const toggleHelp = () => {
     setShowHelp((prev) => !prev);
   };
@@ -491,6 +618,14 @@ const Schedule: React.FC<ScheduleProps> = ({
   const uWorldTasks = getUWorldTasks()
   const handleUWorldScoreSubmit = (scores: number[]) => {
     console.log("UWorld scores:", scores);
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      month: 'long', 
+      day: 'numeric' 
+    });
   };
 
   const handleTabChange = (tab: string) => {
@@ -638,12 +773,22 @@ const Schedule: React.FC<ScheduleProps> = ({
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-8 right-2 w-80 bg-white rounded-lg shadow-lg z-50"
           >
-            <SettingContent
-              onStudyPlanSaved={handleStudyPlanSaved}
-              onToggleCalendarView={handleToggleView}
-              onClose={toggleSettings}
-              onActivitiesUpdate={onActivitiesUpdate}
-            />
+           <SettingContent
+                    onComplete={({ success, action }) => {
+                      if (success && action === 'generate') {
+                        handleSetTab('Tests');
+                      }
+                      if (success) {
+                        handleStudyPlanSaved();
+                        if (action === 'generate') {
+                          handleToggleView();
+                        }
+                        toggleSettings();
+                        onActivitiesUpdate();
+                      }
+                    }}
+                    isInitialSetup={false}
+                  />
           </motion.div>
         )}
       </AnimatePresence>
@@ -791,7 +936,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  onClick={() => handleSetTab("Tests")}
+                  onClick={() => handleButtonClick("Tests")}
                   className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                     border-2 border-[--theme-border-color] 
                     hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
