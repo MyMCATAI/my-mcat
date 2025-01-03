@@ -4,7 +4,6 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  Calendar,
   momentLocalizer,
   View,
   stringOrDate,
@@ -12,9 +11,9 @@ import {
 } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import "../styles/CustomCalendar.css";
-import { addDays, format, isTomorrow, isSameDay, isToday } from 'date-fns';
-import { Plus } from 'lucide-react';
+import "@/components/styles/AgendaCalendar.css";
+import { addDays, format, isTomorrow, isSameDay } from 'date-fns';
+import { Plus, Coffee } from 'lucide-react';
 
 import { useUser } from "@clerk/nextjs";
 import AddEventModal from "./AddEventModal";
@@ -98,11 +97,21 @@ interface DayCardProps {
 
 const DayCard: React.FC<DayCardProps> = ({ date, events, onEventClick, onAddEvent }) => {
   const totalHours = events.reduce((sum, event) => sum + event.hours, 0);
-  const hasExam = events.some(event => event.activityType === 'Exam');
-  const hasOnlyBreaks = events.length > 0 && events.every(event => event.activityType === 'Break');
+  
+  const handleAddBreak = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Create a break event with default values
+    const breakEvent: CalendarActivityData = {
+      activityTitle: "Break",
+      activityText: "Taking a break",
+      hours: 0.5,
+      activityType: "Break",
+      scheduledDate: date.toISOString()
+    };
+  };
   
   return (
-    <div className={`day-card ${hasExam ? 'exam-day' : ''} ${hasOnlyBreaks ? 'break-only-day' : ''}`}>
+    <div className="day-card">
       <div className="day-header">
         <div className="flex items-center gap-3">
           {isTomorrow(date) ? 'Tomorrow' : format(date, 'EEE, MMM d')}
@@ -115,25 +124,23 @@ const DayCard: React.FC<DayCardProps> = ({ date, events, onEventClick, onAddEven
           >
             <Plus className="w-4 h-4" />
           </button>
+          <button 
+            onClick={handleAddBreak}
+            className="p-1 rounded-full hover:bg-[--theme-hover-color] transition-colors"
+            title="Add break"
+          >
+            <Coffee className="w-4 h-4" />
+          </button>
         </div>
         <span className="total-hours">{totalHours} hours total</span>
       </div>
       <div className="events-list">
-        {events.length > 0 ? (
-          events.map((event) => (
-            <div key={event.id} className="event-item" onClick={() => onEventClick(event)}>
-              <div className="flex items-center">
-                <h4>{event.title}</h4>
-              </div>
-              <p>{event.hours} hours - {event.activityType}</p>
-            </div>
-          ))
-        ) : (
-          <div className="flex items-center justify-center text-gray-400">
-            <div className="text-center space-y-2">
-            </div>
+        {events.map((event) => (
+          <div key={event.id} className="event-item" onClick={() => onEventClick(event)}>
+            <h4>{event.title}</h4>
+            <p>{event.hours} hours - {event.activityType}</p>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );

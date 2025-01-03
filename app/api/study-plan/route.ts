@@ -9,26 +9,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { searchParams } = new URL(req.url);
-  const examDateOnly = searchParams.get('examDate') === 'true';
-
   try {
-    const studyPlan = await prisma.studyPlan.findFirst({
+    const studyPlans = await prisma.studyPlan.findMany({
       where: { userId },
-      ...(examDateOnly ? {
-        select: { examDate: true }
-      } : {})
+      orderBy: {
+        creationDate: 'desc'
+      },
+      take: 1
     });
 
-    if (!studyPlan) {
-      return NextResponse.json({ studyPlan: null });
-    }
-
-    if (examDateOnly) {
-      return NextResponse.json({ examDate: studyPlan.examDate });
-    }
-
-    return NextResponse.json({ studyPlan });
+    return NextResponse.json({ studyPlans });
   } catch (error) {
     console.error('Error fetching study plan:', error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

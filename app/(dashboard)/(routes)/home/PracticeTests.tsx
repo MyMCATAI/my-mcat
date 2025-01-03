@@ -1,6 +1,6 @@
 // app/(dashboard)/(routes)/home/PracticeTests.tsx
 import React, { useState, useEffect } from "react";
-import { ChevronRight, Plus, GripVertical, CalendarIcon, BarChart as AnalyticsIcon, ClipboardList } from "lucide-react";
+import { ChevronRight, Plus, GripVertical, CalendarIcon, BarChart as AnalyticsIcon, ClipboardList, ChevronLeft, Trash2 } from "lucide-react";
 import {
   DragDropContext,
   Droppable,
@@ -16,12 +16,50 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import { Calendar, dateFnsLocalizer, ToolbarProps, View } from 'react-big-calendar';
+import format from 'date-fns/format';
+import parse from 'date-fns/parse';
+import startOfWeek from 'date-fns/startOfWeek';
+import getDay from 'date-fns/getDay';
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "@/components/styles/CustomCalendar.css";
 import TestReview from '@/components/home/TestReview';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useExamActivities } from '@/hooks/useCalendarActivities';
+import DatePickerDialog from '@/components/DatePickerDialog';
+import DeleteExamDialog from '@/components/DeleteExamDialog';
 import PracticeTestCompleteDialog from '@/components/PracticeTestCompleteDialog';
-import { toast } from "react-hot-toast";
+
+const locales = {
+  'en-US': require('date-fns/locale/en-US'),
+}
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek,
+  getDay,
+  locales,
+});
+
+interface CalendarActivity {
+  id: string;
+  scheduledDate: Date;
+  activityTitle: string;
+  activityType: string;
+  status: string;
+  hours: number;
+}
+
+interface CalendarEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  allDay?: boolean;
+  resource?: any;
+}
 
 interface PracticeTestsProps {
   className?: string;
@@ -30,31 +68,27 @@ interface PracticeTestsProps {
 
 interface Test {
   id: string;
-  activityTitle: string;
-  activityText: string;
+  name: string;
+  company: string;
   status: string;
-  scheduledDate: Date;
-  fullLengthExam?: {
-    dataPulses: Array<{
-      positive: number;
-      name: string;
-    }>;
-  };
+  calendarDate?: number;
+  score?: number;
+  breakdown?: string;
+  startedAt?: string;
+  formattedDate?: string;
 }
 
-interface StudentStats {
-  averageScore: number;
-  testsTaken: number;
-  testsRemaining: number;
+interface UserTest {
+  id: string;
+  examId: string;
+  name: string;
+  company: string;
+  status: string;
+  score?: number;
+  breakdown?: string;
+  startedAt: string;
+  isCompleted?: boolean;
 }
-
-// Example array for AAMC tests when activeSection === 'aamc'
-// (Assuming these are defined somewhere; adjust as needed)
-const AAMCTests = [
-  { name: "AAMC FL 1", status: "Not Started" },
-  { name: "AAMC FL 2", status: "Not Started" },
-  // Add more tests as needed...
-];
 
 const COMPANIES = ["AAMC", "Blueprint", "Jack Westin", "Altius"] as const;
 type Company = typeof COMPANIES[number];
@@ -78,134 +112,188 @@ const COMPANY_INFO = {
   }
 } as const;
 
-type ValuePiece = Date | null;
 
-interface NewTest {
-  company: Company;
-  testNumber: string;
-  date: Date | null;
-  useRecommendedDate: boolean;
-}
+// Base toolbar component that accepts only ToolbarProps
+const BaseToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = (props) => {
+  const { onNavigate, label } = props;
+
+  return (
+    <div className="flex items-center gap-2">
+      <button 
+        onClick={() => onNavigate('PREV')}
+        className="p-1.5 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-all duration-200"
+      >
+        <ChevronLeft className="w-3.5 h-3.5" />
+      </button>
+      <span className="text-sm font-medium">{label}</span>
+      <button 
+        onClick={() => onNavigate('NEXT')}
+        className="p-1.5 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-all duration-200"
+      >
+        <ChevronRight className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+};
+
+// Wrapper component that adds the countdown
+const CustomToolbarWithEvents: React.FC<{
+  calendarEvents: CalendarEvent[];
+  toolbarProps: ToolbarProps<CalendarEvent, object>;
+}> = ({ calendarEvents, toolbarProps }) => {
+  // Get the next test date from calendar events
+  const nextTestDate = calendarEvents
+    .map(event => event.start)
+    .filter(date => date > new Date())
+    .sort((a, b) => a.getTime() - b.getTime())[0];
+
+  // Calculate days until next test
+  const daysUntilNextTest = nextTestDate
+    ? Math.ceil((nextTestDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  return (
+    <div className="rbc-toolbar flex flex-col items-center gap-2 pb-2">
+      <BaseToolbar {...toolbarProps} />
+      {daysUntilNextTest !== null && (
+        <div className="flex items-center gap-1.5 text-sm">
+          <span className="font-medium text-[--theme-emphasis-color]">
+            {daysUntilNextTest} days
+          </span>
+          <span className="text-[--theme-text-color] opacity-70">
+            until next FL
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const PracticeTests: React.FC<PracticeTestsProps> = ({ 
   className,
   handleSetTab 
 }) => {
-  const [activeSection, setActiveSection] = useState<
-    | "aamc"
-    | "thirdParty"
-    | "myMcat"
-    | "custom"
-    | "diagnostic"
-    | "section"
-    | null
-  >(null);
-  const [date, setDate] = useState<Date>(new Date());
-  const [studentStats] = useState<StudentStats>({
-    averageScore: 85,
-    testsTaken: 3,
-    testsRemaining: 8,
-  });
-  const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
-  const [selectedTest, setSelectedTest] = useState<Test | null>(null);
+  const { activities: examActivities, loading: examLoading, updateExamDate, createExamActivity, fetchExamActivities } = useExamActivities();
   const [scheduledTests, setScheduledTests] = useState<Test[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [date, setDate] = useState<Date>(new Date());
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [testToDelete, setTestToDelete] = useState<string | null>(null);
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
+  const [selectedTestToComplete, setSelectedTestToComplete] = useState<{ id: string; name: string } | null>(null);
+  const [userTests, setUserTests] = useState<UserTest[]>([]);
+  const [activeTab, setActiveTab] = useState("upcoming");
 
-  // Fetch exam activities on component mount
+  // Convert exam activities to calendar events
   useEffect(() => {
-    const fetchExamActivities = async () => {
-      try {
-        const response = await fetch('/api/calendar/exam-activities');
-        if (!response.ok) {
-          throw new Error('Failed to fetch exam activities');
-        }
-        const activities = await response.json();
-        
-        // Transform calendar activities into the Test format
-        const transformedTests = activities.map((activity: any) => ({
-          id: activity.id,
-          activityTitle: activity.activityTitle,
-          activityText: activity.activityText,
-          status: activity.status,
-          scheduledDate: new Date(activity.scheduledDate),
-          fullLengthExam: activity.fullLengthExam,
-        }));
+    if (examActivities) {
+      const events = examActivities.map((activity) => ({
+        id: activity.id,
+        title: activity.activityTitle,
+        start: new Date(activity.scheduledDate),
+        end: new Date(activity.scheduledDate),
+        allDay: true,
+        resource: activity
+      }));
+      setCalendarEvents(events);
+    }
+  }, [examActivities]);
 
-        setScheduledTests(transformedTests);
-      } catch (error) {
-        console.error('Error fetching exam activities:', error);
-        toast.error('Failed to load scheduled exams');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  useEffect(() => {
+    if (examActivities) {
+      const tests = examActivities
+        .filter(activity => !activity.fullLengthExam) // Filter out activities that have a fullLengthExam
+        .map((activity) => {
+          const date = new Date(activity.scheduledDate);
+          return {
+            id: activity.id,
+            name: activity.activityTitle,
+            company: activity.activityText,
+            status: activity.status,
+            calendarDate: date.getUTCDate(),
+            formattedDate: new Date(activity.scheduledDate).toLocaleDateString('en-US', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              timeZone: 'UTC'
+            })
+          };
+        });
 
-    fetchExamActivities();
-  }, []);
+      setScheduledTests(tests);
+    }
+  }, [examActivities]);
 
-  // Helper function to get score breakdown from data pulses
-  const getScoreBreakdown = (dataPulses: Array<{ positive: number; name: string }> | undefined) => {
-    if (!dataPulses) return '';
-    
-    const scores = {
-      cp: 0,
-      cars: 0,
-      bb: 0,
-      ps: 0
-    };
+  // Convert completed exam activities to user tests
+  useEffect(() => {
+    if (examActivities) {
+      const completedTests = examActivities
+        .filter(activity => activity.status === "Completed" && activity.fullLengthExam)
+        .map(activity => {
+          const exam = activity.fullLengthExam!;
+          
+          const sectionScores = exam.dataPulses.reduce((acc, pulse) => {
+            if (pulse.name.includes("Chemical")) acc.cp = pulse.positive;
+            else if (pulse.name.includes("Critical")) acc.cars = pulse.positive;
+            else if (pulse.name === "Biological and Biochemical Foundations") acc.bb = pulse.positive;
+            else if (pulse.name === "Psychological, Social, and Biological Foundations") acc.ps = pulse.positive;
+            return acc;
+          }, { cp: 0, cars: 0, bb: 0, ps: 0 });
 
-    dataPulses.forEach(pulse => {
-      if (pulse.name.includes('Chemical')) scores.cp = pulse.positive;
-      else if (pulse.name.includes('Critical')) scores.cars = pulse.positive;
-      else if (pulse.name.includes('Biological')) scores.bb = pulse.positive;
-      else if (pulse.name.includes('Psychological')) scores.ps = pulse.positive;
-    });
+          const totalScore = Object.values(sectionScores).reduce((sum, score) => sum + score, 0)
+          const breakdown = `${sectionScores.cp}/${sectionScores.cars}/${sectionScores.bb}/${sectionScores.ps}`;
 
-    return `${scores.cp}/${scores.cars}/${scores.bb}/${scores.ps}`;
-  };
+          return {
+            id: activity.id,
+            examId: exam.id,
+            name: activity.activityTitle,
+            company: activity.activityText,
+            status: activity.status,
+            score: Math.round(totalScore),
+            breakdown,
+            startedAt: new Date(activity.scheduledDate).toISOString().split('T')[0],
+            isCompleted: true
+          };
+        });
+
+      setUserTests(completedTests);
+    }
+  }, [examActivities]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newTest, setNewTest] = useState<NewTest>({
+  const [newTest, setNewTest] = useState({
     company: "" as Company,
     testNumber: "",
-    date: null,
+    date: null as Date | null,
     useRecommendedDate: true
   });
 
-  const [activeTest, setActiveTest] = useState<Test | null>(null);
+  const [activeTest, setActiveTest] = useState<UserTest | null>(null);
 
-  // Helper function to format dates consistently
-  const formatDate = (date: Date | null | undefined): string => {
-    if (!date) return "";
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+  const handleAddTest = async () => {
+    try {
+      if (!newTest.company || !newTest.testNumber || (!newTest.date && !newTest.useRecommendedDate)) {
+        return;
+      }
 
-  // Helper function to get recommended test date
-  const getRecommendedTestDate = (): Date => {
-    const recommendedDate = new Date();
-    recommendedDate.setDate(recommendedDate.getDate() + 7); // Set to 1 week from now
-    return recommendedDate;
-  };
+      const testName = `${newTest.company} FL${newTest.testNumber}`;
+      
+      await createExamActivity({
+        activityTitle: testName,
+        activityText: newTest.company,
+        scheduledDate: newTest.date || new Date(),
+        hours: 8, 
+      });
 
-  const handleAddTest = () => {
-    const testId = `${scheduledTests.length + 1}`;
-    const testDate = newTest.useRecommendedDate ? getRecommendedTestDate() : newTest.date;
-    
-    const newTestEntry: Test = {
-      id: testId,
-      name: `FL${newTest.testNumber}`,
-      company: newTest.company,
-      status: "Not Started",
-      calendarDate: testDate || new Date(), // Fallback to current date if no date is selected
-    };
-
-    setScheduledTests([...scheduledTests, newTestEntry]);
-    setIsAddDialogOpen(false);
-    setNewTest({ company: "" as Company, testNumber: "", date: null, useRecommendedDate: true });
+      setIsAddDialogOpen(false);
+      setNewTest({ company: "" as Company, testNumber: "", date: null, useRecommendedDate: true });
+    } catch (error) {
+      console.error('Failed to create test:', error);
+      // You might want to show an error toast or message here
+    }
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -218,344 +306,323 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     setScheduledTests(items);
   };
 
-  const calendarDays = [
-    ["26", "27", "28", "29", "30", "1", "2"],
-    ["3", "4", "5", "6", "7", "8", "9"],
-    ["10", "11", "12", "13", "14", "15", "16"],
-    ["17", "18", "19", "20", "21", "22", "23"],
-    ["24", "25", "26", "27", "28", "29", "30"],
-    ["31", "1", "2", "3", "4", "5", "6"],
-  ] as const;
-
-  const isTestDate = (day: string) => {
-    // Only process days that are valid numbers
-    if (!/^\d+$/.test(day)) return false;
-    
-    const dayNum = parseInt(day);
-    return scheduledTests.some((test) => {
-      if (!test.calendarDate) return false;
-      return test.calendarDate.getDate() === dayNum;
+  const formatDate = (date: Date | null): string => {
+    if (!date) return "";
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
   };
 
-  const handleCompleteTest = (test: Test) => {
-    setSelectedTest(test);
-    setIsCompleteDialogOpen(true);
+  // Handle calendar event selection
+  const handleSelectEvent = (event: CalendarEvent) => {
+    const activity = event.resource as CalendarActivity;
+    console.log('Selected activity:', activity);
+    // Handle event selection logic here
   };
 
-  const handleSubmitScores = (scores: { total: number; cp: number; cars: number; bb: number; ps: number; }) => {
-    if (!selectedTest) return;
-
-    const updatedTest = {
-      ...selectedTest,
-      status: "Completed",
-      score: scores.total,
-      breakdown: `${scores.cp}/${scores.cars}/${scores.bb}/${scores.ps}`,
-      dateTaken: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  // Custom event styling
+  const eventStyleGetter = (event: CalendarEvent) => {
+    return {
+      style: {
+        backgroundColor: 'var(--theme-emphasis-color)',
+        border: 'none',
+      }
     };
+  };
 
-    setScheduledTests(prev => prev.map(t => 
-      t.id === selectedTest.id ? updatedTest : t
-    ));
+  // Add onNavigate handler
+  const handleNavigate = (newDate: Date) => {
+    setDate(newDate);
+  };
 
-    setSelectedTest(null);
+  // Handle opening date picker for a test
+  const handleOpenDatePicker = (testId: string) => {
+    setSelectedTestId(testId);
+    setDatePickerOpen(true);
+  };
+
+  // Handle date selection
+  const handleDateSelect = async (date: Date) => {
+    if (selectedTestId) {
+      try {
+        await updateExamDate(selectedTestId, date);
+        // Close the dialog after successful update
+        setDatePickerOpen(false);
+        setSelectedTestId(null);
+      } catch (error) {
+        console.error('Failed to update test date:', error);
+      }
+    }
+  };
+
+  const handleCompleteTest = async (scores: { total: number; cp: number; cars: number; bb: number; ps: number }) => {
+    try {
+      // After successful completion, refresh the activities to update both lists
+      await fetchExamActivities();
+      setCompleteDialogOpen(false);
+      setSelectedTestToComplete(null);
+      // Switch to completed tab
+      setActiveTab("completed");
+    } catch (error) {
+      console.error('Failed to refresh exam activities:', error);
+    }
   };
 
   return (
     <div className={`flex flex-col ${className}`}>
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex flex-col h-[calc(100vh-8.3rem)]">
-          {activeTest ? (
-            // When a test is active, it takes up the full container
-            <div className="h-full px-4 ">
+          {examLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">Loading exam activities...</div>
+            </div>
+          ) : activeTest ? (
+            <div className="h-full px-4">
               <TestReview 
-                test={activeTest} 
+                test={{
+                  id: activeTest.id,
+                  examId: activeTest.examId,
+                  name: activeTest.name,
+                  company: activeTest.company,
+                  status: activeTest.status,
+                  score: activeTest.score,
+                  breakdown: activeTest.breakdown,
+                  dateTaken: new Date(activeTest.startedAt).toLocaleDateString(),
+                  aiResponse: examActivities
+                    .find(activity => activity.fullLengthExam?.id === activeTest.examId)
+                    ?.fullLengthExam?.aiResponse,
+                  dataPulses: examActivities
+                    .find(activity => activity.fullLengthExam?.id === activeTest.examId)
+                    ?.fullLengthExam?.dataPulses
+                }}
                 onBack={() => setActiveTest(null)} 
               />
             </div>
           ) : (
-            // Original layout with calendar and tests
-            <>
-              {/* Calendar + Scheduled Tests Section */}
-              <div className="h-[70%] min-h-0 mb-4">
-                <div
-                  className="bg-[--theme-leaguecard-color] rounded-xl p-4 sm:p-6 lg:p-8 mx-4 h-full overflow-hidden"
-                  style={{
-                    boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
-                  }}
-                >
-                  <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full">
-                    {/* Calendar Side - Add overflow handling */}
-                    <div className="flex flex-col h-full overflow-hidden">
-                      <div className="text-lg font-medium mb-1 text-center">
-                        December 2024
-                      </div>
-                      <div className="flex-1 overflow-auto px-2">
-                        {/* Calendar Grid Container */}
-                        <div className="h-full flex flex-col">
-                          {/* Header Row - Updated with more responsive text sizes */}
-                          <div className="grid grid-cols-7 mb-0.5">
-                            {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-                              <div
-                                key={day}
-                                className="text-center text-[min(0.6rem,1.5vh)] font-medium truncate"
-                              >
-                                {day}
+            <div className="h-full">
+              <div
+                className="bg-[--theme-leaguecard-color] rounded-xl p-4 sm:p-6 lg:p-8 mx-4 h-full overflow-hidden"
+                style={{
+                  boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                }}
+              >
+                <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full">
+                  {/* Calendar Side */}
+                  <div className="flex flex-col h-full overflow-hidden">
+                    <div className="flex-1 flex items-center justify-center">
+                      <Calendar
+                        localizer={localizer}
+                        events={calendarEvents}
+                        startAccessor="start"
+                        endAccessor="end"
+                        className="custom-calendar w-full max-w-full bg-transparent"
+                        views={['month']}
+                        defaultView="month"
+                        date={date}
+                        onNavigate={handleNavigate}
+                        toolbar={true}
+                        popup
+                        selectable
+                        onSelectEvent={handleSelectEvent}
+                        eventPropGetter={eventStyleGetter}
+                        components={{
+                          toolbar: (props) => (
+                            <CustomToolbarWithEvents
+                              calendarEvents={calendarEvents}
+                              toolbarProps={props}
+                            />
+                          ),
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tests Side with Tabs */}
+                  <div className="flex flex-col h-full overflow-hidden relative">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
+                      <TabsList className="grid w-full grid-cols-2 mb-4">
+                        <TabsTrigger value="completed">Completed</TabsTrigger>
+                        <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="completed" className="flex-1 overflow-auto">
+                        <div className="space-y-2 pb-2">
+                          {userTests.map((test: UserTest, index: number) => (
+                            <div
+                              key={test.id}
+                              className="flex items-center p-3 bg-[--theme-leaguecard-accent] rounded-lg 
+                                transition-all duration-200
+                                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
+                                cursor-pointer"
+                              onClick={() => setActiveTest(test)}
+                            >
+                              {test.score && (
+                                <div className="text-xl font-bold mr-4">
+                                  {test.score}
+                                </div>
+                              )}
+                              <div className="flex-grow text-right">
+                                <h4 className="text-sm font-medium">
+                                  {test.name}
+                                </h4>
+                                <p className="text-xs opacity-70">
+                                  {test.company}
+                                </p>
+                                {test.startedAt && (
+                                  <p className="text-xs opacity-70 mt-1">
+                                    {test.startedAt}
+                                  </p>
+                                )}
                               </div>
-                            ))}
-                          </div>
+                            </div>
+                          ))}
+                        </div>
+                      </TabsContent>
 
-                          {/* Calendar Grid - Updated cell styling with responsive text */}
-                          <div className="flex-1 grid grid-rows-6 min-h-0">
-                            {calendarDays.map((week, weekIndex) => (
-                              <div key={weekIndex} className="grid grid-cols-7">
-                                {week.map((day, dayIndex) => {
-                                  const dayNum = parseInt(day);
-                                  const isValidDay = !isNaN(dayNum) && dayNum > 0 && dayNum <= 31;
-                                  const isCurrentDay = date.getDate() === dayNum;
-                                  const hasTest = isTestDate(day);
-
-                                  return (
+                      <TabsContent value="upcoming" className="flex-1 overflow-auto">
+                        <Droppable droppableId="droppable-tests">
+                          {(provided) => (
+                            <div
+                              {...provided.droppableProps}
+                              ref={provided.innerRef}
+                              className="space-y-2 pb-2"
+                            >
+                              {scheduledTests.map((test, index) => (
+                                <Draggable
+                                  key={test.id}
+                                  draggableId={test.id}
+                                  index={index}
+                                >
+                                  {(provided, snapshot) => (
                                     <div
-                                      key={`${weekIndex}-${dayIndex}`}
-                                      className={`h-full flex items-center justify-center text-[min(0.7rem,1.8vh)] p-0.5
-                                        ${isValidDay ? "hover:bg-[--theme-hover-color] cursor-pointer" : "opacity-30"}
-                                        ${isCurrentDay ? "bg-[--theme-hover-color] text-[--theme-hover-text]" : ""}
-                                        ${hasTest ? "bg-[--theme-calendar-color] text-[--theme-text-color] font-bold" : ""}
-                                      `}
-                                      onClick={() => {
-                                        if (isValidDay) {
-                                          const newDate = new Date(date);
-                                          newDate.setDate(dayNum);
-                                          setDate(newDate);
-                                        }
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      className={`flex items-center p-3 bg-[--theme-leaguecard-accent] rounded-lg 
+                                        transition-all duration-200
+                                        ${snapshot.isDragging ? "opacity-75" : ""}
+                                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]`}
+                                      style={{
+                                        ...provided.draggableProps.style,
                                       }}
                                     >
-                                      {day}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Scheduled Tests Side - Add overflow handling */}
-                    <div className="flex flex-col h-full overflow-hidden">
-                      <h3 className="text-sm font-medium text-[--theme-text-color] opacity-60 uppercase tracking-wide mb-4 text-center">
-                        Scheduled Tests
-                      </h3>
-                      <div className="flex-1 overflow-auto px-2">
-                        {isLoading ? (
-                          <div className="flex items-center justify-center h-full">
-                            <div className="text-sm text-gray-500">Loading scheduled exams...</div>
-                          </div>
-                        ) : (
-                          <Droppable droppableId="droppable-tests">
-                            {(provided) => (
-                              <div
-                                {...provided.droppableProps}
-                                ref={provided.innerRef}
-                                className="space-y-2 pb-2"
-                              >
-                                {scheduledTests.map((test, index) => (
-                                  <Draggable
-                                    key={test.id}
-                                    draggableId={test.id}
-                                    index={index}
-                                  >
-                                    {(provided, snapshot) => (
                                       <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        className={`flex items-center p-3 bg-[--theme-leaguecard-accent] rounded-lg 
-                                          transition-all duration-200
-                                          ${snapshot.isDragging ? "opacity-75" : ""}
-                                          hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]`}
-                                        style={{
-                                          ...provided.draggableProps.style,
-                                        }}
+                                        {...provided.dragHandleProps}
+                                        className="mr-2 cursor-grab active:cursor-grabbing"
                                       >
-                                        <div
-                                          {...provided.dragHandleProps}
-                                          className="mr-2 cursor-grab active:cursor-grabbing"
-                                        >
-                                          <GripVertical className="w-4 h-4 opacity-50" />
-                                        </div>
-                                        <div className="flex-grow">
-                                          <h4 className="text-sm font-medium">
-                                            {test.activityTitle}
-                                          </h4>
-                                          <p className="text-xs opacity-70">
-                                            {test.activityText}
-                                          </p>
-                                          {test.fullLengthExam && (
-                                            <p className="text-xs mt-1">
-                                              Score: {getScoreBreakdown(test.fullLengthExam.dataPulses)}
-                                            </p>
-                                          )}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <button
-                                            className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
-                                              hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                                              transition-colors duration-200"
-                                          >
-                                            Set Date
-                                          </button>
-                                          {test.status !== "Completed" && (
-                                            <button
-                                              onClick={() => handleCompleteTest(test)}
-                                              className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
-                                                hover:bg-green-500 hover:text-white
-                                                transition-colors duration-200"
-                                            >
-                                              Complete
-                                            </button>
-                                          )}
-                                        </div>
+                                        <GripVertical className="w-4 h-4 opacity-50" />
                                       </div>
-                                    )}
-                                  </Draggable>
-                                ))}
-                                {provided.placeholder}
-                              </div>
-                            )}
-                          </Droppable>
-                        )}
-                      </div>
+                                      <div className="flex-grow">
+                                        <h4 className="text-sm font-medium">
+                                          {test.name}
+                                        </h4>
+                                        <p className="text-xs opacity-70">
+                                          {test.company}
+                                        </p>
+                                        {test.formattedDate && (
+                                          <p className="text-xs opacity-70 mt-1">
+                                            {test.formattedDate}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          onClick={() => handleOpenDatePicker(test.id)}
+                                          className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
+                                            hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                                            transition-colors duration-200"
+                                        >
+                                          Set Date
+                                        </button>
+                                        <button
+                                          className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
+                                            hover:bg-green-500 hover:text-white
+                                            transition-colors duration-200"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedTestToComplete({ id: test.id, name: test.name });
+                                            setCompleteDialogOpen(true);
+                                          }}
+                                        >
+                                          Complete
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            setTestToDelete(test.id);
+                                            setDeleteDialogOpen(true);
+                                          }}
+                                          className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
+                                            hover:bg-red-500 hover:text-white
+                                            transition-colors duration-200"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
+                            </div>
+                          )}
+                        </Droppable>
 
-                      <button
-                        onClick={() => setIsAddDialogOpen(true)}
-                        className="mt-4 w-full py-2 px-4 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                          rounded-lg transition-colors duration-200 text-sm font-medium flex items-center justify-center gap-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add Practice Test
-                      </button>
+                        <button
+                          onClick={() => setIsAddDialogOpen(true)}
+                          className="mt-4 w-full py-2 px-4 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                            rounded-lg transition-colors duration-200 text-sm font-medium flex items-center justify-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add Practice Test
+                        </button>
+                      </TabsContent>
+                    </Tabs>
+
+                    {/* View Toggle Buttons - Made Larger */}
+                    <div className="absolute bottom-4 right-4 flex items-center gap-4">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => handleSetTab && handleSetTab("Schedule?view=calendar")}
+                              className="group w-16 h-16 p-3 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                                border-2 border-[--theme-border-color] 
+                                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                                shadow-md rounded-full transition flex flex-col items-center justify-center"
+                            >
+                              <CalendarIcon className="w-8 h-8" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Switch to Calendar View</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => handleSetTab && handleSetTab("Schedule?view=analytics")}
+                              className="group w-16 h-16 p-3 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                                border-2 border-[--theme-border-color] 
+                                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                                shadow-md rounded-full transition flex flex-col items-center justify-center"
+                            >
+                              <AnalyticsIcon className="w-8 h-8" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Switch to Analytics View</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* Previous Practice Tests Section */}
-              <div className="flex-grow px-4">
-                <div className="grid grid-cols-5 gap-4 h-full">
-                  {[
-                    { 
-                      id: "past-1",
-                      name: "FL1",
-                      company: "AAMC",
-                      status: "Completed",
-                      score: 527,
-                      breakdown: "132/132/132/131",
-                      dateTaken: "Dec 15"
-                    },
-                    { 
-                      id: "past-2",
-                      name: "FL2",
-                      company: "Blueprint",
-                      status: "Completed",
-                      score: 515,
-                      breakdown: "129/128/129/129",
-                      dateTaken: "Dec 10"
-                    },
-                    { 
-                      id: "past-3",
-                      name: "FL3",
-                      company: "AAMC",
-                      status: "Completed",
-                      score: 508,
-                      breakdown: "127/127/127/127",
-                      dateTaken: "Dec 5"
-                    },
-                    { 
-                      id: "past-4",
-                      name: "FL1",
-                      company: "Jack Westin",
-                      status: "Completed",
-                      score: 498,
-                      breakdown: "124/124/125/125",
-                      dateTaken: "Nov 30"
-                    },
-                    { 
-                      id: "past-5",
-                      name: "FL4",
-                      company: "Altius",
-                      status: "Completed",
-                      score: 522,
-                      breakdown: "131/130/131/130",
-                      dateTaken: "Nov 25"
-                    }
-                  ].map((test) => (
-                    <div
-                      key={test.id}
-                      className="h-full p-3 rounded-lg bg-opacity-50 bg-[--theme-leaguecard-accent] 
-                        transition-all duration-300 cursor-pointer group
-                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] hover:transform hover:scale-[1.02]"
-                      style={{
-                        boxShadow: 'var(--theme-button-boxShadow)',
-                        height: '15vh',
-                      }}
-                      onClick={() => setActiveTest(test)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow-hover)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow)';
-                      }}
-                    >
-                      <div className="h-full flex flex-col">
-                        <div className="flex justify-between text-[10px] mb-1 opacity-40 group-hover:opacity-100 group-hover:text-[--theme-hover-text] transition-opacity">
-                          <span className="text-[10px] opacity-75">{test.company} {test.name}</span>
-                          <span className="text-[10px] opacity-75">{test.dateTaken}</span>
-                        </div>
-
-                        <div className="flex-grow flex items-center justify-center">
-                          <span 
-                            className={`text-4xl font-bold leading-none transition-all duration-300
-                              opacity-40 group-hover:opacity-100 group-hover:text-[--theme-hover-text]`}
-                          >
-                            {test.score}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-center text-[10px] mt-1 opacity-0 group-hover:opacity-100 group-hover:text-[--theme-hover-text] transition-opacity">
-                          <span className="opacity-75">
-                            {test.breakdown}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* View Toggle Buttons - Positioned like in Schedule.tsx */}
-              <div className="flex justify-end px-4 mr-2.5">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => handleSetTab?.("Schedule")}
-                        className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                          border-2 border-[--theme-border-color] 
-                          hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                          shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
-                      >
-                        <AnalyticsIcon className="w-8 h-8" />
-                        <span className="text-xs font-medium">Stats</span>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Switch to Stats View</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </>
+            </div>
           )}
         </div>
       </DragDropContext>
@@ -667,16 +734,16 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                       We&apos;ll recommend the next available test date based on your study schedule
                     </div>
                   ) : (
-                    <div className="flex justify-center">
-                      <Calendar
-                        onChange={(value) => setNewTest({ ...newTest, date: value as Date })}
-                        value={newTest.date}
-                        className="w-fit bg-white rounded-lg shadow-sm"
-                        tileClassName="text-gray-700"
-                        minDate={new Date()}
-                        formatMonthYear={(locale, date) => {
-                          return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="date"
+                        value={newTest.date ? newTest.date.toISOString().split('T')[0] : ''}
+                        min={new Date().toISOString().split('T')[0]}
+                        onChange={(e) => {
+                          const date = e.target.value ? new Date(e.target.value) : null;
+                          setNewTest({ ...newTest, date });
                         }}
+                        className="w-full p-2 rounded-lg border border-gray-300 bg-white"
                       />
                     </div>
                   )}
@@ -709,11 +776,36 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
         </DialogContent>
       </Dialog>
 
+      <DeleteExamDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setTestToDelete(null);
+        }}
+        testId={testToDelete || undefined}
+        testName={testToDelete ? scheduledTests.find(t => t.id === testToDelete)?.name : undefined}
+      />
+
+      <DatePickerDialog
+        isOpen={datePickerOpen}
+        onClose={() => {
+          setDatePickerOpen(false);
+          setSelectedTestId(null);
+        }}
+        onDateSelect={handleDateSelect}
+        currentDate={selectedTestId ? new Date(scheduledTests.find(t => t.id === selectedTestId)?.formattedDate || '') : undefined}
+        testName={selectedTestId ? scheduledTests.find(t => t.id === selectedTestId)?.name : undefined}
+      />
+
       <PracticeTestCompleteDialog
-        isOpen={isCompleteDialogOpen}
-        onClose={() => setIsCompleteDialogOpen(false)}
-        onSubmit={handleSubmitScores}
-        testTitle={selectedTest?.name || "Practice Test"}
+        isOpen={completeDialogOpen}
+        onClose={() => {
+          setCompleteDialogOpen(false);
+          setSelectedTestToComplete(null);
+        }}
+        onSubmit={handleCompleteTest}
+        testTitle={selectedTestToComplete?.name || ''}
+        calendarActivityId={selectedTestToComplete?.id}
       />
     </div>
   );

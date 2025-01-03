@@ -1,20 +1,12 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Plus, Trash2, Edit2, Flag, XCircle, CheckCircle2, BookOpen } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Plus, Flag, XCircle, RefreshCw } from 'lucide-react';
 import QuestionAddModal from './QuestionAddModal';
+import { ExamQuestion, useExamQuestions } from '@/hooks/useExamQuestions';
+import { DISPLAY_TO_FULL_SECTION } from '@/lib/constants';
+import { DataPulse } from '@/hooks/useCalendarActivities';
 
-type QuestionStatus = 'wrong' | 'flagged' | 'correct';
-
-interface Question {
-  id: string;
-  number: string;
-  category: string;
-  mistake: string;
-  improvement: string;
-  status: QuestionStatus;
-}
-
-interface Section {
-  name: string;
+export interface Section {
+  name: keyof typeof DISPLAY_TO_FULL_SECTION;
   score: number;
 }
 
@@ -26,38 +18,128 @@ interface TopicStats {
 
 interface SectionReviewProps {
   section: Section;
+  examId: string;
   onBack: () => void;
   isCompleted: boolean;
   onComplete: () => void;
+  dataPulse?: DataPulse;
 }
 
 const SectionReview: React.FC<SectionReviewProps> = ({ 
   section, 
+  examId,
   onBack, 
   isCompleted, 
-  onComplete 
+  onComplete,
+  dataPulse 
 }) => {
-  const [listOfQuestions, setListOfQuestions] = useState<Question[]>([]);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [editingQuestion, setEditingQuestion] = useState<ExamQuestion | undefined>(undefined);
+  const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
+  const [analysis, setAnalysis] = useState<string | null>(null);
+  
+  const { 
+    questions: listOfQuestions, 
+    loading, 
+    error,
+    fetchQuestions,
+    createQuestion,
+    updateQuestion
+  } = useExamQuestions(examId, section.name);
 
-  const flaggedCount = listOfQuestions.filter(q => q.status === 'flagged').length;
-  const wrongCount = listOfQuestions.filter(q => q.status === 'wrong').length;
+  // Load existing analysis if available
+  useEffect(() => {
+    if (dataPulse?.aiResponse) {
+      setAnalysis(dataPulse.aiResponse);
+    }
+  }, [dataPulse]);
+
+  const generateAnalysis = async () => {
+    if (!dataPulse?.id) return;
+    
+    setIsGeneratingAnalysis(true);
+    try {
+      const response = await fetch('/api/section-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dataPulseId: dataPulse.id
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate analysis');
+      }
+
+      const data = await response.json();
+      setAnalysis(data.analysis);
+    } catch (error) {
+      console.error('Error generating analysis:', error);
+    } finally {
+      setIsGeneratingAnalysis(false);
+    }
+  };
+
+  // Fetch questions and check if section is already reviewed
+  useEffect(() => {
+    fetchQuestions()
+    const initializeData = async () => {
+      if (dataPulse?.reviewed) {
+        onComplete();
+      }
+    };
+
+    initializeData();
+  }, []);
+
+  const handleSectionComplete = async () => {
+    try {
+      if (!dataPulse?.id) {
+        console.error('No dataPulse found for section:', section.name);
+        return;
+      }
+
+      // Update the reviewed status in the backend
+      const response = await fetch('/api/data-pulse', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dataPulseId: dataPulse.id
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update section completion');
+      }
+      
+      // Call the onComplete callback to update frontend state
+      onComplete();
+    } catch (error) {
+      console.error('Error updating section completion:', error);
+    }
+  };
+
+  const flaggedCount = listOfQuestions.filter(q => q.negative === 0 && q.positive === 0).length;
+  const wrongCount = listOfQuestions.filter(q => q.negative === 1).length;
 
   const topicStats = listOfQuestions.reduce<Record<string, TopicStats>>((acc, question) => {
-    if (!question.category) return acc;
+    if (!question.name) return acc;
     
-    if (!acc[question.category]) {
-      acc[question.category] = {
+    if (!acc[question.name]) {
+      acc[question.name] = {
         total: 0,
         wrong: 0,
         flagged: 0
       };
     }
     
-    acc[question.category].total += 1;
-    if (question.status === 'wrong') acc[question.category].wrong += 1;
-    if (question.status === 'flagged') acc[question.category].flagged += 1;
+    acc[question.name].total += 1;
+    if (question.negative === 1) acc[question.name].wrong += 1;
+    if (question.negative === 0 && question.positive === 0) acc[question.name].flagged += 1;
     
     return acc;
   }, {});
@@ -65,18 +147,6 @@ const SectionReview: React.FC<SectionReviewProps> = ({
   const sortedTopics = Object.entries(topicStats)
     .sort((a, b) => b[1].total - a[1].total)
     .slice(0, 3);
-
-  const handleQuestionAdd = (question: Question) => {
-    if (editingQuestion) {
-      setListOfQuestions(questions => 
-        questions.map(q => q.id === editingQuestion.id ? question : q)
-      );
-    } else {
-      setListOfQuestions(prev => [...prev, question]);
-    }
-    setEditingQuestion(null);
-    setIsAddingQuestion(false);
-  };
 
   return (
     <div className="animate-fadeIn h-full p-6 flex flex-col">
@@ -98,9 +168,31 @@ const SectionReview: React.FC<SectionReviewProps> = ({
         <div className="flex-grow bg-[--theme-leaguecard-color] shadow-xl rounded-2xl p-5">
           <div className="flex gap-4 h-full">
             <div className="flex-grow flex flex-col">
-              <span className="text-xs uppercase tracking-wide opacity-60">Kalypso&apos;s Analysis</span>
-              <div className="flex-grow flex items-center justify-center text-sm opacity-50">
-                Coming soon...
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs uppercase tracking-wide opacity-60">Kalypso&apos;s Analysis</span>
+                {listOfQuestions.length > 0 && (
+                  <button
+                    onClick={generateAnalysis}
+                    disabled={isGeneratingAnalysis}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs bg-[--theme-leaguecard-accent] hover:bg-[--theme-hover-color] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${isGeneratingAnalysis ? 'animate-spin' : ''}`} />
+                    <span>{analysis ? 'Regenerate' : 'Generate'} Analysis</span>
+                  </button>
+                )}
+              </div>
+              <div className="flex-grow flex items-center justify-center text-sm">
+                <div className="max-h-[8rem] overflow-y-auto">
+                  {isGeneratingAnalysis ? (
+                    <div className="opacity-50">Analyzing your performance...</div>
+                  ) : analysis ? (
+                    <div className="text-sm leading-relaxed whitespace-pre-line max-h-[100px] max-w-[660px] overflow-y-auto">{analysis}</div>
+                  ) : listOfQuestions.length === 0 ? (
+                    <div className="opacity-50">Add questions to generate an analysis</div>
+                  ) : (
+                    <div className="opacity-50">Click generate to analyze your performance</div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -145,7 +237,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
 
             <div className="flex items-center gap-4">
               <button
-                onClick={onComplete}
+                onClick={handleSectionComplete}
                 className={`px-4 py-2 rounded-full text-sm transition-all duration-300
                   ${isCompleted 
                     ? 'bg-green-500/20 text-green-500' 
@@ -167,23 +259,37 @@ const SectionReview: React.FC<SectionReviewProps> = ({
 
           <div className="overflow-y-auto flex-1 min-h-0">
             <div className="grid grid-cols-12 gap-2">
-              {listOfQuestions.map((question) => (
-                <div
-                  key={question.id}
-                  onClick={() => {
-                    setEditingQuestion(question);
-                    setIsAddingQuestion(true);
-                  }}
-                  className={`aspect-square rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 text-xs
-                    ${question.status === 'wrong' ? 'bg-red-500/20 text-red-500' : ''}
-                    ${question.status === 'flagged' ? 'bg-yellow-500/20 text-yellow-500' : ''}
-                    ${question.status === 'correct' ? 'bg-green-500/20 text-green-500' : ''}
-                    hover:opacity-75
-                  `}
-                >
-                  <span className="text-xs font-medium">{question.number}</span>
+              {loading ? (
+                <div className="col-span-12 flex items-center justify-center py-8 text-sm opacity-70">
+                  Loading questions...
                 </div>
-              ))}
+              ) : error ? (
+                <div className="col-span-12 flex items-center justify-center py-8 text-sm text-red-500">
+                  Error loading questions. Please try again.
+                </div>
+              ) : listOfQuestions.length === 0 ? (
+                <div className="col-span-12 flex items-center justify-center py-8 text-sm opacity-70">
+                  {`No questions added yet. Click "Add Question" to get started.`}
+                </div>
+              ) : (
+                listOfQuestions.map((question) => (
+                  <div
+                    key={question.id}
+                    onClick={() => {
+                      setEditingQuestion(question);
+                      setIsAddingQuestion(true);
+                    }}
+                    className={`aspect-square rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 text-xs
+                      ${question.negative === 1 ? 'bg-red-500/20 text-red-500' : ''}
+                      ${question.negative === 0 && question.positive === 0 ? 'bg-yellow-500/20 text-yellow-500' : ''}
+                      ${question.negative === 0 && question.positive === 1 ? 'bg-green-500/20 text-green-500' : ''}
+                      hover:opacity-75
+                    `}
+                  >
+                    <span className="text-xs font-medium">{question.questionText}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -193,10 +299,14 @@ const SectionReview: React.FC<SectionReviewProps> = ({
         isOpen={isAddingQuestion}
         onClose={() => {
           setIsAddingQuestion(false);
-          setEditingQuestion(null);
+          setEditingQuestion(undefined);
         }}
-        onAdd={handleQuestionAdd}
+        examId={examId}
         editingQuestion={editingQuestion}
+        sectionName={section.name}
+        createQuestion={createQuestion}
+        updateQuestion={updateQuestion}
+        onQuestionSaved={fetchQuestions}
       />
     </div>
   );
