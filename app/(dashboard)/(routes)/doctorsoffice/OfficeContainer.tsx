@@ -30,7 +30,7 @@ export const roomToSubjectMap: Record<string, string[]> = {
   'HighCare1': ['Biology'],
   'HighCare2': ['Biology','Biochemistry'],
   'OperatingRoom1': ['Biochemistry'],
-  'MedicalCloset1': ['Biochemistry'],
+  'MedicalCloset1': ['Chemistry'],
   'MRIMachine1': ['Chemistry','Physics'],
   'MRIMachine2': ['Physics','Chemistry'],
   'CATScan1': ['Physics'],

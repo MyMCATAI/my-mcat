@@ -191,6 +191,12 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
         ? roomToContentMap[roomId]
         : roomToContentMap[roomId] || [];
       
+      console.log('Fetching flashcards for:', {
+        roomId,
+        subjects,
+        contents
+      });
+      
       const subjectParams = subjects
         .map(subject => `subjectCategory=${encodeURIComponent(subject.replace(/ /g, "_"))}`)
         .join('&');
@@ -200,9 +206,13 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
 
       const pageNumber = 1;
       const pageSize = 10;
-      const response = await fetch(`/api/question?${subjectParams}&${contentParams}&types=flashcard,normal&page=${pageNumber}&pageSize=${pageSize}`);
+      const apiUrl = `/api/question?${subjectParams}&${contentParams}&types=flashcard,normal&page=${pageNumber}&pageSize=${pageSize}`;
+      console.log('API URL:', apiUrl);
       
+      const response = await fetch(apiUrl);
       const data = await response.json();
+      console.log('API Response:', data);
+      
       setCardStartTime(Date.now());
 
       const MCQquestionCount = data.questions.filter((question: FlattenedQuestionResponse) => question.types === 'normal').length;
@@ -235,6 +245,8 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
         };
       });
 
+      console.log('Transformed flashcards:', transformedFlashcards);
+      
       // Randomize the flashcards
       const randomizedFlashcards = shuffleFlashcards(transformedFlashcards);
       setFlashcards(randomizedFlashcards);
