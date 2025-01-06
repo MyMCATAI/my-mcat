@@ -3,18 +3,70 @@ import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 
+interface SourceWeights {
+  aamc: number;
+  uworld: number;
+  mymcat: number;
+}
+
+// Base weights when all sources are available
+const BASE_WEIGHTS: SourceWeights = {
+  aamc: 0.5,    // AAMC has highest weight
+  uworld: 0.3,  // UWorld second
+  mymcat: 0.2   // MyMCAT internal questions
+};
+
+function getAdjustedWeights(
+  hasAAMC: boolean,
+  hasUWorld: boolean,
+  hasMyMCAT: boolean
+): SourceWeights {
+  let weights = { ...BASE_WEIGHTS };
+  let totalWeight = 0;
+
+  // Zero out weights for missing sources
+  if (!hasAAMC) weights.aamc = 0;
+  if (!hasUWorld) weights.uworld = 0;
+  if (!hasMyMCAT) weights.mymcat = 0;
+
+  // Calculate total of remaining weights
+  totalWeight = weights.aamc + weights.uworld + weights.mymcat;
+
+  // If no sources, default to equal weight for any that exist
+  if (totalWeight === 0) {
+    const availableSources = [hasAAMC, hasUWorld, hasMyMCAT].filter(Boolean).length;
+    if (availableSources === 0) return BASE_WEIGHTS; // Fallback to base weights if somehow nothing exists
+    const equalWeight = 1 / availableSources;
+    if (hasAAMC) weights.aamc = equalWeight;
+    if (hasUWorld) weights.uworld = equalWeight;
+    if (hasMyMCAT) weights.mymcat = equalWeight;
+    return weights;
+  }
+
+  // Normalize remaining weights to sum to 1
+  const normalizer = 1 / totalWeight;
+  return {
+    aamc: weights.aamc * normalizer,
+    uworld: weights.uworld * normalizer,
+    mymcat: weights.mymcat * normalizer
+  };
+}
+
+function calculateSourceMastery(
+  positive: number,
+  negative: number,
+  weight: number = 1
+): number {
+  // Using Laplace smoothing
+  return ((positive + 1) / (positive + negative + 2)) * weight;
+}
+
 export async function POST(req: Request) {
   const { userId } = auth();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-
-
-  // TODO: Add data pulse logic here
-
-
-  
   try {
     // Get all user responses for the current user
     const userResponses = await prisma.userResponse.findMany({
@@ -28,9 +80,17 @@ export async function POST(req: Request) {
         Category: {
           select: {
             id: true,
-            contentCategory: true
+            contentCategory: true,
+            conceptCategory: true
           }
         }
+      }
+    });
+
+    // Get all data pulses for the user
+    const dataPulses = await prisma.dataPulse.findMany({
+      where: {
+        userId: userId
       }
     });
 
@@ -53,20 +113,79 @@ export async function POST(req: Request) {
       return acc;
     }, {} as Record<string, typeof userResponses>);
 
-    // Calculate content masteries
+    // Group data pulses by content category
+    const contentGroupedPulses = dataPulses.reduce((acc, pulse) => {
+      if (!acc[pulse.name]) {
+        acc[pulse.name] = {
+          aamc: { positive: 0, negative: 0 },
+          uworld: { positive: 0, negative: 0 }
+        };
+      }
+      
+      if (pulse.source.toLowerCase().includes('aamc')) {
+        acc[pulse.name].aamc.positive += pulse.positive;
+        acc[pulse.name].aamc.negative += pulse.negative;
+      } else if (pulse.source.toLowerCase().includes('uworld')) {
+        acc[pulse.name].uworld.positive += pulse.positive;
+        acc[pulse.name].uworld.negative += pulse.negative;
+      }
+      
+      return acc;
+    }, {} as Record<string, { 
+      aamc: { positive: number, negative: number },
+      uworld: { positive: number, negative: number }
+    }>);
+
+    // Calculate content masteries with weighted sources
     const contentMasteries = Object.entries(contentGroupedResponses).reduce((acc, [contentCategory, responses]) => {
-      const numCorrects = responses.filter(r => r.isCorrect).length;
-      const numIncorrects = responses.length - numCorrects;
-      const contentMastery = (numCorrects + 1) / (numCorrects + 1 + numIncorrects + 1);
-      acc[contentCategory] = contentMastery;
+      // Calculate MyMCAT mastery
+      const mymcatCorrect = responses.filter(r => r.isCorrect).length;
+      const mymcatTotal = responses.length;
+      const hasMymcat = mymcatTotal > 0;
+
+      // Get external source masteries
+      const externalSources = contentGroupedPulses[contentCategory] || {
+        aamc: { positive: 0, negative: 0 },
+        uworld: { positive: 0, negative: 0 }
+      };
+
+      const hasAAMC = externalSources.aamc.positive + externalSources.aamc.negative > 0;
+      const hasUWorld = externalSources.uworld.positive + externalSources.uworld.negative > 0;
+
+      // Get adjusted weights based on available sources
+      const weights = getAdjustedWeights(hasAAMC, hasUWorld, hasMymcat);
+
+      // Calculate individual masteries
+      const mymcatMastery = hasMymcat ? 
+        calculateSourceMastery(mymcatCorrect, mymcatTotal - mymcatCorrect, weights.mymcat) : 0;
+
+      const aamcMastery = hasAAMC ? 
+        calculateSourceMastery(
+          externalSources.aamc.positive,
+          externalSources.aamc.negative,
+          weights.aamc
+        ) : 0;
+
+      const uworldMastery = hasUWorld ? 
+        calculateSourceMastery(
+          externalSources.uworld.positive,
+          externalSources.uworld.negative,
+          weights.uworld
+        ) : 0;
+
+      // Combine all sources
+      const totalMastery = mymcatMastery + aamcMastery + uworldMastery;
+      acc[contentCategory] = totalMastery;
+      
       return acc;
     }, {} as Record<string, number>);
 
     // Update KnowledgeProfile for each category
     const updatePromises = Object.entries(groupedResponses).map(async ([categoryId, responses]) => {
+      // Calculate concept mastery from MyMCAT responses
       const numCorrects = responses.filter(r => r.isCorrect).length;
       const numIncorrects = responses.length - numCorrects;
-      const conceptMastery = (numCorrects + 1) / (numCorrects + 1 + numIncorrects + 1);
+      const conceptMastery = calculateSourceMastery(numCorrects, numIncorrects);
       
       const latestResponse = responses.reduce((latest, current) => 
         latest.answeredAt > current.answeredAt ? latest : current
