@@ -506,7 +506,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
               p-4 border border-[--theme-border-color] rounded-md 
               bg-[--theme-flashcard-color] cursor-pointer 
               transition-all duration-300 hover:shadow-lg
-              min-h-[12rem] max-h-[27rem]
+              min-h-[14rem] max-h-[50rem]
               ${card.isFlipped ? 'bg-opacity-90' : ''}
             `}
             onClick={() => handleCardFlip(index)}
@@ -982,9 +982,9 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   }
   return (
     <Dialog open={open} onOpenChange={handleExit}>
-      <DialogContent className="bg-[--theme-mainbox-color] text-center p-4 max-w-[95vw] w-[65rem] h-[83vh] shadow-lg border border-transparent">
+      <DialogContent className="bg-[--theme-mainbox-color] text-center p-4 max-w-[95vw] w-[65rem] max-h-[95vh] overflow-y-auto shadow-lg border border-transparent">
         {showReviewFeed ? (
-          <div className="flex-1 flex gap-4 overflow-hidden relative">
+          <div className="flex-1 flex gap-4 relative">
             {/* Back Button - Subtle circular design */}
             <button
               onClick={() => setShowReviewFeed(false)}
@@ -1027,7 +1027,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
             </div>
           </div>
         ) : (
-          <div className="h-full flex flex-col justify-center">
+          <div className="flex flex-col justify-center">
             {renderInitialScore()}
           </div>
         )}
