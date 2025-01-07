@@ -640,7 +640,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   const populateRooms = useCallback(async () => {
     try {
       // Get knowledge profiles for weakest categories
-      const response = await fetch('/api/question-selection', {
+      const response = await fetch('/api/fast-thompson', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
