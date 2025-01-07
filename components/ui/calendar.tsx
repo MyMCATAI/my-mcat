@@ -1,40 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import { format, addDays } from 'date-fns';
+import React from 'react';
+import { DayPicker } from "react-day-picker";
+import { cn } from "@/lib/utils";
 
-export default function Calendar() {
-  const [currentDate, setCurrentDate] = useState(new Date(2024, 0, 1)); // Static initial date
+interface CalendarProps {
+  mode?: "single" | "multiple" | "range";
+  selected?: Date | null;
+  onSelect?: (date: Date | null) => void;
+  className?: string;
+  classNames?: Record<string, string>;
+}
 
-  useEffect(() => {
-    setCurrentDate(new Date()); // Update to current date on client-side
-  }, []);
-
-  const tomorrow = addDays(currentDate, 1);
-
+export default function Calendar({
+  mode = "single",
+  selected,
+  onSelect,
+  className,
+  classNames,
+}: CalendarProps) {
   return (
-    <div className="bg-[#0E2247] text-white p-4 rounded-lg shadow-md mt-4">
-      <h2 className="text-xl mb-2">Calendar</h2>
-      <div className="grid grid-cols-4 gap-4 mb-4">
-        <div className="bg-[#001326] text-white p-4 rounded-md h-40">
-          <div>Tomorrow</div>
-          <div>{format(tomorrow, 'MMMM do')}</div>
-        </div>
-      </div>
-      <h2 className="text-xl mb-2 text-center">Later this month...</h2>
-      <div className="grid grid-cols-5 gap-2 mb-4">
-        {[...Array(25)].map((_, index) => {
-          const futureDate = addDays(currentDate, index + 5);
-          return (
-            <div
-              key={index}
-              className="bg-[#001326] text-white p-2 rounded-md h-16 relative"
-              aria-label={`Day ${format(futureDate, 'd')}`}
-            >
-              <span className="absolute top-1 left-1 text-xs">{format(futureDate, 'd')}</span>
-              <span className="absolute bottom-1 right-1 text-xs">{format(futureDate, 'MMM')}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <DayPicker
+      mode={mode}
+      selected={selected}
+      onSelect={onSelect}
+      className={cn("p-3", className)}
+      classNames={{
+        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+        month: "space-y-4",
+        caption: "flex justify-center pt-1 relative items-center",
+        caption_label: "text-sm font-medium",
+        nav: "space-x-1 flex items-center",
+        nav_button: cn(
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+        ),
+        nav_button_previous: "absolute left-1",
+        nav_button_next: "absolute right-1",
+        table: "w-full border-collapse space-y-1",
+        head_row: "flex",
+        head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
+        row: "flex w-full mt-2",
+        cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+        day: cn(
+          "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+          "hover:bg-accent hover:text-accent-foreground",
+          "focus:bg-accent focus:text-accent-foreground focus:outline-none"
+        ),
+        day_selected:
+          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+        day_today: "bg-accent text-accent-foreground",
+        day_outside: "text-muted-foreground opacity-50",
+        day_disabled: "text-muted-foreground opacity-50",
+        day_range_middle:
+          "aria-selected:bg-accent aria-selected:text-accent-foreground",
+        day_hidden: "invisible",
+        ...classNames,
+      }}
+    />
   );
 }

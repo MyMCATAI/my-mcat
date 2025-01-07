@@ -787,4 +787,35 @@ html::-webkit-scrollbar {
   filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.5));
 }
 
+/* Calendar styles */
+.rdp {
+  --rdp-cell-size: 2.5rem;
+  --rdp-accent-color: var(--theme-hover-color);
+  --rdp-background-color: var(--theme-leaguecard-color);
+  --rdp-accent-color-dark: var(--theme-hover-color);
+  --rdp-background-color-dark: var(--theme-leaguecard-color);
+  --rdp-outline: 2px solid var(--rdp-accent-color);
+  --rdp-outline-selected: 2px solid var(--theme-hover-color);
+  margin: 0;
+}
+
+.rdp-months {
+  background-color: var(--theme-leaguecard-color);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}
+
+.rdp-day_selected,
+.rdp-day_selected:focus-visible,
+.rdp-day_selected:hover {
+  background-color: var(--theme-hover-color) !important;
+  color: var(--theme-hover-text) !important;
+}
+
+.rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: var(--theme-hover-color);
+  color: var(--theme-hover-text);
+  opacity: 0.8;
+}
+
 

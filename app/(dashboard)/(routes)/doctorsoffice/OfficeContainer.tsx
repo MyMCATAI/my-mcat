@@ -194,6 +194,15 @@ const AnimatedSpriteWalking: React.FC<{
     />
   );
 };
+
+interface Category {
+  id: string;
+  subjectCategory: string;
+  contentCategory: string;
+  conceptCategory: string;
+  section: string;
+}
+
 interface OfficeContainerProps {
   onNewGame: (fn: () => void) => void;
   visibleImages: Set<string>;
@@ -628,18 +637,70 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   //   }
   // }, []);
 
-  const populateRooms = useCallback(() => {
-    // Get rooms directly from levelConfigurations
-    const rooms = levelConfigurations[currentLevel].rooms;
-    
-    // Randomly select 4 rooms (excluding WaitingRoom1)
+  const populateRooms = useCallback(async () => {
+    try {
+      // Get knowledge profiles for weakest categories
+      const response = await fetch('/api/question-selection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          section: 'all',
+          selectionType: 'rooms'
+        })
+      });
 
-    const otherRooms = rooms
-      .filter(room => room.id !== 'WaitingRoom0' && roomToSubjectMap[room.id][0])
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 4);
-    
-    setActiveRooms(new Set(otherRooms.map(room => room.id)));
+      if (!response.ok) {
+        throw new Error('Failed to fetch weak categories');
+      }
+
+      const { selectedCategories } = await response.json();
+      
+      // Get rooms that match the weak categories
+      const matchingRooms = levelConfigurations[currentLevel].rooms
+        .filter(room => {
+          // Skip tutorial room
+          if (room.id === 'WaitingRoom0') return false;
+          
+          // Get subjects and content for this room
+          const roomSubjects = roomToSubjectMap[room.id];
+          const roomContent = roomToContentMap[room.id];
+          
+          // Check if room contains any of the weak categories
+          return selectedCategories.some((category: Category) => 
+            roomSubjects.includes(category.subjectCategory) ||
+            roomContent.includes(category.contentCategory)
+          );
+        })
+        .sort(() => Math.random() - 0.5) // Randomize matching rooms
+        .slice(0, 4); // Take 4 rooms
+
+      // If we don't have enough matching rooms, fill with random rooms
+      if (matchingRooms.length < 4) {
+        const remainingRooms = levelConfigurations[currentLevel].rooms
+          .filter(room => 
+            room.id !== 'WaitingRoom0' && 
+            !matchingRooms.find(r => r.id === room.id) &&
+            roomToSubjectMap[room.id][0] // Must have a subject
+          )
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 4 - matchingRooms.length);
+
+        matchingRooms.push(...remainingRooms);
+      }
+      
+      setActiveRooms(new Set(matchingRooms.map(room => room.id)));
+    } catch (error) {
+      console.error('Error populating rooms:', error);
+      // Fallback to random selection if there's an error
+      const rooms = levelConfigurations[currentLevel].rooms
+        .filter(room => room.id !== 'WaitingRoom0' && roomToSubjectMap[room.id][0])
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 4);
+      
+      setActiveRooms(new Set(rooms.map(room => room.id)));
+    }
   }, [currentLevel]);
 
   // Pass the stable function reference to parent
