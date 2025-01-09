@@ -296,6 +296,7 @@ model DataPulse {
   correctedThoughtProcess String?       @db.Text
   errorType             String?
   section               String?
+  reviewed              Boolean         @default(false)
   fullLengthExamId      String?
   fullLengthExam        FullLengthExam? @relation(fields: [fullLengthExamId], references: [id])
 
