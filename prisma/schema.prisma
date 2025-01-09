@@ -296,6 +296,7 @@ model DataPulse {
   correctedThoughtProcess String?       @db.Text
   errorType             String?
   section               String?
+  aiResponse            String?            @db.Text
   reviewed              Boolean         @default(false)
   fullLengthExamId      String?
   fullLengthExam        FullLengthExam? @relation(fields: [fullLengthExamId], references: [id])
@@ -308,6 +309,7 @@ model FullLengthExam {
   userId             String
   title              String
   dataPulses         DataPulse[]
+  aiResponse            String?            @db.Text
   calendarActivityId String?            @unique
   calendarActivity   CalendarActivity?  @relation(fields: [calendarActivityId], references: [id])
   completed          Boolean            @default(false)
