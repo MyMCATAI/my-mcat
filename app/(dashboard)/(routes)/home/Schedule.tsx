@@ -821,7 +821,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
       {/* Main Container */}
       <div
-        className="flex-grow h-[calc(100vh-8rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
+        className="flex-grow h-[calc(100vh-7.0rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
         style={{
           backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
           backgroundSize: "cover",

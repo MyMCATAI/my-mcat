@@ -426,7 +426,7 @@ const SideBar: React.FC<SideBarProps> = ({
                 )}
               </button>
 
-              <div className="bg-[--theme-leaguecard-color] shadow-md p-3 mt-2 space-y-2 rounded-lg">
+              <div className="bg-[--theme-mainbox-color] shadow-md p-3 mt-2 space-y-2 rounded-lg">
                 {activity.tasks && activity.tasks.length > 0 ? (
                   activity.tasks.map((task, index) => (
                     <div key={index} className="flex items-center gap-2">

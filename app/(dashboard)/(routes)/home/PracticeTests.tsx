@@ -373,13 +373,13 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
   return (
     <div className={`flex flex-col ${className}`}>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex flex-col h-[calc(100vh-8.3rem)]">
+        <div className="flex flex-col h-[calc(100vh-7.0rem)]">
           {examLoading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">Loading exam activities...</div>
             </div>
           ) : activeTest ? (
-            <div className="h-full px-4">
+            <div className="h-full">
               <TestReview 
                 test={{
                   id: activeTest.id,
@@ -401,223 +401,231 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
               />
             </div>
           ) : (
-            <div className="h-full">
-              <div
-                className="bg-[--theme-leaguecard-color] rounded-xl p-4 sm:p-6 lg:p-8 mx-4 h-full overflow-hidden"
-                style={{
-                  boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
-                }}
-              >
-                <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full">
-                  {/* Calendar Side */}
-                  <div className="flex flex-col h-full overflow-hidden">
-                    <div className="flex-1 flex items-center justify-center">
-                      <Calendar
-                        localizer={localizer}
-                        events={calendarEvents}
-                        startAccessor="start"
-                        endAccessor="end"
-                        className="custom-calendar w-full max-w-full bg-transparent"
-                        views={['month']}
-                        defaultView="month"
-                        date={date}
-                        onNavigate={handleNavigate}
-                        toolbar={true}
-                        popup
-                        selectable
-                        onSelectEvent={handleSelectEvent}
-                        eventPropGetter={eventStyleGetter}
-                        components={{
-                          toolbar: (props) => (
-                            <CustomToolbarWithEvents
-                              calendarEvents={calendarEvents}
-                              toolbarProps={props}
-                            />
-                          ),
-                        }}
-                      />
+            <div 
+              className="flex-grow h-[calc(100vh-7.0rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
+              style={{
+                backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
+                backgroundSize: "cover",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "center",
+                backgroundColor: "var(--theme-mainbox-color)",
+                color: "var(--theme-text-color)",
+                boxShadow: "var(--theme-box-shadow)",
+              }}
+            >
+              <div className="h-full">
+                <div className="bg-transparent rounded-xl p-4 sm:p-6 lg:p-8 h-full overflow-hidden">
+                  <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full">
+                    {/* Calendar Side */}
+                    <div className="flex flex-col h-full overflow-hidden">
+                      <div className="flex-1 flex items-center justify-center">
+                        <Calendar
+                          localizer={localizer}
+                          events={calendarEvents}
+                          startAccessor="start"
+                          endAccessor="end"
+                          className="custom-calendar w-full max-w-full bg-transparent"
+                          views={['month']}
+                          defaultView="month"
+                          date={date}
+                          onNavigate={handleNavigate}
+                          toolbar={true}
+                          popup
+                          selectable
+                          onSelectEvent={handleSelectEvent}
+                          eventPropGetter={eventStyleGetter}
+                          components={{
+                            toolbar: (props) => (
+                              <CustomToolbarWithEvents
+                                calendarEvents={calendarEvents}
+                                toolbarProps={props}
+                              />
+                            ),
+                          }}
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Tests Side with Tabs */}
-                  <div className="flex flex-col h-full overflow-hidden relative">
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
-                      <TabsList className="grid w-full grid-cols-2 mb-4">
-                        <TabsTrigger value="completed">Completed</TabsTrigger>
-                        <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-                      </TabsList>
+                    {/* Tests Side with Tabs */}
+                    <div className="flex flex-col h-full overflow-hidden relative">
+                      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
+                        <TabsList className="grid w-full grid-cols-2 mb-4">
+                          <TabsTrigger value="completed">Completed</TabsTrigger>
+                          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                        </TabsList>
 
-                      <TabsContent value="completed" className="flex-1 overflow-auto">
-                        <div className="space-y-2 pb-2">
-                          {userTests.map((test: UserTest, index: number) => (
-                            <div
-                              key={test.id}
-                              className="flex items-center p-3 bg-[--theme-leaguecard-accent] rounded-lg 
-                                transition-all duration-200
-                                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
-                                cursor-pointer"
-                              onClick={() => setActiveTest(test)}
-                            >
-                              {test.score && (
-                                <div className="text-xl font-bold mr-4">
-                                  {test.score}
-                                </div>
-                              )}
-                              <div className="flex-grow text-right">
-                                <h4 className="text-sm font-medium">
-                                  {test.name}
-                                </h4>
-                                <p className="text-xs opacity-70">
-                                  {test.company}
-                                </p>
-                                {test.startedAt && (
-                                  <p className="text-xs opacity-70 mt-1">
-                                    {test.startedAt}
-                                  </p>
+                        <TabsContent value="completed" className="flex-1 overflow-auto">
+                          <div className="space-y-2 pb-2">
+                            {userTests.map((test: UserTest, index: number) => (
+                              <div
+                                key={test.id}
+                                className="flex items-center p-3 bg-[--theme-leaguecard-accent] rounded-lg 
+                                  transition-all duration-200
+                                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
+                                  cursor-pointer"
+                                onClick={() => setActiveTest(test)}
+                              >
+                                {test.score && (
+                                  <div className="text-xl font-bold mr-4">
+                                    {test.score}
+                                  </div>
                                 )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value="upcoming" className="flex-1 overflow-auto">
-                        <Droppable droppableId="droppable-tests">
-                          {(provided) => (
-                            <div
-                              {...provided.droppableProps}
-                              ref={provided.innerRef}
-                              className="space-y-2 pb-2"
-                            >
-                              {scheduledTests.map((test, index) => (
-                                <Draggable
-                                  key={test.id}
-                                  draggableId={test.id}
-                                  index={index}
-                                >
-                                  {(provided, snapshot) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      className={`flex items-center p-3 bg-[--theme-leaguecard-accent] rounded-lg 
-                                        transition-all duration-200
-                                        ${snapshot.isDragging ? "opacity-75" : ""}
-                                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]`}
-                                      style={{
-                                        ...provided.draggableProps.style,
-                                      }}
-                                    >
-                                      <div
-                                        {...provided.dragHandleProps}
-                                        className="mr-2 cursor-grab active:cursor-grabbing"
-                                      >
-                                        <GripVertical className="w-4 h-4 opacity-50" />
-                                      </div>
-                                      <div className="flex-grow">
-                                        <h4 className="text-sm font-medium">
-                                          {test.name}
-                                        </h4>
-                                        <p className="text-xs opacity-70">
-                                          {test.company}
-                                        </p>
-                                        {test.formattedDate && (
-                                          <p className="text-xs opacity-70 mt-1">
-                                            {test.formattedDate}
-                                          </p>
-                                        )}
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <button
-                                          onClick={() => handleOpenDatePicker(test.id)}
-                                          className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
-                                            hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                                            transition-colors duration-200"
-                                        >
-                                          Set Date
-                                        </button>
-                                        <button
-                                          className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
-                                            hover:bg-green-500 hover:text-white
-                                            transition-colors duration-200"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedTestToComplete({ id: test.id, name: test.name });
-                                            setCompleteDialogOpen(true);
-                                          }}
-                                        >
-                                          Complete
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            setTestToDelete(test.id);
-                                            setDeleteDialogOpen(true);
-                                          }}
-                                          className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
-                                            hover:bg-red-500 hover:text-white
-                                            transition-colors duration-200"
-                                        >
-                                          <Trash2 className="w-3 h-3" />
-                                        </button>
-                                      </div>
-                                    </div>
+                                <div className="flex-grow text-right">
+                                  <h4 className="text-sm font-medium">
+                                    {test.name}
+                                  </h4>
+                                  <p className="text-xs opacity-70">
+                                    {test.company}
+                                  </p>
+                                  {test.startedAt && (
+                                    <p className="text-xs opacity-70 mt-1">
+                                      {test.startedAt}
+                                    </p>
                                   )}
-                                </Draggable>
-                              ))}
-                              {provided.placeholder}
-                            </div>
-                          )}
-                        </Droppable>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </TabsContent>
 
-                        <button
-                          onClick={() => setIsAddDialogOpen(true)}
-                          className="mt-4 w-full py-2 px-4 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                            rounded-lg transition-colors duration-200 text-sm font-medium flex items-center justify-center gap-2"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Add Practice Test
-                        </button>
-                      </TabsContent>
-                    </Tabs>
+                        <TabsContent value="upcoming" className="flex-1 overflow-auto">
+                          <Droppable droppableId="droppable-tests">
+                            {(provided) => (
+                              <div
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                                className="space-y-2 pb-2"
+                              >
+                                {scheduledTests.map((test, index) => (
+                                  <Draggable
+                                    key={test.id}
+                                    draggableId={test.id}
+                                    index={index}
+                                  >
+                                    {(provided, snapshot) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        className={`flex items-center p-3 bg-[--theme-leaguecard-accent] rounded-lg 
+                                          transition-all duration-200
+                                          ${snapshot.isDragging ? "opacity-75" : ""}
+                                          hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]`}
+                                        style={{
+                                          ...provided.draggableProps.style,
+                                        }}
+                                      >
+                                        <div
+                                          {...provided.dragHandleProps}
+                                          className="mr-2 cursor-grab active:cursor-grabbing"
+                                        >
+                                          <GripVertical className="w-4 h-4 opacity-50" />
+                                        </div>
+                                        <div className="flex-grow">
+                                          <h4 className="text-sm font-medium">
+                                            {test.name}
+                                          </h4>
+                                          <p className="text-xs opacity-70">
+                                            {test.company}
+                                          </p>
+                                          {test.formattedDate && (
+                                            <p className="text-xs opacity-70 mt-1">
+                                              {test.formattedDate}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <button
+                                            onClick={() => handleOpenDatePicker(test.id)}
+                                            className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
+                                              hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                                              transition-colors duration-200"
+                                          >
+                                            Set Date
+                                          </button>
+                                          <button
+                                            className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
+                                              hover:bg-green-500 hover:text-white
+                                              transition-colors duration-200"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedTestToComplete({ id: test.id, name: test.name });
+                                              setCompleteDialogOpen(true);
+                                            }}
+                                          >
+                                            Complete
+                                          </button>
+                                          <button
+                                            onClick={() => {
+                                              setTestToDelete(test.id);
+                                              setDeleteDialogOpen(true);
+                                            }}
+                                            className="text-xs px-2 py-1 rounded-md border border-[--theme-border-color] 
+                                              hover:bg-red-500 hover:text-white
+                                              transition-colors duration-200"
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                ))}
+                                {provided.placeholder}
+                              </div>
+                            )}
+                          </Droppable>
 
-                    {/* View Toggle Buttons - Made Larger */}
-                    <div className="absolute bottom-4 right-4 flex items-center gap-4">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => handleSetTab && handleSetTab("Schedule?view=calendar")}
-                              className="group w-16 h-16 p-3 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                                border-2 border-[--theme-border-color] 
-                                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                                shadow-md rounded-full transition flex flex-col items-center justify-center"
-                            >
-                              <CalendarIcon className="w-8 h-8" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Switch to Calendar View</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                          <button
+                            onClick={() => setIsAddDialogOpen(true)}
+                            className="mt-4 w-full py-2 px-4 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                              rounded-lg transition-colors duration-200 text-sm font-medium flex items-center justify-center gap-2"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Add Practice Test
+                          </button>
+                        </TabsContent>
+                      </Tabs>
 
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => handleSetTab && handleSetTab("Schedule?view=analytics")}
-                              className="group w-16 h-16 p-3 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                                border-2 border-[--theme-border-color] 
-                                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                                shadow-md rounded-full transition flex flex-col items-center justify-center"
-                            >
-                              <AnalyticsIcon className="w-8 h-8" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Switch to Analytics View</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      {/* View Toggle Buttons - Made Larger */}
+                      <div className="absolute bottom-4 right-4 flex items-center gap-4">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => handleSetTab && handleSetTab("Schedule?view=calendar")}
+                                className="group w-16 h-16 p-3 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                                  border-2 border-[--theme-border-color] 
+                                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                                  shadow-md rounded-full transition flex flex-col items-center justify-center"
+                              >
+                                <CalendarIcon className="w-8 h-8" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Switch to Calendar View</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => handleSetTab && handleSetTab("Schedule?view=analytics")}
+                                className="group w-16 h-16 p-3 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                                  border-2 border-[--theme-border-color] 
+                                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                                  shadow-md rounded-full transition flex flex-col items-center justify-center"
+                              >
+                                <AnalyticsIcon className="w-8 h-8" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Switch to Analytics View</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                     </div>
                   </div>
                 </div>
