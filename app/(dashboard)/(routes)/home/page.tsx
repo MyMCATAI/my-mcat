@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import { checkProStatus } from "@/lib/utils";
 import FlashcardDeck from "./FlashcardDeck";
 import { toast } from "react-hot-toast";
-import { PurchaseButton } from "@/components/purchase-button";
 import { isToday } from "date-fns";
 import {
   shouldUpdateKnowledgeProfiles,
@@ -30,6 +29,7 @@ import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { Loader2 } from "lucide-react";
+import PracticeTests from "./PracticeTests";
 import { GameOverDialog } from '@/components/home/GameOverDialog';
 
 // Loading component
@@ -45,7 +45,7 @@ const LoadingSpinner = () => (
 // Content wrapper component
 const ContentWrapper = ({ children }: { children: React.ReactNode }) => (
   <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
-    <div className="text-white flex gap-[1.5rem] overflow-visible">
+    <div className="text-[--theme-text-color] flex gap-[1.5rem] overflow-visible">
       {children}
     </div>
   </div>
@@ -258,6 +258,9 @@ const Page = () => {
       case "flashcards":
         content = <FlashcardDeck />;
         break;
+      case "Tests":
+        content = <PracticeTests handleSetTab={handleTabChange} />;
+        break;
       default:
         content = null;
     }
@@ -382,14 +385,24 @@ const Page = () => {
       return;
     }
 
-    setActiveTab(newTab);
-    setCurrentPage(newTab);
+    // Handle tab with view parameter
+    const [tab, params] = newTab.split('?');
+    const searchParams = new URLSearchParams(params);
+    const view = searchParams.get('view');
 
-    if (newTab !== "AdaptiveTutoringSuite"){
-    handleActivityChange('studying', newTab)}
+    setActiveTab(tab);
+    setCurrentPage(tab);
 
-    if (newTab === "Schedule") {
+    if (tab !== "AdaptiveTutoringSuite") {
+      handleActivityChange('studying', tab);
+    }
+
+    if (tab === "Schedule") {
       updateCalendarChatContext(activities);
+      // Update URL with view parameter if present
+      if (view) {
+        router.push(`/home?tab=Schedule&view=${view}`);
+      }
     }
   };
 
@@ -497,11 +510,11 @@ const Page = () => {
 
           <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
             <SideBar
+              handleSetTab={handleTabChange}
               activities={activities}
               currentPage={currentPage}
               chatbotContext={chatbotContext}
               chatbotRef={chatbotRef}
-              handleSetTab={handleTabChange}
             />
           </div>
         </div>

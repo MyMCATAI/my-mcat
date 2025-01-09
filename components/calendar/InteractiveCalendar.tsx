@@ -4,7 +4,6 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  Calendar,
   momentLocalizer,
   View,
   stringOrDate,
@@ -12,8 +11,8 @@ import {
 } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import "../styles/CustomCalendar.css";
-import { addDays, format, isTomorrow, isSameDay, isToday } from 'date-fns';
+import "@/components/styles/AgendaCalendar.css";
+import { addDays, format, isTomorrow, isSameDay } from 'date-fns';
 import { Plus, Coffee } from 'lucide-react';
 
 import { useUser } from "@clerk/nextjs";
