@@ -51,7 +51,6 @@ import UWorldPopup from '@/components/home/UWorldPopup';
 import CompletionDialog from '@/components/home/CompletionDialog';
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { OptionsDialog } from "@/components/home/OptionsDialog";
-import SettingContent from "@/components/calendar/SettingContent";
 import WeeklyCalendarModal from "@/components/calendar/WeeklyCalendarModal";
 
 ChartJS.register(
@@ -87,6 +86,9 @@ interface ScheduleProps {
   handleSetTab: (tab: string) => void;
   isActive: boolean;
   onActivitiesUpdate: () => void;
+  chatbotRef?: React.MutableRefObject<{
+    sendMessage: (message: string) => void;
+  }>;
 }
 
 type Section =
@@ -99,6 +101,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   handleSetTab,
   isActive,
   onActivitiesUpdate,
+  chatbotRef,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
@@ -664,7 +667,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   }, [userCoinCount]);
 
   return (
-    <div className="w-full relative">
+    <div className="w-full relative p-2">
       {/* Purchase Button */}
       {showAnalytics && !selectedSubject && (
         <div className="absolute top-6 left-8 z-30">
@@ -824,7 +827,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
       {/* Main Container */}
       <div
-        className="flex-grow h-[calc(100vh-7.0rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
+        className="flex-grow h-[calc(100vh-7.6rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
         style={{
           backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
           backgroundSize: "cover",
@@ -855,18 +858,6 @@ const Schedule: React.FC<ScheduleProps> = ({
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <div className="absolute left-4 bottom-4 max-w-xs bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-lg">
-                        <p className="text-sm text-[--theme-text-color]">
-                          Greetings. Our site is going for a major overhaul for MyMCAT V2.0 which is launching on January 10th. Stuff might break on you. For more information regarding changes and timeline, please join our <a 
-                            href="https://discord.gg/CcxcZxB6"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline hover:opacity-80 transition-opacity"
-                          >
-                            discord
-                          </a>.
-                        </p>
-                      </div>
                       <DonutChart onProgressClick={(label) => setSelectedSubject(label)} />
                     </motion.div>
                   ) : (
@@ -904,6 +895,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                 handleSetTab={handleSetTab}
                 onTasksUpdate={handleTasksUpdate}
                 updateTodaySchedule={updateTodaySchedule}
+                chatbotRef={chatbotRef}
               />
             </div>
           </div>
@@ -951,27 +943,6 @@ const Schedule: React.FC<ScheduleProps> = ({
               </TooltipTrigger>
               <TooltipContent>
                 <p>Practice Tests</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          {/* New Calendar Button */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setShowCalendarModal(true)}
-                  className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                    border-2 border-[--theme-border-color] 
-                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                    shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
-                >
-                  <Calendar className="w-8 h-8" />
-                  <span className="text-xs font-medium">Plan</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Study Plan</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -1174,7 +1145,7 @@ const Schedule: React.FC<ScheduleProps> = ({
       />
 
       {showCalendarModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center rounded-lg">
           <div className="bg-[--theme-mainbox-color] w-full h-full p-8 relative overflow-auto">
             <button 
               onClick={() => setShowCalendarModal(false)}
