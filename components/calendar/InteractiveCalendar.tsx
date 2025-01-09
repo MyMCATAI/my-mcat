@@ -4,7 +4,6 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  Calendar,
   momentLocalizer,
   View,
   stringOrDate,
@@ -15,10 +14,6 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/components/styles/AgendaCalendar.css";
 import { addDays, format, isTomorrow, isSameDay } from 'date-fns';
 import { Plus, Coffee } from 'lucide-react';
-import withDragAndDrop, {
-  EventInteractionArgs,
-} from "react-big-calendar/lib/addons/dragAndDrop";
-import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
 import { useUser } from "@clerk/nextjs";
 import AddEventModal from "./AddEventModal";
@@ -76,6 +71,9 @@ interface InteractiveCalendarProps {
   handleSetTab: (tab: string) => void;
   onTasksUpdate: (eventId: string, tasks: any[]) => void;
   updateTodaySchedule: () => void;
+  chatbotRef?: React.MutableRefObject<{
+    sendMessage: (message: string) => void;
+  }>;
 }
 
 // Add this conversion function
@@ -151,8 +149,6 @@ const DayCard: React.FC<DayCardProps> = ({ date, events, onEventClick, onAddEven
   );
 };
 
-const DnDCalendar = withDragAndDrop<CalendarEvent>(Calendar);
-
 const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   currentDate,
   activities,
@@ -164,6 +160,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   handleSetTab,
   onTasksUpdate,
   updateTodaySchedule,
+  chatbotRef,
 }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [view, setView] = useState<View>("week");
@@ -515,86 +512,10 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     setIsModalOpen(true);
   };
 
-  const onEventDrop = async ({
-    event,
-    start,
-    end,
-  }: EventInteractionArgs<CalendarEvent>) => {
-    if (start && end) {
-      try {
-        const updatedEvent: CalendarEvent = {
-          ...event,
-          start: parseDate(start),
-          end: parseDate(end),
-        };
-        
-        // Update local state first for immediate feedback
-        setEvents((currentEvents) =>
-          currentEvents.map((ev) =>
-            ev.id === updatedEvent.id ? updatedEvent : ev
-          )
-        );
-
-        // Then update in backend
-        await updateEventInBackend(updatedEvent);
-
-        // Check if event was moved to/from today and update the schedule
-        const wasToday = isToday(event.start);
-        const isMovedToToday = isToday(start);
-        if (wasToday || isMovedToToday) {
-          updateTodaySchedule();
-        }
-
-        onInteraction();
-      } catch (error) {
-        console.error("Error updating event:", error);
-        // Revert the local state if backend update fails
-        fetchActivities();
-      }
-    }
-  };
-
-  const onEventResize = async ({
-    event,
-    start,
-    end,
-  }: EventInteractionArgs<CalendarEvent>) => {
-    if (start && end) {
-      try {
-        const updatedEvent: CalendarEvent = {
-          ...event,
-          start: parseDate(start),
-          end: parseDate(end),
-        };
-        
-        // Update local state first
-        setEvents((currentEvents) =>
-          currentEvents.map((ev) =>
-            ev.id === updatedEvent.id ? updatedEvent : ev
-          )
-        );
-
-        // Then update in backend
-        await updateEventInBackend(updatedEvent);
-
-        // Check if event was resized on today's date
-        if (isToday(start) || isToday(event.start)) {
-          updateTodaySchedule();
-        }
-
-        onInteraction();
-      } catch (error) {
-        console.error("Error updating event:", error);
-        // Revert the local state if backend update fails
-        fetchActivities();
-      }
-    }
-  };
-
   return (
-    <div className="custom-calendar schedule-content">
+    <div className="agenda-calendar custom-calendar schedule-content [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       <div className="bg-[--theme-leaguecard-color] rounded-lg p-3 ml-4 mb-2 mr-4 shadow-sm">
-        <div className="flex justify-center items-center">
+        <div className="flex justify-between items-center">
           <div className="text-sm tracking-wide">
             {events.some(event => event.activityType === 'Exam' && event.start > new Date()) ? (
               <>
@@ -613,21 +534,89 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
               'No upcoming full-length exams scheduled'
             )}
           </div>
+          <button
+            onClick={() => {
+              onInteraction();
+              handleSetTab("SUMMARIZE_WEEK");
+              setTimeout(() => {
+                chatbotRef?.current?.sendMessage("Please summarize my schedule for this week");
+              }, 1500);
+            }}
+            className="px-3 py-1 text-sm bg-[--theme-hover-color] text-[--theme-hover-text] rounded hover:opacity-90 transition-opacity"
+          >
+            Summarize My Week
+          </button>
         </div>
       </div>
-      <div className="days-container">
-        {next7Days.map((date) => {
+      <div className="grid grid-cols-3 gap-6 px-4 pb-4 mt-4">
+        {next7Days.map((day) => {
           const dayEvents = events.filter(event => 
-            isSameDay(new Date(event.start), date)
+            isSameDay(new Date(event.start), day)
           );
           return (
-            <DayCard 
-              key={date.toISOString()} 
-              date={date} 
-              events={dayEvents}
-              onEventClick={handleEventClick}
-              onAddEvent={handleAddEvent}
-            />
+            <div 
+              key={day.toISOString()} 
+              className="bg-[--theme-leaguecard-color] rounded-lg p-3 flex flex-col shadow-lg"
+            >
+              <div className="flex justify-between items-center mb-3">
+                <div className="text-[--theme-text-color]">
+                  <div className="text-xs uppercase tracking-wide opacity-60">
+                    {isTomorrow(day) 
+                      ? `Tomorrow · ${dayEvents.reduce((total, activity) => total + (Number(activity.hours) || 0), 0)}h`
+                      : `${format(day, 'EEE')} · ${dayEvents.reduce((total, activity) => total + (Number(activity.hours) || 0), 0)}h`
+                    }
+                  </div>
+                </div>
+                <div className="flex gap-1 opacity-60 hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddEvent(day);
+                    }}
+                    className="p-1 rounded-full hover:bg-[--theme-hover-color] transition-colors"
+                    title="Add activity"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const breakEvent: CalendarActivityData = {
+                        activityTitle: "Break",
+                        activityText: "Taking a break",
+                        hours: 0.5,
+                        activityType: "Break",
+                        scheduledDate: day.toISOString()
+                      };
+                      handleEventSubmit(breakEvent);
+                    }}
+                    className="p-1 rounded-full hover:bg-[--theme-hover-color] transition-colors"
+                    title="Add break"
+                  >
+                    <Coffee className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1 overflow-y-auto max-h-[12rem] pr-1.5">
+                {dayEvents.map((activity) => (
+                  <div 
+                    key={activity.id}
+                    onClick={() => handleEventClick(activity)}
+                    className="flex items-center justify-between hover:bg-[--theme-hover-color] transition-colors rounded py-1 px-2 cursor-pointer group"
+                  >
+                    <div className="text-[--theme-text-color] min-w-0 flex-1">
+                      <div className="text-xs font-medium opacity-90 truncate">
+                        {activity.title}
+                      </div>
+                      <div className="text-[0.65rem] opacity-50">
+                        {activity.hours} hrs · {activity.activityType}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           );
         })}
       </div>
@@ -659,30 +648,6 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         onCancel={() => {
           setShowDeleteConfirm(false);
           setEventToDelete(null);
-        }}
-      />
-      <DnDCalendar
-        className="custom-calendar"
-        date={date}
-        onNavigate={handleNavigate}
-        view="month"
-        views={["month"]}
-        events={events}
-        localizer={localizer}
-        onEventDrop={onEventDrop}
-        onEventResize={onEventResize}
-        resizable
-        draggableAccessor={() => true}
-        selectable
-        onSelectSlot={handleSelect}
-        onSelectEvent={handleEventClick}
-        style={{ height: "100%" }}
-        eventPropGetter={eventStyleGetter}
-        length={daysInMonth}
-        endAccessor={(event) => {
-          const eventEnd = moment(event.end);
-          const monthEnd = moment(date).endOf("month");
-          return eventEnd.isAfter(monthEnd) ? monthEnd.toDate() : event.end;
         }}
       />
     </div>

@@ -45,13 +45,13 @@ import {
   BarChart as AnalyticsIcon,
 } from "lucide-react";
 import HelpContentSchedule from './HelpContentSchedule';
-import { HelpCircle, Bell, Coffee, ClipboardList, AlertTriangle } from 'lucide-react';
+import { HelpCircle, Bell, Coffee, ClipboardList, AlertTriangle, X, Calendar } from 'lucide-react';
 import { useOutsideClick } from '@/hooks/use-outside-click';
 import UWorldPopup from '@/components/home/UWorldPopup';
 import CompletionDialog from '@/components/home/CompletionDialog';
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { OptionsDialog } from "@/components/home/OptionsDialog";
-import SettingContent from "@/components/calendar/SettingContent";
+import WeeklyCalendarModal from "@/components/calendar/WeeklyCalendarModal";
 
 ChartJS.register(
   CategoryScale,
@@ -86,6 +86,9 @@ interface ScheduleProps {
   handleSetTab: (tab: string) => void;
   isActive: boolean;
   onActivitiesUpdate: () => void;
+  chatbotRef?: React.MutableRefObject<{
+    sendMessage: (message: string) => void;
+  }>;
 }
 
 type Section =
@@ -98,6 +101,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   handleSetTab,
   isActive,
   onActivitiesUpdate,
+  chatbotRef,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
@@ -127,6 +131,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
   const [isCoinsLoading, setIsCoinsLoading] = useState(true);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -662,7 +667,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   }, [userCoinCount]);
 
   return (
-    <div className="w-full relative">
+    <div className="w-full relative p-2">
       {/* Purchase Button */}
       {showAnalytics && !selectedSubject && (
         <div className="absolute top-6 left-8 z-30">
@@ -771,24 +776,25 @@ const Schedule: React.FC<ScheduleProps> = ({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-8 right-2 w-80 bg-white rounded-lg shadow-lg z-50"
+            className="absolute top-8 right-2 w-[70rem] bg-white rounded-lg shadow-lg z-50"
           >
-           <SettingContent
-                    onComplete={({ success, action }) => {
-                      if (success && action === 'generate') {
-                        handleSetTab('Tests');
-                      }
-                      if (success) {
-                        handleStudyPlanSaved();
-                        if (action === 'generate') {
-                          handleToggleView();
-                        }
-                        toggleSettings();
-                        onActivitiesUpdate();
-                      }
-                    }}
-                    isInitialSetup={false}
-                  />
+            <WeeklyCalendarModal
+              onComplete={({ success, action }) => {
+                if (success && action === 'generate') {
+                  handleSetTab('Tests');
+                }
+                if (success) {
+                  handleStudyPlanSaved();
+                  if (action === 'generate') {
+                    handleToggleView();
+                  }
+                  toggleSettings();
+                  onActivitiesUpdate();
+                }
+              }}
+              isInitialSetup={false}
+              onClose={toggleSettings}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -821,7 +827,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
       {/* Main Container */}
       <div
-        className="flex-grow h-[calc(100vh-7.0rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
+        className="flex-grow h-[calc(100vh-7.6rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
         style={{
           backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
           backgroundSize: "cover",
@@ -852,18 +858,6 @@ const Schedule: React.FC<ScheduleProps> = ({
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <div className="absolute left-4 bottom-4 max-w-xs bg-[--theme-leaguecard-color] p-4 rounded-lg shadow-lg">
-                        <p className="text-sm text-[--theme-text-color]">
-                          Greetings. Our site is going for a major overhaul for MyMCAT V2.0 which is launching on January 10th. Stuff might break on you. For more information regarding changes and timeline, please join our <a 
-                            href="https://discord.gg/CcxcZxB6"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline hover:opacity-80 transition-opacity"
-                          >
-                            discord
-                          </a>.
-                        </p>
-                      </div>
                       <DonutChart onProgressClick={(label) => setSelectedSubject(label)} />
                     </motion.div>
                   ) : (
@@ -901,6 +895,7 @@ const Schedule: React.FC<ScheduleProps> = ({
                 handleSetTab={handleSetTab}
                 onTasksUpdate={handleTasksUpdate}
                 updateTodaySchedule={updateTodaySchedule}
+                chatbotRef={chatbotRef}
               />
             </div>
           </div>
@@ -1148,6 +1143,28 @@ const Schedule: React.FC<ScheduleProps> = ({
         handleTabChange={handleTabChange}
         allWelcomeTasksCompleted={allWelcomeTasksCompleted}
       />
+
+      {showCalendarModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center rounded-lg">
+          <div className="bg-[--theme-mainbox-color] w-full h-full p-8 relative overflow-auto">
+            <button 
+              onClick={() => setShowCalendarModal(false)}
+              className="absolute top-4 right-4 p-2 hover:opacity-70 transition-opacity text-[--theme-text-color]"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <WeeklyCalendarModal 
+              isInitialSetup={false}
+              onComplete={({ success }) => {
+                if (success) {
+                  setShowCalendarModal(false);
+                  onActivitiesUpdate();
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 

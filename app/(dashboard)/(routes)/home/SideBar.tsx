@@ -234,7 +234,7 @@ const SideBar: React.FC<SideBarProps> = ({
 
   const renderTutors = (tutors: Tutor[]) => (
     <div className="h-[calc(100vh-12.3rem)] flex flex-col">
-      <ScrollArea className="flex-grow">
+      <ScrollArea className="flex-grow [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <div className="pr-4 pb-4">
           <div className="mb-3 flex justify-center">
             <Dialog>
@@ -398,7 +398,7 @@ const SideBar: React.FC<SideBarProps> = ({
                   }
                   border border-[--theme-border-color]
                   hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
-                  font-semibold shadow-md rounded-lg transition relative flex items-center justify-between
+                  font-semibold rounded-lg transition relative flex items-center justify-between
                   text-sm`}
                 onClick={() => handleButtonClick(activity.activityTitle)}
               >
@@ -426,7 +426,7 @@ const SideBar: React.FC<SideBarProps> = ({
                 )}
               </button>
 
-              <div className="bg-[--theme-mainbox-color] shadow-md p-3 mt-2 space-y-2 rounded-lg">
+              <div className="bg-[--theme-mainbox-color] p-3 mt-2 space-y-2 rounded-lg">
                 {activity.tasks && activity.tasks.length > 0 ? (
                   activity.tasks.map((task, index) => (
                     <div key={index} className="flex items-center gap-2">
@@ -490,7 +490,6 @@ const SideBar: React.FC<SideBarProps> = ({
     { id: "tab1", label: "Insights", content: { type: 'insights', videos: videos } },
     { id: "tab2", label: "Tasks", content: { type: 'tasks' } },
     { id: "tab3", label: "Tutors", content: { type: 'tutors', schools: tutors } },
-    { id: "tab4", label: "Help", content: { type: 'tutorial' } },
   ];
 
   const AddTutorDialog = () => (
@@ -757,12 +756,13 @@ const SideBar: React.FC<SideBarProps> = ({
   };
 
   return (
-    <div className="relative p-2 overflow-hidden h-[calc(100vh-3.9rem)]">
+    <div className="relative p-2 rounded-lg overflow-hidden h-[calc(100vh-4.1rem)]">
       <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
         <div className="flex w-full flex-shrink-0">
           {tabs.map((tab) => (
             <button
               key={tab.id}
+              data-tab={tab.id}
               className={`flex-1 text-m py-2 border border-[#79747E] text-center ${
                 activeTab === tab.id
                   ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
