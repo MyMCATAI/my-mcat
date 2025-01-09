@@ -45,13 +45,14 @@ import {
   BarChart as AnalyticsIcon,
 } from "lucide-react";
 import HelpContentSchedule from './HelpContentSchedule';
-import { HelpCircle, Bell, Coffee, ClipboardList, AlertTriangle } from 'lucide-react';
+import { HelpCircle, Bell, Coffee, ClipboardList, AlertTriangle, X, Calendar } from 'lucide-react';
 import { useOutsideClick } from '@/hooks/use-outside-click';
 import UWorldPopup from '@/components/home/UWorldPopup';
 import CompletionDialog from '@/components/home/CompletionDialog';
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { OptionsDialog } from "@/components/home/OptionsDialog";
 import SettingContent from "@/components/calendar/SettingContent";
+import WeeklyCalendarModal from "@/components/calendar/WeeklyCalendarModal";
 
 ChartJS.register(
   CategoryScale,
@@ -127,6 +128,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
   const [isCoinsLoading, setIsCoinsLoading] = useState(true);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -771,24 +773,25 @@ const Schedule: React.FC<ScheduleProps> = ({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-8 right-2 w-80 bg-white rounded-lg shadow-lg z-50"
+            className="absolute top-8 right-2 w-[70rem] bg-white rounded-lg shadow-lg z-50"
           >
-           <SettingContent
-                    onComplete={({ success, action }) => {
-                      if (success && action === 'generate') {
-                        handleSetTab('Tests');
-                      }
-                      if (success) {
-                        handleStudyPlanSaved();
-                        if (action === 'generate') {
-                          handleToggleView();
-                        }
-                        toggleSettings();
-                        onActivitiesUpdate();
-                      }
-                    }}
-                    isInitialSetup={false}
-                  />
+            <WeeklyCalendarModal
+              onComplete={({ success, action }) => {
+                if (success && action === 'generate') {
+                  handleSetTab('Tests');
+                }
+                if (success) {
+                  handleStudyPlanSaved();
+                  if (action === 'generate') {
+                    handleToggleView();
+                  }
+                  toggleSettings();
+                  onActivitiesUpdate();
+                }
+              }}
+              isInitialSetup={false}
+              onClose={toggleSettings}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -948,6 +951,27 @@ const Schedule: React.FC<ScheduleProps> = ({
               </TooltipTrigger>
               <TooltipContent>
                 <p>Practice Tests</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* New Calendar Button */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setShowCalendarModal(true)}
+                  className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                    border-2 border-[--theme-border-color] 
+                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                    shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
+                >
+                  <Calendar className="w-8 h-8" />
+                  <span className="text-xs font-medium">Plan</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Study Plan</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -1148,6 +1172,28 @@ const Schedule: React.FC<ScheduleProps> = ({
         handleTabChange={handleTabChange}
         allWelcomeTasksCompleted={allWelcomeTasksCompleted}
       />
+
+      {showCalendarModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-[--theme-mainbox-color] w-full h-full p-8 relative overflow-auto">
+            <button 
+              onClick={() => setShowCalendarModal(false)}
+              className="absolute top-4 right-4 p-2 hover:opacity-70 transition-opacity text-[--theme-text-color]"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <WeeklyCalendarModal 
+              isInitialSetup={false}
+              onComplete={({ success }) => {
+                if (success) {
+                  setShowCalendarModal(false);
+                  onActivitiesUpdate();
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 
