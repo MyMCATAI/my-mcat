@@ -9,8 +9,8 @@ import {
   Title,
   Tooltip,
   Legend,
-  ChartData,
-  ChartOptions
+  BarController,
+  LineController
 } from "chart.js";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Bar } from "react-chartjs-2";
@@ -27,6 +27,8 @@ ChartJS.register(
   PointElement,
   LineElement,
   BarElement,
+  BarController,
+  LineController,
   Title,
   Tooltip,
   Legend,
