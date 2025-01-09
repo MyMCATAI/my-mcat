@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect } from "react";
 import {
+  Calendar,
   momentLocalizer,
   View,
   stringOrDate,
@@ -14,6 +15,10 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/components/styles/AgendaCalendar.css";
 import { addDays, format, isTomorrow, isSameDay } from 'date-fns';
 import { Plus, Coffee } from 'lucide-react';
+import withDragAndDrop, {
+  EventInteractionArgs,
+} from "react-big-calendar/lib/addons/dragAndDrop";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
 import { useUser } from "@clerk/nextjs";
 import AddEventModal from "./AddEventModal";
@@ -145,6 +150,8 @@ const DayCard: React.FC<DayCardProps> = ({ date, events, onEventClick, onAddEven
     </div>
   );
 };
+
+const DnDCalendar = withDragAndDrop<CalendarEvent>(Calendar);
 
 const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
   currentDate,
@@ -508,6 +515,82 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     setIsModalOpen(true);
   };
 
+  const onEventDrop = async ({
+    event,
+    start,
+    end,
+  }: EventInteractionArgs<CalendarEvent>) => {
+    if (start && end) {
+      try {
+        const updatedEvent: CalendarEvent = {
+          ...event,
+          start: parseDate(start),
+          end: parseDate(end),
+        };
+        
+        // Update local state first for immediate feedback
+        setEvents((currentEvents) =>
+          currentEvents.map((ev) =>
+            ev.id === updatedEvent.id ? updatedEvent : ev
+          )
+        );
+
+        // Then update in backend
+        await updateEventInBackend(updatedEvent);
+
+        // Check if event was moved to/from today and update the schedule
+        const wasToday = isToday(event.start);
+        const isMovedToToday = isToday(start);
+        if (wasToday || isMovedToToday) {
+          updateTodaySchedule();
+        }
+
+        onInteraction();
+      } catch (error) {
+        console.error("Error updating event:", error);
+        // Revert the local state if backend update fails
+        fetchActivities();
+      }
+    }
+  };
+
+  const onEventResize = async ({
+    event,
+    start,
+    end,
+  }: EventInteractionArgs<CalendarEvent>) => {
+    if (start && end) {
+      try {
+        const updatedEvent: CalendarEvent = {
+          ...event,
+          start: parseDate(start),
+          end: parseDate(end),
+        };
+        
+        // Update local state first
+        setEvents((currentEvents) =>
+          currentEvents.map((ev) =>
+            ev.id === updatedEvent.id ? updatedEvent : ev
+          )
+        );
+
+        // Then update in backend
+        await updateEventInBackend(updatedEvent);
+
+        // Check if event was resized on today's date
+        if (isToday(start) || isToday(event.start)) {
+          updateTodaySchedule();
+        }
+
+        onInteraction();
+      } catch (error) {
+        console.error("Error updating event:", error);
+        // Revert the local state if backend update fails
+        fetchActivities();
+      }
+    }
+  };
+
   return (
     <div className="custom-calendar schedule-content">
       <div className="bg-[--theme-leaguecard-color] rounded-lg p-3 ml-4 mb-2 mr-4 shadow-sm">
@@ -576,6 +659,30 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
         onCancel={() => {
           setShowDeleteConfirm(false);
           setEventToDelete(null);
+        }}
+      />
+      <DnDCalendar
+        className="custom-calendar"
+        date={date}
+        onNavigate={handleNavigate}
+        view="month"
+        views={["month"]}
+        events={events}
+        localizer={localizer}
+        onEventDrop={onEventDrop}
+        onEventResize={onEventResize}
+        resizable
+        draggableAccessor={() => true}
+        selectable
+        onSelectSlot={handleSelect}
+        onSelectEvent={handleEventClick}
+        style={{ height: "100%" }}
+        eventPropGetter={eventStyleGetter}
+        length={daysInMonth}
+        endAccessor={(event) => {
+          const eventEnd = moment(event.end);
+          const monthEnd = moment(date).endOf("month");
+          return eventEnd.isAfter(monthEnd) ? monthEnd.toDate() : event.end;
         }}
       />
     </div>
