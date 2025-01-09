@@ -229,11 +229,24 @@ const Page = () => {
         content = (
           <Schedule
             activities={activities}
-            handleSetTab={handleTabChange}
+            handleSetTab={(tab) => {
+              if (tab === "SUMMARIZE_WEEK") {
+                // First switch to Schedule tab if not already there
+                setActiveTab("Schedule");
+                // Find the SideBar's Insights tab and activate it
+                const sidebarInsightsTab = document.querySelector('[data-tab="tab1"]');
+                if (sidebarInsightsTab instanceof HTMLElement) {
+                  sidebarInsightsTab.click();
+                }
+                return;
+              }
+              handleTabChange(tab);
+            }}
             isActive={activeTab === "Schedule"}
             onActivitiesUpdate={() => {
               fetchActivities();
             }}
+            chatbotRef={chatbotRef}
           />
         );
         break;

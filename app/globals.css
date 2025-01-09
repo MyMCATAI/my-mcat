@@ -188,7 +188,7 @@ body.theme-sunsetCity * {
     --theme-border-color: rgba(59, 130, 246, 0.4); /* Subtle blue */
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
     --theme-leaguecard-color: #031337e6;
-    --theme-leaguecard-accent: rgba(0, 35, 95, 0.8);
+    --theme-leaguecard-accent: rgba(4, 44, 113, 0.7);
     --theme-navbutton-color: #001226;
     --svg-invert: 0;
     --theme-reddit-color: #082645;
@@ -313,7 +313,7 @@ body.theme-sunsetCity * {
   --theme-hover-text: #ffffff;
   --theme-border-color: rgba(184, 84, 117, 0.4); /* Subtle pink */
   --theme-leaguecard-color: #ffffffe6;
-  --theme-leaguecard-accent: rgba(241, 183, 224, 0.6);
+  --theme-leaguecard-accent: rgba(241, 183, 224, 0.7);
   --theme-navbutton-color: #9a2641; /* Pale violet red */
   --svg-invert: 0; /* Changed to 0 to keep original SVG colors */
   --theme-reddit-color: #ffc9fccd; /* Misty rose */
@@ -352,7 +352,7 @@ body.theme-sunsetCity * {
   --theme-hover-text: #2c1e4a;
   --theme-border-color: rgba(255, 99, 71, 0.282); /* Subtle tomato */
   --theme-leaguecard-color: #24173a;
-  --theme-leaguecard-accent: #2a1a50; /* A richer purple that stands out more */
+  --theme-leaguecard-accent: rgba(255, 126, 103, 0.2); /* Softer tomato with transparency */
   --theme-navbutton-color: #49327c;
   --svg-invert: 0;
   --theme-reddit-color: #3a2963;
@@ -654,7 +654,7 @@ body {
   --theme-hover-text: #ffffff;
   --theme-border-color: rgba(76, 181, 230, 0.4); /* Subtle blue */
   --theme-leaguecard-color: rgba(231, 250, 251, 0.9);
-  --theme-leaguecard-accent: rgba(184, 225, 248, 0.449);
+  --theme-leaguecard-accent: rgba(114, 183, 222, 0.3);
   --theme-navbutton-color: #1e81b0;
   --svg-invert: 0;
   --theme-reddit-color: #f0f8ff;

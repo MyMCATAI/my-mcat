@@ -1,125 +1,250 @@
 import React, { useEffect } from "react";
-import { Doughnut } from "react-chartjs-2";
 import {
   Chart as ChartJS,
-  ArcElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
   Tooltip,
   Legend,
-  ChartOptions,
+  ChartData,
+  ChartOptions
 } from "chart.js";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { Bar } from "react-chartjs-2";
 import { useTheme } from "@/contexts/ThemeContext";
 import { calculateGrade, PerformanceMetrics } from "@/utils/gradeCalculator";
 import { useClerk } from '@clerk/nextjs';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, format } from 'date-fns';
+import { motion } from "framer-motion";
+import { Chart } from 'react-chartjs-2';
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ChartDataLabels
+);
 
 interface DonutChartProps {
   onProgressClick: (label: string) => void;
 }
 
+interface FullLengthExam {
+  id: string;
+  title: string;
+  createdAt: string;
+  score: number;
+  dataPulses: Array<{
+    name: string;
+    positive: number;
+    section: string;
+  }>;
+  calendarActivity: {
+    scheduledDate: string;
+  };
+}
+
 const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
+  const { theme } = useTheme();
   const { user } = useClerk();
-  const [hoveredSegment, setHoveredSegment] = React.useState<number | null>(null);
+  const [hoveredButton, setHoveredButton] = React.useState<string | null>(null);
+  const [selectedSubject, setSelectedSubject] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [targetScore, setTargetScore] = React.useState(() => {
     return user?.unsafeMetadata?.targetScore?.toString() || "520";
   });
-
-  const [performanceMetrics, setPerformanceMetrics] =
-    React.useState<{ [subject: string]: PerformanceMetrics }>({});
-  const { theme } = useTheme();
+  const [examScores, setExamScores] = React.useState<FullLengthExam[]>([]);
   const [daysUntilExam, setDaysUntilExam] = React.useState<number | null>(null);
 
+  // Fetch exam scores
   useEffect(() => {
-    const fetchPerformanceMetrics = async () => {
-      setIsLoading(true);
+    const fetchExamScores = async () => {
       try {
-        const subjectMappings = {
-          "CARs": ["CARs"],
-          "Psych/Soc": ["Psychology", "Sociology"],
-          "Chem/Phys": ["Chemistry", "Physics"],
-          "Bio/Biochem": ["Biology", "Biochemistry"]
-        };
-
-        // Create a single request for all subjects
-        const allSubjects = Object.values(subjectMappings).flat();
-        const subjectsQuery = encodeURIComponent(allSubjects.join(','));
-        const response = await fetch(`/api/user-statistics?subjects=${subjectsQuery}`);
-        
+        const response = await fetch('/api/full-length-exam/complete');
         if (response.ok) {
           const data = await response.json();
-          const metrics: { [subject: string]: PerformanceMetrics } = {};
-
-          // Process the response for each subject group
-          for (const [displayName, apiSubjects] of Object.entries(subjectMappings)) {
-            let totalQuestions = 0;
-            let totalCorrect = 0;
-            let totalTime = 0;
-
-            for (const subject of apiSubjects) {
-              const subjectStats = data.subjectStats[subject];
-              
-              if (subjectStats) {
-                totalQuestions += subjectStats.totalQuestions;
-                totalCorrect += subjectStats.correctAnswers;
-                totalTime += subjectStats.averageTime * subjectStats.totalQuestions;
-              }
-            }
-
-            if (totalQuestions > 0) {
-              metrics[displayName] = {
-                questionsAnswered: totalQuestions,
-                accuracy: (totalCorrect / totalQuestions) * 100,
-                averageTime: totalTime / totalQuestions
-              };
-            }
-          }
-
-          setPerformanceMetrics(metrics);
+          setExamScores(data);
         }
       } catch (error) {
-        console.error("Error fetching performance metrics:", error);
+        console.error('Error fetching exam scores:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchPerformanceMetrics();
+    fetchExamScores();
   }, []);
 
-  useEffect(() => {
-    const fetchExamDate = async () => {
-      try {
-        const response = await fetch('/api/study-plan?examDate=true');
-        if (!response.ok) {
-          console.error('Failed to fetch exam date');
-          return;
-        }
+  // Calculate average section scores
+  const sectionAverages = React.useMemo(() => {
+    if (!examScores.length) return {};
 
-        const data = await response.json();
-        if (data.examDate) {
-          const examDate = new Date(data.examDate);
-          const today = new Date();
-          const days = differenceInDays(examDate, today);
-          setDaysUntilExam(Math.max(0, days)); // Ensure we don't show negative days
+    const sectionScores = {
+      "CARs": [] as number[],
+      "Psych/Soc": [] as number[],
+      "Chem/Phys": [] as number[],
+      "Bio/Biochem": [] as number[]
+    };
+
+    examScores.forEach(exam => {
+      exam.dataPulses.forEach(pulse => {
+        if (pulse.name.includes("Critical Analysis")) {
+          sectionScores["CARs"].push(pulse.positive);
+        } else if (pulse.name.includes("Psychological")) {
+          sectionScores["Psych/Soc"].push(pulse.positive);
+        } else if (pulse.name.includes("Chemical")) {
+          sectionScores["Chem/Phys"].push(pulse.positive);
+        } else if (pulse.name.includes("Biological")) {
+          sectionScores["Bio/Biochem"].push(pulse.positive);
         }
-      } catch (error) {
-        console.error("Error fetching exam date:", error);
+      });
+    });
+
+    return Object.entries(sectionScores).reduce((acc, [section, scores]) => {
+      acc[section] = scores.length > 0 
+        ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+        : null;
+      return acc;
+    }, {} as Record<string, number | null>);
+  }, [examScores]);
+
+  // Process exam scores for the chart
+  const chartData = React.useMemo(() => {
+    if (!examScores.length) return null;
+
+    const sortedExams = [...examScores].sort((a, b) => 
+      new Date(a.calendarActivity.scheduledDate).getTime() - new Date(b.calendarActivity.scheduledDate).getTime()
+    );
+
+    return {
+      labels: sortedExams.map(exam => format(new Date(exam.calendarActivity.scheduledDate), 'MMM d')),
+      datasets: [
+        {
+          label: 'MCAT Score',
+          data: sortedExams.map(exam => {
+            // Calculate total score from section scores
+            const totalScore = exam.dataPulses.reduce((sum, pulse) => sum + pulse.positive, 0);
+            return totalScore;
+          }),
+          borderColor: 'rgb(75, 192, 192)',
+          tension: 0.4,
+          fill: false,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: 'rgb(75, 192, 192)',
+        },
+        {
+          label: 'Target Score',
+          data: Array(sortedExams.length).fill(parseInt(targetScore)),
+          borderColor: 'rgba(255, 99, 132, 0.5)',
+          borderDash: [5, 5],
+          tension: 0,
+          fill: false,
+          pointRadius: 0,
+        },
+      ],
+    };
+  }, [examScores, targetScore]);
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      title: {
+        display: false,
+      },
+      tooltip: {
+        mode: 'index' as const,
+        intersect: false,
+        callbacks: {
+          label: function(context: any) {
+            if (context.dataset.label === 'Target Score') {
+              return `Target Score: ${targetScore}`;
+            }
+            return `${context.dataset.label}: ${context.raw}`;
+          }
+        }
+      },
+      datalabels: {
+        color: 'var(--theme-text-color)',
+        anchor: 'start' as const,
+        align: 'bottom' as const,
+        offset: 10,
+        font: {
+          size: 12,
+        },
+        formatter: function(value: any, context: any) {
+          // Only show labels for MCAT Score dataset
+          return context.datasetIndex === 0 ? value : '';
+        }
       }
-    };
-
-    fetchExamDate();
-  }, []);
-
-  const getBorderColor = () => {
-    const themeClasses = {
-      cyberSpace: "#0162ff70",
-      sakuraTrees: "#ff008080",
-      sunsetCity: "#ff634770",
-      mykonosBlue: "#4cb5e670",
-    };
-    return themeClasses[theme];
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+        ticks: {
+          padding: 30,
+          color: 'var(--theme-text-color)',
+          font: {
+            size: 12,
+          }
+        },
+        border: {
+          display: true,
+          color: 'rgba(255, 255, 255, 0.1)',
+        },
+      },
+      y: {
+        display: true,
+        min: 472,
+        max: 528,
+        position: 'left' as const,
+        ticks: {
+          stepSize: 4,
+          color: 'var(--theme-text-color)',
+          font: {
+            size: 12,
+          },
+          padding: 10,
+        },
+        grid: {
+          display: true,
+          color: 'rgba(255, 255, 255, 0.05)',
+          drawBorder: false,
+        },
+        border: {
+          display: true,
+          color: 'rgba(255, 255, 255, 0.1)',
+        },
+      },
+    },
+    onClick: (event: any, elements: any[]) => {
+      if (!elements.length) return;
+      
+      const element = elements[0];
+      if (element.datasetIndex === 1) { // Target Score dataset
+        const yValue = Math.round(element.chart.scales.y.getValueForPixel(event.y));
+        const newTargetScore = Math.min(Math.max(yValue, 472), 528);
+        setTargetScore(newTargetScore.toString());
+      }
+    },
+    hover: {
+      mode: 'index' as const,
+      intersect: false
+    },
   };
 
   // Define color map for subjects
@@ -142,104 +267,129 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
     },
   };
 
-  const getColorForLabel = (label: string): string => {
-    return colorMap[label]?.hoverBackgroundColor || "#000";
-  };
-
   const labels = ["CARs", "Psych/Soc", "Chem/Phys", "Bio/Biochem"];
 
-  const data = {
-    labels: labels,
-    datasets: [
-      {
-        data: [25, 25, 25, 25],
-        backgroundColor: labels.map((label) => colorMap[label]?.backgroundColor),
-        hoverBackgroundColor: labels.map(
-          (label) => colorMap[label]?.hoverBackgroundColor
-        ),
-        borderWidth: 3,
-        borderColor: Array(4).fill(getBorderColor()),
-        hoverBorderColor: Array(4).fill(getBorderColor()),
-        hoverOffset: 50,
-        hoverBorderWidth: [3, 3, 3, 3],
-      },
-    ],
+  const handleButtonClick = (label: string) => {
+    setSelectedSubject(label);
+    onProgressClick(label);
   };
 
-  // Calculate grades for each subject
-  const gradeInfo = React.useMemo(() => {
-    return labels.map((label) => {
-      const metrics = performanceMetrics[label];
-      if (metrics && metrics.questionsAnswered > 0) {
-        const gradeResult = calculateGrade(metrics, [], label);
-        return {
-          grade: gradeResult.grade,
-          color: getColorForLabel(label),
-          trend: gradeResult.trend,
-        };
-      } else {
-        return {
-          grade: "TBD",
-          color: getColorForLabel(label),
-          trend: "flat",
-        };
-      }
-    });
-  }, [performanceMetrics]);
+  const TrendIcon = ({
+    trend,
+    color,
+  }: {
+    trend: string;
+    color: string;
+  }) => {
+    const paths = {
+      up: "M3 17L9 11L13 15L21 7",
+      down: "M3 7L9 13L13 9L21 17",
+      flat: "M3 12L9 12L13 12L21 12",
+    };
 
-  const getGradeInfo = (segmentIndex: number | null) => {
-    return segmentIndex !== null ? gradeInfo[segmentIndex] : null;
+    return (
+      <svg
+        width="1.5rem"
+        height="1.5rem"
+        viewBox="0 0 24 24"
+        fill="none"
+        strokeWidth="2"
+      >
+        <path
+          d={paths[trend as keyof typeof paths]}
+          stroke={color}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
   };
 
-  type DonutChartOptions = ChartOptions<"doughnut"> & {
-    onHover?: (event: any, elements: any[]) => void;
-    onClick?: (event: any, elements: any[]) => void;
+  const getScoreCategory = (score: number) => {
+    if (score < 500) return { label: "Needs Work", color: "var(--theme-error-color)", animation: "pulse" };
+    if (score <= 505) return { label: "Getting There", color: "var(--theme-warning-color)", animation: "glow" };
+    if (score <= 510) return { label: "Good Progress", color: "var(--theme-info-color)", animation: "float" };
+    if (score <= 515) return { label: "Great Work", color: "var(--theme-success-color)", animation: "bounce" };
+    return { label: "Exceptional!", color: "var(--theme-gold-color, #FFD700)", animation: "sparkle" };
   };
 
-  const options: DonutChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: "60%",
-    layout: {
-      padding: {
-        top: 36,
-        bottom: 36,
-        left: 36,
-        right: 36,
-      },
-    },
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        enabled: false,
-      },
-    },
-    hover: {
-      mode: "nearest" as const,
-      intersect: true,
-    },
-    animation: {
-      animateScale: true,
-      animateRotate: true,
-      duration: 1000,
-    },
-    onHover(event, elements) {
-      if (elements.length > 0) {
-        setHoveredSegment(elements[0].index);
-        event.native.target.style.cursor = "pointer";
-      } else {
-        setHoveredSegment(null);
-        event.native.target.style.cursor = "default";
-      }
-    },
-    onClick(event, elements) {
-      if (elements.length > 0) {
-        const selectedLabel = data.labels[elements[0].index];
-        onProgressClick(selectedLabel);
-      }
-    },
+  const ScoreDisplay = ({ score }: { score: number }) => {
+    const category = getScoreCategory(score);
+    
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className={`relative font-bold text-2xl md:text-3xl lg:text-4xl ${category.animation}`}
+          style={{ 
+            color: 'var(--theme-text-color)',
+            textShadow: `0 0 15px ${category.color}`,
+          }}
+        >
+          {score}
+          {/* Sparkle effect for exceptional scores */}
+          {category.animation === 'sparkle' && (
+            <div className="absolute -inset-4 opacity-50">
+              <div className="absolute inset-0 animate-sparkle-1" style={{ background: `radial-gradient(circle, ${category.color} 0%, transparent 50%)` }} />
+              <div className="absolute inset-0 animate-sparkle-2" style={{ background: `radial-gradient(circle, ${category.color} 0%, transparent 50%)` }} />
+            </div>
+          )}
+        </motion.div>
+        <span className="text-sm md:text-base font-medium" style={{ color: category.color }}>
+          {category.label}
+        </span>
+      </div>
+    );
+  };
+
+  // Add keyframes for animations
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    @keyframes glow {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.2); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes sparkle-1 {
+      0%, 100% { transform: translate(0, 0) scale(0); opacity: 0; }
+      25% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+      50% { transform: translate(50%, -50%) scale(0); opacity: 0; }
+      75% { transform: translate(0, 50%) scale(1); opacity: 0.5; }
+    }
+    @keyframes sparkle-2 {
+      0%, 100% { transform: translate(0, 0) scale(0); opacity: 0; }
+      25% { transform: translate(50%, 50%) scale(1); opacity: 0.5; }
+      50% { transform: translate(-50%, 50%) scale(0); opacity: 0; }
+      75% { transform: translate(0, -50%) scale(1); opacity: 0.5; }
+    }
+    .pulse { animation: pulse 2s ease-in-out infinite; }
+    .glow { animation: glow 2s ease-in-out infinite; }
+    .float { animation: float 3s ease-in-out infinite; }
+    .bounce { animation: bounce 2s ease-in-out infinite; }
+    .sparkle { animation: float 3s ease-in-out infinite; }
+  `;
+  document.head.appendChild(style);
+
+  const getThemeColor = () => {
+    const themeColors = {
+      cyberSpace: '#3b82f6',
+      sakuraTrees: '#b85475',
+      sunsetCity: '#ff6347',
+      mykonosBlue: '#4cb5e6'
+    };
+    return themeColors[theme];
   };
 
   const handleScoreChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -259,37 +409,6 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
     }
   };
 
-  const TrendIcon = ({
-    trend,
-    color,
-  }: {
-    trend: string;
-    color: string;
-  }) => {
-    const paths = {
-      up: "M3 17L9 11L13 15L21 7",
-      down: "M3 7L9 13L13 9L21 17",
-      flat: "M3 12L9 12L13 12L21 12",
-    };
-
-    return (
-      <svg
-        width="3vh"
-        height="3vh"
-        viewBox="0 0 24 24"
-        fill="none"
-        strokeWidth="2"
-      >
-        <path
-          d={paths[trend as keyof typeof paths]}
-          stroke={color}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    );
-  };
-
   // Calculate points away based on diagnostic score and target score
   const getScoreMetrics = React.useMemo(() => {
     const diagnosticScore = Number(user?.unsafeMetadata?.diagnosticScore) || 0;
@@ -302,63 +421,190 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
   }, [targetScore, user?.unsafeMetadata?.diagnosticScore]);
 
   return (
-    <div className="relative w-[65vh] h-[65vh] flex items-center justify-center">
-      <Doughnut data={data} options={options} />
-      <div className="absolute text-center">
-        {hoveredSegment !== null ? (
-          <div className="transition-all duration-300 ease-in-out flex flex-col items-center">
-            {isLoading ? (
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[--theme-hover-color]" />
-            ) : (
-              <>
-                <span
-                  className="text-[12vh] font-bold leading-none"
-                  style={{ color: getGradeInfo(hoveredSegment)?.color }}
-                >
-                  {getGradeInfo(hoveredSegment)?.grade || 'N/A'}
-                </span>
-                <div className="flex items-center">
-                  <TrendIcon
-                    trend={getGradeInfo(hoveredSegment)?.trend || "flat"}
-                    color={getGradeInfo(hoveredSegment)?.color || "#000"}
-                  />
-                </div>
-                <span
-                  className="text-[3vh] font-semibold"
-                  style={{ color: getGradeInfo(hoveredSegment)?.color }}
-                >
-                  {data.labels[hoveredSegment]}
-                </span>
-              </>
+    <div className="w-full h-full flex flex-col p-3 md:p-4 lg:p-6">
+      <h2 className="text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center">
+        {user?.firstName || 'Student'}&apos;s MCAT Progress
+      </h2>
+
+      <div className="flex flex-col lg:flex-row gap-3 lg:gap-6 h-[calc(100%-4rem)]">
+        {/* Target Score Input */}
+        <div className="flex flex-col items-center justify-center p-4 bg-[--theme-leaguecard-color] rounded-lg shadow-lg">
+          <h2 className="text-[2vh] font-medium text-[--theme-text-color] opacity-80">{"I Want A"}</h2>
+          <div className="flex items-center justify-center gap-[0.5vh] mb-[0.5vh]">
+            <input
+              type="text"
+              value={targetScore}
+              onChange={handleScoreChange}
+              className="w-[15vh] text-center text-[5vh] font-bold bg-transparent border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 text-[--theme-text-color]"
+              maxLength={3}
+            />
+          </div>
+          <div className="flex flex-col gap-[0.25vh]">
+            <p className="text-[2vh] text-[--theme-hover-color]">
+              {getScoreMetrics.pointsGained} points gained
+            </p>
+            <p className="text-[2vh] text-[--theme-text-color]">
+              {getScoreMetrics.pointsAway} points away
+            </p>
+            {daysUntilExam !== null && (
+              <p className="text-[2vh] text-[--theme-text-color]">
+                {daysUntilExam} {daysUntilExam === 1 ? "day" : "days"} left
+              </p>
             )}
           </div>
-        ) : (
-          <>
-            <h2 className="text-[3vh] font-medium">{"I Want A"}</h2>
-            <div className="flex items-center justify-center gap-[0.5vh] mb-[0.5vh]">
-              <input
-                type="text"
-                value={targetScore}
-                onChange={handleScoreChange}
-                className="w-[15vh] text-center text-[5vh] font-bold bg-transparent border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
-                maxLength={3}
+        </div>
+
+        {/* Chart Container */}
+        <div className="relative flex-1 h-[35vh] lg:h-full min-h-[250px] rounded-xl p-4" 
+          style={{
+            background: 'linear-gradient(135deg, var(--theme-leaguecard-color) 0%, var(--theme-leaguecard-accent) 100%)',
+            boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
+          }}>
+          {chartData ? (
+            <>
+              <Chart 
+                type="bar"
+                data={{
+                  labels: chartData.labels,
+                  datasets: [
+                    {
+                      type: 'bar',
+                      data: chartData.datasets[0].data,
+                      backgroundColor: getThemeColor(),
+                      hoverBackgroundColor: getThemeColor(),
+                      borderRadius: 5,
+                      barThickness: 30,
+                    },
+                    {
+                      type: 'line',
+                      label: 'Target Score',
+                      data: Array(chartData.labels.length).fill(parseInt(targetScore)),
+                      borderColor: 'rgba(255, 255, 255, 0.8)',
+                      borderWidth: 2,
+                      borderDash: [5, 5],
+                      pointRadius: 0,
+                      fill: false,
+                    }
+                  ]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      display: false,
+                    },
+                    datalabels: {
+                      color: getThemeColor(),
+                      anchor: 'end',
+                      align: 'top',
+                      offset: 8,
+                      font: {
+                        weight: 'bold',
+                        size: 18
+                      },
+                      formatter: (value: number, context: any) => {
+                        // Only show labels for bar dataset
+                        if (context.datasetIndex === 0) {
+                          return value.toString();
+                        }
+                        return '';
+                      }
+                    }
+                  },
+                  scales: {
+                    x: {
+                      grid: {
+                        display: false,
+                      },
+                      border: {
+                        display: false,
+                      },
+                      ticks: {
+                        color: getThemeColor(),
+                        font: {
+                          size: 12,
+                          weight: 'bold'
+                        }
+                      }
+                    },
+                    y: {
+                      min: 472,
+                      max: 528,
+                      grid: {
+                        color: `${getThemeColor()}4D`,
+                        display: true,
+                        lineWidth: 0.5
+                      },
+                      border: {
+                        display: false,
+                      },
+                      ticks: {
+                        color: getThemeColor(),
+                        font: {
+                          size: 12,
+                          weight: 'bold'
+                        },
+                        callback: function(value) {
+                          return value.toString();
+                        }
+                      }
+                    }
+                  },
+                }}
               />
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full text-white opacity-70">
+              No exam scores available yet
             </div>
-            <div className="flex flex-col gap-[0.25vh]">
-              <p className="text-[2vh] text-[--theme-hover-color]">
-                {getScoreMetrics.pointsGained} points gained
-              </p>
-              <p className="text-[2vh] text-[--theme-text-color]">
-                {getScoreMetrics.pointsAway} points away
-              </p>
-              {daysUntilExam !== null && (
-                <p className="text-[2vh] text-[--theme-text-color]">
-                  {daysUntilExam} {daysUntilExam === 1 ? "day" : "days"} left
-                </p>
-              )}
-            </div>
-          </>
-        )}
+          )}
+        </div>
+
+        {/* Subject Buttons */}
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 lg:w-40">
+          {labels.map((label) => {
+            const avgScore = sectionAverages[label];
+            return (
+              <motion.button
+                key={label}
+                className="relative group flex flex-col items-center justify-center p-1.5 md:p-2 lg:p-3 rounded-lg transition-all duration-200"
+                style={{
+                  backgroundColor: hoveredButton === label 
+                    ? colorMap[label].hoverBackgroundColor 
+                    : colorMap[label].backgroundColor,
+                  boxShadow: hoveredButton === label
+                    ? 'var(--theme-button-boxShadow-hover)'
+                    : 'var(--theme-button-boxShadow)'
+                }}
+                onHoverStart={() => setHoveredButton(label)}
+                onHoverEnd={() => setHoveredButton(null)}
+                onClick={() => handleButtonClick(label)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex flex-col items-center gap-0.5">
+                  {isLoading ? (
+                    <div className="animate-spin rounded-full h-3 w-3 md:h-4 md:w-4 border-b-2 border-[--theme-hover-color]" />
+                  ) : (
+                    <>
+                      <span className="text-sm md:text-base lg:text-lg font-bold" style={{ 
+                        color: hoveredButton === label ? 'white' : colorMap[label].hoverBackgroundColor 
+                      }}>
+                        {avgScore !== null ? avgScore : 'N/A'}
+                      </span>
+                      <span className="text-xs font-medium" style={{ 
+                        color: hoveredButton === label ? 'white' : 'var(--theme-text-color)' 
+                      }}>
+                        {label}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

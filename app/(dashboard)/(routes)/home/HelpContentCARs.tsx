@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { X, ArrowLeft, ChevronRight } from 'lucide-react';
+import { X, ArrowLeft, ChevronRight, Phone } from 'lucide-react';
 import { FaDiscord } from 'react-icons/fa';
 import MessageButton from '@/components/MessageButton';
 import { useOutsideClick } from '@/hooks/use-outside-click';
@@ -24,7 +24,13 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
   };
 
   return (
-    <div ref={helpRef} className="p-6 h-full overflow-y-auto relative bg-[--theme-mainbox-color] rounded-lg w-[32rem] z-50 border-2 border-[--theme-border-color]">
+    <div 
+      ref={helpRef} 
+      className="p-6 h-full overflow-y-auto relative bg-[--theme-mainbox-color] rounded-lg w-[32rem] z-50 border-2 border-[--theme-border-color] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" 
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
+    >
       {/* Close button */}
       <button
         onClick={onClose}
@@ -228,15 +234,29 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
               <p className="text-xs leading-relaxed mb-4 text-center">
                 Have questions about CARS or need assistance? Our support team and community are here to help!
               </p>
-              <div className="flex justify-center gap-4">
-                <MessageButton iconOnly withShadow />
-                <a 
+              <div className="flex flex-col gap-2">
+                <a
                   href="https://discord.gg/PkRbV5nw"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 flex items-center justify-center rounded-md border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg"
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
                 >
-                  <FaDiscord className="h-5 w-5" />
+                  <FaDiscord className="w-5 h-5" />
+                  <span>Join Discord Community</span>
+                </a>
+                <a
+                  href="sms:832-646-2445"
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
+                >
+                  <Phone className="w-5 h-5" />
+                  <span>Text Prynce (832) 646-2445</span>
+                </a>
+                <a
+                  href="tel:832-646-2445"
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
+                >
+                  <Phone className="w-5 h-5" />
+                  <span>Call Prynce (832) 646-2445</span>
                 </a>
               </div>
             </section>

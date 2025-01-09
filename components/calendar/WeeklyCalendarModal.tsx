@@ -7,7 +7,7 @@ import Calendar from "@/components/ui/calendar";
 import "react-day-picker/dist/style.css";
 
 interface WeeklyCalendarModalProps {
-  onComplete?: (result: { success: boolean }) => void;
+  onComplete?: (result: { success: boolean; action?: 'generate' | 'save' }) => void;
   isInitialSetup?: boolean;
   onClose?: () => void;
 }
@@ -471,7 +471,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
   };
 
   return (
-    <div className="bg-[--theme-mainbox-color] w-full h-full flex flex-col">
+    <div className="bg-[--theme-mainbox-color] w-full h-[50rem] flex flex-col rounded-lg">
       {/* Progress Steps */}
       <div className="flex items-center justify-center px-8 py-6 border-b border-[--theme-border-color]">
         <div className="flex items-center space-x-4">
@@ -541,7 +541,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                 setCurrentStep(currentStep + 1);
               }
             }}
-            className="bg-[--theme-hover-color] text-[--theme-hover-text]"
+            className="bg-[--theme-hover-color] text-[--theme-hover-text] hover:bg-[--theme-hover-color] hover:opacity-80 transition-opacity"
           >
             {currentStep === 4 ? 'Create Schedule' : 'Next'}
             <ArrowRight className="w-4 h-4 ml-2" />

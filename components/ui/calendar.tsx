@@ -1,14 +1,37 @@
 import React from 'react';
-import { DayPicker } from "react-day-picker";
+import { DayPicker, DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 
-interface CalendarProps {
-  mode?: "single" | "multiple" | "range";
-  selected?: Date | null;
-  onSelect?: (date: Date | null) => void;
+type CalendarMode = "single" | "multiple" | "range";
+
+interface BaseCalendarProps {
   className?: string;
   classNames?: Record<string, string>;
 }
+
+interface SingleCalendarProps extends BaseCalendarProps {
+  mode: "single";
+  selected?: Date | null;
+  onSelect?: (date: Date | null) => void;
+}
+
+interface MultipleCalendarProps extends BaseCalendarProps {
+  mode: "multiple";
+  selected?: Date[];
+  onSelect?: (date: Date[]) => void;
+}
+
+interface RangeCalendarProps extends BaseCalendarProps {
+  mode: "range";
+  selected?: DateRange | undefined;
+  onSelect?: (range: DateRange | undefined) => void;
+  required?: boolean;
+}
+
+type CalendarProps = 
+  | (Omit<SingleCalendarProps, 'mode'> & { mode?: 'single' })
+  | MultipleCalendarProps 
+  | RangeCalendarProps;
 
 export default function Calendar({
   mode = "single",
@@ -16,13 +39,16 @@ export default function Calendar({
   onSelect,
   className,
   classNames,
+  ...props
 }: CalendarProps) {
   return (
     <DayPicker
       mode={mode}
-      selected={selected}
-      onSelect={onSelect}
+      selected={selected as any}
+      onSelect={onSelect as any}
       className={cn("p-3", className)}
+      {...(mode === "range" ? { required: false } : {})}
+      {...props}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
