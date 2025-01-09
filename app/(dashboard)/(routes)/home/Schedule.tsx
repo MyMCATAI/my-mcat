@@ -6,7 +6,6 @@ import React, {
   useCallback,
 } from "react";
 import { isSameDay, isToday, isTomorrow } from "date-fns";
-import SettingContent from "./SettingContent";
 import { NewActivity, FetchedActivity } from "@/types";
 import { DialogHeader } from "@/components/ui/dialog";
 import {
@@ -52,6 +51,7 @@ import UWorldPopup from '@/components/home/UWorldPopup';
 import CompletionDialog from '@/components/home/CompletionDialog';
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { OptionsDialog } from "@/components/home/OptionsDialog";
+import SettingContent from "@/components/calendar/SettingContent";
 
 ChartJS.register(
   CategoryScale,
@@ -123,7 +123,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showBreaksDialog, setShowBreaksDialog] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showUWorldPopup, setShowUWorldPopup] = useState(false);
-  const [showTestsDialog, setShowTestsDialog] = useState(false);
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
@@ -360,7 +359,8 @@ const Schedule: React.FC<ScheduleProps> = ({
       case "Adaptive Tutoring Suite":
         handleSetTab("AdaptiveTutoringSuite");
         break;
-      case "AAMC Materials":
+      case "Tests":
+        handleSetTab("Tests");
         break;
       case "UWorld":
         setShowUWorldPopup(true);
@@ -773,12 +773,22 @@ const Schedule: React.FC<ScheduleProps> = ({
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-8 right-2 w-80 bg-white rounded-lg shadow-lg z-50"
           >
-            <SettingContent
-              onStudyPlanSaved={handleStudyPlanSaved}
-              onToggleCalendarView={handleToggleView}
-              onClose={toggleSettings}
-              onActivitiesUpdate={onActivitiesUpdate}
-            />
+           <SettingContent
+                    onComplete={({ success, action }) => {
+                      if (success && action === 'generate') {
+                        handleSetTab('Tests');
+                      }
+                      if (success) {
+                        handleStudyPlanSaved();
+                        if (action === 'generate') {
+                          handleToggleView();
+                        }
+                        toggleSettings();
+                        onActivitiesUpdate();
+                      }
+                    }}
+                    isInitialSetup={false}
+                  />
           </motion.div>
         )}
       </AnimatePresence>
@@ -926,7 +936,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  onClick={() => setShowTestsDialog(true)}
+                  onClick={() => handleButtonClick("Tests")}
                   className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
                     border-2 border-[--theme-border-color] 
                     hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
@@ -1115,22 +1125,6 @@ const Schedule: React.FC<ScheduleProps> = ({
             <p className="text-center text-black">
               Toggle holidays. Add difficult weeks in school. Ask for a break.
               Your schedule will be updated automatically.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showTestsDialog} onOpenChange={setShowTestsDialog}>
-        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
-          <DialogHeader>
-            <DialogTitle className="text-center text-black">
-              Test Management Coming Soon!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-center text-black">
-              {"Tests will allow you to manage AAMC and third party tests, review them in an intelligent suite, and glean insights on strategic changes to improve performance. It's launching on January 10th."}
             </p>
           </div>
         </DialogContent>

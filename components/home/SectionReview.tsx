@@ -1,0 +1,315 @@
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Plus, Flag, XCircle, RefreshCw } from 'lucide-react';
+import QuestionAddModal from './QuestionAddModal';
+import { ExamQuestion, useExamQuestions } from '@/hooks/useExamQuestions';
+import { DISPLAY_TO_FULL_SECTION } from '@/lib/constants';
+import { DataPulse } from '@/hooks/useCalendarActivities';
+
+export interface Section {
+  name: keyof typeof DISPLAY_TO_FULL_SECTION;
+  score: number;
+}
+
+interface TopicStats {
+  total: number;
+  wrong: number;
+  flagged: number;
+}
+
+interface SectionReviewProps {
+  section: Section;
+  examId: string;
+  onBack: () => void;
+  isCompleted: boolean;
+  onComplete: () => void;
+  dataPulse?: DataPulse;
+}
+
+const SectionReview: React.FC<SectionReviewProps> = ({ 
+  section, 
+  examId,
+  onBack, 
+  isCompleted, 
+  onComplete,
+  dataPulse 
+}) => {
+  const [isAddingQuestion, setIsAddingQuestion] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<ExamQuestion | undefined>(undefined);
+  const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
+  const [analysis, setAnalysis] = useState<string | null>(null);
+  
+  const { 
+    questions: listOfQuestions, 
+    loading, 
+    error,
+    fetchQuestions,
+    createQuestion,
+    updateQuestion
+  } = useExamQuestions(examId, section.name);
+
+  // Load existing analysis if available
+  useEffect(() => {
+    if (dataPulse?.aiResponse) {
+      setAnalysis(dataPulse.aiResponse);
+    }
+  }, [dataPulse]);
+
+  const generateAnalysis = async () => {
+    if (!dataPulse?.id) return;
+    
+    setIsGeneratingAnalysis(true);
+    try {
+      const response = await fetch('/api/section-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dataPulseId: dataPulse.id
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate analysis');
+      }
+
+      const data = await response.json();
+      setAnalysis(data.analysis);
+    } catch (error) {
+      console.error('Error generating analysis:', error);
+    } finally {
+      setIsGeneratingAnalysis(false);
+    }
+  };
+
+  // Fetch questions and check if section is already reviewed
+  useEffect(() => {
+    fetchQuestions()
+    const initializeData = async () => {
+      if (dataPulse?.reviewed) {
+        onComplete();
+      }
+    };
+
+    initializeData();
+  }, []);
+
+  const handleSectionComplete = async () => {
+    try {
+      if (!dataPulse?.id) {
+        console.error('No dataPulse found for section:', section.name);
+        return;
+      }
+
+      // Update the reviewed status in the backend
+      const response = await fetch('/api/data-pulse', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dataPulseId: dataPulse.id
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update section completion');
+      }
+      
+      // Call the onComplete callback to update frontend state
+      onComplete();
+    } catch (error) {
+      console.error('Error updating section completion:', error);
+    }
+  };
+
+  const flaggedCount = listOfQuestions.filter(q => q.negative === 0 && q.positive === 0).length;
+  const wrongCount = listOfQuestions.filter(q => q.negative === 1).length;
+
+  const topicStats = listOfQuestions.reduce<Record<string, TopicStats>>((acc, question) => {
+    if (!question.name) return acc;
+    
+    if (!acc[question.name]) {
+      acc[question.name] = {
+        total: 0,
+        wrong: 0,
+        flagged: 0
+      };
+    }
+    
+    acc[question.name].total += 1;
+    if (question.negative === 1) acc[question.name].wrong += 1;
+    if (question.negative === 0 && question.positive === 0) acc[question.name].flagged += 1;
+    
+    return acc;
+  }, {});
+
+  const sortedTopics = Object.entries(topicStats)
+    .sort((a, b) => b[1].total - a[1].total)
+    .slice(0, 3);
+
+  return (
+    <div className="animate-fadeIn h-full p-6 flex flex-col">
+      <div className="flex flex-col md:flex-row gap-6 mb-6">
+        <div className="w-full md:w-[12rem] h-[12rem] bg-[--theme-leaguecard-color] rounded-2xl shadow-xl overflow-hidden relative">
+          <button
+            onClick={onBack}
+            className="absolute top-3 left-3 p-2 hover:bg-[--theme-hover-color] rounded-full transition-all duration-200 hover:scale-105"
+          >
+            <ArrowLeft className="h-5 w-5 text-[--theme-text-color]" />
+          </button>
+
+          <div className="h-full flex flex-col items-center justify-center space-y-2">
+            <span className="text-sm uppercase tracking-wide opacity-60">{section.name}</span>
+            <span className="text-6xl font-bold">{section.score}</span>
+          </div>
+        </div>
+
+        <div className="flex-grow bg-[--theme-leaguecard-color] shadow-xl rounded-2xl p-5">
+          <div className="flex gap-4 h-full">
+            <div className="flex-grow flex flex-col">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs uppercase tracking-wide opacity-60">Kalypso&apos;s Analysis</span>
+                {listOfQuestions.length > 0 && (
+                  <button
+                    onClick={generateAnalysis}
+                    disabled={isGeneratingAnalysis}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs bg-[--theme-leaguecard-accent] hover:bg-[--theme-hover-color] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${isGeneratingAnalysis ? 'animate-spin' : ''}`} />
+                    <span>{analysis ? 'Regenerate' : 'Generate'} Analysis</span>
+                  </button>
+                )}
+              </div>
+              <div className="flex-grow flex items-center justify-center text-sm">
+                <div className="max-h-[8rem] overflow-y-auto">
+                  {isGeneratingAnalysis ? (
+                    <div className="opacity-50">Analyzing your performance...</div>
+                  ) : analysis ? (
+                    <div className="text-sm leading-relaxed whitespace-pre-line max-h-[100px] max-w-[660px] overflow-y-auto">{analysis}</div>
+                  ) : listOfQuestions.length === 0 ? (
+                    <div className="opacity-50">Add questions to generate an analysis</div>
+                  ) : (
+                    <div className="opacity-50">Click generate to analyze your performance</div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="w-48 border-l border-[--theme-border-color] pl-4">
+              <span className="text-xs uppercase tracking-wide opacity-60">Key Topics</span>
+              <div className="space-y-2 mt-2">
+                {sortedTopics.map(([topic, stats]) => (
+                  <div key={topic} className="text-sm">
+                    <div className="flex items-center justify-between">
+                      <span>{topic}</span>
+                      <span className="text-red-500">{stats.wrong}/{stats.total}</span>
+                    </div>
+                    <div className="w-full bg-[--theme-leaguecard-accent] h-1.5 rounded-full mt-1">
+                      <div 
+                        className="bg-red-500 h-full rounded-full"
+                        style={{ width: `${(stats.wrong / stats.total) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0">
+        <div className="bg-[--theme-leaguecard-color] p-6 rounded-2xl shadow-xl h-full flex flex-col">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-6">              
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[--theme-leaguecard-accent]/50">
+                  <XCircle className="h-4 w-4 text-red-500" />
+                  <span className="text-sm">{wrongCount} Wrong</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[--theme-leaguecard-accent]/50">
+                  <Flag className="h-4 w-4 text-yellow-500" />
+                  <span className="text-sm">{flaggedCount} Flagged</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleSectionComplete}
+                className={`px-4 py-2 rounded-full text-sm transition-all duration-300
+                  ${isCompleted 
+                    ? 'bg-green-500/20 text-green-500' 
+                    : 'bg-[--theme-leaguecard-accent] hover:bg-[--theme-hover-color]'
+                  }`}
+              >
+                {isCompleted ? 'Completed' : 'Mark Complete'}
+              </button>
+
+              <button
+                onClick={() => setIsAddingQuestion(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[--theme-leaguecard-accent] hover:bg-[--theme-hover-color] transition-all duration-200"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="text-sm">Add Question</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-y-auto flex-1 min-h-0">
+            <div className="grid grid-cols-12 gap-2">
+              {loading ? (
+                <div className="col-span-12 flex items-center justify-center py-8 text-sm opacity-70">
+                  Loading questions...
+                </div>
+              ) : error ? (
+                <div className="col-span-12 flex items-center justify-center py-8 text-sm text-red-500">
+                  Error loading questions. Please try again.
+                </div>
+              ) : listOfQuestions.length === 0 ? (
+                <div className="col-span-12 flex items-center justify-center py-8 text-sm opacity-70">
+                  {`No questions added yet. Click "Add Question" to get started.`}
+                </div>
+              ) : (
+                listOfQuestions.map((question) => (
+                  <div
+                    key={question.id}
+                    onClick={() => {
+                      setEditingQuestion(question);
+                      setIsAddingQuestion(true);
+                    }}
+                    className={`aspect-square rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 text-xs
+                      ${question.negative === 1 ? 'bg-red-500/20 text-red-500' : ''}
+                      ${question.negative === 0 && question.positive === 0 ? 'bg-yellow-500/20 text-yellow-500' : ''}
+                      ${question.negative === 0 && question.positive === 1 ? 'bg-green-500/20 text-green-500' : ''}
+                      hover:opacity-75
+                    `}
+                  >
+                    <span className="text-xs font-medium">{question.questionText}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <QuestionAddModal
+        isOpen={isAddingQuestion}
+        onClose={() => {
+          setIsAddingQuestion(false);
+          setEditingQuestion(undefined);
+        }}
+        examId={examId}
+        editingQuestion={editingQuestion}
+        sectionName={section.name}
+        createQuestion={createQuestion}
+        updateQuestion={updateQuestion}
+        onQuestionSaved={fetchQuestions}
+      />
+    </div>
+  );
+};
+
+export default SectionReview;

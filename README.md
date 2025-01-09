@@ -110,3 +110,12 @@ npx prisma generate
 ```
 
 in your terminal.
+
+
+
+# Testing Suite
+- When we generate our schedule, we create events of type "Exam" these are full length tests
+    - When generate these, we need to update how titles and activity test are set, title should be something like Full Length 1 and activity Text should be something like AAMC
+- When we Complete an exam activity, we create a new FullLengthExam record associated to it, 
+    - users should have to input their 4 scores for each section into it. For each one, we create a data pulse at that the Section level (cp, bb, ps, cars)
+    - Users can then add additional data pulses as questions to the tests (2nd PR)
