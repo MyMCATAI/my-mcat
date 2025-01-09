@@ -309,6 +309,7 @@ model FullLengthExam {
   dataPulses         DataPulse[]
   calendarActivityId String?            @unique
   calendarActivity   CalendarActivity?  @relation(fields: [calendarActivityId], references: [id])
+  completed          Boolean            @default(false)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
