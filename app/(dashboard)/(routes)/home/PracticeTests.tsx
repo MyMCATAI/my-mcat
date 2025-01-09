@@ -371,9 +371,9 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
   };
 
   return (
-    <div className={`flex flex-col ${className}`}>
+    <div className={`p-2 flex flex-col ${className}`}>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex flex-col h-[calc(100vh-7.0rem)]">
+        <div className="flex flex-col h-[calc(100vh-7.6rem)]">
           {examLoading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">Loading exam activities...</div>
@@ -402,7 +402,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
             </div>
           ) : (
             <div 
-              className="flex-grow h-[calc(100vh-7.0rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
+              className="flex-grow h-[calc(100vh-7.6rem)] w-full rounded-[10px] p-2 flex flex-col relative overflow-hidden"
               style={{
                 backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
                 backgroundSize: "cover",
@@ -414,10 +414,10 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
               }}
             >
               <div className="h-full">
-                <div className="bg-transparent rounded-xl p-4 sm:p-6 lg:p-8 h-full overflow-hidden">
+                <div className="bg-transparent rounded-xl p-2 sm:p-6 lg:p-8 h-full overflow-visible">
                   <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full">
                     {/* Calendar Side */}
-                    <div className="flex flex-col h-full overflow-hidden">
+                    <div className="flex flex-col h-full overflow-visible">
                       <div className="flex-1 flex items-center justify-center">
                         <Calendar
                           localizer={localizer}

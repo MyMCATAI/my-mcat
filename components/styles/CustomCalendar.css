@@ -5,6 +5,7 @@
   border-radius: 1rem;
   border: 1px solid color-mix(in srgb, var(--theme-border-color) 15%, transparent);
   overflow: hidden;
+  box-shadow: 0 10px 13px -3px rgb(0 0 0 / 0.1), 0 6px 8px -4px rgb(0 0 0 / 0.2); /* This is equivalent to shadow-lg */
 }
 
 /* Header/Toolbar styles */
@@ -12,6 +13,8 @@
   padding: 1rem;
   background: color-mix(in srgb, var(--theme-leaguecard-color) 95%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--theme-border-color) 15%, transparent);
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
 }
 
 .custom-calendar .rbc-toolbar button {
@@ -40,7 +43,10 @@
 /* Month view styles */
 .custom-calendar .rbc-month-view {
   border: none;
-  background: transparent;
+  background: color-mix(in srgb, var(--theme-leaguecard-color) 90%, transparent);
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+  overflow: hidden;
 }
 
 .custom-calendar .rbc-month-header {
@@ -62,24 +68,24 @@
 }
 
 .custom-calendar .rbc-off-range-bg {
-  background: color-mix(in srgb, var(--theme-leaguecard-color) 97%, transparent);
+  background: color-mix(in srgb, var(--theme-mainbox-color) 80%, transparent) !important;
 }
 
 .custom-calendar .rbc-today {
-  background: color-mix(in srgb, var(--theme-hover-color) 15%, transparent);
+  background: color-mix(in srgb, var(--theme-leaguecard-accent) 50%, transparent) !important;
 }
 
 /* Event styles */
 .custom-calendar .rbc-event {
-  background-color: var(--theme-emphasis-color) !important;
+  background-color: var(--theme-leaguecard-accent) !important;
   border: none !important;
   border-radius: 0.25rem;
   padding: 0.5rem 0.75rem;
   min-height: 2.5rem;
   font-size: 0.75rem;
   font-weight: 500;
+  color: var(--theme-text-color) !important;
   transition: all 0.2s ease;
-  opacity: 0.9;
 }
 
 .custom-calendar .rbc-event:hover {
@@ -102,7 +108,7 @@
 
 /* Row styles */
 .custom-calendar .rbc-month-row {
-  border-top: 1px solid color-mix(in srgb, var(--theme-border-color) 10%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--theme-border-color) 8%, transparent);
 }
 
 .custom-calendar .rbc-row-content {
@@ -147,7 +153,7 @@
 
 /* Style the event content */
 .custom-calendar .rbc-event-content {
-  color: var(--theme-hover-text) !important;
+  color: var(--theme-text-c) !important;
 }
 
 /* Style the agenda view events */
@@ -163,5 +169,30 @@
 .custom-calendar .rbc-agenda-event-cell:hover {
   opacity: 0.9;
   color: var(--theme-hover-text);
+}
+
+/* Round the corners of the first and last week's cells */
+/* Top corners */
+.custom-calendar .rbc-month-row:first-child .rbc-day-bg:first-child {
+  border-top-left-radius: 0.75rem;
+}
+.custom-calendar .rbc-month-row:first-child .rbc-day-bg:last-child {
+  border-top-right-radius: 0.75rem;
+}
+
+/* Bottom corners */
+.custom-calendar .rbc-month-row:last-child .rbc-day-bg:first-child {
+  border-bottom-left-radius: 0.75rem;
+}
+.custom-calendar .rbc-month-row:last-child .rbc-day-bg:last-child {
+  border-bottom-right-radius: 0.75rem;
+}
+
+/* Round the corners of the header cells */
+.custom-calendar .rbc-header:first-child {
+  border-top-left-radius: 0.75rem;
+}
+.custom-calendar .rbc-header:last-child {
+  border-top-right-radius: 0.75rem;
 }
 

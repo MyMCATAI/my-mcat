@@ -39,6 +39,8 @@ const groupCategories = (categories: any[]) => {
   return result;
 };
 
+const FORBIDDEN_WORDS = ['simple mistake', 'dumb', 'mistake', 'accident', 'easy', 'simple'];
+
 const QuestionAddModal: React.FC<QuestionAddModalProps> = ({ 
   isOpen, 
   onClose, 
@@ -64,6 +66,9 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
     questionText: '',
     answerText: ''
   });
+
+  const [mistakeError, setMistakeError] = useState<string>('');
+  const [improvementError, setImprovementError] = useState<string>('');
 
   // Reset form when opening/closing or switching questions
   useEffect(() => {
@@ -99,6 +104,25 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
   }, [isOpen, editingQuestion, categories]);
 
   const handleSubmit = async () => {
+    if (question.mistake.length < 250) {
+      setMistakeError('Your mistake analysis must be at least 250 characters long.');
+      return;
+    }
+
+    if (question.improvement.length < 250) {
+      setImprovementError('Your improvement plan must be at least 250 characters long.');
+      return;
+    }
+
+    const hasForbiddenWord = FORBIDDEN_WORDS.some(word => 
+      question.mistake.toLowerCase().includes(word.toLowerCase())
+    );
+
+    if (hasForbiddenWord) {
+      setMistakeError('This is a cop-out answer to avoid thinking critically. No such thing as a simple mistake.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
@@ -144,6 +168,19 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
       ...prev,
       categoryId
     }));
+  };
+
+  const handleMistakeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value;
+    setQuestion(prev => ({ ...prev, mistake: newText }));
+    
+    // Clear error when typing
+    setMistakeError('');
+    
+    // Validate as they type (optional)
+    if (FORBIDDEN_WORDS.some(word => newText.toLowerCase().includes(word.toLowerCase()))) {
+      setMistakeError('This is a cop-out answer to avoid thinking critically. No such thing as a simple mistake.');
+    }
   };
 
   return (
@@ -234,7 +271,7 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
                 Question Text (Optional)
               </label>
               <CollapsibleTrigger className="hover:opacity-100 opacity-60 transition-opacity flex items-center [&[data-state=open]>svg]:rotate-90">
-                <ChevronRight className="h-4 w-4 ml-2 text-black transition-transform" />
+                <ChevronRight className="h-4 w-4 ml-2 text-[--theme-text-color] transition-transform" />
               </CollapsibleTrigger>
             </div>
             <CollapsibleContent>
@@ -253,7 +290,7 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
                 Answer (Optional)
               </label>
               <CollapsibleTrigger className="hover:opacity-100 opacity-60 transition-opacity flex items-center [&[data-state=open]>svg]:rotate-90">
-                <ChevronRight className="h-4 w-4 ml-2 text-black transition-transform" />
+                <ChevronRight className="h-4 w-4 ml-2 text-[--theme-text-color] transition-transform" />
               </CollapsibleTrigger>
             </div>
             <CollapsibleContent>
@@ -272,10 +309,20 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
             </label>
             <textarea
               value={question.mistake}
-              onChange={e => setQuestion(prev => ({ ...prev, mistake: e.target.value }))}
-              className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[8rem]"
-              placeholder="Why was I wrong? What was your logical error?"
+              onChange={handleMistakeChange}
+              className={`w-full p-2 rounded-lg border ${
+                mistakeError ? 'border-red-500' : 'border-[--theme-border-color]'
+              } bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[8rem]`}
+              placeholder="'My thought process that resulted in the wrong answer was...'"
             />
+            <div className="flex justify-between mt-1">
+              <span className={`text-sm ${question.mistake.length < 250 ? 'text-red-500' : 'text-green-500'}`}>
+                {question.mistake.length}/250 characters
+              </span>
+              {mistakeError && (
+                <span className="text-sm text-red-500">{mistakeError}</span>
+              )}
+            </div>
           </div>
 
           <div>
@@ -284,10 +331,23 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
             </label>
             <textarea
               value={question.improvement}
-              onChange={e => setQuestion(prev => ({ ...prev, improvement: e.target.value }))}
-              className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[8rem]"
-              placeholder="How could I be right? What would the correct approach have been?"
+              onChange={e => {
+                setQuestion(prev => ({ ...prev, improvement: e.target.value }));
+                setImprovementError('');
+              }}
+              className={`w-full p-2 rounded-lg border ${
+                improvementError ? 'border-red-500' : 'border-[--theme-border-color]'
+              } bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[8rem]`}
+              placeholder="If I could do this question again, I would approach it differently by..."
             />
+            <div className="flex justify-between mt-1">
+              <span className={`text-sm ${question.improvement.length < 250 ? 'text-red-500' : 'text-green-500'}`}>
+                {question.improvement.length}/250 characters
+              </span>
+              {improvementError && (
+                <span className="text-sm text-red-500">{improvementError}</span>
+              )}
+            </div>
           </div>
         </div>
 
