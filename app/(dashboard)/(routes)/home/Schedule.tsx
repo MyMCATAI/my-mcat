@@ -90,7 +90,8 @@ interface ScheduleProps {
 type Section =
   | "AdaptiveTutoringSuite"
   | "MCATGameAnkiClinic"
-  | "DailyCARsSuite";
+  | "DailyCARsSuite"
+  | "Tests";
 
 const Schedule: React.FC<ScheduleProps> = ({
   activities,
@@ -124,6 +125,8 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
   const [isCoinsLoading, setIsCoinsLoading] = useState(true);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [examScores, setExamScores] = useState<any[]>([]);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -140,6 +143,7 @@ const Schedule: React.FC<ScheduleProps> = ({
     AdaptiveTutoringSuite: "Adaptive Tutoring Suite",
     MCATGameAnkiClinic: "Anki Clinic",
     DailyCARsSuite: "MyMCAT Daily CARs",
+    Tests: "Tests",
   };
 
   const handleStartTutorialPart4 = () => {
