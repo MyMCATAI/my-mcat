@@ -158,7 +158,7 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
           }, { cp: 0, cars: 0, bb: 0, ps: 0 });
 
           const scoreText = resource.status === "Completed" && scoreInfo
-            ? ` - Score: ${Object.values(scoreInfo).reduce((sum: number, score: number) => sum + score, 0)} (${scoreInfo.cp}/${scoreInfo.cars}/${scoreInfo.bb}/${scoreInfo.ps})`
+            ? ` - Score: ${Object.values(scoreInfo as Record<string, number>).reduce((sum: number, score: number) => sum + score, 0)} (${scoreInfo.cp}/${scoreInfo.cars}/${scoreInfo.bb}/${scoreInfo.ps})`
             : '';
 
           return `Practice Exam: ${resource.activityTitle} (${resource.activityText}, ${resource.hours}h, ${resource.status}${scoreText})`;
