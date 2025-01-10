@@ -272,7 +272,7 @@ const Page = () => {
         content = <FlashcardDeck />;
         break;
       case "Tests":
-        content = <PracticeTests handleSetTab={handleTabChange} />;
+        content = <PracticeTests handleSetTab={handleTabChange} chatbotRef={chatbotRef} />;
         break;
       default:
         content = null;
