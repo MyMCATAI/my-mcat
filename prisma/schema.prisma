@@ -305,16 +305,16 @@ model DataPulse {
 }
 
 model FullLengthExam {
-  id                 String             @id @default(cuid())
+  id                 String           @id @default(cuid())
   userId             String
   title              String
+  aiResponse         String?         @db.Text
+  calendarActivityId String?         @unique
+  completed          Boolean         @default(false)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
   dataPulses         DataPulse[]
-  aiResponse            String?            @db.Text
-  calendarActivityId String?            @unique
-  calendarActivity   CalendarActivity?  @relation(fields: [calendarActivityId], references: [id])
-  completed          Boolean            @default(false)
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  calendarActivity   CalendarActivity? @relation(fields: [calendarActivityId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([calendarActivityId])
