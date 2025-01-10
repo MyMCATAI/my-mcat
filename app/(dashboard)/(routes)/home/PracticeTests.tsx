@@ -48,9 +48,11 @@ interface CalendarEvent {
 }
 
 interface PracticeTestsProps {
-  className?: string;
   handleSetTab?: (tab: string) => void;
-  onActivitiesUpdate?: () => void;
+  className?: string;
+  chatbotRef?: React.MutableRefObject<{
+    sendMessage: (message: string) => void;
+  }>;
 }
 
 interface Test {
@@ -100,9 +102,9 @@ const COMPANY_INFO = {
 } as const;
 
 const PracticeTests: React.FC<PracticeTestsProps> = ({ 
-  className,
-  handleSetTab,
-  onActivitiesUpdate
+  handleSetTab, 
+  className = "", 
+  chatbotRef 
 }) => {
   const { activities: examActivities, loading: examLoading, updateExamDate, createExamActivity, fetchExamActivities } = useExamActivities();
   const { activities: studyActivities, loading: studyLoading } = useStudyActivities();
@@ -370,8 +372,8 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
 
   const handleStudyPlanSaved = () => {
     setShowSettings(false);
-    if (onActivitiesUpdate) {
-      onActivitiesUpdate();
+    if (handleSetTab) {
+      handleSetTab('Tests');
     }
   };
 
@@ -427,8 +429,9 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                         <TestCalendar
                           events={calendarEvents}
                           date={date}
-                          onNavigate={handleNavigate}
+                          onNavigate={setDate}
                           onSelectEvent={handleSelectEvent}
+                          chatbotRef={chatbotRef}
                         />
                       </div>
                     </div>
