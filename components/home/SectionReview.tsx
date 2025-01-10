@@ -279,14 +279,14 @@ const SectionReview: React.FC<SectionReviewProps> = ({
                       setEditingQuestion(question);
                       setIsAddingQuestion(true);
                     }}
-                    className={`aspect-square rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 text-xs
+                    className={`aspect-square rounded-full flex items-center justify-center cursor-pointer transition-all duration-200
                       ${question.negative === 1 ? 'bg-red-500/20 text-red-500' : ''}
                       ${question.negative === 0 && question.positive === 0 ? 'bg-yellow-500/20 text-yellow-500' : ''}
                       ${question.negative === 0 && question.positive === 1 ? 'bg-green-500/20 text-green-500' : ''}
                       hover:opacity-75
                     `}
                   >
-                    <span className="text-xs font-medium">{question.questionText}</span>
+                    <span className="text-lg font-medium">{question.questionText}</span>
                   </div>
                 ))
               )}

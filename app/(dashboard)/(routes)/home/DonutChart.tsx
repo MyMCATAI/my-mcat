@@ -394,168 +394,111 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
     return themeColors[theme];
   };
 
-  const handleScoreChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setTargetScore(value);
-    
-    // Update the user metadata when target score changes
-    try {
-      await user?.update({
-        unsafeMetadata: {
-          ...user.unsafeMetadata,
-          targetScore: parseInt(value)
-        }
-      });
-    } catch (error) {
-      console.error("Error updating target score:", error);
-    }
-  };
-
-  // Calculate points away based on diagnostic score and target score
-  const getScoreMetrics = React.useMemo(() => {
-    const diagnosticScore = Number(user?.unsafeMetadata?.diagnosticScore) || 0;
-    const target = parseInt(targetScore);
-    
-    return {
-      pointsGained: 0, // We'll implement this later
-      pointsAway: target - diagnosticScore, 
-    };
-  }, [targetScore, user?.unsafeMetadata?.diagnosticScore]);
-
   return (
     <div className="w-full h-full flex flex-col p-3 md:p-4 lg:p-6">
       <h2 className="text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center">
         {user?.firstName || 'Student'}&apos;s MCAT Progress
       </h2>
 
-      <div className="flex flex-col lg:flex-row gap-3 lg:gap-6 h-[calc(100%-4rem)]">
-        {/* Target Score Input */}
-        <div className="flex flex-col items-center justify-center p-4 bg-[--theme-leaguecard-color] rounded-lg shadow-lg">
-          <h2 className="text-[2vh] font-medium text-[--theme-text-color] opacity-80">{"I Want A"}</h2>
-          <div className="flex items-center justify-center gap-[0.5vh] mb-[0.5vh]">
-            <input
-              type="text"
-              value={targetScore}
-              onChange={handleScoreChange}
-              className="w-[15vh] text-center text-[5vh] font-bold bg-transparent border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 text-[--theme-text-color]"
-              maxLength={3}
-            />
-          </div>
-          <div className="flex flex-col gap-[0.25vh]">
-            <p className="text-[2vh] text-[--theme-hover-color]">
-              {getScoreMetrics.pointsGained} points gained
-            </p>
-            <p className="text-[2vh] text-[--theme-text-color]">
-              {getScoreMetrics.pointsAway} points away
-            </p>
-            {daysUntilExam !== null && (
-              <p className="text-[2vh] text-[--theme-text-color]">
-                {daysUntilExam} {daysUntilExam === 1 ? "day" : "days"} left
-              </p>
-            )}
-          </div>
-        </div>
-
+      <div className="flex flex-col lg:flex-row gap-3 lg:gap-6 h-[calc(100%-1rem)]">
         {/* Chart Container */}
-        <div className="relative flex-1 h-[35vh] lg:h-full min-h-[250px] rounded-xl p-4" 
+        <div className="relative flex-1 rounded-xl p-4" 
           style={{
             background: 'linear-gradient(135deg, var(--theme-leaguecard-color) 0%, var(--theme-leaguecard-accent) 100%)',
             boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
           }}>
           {chartData ? (
-            <>
-              <Chart 
-                type="bar"
-                data={{
-                  labels: chartData.labels,
-                  datasets: [
-                    {
-                      type: 'bar',
-                      data: chartData.datasets[0].data,
-                      backgroundColor: getThemeColor(),
-                      hoverBackgroundColor: getThemeColor(),
-                      borderRadius: 5,
-                      barThickness: 30,
+            <Chart 
+              type="bar"
+              data={{
+                labels: chartData.labels,
+                datasets: [
+                  {
+                    type: 'bar',
+                    data: chartData.datasets[0].data,
+                    backgroundColor: getThemeColor(),
+                    hoverBackgroundColor: getThemeColor(),
+                    borderRadius: 5,
+                    barThickness: 30,
+                  },
+                  {
+                    type: 'line',
+                    label: 'Target Score',
+                    data: Array(chartData.labels.length).fill(parseInt(targetScore)),
+                    borderColor: 'rgba(255, 99, 132, 0.8)',
+                    borderWidth: 1.5,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false,
+                  }
+                ]
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    display: false,
+                  },
+                  datalabels: {
+                    color: getThemeColor(),
+                    anchor: 'end',
+                    align: 'top',
+                    offset: 8,
+                    font: {
+                      weight: 'bold',
+                      size: 18
                     },
-                    {
-                      type: 'line',
-                      label: 'Target Score',
-                      data: Array(chartData.labels.length).fill(parseInt(targetScore)),
-                      borderColor: 'rgba(255, 255, 255, 0.8)',
-                      borderWidth: 2,
-                      borderDash: [5, 5],
-                      pointRadius: 0,
-                      fill: false,
+                    formatter: (value: number, context: any) => {
+                      // Only show labels for bar dataset
+                      if (context.datasetIndex === 0) {
+                        return value.toString();
+                      }
+                      return '';
                     }
-                  ]
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
+                  }
+                },
+                scales: {
+                  x: {
+                    grid: {
                       display: false,
                     },
-                    datalabels: {
-                      color: getThemeColor(),
-                      anchor: 'end',
-                      align: 'top',
-                      offset: 8,
-                      font: {
-                        weight: 'bold',
-                        size: 18
-                      },
-                      formatter: (value: number, context: any) => {
-                        // Only show labels for bar dataset
-                        if (context.datasetIndex === 0) {
-                          return value.toString();
-                        }
-                        return '';
-                      }
-                    }
-                  },
-                  scales: {
-                    x: {
-                      grid: {
-                        display: false,
-                      },
-                      border: {
-                        display: false,
-                      },
-                      ticks: {
-                        color: getThemeColor(),
-                        font: {
-                          size: 12,
-                          weight: 'bold'
-                        }
-                      }
+                    border: {
+                      display: false,
                     },
-                    y: {
-                      min: 472,
-                      max: 528,
-                      grid: {
-                        color: `${getThemeColor()}4D`,
-                        display: true,
-                        lineWidth: 0.5
-                      },
-                      border: {
-                        display: false,
-                      },
-                      ticks: {
-                        color: getThemeColor(),
-                        font: {
-                          size: 12,
-                          weight: 'bold'
-                        },
-                        callback: function(value) {
-                          return value.toString();
-                        }
+                    ticks: {
+                      color: getThemeColor(),
+                      font: {
+                        size: 12,
+                        weight: 'bold'
                       }
                     }
                   },
-                }}
-              />
-            </>
+                  y: {
+                    min: 472,
+                    max: 528,
+                    grid: {
+                      color: `${getThemeColor()}4D`,
+                      display: true,
+                      lineWidth: 0.5
+                    },
+                    border: {
+                      display: false,
+                    },
+                    ticks: {
+                      color: getThemeColor(),
+                      font: {
+                        size: 12,
+                        weight: 'bold'
+                      },
+                      callback: function(value) {
+                        return value.toString();
+                      }
+                    }
+                  }
+                },
+              }}
+            />
           ) : (
             <div className="flex items-center justify-center h-full text-white opacity-70">
               No exam scores available yet
@@ -564,7 +507,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
         </div>
 
         {/* Subject Buttons */}
-        <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 lg:w-40">
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-5 lg:w-40">
           {labels.map((label) => {
             const avgScore = sectionAverages[label];
             return (

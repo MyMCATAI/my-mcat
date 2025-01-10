@@ -14,6 +14,7 @@ import { useExamActivities } from '@/hooks/useCalendarActivities';
 interface DeleteExamDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onDelete: (testId: string) => void;
   testId?: string;
   testName?: string;
 }
@@ -21,6 +22,7 @@ interface DeleteExamDialogProps {
 const DeleteExamDialog: React.FC<DeleteExamDialogProps> = ({
   isOpen,
   onClose,
+  onDelete,
   testId,
   testName
 }) => {
@@ -38,10 +40,11 @@ const DeleteExamDialog: React.FC<DeleteExamDialogProps> = ({
         setActivities(activities.filter(activity => activity.id !== testId));
       }
       
+      onDelete(testId);
       onClose();
     } catch (error) {
-      console.error('Failed to delete test:', error);
-      // You might want to show an error toast here
+      console.error('Failed to delete exam:', error);
+      throw error;
     } finally {
       setIsDeleting(false);
     }

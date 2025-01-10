@@ -5,6 +5,8 @@ import { X, Check, Loader2, ArrowRight, ArrowLeft, Calendar as CalendarIcon, Cof
 import { Button } from "@/components/ui/button";
 import Calendar from "@/components/ui/calendar";
 import "react-day-picker/dist/style.css";
+import { useExamActivities, CalendarActivity } from "@/hooks/useCalendarActivities";
+import DatePickerDialog from "@/components/DatePickerDialog";
 
 interface WeeklyCalendarModalProps {
   onComplete?: (result: { success: boolean; action?: 'generate' | 'save' }) => void;
@@ -96,6 +98,10 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
   const [testDate, setTestDate] = useState<Date | null>(new Date('2024-01-24'));
   const [weeklyHours, setWeeklyHours] = useState<Record<string, string>>({});
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date()));
+  const [allWeeksHours, setAllWeeksHours] = useState<Record<string, Record<string, string>>>({});
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
+  const { activities: examActivities, loading: examLoading, error: examError, updateExamDate } = useExamActivities();
   const [resources, setResources] = useState<Resource[]>([
     { id: 'uworld', name: 'UWorld', selected: false },
     { id: 'aamc', name: 'AAMC', selected: false },
@@ -130,15 +136,116 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
     "Almost there...",
   ];
 
-  const simulateScheduleGeneration = async () => {
-    setIsGenerating(true);
-    for (const message of messages) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setLoadingMessages(prev => [...prev, message]);
+  // Function to get week identifier
+  const getWeekIdentifier = (date: Date) => {
+    return format(startOfWeek(date), 'yyyy-MM-dd');
+  };
+
+  // Add state synchronization
+  useEffect(() => {
+    const weekId = getWeekIdentifier(currentWeekStart);
+    if (allWeeksHours[weekId]) {
+      setWeeklyHours(allWeeksHours[weekId]);
+    } else {
+      setWeeklyHours({}); // Reset when switching to a new week
     }
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    if (onComplete) {
-      onComplete({ success: true });
+  }, [currentWeekStart, allWeeksHours]);
+
+  // Load hours for current week
+  useEffect(() => {
+    const weekId = getWeekIdentifier(currentWeekStart);
+    if (allWeeksHours[weekId]) {
+      setWeeklyHours(allWeeksHours[weekId]);
+    } else {
+      setWeeklyHours({});
+    }
+  }, [currentWeekStart, allWeeksHours]);
+
+  // Handle week navigation
+  const handleNextWeek = () => {
+    // Save current week's hours
+    const currentWeekId = getWeekIdentifier(currentWeekStart);
+    setAllWeeksHours(prev => ({
+      ...prev,
+      [currentWeekId]: weeklyHours
+    }));
+    
+    // Move to next week
+    setCurrentWeekStart(addDays(currentWeekStart, 7));
+  };
+
+  // Handle setting hours for all weeks until test date
+  const handleSetForAllWeeks = () => {
+    if (!testDate) return;
+    
+    const newAllWeeksHours: Record<string, Record<string, string>> = {};
+    let currentDate = currentWeekStart;
+    
+    while (currentDate <= testDate) {
+      const weekId = getWeekIdentifier(currentDate);
+      newAllWeeksHours[weekId] = { ...weeklyHours };  // Create a deep copy
+      currentDate = addDays(currentDate, 7);
+    }
+    
+    setAllWeeksHours(newAllWeeksHours);
+  };
+
+  const handleHoursChange = (day: string, hours: string) => {
+    const newHours = {
+      ...weeklyHours,
+      [day]: hours
+    };
+    setWeeklyHours(newHours);
+    
+    // If this is initial setup, also update all future weeks
+    if (isInitialSetup) {
+      handleSetForAllWeeks();
+    }
+  };
+
+  // Generate tasks when completing the schedule
+  const handleScheduleComplete = async () => {
+    if (!testDate) return;
+    
+    const nextExam = getNextExam();
+    if (!nextExam) {
+      alert('Please schedule an exam first');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/generate-tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          examDate: testDate,
+          resources: {
+            uworld: resources.find(r => r.id === 'uworld')?.selected || false,
+            aamc: resources.find(r => r.id === 'aamc')?.selected || false,
+            adaptive: resources.find(r => r.id === 'adaptive')?.selected || false,
+            ankigame: resources.find(r => r.id === 'ankigame')?.selected || false,
+          },
+          hoursPerDay: weeklyHours,
+          selectedBalance,
+          startDate: currentWeekStart,
+          endDate: nextExam.scheduledDate,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate schedule');
+      }
+
+      setCurrentWeekStart(addDays(new Date(nextExam.scheduledDate), 1));
+
+      if (onComplete) {
+        onComplete({ success: true, action: 'generate' });
+      }
+    } catch (error) {
+      alert('Failed to create schedule. Please try again.');
+      setCurrentStep(4); // Return to previous step on failure
     }
   };
 
@@ -183,16 +290,43 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
     return `${examDescriptions[nextExam.examName]}\n\nYour next exam (${nextExam.examName}) is scheduled for ${format(nextExam.date, 'MMMM do, yyyy')}.`;
   };
 
-  const handleHoursChange = (day: string, hours: string) => {
-    setWeeklyHours(prev => ({
-      ...prev,
-      [day]: hours
-    }));
+  const getNextExam = () => {
+    if (!examActivities) return null;
+    
+    const now = new Date();
+    return examActivities
+      .filter((activity: CalendarActivity) => new Date(activity.scheduledDate) > now)
+      .sort((a: CalendarActivity, b: CalendarActivity) => 
+        new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime()
+      )[0];
+  };
+
+  const handleDateSelect = async (date: Date) => {
+    if (selectedExamId) {
+      if (date < new Date()) {
+        alert("Cannot schedule exams in the past");
+        return;
+      }
+      
+      try {
+        await updateExamDate(selectedExamId, date);
+        setDatePickerOpen(false);
+        setSelectedExamId(null);
+      } catch (error) {
+        alert('Failed to update exam date');
+      }
+    }
+  };
+
+  const handleOpenDatePicker = (examId: string) => {
+    setSelectedExamId(examId);
+    setDatePickerOpen(true);
   };
 
   const renderStep = () => {
     switch (currentStep) {
       case 0:
+        const nextExam = getNextExam();
         return (
           <motion.div
             initial={{ opacity: 0 }}
@@ -200,22 +334,30 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
             className="space-y-6"
           >
             <div className="text-center">
-              <p className="text-lg text-[--theme-text-color] mb-6 whitespace-pre-line max-w-2xl mx-auto">
-                {getTestDateDescription()}
-              </p>
-              
-              <div className="flex flex-col items-center justify-center space-y-4">
-                <div className="text-[--theme-text-color] opacity-70 text-sm">
-                  Click to change your test date:
-                </div>
-                <div className="relative w-fit">
-                  <Calendar
-                    mode="single"
-                    selected={testDate}
-                    onSelect={(date) => setTestDate(date)}
-                    className="rounded-md border-2 border-[--theme-border-color]"
-                  />
-                </div>
+              <div className="bg-[--theme-leaguecard-color] rounded-xl p-6 mb-6 max-w-3xl mx-auto">
+                {nextExam ? (
+                  <>
+                    <p className="text-lg text-[--theme-text-color] mb-6 whitespace-pre-line">
+                      {examDescriptions[nextExam.activityTitle as ExamName] || ""}
+                    </p>
+                    <div className="flex flex-col items-center gap-4 mt-6 pt-6 border-t border-[--theme-border-color]">
+                      <div className="text-[--theme-text-color] text-lg">
+                        Your next exam ({nextExam.activityTitle}) is scheduled for {format(new Date(nextExam.scheduledDate), 'MMMM do, yyyy')}
+                      </div>
+                      <button
+                        onClick={() => handleOpenDatePicker(nextExam.id)}
+                        className="px-4 py-2 bg-[--theme-hover-color] text-[--theme-hover-text] rounded-lg hover:opacity-80 transition-opacity flex items-center gap-2"
+                      >
+                        <CalendarIcon className="w-4 h-4" />
+                        Change Exam Date
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-lg text-[--theme-text-color]">
+                    No upcoming exams scheduled.
+                  </p>
+                )}
               </div>
             </div>
           </motion.div>
@@ -229,6 +371,11 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
               <p className="text-[--theme-text-color] opacity-70">
                 Enter your available study hours for each day. Click the coffee icon for that day off.
               </p>
+              {getNextExam() && (
+                <p className="mt-2 text-[--theme-emphasis-color]">
+                  Scheduling until {format(new Date(getNextExam()!.scheduledDate), 'MMMM do')} - {getNextExam()!.activityTitle}
+                </p>
+              )}
             </div>
 
             <motion.div
@@ -285,15 +432,15 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
             <div className="flex justify-center gap-4">
               <Button 
                 variant="outline"
-                className="text-[--theme-text-color] border-[--theme-border-color]"
-                onClick={() => {/* handle keep consistent */}}
+                className="bg-[--theme-button-color] text-[--theme-text-color] border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors shadow-[--theme-button-boxShadow] hover:shadow-[--theme-button-boxShadow-hover]"
+                onClick={handleSetForAllWeeks}
               >
                 Set for All Weeks
               </Button>
               <Button 
                 variant="outline"
-                className="text-[--theme-text-color] border-[--theme-border-color]"
-                onClick={() => {/* handle next week */}}
+                className="bg-[--theme-button-color] text-[--theme-text-color] border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors shadow-[--theme-button-boxShadow] hover:shadow-[--theme-button-boxShadow-hover]"
+                onClick={handleNextWeek}
               >
                 Go to Next Week
               </Button>
@@ -470,95 +617,117 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
     }
   };
 
+  // Add persistence for weekly hours
+  useEffect(() => {
+    // Save to localStorage or backend whenever allWeeksHours changes
+    if (Object.keys(allWeeksHours).length > 0) {
+      localStorage.setItem('studySchedule', JSON.stringify(allWeeksHours));
+      // Or save to backend
+      // await saveStudySchedule(allWeeksHours);
+    }
+  }, [allWeeksHours]);
+
   return (
-    <div className="bg-[--theme-mainbox-color] w-full h-[50rem] flex flex-col rounded-lg">
-      {/* Progress Steps */}
-      <div className="flex items-center justify-center px-8 py-6 border-b border-[--theme-border-color]">
-        <div className="flex items-center space-x-4">
-          {steps.map((step, index) => (
-            <React.Fragment key={index}>
-              <div 
-                className={`flex flex-col items-center ${
-                  index === currentStep ? 'opacity-100' : 'opacity-50'
-                }`}
-              >
-                <div className={`
-                  w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold
-                  transition-all duration-200
-                  ${index === currentStep 
-                    ? 'bg-[--theme-hover-color] text-[--theme-hover-text]' 
-                    : 'bg-[--theme-leaguecard-color] text-[--theme-text-color]'
-                  }
-                `}>
-                  {index + 1}
+    <>
+      <div className="bg-[--theme-mainbox-color] w-full h-[90vh] flex flex-col rounded-lg">
+        {/* Progress Steps */}
+        <div className="flex items-center justify-center px-8 py-6 border-b border-[--theme-border-color]">
+          <div className="flex items-center space-x-4">
+            {steps.map((step, index) => (
+              <React.Fragment key={index}>
+                <div 
+                  className={`flex flex-col items-center ${
+                    index === currentStep ? 'opacity-100' : 'opacity-50'
+                  }`}
+                >
+                  <div className={`
+                    w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold
+                    transition-all duration-200
+                    ${index === currentStep 
+                      ? 'bg-[--theme-hover-color] text-[--theme-hover-text]' 
+                      : 'bg-[--theme-leaguecard-color] text-[--theme-text-color]'
+                    }
+                  `}>
+                    {index + 1}
+                  </div>
+                  <div className="text-center mt-2">
+                    <div className="text-sm font-medium text-[--theme-text-color]">{step.title}</div>
+                    <div className="text-xs text-[--theme-text-color] opacity-70">{step.subtitle}</div>
+                  </div>
                 </div>
-                <div className="text-center mt-2">
-                  <div className="text-sm font-medium text-[--theme-text-color]">{step.title}</div>
-                  <div className="text-xs text-[--theme-text-color] opacity-70">{step.subtitle}</div>
-                </div>
-              </div>
-              {index < steps.length - 1 && (
-                <div className="w-16 h-[2px] bg-[--theme-border-color]" />
-              )}
-            </React.Fragment>
-          ))}
+                {index < steps.length - 1 && (
+                  <div className="w-16 h-[2px] bg-[--theme-border-color]" />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto p-8">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="h-full flex flex-col"
-          >
-            {renderStep()}
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      {/* Navigation */}
-      {currentStep < 5 && (
-        <div className="border-t border-[--theme-border-color] p-6 flex justify-between items-center">
-          <Button
-            onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-            disabled={currentStep === 0}
-            variant="outline"
-            className="text-[--theme-text-color]"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Previous
-          </Button>
-          <Button
-            onClick={() => {
-              if (currentStep === 4) {
-                setCurrentStep(5);
-                simulateScheduleGeneration();
-              } else {
-                setCurrentStep(currentStep + 1);
-              }
-            }}
-            className="bg-[--theme-hover-color] text-[--theme-hover-text] hover:bg-[--theme-hover-color] hover:opacity-80 transition-opacity"
-          >
-            {currentStep === 4 ? 'Create Schedule' : 'Next'}
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto p-8">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="h-full flex flex-col"
+            >
+              {renderStep()}
+            </motion.div>
+          </AnimatePresence>
         </div>
-      )}
 
-      {/* Close Button */}
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="absolute top-6 right-6 text-[--theme-text-color] hover:opacity-70 transition-opacity"
-        >
-          <X className="w-6 h-6" />
-        </button>
-      )}
-    </div>
+        {/* Navigation */}
+        {currentStep < 5 && (
+          <div className="border-t border-[--theme-border-color] p-6 flex justify-between items-center">
+            <Button
+              onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+              disabled={currentStep === 0}
+              variant="outline"
+              className="text-[--theme-text-color]"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Previous
+            </Button>
+            <Button
+              onClick={() => {
+                if (currentStep === 4) {
+                  setCurrentStep(5);
+                  handleScheduleComplete();
+                } else {
+                  setCurrentStep(currentStep + 1);
+                }
+              }}
+              className="bg-[--theme-hover-color] text-[--theme-hover-text] hover:bg-[--theme-hover-color] hover:opacity-80 transition-opacity"
+            >
+              {currentStep === 4 ? 'Create Schedule' : 'Next'}
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        )}
+
+        {/* Close Button */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-6 right-6 text-[--theme-text-color] hover:opacity-70 transition-opacity"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        )}
+      </div>
+      <DatePickerDialog
+        isOpen={datePickerOpen}
+        onClose={() => {
+          setDatePickerOpen(false);
+          setSelectedExamId(null);
+        }}
+        onDateSelect={handleDateSelect}
+        currentDate={selectedExamId && examActivities ? new Date(examActivities.find(a => a.id === selectedExamId)?.scheduledDate || '') : undefined}
+        testName={selectedExamId && examActivities ? examActivities.find(a => a.id === selectedExamId)?.activityTitle : undefined}
+      />
+    </>
   );
 };
 
