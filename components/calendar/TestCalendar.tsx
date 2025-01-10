@@ -158,7 +158,7 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
           }, { cp: 0, cars: 0, bb: 0, ps: 0 });
 
           const scoreText = resource.status === "Completed" && scoreInfo
-            ? ` - Score: ${Object.values(scoreInfo as Record<string, number>).reduce((sum, score) => sum + score, 0)} (${scoreInfo.cp}/${scoreInfo.cars}/${scoreInfo.bb}/${scoreInfo.ps})`
+            ? ` - Score: ${Object.values(scoreInfo).reduce((sum: number, score: number) => sum + score, 0)} (${scoreInfo.cp}/${scoreInfo.cars}/${scoreInfo.bb}/${scoreInfo.ps})`
             : '';
 
           return `Practice Exam: ${resource.activityTitle} (${resource.activityText}, ${resource.hours}h, ${resource.status}${scoreText})`;
@@ -201,9 +201,10 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
   // Custom event styling based on event type
   const eventStyleGetter = (event: CalendarEvent) => {
     const isExam = event.resource?.eventType === 'exam';
+    const isMCATExam = event.title === 'MCAT Exam';
     
     return {
-      className: `calendar-event ${isExam ? 'exam-event' : 'study-event'}`,
+      className: `calendar-event ${isMCATExam ? 'mcat-exam-event' : isExam ? 'exam-event' : 'study-event'}`,
       style: {
         backgroundColor: isExam ? 'var(--theme-emphasis-color)' : 'var(--theme-hover-color)',
       }

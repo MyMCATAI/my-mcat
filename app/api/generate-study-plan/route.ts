@@ -130,7 +130,6 @@ export async function POST(req: Request) {
     const body = await req.json();
     const {
       examDate,
-      resources,
       hoursPerDay,
       fullLengthDays,
     } = body;
@@ -156,28 +155,39 @@ export async function POST(req: Request) {
       },
       update: {
         examDate: new Date(examDate),
-        resources,
         hoursPerDay,
         fullLengthDays,
+        resources: {
+          hasAAMC: true,
+          hasUWorld: false,
+          hasAdaptiveTutoringSuite: false,
+          hasAnki: false,
+          hasThirdPartyFLs: false
+        }
       },
       create: {
         userId,
         examDate: new Date(examDate),
-        resources,
         hoursPerDay,
         fullLengthDays,
+        resources: {
+          hasAAMC: true,
+          hasUWorld: false,
+          hasAdaptiveTutoringSuite: false,
+          hasAnki: false,
+          hasThirdPartyFLs: false
+        }
       },
     });
 
-    // Generate schedule
+    // Generate exam schedule
     const activities = await generateStudySchedule(
       {
         ...studyPlan,
-        resources: resources as Resources,
+        resources: studyPlan.resources as unknown as Resources,
         hoursPerDay: hoursPerDay as { [key: string]: string },
         fullLengthDays: fullLengthDays as string[]
       },
-      resources as Resources,
       hoursPerDay,
       fullLengthDays as string[],
       new Date()
@@ -202,7 +212,6 @@ export async function POST(req: Request) {
 
 async function generateStudySchedule(
   studyPlan: StudyPlan,
-  resources: Resources,
   hoursPerDay: { [key: string]: string },
   fullLengthDays: string[],
   startDate: Date
@@ -218,12 +227,12 @@ async function generateStudySchedule(
   examDate.setHours(0, 0, 0, 0);
 
   const availableExams = [
-    "AAMC Unscored Sample",  // Always first
-    "AAMC Full Length Exam 1",
-    "AAMC Full Length Exam 2",
-    "AAMC Full Length Exam 3",
-    "AAMC Full Length Exam 4",
-    "AAMC Sample Scored (FL5)"  // Always last
+    "Unscored Sample",  // Always first
+    "Full Length Exam 1",
+    "Full Length Exam 2",
+    "Full Length Exam 3",
+    "Full Length Exam 4",
+    "Sample Scored (FL5)"  // Always last
   ];
 
   // Helper function to get all valid exam dates between two dates
@@ -284,10 +293,10 @@ async function generateStudySchedule(
     // Calculate ideal spacing for remaining exams
     const totalDays = Math.floor((lastExamDate.getTime() - firstExamDate.getTime()) / (1000 * 60 * 60 * 24));
     const remainingExams = [
-      "AAMC Full Length Exam 1",
-      "AAMC Full Length Exam 2", 
-      "AAMC Full Length Exam 3", 
-      "AAMC Full Length Exam 4"
+      "Full Length Exam 1",
+      "Full Length Exam 2", 
+      "Full Length Exam 3", 
+      "Full Length Exam 4"
     ]; // Changed order to be sequential
 
     if (totalDays >= MINIMUM_DAYS_BETWEEN_EXAMS * 2) {
@@ -352,6 +361,23 @@ async function generateStudySchedule(
       date
     ));
   });
+
+  // Add the actual MCAT exam date
+  activities.push(createActivity(
+    studyPlan,
+    'MCAT Exam',
+    'Exam',
+    8,
+    examDate,
+    [
+      "Chemical and Physical Foundations section",
+      "CARS section",
+      "Biological and Biochemical Foundations section",
+      "Psychological, Social, and Biological Foundations section",
+      "Remember to bring your ID and arrive 30 minutes early",
+      "Good luck! You've got this! 🎉"
+    ]
+  ));
 
   return activities;
 }

@@ -8,11 +8,11 @@ const AuthLayout = ({
     children: React.ReactNode;
 }) => {
     const pathname = usePathname();
-    const isOnboarding = pathname?.includes('onboarding');
+    const isOnboardingOrExamCalendar = pathname?.includes('onboarding') || pathname?.includes('examcalendar');
     
     return (
         <div className="relative flex items-center justify-center min-h-screen">
-            {!isOnboarding && (
+            {!isOnboardingOrExamCalendar && (
                 <>
                     <div 
                         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-80"
@@ -21,7 +21,7 @@ const AuthLayout = ({
                     <div className="absolute inset-0 bg-black/40" />
                 </>
             )}
-            <div className={`relative z-10 ${isOnboarding ? 'w-full' : ''}`}>
+            <div className={`relative z-10 ${isOnboardingOrExamCalendar ? 'w-full' : ''}`}>
                 {children}
             </div>
         </div>
