@@ -967,13 +967,13 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   const handleNavigateToTutoring = () => {
     // Get the top 4 most missed categories
     const weakestCategories = Object.entries(mostMissed)
-      .slice(0, 4)
+      .slice(0, 5)
       .map(([concept]) => encodeURIComponent(concept));
 
     // Create the URL with the categories as a comma-separated list
     const url = `/home?tab=AdaptiveTutoringSuite&conceptCategories=${weakestCategories.join(',')}`;
 
-    // Use router.push instead of window.open
+    // Navigate to the tutoring page with the weak categories
     router.push(url);
   };
 
