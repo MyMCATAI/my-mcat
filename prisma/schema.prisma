@@ -8,6 +8,25 @@ datasource db {
   relationMode = "prisma"
 }
 
+// model UserInfo {
+//   id                     String   @id @default(cuid())
+//   userId                 String   @unique
+//   bio                    String
+//   updatedAt              DateTime @updatedAt
+//   apiCount               Int      @default(0)
+//   createdAt              DateTime @default(now())
+//   score                  Int      @default(0)
+//   clinicRooms            String   @default("")
+//   hasPaid                Boolean  @default(false)
+//   subscriptionType       String   @default("")
+//   diagnosticScores       Json?
+//   firstName              String?  @default("")
+//   streak                 Int      @default(0)
+//   notificationPreference String   @default("all")
+//   unlocks                Json?    @default("[]")
+//   patientRecord         PatientRecord?
+// }
+
 model UserInfo {
   id                     String   @id @default(cuid())
   userId                 String   @unique
@@ -24,7 +43,8 @@ model UserInfo {
   streak                 Int      @default(0)
   notificationPreference String   @default("all")
   unlocks                Json?    @default("[]")
-  patientRecord         PatientRecord?
+  patientRecord          PatientRecord?
+  hasSeenExamVideo       Boolean  @default(false) // New column
 }
 
 model UserSubscription {

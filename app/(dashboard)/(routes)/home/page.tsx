@@ -484,6 +484,12 @@ const Page = () => {
       setCurrentStudyActivityId(activity.id);
   };
 
+  useEffect(() => {
+    if (!isLoadingUserInfo && userInfo && !userInfo.hasSeenExamVideo) {
+      router.push('/examcalendar');
+    }
+  }, [isLoadingUserInfo, userInfo]);
+
   return (
     <>
       {(isLoading || isLoadingUserInfo) && <LoadingSpinner />}
