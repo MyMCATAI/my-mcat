@@ -246,6 +246,7 @@ const Page = () => {
             onActivitiesUpdate={() => {
               fetchActivities();
             }}
+            chatbotRef={chatbotRef}
           />
         );
         break;

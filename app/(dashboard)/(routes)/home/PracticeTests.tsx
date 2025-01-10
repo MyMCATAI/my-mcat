@@ -123,18 +123,33 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
   // Combine exam and study activities into calendar events
   useEffect(() => {
     if (examActivities && studyActivities) {
-      const examEvents = examActivities.map((activity) => ({
-        id: activity.id,
-        title: "EXAM",
-        start: new Date(activity.scheduledDate),
-        end: new Date(activity.scheduledDate),
-        allDay: true,
-        resource: { 
-          ...activity, 
-          eventType: 'exam',
-          fullTitle: activity.activityTitle
+      const examEvents = examActivities.map((activity) => {
+        // Map exam titles to shorter display names
+        let displayTitle = "EXAM";
+        if (activity.activityTitle === "MCAT Exam") {
+          displayTitle = "MCAT";
+        } else if (activity.activityTitle.includes("Unscored Sample")) {
+          displayTitle = "Unscored";
+        } else if (activity.activityTitle.includes("Full Length Exam")) {
+          const number = activity.activityTitle.match(/\d+/)?.[0];
+          displayTitle = `FL${number}`;
+        } else if (activity.activityTitle.includes("Sample Scored")) {
+          displayTitle = "Scored";
         }
-      }));
+
+        return {
+          id: activity.id,
+          title: displayTitle,
+          start: new Date(activity.scheduledDate),
+          end: new Date(activity.scheduledDate),
+          allDay: true,
+          resource: { 
+            ...activity, 
+            eventType: 'exam',
+            fullTitle: activity.activityTitle
+          }
+        };
+      });
 
       const studyEvents = studyActivities.map((activity) => ({
         id: activity.id,

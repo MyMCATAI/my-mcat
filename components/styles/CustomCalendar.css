@@ -59,11 +59,11 @@
 }
 
 .custom-calendar .rbc-off-range-bg {
-  background: color-mix(in srgb, var(--theme-mainbox-color) 80%, transparent) !important;
+  background: color-mix(in srgb, var(--theme-mainbox-color) 60%, transparent) !important;
 }
 
 .custom-calendar .rbc-today {
-  background: color-mix(in srgb, var(--theme-leaguecard-accent) 50%, transparent) !important;
+  background: color-mix(in srgb, var(--theme-leaguecard-accent) 80%, transparent) !important;
 }
 
 /* Event styles */
@@ -280,17 +280,63 @@
   box-shadow: var(--theme-button-boxShadow);
 }
 
-/* Exam event styles */
+/* Practice exam event styles */
 .custom-calendar .exam-event {
   opacity: 1;
   font-weight: 600;
   min-height: 2.25rem;
+  background-color: var(--theme-hover-color) !important;
+  color: var(--theme-hover-text) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
-.custom-calendar .exam-event:hover {
+.custom-calendar .exam-event .rbc-event-content {
+  color: var(--theme-hover-text) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* MCAT exam day special styling */
+.custom-calendar .mcat-exam-event {
   opacity: 1;
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: var(--theme-button-boxShadow-hover);
+  font-weight: 700;
+  min-height: 2.5rem !important;
+  background: linear-gradient(135deg, var(--theme-hover-color) 0%, var(--theme-emphasis-color) 100%) !important;
+  color: var(--theme-hover-text) !important;
+  border: 2px solid var(--theme-hover-color) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.custom-calendar .mcat-exam-event .rbc-event-content {
+  color: var(--theme-hover-text) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  font-weight: 800;
+}
+
+.custom-calendar .mcat-exam-event:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.custom-calendar .mcat-exam-event .rbc-event-content::before {
+  content: '🎯 MCAT';
+  margin-right: 0.5rem;
+  font-weight: 800;
 }
 
 /* Event content styles */
