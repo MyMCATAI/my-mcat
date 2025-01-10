@@ -35,7 +35,7 @@ interface TestCalendarProps {
   onNavigate: (date: Date) => void;
   onSelectEvent: (event: CalendarEvent) => void;
   chatbotRef?: React.MutableRefObject<{
-    sendMessage: (message: string) => void;
+    sendMessage: (message: string, messageContext?: string) => void;
   }>;
 }
 
@@ -181,7 +181,7 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
           : date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
 
         return `${dayLabel}:\n${formatEventsForDate(date)}`;
-      }).join("\n\n")}
+      }).join("\n\n")}x
     `.trim();
 
     return {
@@ -194,7 +194,9 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
   const handleSummarizeWeek = () => {
     const contextData = createCalendarContext();
     if (chatbotRef?.current) {
-      chatbotRef.current.sendMessage("Please summarize my test schedule for this week");
+      const visibleMessage = "Summarize my week";
+      const hiddenContext = `Here's my calendar context:\n\n${contextData.context}\n\nBased on this calendar, please provide a summary of my test schedule for this week. Include details about upcoming exams, their dates, and any completed exams.`;
+      chatbotRef.current.sendMessage(visibleMessage, hiddenContext);
     }
   };
 
