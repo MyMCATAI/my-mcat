@@ -19,7 +19,7 @@ interface ChatBotProps {
   backgroundColor?: string;
   avatar?: string;
   chatbotRef?: React.MutableRefObject<{
-    sendMessage: (message: string) => void;
+    sendMessage: (message: string, messageContext?: string) => void;
   }>;
 }
 
@@ -49,13 +49,13 @@ const ChatBot: React.FC<ChatBotProps> = ({
   useEffect(() => {
     if (chatbotRef) {
       chatbotRef.current = {
-        sendMessage: (message: string) => {
-          
+        sendMessage: (message: string, messageContext?: string) => {
           // Set the textarea value and simulate Enter press
-          const textarea = document.querySelector('textarea');
-          if (textarea) {
-            // Set value
+          const textarea = document.querySelector('.react-chatbotify-input textarea');
+          if (textarea instanceof HTMLTextAreaElement) {
+            // Set value and trigger input event
             textarea.value = message;
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
             
             // Create and dispatch Enter keydown event
             const enterEvent = new KeyboardEvent('keydown', {
@@ -63,14 +63,16 @@ const ChatBot: React.FC<ChatBotProps> = ({
               code: 'Enter',
               keyCode: 13,
               which: 13,
-              bubbles: true
+              bubbles: true,
+              // Add the context as custom data
+              ...(messageContext && { __context: messageContext })
             });
             
             // Focus the textarea and dispatch the event
             textarea.focus();
             setTimeout(() => {
               textarea.dispatchEvent(enterEvent);
-            }, 50);
+            }, 100);
           }
         }
       };
@@ -140,8 +142,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
     };
   }, []);
 
-  const sendMessage = async (message: string) => {
-
+  const sendMessage = async (message: string, messageContext?: string) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -150,7 +151,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message,
-          context,
+          context: messageContext || context,
           threadId,
           generateAudio: audioEnabled,
           assistantId: 'asst_7jwxyFZEYOYZlduxQrnFLZl8'
@@ -235,8 +236,8 @@ const ChatBot: React.FC<ChatBotProps> = ({
       path: "loop",
     },
     loop: {
-      message: async (params: { userInput: string }) => {
-        const response = await sendMessage(params.userInput);
+      message: async (params: { userInput: string, messageContext?: string }) => {
+        const response = await sendMessage(params.userInput, params.messageContext);
         return response || "I'm sorry, I couldn't process your request. Please try again.";
       },
       path: "loop",
