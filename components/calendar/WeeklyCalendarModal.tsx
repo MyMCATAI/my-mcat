@@ -498,9 +498,20 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                     <motion.button
                       key={resource.id}
                       onClick={() => {
-                        setResources(resources.map(r => 
-                          r.id === resource.id ? { ...r, selected: !r.selected } : r
-                        ));
+                        setResources(resources.map(r => {
+                          // If clicking on anki or ankigame, deselect the other one
+                          if (resource.id === 'anki' && r.id === 'ankigame') {
+                            return { ...r, selected: false };
+                          }
+                          if (resource.id === 'ankigame' && r.id === 'anki') {
+                            return { ...r, selected: false };
+                          }
+                          // Toggle the clicked resource
+                          if (r.id === resource.id) {
+                            return { ...r, selected: !r.selected };
+                          }
+                          return r;
+                        }));
                       }}
                       className={`w-full flex items-center justify-between p-4 transition-colors ${
                         resource.selected ? 'bg-[--theme-border-color] bg-opacity-10' : ''
