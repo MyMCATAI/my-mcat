@@ -246,7 +246,6 @@ const Page = () => {
             onActivitiesUpdate={() => {
               fetchActivities();
             }}
-            chatbotRef={chatbotRef}
           />
         );
         break;
@@ -412,6 +411,16 @@ const Page = () => {
 
     if (tab === "Schedule") {
       updateCalendarChatContext(activities);
+      // If view=tutors, find and click the tutors tab in the sidebar
+      if (view === 'tutors') {
+        // Small delay to ensure the sidebar is rendered
+        setTimeout(() => {
+          const tutorsTab = document.querySelector('[data-tab="tab3"]');
+          if (tutorsTab instanceof HTMLElement) {
+            tutorsTab.click();
+          }
+        }, 100);
+      }
       // Update URL with view parameter if present
       if (view) {
         router.push(`/home?tab=Schedule&view=${view}`);

@@ -3,7 +3,9 @@ import { ArrowLeft, CheckCircle2, Circle, GraduationCap, RefreshCw } from 'lucid
 import SectionReview, { Section } from './SectionReview';
 import { Button } from "@/components/ui/button";
 import { DataPulse } from '@/hooks/useCalendarActivities';
-import { FULL_TO_DISPLAY_SECTION, SECTION_MAPPINGS, REVERSE_SECTION_MAPPINGS } from '@/lib/constants';
+import { FULL_TO_DISPLAY_SECTION, SECTION_MAPPINGS } from '@/lib/constants';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 
 interface TestReviewProps {
   test: {
@@ -23,6 +25,7 @@ interface TestReviewProps {
 }
 
 const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
+  const router = useRouter();
   const [completedSections, setCompletedSections] = useState<string[]>([]);
   const [activeSection, setActiveSection] = useState<Section | null>(null);
   const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
@@ -81,15 +84,24 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
 
   // Process dataPulses to find weaknesses
   const getWeaknesses = (dataPulses: DataPulse[] | undefined) => {
-    if (!dataPulses) return [];
+    console.log('Getting weaknesses from dataPulses:', dataPulses);
+    if (!dataPulses || dataPulses.length === 0) {
+      console.log('No data pulses found');
+      return [];
+    }
 
     // Filter out section-level pulses and group by section and name
     const groupedPulses = dataPulses
-      .filter(pulse => pulse.level !== "section")
+      .filter(pulse => {
+        console.log('Processing pulse:', pulse);
+        return pulse.level !== "section";
+      })
       .reduce((acc, pulse) => {
         // Get the standardized section name (C/P, CARS, etc.)
         const sectionKey = pulse.section || 
           (SECTION_MAPPINGS[pulse.name as keyof typeof SECTION_MAPPINGS] || 'Unknown');
+        
+        console.log('Section key:', sectionKey, 'for pulse:', pulse.name);
 
         if (!acc[sectionKey]) {
           acc[sectionKey] = {};
@@ -112,6 +124,8 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
         return acc;
       }, {} as Record<string, Record<string, { total: number; negative: number; positive: number; flagged: number }>>);
 
+    console.log('Grouped pulses:', groupedPulses);
+
     // Convert to array and calculate weakness scores
     const weaknesses = Object.entries(groupedPulses).flatMap(([section, topics]) =>
       Object.entries(topics).map(([topic, stats]) => ({
@@ -124,10 +138,12 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
       }))
     );
 
+    console.log('Calculated weaknesses:', weaknesses);
+
     // Sort by weakness score and take top 3
-    return weaknesses
+    const result = weaknesses
       .sort((a, b) => b.weaknessScore - a.weaknessScore)
-      .slice(0, 3)
+      .slice(0, 5)
       .map(weakness => ({
         topic: weakness.topic,
         section: weakness.section,
@@ -137,6 +153,9 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
               weakness.section === "CARS" ? "📚" :
               weakness.section === "B/B" ? "🧬" : "🧠"
       }));
+
+    console.log('Final result:', result);
+    return result;
   };
 
   const formatAnalysis = (text: string) => {
@@ -148,6 +167,23 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
       // Convert newlines to proper spacing
       .replace(/\n\n/g, '</p><p class="mb-4">')
       .replace(/\n/g, '<br/>');
+  };
+
+  const handleNavigateToTutoring = async () => {
+    const weakCategories = getWeaknesses(test.dataPulses)
+      .map(item => encodeURIComponent(item.topic));
+    
+    if (weakCategories.length > 0) {
+      const url = `/home?tab=AdaptiveTutoringSuite&conceptCategories=${weakCategories.join(',')}`;
+      // First navigate to home
+      await router.push('/home');
+      // Then after a small delay, navigate to the specific tab with categories
+      setTimeout(() => {
+        router.push(url);
+      }, 100);
+    } else {
+      toast.error('No weak categories found to review');
+    }
   };
 
   if (activeSection) {
@@ -189,7 +225,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
             <ArrowLeft className="h-5 w-5 text-[--theme-text-color]" />
           </button>
           <div className="h-full flex flex-col items-center justify-center space-y-2">
-            <span className="text-sm uppercase tracking-wide opacity-60">{test.company} {test.name}</span>
+            <span className="text-sm uppercase tracking-wide opacity-60 truncate max-w-[80%]">{test.name}</span>
             <span className={`text-6xl font-bold transition-all duration-300 hover:scale-110
               ${test.score < 500 ? 'text-red-500' : ''}
               ${test.score >= 500 && test.score < 510 ? 'text-yellow-500' : ''}
@@ -200,7 +236,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
             `}>
               {test.score}
             </span>
-            <span className="text-xs opacity-50">{test.dateTaken || formatDate(test.calendarDate)}</span>
+            <span className="text-xs opacity-50 truncate max-w-[80%]">{test.dateTaken || formatDate(test.calendarDate)}</span>
           </div>
         </div>
 
@@ -282,6 +318,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
                 variant="secondary"
                 size="icon"
                 className="opacity-80 hover:opacity-100 transition-all duration-200 h-8 w-8"
+                onClick={handleNavigateToTutoring}
               >
                 <GraduationCap className="h-4 w-4 text-[--theme-text-color] hover:text-[--theme-hover-color]" />
               </Button>

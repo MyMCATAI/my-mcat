@@ -187,8 +187,8 @@ body.theme-sunsetCity * {
     --theme-hover-text: #ffffff;
     --theme-border-color: rgba(59, 130, 246, 0.4); /* Subtle blue */
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
-    --theme-leaguecard-color: #031337e6;
-    --theme-leaguecard-accent: rgba(4, 44, 113, 0.7);
+    --theme-leaguecard-color: #02143de6;
+    --theme-leaguecard-accent: rgba(37, 143, 122, 0.258);
     --theme-navbutton-color: #001226;
     --svg-invert: 0;
     --theme-reddit-color: #082645;
@@ -356,7 +356,7 @@ body.theme-sunsetCity * {
   --theme-navbutton-color: #49327c;
   --svg-invert: 0;
   --theme-reddit-color: #3a2963;
-  --theme-doctorsoffice-accent: #251648;
+  --theme-doctorsoffice-accent: #3e2774;
   --theme-flashcard-color: #21133e; /* Matches --theme-mainbox-color for consistency */
   --theme-flashcard-text-color: #ffd1dc; /* Keeping the existing text color for readability */
   --theme-adaptive-tutoring-color: #001226;
@@ -873,5 +873,41 @@ html::-webkit-scrollbar {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Hide scrollbar class */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbars globally */
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+*::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Only show themed scrollbars when explicitly requested */
+.show-scrollbar {
+  scrollbar-width: thin !important;
+  -ms-overflow-style: auto !important;
+}
+
+.show-scrollbar::-webkit-scrollbar {
+  display: block !important;
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.show-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.show-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--theme-hover-color) !important;
+  border-radius: 3px !important;
 }
  
