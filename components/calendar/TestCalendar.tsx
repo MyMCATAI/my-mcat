@@ -201,9 +201,10 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
   // Custom event styling based on event type
   const eventStyleGetter = (event: CalendarEvent) => {
     const isExam = event.resource?.eventType === 'exam';
+    const isMCATExam = event.title === 'MCAT Exam';
     
     return {
-      className: `calendar-event ${isExam ? 'exam-event' : 'study-event'}`,
+      className: `calendar-event ${isMCATExam ? 'mcat-exam-event' : isExam ? 'exam-event' : 'study-event'}`,
       style: {
         backgroundColor: isExam ? 'var(--theme-emphasis-color)' : 'var(--theme-hover-color)',
       }

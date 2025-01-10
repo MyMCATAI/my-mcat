@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 import { GET as getEventTasks } from '../event-task/route';
+import { format } from 'date-fns';
 
 
 // Update EVENT_CATEGORIES type definition
@@ -55,6 +56,15 @@ const EVENT_CATEGORIES: EventCategory[] = [
     description: "Review and reinforce key concepts using spaced repetition. Focus on high-yield facts, strengthen your recall ability, and maintain long-term retention of important MCAT content.",
   },
   {
+    name: 'Regular Anki',
+    optional: true,
+    minDuration: 0.5,
+    maxDuration: 1.5,
+    priority: 2,
+    type: 'Review',
+    description: "Review and reinforce key concepts using spaced repetition with your own Anki deck. Focus on high-yield facts, strengthen your recall ability, and maintain long-term retention of important MCAT content.",
+  },
+  {
     name: 'UWorld',
     duration: 1,
     priority: 3,
@@ -75,6 +85,7 @@ interface Resources {
   aamc: boolean;
   adaptive: boolean;
   ankigame: boolean;
+  anki: boolean;
 }
 
 interface CalendarActivity {
@@ -179,10 +190,8 @@ async function generateDailyTasks(
   const activities: CalendarActivity[] = [];
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   
-  // Calculate initial content review ratio based on selected balance
-  let initialReviewRatio = getContentReviewRatio(selectedBalance);
-  const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
-  const ratioChangePerDay = (initialReviewRatio - 0.2) / totalDays; // Progress towards more practice
+  // Use fixed content review ratio based on selection
+  const contentReviewRatio = getContentReviewRatio(selectedBalance);
 
   // Get exam schedule from database
   const examActivities = await prisma.calendarActivity.findMany({
@@ -209,21 +218,25 @@ async function generateDailyTasks(
   const carsDays = generateCarsSchedule(startDate, endDate);
 
   let currentDate = new Date(startDate);
-  let currentReviewRatio = initialReviewRatio;
 
   while (currentDate <= endDate) {
     const dayOfWeek = currentDate.getDay();
     const dayName = daysOfWeek[dayOfWeek];
     const availableHours = parseInt(hoursPerDay[dayName]) || 0;
 
-    if (availableHours === 0) {
+    // Skip if it's a break day or an exam day
+    const isExamDay = examActivities.some(exam => 
+      format(new Date(exam.scheduledDate), 'yyyy-MM-dd') === format(currentDate, 'yyyy-MM-dd')
+    );
+
+    if (availableHours === 0 || isExamDay) {
       currentDate.setDate(currentDate.getDate() + 1);
       continue;
     }
 
     const dayTasks = getAvailableTasks(
       resources,
-      currentReviewRatio,
+      contentReviewRatio,
       new Set<string>(),
       availableHours,
       carsDays.has(currentDate.getTime()),
@@ -250,7 +263,6 @@ async function generateDailyTasks(
       });
     }
 
-    currentReviewRatio = Math.max(0.2, currentReviewRatio - ratioChangePerDay);
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
@@ -324,6 +336,7 @@ function getAvailableTasks(
   // Get duration constants from EVENT_CATEGORIES with safe defaults
   const ATS = EVENT_CATEGORIES.find(c => c.name === 'Adaptive Tutoring Suite')!;
   const ANKI = EVENT_CATEGORIES.find(c => c.name === 'Anki Clinic')!;
+  const REGULAR_ANKI = EVENT_CATEGORIES.find(c => c.name === 'Regular Anki')!;
   const CARS = EVENT_CATEGORIES.find(c => c.name === 'Daily CARs')!;
   const UWORLD = EVENT_CATEGORIES.find(c => c.name === 'UWorld')!;
   const AAMC = EVENT_CATEGORIES.find(c => c.name === 'AAMC Materials')!;
@@ -348,9 +361,11 @@ function getAvailableTasks(
       remainingHours -= duration;
     }
 
-    if (resources.ankigame && remainingHours >= ANKI_MIN) {
+    // Handle either Anki Game or Regular Anki
+    if ((resources.ankigame || resources.anki) && remainingHours >= ANKI_MIN) {
       const duration = Math.min(ANKI_MAX, remainingHours - CARS_MIN);
-      tasks.push({ name: 'Anki Clinic', duration, type: ANKI.type });
+      const ankiType = resources.ankigame ? 'Anki Clinic' : 'Regular Anki';
+      tasks.push({ name: ankiType, duration, type: ANKI.type });
       remainingHours -= duration;
     }
   } else {
@@ -377,9 +392,11 @@ function getAvailableTasks(
       }
     }
 
-    if (resources.ankigame && remainingHours >= ANKI_MIN) {
+    // Handle either Anki Game or Regular Anki
+    if ((resources.ankigame || resources.anki) && remainingHours >= ANKI_MIN) {
       const duration = Math.min(ANKI_MAX, remainingHours);
-      tasks.push({ name: 'Anki Clinic', duration, type: ANKI.type });
+      const ankiType = resources.ankigame ? 'Anki Clinic' : 'Regular Anki';
+      tasks.push({ name: ankiType, duration, type: ANKI.type });
       remainingHours -= duration;
     }
   }

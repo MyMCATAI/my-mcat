@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format, addDays, startOfWeek } from "date-fns";
 import { X, Check, Loader2, ArrowRight, ArrowLeft, Calendar as CalendarIcon, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Calendar from "@/components/ui/calendar";
 import "react-day-picker/dist/style.css";
 import { useExamActivities, CalendarActivity } from "@/hooks/useCalendarActivities";
 import DatePickerDialog from "@/components/DatePickerDialog";
@@ -33,12 +32,12 @@ interface Subject {
 }
 
 const examDescriptions = {
-  "AAMC Unscored Sample": "The Unscored Sample is your first step into AAMC-style questions. While unscored, it's crucial for understanding the test format and identifying initial content gaps. Take this early in your prep to establish a baseline.",
-  "AAMC Full Length Exam 1": "FL1 is typically easier than later exams but provides accurate CARS difficulty. Use this to gauge your progress and identify areas needing focus. Many find the Chemical/Physical foundations section particularly representative.",
-  "AAMC Full Length Exam 2": "FL2 is known for its challenging Biology/Biochemistry section. The CARS section tends to be slightly more difficult than FL1. This exam helps assess your content mastery mid-preparation.",
-  "AAMC Full Length Exam 3": "FL3 is considered most representative of recent MCAT exams. The Psychology/Sociology section is particularly challenging. Use this exam to get the most accurate prediction of your performance.",
-  "AAMC Full Length Exam 4": "FL4 features more research-heavy passages and data interpretation. The Chemical/Physical section is notably challenging. This exam is crucial for identifying last-minute weak areas.",
-  "AAMC Sample Scored (FL5)": "The final practice exam before your test day. Known for having the most up-to-date question style and difficulty level. Focus on timing and stamina, treating it exactly like the real exam."
+  "Unscored Sample": "The Unscored Sample is your first step into AAMC-style questions. While unscored, it's crucial for understanding the test format and identifying initial content gaps. Take this",
+  "Full Length Exam 1": "FL1 is typically easier than later exams but provides accurate CARS difficulty. Use this to gauge your progress and identify areas needing focus. Many find the Chemical/Phys",
+  "Full Length Exam 2": "FL2 is known for its challenging Biology/Biochemistry section. The CARS section tends to be slightly more difficult than FL1. This exam helps assess your content mastery mid",
+  "Full Length Exam 3": "FL3 is considered most representative of recent MCAT exams. The Psychology/Sociology section is particularly challenging. Use this exam to get the most accurate prediction o",
+  "Full Length Exam 4": "FL4 features more research-heavy passages and data interpretation. The Chemical/Physical section is notably challenging. This exam is crucial for identifying last-minute wea",
+  "Sample Scored (FL5)": "The final practice exam before your test day. Known for having the most up-to-date question style and difficulty level. Focus on timing and stamina, treating it exactly lik"
 } as const;
 
 type ExamName = keyof typeof examDescriptions;
@@ -82,10 +81,6 @@ const steps = [
   {
     title: "Study Balance",
     subtitle: "Content vs Practice"
-  },
-  {
-    title: "Subject Focus",
-    subtitle: "Select your focus areas"
   }
 ];
 
@@ -103,27 +98,21 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const { activities: examActivities, loading: examLoading, error: examError, updateExamDate } = useExamActivities();
   const [resources, setResources] = useState<Resource[]>([
+    { id: 'adaptive', name: 'MyMCAT Adaptive Tutoring', selected: true },
+    { id: 'ankigame', name: 'MyMCAT Anki Clinic', selected: false },
     { id: 'uworld', name: 'UWorld', selected: false },
-    { id: 'aamc', name: 'AAMC', selected: false },
-    { id: 'adaptive', name: 'MyMCAT Adaptive Tutoring', selected: false },
-    { id: 'ankigame', name: 'MyMCAT Anki Game', selected: false },
+    { id: 'aamc', name: 'AAMC Materials', selected: false },
+    { id: 'anki', name: 'Anki', selected: false },
   ]);
 
   const balanceOptions: StudyBalance[] = [
-    { id: '25-75', ratio: '25/75', description: 'Focus on Practice (25% Content, 75% Practice)' },
-    { id: '50-50', ratio: '50/50', description: 'Balanced (50% Content, 50% Practice)' },
-    { id: '75-25', ratio: '75/25', description: 'Focus on Content (75% Content, 25% Practice)' },
+    { id: '75-25', ratio: '75/25', description: '75% Content, 25% Practice' },
+    { id: '50-50', ratio: '50/50', description: '50% Content, 50% Practice' },
+    { id: '25-75', ratio: '25/75', description: '25% Content, 75% Practice' }
   ];
 
   const [selectedBalance, setSelectedBalance] = useState<string>('50-50');
   
-  const [subjects, setSubjects] = useState<Subject[]>([
-    { id: 'cp', name: 'Chemical and Physical Foundations of Biological Systems', selected: true },
-    { id: 'cars', name: 'Critical Analysis and Reasoning Skills', selected: true },
-    { id: 'bb', name: 'Biological and Biochemical Foundations of Living Systems', selected: true },
-    { id: 'ps', name: 'Psychological, Social, and Biological Foundations of Behavior', selected: true },
-  ]);
-
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState<string[]>([]);
   const [examSchedule, setExamSchedule] = useState<ExamSchedule[]>([]);
@@ -161,46 +150,66 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
     }
   }, [currentWeekStart, allWeeksHours]);
 
-  // Handle week navigation
-  const handleNextWeek = () => {
-    // Save current week's hours
-    const currentWeekId = getWeekIdentifier(currentWeekStart);
-    setAllWeeksHours(prev => ({
-      ...prev,
-      [currentWeekId]: weeklyHours
-    }));
+  const getNextExam = () => {
+    if (!examActivities) return null;
     
-    // Move to next week
-    setCurrentWeekStart(addDays(currentWeekStart, 7));
+    const now = new Date();
+    return examActivities
+      .filter((activity: CalendarActivity) => new Date(activity.scheduledDate) > now)
+      .sort((a: CalendarActivity, b: CalendarActivity) => 
+        new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime()
+      )[0];
   };
 
-  // Handle setting hours for all weeks until test date
-  const handleSetForAllWeeks = () => {
-    if (!testDate) return;
+  // Generate all days until next exam
+  const getAllDaysUntilExam = () => {
+    const nextExam = getNextExam();
+    if (!nextExam) return [];
     
-    const newAllWeeksHours: Record<string, Record<string, string>> = {};
-    let currentDate = currentWeekStart;
+    const days = [];
+    let currentDate = new Date();
+    const examDate = new Date(nextExam.scheduledDate);
     
-    while (currentDate <= testDate) {
-      const weekId = getWeekIdentifier(currentDate);
-      newAllWeeksHours[weekId] = { ...weeklyHours };  // Create a deep copy
-      currentDate = addDays(currentDate, 7);
+    while (currentDate <= examDate) {
+      days.push({
+        date: new Date(currentDate),
+        dayName: format(currentDate, 'EEEE'),
+        dayDate: format(currentDate, 'MMM d'),
+        isValid: true
+      });
+      currentDate = addDays(currentDate, 1);
     }
     
-    setAllWeeksHours(newAllWeeksHours);
+    return days;
   };
 
-  const handleHoursChange = (day: string, hours: string) => {
+  // Handle setting hours for all specific weekdays
+  const handleSetForWeekday = (targetDayName: string, hours: string) => {
+    const newHours = { ...weeklyHours };
+    getAllDaysUntilExam().forEach(({ dayName, date }) => {
+      if (dayName === targetDayName) {
+        newHours[format(date, 'yyyy-MM-dd')] = hours;
+      }
+    });
+    setWeeklyHours(newHours);
+  };
+
+  // Handle setting hours for all days
+  const handleSetForAllDays = (hours: string) => {
+    const newHours = { ...weeklyHours };
+    getAllDaysUntilExam().forEach(({ date }) => {
+      newHours[format(date, 'yyyy-MM-dd')] = hours;
+    });
+    setWeeklyHours(newHours);
+  };
+
+  const handleHoursChange = (date: Date, hours: string) => {
+    const dateKey = format(date, 'yyyy-MM-dd');
     const newHours = {
       ...weeklyHours,
-      [day]: hours
+      [dateKey]: hours
     };
     setWeeklyHours(newHours);
-    
-    // If this is initial setup, also update all future weeks
-    if (isInitialSetup) {
-      handleSetForAllWeeks();
-    }
   };
 
   // Generate tasks when completing the schedule
@@ -214,6 +223,9 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
     }
 
     try {
+      setIsGenerating(true);
+      setCurrentStep(4);  // Move to generation step
+      
       const response = await fetch('/api/generate-tasks', {
         method: 'POST',
         headers: {
@@ -226,10 +238,11 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
             aamc: resources.find(r => r.id === 'aamc')?.selected || false,
             adaptive: resources.find(r => r.id === 'adaptive')?.selected || false,
             ankigame: resources.find(r => r.id === 'ankigame')?.selected || false,
+            anki: resources.find(r => r.id === 'anki')?.selected || false,
           },
           hoursPerDay: weeklyHours,
           selectedBalance,
-          startDate: currentWeekStart,
+          startDate: new Date(),
           endDate: nextExam.scheduledDate,
         }),
       });
@@ -238,14 +251,24 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
         throw new Error('Failed to generate schedule');
       }
 
-      setCurrentWeekStart(addDays(new Date(nextExam.scheduledDate), 1));
+      // Start showing loading messages
+      const interval = setInterval(() => {
+        setLoadingMessages(prev => {
+          if (prev.length < messages.length) {
+            return [...prev, messages[prev.length]];
+          }
+          clearInterval(interval);
+          return prev;
+        });
+      }, 1000);
 
       if (onComplete) {
         onComplete({ success: true, action: 'generate' });
       }
     } catch (error) {
       alert('Failed to create schedule. Please try again.');
-      setCurrentStep(4); // Return to previous step on failure
+      setCurrentStep(3); // Return to previous step on failure
+      setIsGenerating(false); // Reset generating state
     }
   };
 
@@ -265,16 +288,6 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
     show: { opacity: 1, y: 0 }
   };
 
-  // Generate the week days
-  const weekDays = [...Array(7)].map((_, i) => {
-    const date = addDays(currentWeekStart, i);
-    return {
-      date,
-      dayName: format(date, 'EEEE'),
-      dayDate: format(date, 'MMM d')
-    };
-  });
-
   const getTestDateDescription = () => {
     // Find the next scheduled exam
     const nextExam = examSchedule.find(exam => {
@@ -283,22 +296,11 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
     });
 
     if (!nextExam) {
-      // Default to AAMC Unscored Sample description if no exam is scheduled
-      return `${examDescriptions["AAMC Unscored Sample"]}\n\nYour test is scheduled for ${testDate ? format(testDate, 'MMMM do, yyyy') : 'January 24th'}.`;
+      // Default to Unscored Sample description if no exam is scheduled
+      return `${examDescriptions["Unscored Sample"]}\n\nYour test is scheduled for ${testDate ? format(testDate, 'MMMM do, yyyy') : 'January 24th'}.`;
     }
 
     return `${examDescriptions[nextExam.examName]}\n\nYour next exam (${nextExam.examName}) is scheduled for ${format(nextExam.date, 'MMMM do, yyyy')}.`;
-  };
-
-  const getNextExam = () => {
-    if (!examActivities) return null;
-    
-    const now = new Date();
-    return examActivities
-      .filter((activity: CalendarActivity) => new Date(activity.scheduledDate) > now)
-      .sort((a: CalendarActivity, b: CalendarActivity) => 
-        new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime()
-      )[0];
   };
 
   const handleDateSelect = async (date: Date) => {
@@ -364,16 +366,16 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
         );
 
       case 1:
+        const availableDays = getAllDaysUntilExam();
+        const uniqueWeekdays = Array.from(new Set(availableDays.map(day => day.dayName)));
+        
         return (
-          <div className="space-y-8">
+          <div className="space-y-6 p-6">
             <div className="text-center">
-              <h3 className="text-xl text-[--theme-text-color] mb-2">Your Study Week</h3>
-              <p className="text-[--theme-text-color] opacity-70">
-                Enter your available study hours for each day. Click the coffee icon for that day off.
-              </p>
+              <h3 className="text-xl text-[--theme-text-color] mb-2">Study Schedule</h3>
               {getNextExam() && (
-                <p className="mt-2 text-[--theme-emphasis-color]">
-                  Scheduling until {format(new Date(getNextExam()!.scheduledDate), 'MMMM do')} - {getNextExam()!.activityTitle}
+                <p className="text-[--theme-emphasis-color] text-sm">
+                  {format(new Date(), 'MMMM do')} → {format(new Date(getNextExam()!.scheduledDate), 'MMMM do')} ({getNextExam()!.activityTitle})
                 </p>
               )}
             </div>
@@ -382,147 +384,187 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
               variants={containerVariants}
               initial="hidden"
               animate="show"
-              className="grid grid-cols-7 gap-4"
+              className="max-w-2xl mx-auto"
             >
-              {weekDays.map(({ dayName, dayDate }) => (
-                <motion.div
-                  key={dayName}
-                  variants={itemVariants}
-                  className="flex flex-col items-center"
-                >
-                  <div className="w-full bg-[--theme-leaguecard-color] rounded-xl p-4 space-y-2">
-                    <div className="flex justify-between items-center relative">
-                      <div className="text-[--theme-text-color] font-medium">{dayName}</div>
-                      <div className="flex items-center">
-                        <AnimatePresence>
-                          <motion.div
-                            initial={{ width: 0, opacity: 0 }}
-                            whileHover={{ width: "auto", opacity: 1 }}
-                            exit={{ width: 0, opacity: 0 }}
-                            className="overflow-hidden flex items-center"
-                          >
-                            <motion.span className="text-sm text-[--theme-text-color] opacity-70 mr-2 whitespace-nowrap">
-                              break?
-                            </motion.span>
-                          </motion.div>
-                        </AnimatePresence>
-                        <button
-                          onClick={() => handleHoursChange(dayName, '0')}
-                          className="text-[--theme-text-color] opacity-70 hover:opacity-100 transition-opacity"
-                        >
-                          <Coffee className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="text-[--theme-text-color] opacity-70 text-sm">{dayDate}</div>
-                    <input
-                      type="number"
-                      min="0"
-                      max="24"
-                      value={weeklyHours[dayName] || ''}
-                      onChange={(e) => handleHoursChange(dayName, e.target.value)}
-                      placeholder="0"
-                      className="w-full bg-transparent border-2 border-[--theme-border-color] rounded-lg px-3 py-2 text-center text-[--theme-text-color] placeholder-[--theme-text-color]/50 focus:outline-none focus:border-[--theme-hover-color]"
-                    />
+              <div className="bg-[--theme-leaguecard-color] rounded-xl overflow-hidden">
+                <div className="p-4 border-b border-[--theme-border-color] flex items-center justify-between">
+                  <span className="text-[--theme-text-color] text-sm">Quick Actions</span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const hours = prompt('Enter hours for all days:');
+                        if (hours !== null) handleSetForAllDays(hours);
+                      }}
+                      className="bg-[--theme-button-color] text-[--theme-text-color] border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+                    >
+                      Set All Days
+                    </Button>
+                    <select
+                      onChange={(e) => {
+                        const [day, hours] = e.target.value.split('|');
+                        if (hours) handleSetForWeekday(day, hours);
+                        e.target.value = '';
+                      }}
+                      className="bg-[--theme-button-color] text-[--theme-text-color] border border-[--theme-border-color] rounded-md px-3 py-1 text-sm hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] cursor-pointer"
+                    >
+                      <option value="">Set by weekday...</option>
+                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                        <optgroup key={day} label={`Set all ${day}s`}>
+                          {[0, 2, 4, 6].map(hours => (
+                            <option key={`${day}-${hours}`} value={`${day}|${hours}`}>
+                              {hours === 0 ? 'Break day' : `${hours} hours`}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
                   </div>
-                </motion.div>
-              ))}
-            </motion.div>
+                </div>
 
-            <div className="flex justify-center gap-4">
-              <Button 
-                variant="outline"
-                className="bg-[--theme-button-color] text-[--theme-text-color] border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors shadow-[--theme-button-boxShadow] hover:shadow-[--theme-button-boxShadow-hover]"
-                onClick={handleSetForAllWeeks}
-              >
-                Set for All Weeks
-              </Button>
-              <Button 
-                variant="outline"
-                className="bg-[--theme-button-color] text-[--theme-text-color] border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors shadow-[--theme-button-boxShadow] hover:shadow-[--theme-button-boxShadow-hover]"
-                onClick={handleNextWeek}
-              >
-                Go to Next Week
-              </Button>
-            </div>
+                <div className="divide-y divide-[--theme-border-color]">
+                  {availableDays.map(({ date, dayName, dayDate }) => {
+                    const dateKey = format(date, 'yyyy-MM-dd');
+                    const hours = weeklyHours[dateKey] || '';
+                    const isBreak = hours === '0';
+
+                    return (
+                      <motion.div
+                        key={dateKey}
+                        variants={itemVariants}
+                        className={`flex items-center justify-between p-4 ${
+                          isBreak ? 'bg-[--theme-border-color] bg-opacity-10' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-6">
+                          <div>
+                            <div className="text-[--theme-text-color] font-medium">{dayName}</div>
+                            <div className="text-[--theme-text-color] opacity-70 text-sm">{dayDate}</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              max="24"
+                              value={hours}
+                              onChange={(e) => handleHoursChange(date, e.target.value)}
+                              placeholder="0"
+                              className={`w-16 bg-transparent border border-[--theme-border-color] rounded-md px-2 py-1 text-center text-[--theme-text-color] placeholder-[--theme-text-color]/50 focus:outline-none focus:border-[--theme-hover-color] ${
+                                isBreak ? 'opacity-50' : ''
+                              }`}
+                            />
+                            <span className="text-[--theme-text-color] opacity-70 text-sm">hours</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleHoursChange(date, isBreak ? '' : '0')}
+                          className={`px-3 py-1 rounded-md text-sm ${
+                            isBreak
+                              ? 'text-[--theme-text-color] opacity-70 hover:opacity-100'
+                              : 'opacity-0'
+                          } transition-opacity`}
+                        >
+                          {isBreak ? "Work" : "Break"}
+                        </button>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
           </div>
         );
 
       case 2:
         return (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-8"
-          >
+          <div className="space-y-6 p-6">
             <div className="text-center">
               <h3 className="text-xl text-[--theme-text-color] mb-2">Study Resources</h3>
-              <p className="text-[--theme-text-color] opacity-70">
-                Select the resources you plan to use in your study schedule
+              <p className="text-[--theme-emphasis-color] text-sm">
+                Select the resources you&apos;ll use to prepare for your {getNextExam()?.activityTitle}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {resources.map((resource) => (
-                <motion.button
-                  key={resource.id}
-                  onClick={() => {
-                    setResources(resources.map(r => 
-                      r.id === resource.id ? { ...r, selected: !r.selected } : r
-                    ));
-                  }}
-                  className={`
-                    p-4 rounded-xl border-2 flex items-center justify-between
-                    ${resource.selected 
-                      ? 'border-[--theme-hover-color] bg-[--theme-hover-color] bg-opacity-10' 
-                      : 'border-[--theme-border-color]'
-                    }
-                  `}
-                >
-                  <span className="text-[--theme-text-color]">{resource.name}</span>
-                  {resource.selected && <Check className="w-5 h-5 text-[--theme-hover-color]" />}
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="max-w-2xl mx-auto"
+            >
+              <div className="bg-[--theme-leaguecard-color] rounded-xl overflow-hidden">
+                <div className="divide-y divide-[--theme-border-color]">
+                  {resources.map((resource) => (
+                    <motion.button
+                      key={resource.id}
+                      onClick={() => {
+                        setResources(resources.map(r => 
+                          r.id === resource.id ? { ...r, selected: !r.selected } : r
+                        ));
+                      }}
+                      className={`w-full flex items-center justify-between p-4 transition-colors ${
+                        resource.selected ? 'bg-[--theme-border-color] bg-opacity-10' : ''
+                      }`}
+                    >
+                      <span className="text-[--theme-text-color]">{resource.name}</span>
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                        resource.selected 
+                          ? 'border-[--theme-hover-color] bg-[--theme-hover-color]' 
+                          : 'border-[--theme-text-color]'
+                      }`}>
+                        {resource.selected && <Check className="w-4 h-4 text-[--theme-hover-text]" />}
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </div>
         );
 
       case 3:
         return (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-8"
-          >
+          <div className="space-y-6 p-6">
             <div className="text-center">
-              <h3 className="text-xl text-[--theme-text-color] mb-2">Content vs Practice Balance</h3>
-              <p className="text-[--theme-text-color] opacity-70">
-                Choose your preferred balance between content review and practice questions
+              <h3 className="text-xl text-[--theme-text-color] mb-2">Study Balance</h3>
+              <p className="text-[--theme-emphasis-color] text-sm">
+                Choose how to balance content review and practice
               </p>
             </div>
 
-            <div className="space-y-4">
-              {balanceOptions.map((option) => (
-                <motion.button
-                  key={option.id}
-                  onClick={() => setSelectedBalance(option.id)}
-                  className={`
-                    w-full p-6 rounded-xl border-2 flex items-center justify-between
-                    ${selectedBalance === option.id 
-                      ? 'border-[--theme-hover-color] bg-[--theme-hover-color] bg-opacity-10' 
-                      : 'border-[--theme-border-color]'
-                    }
-                  `}
-                >
-                  <div className="text-left">
-                    <div className="text-lg font-medium text-[--theme-text-color]">{option.ratio}</div>
-                    <div className="text-sm text-[--theme-text-color] opacity-70">{option.description}</div>
-                  </div>
-                  {selectedBalance === option.id && <Check className="w-5 h-5 text-[--theme-hover-color]" />}
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="max-w-2xl mx-auto"
+            >
+              <div className="bg-[--theme-leaguecard-color] rounded-xl overflow-hidden">
+                <div className="divide-y divide-[--theme-border-color]">
+                  {balanceOptions.map((option) => (
+                    <motion.button
+                      key={option.id}
+                      onClick={() => setSelectedBalance(option.id)}
+                      className={`w-full flex items-center justify-between p-4 transition-colors ${
+                        selectedBalance === option.id ? 'bg-[--theme-border-color] bg-opacity-10' : ''
+                      }`}
+                    >
+                      <div className="text-left">
+                        <div className="text-[--theme-text-color] font-medium">{option.ratio}</div>
+                        <div className="text-[--theme-text-color] opacity-70 text-sm">{option.description}</div>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
+                        selectedBalance === option.id
+                          ? 'border-[--theme-hover-color] bg-[--theme-hover-color]' 
+                          : 'border-[--theme-text-color]'
+                      }`}>
+                        {selectedBalance === option.id && <Check className="w-4 h-4 text-[--theme-hover-text]" />}
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </div>
         );
 
       case 4:
@@ -530,56 +572,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="space-y-8"
-          >
-            <div className="text-center">
-              <h3 className="text-xl text-[--theme-text-color] mb-2">Subject Focus</h3>
-              <p className="text-[--theme-text-color] opacity-70">
-                Check the subjects you want in your weekly schedule.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
-              {subjects.map((subject) => (
-                <motion.button
-                  key={subject.id}
-                  onClick={() => {
-                    setSubjects(subjects.map(s => 
-                      s.id === subject.id ? { ...s, selected: !s.selected } : s
-                    ));
-                  }}
-                  className={`
-                    p-6 rounded-xl border-2 flex items-center justify-between
-                    ${subject.selected 
-                      ? 'border-[--theme-hover-color] bg-[--theme-hover-color] bg-opacity-10 text-[--theme-hover-text]' 
-                      : 'border-[--theme-border-color] text-[--theme-text-color] hover:text-[--theme-hover-text]'
-                    }
-                  `}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className={`
-                      w-5 h-5 rounded border flex items-center justify-center
-                      ${subject.selected 
-                        ? 'border-[--theme-hover-color] bg-[--theme-hover-color]' 
-                        : 'border-[--theme-text-color]'
-                      }
-                    `}>
-                      {subject.selected && <Check className="w-4 h-4 text-[--theme-hover-text]" />}
-                    </div>
-                    <span>{subject.name}</span>
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-        );
-
-      case 5:
-        return (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="h-full flex flex-col items-center justify-center space-y-8"
+            className="h-full flex flex-col items-center justify-center p-6"
           >
             <div className="space-y-4 w-full max-w-md">
               {loadingMessages.map((message, index) => (
@@ -679,7 +672,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
         </div>
 
         {/* Navigation */}
-        {currentStep < 5 && (
+        {currentStep < 4 && (
           <div className="border-t border-[--theme-border-color] p-6 flex justify-between items-center">
             <Button
               onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
@@ -692,8 +685,8 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
             </Button>
             <Button
               onClick={() => {
-                if (currentStep === 4) {
-                  setCurrentStep(5);
+                if (currentStep === 3) {
+                  setCurrentStep(4);
                   handleScheduleComplete();
                 } else {
                   setCurrentStep(currentStep + 1);
@@ -701,7 +694,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
               }}
               className="bg-[--theme-hover-color] text-[--theme-hover-text] hover:bg-[--theme-hover-color] hover:opacity-80 transition-opacity"
             >
-              {currentStep === 4 ? 'Create Schedule' : 'Next'}
+              {currentStep === 3 ? 'Create Schedule' : 'Next'}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
