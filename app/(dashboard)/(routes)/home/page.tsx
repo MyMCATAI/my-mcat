@@ -246,7 +246,6 @@ const Page = () => {
             onActivitiesUpdate={() => {
               fetchActivities();
             }}
-            chatbotRef={chatbotRef}
           />
         );
         break;
@@ -272,7 +271,7 @@ const Page = () => {
         content = <FlashcardDeck />;
         break;
       case "Tests":
-        content = <PracticeTests handleSetTab={handleTabChange} chatbotRef={chatbotRef} />;
+        content = <PracticeTests handleSetTab={handleTabChange} />;
         break;
       default:
         content = null;
