@@ -85,7 +85,6 @@ interface ScheduleProps {
   handleSetTab: (tab: string) => void;
   isActive: boolean;
   onActivitiesUpdate: () => void;
-  chatbotRef?: React.MutableRefObject<{ sendMessage: (message: string) => void; }>;
 }
 
 type Section =
