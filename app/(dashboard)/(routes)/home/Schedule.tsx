@@ -85,6 +85,7 @@ interface ScheduleProps {
   handleSetTab: (tab: string) => void;
   isActive: boolean;
   onActivitiesUpdate: () => void;
+  chatbotRef?: React.MutableRefObject<{ sendMessage: (message: string) => void; }>;
 }
 
 type Section =
@@ -100,6 +101,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   onActivitiesUpdate,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [showNewActivityForm, setShowNewActivityForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -125,7 +127,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
   const [isCoinsLoading, setIsCoinsLoading] = useState(true);
-  const [showAnalytics, setShowAnalytics] = useState(false);
   const [examScores, setExamScores] = useState<any[]>([]);
 
   // todo fetch total stats, include streak, coins, grades for each subject
@@ -143,7 +144,7 @@ const Schedule: React.FC<ScheduleProps> = ({
     AdaptiveTutoringSuite: "Adaptive Tutoring Suite",
     MCATGameAnkiClinic: "Anki Clinic",
     DailyCARsSuite: "MyMCAT Daily CARs",
-    Tests: "Tests",
+    Tests: "Tests"
   };
 
   const handleStartTutorialPart4 = () => {
