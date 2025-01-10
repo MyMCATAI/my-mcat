@@ -234,8 +234,8 @@ const SideBar: React.FC<SideBarProps> = ({
 
   const renderTutors = (tutors: Tutor[]) => (
     <div className="h-[calc(100vh-12.3rem)] flex flex-col">
-      <ScrollArea className="flex-grow [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <div className="pr-4 pb-4">
+      <ScrollArea className="flex-grow">
+        <div className="pb-4">
           <div className="mb-3 flex justify-center">
             <Dialog>
               <DialogTrigger asChild>
@@ -336,7 +336,7 @@ const SideBar: React.FC<SideBarProps> = ({
                         className="text-sm font-medium text-blue-500 hover:text-[--theme-hover-color] transition-colors duration-200 underline-offset-4 hover:underline"
                       >
                         {tutor.name === "Prynce K." 
-                          ? "Book (5 coins/meeting)"
+                          ? "Book (50 coins/meeting)"
                           : `Book ($${tutor.price}/hr)`
                         }
                       </button>
@@ -499,9 +499,6 @@ const SideBar: React.FC<SideBarProps> = ({
       </DialogHeader>
       <div className="py-4">
         <div className="space-y-4">
-          <p className="text-md">
-            MyMCAT seeks to empower tutors, unlike tutoring firms that take a 50% cut while providing little value. For that reason, in our early stages, we do not take a cut off your labor, but we do expect excellence from everyone working to serve students — even for contractors.
-          </p>
           <div>
             <p className="font-medium mb-2">Enlisting with MyMCAT requires three things:</p>
             <ol className="list-decimal list-inside space-y-2 text-sm">
@@ -512,7 +509,7 @@ const SideBar: React.FC<SideBarProps> = ({
               Please book an initial session with Prynce to verify your skills for listing.
             </p>
           </div>
-          <div className="w-[calc(100%-2rem)] bg-white h-[calc(100vh-30rem)] rounded-lg overflow-hidden mx-auto">
+          <div className="w-[calc(100%-2rem)] bg-white h-[calc(100vh-20rem)] rounded-lg overflow-hidden mx-auto">
             <iframe 
               src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ3hMOL4oJtFVHit6w6WyM2EuvBFRPoG59w6a-T0rU14-PWTIPMVRDlOx3PrYoVMpNYOVo4UhVXk?gv=true" 
               className="w-full h-full border-0"

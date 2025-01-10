@@ -155,8 +155,6 @@ const RedditPosts: React.FC = () => {
       <div 
         className="flex-grow overflow-y-auto"
         style={{ 
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch'
         }}
       >

@@ -15,7 +15,6 @@ import {
   DialogOverlay,
 } from "@radix-ui/react-dialog";
 import Image from "next/image";
-import InteractiveCalendar from "@/components/calendar/InteractiveCalendar";
 import { 
   Tooltip,
   TooltipContent,
@@ -51,7 +50,6 @@ import UWorldPopup from '@/components/home/UWorldPopup';
 import CompletionDialog from '@/components/home/CompletionDialog';
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { OptionsDialog } from "@/components/home/OptionsDialog";
-import WeeklyCalendarModal from "@/components/calendar/WeeklyCalendarModal";
 
 ChartJS.register(
   CategoryScale,
@@ -80,15 +78,13 @@ interface Activity {
   tasks?: Task[];
 }
 
+
 interface ScheduleProps {
   activities: Activity[];
   onStudyPlanSaved?: () => void;
   handleSetTab: (tab: string) => void;
   isActive: boolean;
   onActivitiesUpdate: () => void;
-  chatbotRef?: React.MutableRefObject<{
-    sendMessage: (message: string) => void;
-  }>;
 }
 
 type Section =
@@ -101,16 +97,13 @@ const Schedule: React.FC<ScheduleProps> = ({
   handleSetTab,
   isActive,
   onActivitiesUpdate,
-  chatbotRef,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [showSettings, setShowSettings] = useState(false);
   const [showNewActivityForm, setShowNewActivityForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [showAnalytics, setShowAnalytics] = useState(true);
   const [showRewardDialog, setShowRewardDialog] = useState(false);
   const [rewardSection, setRewardSection] = useState("");
   const [userCoinCount, setUserCoinCount] = useState(0);
@@ -131,7 +124,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
   const [isCoinsLoading, setIsCoinsLoading] = useState(true);
-  const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -274,7 +266,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   }, [getActivitiesText, runTutorialPart1, tutorialStep]);
 
   const handleStudyPlanSaved = useCallback(() => {
-    setShowSettings(false);
     setShowAnalytics(false); // Switch to calendar mode
 
     // Only start Part 2 if it hasn't been played yet
@@ -288,10 +279,6 @@ const Schedule: React.FC<ScheduleProps> = ({
       }, 1000);
     }
   }, []);
-
-  const toggleSettings = () => {
-    setShowSettings((prev) => !prev);
-  };
 
   const toggleNewActivityForm = () =>
     setShowNewActivityForm(!showNewActivityForm);
@@ -347,32 +334,10 @@ const Schedule: React.FC<ScheduleProps> = ({
     );
   };
 
-  const handleToggleView = () => {
-    setShowAnalytics(!showAnalytics);
-  };
-
   const router = useRouter();
 
-  const handleButtonClick = (section: string) => {
-    switch (section) {
-      case "MyMCAT Daily CARs":
-        handleSetTab("CARS");
-        break;
-      case "Anki Clinic":
-        router.push("/doctorsoffice");
-        break;
-      case "Adaptive Tutoring Suite":
-        handleSetTab("AdaptiveTutoringSuite");
-        break;
-      case "Tests":
-        handleSetTab("Tests");
-        break;
-      case "UWorld":
-        setShowUWorldPopup(true);
-        break;
-      default:
-        break;
-    }
+  const handleButtonClick = (section: Section) => {
+    handleSetTab("Tests");
   };
 
   useEffect(() => {
@@ -415,7 +380,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   useEffect(() => {
     if (!isActive) {
-      setShowSettings(false);
+      // No action needed
     }
   }, [isActive]);
 
@@ -666,75 +631,120 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   }, [userCoinCount]);
 
+  // Add this function to calculate score feedback
+  const getScoreFeedback = () => {
+    if (!examScores.length) return null;
+
+    const sortedExams = [...examScores].sort((a, b) => 
+      new Date(a.calendarActivity.scheduledDate).getTime() - new Date(b.calendarActivity.scheduledDate).getTime()
+    );
+
+    const recentScore = sortedExams[sortedExams.length - 1].score;
+    const previousScore = sortedExams.length > 1 ? sortedExams[sortedExams.length - 2].score : recentScore;
+    const isImproving = recentScore > previousScore;
+
+    if (!isImproving || recentScore === previousScore) {
+      return {
+        text: "You haven't improved from your last exam. Schedule a meeting with a tutor",
+        link: true
+      };
+    }
+
+    if (recentScore <= 505) {
+      return {
+        text: "You're scoring low and need help. Schedule a meeting with a tutor",
+        link: true
+      };
+    }
+
+    if (recentScore >= 525) {
+      return {
+        text: "Please reach out to prynce@mymcat.ai if you're scoring this high.",
+        link: false
+      };
+    }
+
+    if (recentScore >= 520) {
+      return {
+        text: "You're getting into medical school with that score.",
+        link: false
+      };
+    }
+
+    if (recentScore >= 515) {
+      return {
+        text: "You're scoring above the average for admitted medical students.",
+        link: false
+      };
+    }
+
+    if (recentScore >= 510) {
+      return {
+        text: "You're scoring good enough to secure admission to medical school.",
+        link: false
+      };
+    }
+
+    return null;
+  };
+
+  // Add this useEffect for fetching exam scores
+  useEffect(() => {
+    const fetchExamScores = async () => {
+      try {
+        const response = await fetch('/api/full-length-exam/complete');
+        if (response.ok) {
+          const data = await response.json();
+          setExamScores(data);
+        }
+      } catch (error) {
+        console.error('Error fetching exam scores:', error);
+      }
+    };
+
+    fetchExamScores();
+  }, []);
+
   return (
     <div className="w-full relative p-2">
       {/* Purchase Button */}
-      {showAnalytics && !selectedSubject && (
-        <div className="absolute top-6 left-8 z-30">
-          {!isCoinsLoading && (
-            <div className="pointer-events-auto flex items-center gap-2">
-              <PurchaseButton 
-                tooltipText="Click to purchase more coins!"
-                autoOpen={false}
-                userCoinCount={userCoinCount}
-                className="purchase-button"
-              >
-                <button className="hover:opacity-80 transition-opacity">
-                  <ScoreDisplay score={userCoinCount} />
-                </button>
-              </PurchaseButton>
-              
-              {userCoinCount <= 3 && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <div className="animate-vibrate">
-                        <AlertTriangle 
-                          className="h-6 w-6 text-red-500 drop-shadow-glow" 
-                          strokeWidth={3}
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-red-500 text-white border-red-600">
-                      <p>Low coin balance! Purchase more coins to continue accessing our features.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+      <div className="absolute top-6 left-8 z-30">
+        {!isCoinsLoading && (
+          <div className="pointer-events-auto flex items-center gap-2">
+            <PurchaseButton 
+              tooltipText="Click to purchase more coins!"
+              autoOpen={false}
+              userCoinCount={userCoinCount}
+              className="purchase-button"
+            >
+              <button className="hover:opacity-80 transition-opacity">
+                <ScoreDisplay score={userCoinCount} />
+              </button>
+            </PurchaseButton>
+            
+            {userCoinCount <= 3 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="animate-vibrate">
+                      <AlertTriangle 
+                        className="h-6 w-6 text-red-500 drop-shadow-glow" 
+                        strokeWidth={3}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-red-500 text-white border-red-600">
+                    <p>Low coin balance! Purchase more coins to continue accessing our features.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Settings and Help Buttons */}
       <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger>
-              <button
-                onClick={toggleSettings}
-                className={`settings-button tutorial-settings-button p-2 rounded-full shadow-md ${
-                  showSettings ? "bg-[--theme-hover-color]" : "bg-white"
-                }`}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill={showSettings ? "white" : "#333"}
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M9.25,22l-.4-3.2c-.216-.084-.42-.184-.612-.3c-.192-.117-.38-.242-.563-.375L4.7,19.375L1.95,14.625L4.525,12.675c-.016-.117-.024-.23-.024-.338V11.662c0-.108.008-.221.025-.337L1.95,9.375L4.7,4.625L7.675,5.875c.183-.134.375-.259.575-.375c.2-.117.4-.217.6-.3l.4-3.2H14.75l.4,3.2c.216.084.42.184.612.3c.192.117.38.242.563.375l2.975-.75l2.75,4.75l-2.575,1.95c.016.117.024.23.024.338v.675c0,.108-.008.221-.025.337l2.575,1.95l-2.75,4.75l-2.95-.75c-.183.133-.375.258-.575.375c-.2.117-.4.217-.6.3l-.4,3.2H9.25zM12.05,15.5c.966,0,1.791-.342,2.475-1.025c.683-.683,1.025-1.508,1.025-2.475c0-.966-.342-1.791-1.025-2.475c-.683-.683-1.508-1.025-2.475-1.025c-0.984,0-1.813,.342-2.488,1.025c-0.675,.683-1.012,1.508-1.012,2.475c0,.966,.337,1.791,1.012,2.475c.675,.683,1.504,1.025,2.488,1.025z"
-                    fill={showSettings ? "white" : "#333"}
-                  />
-                </svg>
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Settings</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger>
@@ -756,75 +766,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         </TooltipProvider>
       </div>
 
-      {/* Opaque Overlay */}
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-70 z-40"
-            onClick={toggleSettings}
-          />
-        )}
-      </AnimatePresence>  
-
-      {/* Settings Modal */}
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-8 right-2 w-[70rem] bg-white rounded-lg shadow-lg z-50"
-          >
-            <WeeklyCalendarModal
-              onComplete={({ success, action }) => {
-                if (success && action === 'generate') {
-                  handleSetTab('Tests');
-                }
-                if (success) {
-                  handleStudyPlanSaved();
-                  if (action === 'generate') {
-                    handleToggleView();
-                  }
-                  toggleSettings();
-                  onActivitiesUpdate();
-                }
-              }}
-              isInitialSetup={false}
-              onClose={toggleSettings}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Help Modal */}
-      <AnimatePresence>
-        {showHelp && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-70 z-40"
-              onClick={toggleHelp}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-0 right-4 w-[32rem] z-50 max-h-[80vh] flex flex-col"
-            >
-              <HelpContentSchedule 
-                onClose={toggleHelp}
-                onResetTutorials={resetTutorials}
-              />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
       {/* Main Container */}
       <div
         className="flex-grow h-[calc(100vh-7.6rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
@@ -840,12 +781,8 @@ const Schedule: React.FC<ScheduleProps> = ({
       >
         {/* Content Container */}
         <div className="relative w-full h-full flex-grow overflow-auto">
-          {/* Analytics View */}
-          <div
-            className={`absolute inset-0 transition-opacity duration-300 ${
-              showAnalytics ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
-            } flex flex-col overflow-auto`}
-          >
+          {/* Analytics View - now always visible */}
+          <div className="absolute inset-0 flex flex-col overflow-auto">
             {(isTypingComplete || isTutorialTypingComplete) && (
               <div className="flex-grow flex flex-col">
                 <AnimatePresence mode="wait">
@@ -876,54 +813,44 @@ const Schedule: React.FC<ScheduleProps> = ({
               </div>
             )}
           </div>
-
-          {/* Calendar View */}
-          <div
-            className={`absolute inset-0 transition-opacity duration-300 ${
-              showAnalytics ? "opacity-0 pointer-events-none z-0" : "opacity-100 z-10"
-            } flex flex-col overflow-auto`}
-          >
-            <div className="flex-grow">
-              <InteractiveCalendar
-                currentDate={currentDate}
-                activities={activities}
-                onDateChange={setCurrentDate}
-                getActivitiesForDate={getActivitiesForDate}
-                onInteraction={() => {}}
-                setRunTutorialPart2={setRunTutorialPart2}
-                setRunTutorialPart3={setRunTutorialPart3}
-                handleSetTab={handleSetTab}
-                onTasksUpdate={handleTasksUpdate}
-                updateTodaySchedule={updateTodaySchedule}
-                chatbotRef={chatbotRef}
-              />
-            </div>
-          </div>
         </div>
 
-        {/* View Toggle Buttons */}
+        {/* Bottom Buttons */}
         <div className="mt-auto flex justify-end items-center gap-2 pt-2">
-          {/* Break button - only show in calendar view */}
-          {!showAnalytics && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setShowBreaksDialog(true)}
-                    className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                      border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
+          {/* Score Feedback */}
+          {examScores.length > 0 && (
+            <div className="mr-auto">
+              {(() => {
+                const feedback = getScoreFeedback();
+                if (!feedback) return null;
+
+                return (
+                  <div 
+                    className="text-[--theme-text-color] ml-5 text-sm font-medium p-2 rounded-lg max-w-[24rem]"
+                    style={{
+                      background: 'var(--theme-leaguecard-color)',
+                      border: '1px solid var(--theme-border-color)',
+                      boxShadow: 'var(--theme-button-boxShadow)'
+                    }}
                   >
-                    <Coffee className="w-8 h-8" />
-                    <span className="text-xs font-medium">Break</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Take a Break</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                    {feedback.link ? (
+                      <p>
+                        {feedback.text}
+                        <span 
+                          className="text-blue-500 hover:text-blue-600 cursor-pointer underline ml-1"
+                          onClick={() => handleSetTab("Schedule?view=tutors")}
+                        >
+                          here
+                        </span>
+                        .
+                      </p>
+                    ) : (
+                      <p>{feedback.text}</p>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
           )}
 
           {/* Practice Tests button */}
@@ -946,50 +873,34 @@ const Schedule: React.FC<ScheduleProps> = ({
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-
-          {showAnalytics ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={handleToggleView}
-                    className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                      border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
-                  >
-                    <CalendarIcon className="w-8 h-8" />
-                    <span className="text-xs font-medium">Calendar</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Switch to Calendar View</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={handleToggleView}
-                    className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                      border-2 border-[--theme-border-color] 
-                      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                      shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
-                  >
-                    <AnalyticsIcon className="w-8 h-8" />
-                    <span className="text-xs font-medium">Stats</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Switch to Analytics View</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
         </div>
       </div>
+
+      {/* Help Modal */}
+      <AnimatePresence>
+        {showHelp && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-70 z-40"
+              onClick={toggleHelp}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-0 right-4 w-[32rem] z-50 max-h-[80vh] flex flex-col"
+            >
+              <HelpContentSchedule 
+                onClose={toggleHelp}
+                onResetTutorials={resetTutorials}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* New Activity Form */}
       {showNewActivityForm && (
@@ -1143,28 +1054,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         handleTabChange={handleTabChange}
         allWelcomeTasksCompleted={allWelcomeTasksCompleted}
       />
-
-      {showCalendarModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center rounded-lg">
-          <div className="bg-[--theme-mainbox-color] w-full h-full p-8 relative overflow-auto">
-            <button 
-              onClick={() => setShowCalendarModal(false)}
-              className="absolute top-4 right-4 p-2 hover:opacity-70 transition-opacity text-[--theme-text-color]"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <WeeklyCalendarModal 
-              isInitialSetup={false}
-              onComplete={({ success }) => {
-                if (success) {
-                  setShowCalendarModal(false);
-                  onActivitiesUpdate();
-                }
-              }}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 
