@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import prisma from "@/lib/prismadb";
 
 const publicRoutes = [
   "/",
@@ -44,7 +45,7 @@ const allowedAdminUserIds = [
   "user_2krxKeoPq12i3Nm8AD77AkIwC3H"
 ];
 
-export default clerkMiddleware((auth, request) => {
+export default clerkMiddleware(async (auth, request) => {
   const userAgent = request.headers.get('user-agent') || ''
   const isCrawler = /bot|crawler|spider|crawling|googlebot|bingbot|duckduckbot/i.test(userAgent);
   const pathname = new URL(request.url).pathname;
@@ -74,6 +75,16 @@ export default clerkMiddleware((auth, request) => {
       return NextResponse.redirect(signInUrl);
     }
     auth().protect();
+  }
+
+  if (pathname === '/home' || pathname === '/doctorsoffice') {
+    const userInfo = await prisma.userInfo.findUnique({
+      where: { userId: auth().userId || '' },
+    });
+
+    if (!userInfo?.hasSeenExamVideo) {
+      return NextResponse.redirect(new URL('/examcalendar', request.url));
+    }
   }
 
   if (isAdminRoute(request)) {
