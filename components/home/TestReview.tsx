@@ -241,9 +241,9 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
   }
 
   return (
-    <div className="animate-fadeIn h-full p-6 flex flex-col min-h-0">
+    <div className="animate-fadeIn h-full p-3 flex flex-col min-h-0">
       <div className="flex flex-col md:flex-row gap-6 mb-6">
-        <div className="w-full md:w-[12rem] h-[12rem] bg-[--theme-leaguecard-color] rounded-2xl shadow-xl overflow-hidden relative">
+        <div className="w-full md:w-[12rem] h-[13rem] bg-[--theme-leaguecard-color] rounded-2xl shadow-xl overflow-hidden relative">
           <button
             onClick={onBack}
             className="absolute top-3 left-3 p-2 hover:bg-[--theme-hover-color] rounded-full transition-all duration-200 hover:scale-105"
