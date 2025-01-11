@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       };
     });
 
-    const prompt = `Analyze my MCAT test performance for me, here are details on my scores:
+    const prompt = `You're Kalypso, the friendly AI cat. Analyze my MCAT test performance for me, here are details on my scores:
 
 Scoring Context:
 - MCAT scores range from 118 (lowest) to 132 (perfect) per section
@@ -94,7 +94,7 @@ ${sectionQuestions
 `;
 }).join('\n')}
 
-Provide me a concise analysis of my Strongest and weakest sections and specific study recommendation per section`;
+Provide me a concise analysis of my strongest and weakest sections and what my common errors or mistakes are. At the end, provide me a big general takeaway for my next exam.`;
 
     // Generate the AI analysis
     const analysis = await generateCompletion(prompt);
