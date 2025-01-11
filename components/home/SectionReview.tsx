@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Flag, XCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Plus, Flag, XCircle, RefreshCw, Maximize2 } from 'lucide-react';
 import QuestionAddModal from './QuestionAddModal';
 import { ExamQuestion, useExamQuestions } from '@/hooks/useExamQuestions';
 import { DISPLAY_TO_FULL_SECTION } from '@/lib/constants';
 import { DataPulse } from '@/hooks/useCalendarActivities';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export interface Section {
   name: keyof typeof DISPLAY_TO_FULL_SECTION;
@@ -37,6 +38,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
   const [editingQuestion, setEditingQuestion] = useState<ExamQuestion | undefined>(undefined);
   const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
+  const [isAnalysisMaximized, setIsAnalysisMaximized] = useState(false);
   
   const { 
     questions: listOfQuestions, 
@@ -182,11 +184,22 @@ const SectionReview: React.FC<SectionReviewProps> = ({
                 )}
               </div>
               <div className="flex-grow flex items-center justify-center text-sm">
-                <div className="max-h-[8rem] overflow-y-auto">
+                <div className="w-full relative">
                   {isGeneratingAnalysis ? (
                     <div className="opacity-50">Analyzing your performance...</div>
                   ) : analysis ? (
-                    <div className="text-sm leading-relaxed whitespace-pre-line max-h-[100px] max-w-[660px] overflow-y-auto">{analysis}</div>
+                    <>
+                      <div className="text-sm leading-relaxed whitespace-pre-line max-h-[8rem] overflow-hidden relative">
+                        {analysis}
+                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[--theme-leaguecard-color] to-transparent" />
+                      </div>
+                      <button 
+                        onClick={() => setIsAnalysisMaximized(true)}
+                        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 px-4 py-1 text-xs text-[--theme-text-color] hover:text-[--theme-hover-color] transition-colors"
+                      >
+                        Read More
+                      </button>
+                    </>
                   ) : listOfQuestions.length === 0 ? (
                     <div className="opacity-50">Add questions to generate an analysis</div>
                   ) : (
@@ -294,6 +307,17 @@ const SectionReview: React.FC<SectionReviewProps> = ({
           </div>
         </div>
       </div>
+
+      <Dialog open={isAnalysisMaximized} onOpenChange={setIsAnalysisMaximized}>
+        <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw] max-h-[90vh] overflow-y-auto bg-[--theme-leaguecard-color] border-[--theme-border-color]">
+          <div className="flex flex-col space-y-4">
+            <h3 className="text-sm uppercase tracking-wide opacity-60 text-center text-[--theme-text-color]">Kalypso&apos;s Analysis</h3>
+            <div className="text-lg leading-relaxed whitespace-pre-line text-[--theme-text-color]">
+              {analysis}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <QuestionAddModal
         isOpen={isAddingQuestion}

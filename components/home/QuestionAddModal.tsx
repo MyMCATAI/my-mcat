@@ -104,13 +104,13 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
   }, [isOpen, editingQuestion, categories]);
 
   const handleSubmit = async () => {
-    if (question.mistake.length < 250) {
-      setMistakeError('Your mistake analysis must be at least 250 characters long.');
+    if (question.mistake.length < 100) {
+      setMistakeError('Your mistake analysis must be at least 100 characters long.');
       return;
     }
 
-    if (question.improvement.length < 250) {
-      setImprovementError('Your improvement plan must be at least 250 characters long.');
+    if (question.improvement.length < 100) {
+      setImprovementError('Your improvement plan must be at least 100 characters long.');
       return;
     }
 
@@ -185,13 +185,13 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[45vw] bg-[--theme-leaguecard-color] border-[--theme-border-color]">
+      <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[45vw] max-h-[90vh] overflow-y-auto bg-[--theme-leaguecard-color] border-[--theme-border-color]">
         <h3 className="text-sm uppercase tracking-wide opacity-60 mb-6 text-center">
           {editingQuestion ? 'Edit' : 'Add'} Question Review
         </h3>
 
         {/* Status Selection */}
-        <div className="grid grid-cols-3 gap-4 mb-6 min-h-[4.5rem]">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 min-h-[4.5rem]">
           <button
             onClick={() => setQuestion(prev => ({ ...prev, status: 'wrong' }))}
             className={`p-3 rounded-lg flex flex-col items-center gap-2 transition-all duration-200
@@ -225,7 +225,7 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
         </div>
 
         <div className="grid gap-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm uppercase tracking-wide opacity-60 block mb-1.5 text-[--theme-text-color]">
                 Question #
@@ -248,18 +248,16 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
                 <SelectTrigger className="w-full bg-[--theme-mainbox-color] border-[--theme-border-color]">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
-                <SelectContent className="max-h-[12.5rem]">
-                  <div className="max-h-[12.5rem] overflow-y-auto">
-                    {categoriesLoading ? (
-                      <SelectItem value="loading" disabled>Loading categories...</SelectItem>
-                    ) : (
-                      groupCategories(categories).map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.contentCategory}
-                        </SelectItem>
-                      ))
-                    )}
-                  </div>
+                <SelectContent className="max-h-[40vh] overflow-y-auto">
+                  {categoriesLoading ? (
+                    <SelectItem value="loading" disabled>Loading categories...</SelectItem>
+                  ) : (
+                    groupCategories(categories).map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.contentCategory}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -316,8 +314,8 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
               placeholder="'My thought process that resulted in the wrong answer was...'"
             />
             <div className="flex justify-between mt-1">
-              <span className={`text-sm ${question.mistake.length < 250 ? 'text-red-500' : 'text-green-500'}`}>
-                {question.mistake.length}/250 characters
+              <span className={`text-sm ${question.mistake.length < 100 ? 'text-red-500' : 'text-green-500'}`}>
+                {question.mistake.length}/100 characters
               </span>
               {mistakeError && (
                 <span className="text-sm text-red-500">{mistakeError}</span>
@@ -341,8 +339,8 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
               placeholder="If I could do this question again, I would approach it differently by..."
             />
             <div className="flex justify-between mt-1">
-              <span className={`text-sm ${question.improvement.length < 175 ? 'text-red-500' : 'text-green-500'}`}>
-                {question.improvement.length}/175 characters
+              <span className={`text-sm ${question.improvement.length < 100 ? 'text-red-500' : 'text-green-500'}`}>
+                {question.improvement.length}/100 characters
               </span>
               {improvementError && (
                 <span className="text-sm text-red-500">{improvementError}</span>
