@@ -499,14 +499,14 @@ const Page = () => {
               >
                 {activeTab === "Schedule"
                   ? "Statistics"
-                  : activeTab === "AdaptiveTutoringSuite"
-                    ? "Adaptive Tutoring Suite"
-                    : activeTab === "flashcards"
-                      ? "Flashcards"
-                      : activeTab === "CARS"
-                        ? "Daily CARs Practice"
-                        : activeTab === "Tests"
-                          ? "Testing Suite"
+                  : activeTab === "Tests"
+                    ? "Testing Suite"
+                    : activeTab === "AdaptiveTutoringSuite"
+                      ? "Adaptive Tutoring Suite"
+                      : activeTab === "flashcards"
+                        ? "Flashcards"
+                        : activeTab === "CARS"
+                          ? "Daily CARs Practice"
                           : "Home"}
               </h2>
               <ThemeSwitcher />
@@ -516,17 +516,18 @@ const Page = () => {
             <div className="p-3 gradientbg h-[calc(100vh-5rem)] rounded-lg">
               {renderContent()}
             </div>
-
-            <FloatingButton
-              onTabChange={handleTabChange}
-              currentPage={currentPage}
-              initialTab={activeTab}
-              className="z-50"
-              activities={activities}
-              onTasksUpdate={fetchActivities}
-            />
           </div>
         </div>
+
+        <FloatingButton
+          onTabChange={handleTabChange}
+          currentPage={currentPage}
+          initialTab="Tests"
+          className="z-50"
+          activities={activities}
+          onTasksUpdate={fetchActivities}
+        />
+
         <div className="w-1/4">
           <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
             &nbsp;
