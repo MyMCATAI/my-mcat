@@ -42,7 +42,7 @@
 
 /* Month view styles */
 .custom-calendar .rbc-month-view {
-  border: none;
+  border: 1px solid color-mix(in srgb, var(--theme-border-color) 30%, transparent);
   background: color-mix(in srgb, var(--theme-leaguecard-color) 90%, transparent);
   border-bottom-left-radius: 1rem;
   border-bottom-right-radius: 1rem;
@@ -56,6 +56,8 @@
 .custom-calendar .rbc-day-bg {
   transition: all 0.2s ease;
   border: none;
+  border-left: 1px solid color-mix(in srgb, var(--theme-border-color) 15%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--theme-border-color) 15%, transparent);
 }
 
 .custom-calendar .rbc-off-range-bg {
@@ -99,7 +101,7 @@
 
 /* Row styles */
 .custom-calendar .rbc-month-row {
-  border-top: 1px solid color-mix(in srgb, var(--theme-border-color) 4%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--theme-border-color) 20%, transparent);
 }
 
 .custom-calendar .rbc-row-content {
@@ -117,13 +119,6 @@
   color: var(--theme-emphasis-color);
   opacity: 1;
 }
-
-/* Remove unnecessary borders */
-.custom-calendar .rbc-month-row + .rbc-month-row,
-.custom-calendar .rbc-day-bg + .rbc-day-bg {
-  border: none;
-}
-
 /* Add subtle grid lines */
 .custom-calendar .rbc-day-bg {
   border-right: 1px solid color-mix(in srgb, var(--theme-border-color) 4%, transparent);
@@ -283,10 +278,9 @@
 /* Practice exam event styles */
 .custom-calendar .exam-event {
   opacity: 1;
-  font-weight: 600;
+  font-weight: 800;
   min-height: 2.25rem;
-  background-color: var(--theme-hover-color) !important;
-  color: var(--theme-hover-text) !important;
+  background-color: var(--theme-emphasis-color) !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -299,7 +293,7 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.02em;
 }
 
