@@ -152,7 +152,7 @@ const Page = () => {
     };
 
     initializePage();
-  }, [checkHasReferrals, isLoadingUserInfo, userInfo?.streak]);
+  }, [checkHasReferrals, isLoadingUserInfo, userInfo?.streak, fetchActivities]);
 
   useEffect(() => {
     updateCalendarChatContext(activities);
@@ -450,8 +450,7 @@ const Page = () => {
     };
 
     initializeActivity();
-
-  }, [isLoading, pathname]);
+  }, [isLoading, pathname, activeTab, startActivity, currentStudyActivityId]);
 
   useEffect(() => {
     if (!currentStudyActivityId) return;
