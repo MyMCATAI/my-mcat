@@ -505,14 +505,16 @@ const Page = () => {
                 onClick={() => (window.location.href = "/home")}
               >
                 {activeTab === "Schedule"
-                  ? "Dashboard"
+                  ? "Statistics"
                   : activeTab === "AdaptiveTutoringSuite"
                     ? "Adaptive Tutoring Suite"
                     : activeTab === "flashcards"
                       ? "Flashcards"
                       : activeTab === "CARS"
                         ? "Daily CARs Practice"
-                        : "Home"}
+                        : activeTab === "Tests"
+                          ? "Testing Suite"
+                          : "Home"}
               </h2>
               <ThemeSwitcher />
             </div>

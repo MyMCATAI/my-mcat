@@ -967,7 +967,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   const handleNavigateToTutoring = () => {
     // Get the top 4 most missed categories
     const weakestCategories = Object.entries(mostMissed)
-      .slice(0, 5)
+      .slice(0, 6)
       .map(([concept]) => encodeURIComponent(concept));
 
     // Create the URL with the categories as a comma-separated list
