@@ -187,7 +187,7 @@ body.theme-sunsetCity * {
     --theme-hover-text: #ffffff;
     --theme-border-color: rgba(59, 130, 246, 0.4); /* Subtle blue */
     --theme-svg-color: #ffffff; /* Default white for CyberSpace theme */
-    --theme-leaguecard-color: #02143de6;
+    --theme-leaguecard-color: #001736;
     --theme-leaguecard-accent: rgba(37, 143, 122, 0.258);
     --theme-navbutton-color: #001226;
     --svg-invert: 0;
@@ -198,7 +198,7 @@ body.theme-sunsetCity * {
     --theme-adaptive-tutoring-color: #001226;
     --theme-adaptive-tutoring-boxShadow: 0 0 8px 2px rgba(0, 123, 255, 0.5);
     --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 4px rgba(0, 123, 255, 0.8);
-    --theme-emphasis-color: #6cd0c4; /* Bright cyber green to contrast with blue */
+    --theme-emphasis-color: #6cd0c493; /* Bright cyber green to contrast with blue */
     --theme-button-color: #011c3ce6; /* Slightly lighter than leaguecard-color: #000e2de6 */
     --theme-button-boxShadow: 0 0 2px 1px rgba(0, 123, 255, 0.5);
     --theme-button-boxShadow-hover: 0 0 9px 3px rgba(0, 123, 255, 0.7);
@@ -324,7 +324,7 @@ body.theme-sunsetCity * {
   --theme-adaptive-tutoring-boxShadow: 0 0 5px 2px rgba(255, 0, 89, 0.5);
   --theme-adaptive-tutoring-boxShadow-hover: 0 0 10px 4px rgba(255, 0, 89, 0.8);
   --theme-button-boxShadow: 0 0 2px 1px rgba(255, 0, 89, 0.4);
-  --theme-emphasis-color: #b41500; /* Vibrant pink to contrast with soft pink */
+  --theme-emphasis-color: #eb80b0; /* Vibrant pink to contrast with soft pink */
   --theme-button-color: #fbf0f3e6; /* Slightly darker than leaguecard-color: #ffffffe6 */
   --theme-button-boxShadow-hover: 0 0 8px 2px rgba(255, 0, 89, 0.6);
 }
@@ -363,7 +363,7 @@ body.theme-sunsetCity * {
   --theme-adaptive-tutoring-boxShadow: 0 0 10px 1px rgba(255, 99, 71, 0.5);
   --theme-button-boxShadow: 0 0 2px 1px rgba(255, 99, 71, 0.3);
   --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 5px rgba(255, 99, 71, 0.8);
-  --theme-emphasis-color: #f8a789; /* Changed from #ffeef6 to a warm coral color that matches the sunset theme */
+  --theme-emphasis-color: #ff9baf; /* Changed from #ffeef6 to a warm coral color that matches the sunset theme */
   --theme-button-color: #261741; /* Slightly lighter than leaguecard-color: #231639 */
   --theme-button-boxShadow-hover: 0 0 8px 3px rgba(255, 99, 71, 0.6);
 }
@@ -664,7 +664,7 @@ body {
   --theme-adaptive-tutoring-color: #f0f9fc;
   --theme-adaptive-tutoring-boxShadow: 0 0 8px 3px rgba(63, 194, 255, 0.5);
   --theme-adaptive-tutoring-boxShadow-hover: 0 0 11px 5px rgba(76, 181, 230, 0.8);
-  --theme-emphasis-color: #007c85d1; /* Warm orange to contrast with blue */
+  --theme-emphasis-color: #117bac98; /* Warm orange to contrast with blue */
   --theme-button-color: rgba(252, 254, 255, 0.9); /* Slightly lighter than leaguecard-color: rgba(255, 255, 255, 0.9) */
   --theme-button-boxShadow: 0 0 4px 3px rgba(66, 163, 208, 0.497); /* Increased spread/blur, reduced alpha by 18% from 0.5 */
   --theme-button-boxShadow-hover: 0 0 8px 4px rgba(4, 149, 216, 0.595); /* Increased spread/blur, reduced alpha by 18% from 0.6 */

@@ -3,8 +3,6 @@ import { Test } from "@/types";
 import Exams from "./testingsuit/Exams";
 import { toast } from "@/components/ui/use-toast";
 import CARsTutorial from "./testingsuit/CARsTutorial";
-import { HelpCircle } from 'lucide-react';
-import HelpContentCARs from './HelpContentCARs';
 
 
 const TestingSuit: React.FC = () => {
@@ -22,8 +20,6 @@ const TestingSuit: React.FC = () => {
     return tutorialPlayed === null || tutorialPlayed === "false";
   });
   const [kalypsoInteracted, setKalypsoInteracted] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
-  const helpRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const tutorialPlayed = localStorage.getItem("carsTutorialPlayed");
@@ -109,10 +105,6 @@ const TestingSuit: React.FC = () => {
     }
   };
 
-  const toggleHelp = () => {
-    setShowHelp((prev) => !prev);
-  };
-
   const tabs = [
     { 
       label: "Exams", 
@@ -134,42 +126,6 @@ const TestingSuit: React.FC = () => {
 
   return (
     <div className="testing-suit h-full flex flex-col relative">
-      <div className="absolute top-4 right-4 z-20">
-        <button
-          onClick={toggleHelp}
-          className={`help-button p-2 rounded-full shadow-md ${
-            showHelp ? "bg-[--theme-hover-color]" : "bg-white"
-          }`}
-        >
-          <HelpCircle 
-            className="w-4 h-4" 
-            fill="none"
-            stroke={showHelp ? "white" : "#333"}
-          />
-        </button>
-      </div>
-
-      {showHelp && (
-        <>
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
-            onClick={toggleHelp}
-          />
-          <div
-            ref={helpRef}
-            className="absolute top-6 right-8 max-h-[80vh] flex flex-col"
-          >
-            <HelpContentCARs 
-              onClose={toggleHelp}
-              onResetTutorials={() => {
-                setShowCARsTutorial(true);
-                toggleHelp();
-              }}
-            />
-          </div>
-        </>
-      )}
-
       <div className="tab-content flex-grow overflow-auto">
         {tabs[activeTab].content}
       </div>
