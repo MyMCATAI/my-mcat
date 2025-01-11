@@ -701,7 +701,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   return (
     <div className="w-full relative p-2">
       {/* Purchase Button - Now conditionally rendered */}
-      <div className="absolute top-6 left-8 z-30">
+      <div className="absolute top-6 left-8 z-30 ml-4">
         {!isCoinsLoading && !selectedSubject && (
           <div className="pointer-events-auto flex items-center gap-2">
             <PurchaseButton 
