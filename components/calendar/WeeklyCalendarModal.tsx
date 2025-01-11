@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import "react-day-picker/dist/style.css";
 import { useExamActivities, CalendarActivity } from "@/hooks/useCalendarActivities";
 import DatePickerDialog from "@/components/DatePickerDialog";
+import { useStudyPlan } from '@/hooks/useStudyPlan';
 
 interface WeeklyCalendarModalProps {
   onComplete?: (result: { success: boolean; action?: 'generate' | 'save' }) => void;
@@ -123,7 +124,10 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
     "Optimizing your schedule...",
     "Creating personalized tasks...",
     "Almost there...",
+    "Schedule generated successfully!"
   ];
+
+  const { generateTasks, loading: studyPlanLoading } = useStudyPlan();
 
   // Function to get week identifier
   const getWeekIdentifier = (date: Date) => {
@@ -225,50 +229,65 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
     try {
       setIsGenerating(true);
       setCurrentStep(4);  // Move to generation step
-      
-      const response = await fetch('/api/generate-tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+
+      // Show first message immediately
+      setLoadingMessages([messages[0]]);
+
+      // Convert date-based hours to day-based hours
+      const dayBasedHours = Object.entries(weeklyHours).reduce((acc, [dateStr, hours]) => {
+        const date = new Date(dateStr);
+        const dayName = format(date, 'EEEE');
+        acc[dayName] = hours;
+        return acc;
+      }, {} as Record<string, string>);
+
+      // Get current date with time set to start of day in UTC
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startDate = new Date(today.toISOString());
+
+      // Set end date to end of the exam day in UTC
+      const endDate = new Date(nextExam.scheduledDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      const response = await generateTasks({
+        resources: {
+          uworld: resources.find(r => r.id === 'uworld')?.selected || false,
+          aamc: resources.find(r => r.id === 'aamc')?.selected || false,
+          adaptive: resources.find(r => r.id === 'adaptive')?.selected || false,
+          ankigame: resources.find(r => r.id === 'ankigame')?.selected || false,
+          anki: resources.find(r => r.id === 'anki')?.selected || false,
         },
-        body: JSON.stringify({
-          examDate: testDate,
-          resources: {
-            uworld: resources.find(r => r.id === 'uworld')?.selected || false,
-            aamc: resources.find(r => r.id === 'aamc')?.selected || false,
-            adaptive: resources.find(r => r.id === 'adaptive')?.selected || false,
-            ankigame: resources.find(r => r.id === 'ankigame')?.selected || false,
-            anki: resources.find(r => r.id === 'anki')?.selected || false,
-          },
-          hoursPerDay: weeklyHours,
-          selectedBalance,
-          startDate: new Date(),
-          endDate: nextExam.scheduledDate,
-        }),
+        hoursPerDay: dayBasedHours,
+        selectedBalance,
+        startDate,
+        endDate,
+        examDate: new Date(nextExam.scheduledDate)
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate schedule');
+      // After getting response, show remaining messages with delay
+      for (let i = 1; i < messages.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setLoadingMessages(prev => [...prev, messages[i]]);
       }
 
-      // Start showing loading messages
-      const interval = setInterval(() => {
-        setLoadingMessages(prev => {
-          if (prev.length < messages.length) {
-            return [...prev, messages[prev.length]];
-          }
-          clearInterval(interval);
-          return prev;
-        });
-      }, 1000);
+      // Wait a final second before closing
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       if (onComplete) {
         onComplete({ success: true, action: 'generate' });
       }
+
+      // Close the modal
+      if (onClose) {
+        onClose();
+      }
     } catch (error) {
+      console.error('Failed to create schedule:', error);
       alert('Failed to create schedule. Please try again.');
       setCurrentStep(3); // Return to previous step on failure
-      setIsGenerating(false); // Reset generating state
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -602,7 +621,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                   </div>
                 </motion.div>
               ))}
-              {isGenerating && loadingMessages.length < messages.length && (
+              {isGenerating && loadingMessages.length < messages.length - 1 && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
