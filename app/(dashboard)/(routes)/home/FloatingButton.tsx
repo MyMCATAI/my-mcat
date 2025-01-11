@@ -110,7 +110,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
   };
 
   const buttonPositions: ButtonPosition[] = [
-    { top: 0, left: 0, tab: "Tests", icon: "/icons/exam.svg" },
+    { top: 0, left: 0, tab: "Tests", icon: "/icons/xam.svg" },
     { top: 0, left: 0, tab: "doctorsoffice", icon: "/icons/gamecontroller.svg" },
     { top: 0, left: 0, tab: "CARS", icon: "/icons/book.svg" },
     { top: 0, left: 0, tab: "AdaptiveTutoringSuite", icon: "/graduationcap.svg" },
