@@ -117,6 +117,8 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
+    console.log('Request body:', body); // Log entire request body
+
     const {
       examDate,
       resources,
@@ -126,7 +128,26 @@ export async function POST(req: Request) {
       endDate
     } = body;
 
+    // Log each required field
+    console.log('Required fields check:', {
+      examDate,
+      resources,
+      hoursPerDay,
+      selectedBalance,
+      endDate
+    });
+
     if (!examDate || !resources || !hoursPerDay || !selectedBalance || !endDate) {
+      // Log which specific fields are missing
+      const missingFields = {
+        examDate: !examDate,
+        resources: !resources,
+        hoursPerDay: !hoursPerDay,
+        selectedBalance: !selectedBalance,
+        endDate: !endDate
+      };
+      console.log('Missing fields:', missingFields);
+      
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -138,6 +159,20 @@ export async function POST(req: Request) {
     if (!studyPlan) {
       return NextResponse.json({ error: "No study plan found" }, { status: 404 });
     }
+
+    // First, delete all existing non-exam activities from startDate onwards
+    await prisma.calendarActivity.deleteMany({
+      where: {
+        userId,
+        studyPlanId: studyPlan.id,
+        scheduledDate: {
+          gte: new Date(startDate)
+        },
+        activityType: {
+          not: 'Exam'
+        }
+      }
+    });
 
     // Generate activities for the date range
     const activities = await generateDailyTasks(
@@ -187,6 +222,12 @@ async function generateDailyTasks(
   startDate: Date,
   endDate: Date
 ): Promise<CalendarActivity[]> {
+  console.log('\n=== Starting Daily Task Generation ===');
+  console.log('Resources:', resources);
+  console.log('Hours per Day:', hoursPerDay);
+  console.log('Selected Balance:', selectedBalance);
+  console.log('Date Range:', format(startDate, 'yyyy-MM-dd'), 'to', format(endDate, 'yyyy-MM-dd'));
+
   const activities: CalendarActivity[] = [];
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   
@@ -266,6 +307,9 @@ async function generateDailyTasks(
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
+  console.log('Total Activities Generated:', activities.length);
+  console.log('=== Task Generation Complete ===\n');
+
   return activities;
 }
 
@@ -329,6 +373,13 @@ function getAvailableTasks(
   currentDate: Date,
   examSchedule: { date: Date; examName: string }[]
 ): { name: string; duration: number; type: string }[] {
+  console.log('\n--- Task Generation Details ---');
+  console.log('Date:', format(currentDate, 'yyyy-MM-dd'));
+  console.log('Available Hours:', availableHours);
+  console.log('Is Review Day:', Math.random() < contentReviewRatio);
+  console.log('Is AAMC CARS Day:', isAamcCarsDay);
+  console.log('Current FL Milestone:', getCurrentFLMilestone(currentDate, examSchedule));
+
   const tasks: { name: string; duration: number; type: string }[] = [];
   const isReviewDay = Math.random() < contentReviewRatio;
   let remainingHours = availableHours;
@@ -411,6 +462,10 @@ function getAvailableTasks(
     });
   }
 
+  console.log('Generated Tasks:', tasks);
+  console.log('Remaining Hours:', remainingHours);
+  console.log('------------------------\n');
+  
   return tasks;
 }
 
