@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense, useCallback } from "react";
 import Schedule from "./Schedule";
 import SideBar from "./SideBar";
 import AdaptiveTutoring from "./AdaptiveTutoring";
@@ -92,7 +92,72 @@ const Page = () => {
   const [currentStudyActivityId, setCurrentStudyActivityId] = useState<string | null>(null);
   const pathname = usePathname();
 
-  const fetchActivities = async () => {
+  const updateCalendarChatContext = useCallback((currentActivities: FetchedActivity[]) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Create array of next 7 days
+    const nextWeekDays = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      return date;
+    });
+
+    // Helper function to format activities for a specific date
+    const formatActivitiesForDate = (activities: FetchedActivity[]) => {
+      return activities
+        .map(
+          (a) =>
+            `${a.activityTitle} (${a.activityType}, ${a.hours}h, ${a.status})`
+        )
+        .join(", ");
+    };
+
+    // Get activities for yesterday and each day of the week
+    const yesterdayActivities = currentActivities.filter(
+      (activity) =>
+        new Date(activity.scheduledDate).toDateString() ===
+        yesterday.toDateString()
+    );
+
+    // Create context string with detailed information
+    const context = `
+      Here's my personal MCAT study calendar:
+
+      Yesterday (${yesterday.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}):
+      ${formatActivitiesForDate(yesterdayActivities) || "No activities scheduled"}
+
+      ${nextWeekDays
+        .map((date) => {
+          const dayActivities = currentActivities.filter(
+            (activity) =>
+              new Date(activity.scheduledDate).toDateString() ===
+              date.toDateString()
+          );
+
+          const dayLabel =
+            date.toDateString() === today.toDateString()
+              ? "Today"
+              : date.toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "short",
+                  day: "numeric",
+                });
+
+          return `${dayLabel}:
+      ${formatActivitiesForDate(dayActivities) || "No activities scheduled"}`;
+        })
+        .join("\n\n")}
+    `.trim();
+
+    setChatbotContext({
+      contentTitle: "Personal Calendar",
+      context: context,
+    });
+  }, []);
+
+  const fetchActivities = useCallback(async () => {
     try {
       const response = await fetch("/api/calendar-activity");
       if (!response.ok) {
@@ -139,7 +204,7 @@ const Page = () => {
       console.error("Error fetching activities:", error);
       toast.error("Failed to fetch activities. Please try again.");
     }
-  };
+  }, [updateCalendarChatContext]);
 
   // Combine loading states
   const isPageLoading = isLoading || isLoadingUserInfo || isUpdatingProfile || isGeneratingActivities;
@@ -321,71 +386,6 @@ const Page = () => {
       }
     };
   }, []);
-
-  const updateCalendarChatContext = (currentActivities: FetchedActivity[]) => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    // Create array of next 7 days
-    const nextWeekDays = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      return date;
-    });
-
-    // Helper function to format activities for a specific date
-    const formatActivitiesForDate = (activities: FetchedActivity[]) => {
-      return activities
-        .map(
-          (a) =>
-            `${a.activityTitle} (${a.activityType}, ${a.hours}h, ${a.status})`
-        )
-        .join(", ");
-    };
-
-    // Get activities for yesterday and each day of the week
-    const yesterdayActivities = currentActivities.filter(
-      (activity) =>
-        new Date(activity.scheduledDate).toDateString() ===
-        yesterday.toDateString()
-    );
-
-    // Create context string with detailed information
-    const context = `
-      Here's my personal MCAT study calendar:
-
-      Yesterday (${yesterday.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}):
-      ${formatActivitiesForDate(yesterdayActivities) || "No activities scheduled"}
-
-      ${nextWeekDays
-        .map((date) => {
-          const dayActivities = currentActivities.filter(
-            (activity) =>
-              new Date(activity.scheduledDate).toDateString() ===
-              date.toDateString()
-          );
-
-          const dayLabel =
-            date.toDateString() === today.toDateString()
-              ? "Today"
-              : date.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "short",
-                  day: "numeric",
-                });
-
-          return `${dayLabel}:
-      ${formatActivitiesForDate(dayActivities) || "No activities scheduled"}`;
-        })
-        .join("\n\n")}
-    `.trim();
-
-    setChatbotContext({
-      contentTitle: "Personal Calendar",
-      context: context,
-    });
-  };
 
   // Handle tab changes
   const handleTabChange = async (newTab: string) => {
