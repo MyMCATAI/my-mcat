@@ -169,20 +169,46 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
       .replace(/\n/g, '<br/>');
   };
 
-  const handleNavigateToTutoring = async () => {
-    const weakCategories = getWeaknesses(test.dataPulses)
-      .map(item => encodeURIComponent(item.topic));
+  const handleNavigateToTutoring = async (specificContentCategory?: string) => {
+    // If specific content category provided, only use that one
+    const weakContentCategories = specificContentCategory 
+      ? [specificContentCategory]
+      : getWeaknesses(test.dataPulses).map(item => item.topic);
     
-    if (weakCategories.length > 0) {
-      const url = `/home?tab=AdaptiveTutoringSuite&conceptCategories=${weakCategories.join(',')}`;
-      // First navigate to home
-      await router.push('/home');
-      // Then after a small delay, navigate to the specific tab with categories
-      setTimeout(() => {
-        router.push(url);
-      }, 100);
+    if (weakContentCategories.length > 0) {
+        try {
+            // Query prisma to get all concept categories for these content categories
+            const conceptCategories = await fetch('/api/categories/concepts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ contentCategories: weakContentCategories })
+            }).then(res => res.json());
+
+            if (!conceptCategories || !Array.isArray(conceptCategories)) {
+                throw new Error('Invalid response from server');
+            }
+
+            // If specific content category, use all concepts, otherwise take 6 weakest
+            const selectedConcepts = specificContentCategory
+                ? conceptCategories.map(concept => encodeURIComponent(concept))
+                : conceptCategories
+                    .slice(0, 6)
+                    .map(concept => encodeURIComponent(concept));
+
+            if (selectedConcepts.length > 0) {
+                const url = `/home?tab=AdaptiveTutoringSuite&conceptCategories=${selectedConcepts.join(',')}`;
+                window.location.href = url;
+            } else {
+                toast.error('No concept categories found to review');
+            }
+        } catch (error) {
+            console.error('Error fetching concept categories:', error);
+            toast.error('Failed to load review content');
+        }
     } else {
-      toast.error('No weak categories found to review');
+        toast.error('No weak categories found to review');
     }
   };
 
@@ -310,7 +336,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-[--theme-leaguecard-color] p-4 rounded-2xl shadow-xl flex flex-col min-h-0">
+        <div className="lg:col-span-2 bg-[--theme-leaguecard-color] p-4 rounded-2xl shadow-xl flex flex-col min-h-0 overflow-visible">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs uppercase tracking-wide opacity-60">Weaknesses</h3>
             <div className="relative group">
@@ -318,7 +344,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
                 variant="secondary"
                 size="icon"
                 className="opacity-80 hover:opacity-100 transition-all duration-200 h-8 w-8"
-                onClick={handleNavigateToTutoring}
+                onClick={() => handleNavigateToTutoring()}
               >
                 <GraduationCap className="h-4 w-4 text-[--theme-text-color] hover:text-[--theme-hover-color]" />
               </Button>
@@ -327,11 +353,12 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
               </span>
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 overflow-y-auto overflow-x-visible flex-1 min-h-0 pr-2">
             {getWeaknesses(test.dataPulses).map((item, index) => (
               <div 
                 key={index}
-                className="flex items-center p-3 rounded-xl bg-[--theme-leaguecard-accent] hover:translate-x-2 transition-all duration-200 cursor-pointer"
+                className="flex items-center p-3 rounded-xl bg-[--theme-leaguecard-accent] hover:translate-x-2 transition-all duration-200 cursor-pointer relative"
+                onClick={() => handleNavigateToTutoring(item.topic)}
               >
                 <span className="text-xl mr-3">{item.icon}</span>
                 <div className="flex-grow">

@@ -248,8 +248,8 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
                 <SelectTrigger className="w-full bg-[--theme-mainbox-color] border-[--theme-border-color]">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
-                <SelectContent className="max-h-[200px]">
-                  <div className="max-h-[200px] overflow-y-auto">
+                <SelectContent className="max-h-[12.5rem]">
+                  <div className="max-h-[12.5rem] overflow-y-auto">
                     {categoriesLoading ? (
                       <SelectItem value="loading" disabled>Loading categories...</SelectItem>
                     ) : (
@@ -341,8 +341,8 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
               placeholder="If I could do this question again, I would approach it differently by..."
             />
             <div className="flex justify-between mt-1">
-              <span className={`text-sm ${question.improvement.length < 250 ? 'text-red-500' : 'text-green-500'}`}>
-                {question.improvement.length}/250 characters
+              <span className={`text-sm ${question.improvement.length < 175 ? 'text-red-500' : 'text-green-500'}`}>
+                {question.improvement.length}/175 characters
               </span>
               {improvementError && (
                 <span className="text-sm text-red-500">{improvementError}</span>

@@ -110,9 +110,9 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
   };
 
   const buttonPositions: ButtonPosition[] = [
-    { top: 0, left: 0, tab: "Schedule", icon: "/calendar.svg" },
-    { top: 0, left: 0, tab: "doctorsoffice", icon: "/gamecontroller.svg" },
-    { top: 0, left: 0, tab: "CARS", icon: "/book.svg" },
+    { top: 0, left: 0, tab: "Tests", icon: "/icons/exam.svg" },
+    { top: 0, left: 0, tab: "doctorsoffice", icon: "/icons/gamecontroller.svg" },
+    { top: 0, left: 0, tab: "CARS", icon: "/icons/book.svg" },
     { top: 0, left: 0, tab: "AdaptiveTutoringSuite", icon: "/graduationcap.svg" },
   ];
 
@@ -146,6 +146,20 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
       // If we reach here, user has the required unlock
       // Execute the navigation logic
       const tabActions = {
+        Tests: () => {
+          if (currentPage === 'doctorsoffice') {
+            router.push('/home');
+          }
+          setActiveTab(tab);
+          onTabChange(tab);
+          setRecentlyChangedTab(true);
+          if (tabChangeTimeout.current) {
+            clearTimeout(tabChangeTimeout.current);
+          }
+          tabChangeTimeout.current = window.setTimeout(() => {
+            setRecentlyChangedTab(false);
+          }, 3000);
+        },
         AdaptiveTutoringSuite: () => {
           router.push('/home');
           setActiveTab(tab);
@@ -206,7 +220,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
   };
 
   const labelTexts: Record<string, string> = {
-    "Schedule": "Dashboard",
+    "Tests": "Practice Tests",
     "doctorsoffice": "The Anki Clinic",
     "CARS": "Daily CARs Suite",
     "AdaptiveTutoringSuite": "Tutoring Suite",
