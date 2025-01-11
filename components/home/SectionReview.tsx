@@ -183,23 +183,21 @@ const SectionReview: React.FC<SectionReviewProps> = ({
                   </button>
                 )}
               </div>
-              <div className="flex-grow flex items-center justify-center text-sm">
-                <div className="w-full relative">
+              <div className="flex-grow flex items-center justify-center text-sm relative">
+                <div className="max-h-[8rem] overflow-y-auto w-full">
                   {isGeneratingAnalysis ? (
                     <div className="opacity-50">Analyzing your performance...</div>
                   ) : analysis ? (
-                    <>
-                      <div className="text-sm leading-relaxed whitespace-pre-line max-h-[8rem] overflow-hidden relative">
-                        {analysis}
-                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[--theme-leaguecard-color] to-transparent" />
-                      </div>
+                    <div className="relative">
+                      <div className="text-sm leading-relaxed whitespace-pre-line max-h-[100px] max-w-[660px] overflow-hidden">{analysis}</div>
+                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[--theme-leaguecard-color] to-transparent" />
                       <button 
                         onClick={() => setIsAnalysisMaximized(true)}
-                        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 px-4 py-1 text-xs text-[--theme-text-color] hover:text-[--theme-hover-color] transition-colors"
+                        className="absolute bottom-1 left-1/2 transform -translate-x-1/2 px-4 py-1 text-xs text-blue-500 hover:text-blue-600 transition-colors"
                       >
                         Read More
                       </button>
-                    </>
+                    </div>
                   ) : listOfQuestions.length === 0 ? (
                     <div className="opacity-50">Add questions to generate an analysis</div>
                   ) : (
