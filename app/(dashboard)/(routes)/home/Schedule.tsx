@@ -42,9 +42,11 @@ import { toast } from "react-hot-toast";
 import {
   Calendar as CalendarIcon,
   BarChart as AnalyticsIcon,
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
 } from "lucide-react";
-import HelpContentSchedule from './HelpContentSchedule';
-import { HelpCircle, Bell, Coffee, ClipboardList, AlertTriangle, X, Calendar } from 'lucide-react';
 import { useOutsideClick } from '@/hooks/use-outside-click';
 import UWorldPopup from '@/components/home/UWorldPopup';
 import CompletionDialog from '@/components/home/CompletionDialog';
@@ -121,7 +123,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     useState(false);
   const [tutorialStep, setTutorialStep] = useState(1);
   const [showBreaksDialog, setShowBreaksDialog] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
   const [showUWorldPopup, setShowUWorldPopup] = useState(false);
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
@@ -577,19 +578,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     );
   };
 
-  const toggleHelp = () => {
-    setShowHelp((prev) => !prev);
-  };
-
-  const helpRef = useRef<HTMLDivElement>(null);
-
-  // Use the useOutsideClick hook to close the help modal when clicking outside
-  useOutsideClick(helpRef, () => {
-    if (showHelp) {
-      setShowHelp(false);
-    }
-  });
-
   const uWorldTasks = getUWorldTasks()
   const handleUWorldScoreSubmit = (scores: number[]) => {
     console.log("UWorld scores:", scores);
@@ -748,29 +736,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         )}
       </div>
 
-      {/* Settings and Help Buttons */}
-      <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger>
-              <button
-                onClick={toggleHelp}
-                className={`help-button p-2 rounded-full shadow-md ${
-                  showHelp ? "bg-[--theme-hover-color]" : "bg-white"
-                }`}
-              >
-                <HelpCircle 
-                  className="w-4 h-4" 
-                  fill="none"
-                  stroke={showHelp ? "white" : "#333"}
-                />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Help</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-
       {/* Main Container */}
       <div
         className="flex-grow h-[calc(100vh-7.6rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
@@ -880,32 +845,6 @@ const Schedule: React.FC<ScheduleProps> = ({
           </TooltipProvider>
         </div>
       </div>
-
-      {/* Help Modal */}
-      <AnimatePresence>
-        {showHelp && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-70 z-40"
-              onClick={toggleHelp}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-0 right-4 w-[32rem] z-50 max-h-[80vh] flex flex-col"
-            >
-              <HelpContentSchedule 
-                onClose={toggleHelp}
-                onResetTutorials={resetTutorials}
-              />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
 
       {/* New Activity Form */}
       {showNewActivityForm && (

@@ -151,7 +151,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
     .slice(0, 3);
 
   return (
-    <div className="animate-fadeIn h-full p-6 flex flex-col">
+    <div className="animate-fadeIn h-full p-3 flex flex-col">
       <div className="flex flex-col md:flex-row gap-6 mb-6">
         <div className="w-full md:w-[12rem] h-[12rem] bg-[--theme-leaguecard-color] rounded-2xl shadow-xl overflow-hidden relative">
           <button

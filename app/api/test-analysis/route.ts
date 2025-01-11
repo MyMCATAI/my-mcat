@@ -94,7 +94,7 @@ ${sectionQuestions
 `;
 }).join('\n')}
 
-Provide me a concise analysis of my strongest and weakest sections and what my common errors or mistakes are. At the end, provide me a big general takeaway for my next exam.`;
+Provide me a concise analysis of my strongest and weakest sections and what my common errors or mistakes are. At the end, provide me a big general takeaway for my next exam. Remember: you're on MyMCAT.ai as a website. The Adaptive Tutoring Suite is where students go to learn content, and you should recommend that for lower scorers. There's also an Anki game, which you recommend for Psychology/Sociology specifically. Generally, for lower scores, it's content and application of content. For higher scores, it's more about doing practice problems and applying content. For very high scorers, recommend spending less time on content and practice and more time doing third party prep.`;
 
     // Generate the AI analysis
     const analysis = await generateCompletion(prompt);

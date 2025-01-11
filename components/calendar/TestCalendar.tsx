@@ -37,6 +37,7 @@ interface TestCalendarProps {
   chatbotRef?: React.MutableRefObject<{
     sendMessage: (message: string, messageContext?: string) => void;
   }>;
+  handleSetTab?: (tab: string) => void;
 }
 
 interface ToolbarWithEventsProps {
@@ -124,7 +125,8 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
   date, 
   onNavigate, 
   onSelectEvent,
-  chatbotRef 
+  chatbotRef,
+  handleSetTab
 }) => {
   const createCalendarContext = () => {
     const today = new Date();
@@ -196,7 +198,17 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
     if (chatbotRef?.current) {
       const visibleMessage = "Summarize my week";
       const hiddenContext = `Here's my calendar context:\n\n${contextData.context}\n\nBased on this calendar, please provide a summary of my test schedule for this week. Include details about upcoming exams, their dates, and any completed exams.`;
-      chatbotRef.current.sendMessage(visibleMessage, hiddenContext);
+      
+      // Just switch the sidebar to Insights tab
+      const sidebarInsightsTab = document.querySelector('[data-tab="tab1"]');
+      if (sidebarInsightsTab instanceof HTMLElement) {
+        sidebarInsightsTab.click();
+      }
+      
+      // Add delay before sending message
+      setTimeout(() => {
+        chatbotRef.current.sendMessage(visibleMessage, hiddenContext);
+      }, 2000);
     }
   };
 
