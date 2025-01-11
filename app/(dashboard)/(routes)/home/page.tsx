@@ -88,9 +88,58 @@ const Page = () => {
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [userStreak, setUserStreak] = useState(0);
   const router = useRouter();
-  const { startActivity, endActivity,updateActivityEndTime } = useUserActivity();
+  const { startActivity, endActivity, updateActivityEndTime } = useUserActivity();
   const [currentStudyActivityId, setCurrentStudyActivityId] = useState<string | null>(null);
   const pathname = usePathname();
+
+  const fetchActivities = async () => {
+    try {
+      const response = await fetch("/api/calendar-activity");
+      if (!response.ok) {
+        throw new Error("Failed to fetch activities");
+      }
+      const activities = await response.json();
+
+      const todaysActivities = activities.filter((activity: FetchedActivity) =>
+        isToday(new Date(activity.scheduledDate))
+      );
+
+      // get UWorld activities that need task generation
+      const uworldActivities = todaysActivities.filter(
+        (activity: FetchedActivity) =>
+          activity.activityTitle === "UWorld" &&
+          (!activity.tasks || activity.tasks.length === 1)
+      );
+
+      let updatedActivities = [...activities];
+
+      // Only fetch UWorld updates if there are UWorld activities that need tasks
+      if (uworldActivities.length > 0) {
+        const responseUWorld = await fetch("/api/uworld-update", {
+          method: "POST",
+          body: JSON.stringify({ todayUWorldActivity: uworldActivities }),
+        });
+
+        const responseUWorldJson = await responseUWorld.json();
+        const uworldActivityTasks = responseUWorldJson.tasks;
+
+        // Update only the activities that needed new tasks
+        updatedActivities = updatedActivities.map((activity) =>
+          isToday(new Date(activity.scheduledDate)) &&
+          activity.activityTitle === "UWorld" &&
+          (!activity.tasks || activity.tasks.length === 1)
+            ? { ...activity, tasks: uworldActivityTasks }
+            : activity
+        );
+      }
+
+      setActivities(updatedActivities);
+      updateCalendarChatContext(updatedActivities);
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+      toast.error("Failed to fetch activities. Please try again.");
+    }
+  };
 
   // Combine loading states
   const isPageLoading = isLoading || isLoadingUserInfo || isUpdatingProfile || isGeneratingActivities;
@@ -157,55 +206,6 @@ const Page = () => {
   useEffect(() => {
     updateCalendarChatContext(activities);
   }, [activities]);
-
-  const fetchActivities = async () => {
-    try {
-      const response = await fetch("/api/calendar-activity");
-      if (!response.ok) {
-        throw new Error("Failed to fetch activities");
-      }
-      const activities = await response.json();
-
-      const todaysActivities = activities.filter((activity: FetchedActivity) =>
-        isToday(new Date(activity.scheduledDate))
-      );
-
-      // get UWorld activities that need task generation
-      const uworldActivities = todaysActivities.filter(
-        (activity: FetchedActivity) =>
-          activity.activityTitle === "UWorld" &&
-          (!activity.tasks || activity.tasks.length === 1)
-      );
-
-      let updatedActivities = [...activities];
-
-      // Only fetch UWorld updates if there are UWorld activities that need tasks
-      if (uworldActivities.length > 0) {
-        const responseUWorld = await fetch("/api/uworld-update", {
-          method: "POST",
-          body: JSON.stringify({ todayUWorldActivity: uworldActivities }),
-        });
-
-        const responseUWorldJson = await responseUWorld.json();
-        const uworldActivityTasks = responseUWorldJson.tasks;
-
-        // Update only the activities that needed new tasks
-        updatedActivities = updatedActivities.map((activity) =>
-          isToday(new Date(activity.scheduledDate)) &&
-          activity.activityTitle === "UWorld" &&
-          (!activity.tasks || activity.tasks.length === 1)
-            ? { ...activity, tasks: uworldActivityTasks }
-            : activity
-        );
-      }
-
-      setActivities(updatedActivities);
-      updateCalendarChatContext(updatedActivities);
-    } catch (error) {
-      console.error("Error fetching activities:", error);
-      toast.error("Failed to fetch activities. Please try again.");
-    }
-  };
 
   const renderContent = () => {
     if (isUpdatingProfile || isGeneratingActivities) {
