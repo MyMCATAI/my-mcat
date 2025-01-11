@@ -158,4 +158,43 @@ export function useExamActivities() {
     deleteExamActivity,
     fetchExamActivities
   };
+}
+
+export function useAllCalendarActivities() {
+  const [activities, setActivities] = useState<CalendarActivity[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchAllActivities = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/calendar-activity');
+      if (!response.ok) {
+        throw new Error('Failed to fetch activities');
+      }
+      const data = await response.json();
+      console.log(data);
+      // Filter out exam activities
+      const nonExamActivities = data.filter(
+        (activity: CalendarActivity) => activity.activityType !== 'Exam'
+      );
+      setActivities(nonExamActivities);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch activities'));
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAllActivities();
+  }, [fetchAllActivities]);
+
+  return {
+    activities,
+    loading,
+    error,
+    refetch: fetchAllActivities
+  };
 } 
