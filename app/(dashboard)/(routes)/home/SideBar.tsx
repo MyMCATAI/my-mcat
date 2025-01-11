@@ -489,7 +489,7 @@ const SideBar: React.FC<SideBarProps> = ({
             case "Schedule":
                 return <HelpContentSchedule onClose={() => {}} />;
             case "AdaptiveTutoringSuite":
-                return <HelpContent onClose={() => {}} />;
+                return <HelpContent onClose={() => {}} onResetTutorials={() => {}} />;
             default:
                 return (
                     <div className="h-[calc(100vh-11.6rem)] flex items-center justify-center text-center p-4">
