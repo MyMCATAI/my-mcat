@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     }, {} as Record<string, { total: number; wrong: number; flagged: number; }>);
 
     
-    const prompt = `Analyze my MCAT ${sectionPulse.name} section performance and write a short analysis for me:
+    const prompt = `You're Kalypso, the friendly AI cat. Analyze my MCAT ${sectionPulse.name} section performance and write a short analysis for me. When looking at my thought processes, focus on the gap you're noticing between my original thought process and my corrected thought process and report a summary of the common errors I make.:
 
 Score: ${sectionPulse.name === "CARS" ? sectionPulse.positive : accuracy.toFixed(1)}%
 Questions: ${correctQuestions} correct, ${wrongQuestions} wrong, ${flaggedQuestions} flagged
