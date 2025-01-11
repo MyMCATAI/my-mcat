@@ -122,6 +122,13 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
     { top: 30, left: 100 },
   ];
 
+  const labelTexts: Record<string, string> = {
+    "Tests": "Practice Tests",
+    "doctorsoffice": "The Anki Clinic",
+    "CARS": "Daily CARs Suite",
+    "AdaptiveTutoringSuite": "Tutoring Suite",
+  };
+
   const handleButtonClick = async (tab: string) => {
     // First check if user has the required unlock
     try {
@@ -217,13 +224,6 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
       console.error("Error checking unlocks:", error);
       toast.error("Failed to check feature access");
     }
-  };
-
-  const labelTexts: Record<string, string> = {
-    "Tests": "Practice Tests",
-    "doctorsoffice": "The Anki Clinic",
-    "CARS": "Daily CARs Suite",
-    "AdaptiveTutoringSuite": "Tutoring Suite",
   };
 
   const getLabelPosition = (index: number) => {
