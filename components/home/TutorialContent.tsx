@@ -51,28 +51,28 @@ const ResourcePack: React.FC = () => {
       mcat: (
         <div className="animate-fadeIn p-6 space-y-6">
           <h2 className="text-xl font-bold">Introduction to the MCAT</h2>
-          <p>Comprehensive overview of the MCAT exam structure, scoring, and preparation strategies.</p>
+          <p>{"Comprehensive overview of the MCAT exam structure, scoring, and preparation strategies."}</p>
           {/* Add more content here */}
         </div>
       ),
       mymcat: (
         <div className="animate-fadeIn p-6 space-y-6">
           <h2 className="text-xl font-bold">Getting Started with MyMCAT</h2>
-          <p>Learn how to make the most of MyMCAT's features and tools for your MCAT preparation.</p>
+          <p>{"Learn how to make the most of MyMCAT&apos;s features and tools for your MCAT preparation."}</p>
           {/* Add more content here */}
         </div>
       ),
       taking: (
         <div className="animate-fadeIn p-6 space-y-6">
           <h2 className="text-xl font-bold">Taking a Test</h2>
-          <p>Best practices and strategies for taking MCAT practice tests and managing your time effectively.</p>
+          <p>{"Best practices and strategies for taking MCAT practice tests and managing your time effectively."}</p>
           {/* Add more content here */}
         </div>
       ),
       reviewing: (
         <div className="animate-fadeIn p-6 space-y-6">
           <h2 className="text-xl font-bold">Reviewing Your Test</h2>
-          <p>How to effectively review your practice tests and learn from your mistakes.</p>
+          <p>{"How to effectively review your practice tests and learn from your mistakes."}</p>
           {/* Add more content here */}
         </div>
       ),
