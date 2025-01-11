@@ -51,7 +51,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
       chatbotRef.current = {
         sendMessage: (message: string, messageContext?: string) => {
           // Set the textarea value and simulate Enter press
-          const textarea = document.querySelector('.react-chatbotify-input textarea');
+          const textarea = document.querySelector('.rcb-chat-input-textarea');
           if (textarea instanceof HTMLTextAreaElement) {
             // Set value and trigger input event
             textarea.value = message;
