@@ -52,7 +52,7 @@ interface PracticeTestsProps {
   handleSetTab?: (tab: string) => void;
   className?: string;
   chatbotRef?: React.MutableRefObject<{
-    sendMessage: (message: string) => void;
+    sendMessage: (message: string, messageContext?: string) => void;
   }>;
 }
 
