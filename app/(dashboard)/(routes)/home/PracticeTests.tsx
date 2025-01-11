@@ -20,13 +20,14 @@ import TestReview from '@/components/home/TestReview';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useExamActivities } from '@/hooks/useCalendarActivities';
+import { useStudyActivities } from '@/hooks/useStudyActivities';
+import { useAllCalendarActivities } from '@/hooks/useCalendarActivities';
 import DatePickerDialog from '@/components/DatePickerDialog';
 import DeleteExamDialog from '@/components/DeleteExamDialog';
 import PracticeTestCompleteDialog from '@/components/PracticeTestCompleteDialog';
 import { toast } from "@/components/ui/use-toast";
 import WeeklyCalendarModal from "@/components/calendar/WeeklyCalendarModal";
 import { AnimatePresence, motion } from "framer-motion";
-import { useStudyActivities } from '@/hooks/useStudyActivities';
 import TestCalendar from '@/components/calendar/TestCalendar';
 
 interface CalendarActivity {
@@ -107,6 +108,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
   chatbotRef 
 }) => {
   const { activities: examActivities, loading: examLoading, updateExamDate, createExamActivity, fetchExamActivities } = useExamActivities();
+  const { activities: allActivities, loading: activitiesLoading, refetch: refetchAllActivities } = useAllCalendarActivities();
   const { activities: studyActivities, loading: studyLoading } = useStudyActivities();
   const [scheduledTests, setScheduledTests] = useState<Test[]>([]);
   const [date, setDate] = useState<Date>(new Date());
@@ -124,7 +126,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
 
   // Combine exam and study activities into calendar events
   useEffect(() => {
-    if (examActivities && studyActivities) {
+    if (examActivities && allActivities) {
       const examEvents = examActivities.map((activity) => {
         // Map exam titles to shorter display names
         let displayTitle = "EXAM";
@@ -153,22 +155,24 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
         };
       });
 
-      const studyEvents = studyActivities.map((activity) => ({
-        id: activity.id,
-        title: activity.activityTitle,
-        start: new Date(activity.scheduledDate),
-        end: new Date(activity.scheduledDate),
-        allDay: true,
-        resource: { 
-          ...activity, 
-          eventType: 'study',
-          fullTitle: `${activity.activityTitle} (${activity.hours}h)`
-        }
-      }));
+      const studyEvents = allActivities
+        .filter(activity => activity.activityType !== 'exam')
+        .map((activity) => ({
+          id: activity.id,
+          title: activity.activityTitle,
+          start: new Date(activity.scheduledDate),
+          end: new Date(activity.scheduledDate),
+          allDay: true,
+          resource: { 
+            ...activity, 
+            eventType: 'study',
+            fullTitle: `${activity.activityTitle} (${activity.hours}h)`
+          }
+        }));
 
       setCalendarEvents([...examEvents, ...studyEvents]);
     }
-  }, [examActivities, studyActivities]);
+  }, [examActivities, allActivities]);
 
   useEffect(() => {
     if (examActivities) {
@@ -847,17 +851,21 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                 className="max-h-[90vh] overflow-auto"
               >
                 <WeeklyCalendarModal
-                  onComplete={({ success, action }) => {
-                    if (success && action === 'generate') {
-                      handleSetTab && handleSetTab('Tests');
-                    }
+                  onComplete={async ({ success, action }) => {
                     if (success) {
+                      if (action === 'generate') {
+                        // Refresh all activities
+                        await Promise.all([
+                          fetchExamActivities(),
+                          refetchAllActivities()
+                        ]);
+                        handleSetTab && handleSetTab('Tests');
+                      }
                       handleStudyPlanSaved();
-                      toggleSettings();
                     }
                   }}
                   isInitialSetup={false}
-                  onClose={toggleSettings}
+                  onClose={()=>setShowSettings(false)}
                 />
               </div>
             </motion.div>
