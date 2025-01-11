@@ -21,7 +21,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import CompletionDialog from "@/components/home/CompletionDialog";
 import { useRouter } from "next/navigation";
 import UWorldPopup from '@/components/home/UWorldPopup';
-
+import HelpContent from "@/components/guides/HelpContent";
+import HelpContentCARS from "@/components/guides/HelpContentCARs";
+import HelpContentSchedule from "@/components/guides/HelpContentSchedule";
 interface Task {
   text: string;
   completed: boolean;
@@ -71,6 +73,8 @@ const SideBar: React.FC<SideBarProps> = ({
       case "CARS":
       case "AdaptiveTutoringSuite":
         return "tab1"; // Insights tab
+      case "Tests":
+        return "tab4"; // Help tab
       default:
         return "tab1";
     }
@@ -475,13 +479,28 @@ const SideBar: React.FC<SideBarProps> = ({
 
   const renderContent = (content: TabContent) => {
     if (content.type === 'insights') {
-      return renderInsights();
+        return renderInsights();
     } else if (content.type === 'tutors') {
-      return renderTutors(content.schools);
+        return renderTutors(content.schools);
     } else if (content.type === 'tutorial') {
-      return <TutorialContent />;
+        switch (currentPage) {
+            case "CARS":
+                return <HelpContentCARS onClose={() => {}} />;
+            case "Schedule":
+                return <HelpContentSchedule onClose={() => {}} />;
+            case "AdaptiveTutoringSuite":
+                return <HelpContent onClose={() => {}} />;
+            default:
+                return (
+                    <div className="h-[calc(100vh-11.6rem)] flex items-center justify-center text-center p-4">
+                        <p className="text-[--theme-text-color]">
+                            Select a specific section to view its help content.
+                        </p>
+                    </div>
+                );
+        }
     } else if (content.type === 'tasks') {
-      return renderTasks();
+        return renderTasks();
     }
     return null;
   };
@@ -490,6 +509,7 @@ const SideBar: React.FC<SideBarProps> = ({
     { id: "tab1", label: "Insights", content: { type: 'insights', videos: videos } },
     { id: "tab2", label: "Tasks", content: { type: 'tasks' } },
     { id: "tab3", label: "Tutors", content: { type: 'tutors', schools: tutors } },
+    { id: "tab4", label: "Help", content: { type: 'tutorial' } },
   ];
 
   const AddTutorDialog = () => (
@@ -755,15 +775,15 @@ const SideBar: React.FC<SideBarProps> = ({
   return (
     <div className="relative p-2 rounded-lg overflow-hidden h-[calc(100vh-4.1rem)]">
       <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
-        <div className="flex w-full flex-shrink-0">
+        <div className="flex w-full flex-shrink-0 p-[1%] bg-[--theme-leaguecard-color] rounded-lg">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               data-tab={tab.id}
-              className={`flex-1 text-m py-2 border border-[#79747E] text-center ${
+              className={`flex-1 text-m py-[2%] px-[3%] rounded-lg transition-all duration-300 ${
                 activeTab === tab.id
-                  ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                  : "bg-[white] text-black"
+                  ? "bg-[--theme-hover-color] text-[--theme-hover-text] shadow-md transform scale-105"
+                  : "bg-transparent text-[--theme-text-color] hover:opacity-50 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
               }`}
               onClick={() => setActiveTab(tab.id)}
             >
@@ -775,7 +795,7 @@ const SideBar: React.FC<SideBarProps> = ({
           activeTab === 'tab3'
             ? 'bg-transparent' 
             : 'bg-[--theme-mainbox-color]'
-          } flex-1 min-h-0 mb-8 overflow-hidden relative rounded-lg`}>
+          } flex-1 min-h-0 mb-8 overflow-hidden relative rounded-lg transition-all duration-300`}>
           {renderContent(tabs.find(tab => tab.id === activeTab)!.content)}
         </div>
       </div>

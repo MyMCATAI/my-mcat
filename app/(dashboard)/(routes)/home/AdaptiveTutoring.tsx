@@ -27,7 +27,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { FaSpotify, FaApple, FaHeadphones } from "react-icons/fa";
 import ATSSettingContent from "./ATSSettingContent";
-import HelpContent from "./HelpContent";
+import HelpContent from "../../../../components/guides/HelpContent";
 import {
   TooltipProvider,
   Tooltip,
@@ -46,7 +46,6 @@ import DiagnosticDialog from "./DiagnosticDialog";
 import ATSTutorial from "./ATSTutorial";
 import CompleteTopicButton from "@/components/CompleteTopicButton";
 import ReactConfetti from "react-confetti";
-import { HelpCircle } from "lucide-react";
 
 interface ContentItem {
   id: string;
@@ -92,7 +91,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 }) => {
   const [isFirstVisit] = useState(() => !localStorage.getItem("initialTutorialPlayed"));
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
   const [contentType, setContentType] = useState("video");
   const [isLoading, setIsLoading] = useState(true);
   const [content, setContent] = useState<ContentItem[]>([]);
@@ -707,7 +705,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     setRunTutorialPart3(false);
     setRunTutorialPart4(false);
     setCatIconInteracted(false);
-    setShowHelp(false);
     setTutorialKey((prev) => prev + 1);
 
     // Clear both types of stored categories
@@ -828,7 +825,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         />
       )}
       <div className="flex items-stretch w-full mb-3">
-        <div className="flex-grow mr-3.5 ml-2">
+        <div className="flex-grow mr-[3.5%] ml-[1%]">
           <div className="grid grid-cols-7 gap-3 ats-topic-icons">
             {isLoading ? (
               (
@@ -928,25 +925,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         </div>
         <div className="col-span-1">
           <div className="grid grid-cols-1 gap-2 mb-4 ml-14">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <button
-                    onClick={() => setShowHelp(true)}
-                    className={`help-button p-2 rounded-full shadow-md ${
-                      showHelp ? "bg-[--theme-hover-color]" : "bg-white"
-                    }`}
-                  >
-                    <HelpCircle
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke={showHelp ? "white" : "#333"}
-                    />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Help</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
         </div>
       </div>
@@ -1502,33 +1480,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         setRunPart4={setRunTutorialPart4}
         catIconInteracted={catIconInteracted}
       />
-
-      {/* Help Modal */}
-      <AnimatePresence>
-        {showHelp && (
-          <>
-            {/* Add overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-70 z-40"
-              onClick={() => setShowHelp(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-0 right-4 w-[32rem] z-50 max-h-[80vh] flex flex-col"
-            >
-              <HelpContent
-                onClose={() => setShowHelp(false)}
-                onResetTutorials={handleResetTutorials}
-              />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import TestReview from '@/components/home/TestReview';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useExamActivities } from '@/hooks/useCalendarActivities';
 import { useStudyActivities } from '@/hooks/useStudyActivities';
 import { useAllCalendarActivities } from '@/hooks/useCalendarActivities';
@@ -428,7 +427,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                 <div className="bg-transparent rounded-xl p-2 sm:p-6 lg:p-8 h-full overflow-visible">
                   <div className="grid grid-cols-3 gap-4 sm:gap-6 lg:gap-8 h-full">
                     {/* Calendar Side - Now spans 2 columns */}
-                    <div className="col-span-2 flex flex-col h-full overflow-visible">
+                    <div className="p-2 mr-1 col-span-2 flex flex-col h-full overflow-visible">
                       <div className="flex-1 flex items-center justify-center">
                         <TestCalendar
                           events={calendarEvents}
@@ -588,7 +587,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                               key={test.id}
                               className="flex items-center h-[3.5rem] p-2 bg-[--theme-leaguecard-accent] rounded-lg 
                                 transition-all duration-200 cursor-pointer
-                                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+                                hover:bg-[--theme-emphasis-color] hover:text-[--theme-hover-text]"
                               onClick={() => setActiveTest(test)}
                             >
                               {test.score && (
