@@ -79,7 +79,7 @@ const Page = () => {
   const [hasReferral, setHasReferral] = useState(false);
 
   const [currentPage, setCurrentPage] = useState("Schedule");
-  const chatbotRef = useRef<{ sendMessage: (message: string) => void }>({
+  const chatbotRef = useRef<{ sendMessage: (message: string, context?: string) => void }>({
     sendMessage: () => {},
   });
   const paymentStatus = searchParams?.get("payment");
