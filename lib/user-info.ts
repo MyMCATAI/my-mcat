@@ -39,7 +39,7 @@ export const createUserInfo = async () =>{
         return
     }else{
         await prismadb.userInfo.create({
-            data: {userId: userId, bio:DEFAULT_BIO }
+            data: {userId: userId, bio:DEFAULT_BIO, score: 9 } // default 9
         })
     }
 };
