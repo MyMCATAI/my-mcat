@@ -351,7 +351,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
                               Retaking AAMC
                             </h4>
                             <p className="text-sm leading-relaxed text-black">
-                              Before you mark it as complete, spend an hour-thirty minutes retaking a section. We ran a statistical analysis and found students who retook sections, even if you did it recently, performed better. However, don't rely on memory. Rely on actually verbally walking yourself through the logic of why an answer is correct or wrong.
+                              Before you mark it as complete, spend an hour-thirty minutes retaking a section. We ran a statistical analysis and found students who retook sections, even if you did it recently, performed better. However, don&apos;t rely on memory. Rely on actually verbally walking yourself through the logic of why an answer is correct or wrong.
                             </p>
                           </div>
                         </DialogContent>
