@@ -4,7 +4,7 @@ import { Category } from "@/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import ATSSettingsTutorial from "./ATSSettingsTutorial";
+import { Button } from "@/components/ui/button";
 
 interface Option {
   id: string;
@@ -287,15 +287,6 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
           />
         </div>
 
-        <div className="h-10 flex-shrink-0">
-          <button
-            onClick={handleRandomize}
-            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-transparent text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition duration-200 shuffle-button"
-          >
-            <span>Shuffle</span>
-          </button>
-        </div>
-
         <div className="flex-grow overflow-y-auto min-h-[12rem]">
           {isLoading ? (
             <div className="space-y-2">
@@ -333,72 +324,48 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
           )}
         </div>
 
-        <div className="flex-shrink-0 space-y-2 reset-button">
-          <div className="h-10">
-            <button
-              onClick={() => {
-                setCheckedCategories([]);
-                setSelectedSubjectsForShuffle(
-                  new Set(subjects.map((subject) => subject.name))
-                );
-                localStorage.removeItem("checkedCategories");
-                localStorage.setItem(
-                  "selectedSubjects",
-                  JSON.stringify(subjects.map((subject) => subject.name))
-                );
-              }}
-              className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
-                bg-transparent text-[--theme-text-color]
-                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                transition duration-200"
-            >
-              <span>Reset All Categories</span>
-            </button>
-          </div>
+        <div className="h-10 flex justify-between">
+          <button
+            onClick={() => {
+              setCurrentPage((prev) => Math.max(1, prev - 1));
+              fetchCategories(
+                searchQuery,
+                selectedSubject,
+                Math.max(1, currentPage - 1),
+                selectedSubjectsForShuffle
+              );
+            }}
+            disabled={currentPage === 1}
+            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
+            bg-transparent text-[--theme-text-color]
+            hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+            transition duration-200 ${
+              currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            {currentPage - 1}/{totalPages} Previous
+          </button>
 
-          <div className="h-10 flex justify-between">
-            <button
-              onClick={() => {
-                setCurrentPage((prev) => Math.max(1, prev - 1));
-                fetchCategories(
-                  searchQuery,
-                  selectedSubject,
-                  Math.max(1, currentPage - 1),
-                  selectedSubjectsForShuffle
-                );
-              }}
-              disabled={currentPage === 1}
-              className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
-      bg-transparent text-[--theme-text-color]
-      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-      transition duration-200 ${
-        currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-      }`}
-            >
-              {currentPage - 1}/{totalPages} Previous
-            </button>
-
-            <button
-              onClick={() => {
-                setCurrentPage((prev) => prev + 1);
-                fetchCategories(
-                  searchQuery,
-                  selectedSubject,
-                  currentPage + 1,
-                  selectedSubjectsForShuffle
-                );
-              }}
-              disabled={currentPage === totalPages}
-              className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
-      bg-transparent text-[--theme-text-color]
-      hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-      transition duration-200 ${
-        currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
-      }`}
-            >
-              Next {currentPage + 1}/{totalPages}
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              setCurrentPage((prev) => prev + 1);
+              fetchCategories(
+                searchQuery,
+                selectedSubject,
+                currentPage + 1,
+                selectedSubjectsForShuffle
+              );
+            }}
+            disabled={currentPage === totalPages}
+            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
+            bg-transparent text-[--theme-text-color]
+            hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+            transition duration-200 ${
+              currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            Next {currentPage + 1}/{totalPages}
+          </button>
         </div>
       </div>
     );
@@ -407,7 +374,9 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
   return (
     <div className="h-full flex flex-col gap-4 overflow-y-auto p-4">
       <div className="bg-[--theme-leaguecard-color] text-[--theme-text-color] p-4 rounded-lg shadow-md flex-shrink-0">
-        <h3 className="text-lg font-medium mb-2">Filter by Subjects</h3>
+        <h3 className="text-xs mb-4 text-center opacity-60 uppercase tracking-wide">
+          Filter by Subjects
+        </h3>
         <div className="max-h-[8rem] overflow-y-auto">
           <div className="grid grid-cols-2 gap-2">
             {subjects.map((subject) => (
@@ -445,6 +414,34 @@ const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
               </div>
             ))}
           </div>
+        </div>
+        
+        <div className="mt-4 grid grid-cols-2 gap-4">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleRandomize}
+          >
+            Shuffle
+          </Button>
+          
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              setCheckedCategories([]);
+              setSelectedSubjectsForShuffle(
+                new Set(subjects.map((subject) => subject.name))
+              );
+              localStorage.removeItem("checkedCategories");
+              localStorage.setItem(
+                "selectedSubjects",
+                JSON.stringify(subjects.map((subject) => subject.name))
+              );
+            }}
+          >
+            Reset All Categories
+          </Button>
         </div>
       </div>
 

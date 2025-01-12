@@ -54,6 +54,7 @@ interface ContentItem {
   type: string;
   transcript?: string;
   summary?: string;
+  conceptCategory?: string;
 }
 
 interface AdaptiveTutoringProps {
@@ -79,8 +80,7 @@ const platformText: Record<PlatformType, string> = {
 // Add this interface for category type safety
 interface CategoryWithCompletion extends Category {
   isCompleted?: boolean;
-  conceptCategory: string;
-  id: string;
+  sample?: number;
 }
 
 const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
@@ -103,7 +103,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const podcastButtonRef = useRef<HTMLButtonElement>(null);
   const [isPodcastHovered, setIsPodcastHovered] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [checkedCategories, setCheckedCategories] = useState<Category[]>([]);
+  const [checkedCategories, setCheckedCategories] = useState<CategoryWithCompletion[]>([]);
   const [playedSeconds, setPlayedSeconds] = useState<number>(0);
 
   const formatTime = (seconds: number): string => {
@@ -137,110 +137,47 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   );
   const { toast } = useToast();
 
-  const fetchCategories = useCallback(
-    async (useKnowledgeProfiles: boolean = false, conceptCategories?: string[]) => {
-      try {
-        setIsLoading(true);
-        const url = new URL("/api/category", window.location.origin);
-        url.searchParams.append("page", "1");
-        url.searchParams.append("pageSize", "7");
-        url.searchParams.append("useDiagnostic", "true");
-        
-        if (useKnowledgeProfiles) {
-          url.searchParams.append("useKnowledgeProfiles", "true");
-        }
-
-        // Add conceptCategories to query if they exist
-        if (conceptCategories?.length) {
-          url.searchParams.append("conceptCategories", conceptCategories.join(','));
-        }
-
-        const response = await fetch(url.toString());
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-
-        const data = await response.json();
-        return data.items;
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        return [];
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
-
-  const [showSettingsSteps, setShowSettingsSteps] = useState(false);
-
-  const fetchInitialData = useCallback(
-    async (useKnowledgeProfiles: boolean = false) => {
+  const fetchCategories = useCallback(async () => {
+    try {
       setIsLoading(true);
-      try {
-        // Get conceptCategories from URL if they exist
-        const searchParams = new URLSearchParams(window.location.search);
-        const conceptCategoryParam = searchParams.get('conceptCategories');
-        const conceptCategories = conceptCategoryParam?.split(',').map(t => decodeURIComponent(t));
-
-        // Fetch categories with conceptCategories if they exist
-        const categoriesData = await fetchCategories(useKnowledgeProfiles, conceptCategories);
-        setCategories(categoriesData);
-        setInitialCategories(categoriesData);
-
-        // If we have specific conceptCategories, use them directly
-        if (conceptCategories?.length) {
-          setCheckedCategories(categoriesData);
-          localStorage.setItem("checkedCategories", JSON.stringify(categoriesData));
-          
-          // Select the first concept category from the URL
-          const categoryToSelect = categoriesData[0]?.conceptCategory;
-          if (categoryToSelect) {
-            setSelectedCategory(categoryToSelect);
-            localStorage.setItem("lastSelectedCategory", categoryToSelect);
-            await fetchContentAndQuestions(categoryToSelect);
-          }
-        } else {
-          // Original localStorage logic for when no specific categories are requested
-          const savedCategories = localStorage.getItem("checkedCategories");
-          const parsedCategories = savedCategories 
-            ? JSON.parse(savedCategories) 
-            : categoriesData.slice(0, 6);
-          
-          setCheckedCategories(parsedCategories);
-
-          // Set the selected category based on lastSelectedCategory or first checked category
-          const categoryToSelect = lastSelectedCategory && 
-            parsedCategories.find((cat: CategoryWithCompletion) => cat.conceptCategory === lastSelectedCategory)
-              ? lastSelectedCategory
-              : parsedCategories[0]?.conceptCategory;
-
-          if (categoryToSelect) {
-            setSelectedCategory(categoryToSelect);
-            await fetchContentAndQuestions(categoryToSelect);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching initial data:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load initial data. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+      const response = await fetch(
+        "/api/category?useKnowledgeProfiles=true&page=1&pageSize=6&excludeCompleted=true"
+      );
+      
+      if (!response.ok) throw new Error("Failed to fetch categories");
+      
+      const data = await response.json();
+      const categories = data.items as CategoryWithCompletion[];
+      
+      // Set checked categories to top 6 by mastery
+      setCheckedCategories(categories);
+      
+      // Select first category if none selected
+      if (!selectedCategory && categories.length > 0) {
+        setSelectedCategory(categories[0].conceptCategory);
+        await fetchContentAndQuestions(categories[0].conceptCategory);
       }
-    },
-    [lastSelectedCategory, fetchCategories]
-  );
 
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load categories. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedCategory, toast]);
+
+  // Initial fetch of categories on mount only
   useEffect(() => {
-    fetchInitialData(true);
-  }, [fetchInitialData]);
+    fetchCategories();
+  }, []); // Empty dependency array means this runs once on mount
 
   const handleDiagnosticSubmit = async (scores: any) => {
     setShowDiagnosticDialog(false);
-    await fetchInitialData(true);
+    await fetchCategories();
     
     // Only start tutorial if it hasn't been played
     if (!localStorage.getItem("initialTutorialPlayed")) {
@@ -523,20 +460,14 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     localStorage.setItem("lastSelectedCategory", selectedCategory);
     setLastSelectedCategory(selectedCategory);
     
-    try {
-      setIsLoading(true);
-      const contentData = await fetchContent(selectedCategory);
-      setContent(contentData);
-      updateContentVisibility(contentData);
-    } catch (error) {
-      console.error("Error loading content:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load content. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    // Instead of fetching new content, filter from existing content
+    const existingContent = content.filter(item => 
+      item.conceptCategory === selectedCategory
+    );
+    
+    if (existingContent.length > 0) {
+      setContent(existingContent);
+      updateContentVisibility(existingContent);
     }
   };
 
@@ -712,42 +643,22 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     localStorage.removeItem("selectedSubjects");
   };
   const handleTopicComplete = async (categoryId: string) => {
-    // First, remove the completed category from checked categories
-    const newCheckedCategories = checkedCategories.filter(
-      (category) => category.id !== categoryId
-    );
-    setCheckedCategories(newCheckedCategories);
-    localStorage.setItem("checkedCategories", JSON.stringify(newCheckedCategories));
-
-    // Fetch fresh categories with updated knowledge profiles
     try {
-      const response = await fetch("/api/category?useKnowledgeProfiles=true&page=1&pageSize=10");
-      if (!response.ok) throw new Error("Failed to fetch categories");
-      
-      const data = await response.json();
-      const freshCategories = data.items;
+      // Mark category as complete
+      await fetch('/api/category/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoryId }),
+      });
 
-      // Filter out completed categories and get the first uncompleted one
-      const nextCategory = freshCategories.find((cat: CategoryWithCompletion) => 
-        !cat.isCompleted && 
-        !newCheckedCategories.some(checked => checked.id === cat.id)
-      );
+      // Fetch fresh categories
+      await fetchCategories();
 
-      if (nextCategory) {
-        // Add the new category to checked categories
-        const updatedCheckedCategories = [...newCheckedCategories, nextCategory];
-        setCheckedCategories(updatedCheckedCategories);
-        localStorage.setItem("checkedCategories", JSON.stringify(updatedCheckedCategories));
-
-        // Set it as selected and fetch its content
-        setSelectedCategory(nextCategory.conceptCategory);
-        await fetchContentAndQuestions(nextCategory.conceptCategory);
-      }
     } catch (error) {
-      console.error("Error fetching next category:", error);
+      console.error("Error completing topic:", error);
       toast({
         title: "Error",
-        description: "Failed to load next topic. Please try again.",
+        description: "Failed to complete topic. Please try again.",
         variant: "destructive",
       });
     }
@@ -812,6 +723,11 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     updateActivity();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentType, selectedCategory])
+
+  // Add refresh function
+  const refreshCategories = async () => {
+    await fetchCategories();
+  };
 
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">

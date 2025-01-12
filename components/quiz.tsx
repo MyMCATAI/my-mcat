@@ -345,6 +345,7 @@ const Quiz: React.FC<QuizProps> = ({
   };
 
   const handleReset = useCallback(() => {
+    // Reset all quiz states
     setCurrentQuestionIndex(0);
     setAnswerSummaries([]);
     setAnsweredQuestions(new Set());
@@ -354,8 +355,14 @@ const Quiz: React.FC<QuizProps> = ({
     setHasAwardedCoins(false);
     questionTimerRef.current?.resetTimer();
     totalTimerRef.current?.resetTimer();
-    fetchQuestions(1);
-  }, [fetchQuestions]);
+    
+    // Reset to initial quiz state
+    setHasStarted(false);
+    setShowIntroDialog(true);
+    
+    // Clear current questions to force a fresh fetch
+    setQuestions([]);
+  }, []);
 
   const handleNextQuestion = async () => {
     if (isQuizComplete) return;
@@ -703,19 +710,27 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
           Previous
         </button>
 
-        {!isQuizComplete && (
-          <button
-            onClick={handleNextQuestion}
-            disabled={isLoadingMore || isQuizComplete}
-            className="px-4 py-2 bg-[#0e2247] text-white rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-        )}
+        <button
+          onClick={isQuizComplete ? handleReset : handleNextQuestion}
+          disabled={isLoadingMore}
+          className="px-4 py-2 bg-[#0e2247] text-white rounded disabled:opacity-50"
+        >
+          {isQuizComplete ? "Try Again" : "Next"}
+        </button>
       </div>
 
-      {/* Add Dialog for Quiz Summary */}
-      <Dialog open={showSummary} onOpenChange={setShowSummary}>
+      {/* Move Dialog outside the main container */}
+      <Dialog 
+        open={showSummary && isQuizComplete} 
+        onOpenChange={(open) => {
+          setShowSummary(open);
+          // Exit fullscreen when showing summary
+          if (open && document.fullscreenElement) {
+            document.exitFullscreen();
+            setIsFullScreen(false);
+          }
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto !bg-[--theme-adaptive-tutoring-color] border border-transparent">
           <DialogHeader>
             <DialogTitle className="text-[--theme-text-color]">

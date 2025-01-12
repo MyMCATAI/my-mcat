@@ -230,7 +230,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
                     disabled={isGeneratingAnalysis}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs bg-[--theme-leaguecard-accent] hover:bg-[--theme-hover-color] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <RefreshCw className={`h-3 w-3 ${isGeneratingAnalysis ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`h-3.5 w-3.5 ${isGeneratingAnalysis ? 'animate-spin' : ''}`} />
                     <span>{analysis ? 'Regenerate' : 'Generate'} Analysis</span>
                   </button>
                 )}
