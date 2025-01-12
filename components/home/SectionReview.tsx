@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Flag, XCircle, RefreshCw, Maximize2 } from 'lucide-react';
+import { ArrowLeft, Plus, Flag, XCircle, RefreshCw, Maximize2, Edit2 } from 'lucide-react';
 import QuestionAddModal from './QuestionAddModal';
 import { ExamQuestion, useExamQuestions } from '@/hooks/useExamQuestions';
 import { DISPLAY_TO_FULL_SECTION } from '@/lib/constants';
 import { DataPulse } from '@/hooks/useCalendarActivities';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Confetti from 'react-confetti';
+import { useDataPulse } from '@/hooks/useDataPulse';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export interface Section {
   name: keyof typeof DISPLAY_TO_FULL_SECTION;
@@ -25,6 +32,7 @@ interface SectionReviewProps {
   isCompleted: boolean;
   onComplete: () => void;
   dataPulse?: DataPulse;
+  onScoreUpdate?: (newScore: number) => void;
 }
 
 const SectionReview: React.FC<SectionReviewProps> = ({ 
@@ -33,7 +41,8 @@ const SectionReview: React.FC<SectionReviewProps> = ({
   onBack, 
   isCompleted, 
   onComplete,
-  dataPulse 
+  dataPulse,
+  onScoreUpdate
 }) => {
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<ExamQuestion | undefined>(undefined);
@@ -42,6 +51,9 @@ const SectionReview: React.FC<SectionReviewProps> = ({
   const [isAnalysisMaximized, setIsAnalysisMaximized] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiDimensions, setConfettiDimensions] = useState({ x: 0, y: 0, w: 0, h: 0 });
+  const [isEditingScore, setIsEditingScore] = useState(false);
+  const [editedScore, setEditedScore] = useState(section.score);
+  const { updateDataPulse, markAsReviewed, loading: dataPulseLoading } = useDataPulse();
   
   // Add refs
   const fanfareAudio = React.useRef<HTMLAudioElement | null>(null);
@@ -129,20 +141,8 @@ const SectionReview: React.FC<SectionReviewProps> = ({
         return;
       }
 
-      // Update the reviewed status in the backend
-      const response = await fetch('/api/data-pulse', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          dataPulseId: dataPulse.id
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update section completion');
-      }
+      const updatedPulse = await markAsReviewed(dataPulse.id);
+      if (!updatedPulse) return;
       
       // Play celebration effects
       setShowConfetti(true);
@@ -187,6 +187,23 @@ const SectionReview: React.FC<SectionReviewProps> = ({
     .sort((a, b) => b[1].total - a[1].total)
     .slice(0, 3);
 
+  const handleScoreUpdate = async () => {
+    if (!dataPulse?.id) return;
+    
+    const updatedPulse = await updateDataPulse({
+      id: dataPulse.id,
+      positive: editedScore
+    });
+
+    if (updatedPulse) {
+      // Update the local section score
+      section.score = editedScore;
+      // Notify parent of score update
+      onScoreUpdate?.(editedScore);
+      setIsEditingScore(false);
+    }
+  };
+
   return (
     <div className="animate-fadeIn h-full p-3 flex flex-col">
       {showConfetti && (
@@ -215,7 +232,54 @@ const SectionReview: React.FC<SectionReviewProps> = ({
 
           <div className="h-full flex flex-col items-center justify-center space-y-2">
             <span className="text-sm uppercase tracking-wide opacity-60">{section.name}</span>
-            <span className="text-6xl font-bold">{section.score}</span>
+            {isEditingScore ? (
+              <div className="flex flex-col items-center gap-2">
+                <input
+                  type="number"
+                  value={editedScore}
+                  onChange={(e) => setEditedScore(Number(e.target.value))}
+                  className="w-24 text-4xl font-bold text-center bg-transparent border-b-2 border-[--theme-text-color] focus:outline-none"
+                  min="0"
+                  max="132"
+                  disabled={dataPulseLoading}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleScoreUpdate}
+                    disabled={dataPulseLoading}
+                    className="px-2 py-1 text-xs bg-green-500/20 text-green-500 rounded-full hover:bg-green-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {dataPulseLoading ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingScore(false);
+                      setEditedScore(section.score);
+                    }}
+                    disabled={dataPulseLoading}
+                    className="px-2 py-1 text-xs bg-red-500/20 text-red-500 rounded-full hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div 
+                      className="group flex items-center justify-center relative cursor-pointer w-full"
+                      onClick={() => setIsEditingScore(true)}
+                    >
+                      <span className="text-6xl font-bold group-hover:opacity-90">{section.score}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Edit score</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         </div>
 
