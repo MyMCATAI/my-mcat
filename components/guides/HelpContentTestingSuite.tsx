@@ -52,7 +52,7 @@ const ResourcePack: React.FC = () => {
           <div className="space-y-6">
             <section>
               <p className="text-sm opacity-80 mb-4">
-                The MCAT is a test of content and critical thinking. It consists of <strong>four sections</strong> spanning seven undergraduate topics. The test is a mile wide and an inch deep so <strong>don't overrely on content such as Anki or even UWorld.</strong> We have tagged every topic on the MCAT. For every question you answer, our model updates your knowledge profile which affects your flashcards, UWorld, ATS, and Anki Clinic.
+                The MCAT is a test of content and critical thinking. It consists of <strong>four sections</strong> spanning seven undergraduate topics. The test is a mile wide and an inch deep so <strong>don&apos;t overrely on content such as Anki or even UWorld.</strong> We have tagged every topic on the MCAT. For every question you answer, our model updates your knowledge profile which affects your flashcards, UWorld, ATS, and Anki Clinic.
               </p>
 
               <h3 className="text-xs mb-4 text-center opacity-60 uppercase tracking-wide font-semibold">
@@ -60,7 +60,7 @@ const ResourcePack: React.FC = () => {
               </h3>
               <div className="space-y-3">
                 <a 
-                  href={'https://my-mcat.s3.us-east-2.amazonaws.com/pdfs/What\'s+On+The+MCAT.pdf'}
+                  href={'https://my-mcat.s3.us-east-2.amazonaws.com/pdfs/What%27s+On+The+MCAT.pdf'}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 px-4 py-3 bg-[--theme-doctorsoffice-accent] rounded-lg hover:opacity-80 transition-opacity w-full"
