@@ -404,7 +404,7 @@ const MethodologyAndTestimonials = () => {
               for a 10 coin pack
             </p>
             <p className="text-green-400 text-6xl font-bold mb-4">
-              $150
+              $150/mo
             </p>
             <p className="text-white text-3xl mb-16">
               for unlimited access
