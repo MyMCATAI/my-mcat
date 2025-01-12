@@ -14,18 +14,21 @@ interface CreateExamActivityBody {
 
 // Helper function to ensure consistent date handling
 function parseAndFormatDate(dateString: string): Date {
-  // Parse the incoming date string
-  const parsedDate = new Date(dateString);
+  // Parse the incoming date string to local date
+  const localDate = new Date(dateString);
   
-  // Format to ensure it's in US timezone and set to start of day
-  const formattedDate = new Date(
-    format(parsedDate, 'yyyy-MM-dd', { locale: enUS })
-  );
+  // Create a date at noon UTC on the same day
+  const utcDate = new Date(Date.UTC(
+    localDate.getFullYear(),
+    localDate.getMonth(),
+    localDate.getDate(),
+    12, // noon UTC
+    0,
+    0,
+    0
+  ));
   
-  // Set to noon to avoid timezone issues
-  formattedDate.setHours(12, 0, 0, 0);
-  
-  return formattedDate;
+  return utcDate;
 }
 
 export async function GET() {
