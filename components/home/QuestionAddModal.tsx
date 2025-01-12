@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { XCircle, Flag, CheckCircle2, HelpCircle, ChevronRight } from 'lucide-react';
+import { XCircle, Flag, CheckCircle2, HelpCircle, ChevronRight, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCategories } from '@/hooks/useCategories';
 import { DISPLAY_TO_FULL_SECTION, DISPLAY_TO_SHORT_SECTION } from '@/lib/constants';
 import { toast } from "react-hot-toast";
-import {  ExamQuestion } from '@/hooks/useExamQuestions';
+import { ExamQuestion } from '@/hooks/useExamQuestions';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface QuestionAddModalProps {
@@ -103,7 +102,7 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
     }
   }, [isOpen, editingQuestion, categories]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (goToNext: boolean = false) => {
     // For flagged questions, require 150 characters
     if (question.status === 'flagged') {
       if (question.mistake.length < 150) {
@@ -158,7 +157,6 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
         level: 'contentCategory'
       };
 
-
       if (editingQuestion) {
         await updateQuestion({ ...params, id: editingQuestion.id });
         toast.success('Question updated successfully');
@@ -167,9 +165,24 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
         toast.success('Question added successfully');
       }
 
-      // Wait for questions to be refreshed before closing
+      // Wait for questions to be refreshed before proceeding
       await onQuestionSaved();
-      onClose();
+      
+      if (goToNext) {
+        // Reset form for next question
+        setQuestion({
+          id: '',
+          number: '',
+          categoryId: '',
+          mistake: '',
+          improvement: '',
+          status: 'wrong',
+          questionText: '',
+          answerText: ''
+        });
+      } else {
+        onClose();
+      }
     } catch (error) {
       console.error('Failed to save question:', error);
       toast.error(editingQuestion ? 'Failed to update question' : 'Failed to add question');
@@ -198,60 +211,82 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
     }
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[45vw] max-h-[90vh] overflow-y-auto bg-[--theme-leaguecard-color] border-[--theme-border-color]">
-        <h3 className="text-sm uppercase tracking-wide opacity-60 mb-6 text-center">
-          {editingQuestion ? 'Edit' : 'Add'} Question Review
-        </h3>
+  if (!isOpen) return null;
 
-        {/* Status Selection */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 min-h-[4.5rem]">
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto" style={{ 
+      backgroundColor: 'var(--theme-mainbox-color)',
+      backgroundImage: 'var(--theme-interface-image)',
+      backgroundBlendMode: 'overlay'
+    }}>
+      <div className="max-w-[60rem] mx-auto px-4 py-6">
+        <div className="flex items-center justify-between mb-6">
           <button
-            onClick={() => setQuestion(prev => ({ ...prev, status: 'wrong' }))}
-            className={`p-3 rounded-lg flex flex-col items-center gap-2 transition-all duration-200
-              ${question.status === 'wrong' 
-                ? 'bg-red-500/20 text-red-500' 
-                : 'hover:bg-[--theme-hover-color] text-[--theme-text-color]'}`}
+            onClick={onClose}
+            className="p-2 hover:bg-[--theme-hover-color] rounded-full transition-colors duration-200"
           >
-            <XCircle className="h-6 w-6" />
-            <span className="text-xs">Wrong</span>
+            <ArrowLeft className="h-5 w-5 text-[--theme-text-color]" />
           </button>
-          <button
-            onClick={() => setQuestion(prev => ({ ...prev, status: 'flagged' }))}
-            className={`p-3 rounded-lg flex flex-col items-center gap-2 transition-all duration-200
-              ${question.status === 'flagged' 
-                ? 'bg-yellow-500/20 text-yellow-500' 
-                : 'hover:bg-[--theme-hover-color] text-[--theme-text-color]'}`}
-          >
-            <Flag className="h-6 w-6" />
-            <span className="text-xs">Flag</span>
-          </button>
-          <button
-            onClick={() => setQuestion(prev => ({ ...prev, status: 'correct' }))}
-            className={`p-3 rounded-lg flex flex-col items-center gap-2 transition-all duration-200
-              ${question.status === 'correct' 
-                ? 'bg-green-500/20 text-green-500' 
-                : 'hover:bg-[--theme-hover-color] text-[--theme-text-color]'}`}
-          >
-            <CheckCircle2 className="h-6 w-6" />
-            <span className="text-xs">Correct</span>
-          </button>
+          <h3 className="text-sm uppercase tracking-wide opacity-60 text-center text-[--theme-text-color]">
+            {editingQuestion ? 'Edit' : 'Add'} Question Review
+          </h3>
+          <div className="w-8" /> {/* Spacer for alignment */}
         </div>
 
-        <div className="grid gap-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm uppercase tracking-wide opacity-60 block mb-1.5 text-[--theme-text-color]">
-                Question #
-              </label>
-              <input
-                value={question.number}
-                onChange={e => setQuestion(prev => ({ ...prev, number: e.target.value }))}
-                className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color]"
-                placeholder="e.g., 12"
-              />
+        <div className="bg-[--theme-leaguecard-color] rounded-lg p-6 shadow-lg border border-[--theme-border-color]">
+          <div className="grid gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm uppercase tracking-wide opacity-60 block mb-1.5 text-[--theme-text-color]">
+                  Question #
+                </label>
+                <input
+                  value={question.number}
+                  onChange={e => setQuestion(prev => ({ ...prev, number: e.target.value }))}
+                  className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color]"
+                  placeholder="e.g., 12"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm uppercase tracking-wide opacity-60 block mb-1.5 text-[--theme-text-color]">
+                  Status
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setQuestion(prev => ({ ...prev, status: 'wrong' }))}
+                    className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 transition-all duration-200
+                      ${question.status === 'wrong' 
+                        ? 'bg-red-500/20 text-red-500' 
+                        : 'hover:bg-[--theme-hover-color] text-[--theme-text-color]'}`}
+                  >
+                    <XCircle className="h-5 w-5" />
+                    <span className="text-sm">Wrong</span>
+                  </button>
+                  <button
+                    onClick={() => setQuestion(prev => ({ ...prev, status: 'flagged' }))}
+                    className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 transition-all duration-200
+                      ${question.status === 'flagged' 
+                        ? 'bg-yellow-500/20 text-yellow-500' 
+                        : 'hover:bg-[--theme-hover-color] text-[--theme-text-color]'}`}
+                  >
+                    <Flag className="h-5 w-5" />
+                    <span className="text-sm">Flag</span>
+                  </button>
+                  <button
+                    onClick={() => setQuestion(prev => ({ ...prev, status: 'correct' }))}
+                    className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 transition-all duration-200
+                      ${question.status === 'correct' 
+                        ? 'bg-green-500/20 text-green-500' 
+                        : 'hover:bg-[--theme-hover-color] text-[--theme-text-color]'}`}
+                  >
+                    <CheckCircle2 className="h-5 w-5" />
+                    <span className="text-sm">Correct</span>
+                  </button>
+                </div>
+              </div>
             </div>
+
             <div>
               <label className="text-sm uppercase tracking-wide opacity-60 block mb-1.5 text-[--theme-text-color]">
                 Category
@@ -276,104 +311,104 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <Collapsible className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-sm uppercase tracking-wide opacity-60 text-[--theme-text-color]">
-                Question Text (Optional)
+            <Collapsible className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-sm uppercase tracking-wide opacity-60 text-[--theme-text-color]">
+                  Question Text (Optional)
+                </label>
+                <CollapsibleTrigger className="hover:opacity-100 opacity-60 transition-opacity flex items-center [&[data-state=open]>svg]:rotate-90">
+                  <ChevronRight className="h-4 w-4 ml-2 text-[--theme-text-color] transition-transform" />
+                </CollapsibleTrigger>
+              </div>
+              <CollapsibleContent>
+                <textarea
+                  value={question.questionText}
+                  onChange={e => setQuestion(prev => ({ ...prev, questionText: e.target.value }))}
+                  className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[4rem]"
+                  placeholder="Enter the actual question text here..."
+                />
+              </CollapsibleContent>
+            </Collapsible>
+
+            <Collapsible className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-sm uppercase tracking-wide opacity-60 text-[--theme-text-color]">
+                  Answer (Optional)
+                </label>
+                <CollapsibleTrigger className="hover:opacity-100 opacity-60 transition-opacity flex items-center [&[data-state=open]>svg]:rotate-90">
+                  <ChevronRight className="h-4 w-4 ml-2 text-[--theme-text-color] transition-transform" />
+                </CollapsibleTrigger>
+              </div>
+              <CollapsibleContent>
+                <textarea
+                  value={question.answerText}
+                  onChange={e => setQuestion(prev => ({ ...prev, answerText: e.target.value }))}
+                  className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[4rem]"
+                  placeholder="Enter the correct answer here..."
+                />
+              </CollapsibleContent>
+            </Collapsible>
+
+            <div>
+              <label className="text-sm uppercase tracking-wide opacity-60 block mb-1.5 text-[--theme-text-color]">
+                Mistake Analysis
               </label>
-              <CollapsibleTrigger className="hover:opacity-100 opacity-60 transition-opacity flex items-center [&[data-state=open]>svg]:rotate-90">
-                <ChevronRight className="h-4 w-4 ml-2 text-[--theme-text-color] transition-transform" />
-              </CollapsibleTrigger>
-            </div>
-            <CollapsibleContent>
               <textarea
-                value={question.questionText}
-                onChange={e => setQuestion(prev => ({ ...prev, questionText: e.target.value }))}
-                className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[4rem]"
-                placeholder="Enter the actual question text here..."
+                value={question.mistake}
+                onChange={handleMistakeChange}
+                className={`w-full p-2 rounded-lg border ${
+                  mistakeError ? 'border-red-500' : 'border-[--theme-border-color]'
+                } bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[8rem]`}
+                placeholder="'My thought process that resulted in the wrong answer was...'"
               />
-            </CollapsibleContent>
-          </Collapsible>
+              <div className="flex justify-between mt-1">
+                {question.status !== 'correct' && (
+                  <span className={`text-sm ${
+                    (question.status === 'flagged' && question.mistake.length < 150) ||
+                    (question.status === 'wrong' && question.mistake.length < 100)
+                      ? 'text-red-500' 
+                      : 'text-green-500'
+                  }`}>
+                    {question.mistake.length}/{question.status === 'flagged' ? '150' : '100'} characters
+                  </span>
+                )}
+                {mistakeError && (
+                  <span className="text-sm text-red-500">{mistakeError}</span>
+                )}
+              </div>
+            </div>
 
-          <Collapsible className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-sm uppercase tracking-wide opacity-60 text-[--theme-text-color]">
-                Answer (Optional)
+            <div>
+              <label className="text-sm uppercase tracking-wide opacity-60 block mb-1.5 text-[--theme-text-color]">
+                Rethink.
               </label>
-              <CollapsibleTrigger className="hover:opacity-100 opacity-60 transition-opacity flex items-center [&[data-state=open]>svg]:rotate-90">
-                <ChevronRight className="h-4 w-4 ml-2 text-[--theme-text-color] transition-transform" />
-              </CollapsibleTrigger>
-            </div>
-            <CollapsibleContent>
               <textarea
-                value={question.answerText}
-                onChange={e => setQuestion(prev => ({ ...prev, answerText: e.target.value }))}
-                className="w-full p-2 rounded-lg border border-[--theme-border-color] bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[4rem]"
-                placeholder="Enter the correct answer here..."
+                value={question.improvement}
+                onChange={e => {
+                  setQuestion(prev => ({ ...prev, improvement: e.target.value }));
+                  setImprovementError('');
+                }}
+                className={`w-full p-2 rounded-lg border ${
+                  improvementError ? 'border-red-500' : 'border-[--theme-border-color]'
+                } bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[8rem]`}
+                placeholder="If I could do this question again, I would approach it differently by..."
               />
-            </CollapsibleContent>
-          </Collapsible>
-
-          <div>
-            <label className="text-sm uppercase tracking-wide opacity-60 block mb-1.5 text-[--theme-text-color]">
-              Mistake Analysis
-            </label>
-            <textarea
-              value={question.mistake}
-              onChange={handleMistakeChange}
-              className={`w-full p-2 rounded-lg border ${
-                mistakeError ? 'border-red-500' : 'border-[--theme-border-color]'
-              } bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[8rem]`}
-              placeholder="'My thought process that resulted in the wrong answer was...'"
-            />
-            <div className="flex justify-between mt-1">
-              {question.status !== 'correct' && (
-                <span className={`text-sm ${
-                  (question.status === 'flagged' && question.mistake.length < 150) ||
-                  (question.status === 'wrong' && question.mistake.length < 100)
-                    ? 'text-red-500' 
-                    : 'text-green-500'
-                }`}>
-                  {question.mistake.length}/{question.status === 'flagged' ? '150' : '100'} characters
-                </span>
-              )}
-              {mistakeError && (
-                <span className="text-sm text-red-500">{mistakeError}</span>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm uppercase tracking-wide opacity-60 block mb-1.5 text-[--theme-text-color]">
-              Improvement Plan
-            </label>
-            <textarea
-              value={question.improvement}
-              onChange={e => {
-                setQuestion(prev => ({ ...prev, improvement: e.target.value }));
-                setImprovementError('');
-              }}
-              className={`w-full p-2 rounded-lg border ${
-                improvementError ? 'border-red-500' : 'border-[--theme-border-color]'
-              } bg-[--theme-mainbox-color] text-[--theme-text-color] min-h-[8rem]`}
-              placeholder="If I could do this question again, I would approach it differently by..."
-            />
-            <div className="flex justify-between mt-1">
-              {question.status !== 'correct' && (
-                <span className={`text-sm ${
-                  (question.status === 'flagged' && question.improvement.length < 150) ||
-                  (question.status === 'wrong' && question.improvement.length < 100)
-                    ? 'text-red-500' 
-                    : 'text-green-500'
-                }`}>
-                  {question.improvement.length}/{question.status === 'flagged' ? '150' : '100'} characters
-                </span>
-              )}
-              {improvementError && (
-                <span className="text-sm text-red-500">{improvementError}</span>
-              )}
+              <div className="flex justify-between mt-1">
+                {question.status !== 'correct' && (
+                  <span className={`text-sm ${
+                    (question.status === 'flagged' && question.improvement.length < 150) ||
+                    (question.status === 'wrong' && question.improvement.length < 100)
+                      ? 'text-red-500' 
+                      : 'text-green-500'
+                  }`}>
+                    {question.improvement.length}/{question.status === 'flagged' ? '150' : '100'} characters
+                  </span>
+                )}
+                {improvementError && (
+                  <span className="text-sm text-red-500">{improvementError}</span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -388,23 +423,26 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
 
           <div className="flex gap-2">
             <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg hover:bg-[--theme-hover-color] transition-all duration-200 text-[--theme-text-color]"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
+              onClick={() => handleSubmit(false)}
               disabled={!question.categoryId || !question.number || isSubmitting}
               className="px-4 py-2 rounded-lg bg-[--theme-leaguecard-accent] hover:bg-[--theme-hover-color] transition-all duration-200 text-[--theme-text-color] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Saving...' : editingQuestion ? 'Update' : 'Add'} Question
+              {isSubmitting ? 'Saving...' : editingQuestion ? 'Update' : 'Save & Exit'}
             </button>
+            {!editingQuestion && (
+              <button
+                onClick={() => handleSubmit(true)}
+                disabled={!question.categoryId || !question.number || isSubmitting}
+                className="px-4 py-2 rounded-lg bg-[--theme-leaguecard-accent] hover:bg-[--theme-hover-color] transition-all duration-200 text-[--theme-text-color] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <span>{isSubmitting ? 'Saving...' : 'Save & Next'}</span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 
