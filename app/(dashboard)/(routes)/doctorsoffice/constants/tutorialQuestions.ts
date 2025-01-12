@@ -115,16 +115,16 @@ export const tutorialQuestions: Flashcard[] = [
   {
     questionType: 'flashcard',
     id: 'tutorial-8',
-    questionContent: 'This doesn\'t feel like a game yet. I want... {{c1::We\'ve built a lot and are constantly building. Join our discord if you want to enage with our community and ask for more! https://discord.gg/PkRbV5nw. }}',
+    questionContent: 'This doesn\'t feel like a game yet. I want... {{c1::We\'ve built a lot and are constantly building. Join our discord if you want to enage with our community and ask for more! https://discord.gg/DcHWnEu8Xb. }}',
     questionOptions: [],
-    links: ['https://discord.gg/PkRbV5nw'],
+    links: ['https://discord.gg/DcHWnEu8Xb'],
     categoryId: '1T',
     category: {
       subjectCategory: 'Tutorial',
       conceptCategory: 'Game'
     },
     userResponses: [],
-    questionAnswerNotes: ["We've built a lot and are constantly building. Join our discord if you want to enage with our community and ask for more! https://discord.gg/PkRbV5nw."]
+    questionAnswerNotes: ["We've built a lot and are constantly building. Join our discord if you want to enage with our community and ask for more! https://discord.gg/DcHWnEu8Xb."]
   },
   {
     questionType: 'flashcard',

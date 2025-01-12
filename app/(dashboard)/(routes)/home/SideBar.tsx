@@ -10,7 +10,6 @@ import { isToday, isSameDay, isTomorrow, format } from "date-fns";
 import RedditPosts from "@/components/RedditPosts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import TutorialContent from "@/components/home/TutorialContent";
 import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 import ChatBot from "@/components/chatbot/ChatBot";
 import { useUser } from "@clerk/nextjs";
