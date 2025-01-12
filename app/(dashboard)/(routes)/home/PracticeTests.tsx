@@ -1,13 +1,10 @@
 // app/(dashboard)/(routes)/home/PracticeTests.tsx
 import React, { useState, useEffect } from "react";
 import { 
-  ChevronRight, 
   Plus, 
   GripVertical, 
   CalendarIcon, 
-  BarChart as AnalyticsIcon, 
   ClipboardList, 
-  ChevronLeft, 
   Trash2, 
   Settings, 
   BarChart,
@@ -19,15 +16,6 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import TestReview from '@/components/home/TestReview';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useExamActivities } from '@/hooks/useCalendarActivities';
@@ -40,16 +28,9 @@ import { toast } from "@/components/ui/use-toast";
 import WeeklyCalendarModal from "@/components/calendar/WeeklyCalendarModal";
 import { AnimatePresence, motion } from "framer-motion";
 import TestCalendar from '@/components/calendar/TestCalendar';
-import { cn, toUTCDate, formatDisplayDate } from "@/lib/utils";
+import { toUTCDate, formatDisplayDate } from "@/lib/utils";
+import AddPracticeTestDialog from '@/components/home/AddPracticeTestDialog';
 
-interface CalendarActivity {
-  id: string;
-  scheduledDate: Date;
-  activityTitle: string;
-  activityType: string;
-  status: string;
-  hours: number;
-}
 
 interface CalendarEvent {
   id: string;
@@ -97,28 +78,6 @@ interface CompletedTestRecord {
   completedAt: string;
 }
 
-const COMPANIES = ["AAMC", "Blueprint", "Jack Westin", "Altius"] as const;
-type Company = typeof COMPANIES[number];
-
-const COMPANY_INFO = {
-  "Jack Westin": {
-    url: "https://jackwestin.com/mcat-cars-practice-exams",
-    note: "(6 Free FLs)"
-  },
-  "Blueprint": {
-    url: "https://blueprintprep.com/mcat/free-resources/free-mcat-practice-bundle",
-    note: "(One Free HL)"
-  },
-  "AAMC": {
-    url: "https://students-residents.aamc.org/prepare-mcat-exam/practice-mcat-exam-official-low-cost-products",
-    note: "(Two Free Samples)"
-  },
-  "Altius": {
-    url: "https://altiustestprep.com/practice-exam/free-exam/",
-    note: "(One Free FL)"
-  }
-} as const;
-
 const PracticeTests: React.FC<PracticeTestsProps> = ({ 
   handleSetTab, 
   className = "", 
@@ -126,11 +85,10 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
 }) => {
   const { activities: examActivities, loading: examLoading, updateExamDate, createExamActivity, fetchExamActivities } = useExamActivities();
   const { activities: allActivities, loading: activitiesLoading, refetch: refetchAllActivities } = useAllCalendarActivities();
-  const { activities: studyActivities, loading: studyLoading } = useStudyActivities();
+  const {  loading: studyLoading } = useStudyActivities();
   const [scheduledTests, setScheduledTests] = useState<Test[]>([]);
   const [date, setDate] = useState<Date>(new Date());
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [loading, setLoading] = useState(true);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -302,35 +260,27 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
   }, [examActivities, completedTestRecords]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newTest, setNewTest] = useState({
-    company: "" as Company,
-    testNumber: "",
-    date: null as Date | null,
-    useRecommendedDate: true
-  });
-
   const [activeTest, setActiveTest] = useState<UserTest | null>(null);
 
-  const handleAddTest = async () => {
+  const handleAddTest = async (params: {
+    company: string;
+    testNumber: string;
+    date: Date | null;
+    useRecommendedDate: boolean;
+  }) => {
     try {
-      if (!newTest.company || !newTest.testNumber || (!newTest.date && !newTest.useRecommendedDate)) {
-        return;
-      }
-
-      const testName = `${newTest.company} FL${newTest.testNumber}`;
+      const testName = `${params.company} FL${params.testNumber}`;
       
       await createExamActivity({
         activityTitle: testName,
-        activityText: newTest.company,
-        scheduledDate: newTest.date || new Date(),
+        activityText: params.company,
+        scheduledDate: params.date || new Date(),
         hours: 8, 
       });
 
       setIsAddDialogOpen(false);
-      setNewTest({ company: "" as Company, testNumber: "", date: null, useRecommendedDate: true });
     } catch (error) {
       console.error('Failed to create test:', error);
-      // You might want to show an error toast or message here
     }
   };
 
@@ -362,11 +312,6 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
       // Handle study activity selection
       // You can add a modal or sidebar to show activity details and tasks
     }
-  };
-
-  // Add onNavigate handler
-  const handleNavigate = (newDate: Date) => {
-    setDate(newDate);
   };
 
   // Handle opening date picker for a test
@@ -708,154 +653,11 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
         </div>
       </DragDropContext>
 
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[40rem] bg-[#f8fafc] text-black">
-          <DialogHeader>
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col gap-1">
-                  <DialogTitle className="text-2xl font-bold text-black">
-                    Add Practice Test
-                  </DialogTitle>
-                  <div className="text-[0.7rem] text-gray-400 italic">
-                    Our study tool is unaffiliated. Click visit to access their websites.
-                  </div>
-                </div>
-                {newTest.company && (
-                  <a 
-                    href={COMPANY_INFO[newTest.company].url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-black rounded-lg hover:bg-gray-200 transition-all shadow-sm hover:shadow-md"
-                  >
-                    <span>Visit</span>
-                    <span className="text-[0.625rem] text-gray-500">*</span>
-                    <svg 
-                      className="w-4 h-4" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
-                      />
-                    </svg>
-                  </a>
-                )}
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="flex flex-col space-y-8 py-6">
-            <div className="bg-[#8e9aab] bg-opacity-10 p-6 rounded-lg border border-[#e5e7eb] shadow-sm">
-              <div className="space-y-6">
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium text-gray-700">Company</label>
-                  <Select
-                    value={newTest.company}
-                    onValueChange={(value) => setNewTest({ ...newTest, company: value as Company })}
-                  >
-                    <SelectTrigger className="bg-white border-gray-300 h-10">
-                      <SelectValue placeholder="Select company" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COMPANIES.map((company) => (
-                        <SelectItem key={company} value={company}>
-                          <span className="flex items-center justify-between w-full">
-                            <span>{company}</span>
-                            <span className="text-xs text-gray-500 ml-2">
-                              {COMPANY_INFO[company].note}
-                            </span>
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium text-gray-700">Full Length Number</label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={newTest.testNumber}
-                    onChange={(e) => setNewTest({ ...newTest, testNumber: e.target.value })}
-                    placeholder="Enter test number"
-                    className="bg-white border-gray-300 h-10"
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-700">Test Date</label>
-                    <div className="flex items-center gap-1 ml-auto">
-                      <input
-                        type="checkbox"
-                        checked={newTest.useRecommendedDate}
-                        onChange={(e) => setNewTest({ 
-                          ...newTest, 
-                          useRecommendedDate: e.target.checked,
-                          date: null
-                        })}
-                        className="rounded border-gray-300"
-                        id="pickForMe"
-                      />
-                      <label htmlFor="pickForMe" className="text-sm text-gray-600">
-                        Pick for me
-                      </label>
-                    </div>
-                  </div>
-                  
-                  {newTest.useRecommendedDate ? (
-                    <div className="text-sm text-gray-600 italic p-2 bg-gray-50 rounded text-center">
-                      We&apos;ll recommend the next available test date based on your study schedule
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      <input
-                        type="date"
-                        value={newTest.date ? newTest.date.toISOString().split('T')[0] : ''}
-                        min={new Date().toISOString().split('T')[0]}
-                        onChange={(e) => {
-                          const date = e.target.value ? new Date(e.target.value) : null;
-                          setNewTest({ ...newTest, date });
-                        }}
-                        className="w-full p-2 rounded-lg border border-gray-300 bg-white"
-                      />
-                    </div>
-                  )}
-                  
-                  {newTest.date && (
-                    <div className="text-sm text-gray-600 mt-1 text-center">
-                      Selected date: {formatDate(newTest.date)}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setIsAddDialogOpen(false)}
-                className="px-4 py-1.5 text-gray-600 hover:text-gray-900 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddTest}
-                disabled={!newTest.company || !newTest.testNumber || (!newTest.date && !newTest.useRecommendedDate)}
-                className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                Add Test
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AddPracticeTestDialog
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onAddTest={handleAddTest}
+      />
 
       <DeleteExamDialog
         isOpen={deleteDialogOpen}
