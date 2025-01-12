@@ -192,7 +192,7 @@ body.theme-sunsetCity * {
     --theme-navbutton-color: #001226;
     --svg-invert: 0;
     --theme-reddit-color: #082645;
-    --theme-doctorsoffice-accent: #2e5387;
+    --theme-doctorsoffice-accent: #132b4c;
     --theme-flashcard-color: #001a3a; /* Darker shade for CyberSpace theme */
     --theme-flashcard-text-color: #ffffff; /* White text for CyberSpace theme */
     --theme-adaptive-tutoring-color: #001226;
@@ -312,7 +312,7 @@ body.theme-sunsetCity * {
   --theme-botchatbox-color: #dcdcdc; /* Transparent pale violet red */
   --theme-hover-text: #ffffff;
   --theme-border-color: rgba(184, 84, 117, 0.4); /* Subtle pink */
-  --theme-leaguecard-color: #ffffffe6;
+  --theme-leaguecard-color: #fbf0f8e6;
   --theme-leaguecard-accent: rgba(241, 183, 224, 0.7);
   --theme-navbutton-color: #9a2641; /* Pale violet red */
   --svg-invert: 0; /* Changed to 0 to keep original SVG colors */
@@ -654,11 +654,11 @@ body {
   --theme-hover-text: #ffffff;
   --theme-border-color: rgba(76, 181, 230, 0.4); /* Subtle blue */
   --theme-leaguecard-color: rgba(231, 250, 251, 0.9);
-  --theme-leaguecard-accent: rgba(114, 183, 222, 0.3);
+  --theme-leaguecard-accent: rgba(103, 211, 215, 0.428);
   --theme-navbutton-color: #1e81b0;
   --svg-invert: 0;
   --theme-reddit-color: #f0f8ff;
-  --theme-doctorsoffice-accent: #d7ecff;
+  --theme-doctorsoffice-accent: #e9f3fb;
   --theme-flashcard-color: #ffffff; /* White for light MykonosBlue theme */
   --theme-flashcard-text-color: #1e81b0; /* Blue text for MykonosBlue theme */
   --theme-adaptive-tutoring-color: #f0f9fc;
