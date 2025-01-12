@@ -54,6 +54,7 @@ interface ContentItem {
   type: string;
   transcript?: string;
   summary?: string;
+  conceptCategory?: string;
 }
 
 interface AdaptiveTutoringProps {
