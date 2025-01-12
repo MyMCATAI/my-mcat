@@ -40,6 +40,7 @@ import { toast } from "@/components/ui/use-toast";
 import WeeklyCalendarModal from "@/components/calendar/WeeklyCalendarModal";
 import { AnimatePresence, motion } from "framer-motion";
 import TestCalendar from '@/components/calendar/TestCalendar';
+import { cn, toUTCDate, formatDisplayDate } from "@/lib/utils";
 
 interface CalendarActivity {
   id: string;
@@ -378,8 +379,9 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
   const handleDateSelect = async (date: Date) => {
     if (selectedTestId) {
       try {
-        await updateExamDate(selectedTestId, date);
-        // Close the dialog after successful update
+        // Convert to UTC date without time component
+        const utcDate = toUTCDate(date);
+        await updateExamDate(selectedTestId, utcDate);
         setDatePickerOpen(false);
         setSelectedTestId(null);
       } catch (error) {
@@ -573,10 +575,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                                           </h4>
                                           {test.formattedDate && (
                                             <span className="text-xs opacity-70 flex-shrink-0">
-                                              • {new Date(test.formattedDate).toLocaleDateString('en-US', {
-                                                month: 'short',
-                                                day: 'numeric'
-                                              })}
+                                              • {formatDisplayDate(test.formattedDate)}
                                             </span>
                                           )}
                                         </div>
