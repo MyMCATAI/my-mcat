@@ -393,15 +393,6 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     }
   };
 
-  // Add helper function to check if all sections are reviewed
-  const isTestFullyReviewed = (test: UserTest) => {
-    const dataPulses = examActivities?.find(activity => activity.id === test.id)?.fullLengthExam?.dataPulses;
-    if (!dataPulses) return false;
-    
-    const sectionPulses = dataPulses.filter(pulse => pulse.level === "section");
-    return sectionPulses.every(pulse => pulse.reviewed);
-  };
-
   return (
     <div className={`p-2 flex flex-col ${className}`}>
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -430,6 +421,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                     ?.fullLengthExam?.dataPulses
                 }}
                 onBack={() => setActiveTest(null)} 
+                onRefresh={fetchExamActivities}
               />
             </div>
           ) : (

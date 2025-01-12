@@ -23,10 +23,15 @@ interface TestReviewProps {
     aiResponse?: string;
   };
   onBack: () => void;
+  onRefresh?: () => Promise<void>;
 }
 
-const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
+const TestReview: React.FC<TestReviewProps> = ({ test, onBack, onRefresh }) => {
   const router = useRouter();
+  
+  // Safely handle potentially undefined breakdown first
+  const [chem, cars, bio, psych] = (test.breakdown?.split('/').map(Number) || [0, 0, 0, 0]);
+
   const [completedSections, setCompletedSections] = useState<string[]>([]);
   const [activeSection, setActiveSection] = useState<Section | null>(null);
   const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
@@ -37,6 +42,31 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
     }
     return false;
   });
+
+  // Function to refetch exam data
+  const refetchExamData = async () => {
+    try {
+      // First try to use the parent's refresh function
+      if (onRefresh) {
+        await onRefresh();
+        return;
+      }
+
+      // Fallback to local refresh if parent refresh not provided
+      const response = await fetch(`/api/full-length-exam?id=${test.examId}`);
+      if (!response.ok) throw new Error('Failed to fetch exam data');
+      const data = await response.json();
+      
+      // Update the test data with fresh data
+      if (data.dataPulses) {
+        test.dataPulses = data.dataPulses;
+        test.breakdown = data.breakdown;
+        test.score = data.score;
+      }
+    } catch (error) {
+      console.error('Error refetching exam data:', error);
+    }
+  };
 
   // Initialize completedSections and analysis from dataPulses
   useEffect(() => {
@@ -51,6 +81,10 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
       setAnalysis(test.aiResponse);
     }
   }, [test.dataPulses, test.aiResponse]);
+
+  const handleScoreUpdate = async (section: Section, newScore: number) => {
+    await refetchExamData();
+  };
 
   const generateAnalysis = async () => {
     setIsGeneratingAnalysis(true);
@@ -77,9 +111,6 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
       setIsGeneratingAnalysis(false);
     }
   };
-
-  // Safely handle potentially undefined breakdown
-  const [chem, cars, bio, psych] = (test.breakdown?.split('/').map(Number) || [0, 0, 0, 0]);
 
   const handleSectionComplete = (sectionName: string) => {
     setCompletedSections(prev => 
@@ -239,6 +270,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
         isCompleted={completedSections.includes(activeSection.name)}
         onComplete={() => handleSectionComplete(activeSection.name)}
         dataPulse={sectionDataPulse}
+        onScoreUpdate={(newScore) => handleScoreUpdate(activeSection, newScore)}
       />
     );
   }
@@ -264,16 +296,24 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
           </button>
           <div className="h-full flex flex-col items-center justify-center space-y-2">
             <span className="text-sm uppercase tracking-wide opacity-60 truncate max-w-[80%]">{test.name}</span>
-            <span className={`text-6xl font-bold transition-all duration-300 hover:scale-110
-              ${test.score < 500 ? 'text-red-500' : ''}
-              ${test.score >= 500 && test.score < 510 ? 'text-yellow-500' : ''}
-              ${test.score >= 510 && test.score < 515 ? 'text-green-500' : ''}
-              ${test.score >= 515 && test.score < 520 ? 'text-sky-500' : ''}
-              ${test.score >= 520 && test.score < 525 ? 'text-sky-400 animate-pulse-subtle' : ''}
-              ${test.score >= 525 ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-transparent bg-clip-text animate-pulse-subtle' : ''}
-            `}>
-              {test.score}
-            </span>
+            {(() => {
+              const totalScore = ["C/P", "CARs", "B/B", "P/S"]
+                .reduce((sum, section) => sum + (test.dataPulses?.find(dp => dp.section === section)?.positive || 0), 0);
+
+              const scoreClass = 
+                totalScore < 500 ? 'text-red-500' :
+                totalScore < 510 ? 'text-yellow-500' :
+                totalScore < 515 ? 'text-green-500' :
+                totalScore < 520 ? 'text-sky-500' :
+                totalScore < 525 ? 'text-sky-400 animate-pulse-subtle' :
+                'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-transparent bg-clip-text animate-pulse-subtle';
+
+              return (
+                <span className={`text-6xl font-bold transition-all duration-300 hover:scale-110 ${scoreClass}`}>
+                  {totalScore}
+                </span>
+              );
+            })()}
             <span className="text-xs opacity-50 truncate max-w-[80%]">{test.dateTaken || formatDate(test.calendarDate)}</span>
           </div>
         </div>
@@ -281,10 +321,10 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
         <div className="flex-grow bg-[--theme-leaguecard-color] shadow-xl rounded-2xl p-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 h-full">
             {[
-              { name: "Chem Phys" as const, score: chem },
-              { name: "CARS" as const, score: cars },
-              { name: "Bio Biochem" as const, score: bio },
-              { name: "Psych Soc" as const, score: psych }
+              { name: "Chem Phys" as const, score: test.dataPulses?.find(dp => dp.section === "C/P")?.positive || 0 },
+              { name: "CARS" as const, score: test.dataPulses?.find(dp => dp.section === "CARs")?.positive || 0 },
+              { name: "Bio Biochem" as const, score: test.dataPulses?.find(dp => dp.section === "B/B")?.positive || 0 },
+              { name: "Psych Soc" as const, score: test.dataPulses?.find(dp => dp.section === "P/S")?.positive || 0 }
             ].map((section: Section, index) => (
               <div 
                 key={index} 
