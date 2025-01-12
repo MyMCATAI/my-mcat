@@ -221,7 +221,7 @@ const HelpContentCARs: React.FC<HelpContentCARsProps> = ({ onClose, onResetTutor
               </h3>
               <div className="flex flex-col gap-3">
                 <a
-                  href="https://discord.gg/PkRbV5nw"
+                  href="https://discord.gg/DcHWnEu8Xb"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
