@@ -475,7 +475,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                                     <div
                                       ref={provided.innerRef}
                                       {...provided.draggableProps}
-                                      className={`flex items-center h-[3.5rem] p-2 bg-[--theme-leaguecard-accent] rounded-lg 
+                                      className={`flex items-center h-[3.5rem] p-2 bg-[--theme-leaguecard-accent] rounded-lg
                                         transition-all duration-200 group relative
                                         ${snapshot.isDragging ? "opacity-75" : ""}
                                         opacity-100 hover:opacity-80`}
@@ -585,7 +585,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                           {userTests.map((test: UserTest) => (
                             <div
                               key={test.id}
-                              className="flex items-center h-[3.5rem] p-2 bg-[--theme-leaguecard-accent] rounded-lg 
+                              className="flex items-center h-[3.5rem] p-2 bg-[--theme-leaguecard-accent] rounded-lg
                                 transition-all duration-200 cursor-pointer
                                 hover:bg-[--theme-emphasis-color] hover:text-[--theme-hover-text]"
                               onClick={() => setActiveTest(test)}

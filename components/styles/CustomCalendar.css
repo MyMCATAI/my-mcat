@@ -3,9 +3,9 @@
   background: color-mix(in srgb, var(--theme-leaguecard-color) 85%, transparent);
   backdrop-filter: blur(10px);
   border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--theme-border-color) 15%, transparent);
+  border: none;
   overflow: hidden;
-  box-shadow: 0 10px 13px -3px rgb(0 0 0 / 0.1), 0 6px 8px -4px rgb(0 0 0 / 0.2); /* This is equivalent to shadow-lg */
+  box-shadow: var(--theme-adaptive-tutoring-boxShadow), 0 10px 13px -3px rgb(0 0 0 / 0.1), 0 6px 8px -4px rgb(0 0 0 / 0.2);
 }
 
 /* Header/Toolbar styles */
@@ -452,38 +452,104 @@
   backdrop-filter: blur(10px);
   border-radius: 1rem;
   border: 1px solid color-mix(in srgb, var(--theme-border-color) 15%, transparent);
-  padding: 0.75rem;
+  padding: 1rem;
+  box-shadow: var(--theme-button-boxShadow);
+  z-index: 1000;
+  position: absolute;
+  max-height: 80vh;
+  overflow-y: auto;
+  min-width: 15rem;
+}
+
+/* Style the popup header */
+.custom-calendar .rbc-overlay-header {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--theme-text-color);
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-border-color) 15%, transparent);
+}
+
+/* Style individual events in the popup */
+.custom-calendar .rbc-overlay .rbc-event {
+  background: color-mix(in srgb, var(--theme-mainbox-color) 95%, transparent) !important;
+  margin: 0.5rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  width: 100%;
+  display: block;
+  color: var(--theme-text-color) !important;
+}
+
+.custom-calendar .rbc-overlay .rbc-event:hover {
+  transform: translateY(-2px);
+  background: var(--theme-hover-color) !important;
+  color: var(--theme-hover-text) !important;
   box-shadow: var(--theme-button-boxShadow);
 }
 
-.custom-calendar .rbc-overlay > * + * {
+/* Style event content within popup */
+.custom-calendar .rbc-overlay .rbc-event-content {
+  color: inherit !important;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* Add scrollbar styling */
+.custom-calendar .rbc-overlay::-webkit-scrollbar {
+  width: 0.375rem;
+}
+
+.custom-calendar .rbc-overlay::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-calendar .rbc-overlay::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--theme-border-color) 50%, transparent);
+  border-radius: 0.375rem;
+}
+
+/* Base overlay styles */
+.rbc-overlay {
+  position: absolute;
+  z-index: 1000;
+  background: color-mix(in srgb, var(--theme-leaguecard-color) 85%, transparent) !important;
+  backdrop-filter: blur(4px);
+  border: 1px solid color-mix(in srgb, var(--theme-border-color) 15%, transparent);
+  box-shadow: var(--theme-button-boxShadow);
+  padding: 1rem;
+  min-width: 200px;
+  border-radius: 0.5rem;
+}
+
+.rbc-overlay > * + * {
   margin-top: 0.5rem;
 }
 
-/* Style the events within the popup */
-.custom-calendar .rbc-overlay .rbc-event {
-  margin: 0.25rem 0;
+/* Header styling */
+.rbc-overlay-header {
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-border-color) 15%, transparent);
+  margin: -1rem -1rem 0.5rem -1rem;
+  padding: 0.5rem 1rem;
+  color: var(--theme-text-color);
+  font-weight: 600;
+}
+
+/* Event styling within overlay */
+.rbc-overlay .rbc-event {
+  background: var(--theme-mainbox-color) !important;
+  color: var(--theme-text-color) !important;
+  padding: 0.75rem 1rem;
   border-radius: 0.5rem;
   transition: all 0.2s ease;
 }
 
-/* Style the more link */
-.custom-calendar .rbc-show-more {
-  font-size: 0.65rem;
-  color: var(--theme-leaguecard-accent);
-  opacity: 0.9;
-  height: calc(1vh + 0.5rem);
-  min-height: 1rem;
-  display: flex;
-  align-items: center;
-  z-index: 5;
-}
-
-.custom-calendar .rbc-show-more:hover {
-  opacity: 1;
-  box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.1);
-  color: var(--theme-text-color);
-  text-decoration: none;
-  background: var(--theme-leaguecard-color) !important;
+.rbc-overlay .rbc-event:hover {
+  background: var(--theme-hover-color) !important;
+  color: var(--theme-hover-text) !important;
+  transform: translateY(-2px);
+  box-shadow: var(--theme-button-boxShadow);
 }
 
