@@ -1,6 +1,18 @@
 // app/(dashboard)/(routes)/home/PracticeTests.tsx
 import React, { useState, useEffect } from "react";
-import { ChevronRight, Plus, GripVertical, CalendarIcon, BarChart as AnalyticsIcon, ClipboardList, ChevronLeft, Trash2, Settings, BarChart } from "lucide-react";
+import { 
+  ChevronRight, 
+  Plus, 
+  GripVertical, 
+  CalendarIcon, 
+  BarChart as AnalyticsIcon, 
+  ClipboardList, 
+  ChevronLeft, 
+  Trash2, 
+  Settings, 
+  BarChart,
+  CheckCircle2 
+} from "lucide-react";
 import {
   DragDropContext,
   Droppable,
@@ -79,6 +91,11 @@ interface UserTest {
   isCompleted?: boolean;
 }
 
+interface CompletedTestRecord {
+  id: string;
+  completedAt: string;
+}
+
 const COMPANIES = ["AAMC", "Blueprint", "Jack Westin", "Altius"] as const;
 type Company = typeof COMPANIES[number];
 
@@ -122,6 +139,33 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
   const [userTests, setUserTests] = useState<UserTest[]>([]);
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showSettings, setShowSettings] = useState(false);
+  const [showWeeklyModal, setShowWeeklyModal] = useState(false);
+
+  // Replace previousCompletedTestsCount with completedTestRecords
+  const [completedTestRecords, setCompletedTestRecords] = useState<CompletedTestRecord[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('completedTestRecords');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+
+  // Update localStorage whenever records change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('completedTestRecords', JSON.stringify(completedTestRecords));
+    }
+  }, [completedTestRecords]);
+
+  // Helper to check if a test was recently completed
+  const isRecentlyCompleted = (testId: string) => {
+    const record = completedTestRecords.find(r => r.id === testId);
+    if (!record) return false;
+    
+    const completedTime = new Date(record.completedAt).getTime();
+    const oneHourAgo = Date.now() - (60 * 60 * 1000); // 1 hour window
+    return completedTime > oneHourAgo;
+  };
 
   // Combine exam and study activities into calendar events
   useEffect(() => {
@@ -231,8 +275,30 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
         });
 
       setUserTests(completedTests);
+
+      // Check for newly completed tests
+      const newlyCompletedTests = completedTests.filter(test => {
+        const existingRecord = completedTestRecords.find(r => r.id === test.id);
+        return !existingRecord;
+      });
+
+      if (newlyCompletedTests.length > 0) {
+        // Add new records
+        const newRecords = newlyCompletedTests.map(test => ({
+          id: test.id,
+          completedAt: new Date().toISOString()
+        }));
+
+        setCompletedTestRecords(prev => [...prev, ...newRecords]);
+
+        // Only show modal if the test was completed recently
+        const hasRecentCompletion = newlyCompletedTests.some(test => isRecentlyCompleted(test.id));
+        if (hasRecentCompletion) {
+          setShowWeeklyModal(true);
+        }
+      }
     }
-  }, [examActivities]);
+  }, [examActivities, completedTestRecords]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newTest, setNewTest] = useState({
@@ -378,6 +444,15 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     if (handleSetTab) {
       handleSetTab('Tests');
     }
+  };
+
+  // Add helper function to check if all sections are reviewed
+  const isTestFullyReviewed = (test: UserTest) => {
+    const dataPulses = examActivities?.find(activity => activity.id === test.id)?.fullLengthExam?.dataPulses;
+    if (!dataPulses) return false;
+    
+    const sectionPulses = dataPulses.filter(pulse => pulse.level === "section");
+    return sectionPulses.every(pulse => pulse.reviewed);
   };
 
   return (
@@ -582,34 +657,47 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                       {/* Completed Tests Scrollable Area */}
                       <div className="flex-1 overflow-auto">
                         <div className="space-y-1.5 pb-2">
-                          {userTests.map((test: UserTest) => (
-                            <div
-                              key={test.id}
-                              className="flex items-center h-[3.5rem] p-2 bg-[--theme-leaguecard-accent] rounded-lg
-                                transition-all duration-200 cursor-pointer
-                                hover:bg-[--theme-emphasis-color] hover:text-[--theme-hover-text]"
-                              onClick={() => setActiveTest(test)}
-                            >
-                              {test.score && (
-                                <div className="text-xl font-bold mr-3 w-12 text-center flex-shrink-0">
-                                  {test.score}
+                          {userTests.map((test: UserTest) => {
+                            const isCompleted = examActivities?.find(activity => 
+                              activity.id === test.id && 
+                              activity.fullLengthExam?.dataPulses?.filter(p => p.level === "section")?.every(p => p.reviewed)
+                            );
+                            
+                            return (
+                              <div
+                                key={test.id}
+                                onClick={() => setActiveTest(test)}
+                                className={`flex items-center h-[3.5rem] p-2 bg-[--theme-leaguecard-accent] rounded-lg
+                                  transition-all duration-200 cursor-pointer
+                                  hover:bg-[--theme-emphasis-color] hover:text-[--theme-hover-text]
+                                  ${isCompleted ? 'opacity-50' : 'opacity-100'}`}
+                              >
+                                {test.score && (
+                                  <div className="text-xl font-bold w-12 text-center">
+                                    {test.score}
+                                  </div>
+                                )}
+                                <div className="flex-grow min-w-0 flex flex-col justify-center">
+                                  <h4 className="text-sm opacity-70 truncate">
+                                    {test.name}
+                                  </h4>
+                                  {test.startedAt && (
+                                    <span className="text-xs opacity-70">
+                                      {new Date(test.startedAt).toLocaleDateString('en-US', {
+                                        month: 'short',
+                                        day: 'numeric'
+                                      })}
+                                    </span>
+                                  )}
                                 </div>
-                              )}
-                              <div className="flex-grow min-w-0 flex flex-col justify-center">
-                                <h4 className="text-sm opacity-70 truncate">
-                                  {test.name}
-                                </h4>
-                                {test.startedAt && (
-                                  <span className="text-xs opacity-70">
-                                    {new Date(test.startedAt).toLocaleDateString('en-US', {
-                                      month: 'short',
-                                      day: 'numeric'
-                                    })}
-                                  </span>
+                                {isCompleted && (
+                                  <div className="ml-2">
+                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                  </div>
                                 )}
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
@@ -761,7 +849,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
               <button
                 onClick={handleAddTest}
                 disabled={!newTest.company || !newTest.testNumber || (!newTest.date && !newTest.useRecommendedDate)}
-                className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 Add Test
               </button>
@@ -829,21 +917,29 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
       </div>
 
       <AnimatePresence>
-        {showSettings && (
+        {(showSettings || showWeeklyModal) && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black bg-opacity-70 z-40"
-              onClick={toggleSettings}
+              onClick={() => {
+                if (showSettings) setShowSettings(false);
+                if (showWeeklyModal) setShowWeeklyModal(false);
+              }}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              onClick={toggleSettings}
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  if (showSettings) setShowSettings(false);
+                  if (showWeeklyModal) setShowWeeklyModal(false);
+                }
+              }}
             >
               <div 
                 onClick={(e) => e.stopPropagation()}
@@ -860,11 +956,16 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                         ]);
                         handleSetTab && handleSetTab('Tests');
                       }
-                      handleStudyPlanSaved();
+                      if (showSettings) handleStudyPlanSaved();
+                      setShowSettings(false);
+                      setShowWeeklyModal(false);
                     }
                   }}
                   isInitialSetup={false}
-                  onClose={()=>setShowSettings(false)}
+                  onClose={() => {
+                    setShowSettings(false);
+                    setShowWeeklyModal(false);
+                  }}
                 />
               </div>
             </motion.div>

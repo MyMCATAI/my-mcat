@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle2, Circle, GraduationCap, RefreshCw } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle, GraduationCap, RefreshCw, HelpCircle } from 'lucide-react';
 import SectionReview, { Section } from './SectionReview';
 import { Button } from "@/components/ui/button";
 import { DataPulse } from '@/hooks/useCalendarActivities';
 import { FULL_TO_DISPLAY_SECTION, SECTION_MAPPINGS } from '@/lib/constants';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 interface TestReviewProps {
   test: {
@@ -30,6 +31,12 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
   const [activeSection, setActiveSection] = useState<Section | null>(null);
   const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(test.aiResponse || null);
+  const [retakeCompleted, setRetakeCompleted] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(`retake-${test.id}`) === 'true';
+    }
+    return false;
+  });
 
   // Initialize completedSections and analysis from dataPulses
   useEffect(() => {
@@ -212,6 +219,11 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
     }
   };
 
+  const handleRetakeComplete = () => {
+    setRetakeCompleted(true);
+    localStorage.setItem(`retake-${test.id}`, 'true');
+  };
+
   if (activeSection) {
     // Find the specific dataPulse for this section
     const sectionDataPulse = test.dataPulses?.find(pulse => 
@@ -323,6 +335,54 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack }) => {
                     __html: `<p class="mb-4">${formatAnalysis(analysis)}</p>` 
                   }} 
                 />
+                {analysis && (
+                  <div className="mt-8">
+                    <h3 className="text-xs uppercase tracking-wide opacity-60 mb-3 flex items-center gap-2">
+                      Retake A Section
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="hover:opacity-100 transition-opacity">
+                            <HelpCircle className="h-3.5 w-3.5 opacity-60 hover:opacity-100" />
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <div className="p-4 sm:p-6">
+                            <h4 className="text-[--theme-hover-color] font-medium text-lg mb-3">
+                              Retaking AAMC
+                            </h4>
+                            <p className="text-sm leading-relaxed text-black">
+                              Before you mark it as complete, spend an hour-thirty minutes retaking a section. We ran a statistical analysis and found students who retook sections, even if you did it recently, performed better. However, don't rely on memory. Rely on actually verbally walking yourself through the logic of why an answer is correct or wrong.
+                            </p>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </h3>
+                    <div className="inline-flex items-center gap-3 px-4 py-2.5 bg-[--theme-doctorsoffice-accent] rounded-lg">
+                      <span className="text-sm whitespace-nowrap">
+                        {(() => {
+                          const lowestIdx = [chem, cars, bio, psych]
+                            .reduce((acc, curr, idx) => curr < acc.score ? { score: curr, idx } : acc, { score: Infinity, idx: 0 })
+                            .idx;
+                          
+                          return lowestIdx === 0 ? "Chemistry and Physics" 
+                               : lowestIdx === 1 ? "Critical Analysis and Reading Skills"
+                               : lowestIdx === 2 ? "Biology and Biochemistry"
+                               : "Psychology/Sociology";
+                        })()}
+                      </span>
+                      {retakeCompleted ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <button
+                          onClick={handleRetakeComplete}
+                          className="px-3 py-1 text-xs rounded-full bg-black/10 hover:bg-black/20 transition-colors duration-200"
+                        >
+                          Complete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : completedSections.length === 0 ? (
               <div className="flex items-center justify-center h-full opacity-50">

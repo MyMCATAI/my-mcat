@@ -33,12 +33,12 @@ interface Subject {
 }
 
 const examDescriptions = {
-  "Unscored Sample": "The Unscored Sample is your first step into AAMC-style questions. While unscored, it's crucial for understanding the test format and identifying initial content gaps. Take this",
-  "Full Length Exam 1": "FL1 is typically easier than later exams but provides accurate CARS difficulty. Use this to gauge your progress and identify areas needing focus. Many find the Chemical/Phys",
-  "Full Length Exam 2": "FL2 is known for its challenging Biology/Biochemistry section. The CARS section tends to be slightly more difficult than FL1. This exam helps assess your content mastery mid",
-  "Full Length Exam 3": "FL3 is considered most representative of recent MCAT exams. The Psychology/Sociology section is particularly challenging. Use this exam to get the most accurate prediction o",
-  "Full Length Exam 4": "FL4 features more research-heavy passages and data interpretation. The Chemical/Physical section is notably challenging. This exam is crucial for identifying last-minute wea",
-  "Sample Scored (FL5)": "The final practice exam before your test day. Known for having the most up-to-date question style and difficulty level. Focus on timing and stamina, treating it exactly lik"
+  "Unscored Sample": "The Unscored Sample is your first step into AAMC-style questions. While unscored, it's crucial for understanding the test format and identifying initial content gaps. It's not representative. Take this first and focus on content.",
+  "Full Length Exam 1": "FL1 is typically easier than later exams but provides accurate CARS difficulty. Generally, we recommend more content-heavy resources for this exam interspersed with practice questions. It's semi-representative.",
+  "Full Length Exam 2": "FL2 is known for its challenging Biology/Biochemistry section. The CARS section tends to be slightly more difficult than FL1. This exam helps assess your content mastery mid-way through your studies.",
+  "Full Length Exam 3": "FL3 is considered slightly inflated. The Psychology/Sociology section is particularly considered easy. However, it is a good exam for diagnosing certain weaknesses in the sciences. After this point, your schedule will focus on AAMC.",
+  "Full Length Exam 4": "FL4 features more research-heavy passages and data interpretation. The Chemical/Physical section is notably challenging. This exam is crucial for identifying last-minute weaknesses. If you score poorly, reschedule.",
+  "Sample Scored (FL5)": "The final practice exam before your test day. Known for having the most up-to-date question style and difficulty level. Focus on timing and stamina, treating it exactly like the MCAT. If you score poorly, reschedule."
 } as const;
 
 type ExamName = keyof typeof examDescriptions;
@@ -119,11 +119,10 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
   const [examSchedule, setExamSchedule] = useState<ExamSchedule[]>([]);
 
   const messages = [
-    "Analyzing your study patterns...",
-    "Balancing content and practice...",
-    "Optimizing your schedule...",
-    "Creating personalized tasks...",
-    "Almost there...",
+    "Analyzing your previous tests...",
+    "Curating your weaknesses...",
+    "Selecting topics for your ATS and Anki Clinic...",
+    "Now we know what you're week in...",
     "Schedule generated successfully!"
   ];
 

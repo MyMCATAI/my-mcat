@@ -104,15 +104,30 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
   }, [isOpen, editingQuestion, categories]);
 
   const handleSubmit = async () => {
-    if (question.mistake.length < 100) {
-      setMistakeError('Your mistake analysis must be at least 100 characters long.');
-      return;
+    // For flagged questions, require 150 characters
+    if (question.status === 'flagged') {
+      if (question.mistake.length < 150) {
+        setMistakeError('Your mistake analysis must be at least 150 characters long for flagged questions.');
+        return;
+      }
+      if (question.improvement.length < 150) {
+        setImprovementError('Your improvement plan must be at least 150 characters long for flagged questions.');
+        return;
+      }
     }
-
-    if (question.improvement.length < 100) {
-      setImprovementError('Your improvement plan must be at least 100 characters long.');
-      return;
+    
+    // For wrong questions, require 100 characters
+    if (question.status === 'wrong') {
+      if (question.mistake.length < 100) {
+        setMistakeError('Your mistake analysis must be at least 100 characters long.');
+        return;
+      }
+      if (question.improvement.length < 100) {
+        setImprovementError('Your improvement plan must be at least 100 characters long.');
+        return;
+      }
     }
+    // No character validation for correct questions
 
     const hasForbiddenWord = FORBIDDEN_WORDS.some(word => 
       question.mistake.toLowerCase().includes(word.toLowerCase())
@@ -314,9 +329,16 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
               placeholder="'My thought process that resulted in the wrong answer was...'"
             />
             <div className="flex justify-between mt-1">
-              <span className={`text-sm ${question.mistake.length < 100 ? 'text-red-500' : 'text-green-500'}`}>
-                {question.mistake.length}/100 characters
-              </span>
+              {question.status !== 'correct' && (
+                <span className={`text-sm ${
+                  (question.status === 'flagged' && question.mistake.length < 150) ||
+                  (question.status === 'wrong' && question.mistake.length < 100)
+                    ? 'text-red-500' 
+                    : 'text-green-500'
+                }`}>
+                  {question.mistake.length}/{question.status === 'flagged' ? '150' : '100'} characters
+                </span>
+              )}
               {mistakeError && (
                 <span className="text-sm text-red-500">{mistakeError}</span>
               )}
@@ -339,9 +361,16 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
               placeholder="If I could do this question again, I would approach it differently by..."
             />
             <div className="flex justify-between mt-1">
-              <span className={`text-sm ${question.improvement.length < 100 ? 'text-red-500' : 'text-green-500'}`}>
-                {question.improvement.length}/100 characters
-              </span>
+              {question.status !== 'correct' && (
+                <span className={`text-sm ${
+                  (question.status === 'flagged' && question.improvement.length < 150) ||
+                  (question.status === 'wrong' && question.improvement.length < 100)
+                    ? 'text-red-500' 
+                    : 'text-green-500'
+                }`}>
+                  {question.improvement.length}/{question.status === 'flagged' ? '150' : '100'} characters
+                </span>
+              )}
               {improvementError && (
                 <span className="text-sm text-red-500">{improvementError}</span>
               )}
