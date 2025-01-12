@@ -24,6 +24,8 @@ import UWorldPopup from '@/components/home/UWorldPopup';
 import HelpContent from "@/components/guides/HelpContent";
 import HelpContentCARS from "@/components/guides/HelpContentCARs";
 import HelpContentSchedule from "@/components/guides/HelpContentSchedule";
+import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";
+
 interface Task {
   text: string;
   completed: boolean;
@@ -490,6 +492,8 @@ const SideBar: React.FC<SideBarProps> = ({
                 return <HelpContentSchedule onClose={() => {}} />;
             case "AdaptiveTutoringSuite":
                 return <HelpContent onClose={() => {}} onResetTutorials={() => {}} />;
+            case "Tests":
+                return <HelpContentTestingSuite />;
             default:
                 return (
                     <div className="h-[calc(100vh-11.6rem)] flex items-center justify-center text-center p-4">
