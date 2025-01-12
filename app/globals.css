@@ -192,7 +192,7 @@ body.theme-sunsetCity * {
     --theme-navbutton-color: #001226;
     --svg-invert: 0;
     --theme-reddit-color: #082645;
-    --theme-doctorsoffice-accent: #132b4c;
+    --theme-doctorsoffice-accent: #161c43;
     --theme-flashcard-color: #001a3a; /* Darker shade for CyberSpace theme */
     --theme-flashcard-text-color: #ffffff; /* White text for CyberSpace theme */
     --theme-adaptive-tutoring-color: #001226;
@@ -317,7 +317,7 @@ body.theme-sunsetCity * {
   --theme-navbutton-color: #9a2641; /* Pale violet red */
   --svg-invert: 0; /* Changed to 0 to keep original SVG colors */
   --theme-reddit-color: #ffc9fccd; /* Misty rose */
-  --theme-doctorsoffice-accent: #fce4f5; /* Light pink */
+  --theme-doctorsoffice-accent: #f5dbed; /* Light pink */
   --theme-flashcard-color: #ffffff; /* White for light SakuraTrees theme */
   --theme-flashcard-text-color: #4a0e37; /* Dark pink text for SakuraTrees theme */
   --theme-adaptive-tutoring-color: #faeef4;
@@ -356,7 +356,7 @@ body.theme-sunsetCity * {
   --theme-navbutton-color: #49327c;
   --svg-invert: 0;
   --theme-reddit-color: #3a2963;
-  --theme-doctorsoffice-accent: #3e2774;
+  --theme-doctorsoffice-accent: #382761;
   --theme-flashcard-color: #21133e; /* Matches --theme-mainbox-color for consistency */
   --theme-flashcard-text-color: #ffd1dc; /* Keeping the existing text color for readability */
   --theme-adaptive-tutoring-color: #001226;
