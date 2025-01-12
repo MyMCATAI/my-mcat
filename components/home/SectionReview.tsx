@@ -5,6 +5,7 @@ import { ExamQuestion, useExamQuestions } from '@/hooks/useExamQuestions';
 import { DISPLAY_TO_FULL_SECTION } from '@/lib/constants';
 import { DataPulse } from '@/hooks/useCalendarActivities';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import Confetti from 'react-confetti';
 
 export interface Section {
   name: keyof typeof DISPLAY_TO_FULL_SECTION;
@@ -39,7 +40,32 @@ const SectionReview: React.FC<SectionReviewProps> = ({
   const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [isAnalysisMaximized, setIsAnalysisMaximized] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiDimensions, setConfettiDimensions] = useState({ x: 0, y: 0, w: 0, h: 0 });
   
+  // Add refs
+  const fanfareAudio = React.useRef<HTMLAudioElement | null>(null);
+  const statsAreaRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Initialize audio
+    fanfareAudio.current = new Audio('/fanfare.mp3');
+    fanfareAudio.current.volume = 0.5;
+  }, []);
+
+  // Update confetti dimensions when showing
+  useEffect(() => {
+    if (showConfetti && statsAreaRef.current) {
+      const rect = statsAreaRef.current.getBoundingClientRect();
+      setConfettiDimensions({
+        x: rect.x,
+        y: rect.y,
+        w: rect.width,
+        h: rect.height
+      });
+    }
+  }, [showConfetti]);
+
   const { 
     questions: listOfQuestions, 
     loading, 
@@ -118,6 +144,17 @@ const SectionReview: React.FC<SectionReviewProps> = ({
         throw new Error('Failed to update section completion');
       }
       
+      // Play celebration effects
+      setShowConfetti(true);
+      if (fanfareAudio.current) {
+        fanfareAudio.current.play();
+      }
+
+      // Hide confetti after 5 seconds
+      setTimeout(() => {
+        setShowConfetti(false);
+      }, 5000);
+      
       // Call the onComplete callback to update frontend state
       onComplete();
     } catch (error) {
@@ -152,6 +189,21 @@ const SectionReview: React.FC<SectionReviewProps> = ({
 
   return (
     <div className="animate-fadeIn h-full p-3 flex flex-col">
+      {showConfetti && (
+        <Confetti
+          width={confettiDimensions.w}
+          height={confettiDimensions.h}
+          recycle={false}
+          numberOfPieces={50}
+          gravity={0.3}
+          style={{
+            position: 'fixed',
+            left: confettiDimensions.x,
+            top: confettiDimensions.y,
+            pointerEvents: 'none'
+          }}
+        />
+      )}
       <div className="flex flex-col md:flex-row gap-6 mb-6">
         <div className="w-full md:w-[12rem] h-[12rem] bg-[--theme-leaguecard-color] rounded-2xl shadow-xl overflow-hidden relative">
           <button
@@ -231,7 +283,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
       </div>
 
       <div className="flex-1 min-h-0">
-        <div className="bg-[--theme-leaguecard-color] p-6 rounded-2xl shadow-xl h-full flex flex-col">
+        <div className="bg-[--theme-leaguecard-color] p-6 rounded-2xl shadow-xl h-full flex flex-col" ref={statsAreaRef}>
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-6">              
               <div className="flex items-center gap-4">

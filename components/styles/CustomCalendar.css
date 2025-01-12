@@ -553,3 +553,23 @@
   box-shadow: var(--theme-button-boxShadow);
 }
 
+/* Completed event styles */
+.custom-calendar .completed-event {
+  position: relative;
+}
+
+.custom-calendar .completed-event::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  color: #22c55e; /* green-500 */
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.custom-calendar .completed-event .rbc-event-content {
+  padding-right: 1.5rem; /* Make room for the check mark */
+}
+
