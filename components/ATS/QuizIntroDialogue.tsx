@@ -37,6 +37,9 @@ export function QuizIntroDialog({
             <p className="text-sm text-[--theme-text-color]">
               • You can earn coins by achieving a score of 80%
             </p>
+            <p className="text-sm text-[--theme-text-color]">
+              • Each quiz has a new set of questions 
+            </p>
             <p className="text-sm font-medium mt-2 text-[--theme-text-color]">
               Your current balance: {userScore} coins
             </p>
