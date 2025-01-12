@@ -210,3 +210,21 @@ export const fetchDefinitionAndAddToVocab = async (
     addVocabWord(word, ""); // Add word with empty definition if fetch fails
   }
 };
+
+// Date utility functions
+export const toUTCDate = (date: string | Date) => {
+  // Keep the date in local time, don't do any UTC conversion
+  const d = new Date(date);
+  // Zero out the time portion but keep it in local time
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+export const formatDisplayDate = (date: string | Date) => {
+  const d = new Date(date);
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+};
