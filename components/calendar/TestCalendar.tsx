@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, dateFnsLocalizer, ToolbarProps, View } from 'react-big-calendar';
 import { format, isToday, isTomorrow } from 'date-fns';
 import parse from 'date-fns/parse';
@@ -7,6 +7,7 @@ import getDay from 'date-fns/getDay';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/components/styles/CustomCalendar.css";
+import WeeklyCalendarModal from '@/components/calendar/WeeklyCalendarModal';
 
 const locales = {
   'en-US': require('date-fns/locale/en-US'),
@@ -48,6 +49,7 @@ interface ToolbarWithEventsProps {
     sendMessage: (message: string) => void;
   }>;
   onSummarize: () => void;
+  onGenerate: () => void;
 }
 
 const getNextTestDate = (events: CalendarEvent[]): Date | null => {
@@ -87,7 +89,8 @@ const CustomToolbarWithEvents: React.FC<ToolbarWithEventsProps> = ({
   label, 
   onNavigate, 
   events,
-  onSummarize
+  onSummarize,
+  onGenerate
 }) => {
   return (
     <div className="rbc-toolbar">
@@ -107,12 +110,18 @@ const CustomToolbarWithEvents: React.FC<ToolbarWithEventsProps> = ({
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-        <div className="flex-1 flex justify-center">
+        <div className="flex-1 flex justify-center gap-4">
           <button
             onClick={onSummarize}
             className="bg-[--theme-hover-color] text-[--theme-hover-text] hover:opacity-90 transition-all duration-200 px-4 py-1.5 rounded-lg text-sm"
           >
-            Summarize My Week
+            Summarize
+          </button>
+          <button
+            onClick={onGenerate}
+            className="bg-[--theme-hover-color] text-[--theme-hover-text] hover:opacity-90 transition-all duration-200 px-4 py-1.5 rounded-lg text-sm"
+          >
+            Generate
           </button>
         </div>
       </div>
@@ -128,6 +137,8 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
   chatbotRef,
   handleSetTab
 }) => {
+  const [isWeeklyModalOpen, setIsWeeklyModalOpen] = useState(false);
+
   const createCalendarContext = () => {
     const today = new Date();
     const yesterday = new Date(today);
@@ -192,7 +203,6 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
     };
   };
 
-  // Modify the CustomToolbarWithEvents to use the new context
   const handleSummarizeWeek = () => {
     const contextData = createCalendarContext();
     if (chatbotRef?.current) {
@@ -212,15 +222,24 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
     }
   };
 
+  const handleGenerateSchedule = () => {
+    setIsWeeklyModalOpen(true);
+  };
+
   // Custom event styling based on event type
   const eventStyleGetter = (event: CalendarEvent) => {
     const isExam = event.resource?.eventType === 'exam';
     const isMCATExam = event.title === 'MCAT Exam';
+    const isCompleted = event.resource?.fullLengthExam?.dataPulses?.filter((p: any) => p.level === "section")?.every((p: any) => p.reviewed);
     
     return {
-      className: `calendar-event ${isMCATExam ? 'mcat-exam-event' : isExam ? 'exam-event' : 'study-event'}`,
+      className: `calendar-event ${
+        isMCATExam ? 'mcat-exam-event' : 
+        isExam ? 'exam-event' : 'study-event'
+      } ${isCompleted ? 'completed-event' : ''}`,
       style: {
         backgroundColor: isExam ? 'var(--theme-emphasis-color)' : 'var(--theme-hover-color)',
+        opacity: isCompleted ? '0.5' : '1'
       }
     };
   };
@@ -233,6 +252,7 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
         events={events}
         chatbotRef={chatbotRef}
         onSummarize={handleSummarizeWeek}
+        onGenerate={handleGenerateSchedule}
       />
     ),
     eventContent: (event: any) => (
@@ -243,23 +263,46 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
   };
 
   return (
-    <Calendar
-      localizer={localizer}
-      events={events}
-      startAccessor="start"
-      endAccessor="end"
-      className="custom-calendar w-full max-w-full bg-transparent"
-      views={['month']}
-      defaultView="month"
-      date={date}
-      onNavigate={onNavigate}
-      toolbar={true}
-      popup
-      selectable
-      onSelectEvent={onSelectEvent}
-      eventPropGetter={eventStyleGetter}
-      components={components}
-    />
+    <>
+      <Calendar
+        localizer={localizer}
+        events={events}
+        startAccessor="start"
+        endAccessor="end"
+        className="custom-calendar w-full max-w-full bg-transparent"
+        views={['month']}
+        defaultView="month"
+        date={date}
+        onNavigate={onNavigate}
+        toolbar={true}
+        popup
+        selectable
+        onSelectEvent={onSelectEvent}
+        eventPropGetter={eventStyleGetter}
+        components={components}
+      />
+      {isWeeklyModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsWeeklyModalOpen(false);
+            }
+          }}
+        >
+          <div className="w-[90vw] max-w-6xl max-h-[90vh] bg-[--theme-mainbox-color] rounded-xl overflow-hidden">
+            <WeeklyCalendarModal
+              onComplete={(result: { success: boolean; action?: 'generate' | 'save' }) => {
+                if (result.success) {
+                  setIsWeeklyModalOpen(false);
+                }
+              }}
+              onClose={() => setIsWeeklyModalOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

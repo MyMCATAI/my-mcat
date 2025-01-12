@@ -86,6 +86,12 @@ Question Analysis by Section:
 ${sectionStats.map(section => {
   const sectionQuestions = questionsBySection[section.name] || [];
   return `
+${section.name} Flagged Questions (⚠️ Review Required):
+${sectionQuestions
+  .filter(q => q.positive === 0 && q.negative === 0)
+  .map(q => `⚠️ ${q.originalThoughtProcess || 'No thought process recorded'}`)
+  .join('\n')}
+
 ${section.name} Common Mistakes:
 ${sectionQuestions
   .filter(q => q.negative === 1)
@@ -94,7 +100,7 @@ ${sectionQuestions
 `;
 }).join('\n')}
 
-Provide me a concise analysis of my strongest and weakest sections and what my common errors or mistakes are. At the end, recommend that I redo ONE section again and tell me what to focus on in my retake of that section. Tell me that, in my retake, I should go through the logic of the correct answer and use passage logic to cross out the wrong answers rather than selecting based on memory.`;
+Provide me a concise analysis of my strongest and weakest sections and what my common errors or mistakes are. At the end, provide me a big general takeaway for my next exam. Remember: you're on MyMCAT.ai as a website. The Adaptive Tutoring Suite is where students go to learn content, and you should recommend that for lower scorers. There's also an Anki game, which you recommend for Psychology/Sociology specifically. Generally, for lower scores, it's content and application of content. For higher scores, it's more about doing practice problems and applying content. For very high scorers, recommend spending less time on content and practice and more time doing third party prep.`;
 
     // Generate the AI analysis
     const analysis = await generateCompletion(prompt);
