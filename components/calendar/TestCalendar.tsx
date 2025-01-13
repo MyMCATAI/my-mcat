@@ -8,6 +8,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/components/styles/CustomCalendar.css";
 import WeeklyCalendarModal from '@/components/calendar/WeeklyCalendarModal';
+import ReplaceEventModal from '@/components/calendar/ReplaceEventModal';
+import toast from 'react-hot-toast';
+import { CalendarEvent, ReplacementData } from '@/types/calendar';
 
 const locales = {
   'en-US': require('date-fns/locale/en-US'),
@@ -21,15 +24,6 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-interface CalendarEvent {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  allDay?: boolean;
-  resource?: any;
-}
-
 interface TestCalendarProps {
   events: CalendarEvent[];
   date: Date;
@@ -39,6 +33,7 @@ interface TestCalendarProps {
     sendMessage: (message: string, messageContext?: string) => void;
   }>;
   handleSetTab?: (tab: string) => void;
+  onEventUpdate?: () => void;
 }
 
 interface ToolbarWithEventsProps {
@@ -135,9 +130,12 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
   onNavigate, 
   onSelectEvent,
   chatbotRef,
-  handleSetTab
+  handleSetTab,
+  onEventUpdate
 }) => {
   const [isWeeklyModalOpen, setIsWeeklyModalOpen] = useState(false);
+  const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
   const createCalendarContext = () => {
     const today = new Date();
@@ -230,7 +228,7 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
   const eventStyleGetter = (event: CalendarEvent) => {
     const isExam = event.resource?.eventType === 'exam';
     const isMCATExam = event.title === 'MCAT Exam';
-    const isCompleted = event.resource?.fullLengthExam?.dataPulses?.filter((p: any) => p.level === "section")?.every((p: any) => p.reviewed);
+    const isCompleted = event.resource?.fullLengthExam?.dataPulses?.some(p => p.level === "section" && p.reviewed) ?? false;
     
     return {
       className: `calendar-event ${
@@ -256,10 +254,55 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
       />
     ),
     eventContent: (event: any) => (
-      <div title={event.event.resource.fullTitle}>
+      <div title={event.event.resource?.fullTitle || event.event.title}>
         {event.title}
       </div>
     )
+  };
+
+  const handleEventClick = (event: CalendarEvent) => {
+    // Don't allow replacing exam events
+    if (event.resource?.eventType === 'exam') {
+      onSelectEvent(event);
+      return;
+    }
+
+    setSelectedEvent(event);
+    setIsReplaceModalOpen(true);
+  };
+
+  const handleReplaceEvent = async (replacementData: ReplacementData) => {
+    if (!selectedEvent) return;
+
+    try {
+      const response = await fetch('/api/calendar-activity/replace', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventId: selectedEvent.id,
+          ...replacementData
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to replace event');
+      }
+
+      toast.success('Event replaced successfully');
+      
+      // Trigger immediate refresh
+      if (onEventUpdate) {
+        await onEventUpdate();
+      }
+      
+      setIsReplaceModalOpen(false);
+      setSelectedEvent(null);
+    } catch (error) {
+      console.error('Error replacing event:', error);
+      toast.error('Failed to replace event');
+    }
   };
 
   return (
@@ -277,7 +320,7 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
         toolbar={true}
         popup
         selectable
-        onSelectEvent={onSelectEvent}
+        onSelectEvent={handleEventClick}
         eventPropGetter={eventStyleGetter}
         components={components}
       />
@@ -292,16 +335,30 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
         >
           <div className="w-[90vw] max-w-6xl max-h-[90vh] bg-[--theme-mainbox-color] rounded-xl overflow-hidden">
             <WeeklyCalendarModal
-              onComplete={(result: { success: boolean; action?: 'generate' | 'save' }) => {
+              onComplete={async (result: { success: boolean; action?: 'generate' | 'save' }) => {
                 if (result.success) {
+                  if (onEventUpdate) {
+                    await onEventUpdate();
+                  }
                   setIsWeeklyModalOpen(false);
+                  return true;
                 }
+                return false;
               }}
               onClose={() => setIsWeeklyModalOpen(false)}
             />
           </div>
         </div>
       )}
+      <ReplaceEventModal
+        isOpen={isReplaceModalOpen}
+        onClose={() => {
+          setIsReplaceModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        onSubmit={handleReplaceEvent}
+        event={selectedEvent}
+      />
     </>
   );
 };
