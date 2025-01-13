@@ -7,9 +7,14 @@ import toast from 'react-hot-toast';
 interface MessageButtonProps {
   iconOnly?: boolean;
   withShadow?: boolean;
+  className?: string;
 }
 
-const MessageButton: React.FC<MessageButtonProps> = ({ iconOnly = false, withShadow = false }) => {
+const MessageButton: React.FC<MessageButtonProps> = ({ 
+  iconOnly = false, 
+  withShadow = false,
+  className 
+}) => {
   const [showForm, setShowForm] = useState(false);
 
   const handleSendMessage = async (message: string) => {
@@ -38,7 +43,7 @@ const MessageButton: React.FC<MessageButtonProps> = ({ iconOnly = false, withSha
     <>
       <button
         onClick={() => setShowForm(true)}
-        className={`flex items-center justify-center ${
+        className={className || `flex items-center justify-center ${
           iconOnly 
             ? "w-10 h-10 border border-[--theme-border-color]" 
             : "gap-2 px-4 py-2 bg-gray-600"

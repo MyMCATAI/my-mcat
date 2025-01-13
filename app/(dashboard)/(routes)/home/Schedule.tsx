@@ -41,17 +41,18 @@ import { PurchaseButton } from "@/components/purchase-button";
 import { toast } from "react-hot-toast";
 import {
   Calendar as CalendarIcon,
-  BarChart as AnalyticsIcon,
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Target,
 } from "lucide-react";
 import { useOutsideClick } from '@/hooks/use-outside-click';
 import UWorldPopup from '@/components/home/UWorldPopup';
 import CompletionDialog from '@/components/home/CompletionDialog';
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { OptionsDialog } from "@/components/home/OptionsDialog";
+import { useClerk } from "@clerk/clerk-react";
 
 ChartJS.register(
   CategoryScale,
@@ -102,6 +103,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   isActive,
   onActivitiesUpdate,
 }) => {
+  const { user } = useClerk();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showNewActivityForm, setShowNewActivityForm] = useState(false);
@@ -129,6 +131,8 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
   const [isCoinsLoading, setIsCoinsLoading] = useState(true);
   const [examScores, setExamScores] = useState<any[]>([]);
+  const [showTargetScoreDialog, setShowTargetScoreDialog] = useState(false);
+  const [targetScore, setTargetScore] = useState("500");
 
   // todo fetch total stats, include streak, coins, grades for each subject
   const [newActivity, setNewActivity] = useState<NewActivity>({
@@ -365,6 +369,13 @@ const Schedule: React.FC<ScheduleProps> = ({
 
     fetchUserInfo();
   }, []);
+
+  // Initialize target score from user metadata
+  useEffect(() => {
+    if (user?.unsafeMetadata?.targetScore) {
+      setTargetScore(user.unsafeMetadata.targetScore.toString());
+    }
+  }, [user?.unsafeMetadata?.targetScore]);
 
   const resetTutorials = () => {
     localStorage.removeItem("tutorialPart1Played");
@@ -786,7 +797,7 @@ const Schedule: React.FC<ScheduleProps> = ({
         </div>
 
         {/* Bottom Buttons */}
-        <div className="mt-auto flex justify-end items-center gap-2 pt-2">
+        <div className="mt-auto flex justify-end items-center gap-2 pt-2 mr-5">
           {/* Score Feedback */}
           {examScores.length > 0 && (
             <div className="mr-auto">
@@ -822,6 +833,27 @@ const Schedule: React.FC<ScheduleProps> = ({
               })()}
             </div>
           )}
+
+          {/* Target Score Button */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setShowTargetScoreDialog(true)}
+                  className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                    border-2 border-[--theme-border-color] 
+                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                    shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
+                >
+                  <Target className="w-8 h-8" />
+                  <span className="text-xs font-medium">Target</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Set Target Score</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           {/* Practice Tests button */}
           <TooltipProvider>
@@ -998,6 +1030,86 @@ const Schedule: React.FC<ScheduleProps> = ({
         handleTabChange={handleTabChange}
         allWelcomeTasksCompleted={allWelcomeTasksCompleted}
       />
+
+      {/* Target Score Dialog */}
+      <Dialog open={showTargetScoreDialog} onOpenChange={setShowTargetScoreDialog}>
+        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
+        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
+          <DialogHeader>
+            <DialogTitle className="text-center text-black">Set Target Score</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            
+            const numValue = parseInt(targetScore);
+            
+            // Validate the score range on submit
+            if (numValue < 472 || numValue > 528 || isNaN(numValue)) {
+              toast.error('Please enter a score between 472 and 528');
+              return;
+            }
+
+            try {
+              await user?.update({
+                unsafeMetadata: {
+                  ...user.unsafeMetadata,
+                  targetScore: numValue
+                }
+              });
+              toast.success('Target score updated successfully!');
+              setShowTargetScoreDialog(false);
+            } catch (error) {
+              console.error("Error updating target score:", error);
+              toast.error('Failed to update target score');
+            }
+          }}>
+            <div className="p-4 flex flex-col items-center gap-4">
+              <input
+                type="text"
+                pattern="\d*"
+                maxLength={3}
+                value={targetScore}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Allow empty input for better UX
+                  if (value === '') {
+                    setTargetScore('');
+                    return;
+                  }
+                  
+                  // Only allow numbers
+                  if (!/^\d+$/.test(value)) {
+                    return;
+                  }
+
+                  const numValue = parseInt(value);
+                  // Allow any number input, validation will happen on form submit
+                  setTargetScore(value);
+                }}
+                className="w-24 text-center text-3xl font-bold bg-transparent border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 text-black"
+              />
+              <p className="text-sm text-gray-500 text-center">
+                Enter a score between 472 and 528
+              </p>
+              <div className="flex gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowTargetScoreDialog(false)}
+                  className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
