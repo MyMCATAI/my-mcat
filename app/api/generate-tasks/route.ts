@@ -66,7 +66,8 @@ const EVENT_CATEGORIES: EventCategory[] = [
   },
   {
     name: 'UWorld',
-    duration: 1,
+    minDuration: 1,
+    maxDuration: 3,
     priority: 3,
     type: 'practice',
     description: "Complete UWorld question blocks focusing on identifying knowledge gaps and improving test-taking strategies. Review explanations thoroughly and create notes on commonly missed concepts.",
@@ -398,7 +399,8 @@ function getAvailableTasks(
   const ANKI_MAX = ANKI.maxDuration ?? 1.5;
   const CARS_MIN = CARS.minDuration ?? 0.5;
   const CARS_MAX = CARS.maxDuration ?? 1;
-  const UWORLD_DUR = UWORLD.duration ?? 1;
+  const UWORLD_MIN = UWORLD.minDuration ?? 1;
+  const UWORLD_MAX = UWORLD.maxDuration ?? 3;
   const AAMC_DUR = AAMC.duration ?? 2;
 
   // Get current FL milestone
@@ -427,15 +429,17 @@ function getAvailableTasks(
         tasks.push({ name: 'AAMC Materials', duration: AAMC_DUR, type: AAMC.type });
         remainingHours -= AAMC_DUR;
       }
-      if (resources.uworld && remainingHours >= UWORLD_DUR) {
-        tasks.push({ name: 'UWorld', duration: UWORLD_DUR, type: UWORLD.type });
-        remainingHours -= UWORLD_DUR;
+      if (resources.uworld && remainingHours >= UWORLD_MIN) {
+        const uWorldHours = Math.min(UWORLD_MAX, Math.floor(remainingHours));
+        tasks.push({ name: 'UWorld', duration: uWorldHours, type: UWORLD.type });
+        remainingHours -= uWorldHours;
       }
     } else {
       // Before FL3, prioritize UWorld
-      if (resources.uworld && remainingHours >= UWORLD_DUR) {
-        tasks.push({ name: 'UWorld', duration: UWORLD_DUR, type: UWORLD.type });
-        remainingHours -= UWORLD_DUR;
+      if (resources.uworld && remainingHours >= UWORLD_MIN) {
+        const uWorldHours = Math.min(UWORLD_MAX, Math.floor(remainingHours));
+        tasks.push({ name: 'UWorld', duration: uWorldHours, type: UWORLD.type });
+        remainingHours -= uWorldHours;
       }
       if (resources.aamc && remainingHours >= AAMC_DUR) {
         tasks.push({ name: 'AAMC Materials', duration: AAMC_DUR, type: AAMC.type });
