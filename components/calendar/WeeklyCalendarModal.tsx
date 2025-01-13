@@ -107,9 +107,9 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
   ]);
 
   const balanceOptions: StudyBalance[] = [
-    { id: '75-25', ratio: '75/25', description: '75% Content, 25% Practice' },
-    { id: '50-50', ratio: '50/50', description: '50% Content, 50% Practice' },
-    { id: '25-75', ratio: '25/75', description: '25% Content, 75% Practice' }
+    { id: '75-25', ratio: 'More Content', description: '75% Content, 25% Practice' },
+    { id: '50-50', ratio: 'Balanced', description: '50% Content, 50% Practice' },
+    { id: '25-75', ratio: 'More Practice', description: '25% Content, 75% Practice' }
   ];
 
   const [selectedBalance, setSelectedBalance] = useState<string>('50-50');
@@ -516,6 +516,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                     <motion.button
                       key={resource.id}
                       onClick={() => {
+                        if (resource.id === 'adaptive') return;
                         setResources(resources.map(r => {
                           // If clicking on anki or ankigame, deselect the other one
                           if (resource.id === 'anki' && r.id === 'ankigame') {
@@ -533,7 +534,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                       }}
                       className={`w-full flex items-center justify-between p-4 transition-colors ${
                         resource.selected ? 'bg-[--theme-border-color] bg-opacity-10' : ''
-                      }`}
+                      } ${resource.id === 'adaptive' ? 'cursor-default' : ''}`}
                     >
                       <span className="text-[--theme-text-color]">{resource.name}</span>
                       <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
