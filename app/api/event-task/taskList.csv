@@ -45,11 +45,15 @@ Minutes,Task,Task 1,Task 2,Task 3
 60,Daily CARs,(4 Passages) AAMC CARs Vol 2,AAMC Review CARs,
 60,Daily CARs,(5 Passages) AAMC CARs Vol 2,AAMC Review CARs,
 60,Daily CARs, Congratulations on completing AAMC Daily CARs!
-180,Adaptive Tutoring Suite,Review Content - 1 Hr, Practice Questions - 1 Hr,
+180,Adaptive Tutoring Suite,Concept will be generated based on your time and weakness, Practice with two quizzes
+120,Adaptive Tutoring Suite,Concept will be generated based on your time and weakness, Practice with two quizzes
+60,Adaptive Tutoring Suite,Concept will be generated based on your time and weakness, Practice with two quizzes
 30,Anki Clinic,Start new game four times,Review your cards
 30,Anki,Sort Anki Cards,Review Anki Cards,
 15,Welcome!,Enter information to generate your calendar,Talk to Kalypso,Click the "Help" icon below settings for more information
-60,UWorld,New tasks will be generated based on your test results,
+60,UWorld,New tasks will be generated based on your test results (1 Hour),
+120,UWorld,New tasks will be generated based on your test results (2 Hours),
+180,UWorld,New tasks will be generated based on your test results (3 Hours),
 480,Unscored sample full Length Exam,Take unscored sample,Enter your score in the MyMCAT AAMC Tracker,
 480,Full Length Exam 1,Take exam 1,Enter your score in the MyMCAT Tracker,
 480,Full Length Exam 2,Take exam 2,Enter your score in the MyMCAT Tracker,
