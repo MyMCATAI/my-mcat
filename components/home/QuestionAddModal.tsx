@@ -255,7 +255,7 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
                 <label className="text-sm uppercase tracking-wide opacity-60 block mb-1.5 text-[--theme-text-color]">
                   Status
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 relative mb-8">
                   <button
                     onClick={() => setQuestion(prev => ({ ...prev, status: 'wrong' }))}
                     className={`flex-1 p-2 rounded-lg flex items-center justify-center gap-2 transition-all duration-200
@@ -286,6 +286,13 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
                     <CheckCircle2 className="h-5 w-5" />
                     <span className="text-sm">Correct</span>
                   </button>
+                  {question.status === 'correct' && (
+                    <div className="absolute -bottom-6 left-0 right-0 text-center">
+                      <span className="text-xs text-[--theme-text-color] opacity-60">
+                        Doing correct is optional unless it was a question you were unsure about.
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

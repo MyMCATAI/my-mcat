@@ -119,11 +119,11 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
   const [examSchedule, setExamSchedule] = useState<ExamSchedule[]>([]);
 
   const messages = [
-    "Analyzing your previous tests...",
-    "Curating your weaknesses...",
-    "Selecting topics for your ATS and Anki Clinic...",
-    "Now we know what you're week in...",
-    "Schedule generated successfully!"
+    "Purr-using your past exams...",
+    "Clawing at your vulnerabilities...",
+    "Picking out subjects...",
+    "Nibbling on some catnip...",
+    "Your study plan is now ready!"
   ];
 
   const { generateTasks, loading: studyPlanLoading } = useStudyPlan();
