@@ -1,17 +1,27 @@
 import React, { useState } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronRight, ArrowLeft } from 'lucide-react';
+import { ChevronRight, ArrowLeft, Check, X, Podcast, Bell } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from 'clsx';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { FaDiscord } from 'react-icons/fa';
+import MessageButton from '@/components/MessageButton';
+import Link from 'next/link';
 
 type Section = 'mcat' | 'mymcat' | 'taking' | 'reviewing' | 'strategies' | 'testing' | 'cars' | 'ats' | 'anki' | null;
 
-const ResourcePack: React.FC = () => {
+interface ResourcePackProps {
+  onResetTutorials: () => void;
+}
+
+const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
   const [activeSection, setActiveSection] = useState<Section>(null);
+  const [activeATSSubsection, setActiveATSSubsection] = useState<string | null>(null);
   const [previousSection, setPreviousSection] = useState<Section>(null);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  const [testingSuiteExpanded, setTestingSuiteExpanded] = useState(false);
+  const [statsExpanded, setStatsExpanded] = useState(false);
 
   const handleSectionChange = (newSection: Section) => {
     setPreviousSection(activeSection);
@@ -39,6 +49,14 @@ const ResourcePack: React.FC = () => {
       </div>
     </div>
   );
+
+  const toggleSection = (section: Section) => {
+    setActiveSection(activeSection === section ? null : section);
+  };
+
+  const toggleATSSubsection = (section: string) => {
+    setActiveATSSubsection(activeATSSubsection === section ? null : section);
+  };
 
   const renderContent = () => {
     if (!activeSection) return null;
@@ -108,8 +126,10 @@ const ResourcePack: React.FC = () => {
         </div>
       ),
       mymcat: (
-        <div className="animate-fadeIn space-y-6 mt-6">
-          <h2 className="text-xl font-bold mb-6 text-center">Getting Started with MyMCAT</h2>
+        <div className="animate-fadeIn space-y-6">
+          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            Getting Started with MyMCAT
+          </h3>
           
           <p className="text-sm opacity-80 mb-6">
             MyMCAT is a resource that can either be your <strong>only resource or within your rotation</strong> of resources. The biggest thing about our platform is that <strong>it knows you</strong>. When you enter your tests, it curates videos and readings and flashcards for your weaknesses.
@@ -195,10 +215,300 @@ const ResourcePack: React.FC = () => {
                 <span className="text-md font-semibold">ATS</span>
               </button>
               {activeSection === 'ats' && (
-                <div className="animate-fadeIn mt-4 space-y-4">
-                  <p className="text-sm opacity-80">
-                    The ATS is your content learning hub...
+                <div className="animate-fadeIn">
+                  <h3 className="text-xs text-center opacity-60 uppercase tracking-wide">
+                    Adaptive Learning
+                  </h3>
+                  <p className="text-sm text-[--theme-text-color] leading-relaxed">
+                    The ATS is designed so you can learn content in one place. Everytime you refresh, it pulls your weakest subjects from your knowledge profile. Please click the buttons below for more information.
                   </p>
+
+                  <section className="space-y-8">
+                    <section className="py-6 border-t border-[--theme-doctorsoffice-accent]">
+                      <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+                        Learning Content
+                      </h3>
+                      <div className="flex items-center justify-center gap-2 bg-[--theme-leaguecard-color] p-3 rounded-lg shadow-md">
+                        {/* Video Icon */}
+                        <div 
+                          className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-1.5 rounded-md hover:bg-[--theme-hover-color] bg-[--theme-leaguecard-color] shadow-lg hover:shadow-xl ${activeATSSubsection === 'video' ? 'scale-110' : 'hover:scale-105'}`}
+                          onClick={() => toggleATSSubsection('video')}
+                        >
+                          <div className="w-4 h-4 relative theme-box">
+                            <Image
+                              src="/camera.svg"
+                              layout="fill"
+                              objectFit="contain"
+                              alt="camera"
+                              className="theme-svg"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Reading Icon */}
+                        <div 
+                          className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-1.5 rounded-md hover:bg-[--theme-hover-color] bg-[--theme-leaguecard-color] shadow-lg hover:shadow-xl ${activeATSSubsection === 'reading' ? 'scale-110' : 'hover:scale-105'}`}
+                          onClick={() => toggleATSSubsection('reading')}
+                        >
+                          <div className="w-4 h-4 relative theme-box">
+                            <Image
+                              src="/bookopened.svg"
+                              layout="fill"
+                              objectFit="contain"
+                              alt="book opened"
+                              className="theme-svg"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Sample Title */}
+                        <div 
+                          className={`flex flex-col items-center cursor-pointer transition-all duration-200 px-3 py-1 rounded-md bg-[--theme-leaguecard-color] shadow-lg hover:shadow-xl border border-[--theme-border-color] hover:bg-[--theme-hover-color] ${activeATSSubsection === 'sample' ? 'scale-110' : 'hover:scale-105'}`}
+                          onClick={() => toggleATSSubsection('sample')}
+                        >
+                          <span className="text-[--theme-text-color] font-semibold">Topic</span>
+                        </div>
+
+                        {/* Quiz Icon */}
+                        <div 
+                          className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-1.5 rounded-md hover:bg-[--theme-hover-color] bg-[--theme-leaguecard-color] shadow-lg hover:shadow-xl ${activeATSSubsection === 'quiz' ? 'scale-110' : 'hover:scale-105'}`}
+                          onClick={() => toggleATSSubsection('quiz')}
+                        >
+                          <div className="w-4 h-4 relative theme-box">
+                            <Image
+                              src="/exam.svg"
+                              layout="fill"
+                              objectFit="contain"
+                              alt="exam"
+                              className="theme-svg"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Kalypso Icon */}
+                        <div 
+                          className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-1.5 rounded-md hover:bg-[--theme-hover-color] bg-[--theme-leaguecard-color] shadow-lg hover:shadow-xl ${activeATSSubsection === 'kalypso' ? 'scale-110' : 'hover:scale-105'}`}
+                          onClick={() => toggleATSSubsection('kalypso')}
+                        >
+                          <div className="w-4 h-4 relative theme-box">
+                            <Image
+                              src="/cat.svg"
+                              layout="fill"
+                              objectFit="contain"
+                              alt="AI Chat"
+                              className="theme-svg"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Explanations */}
+                      {activeATSSubsection ? (
+                        <div className="p-4 bg-transparent rounded-lg text-sm space-y-2 animate-fadeIn">
+                          {activeATSSubsection === 'video' && (
+                            <div className="text-sm leading-relaxed">
+                              Watch MCAT video lectures curated from YouTube with detailed summaries. Use Kalypso to get instant clarification on any concept while watching. 
+                              <strong> You don&apos;t have to do BOTH readings and videos. One will suffice.</strong>
+                            </div>
+                          )}
+                          {activeATSSubsection === 'reading' && (
+                            <div className="text-sm leading-relaxed">
+                              Access detailed PDFs from LibreText or OpenStax that cover concepts comprehensively. 
+                              You can full screen. Kalypso can clarify anything you don&apos;t understand.
+                              <strong> You don&apos;t have to do BOTH readings and videos. One will suffice.</strong>
+                            </div>
+                          )}
+                          {activeATSSubsection === 'sample' && (
+                            <>
+                              <div className="">
+                                <p className="text-sm mb-4">
+                                  This is the content category (CC) that you&apos;re currently studying. Hover over it and press a button that looks like the below to complete the category:
+                                </p>
+                                <div className="flex justify-center flex-col items-center">
+                                  <button
+                                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md text-sm"
+                                    disabled
+                                  >
+                                    <Check className="w-4 h-4 items-center justify-center" />
+                                    Complete Topic
+                                  </button>
+                                  <p className="text-sm mt-2">
+                                    Pressing complete topic will then result in our system selecting another topic for you to study.
+                                  </p>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                          {activeATSSubsection === 'quiz' && (
+                            <div className="text-sm leading-relaxed">
+                              You can do practice questions and it&apos;s full screen. You can pay a coin to take a quiz. 
+                              If you get a 100, you can get your coin back. Your performance feeds your knowledge profile 
+                              and affects the ITS&apos; understanding of your weaknesses. <strong>You can report unfair questions with the downvote and win two coins as compensation.</strong>
+                            </div>
+                          )}
+                          {activeATSSubsection === 'kalypso' && (
+                            <div className="text-sm leading-relaxed">
+                              Ask Kalypso questions directly or use the button. <strong>Press cmd to toggle voice input (browser support varies).</strong>
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
+                    </section>
+
+                    <section className="py-6 border-t border-[--theme-doctorsoffice-accent] mb-6">
+                      <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+                        Topic Selection
+                      </h3>
+                      <div className="flex items-center justify-center gap-2">
+                        {/* Settings Card */}
+                        <div 
+                          className="relative z-10 rounded-lg text-center group min-h-[4rem] w-[4rem] cursor-pointer transition-all hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg"
+                          style={{
+                            backgroundColor: "var(--theme-adaptive-tutoring-color)",
+                            boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.boxShadow = "var(--theme-adaptive-tutoring-boxShadow-hover)";
+                            e.currentTarget.style.transform = "scale(1.05)";
+                            e.currentTarget.style.zIndex = "30";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.boxShadow = "var(--theme-adaptive-tutoring-boxShadow)";
+                            e.currentTarget.style.transform = "scale(1)";
+                            e.currentTarget.style.zIndex = "10";
+                          }}
+                          onClick={() => toggleATSSubsection('settings')}
+                        >
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <div className="settings-container flex flex-col items-center">
+                              <svg
+                                className="settings-icon w-6 h-6 text-[--theme-text-color]"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M9.25,22l-.4-3.2c-.216-.084-.42-.184-.612-.3c-.192-.117-.38-.242-.563-.375L4.7,19.375L1.95,14.625L4.525,12.675c-.016-.117-.024-.23-.024-.338V11.662c0-.108.008-.221.025-.337L1.95,9.375L4.7,4.625L7.675,5.875c.183-.134.375-.259.575-.375c.2-.117.4-.217.6-.3l.4-3.2H14.75l.4,3.2c.216.084.42.184.612.3c.192.117.38.242.563.375l2.975-.75l2.75,4.75l-2.575,1.95c.016.117.024.23.024.338v.675c0,.108-.008.221-.025.337l2.575,1.95l-2.75,4.75l-2.95-.75c-.183.133-.375.258-.575.375c-.2.117-.4.217-.6.3l-.4,3.2H9.25zM12.05,15.5c.966,0,1.791-.342,2.475-1.025c.683-.683,1.025-1.508,1.025-2.475c0-.966-.342-1.791-1.025-2.475c-.683-.683-1.508-1.025-2.475-1.025c-0.984,0-1.813,.342-2.488,1.025c-0.675,.683-1.012,1.508-1.012,2.475c0,.966,.337,1.791,1.012,2.475c.675,.683,1.504,1.025,2.488,1.025z"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Amino Acids Icon */}
+                        <div 
+                          className="relative z-10 rounded-lg text-center group min-h-[4rem] w-[4rem] cursor-pointer transition-all hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg"
+                          style={{
+                            backgroundColor: "var(--theme-adaptive-tutoring-color)",
+                            boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.boxShadow = "var(--theme-adaptive-tutoring-boxShadow-hover)";
+                            e.currentTarget.style.transform = "scale(1.05)";
+                            e.currentTarget.style.zIndex = "30";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.boxShadow = "var(--theme-adaptive-tutoring-boxShadow)";
+                            e.currentTarget.style.transform = "scale(1)";
+                            e.currentTarget.style.zIndex = "10";
+                          }}
+                          onClick={() => toggleATSSubsection('amino')}
+                        >
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="m-auto transform scale-90">
+                              <svg
+                                className="w-6 h-6"
+                                viewBox="0 0 24 24"
+                                fill="#3B82F6"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" />
+                                <path d="M2 17L12 22L22 17" />
+                                <path d="M2 12L12 17L22 12" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Fluids Icon */}
+                        <div 
+                          className="relative z-10 rounded-lg text-center group min-h-[4rem] w-[4rem] cursor-pointer transition-all hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg"
+                          style={{
+                            backgroundColor: "var(--theme-adaptive-tutoring-color)",
+                            boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.boxShadow = "var(--theme-adaptive-tutoring-boxShadow-hover)";
+                            e.currentTarget.style.transform = "scale(1.05)";
+                            e.currentTarget.style.zIndex = "30";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.boxShadow = "var(--theme-adaptive-tutoring-boxShadow)";
+                            e.currentTarget.style.transform = "scale(1)";
+                            e.currentTarget.style.zIndex = "10";
+                          }}
+                          onClick={() => toggleATSSubsection('fluids')}
+                        >
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="m-auto transform scale-90">
+                              <svg
+                                className="w-6 h-6"
+                                viewBox="0 0 24 24"
+                                fill="#800020"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path d="M12 2L5 12L12 22L19 12L12 2Z" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Explanations */}
+                      {(activeATSSubsection === 'amino' || activeATSSubsection === 'fluids') ? (
+                        <div className="p-4 rounded-lg text-sm space-y-2 mt-2 animate-fadeIn">
+                          <div className="text-sm leading-relaxed">
+                            At a time, you can have five topics active to choose from when studying. There are around a 100 topics. They are either curated for you using our algorithm or you can choose them. Switch between them by clicking a button.
+                          </div>
+                        </div>
+                      ) : activeATSSubsection === 'settings' ? (
+                        <div className="p-4 rounded-lg text-sm space-y-2 mt-2 animate-fadeIn">
+                          <div className="text-sm leading-relaxed">
+                            The settings shows the current categories you have active. You can come here to shuffle them, change them, focus on a category, or have our algorithm find new weaknesses for you.
+                          </div>
+                        </div>
+                      ) : null}
+                    </section>
+
+                    {/* Add new Podcast Section */}
+                    <section className="py-6 border-t border-[--theme-doctorsoffice-accent] mb-8">
+                      <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+                        MyMCAT Podcast
+                      </h3>
+                      <div className="w-full flex items-center justify-center">
+                        <iframe 
+                          style={{ borderRadius: "0.75rem" }}
+                          src="https://open.spotify.com/embed/artist/39hEmhoBLVCLVbKNgcCQpw?utm_source=generator" 
+                          width="100%" 
+                          height="152"
+                          frameBorder="0" 
+                          allowFullScreen 
+                          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                          loading="lazy"
+                        />
+                      </div>
+                      <p className="text-sm leading-relaxed mt-4 text-center">
+                        Under the thumbnails besides a category, you can access a podcast for a category by clicking this icon:
+                      </p>
+                      <div className="flex items-center justify-center mt-2">
+                        <button
+                          className="w-14 h-14 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-300 bg-[--theme-leaguecard-color] hover:bg-[--theme-hover-color] border border-[--theme-border-color]"
+                        >
+                          <Podcast className="w-8 h-8 transition-colors duration-300 text-[--theme-text-color] hover:text-[--theme-hover-text]" />
+                        </button>
+                      </div>
+                    </section>
+                  </section>
                 </div>
               )}
             </div>
@@ -220,13 +530,85 @@ const ResourcePack: React.FC = () => {
                 <span className="text-md font-semibold">Anki Clinic</span>
               </button>
               {activeSection === 'anki' && (
-                <div className="animate-fadeIn mt-4 space-y-4">
-                  <p className="text-sm opacity-80">
-                    Review content on either Anki or Anki Clinic...
-                  </p>
-                  <div className="space-y-3 mt-4">
+                <div className="animate-fadeIn space-y-6">
+                  <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+                    Flashcards
+                  </h3>
+
+                  {/* Anki Clinic Video */}
+                  <div 
+                    className="rounded-xl overflow-hidden bg-[--theme-doctorsoffice-accent] cursor-pointer hover:opacity-90 transition-all duration-200"
+                    onClick={() => setActiveVideo("https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/AnkiClinicAdvertisement.mp4")}
+                  >
+                    <video 
+                      className="w-full"
+                      preload="metadata"
+                    >
+                      <source src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/AnkiClinicAdvertisement.mp4" type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                    <div className="p-4">
+                      <h4 className="text-lg font-medium mb-1">Anki Clinic</h4>
+                      <div className="relative">
+                        <p className={clsx(
+                          "text-sm opacity-70 transition-all duration-300",
+                          !testingSuiteExpanded && "line-clamp-2"
+                        )}>
+                          The Anki Clinic is an adaptive question bank in the form of a flashcard game that allows you to treat patients to solve cards. Every question you see is picked for you based upon your results in AAMC, UWorld, and the ATS.
+                        </p>
+                        <button 
+                          className="text-xs mt-2 text-blue-500 hover:text-blue-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTestingSuiteExpanded(!testingSuiteExpanded);
+                          }}
+                        >
+                          {!testingSuiteExpanded ? 'Read more' : 'Show less'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Filtering MilesDown Video */}
+                  <div 
+                    className="rounded-xl overflow-hidden bg-[--theme-doctorsoffice-accent] cursor-pointer hover:opacity-90 transition-all duration-200"
+                    onClick={() => setActiveVideo("https://my-mcat.s3.us-east-2.amazonaws.com/Anki.mp4")}
+                  >
+                    <video 
+                      className="w-full"
+                      preload="metadata"
+                    >
+                      <source src="https://my-mcat.s3.us-east-2.amazonaws.com/Anki.mp4" type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                    <div className="p-4">
+                      <h4 className="text-lg font-medium mb-1">Filtering MilesDown By Concepts</h4>
+                      <div className="relative">
+                        <p className={clsx(
+                          "text-sm opacity-70 transition-all duration-300",
+                          !statsExpanded && "line-clamp-2"
+                        )}>
+                          For those of you using Anki, we recommend filtering it by the subject you studied that day using this method. Simply, create a custom study, sort by tags, as many new cards as you can, and then study.
+                        </p>
+                        <button 
+                          className="text-xs mt-2 text-blue-500 hover:text-blue-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setStatsExpanded(!statsExpanded);
+                          }}
+                        >
+                          {!statsExpanded ? 'Read more' : 'Show less'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="text-xs text-center opacity-60 uppercase tracking-wide">
+                      Anki Decks
+                    </h3>
                     <a 
-                      href="https://www.reddit.com/r/Mcat/comments/p1tlkf/milesdown_anki_deck_subdivided_by_kaplan_chapter/"
+                      href="https://drive.google.com/file/d/1v4gIfTwr9xCyjqVxj7xmYquDpmsY3y8t/view?usp=drive_link"
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 px-4 py-3 bg-[--theme-doctorsoffice-accent] rounded-lg hover:opacity-80 transition-opacity w-full"
@@ -238,7 +620,7 @@ const ResourcePack: React.FC = () => {
                     </a>
 
                     <a 
-                      href="https://www.reddit.com/r/AnkiMCAT/comments/p7h0g3/aidan_6_million_card_anki_deck/"
+                      href="https://drive.google.com/file/d/1lYHJG0t8NZqvaQQk8s1l5rold-0h6amR/view?usp=drive_link"
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 px-4 py-3 bg-[--theme-doctorsoffice-accent] rounded-lg hover:opacity-80 transition-opacity w-full"
@@ -256,36 +638,67 @@ const ResourcePack: React.FC = () => {
         </div>
       ),
       taking: (
-        <div className="animate-fadeIn space-y-6 mt-6">
+        <div className="animate-fadeIn space-y-6">
           <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
             Test Taking
           </h3>
-          <h2 className="text-xl font-bold mb-6">Taking a Test</h2>
-          <p className="text-sm opacity-80">
-            {"Best practices and strategies for taking MCAT practice tests and managing your time effectively."}
-          </p>
-          {/* Add more content here */}
+          <div className="flex flex-col items-center justify-center p-8 bg-[--theme-doctorsoffice-accent] rounded-lg">
+            <svg
+              className="w-16 h-16 text-yellow-500 mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <h2 className="text-xl font-semibold mb-2">Under Construction</h2>
+            <p className="text-sm opacity-70 text-center">
+              This section is currently being built. Check back soon!
+            </p>
+          </div>
         </div>
       ),
       reviewing: (
-        <div className="animate-fadeIn space-y-6 mt-6">
+        <div className="animate-fadeIn space-y-6">
           <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
             Test Review
           </h3>
-          <h2 className="text-xl font-bold mb-6">Reviewing Your Test</h2>
-          <p className="text-sm opacity-80">
-            {"How to effectively review your practice tests and learn from your mistakes."}
-          </p>
-          {/* Add more content here */}
+          <div className="flex flex-col items-center justify-center p-8 bg-[--theme-doctorsoffice-accent] rounded-lg">
+            <svg
+              className="w-16 h-16 text-yellow-500 mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <h2 className="text-xl font-semibold mb-2">Under Construction</h2>
+            <p className="text-sm opacity-70 text-center">
+              This section is currently being built. Check back soon!
+            </p>
+          </div>
         </div>
       ),
       strategies: (
-        <div className="animate-fadeIn space-y-6 mt-6">
+        <div className="animate-fadeIn space-y-6">
           <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
-            Premium Content
+            Strategies
           </h3>
-          <h2 className="text-xl font-bold mb-6">Premium Strategies</h2>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a] p-8 shadow-lg">
+
+          {/* Premium Content Section */}
+          <div className="relative overflow-hidden rounded-xl bg-[--theme-leaguecard-color] p-8 shadow-lg mt-6">
             <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
               <Image
                 src="/MDPremium.png"
@@ -304,10 +717,10 @@ const ResourcePack: React.FC = () => {
                   height={48}
                   className="object-contain"
                 />
-                <h3 className="text-xl font-bold text-white">MD Premium Exclusive</h3>
+                <h3 className="text-lg font-bold text-[--theme-text-color]">MD Premium Exclusive</h3>
               </div>
-              <p className="text-gray-300 mb-6">
-                Access our premium MCAT strategies and resources, curated by top scorers and medical students.
+              <p className="text-[--theme-text-color] opacity-80 mb-6">
+                No coin limits. Once-a-week masterclasses on MCAT strategies. Access to a private discord community. Now, you can apply content rather than just learn it.
               </p>
               <button className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold px-6 py-2 rounded-lg hover:opacity-90 transition-opacity">
                 Upgrade to Premium
@@ -317,40 +730,76 @@ const ResourcePack: React.FC = () => {
         </div>
       ),
       testing: (
-        <div className="animate-fadeIn mt-8 space-y-6">
+        <div className="animate-fadeIn space-y-6">
           <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
             Testing Suite
           </h3>
-          <p className="text-sm opacity-80">
-            {'Take practice tests from AAMC or third parties and enter your results, question by question, into the question tracker. The platform will then generate summaries of your strengths and weaknesses, and then assign content for you on an adaptive schedule.'}
-          </p>
 
-          <div className="space-y-6 mt-8">
-            {/* Scheduling Section */}
-            <div className="space-y-3">
-              <VideoCard 
-                src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TSReviewVid.mp4"
-                title="How to Schedule Practice Tests"
-                description="Learn the optimal way to schedule your practice tests"
-              />
+          <div className="space-y-6">
+            <div 
+              className="rounded-xl overflow-hidden bg-[--theme-doctorsoffice-accent] cursor-pointer hover:opacity-90 transition-all duration-200"
+              onClick={() => setActiveVideo("https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/testingsuite.mp4")}
+            >
+              <video 
+                className="w-full"
+                preload="metadata"
+              >
+                <source src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/testingsuite.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+              <div className="p-4">
+                <h4 className="text-lg font-medium mb-1">How To Use The Testing Suite</h4>
+                <div className="relative">
+                  <p className={clsx(
+                    "text-sm opacity-70 transition-all duration-300",
+                    !testingSuiteExpanded && "line-clamp-2"
+                  )}>
+                    MyMCAT.ai allows you to intelligently review your exams and find where you can improve. Simply add your exam, whether it's AAMC or third party, and then it's scheduled. Then, you can complete exam and then add questions you got wrong for each section. When you're done with that, your weaknesses are automatically considered in the ATS, and you can generate a new day-by-day schedule until your next exam.
+                  </p>
+                  <button 
+                    className="text-xs mt-2 text-blue-500 hover:text-blue-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTestingSuiteExpanded(!testingSuiteExpanded);
+                    }}
+                  >
+                    {!testingSuiteExpanded ? 'Read more' : 'Show less'}
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Test Suite Section */}
-            <div className="space-y-3">
-              <VideoCard 
-                src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TSSchedulingVid.mp4"
-                title="Using the Test Suite"
-                description="Master the test suite features and functionality"
-              />
-            </div>
-
-            {/* Weekly Planning Section */}
-            <div className="space-y-3">
-              <VideoCard 
-                src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TSWeeklyPlanning.mp4"
-                title="Weekly Schedule Creation"
-                description="Create an effective study schedule based on your results"
-              />
+            <div 
+              className="rounded-xl overflow-hidden bg-[--theme-doctorsoffice-accent] cursor-pointer hover:opacity-90 transition-all duration-200"
+              onClick={() => setActiveVideo("https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/Finding+Stats.mp4")}
+            >
+              <video 
+                className="w-full"
+                preload="metadata"
+              >
+                <source src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/Finding+Stats.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+              <div className="p-4">
+                <h4 className="text-lg font-medium mb-1">Finding Your Stats</h4>
+                <div className="relative">
+                  <p className={clsx(
+                    "text-sm opacity-70 transition-all duration-300",
+                    !statsExpanded && "line-clamp-2"
+                  )}>
+                    We calculate the average of all of your FLs, let you know if you're within range of a target score, and also predict your FL score in stats. Here's how to navigate to it.
+                  </p>
+                  <button 
+                    className="text-xs mt-2 text-blue-500 hover:text-blue-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setStatsExpanded(!statsExpanded);
+                    }}
+                  >
+                    {!statsExpanded ? 'Read more' : 'Show less'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -372,39 +821,450 @@ const ResourcePack: React.FC = () => {
         </div>
       ),
       cars: (
-        <div className="animate-fadeIn mt-8 space-y-6">
-          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
-            CARS Practice
-          </h3>
-          <h2 className="text-xl font-bold mb-6">CARS Suite</h2>
-          <p className="text-sm opacity-80">
-            {'MyMCAT uses an internal content generator trained on AAMC passages and designed by top CARs scorers. Our passages are generally more difficult than AAMC.'}
-          </p>
+        <div className="animate-fadeIn space-y-6">
+
+          {/* Key Metrics Section */}
+          <section className="">
+            <h3 className="text-xs mb-4 text-center opacity-60 uppercase tracking-wide">
+              Key Metrics
+            </h3>
+            <div className="flex justify-between items-center p-2 bg-transparent border-2 rounded-lg mb-6"
+                 style={{ borderColor: "var(--theme-border-color)" }}>
+              <div className="flex flex-col items-center w-1/4">
+                <div className="w-10 h-10 relative">
+                  <Image src="/game-components/PixelHeart.png" alt="Heart" layout="fill" objectFit="contain" />
+                </div>
+                <span className="text-xs mt-1">score</span>
+              </div>
+              <div className="flex flex-col items-center w-1/4">
+                <div className="w-10 h-10 relative">
+                  <Image src="/game-components/PixelWatch.png" alt="Watch" layout="fill" objectFit="contain" />
+                </div>
+                <span className="text-xs mt-1">per passage</span>
+              </div>
+              <div className="flex flex-col items-center w-1/4">
+                <div className="w-10 h-10 relative">
+                  <Image src="/game-components/PixelCupcake.png" alt="Diamond" layout="fill" objectFit="contain" />
+                </div>
+                <span className="text-xs mt-1">coins</span>
+              </div>
+              <div className="flex flex-col items-center w-1/4">
+                <div className="w-10 h-10 relative">
+                  <Image src="/game-components/PixelBook.png" alt="Flex" layout="fill" objectFit="contain" />
+                </div>
+                <span className="text-xs mt-1">tests</span>
+              </div>
+            </div>
+            <div className="mt-4 space-y-2.5 text-sm">
+              <p><span className="font-medium">Score:</span> Averaged from last 10 passages</p>
+              <p><span className="font-medium">Time:</span> Target under 10 mins/passage</p>
+              <p><span className="font-medium">Coins:</span> Pay a coin a passage, earn back at 80%+ score</p>
+              <p><span className="font-medium">Tests:</span> Review for bonus coins</p>
+            </div>
+          </section>
+
+          {/* System Design Section */}
+          <section className="py-4 border-t border-[--theme-doctorsoffice-accent]">
+            <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+              System Design
+            </h3>
+            <ul className="text-sm space-y-2 list-disc pl-4">
+              <li><span className="font-medium">Cost:</span> 1 coin per passage</li>
+              <li><span className="font-medium">Difficulty:</span> Levels 1-3, based on recent scores</li>
+              <li><span className="font-medium">Part 2:</span> Most passages have bonus questions</li>
+              <li><span className="font-medium">Bugs:</span> Report for 2 coins if validated</li>
+            </ul>
+          </section>
+
+          {/* Sidebar Section */}
+          <section className="py-4 border-t border-[--theme-doctorsoffice-accent]">
+            <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+              Sidebar
+            </h3>
+            <ul className="text-sm space-y-2 list-disc pl-4">
+              <li>Videos are collected from YouTube to help with CARs.</li>
+              <li>Insights from r/MCAT sends a feed of Reddit content to you for you to search and review.</li>
+            </ul>
+          </section>
         </div>
       ),
       ats: (
-        <div className="animate-fadeIn mt-8 space-y-6">
-          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+        <div className="animate-fadeIn space-y-6">
+          <h3 className="text-xs text-center opacity-60 uppercase tracking-wide">
             Adaptive Learning
           </h3>
-          <h2 className="text-xl font-bold mb-6">Adaptive Tutoring Suite</h2>
-          <p className="text-sm opacity-80">
-            {'The ATS is your content learning hub. It has 100 topics assigned based on your weaknesses and thousands of practice quiz questions. It has videos and readings in one central hub. You can take quizzes on these again and again, with different questions each time.'}
+          <p className="text-sm text-[--theme-text-color] leading-relaxed">
+            The ATS is designed so you can learn content in one place. Everytime you refresh, it pulls your weakest subjects from your knowledge profile. Please click the buttons below for more information.
           </p>
+
+          <section className="space-y-4">
+            <section className="py-4 border-t border-[--theme-doctorsoffice-accent]">
+              <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+                Learning Content
+              </h3>
+              <div className="flex items-center justify-center gap-2 bg-[--theme-leaguecard-color] p-3 rounded-lg shadow-md">
+                {/* Video Icon */}
+                <div 
+                  className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-1.5 rounded-md hover:bg-[--theme-hover-color] bg-[--theme-leaguecard-color] shadow-lg hover:shadow-xl ${activeATSSubsection === 'video' ? 'scale-110' : 'hover:scale-105'}`}
+                  onClick={() => toggleATSSubsection('video')}
+                >
+                  <div className="w-4 h-4 relative theme-box">
+                    <Image
+                      src="/camera.svg"
+                      layout="fill"
+                      objectFit="contain"
+                      alt="camera"
+                      className="theme-svg"
+                    />
+                  </div>
+                </div>
+
+                {/* Reading Icon */}
+                <div 
+                  className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-1.5 rounded-md hover:bg-[--theme-hover-color] bg-[--theme-leaguecard-color] shadow-lg hover:shadow-xl ${activeATSSubsection === 'reading' ? 'scale-110' : 'hover:scale-105'}`}
+                  onClick={() => toggleATSSubsection('reading')}
+                >
+                  <div className="w-4 h-4 relative theme-box">
+                    <Image
+                      src="/bookopened.svg"
+                      layout="fill"
+                      objectFit="contain"
+                      alt="book opened"
+                      className="theme-svg"
+                    />
+                  </div>
+                </div>
+
+                {/* Sample Title */}
+                <div 
+                  className={`flex flex-col items-center cursor-pointer transition-all duration-200 px-3 py-1 rounded-md bg-[--theme-leaguecard-color] shadow-lg hover:shadow-xl border border-[--theme-border-color] hover:bg-[--theme-hover-color] ${activeATSSubsection === 'sample' ? 'scale-110' : 'hover:scale-105'}`}
+                  onClick={() => toggleATSSubsection('sample')}
+                >
+                  <span className="text-[--theme-text-color] font-semibold">Topic</span>
+                </div>
+
+                {/* Quiz Icon */}
+                <div 
+                  className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-1.5 rounded-md hover:bg-[--theme-hover-color] bg-[--theme-leaguecard-color] shadow-lg hover:shadow-xl ${activeATSSubsection === 'quiz' ? 'scale-110' : 'hover:scale-105'}`}
+                  onClick={() => toggleATSSubsection('quiz')}
+                >
+                  <div className="w-4 h-4 relative theme-box">
+                    <Image
+                      src="/exam.svg"
+                      layout="fill"
+                      objectFit="contain"
+                      alt="exam"
+                      className="theme-svg"
+                    />
+                  </div>
+                </div>
+
+                {/* Kalypso Icon */}
+                <div 
+                  className={`flex flex-col items-center cursor-pointer transition-all duration-200 p-1.5 rounded-md hover:bg-[--theme-hover-color] bg-[--theme-leaguecard-color] shadow-lg hover:shadow-xl ${activeATSSubsection === 'kalypso' ? 'scale-110' : 'hover:scale-105'}`}
+                  onClick={() => toggleATSSubsection('kalypso')}
+                >
+                  <div className="w-4 h-4 relative theme-box">
+                    <Image
+                      src="/cat.svg"
+                      layout="fill"
+                      objectFit="contain"
+                      alt="AI Chat"
+                      className="theme-svg"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Explanations */}
+              {activeATSSubsection ? (
+                <div className="p-4 bg-transparent rounded-lg text-sm space-y-2 animate-fadeIn">
+                  {activeATSSubsection === 'video' && (
+                    <div className="text-sm leading-relaxed">
+                      Watch MCAT video lectures curated from YouTube with detailed summaries. Use Kalypso to get instant clarification on any concept while watching. 
+                      <strong> You don&apos;t have to do BOTH readings and videos. One will suffice.</strong>
+                    </div>
+                  )}
+                  {activeATSSubsection === 'reading' && (
+                    <div className="text-sm leading-relaxed">
+                      Access detailed PDFs from LibreText or OpenStax that cover concepts comprehensively. 
+                      You can full screen. Kalypso can clarify anything you don&apos;t understand.
+                      <strong> You don&apos;t have to do BOTH readings and videos. One will suffice.</strong>
+                    </div>
+                  )}
+                  {activeATSSubsection === 'sample' && (
+                    <>
+                      <div className="">
+                        <p className="text-sm mb-4">
+                          This is the content category (CC) that you&apos;re currently studying. Hover over it and press a button that looks like the below to complete the category:
+                        </p>
+                        <div className="flex justify-center flex-col items-center">
+                          <button
+                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md text-sm"
+                            disabled
+                          >
+                            <Check className="w-4 h-4 items-center justify-center" />
+                            Complete Topic
+                          </button>
+                          <p className="text-sm mt-2">
+                            Pressing complete topic will then result in our system selecting another topic for you to study.
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {activeATSSubsection === 'quiz' && (
+                    <div className="text-sm leading-relaxed">
+                      You can do practice questions and it&apos;s full screen. You can pay a coin to take a quiz. 
+                      If you get a 100, you can get your coin back. Your performance feeds your knowledge profile 
+                      and affects the ITS&apos; understanding of your weaknesses. <strong>You can report unfair questions with the downvote and win two coins as compensation.</strong>
+                    </div>
+                  )}
+                  {activeATSSubsection === 'kalypso' && (
+                    <div className="text-sm leading-relaxed">
+                      Ask Kalypso questions directly or use the button. <strong>Press cmd to toggle voice input (browser support varies).</strong>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </section>
+
+            <section className="py-6 border-t border-[--theme-doctorsoffice-accent] mb-6">
+              <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+                Topic Selection
+              </h3>
+              <div className="flex items-center justify-center gap-2">
+                {/* Settings Card */}
+                <div 
+                  className="relative z-10 rounded-lg text-center group min-h-[4rem] w-[4rem] cursor-pointer transition-all hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg"
+                  style={{
+                    backgroundColor: "var(--theme-adaptive-tutoring-color)",
+                    boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = "var(--theme-adaptive-tutoring-boxShadow-hover)";
+                    e.currentTarget.style.transform = "scale(1.05)";
+                    e.currentTarget.style.zIndex = "30";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "var(--theme-adaptive-tutoring-boxShadow)";
+                    e.currentTarget.style.transform = "scale(1)";
+                    e.currentTarget.style.zIndex = "10";
+                  }}
+                  onClick={() => toggleATSSubsection('settings')}
+                >
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="settings-container flex flex-col items-center">
+                      <svg
+                        className="settings-icon w-6 h-6 text-[--theme-text-color]"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M9.25,22l-.4-3.2c-.216-.084-.42-.184-.612-.3c-.192-.117-.38-.242-.563-.375L4.7,19.375L1.95,14.625L4.525,12.675c-.016-.117-.024-.23-.024-.338V11.662c0-.108.008-.221.025-.337L1.95,9.375L4.7,4.625L7.675,5.875c.183-.134.375-.259.575-.375c.2-.117.4-.217.6-.3l.4-3.2H14.75l.4,3.2c.216.084.42.184.612.3c.192.117.38.242.563.375l2.975-.75l2.75,4.75l-2.575,1.95c.016.117.024.23.024.338v.675c0,.108-.008.221-.025.337l2.575,1.95l-2.75,4.75l-2.95-.75c-.183.133-.375.258-.575.375c-.2.117-.4.217-.6.3l-.4,3.2H9.25zM12.05,15.5c.966,0,1.791-.342,2.475-1.025c.683-.683,1.025-1.508,1.025-2.475c0-.966-.342-1.791-1.025-2.475c-.683-.683-1.508-1.025-2.475-1.025c-0.984,0-1.813,.342-2.488,1.025c-0.675,.683-1.012,1.508-1.012,2.475c0,.966,.337,1.791,1.012,2.475c.675,.683,1.504,1.025,2.488,1.025z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Amino Acids Icon */}
+                <div 
+                  className="relative z-10 rounded-lg text-center group min-h-[4rem] w-[4rem] cursor-pointer transition-all hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg"
+                  style={{
+                    backgroundColor: "var(--theme-adaptive-tutoring-color)",
+                    boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = "var(--theme-adaptive-tutoring-boxShadow-hover)";
+                    e.currentTarget.style.transform = "scale(1.05)";
+                    e.currentTarget.style.zIndex = "30";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "var(--theme-adaptive-tutoring-boxShadow)";
+                    e.currentTarget.style.transform = "scale(1)";
+                    e.currentTarget.style.zIndex = "10";
+                  }}
+                  onClick={() => toggleATSSubsection('amino')}
+                >
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="m-auto transform scale-90">
+                      <svg
+                        className="w-6 h-6"
+                        viewBox="0 0 24 24"
+                        fill="#3B82F6"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" />
+                        <path d="M2 17L12 22L22 17" />
+                        <path d="M2 12L12 17L22 12" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fluids Icon */}
+                <div 
+                  className="relative z-10 rounded-lg text-center group min-h-[4rem] w-[4rem] cursor-pointer transition-all hover:bg-[--theme-hover-color] shadow-md hover:shadow-lg"
+                  style={{
+                    backgroundColor: "var(--theme-adaptive-tutoring-color)",
+                    boxShadow: "var(--theme-adaptive-tutoring-boxShadow)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = "var(--theme-adaptive-tutoring-boxShadow-hover)";
+                    e.currentTarget.style.transform = "scale(1.05)";
+                    e.currentTarget.style.zIndex = "30";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "var(--theme-adaptive-tutoring-boxShadow)";
+                    e.currentTarget.style.transform = "scale(1)";
+                    e.currentTarget.style.zIndex = "10";
+                  }}
+                  onClick={() => toggleATSSubsection('fluids')}
+                >
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="m-auto transform scale-90">
+                      <svg
+                        className="w-6 h-6"
+                        viewBox="0 0 24 24"
+                        fill="#800020"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M12 2L5 12L12 22L19 12L12 2Z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Explanations */}
+              {(activeATSSubsection === 'amino' || activeATSSubsection === 'fluids') ? (
+                <div className="p-4 rounded-lg text-sm space-y-2 mt-2 animate-fadeIn">
+                  <div className="text-sm leading-relaxed">
+                    At a time, you can have five topics active to choose from when studying. There are around a 100 topics. They are either curated for you using our algorithm or you can choose them. Switch between them by clicking a button.
+                  </div>
+                </div>
+              ) : activeATSSubsection === 'settings' ? (
+                <div className="p-4 rounded-lg text-sm space-y-2 mt-2 animate-fadeIn">
+                  <div className="text-sm leading-relaxed">
+                    The settings shows the current categories you have active. You can come here to shuffle them, change them, focus on a category, or have our algorithm find new weaknesses for you.
+                  </div>
+                </div>
+              ) : null}
+            </section>
+
+            {/* Add new Podcast Section */}
+            <section className="py-4 border-t border-[--theme-doctorsoffice-accent]">
+              <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+                MyMCAT Podcast
+              </h3>
+              <div className="w-full flex items-center justify-center">
+                <iframe 
+                  style={{ borderRadius: "0.75rem" }}
+                  src="https://open.spotify.com/embed/artist/39hEmhoBLVCLVbKNgcCQpw?utm_source=generator" 
+                  width="100%" 
+                  height="152"
+                  frameBorder="0" 
+                  allowFullScreen 
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                  loading="lazy"
+                />
+              </div>
+              <p className="text-sm mb-8 leading-relaxed mt-4 text-center">
+                Under the thumbnails besides a category, you can access a podcast for a category by clicking this icon:
+              </p>
+              <div className="flex items-center justify-center mt-2">
+                <button
+                  className="w-14 h-14 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-300 bg-[--theme-leaguecard-color] hover:bg-[--theme-hover-color] border border-[--theme-border-color]"
+                >
+                  <Podcast className="w-8 h-8 transition-colors duration-300 text-[--theme-text-color] hover:text-[--theme-hover-text]" />
+                </button>
+              </div>
+            </section>
+          </section>
         </div>
       ),
       anki: (
-        <div className="animate-fadeIn mt-8 space-y-6">
+        <div className="animate-fadeIn space-y-6">
           <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
             Flashcards
           </h3>
-          <h2 className="text-xl font-bold mb-6">Anki Clinic</h2>
-          <p className="text-sm opacity-80">
-            {'Review content on either Anki or Anki Clinic after the ATS. Unlike Anki, we include multiple choice questions and flashcards to help with areas like chemistry and physics. We recommend using ours over Anki, but you can use both. The MCAT requires active learning.'}
-          </p>
-          <div className="space-y-3 mt-4">
+
+          {/* Anki Clinic Video */}
+          <div 
+            className="rounded-xl overflow-hidden bg-[--theme-doctorsoffice-accent] cursor-pointer hover:opacity-90 transition-all duration-200"
+            onClick={() => setActiveVideo("https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/AnkiClinicAdvertisement.mp4")}
+          >
+            <video 
+              className="w-full"
+              preload="metadata"
+            >
+              <source src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/AnkiClinicAdvertisement.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            <div className="p-4">
+              <h4 className="text-lg font-medium mb-1">Anki Clinic</h4>
+              <div className="relative">
+                <p className={clsx(
+                  "text-sm opacity-70 transition-all duration-300",
+                  !testingSuiteExpanded && "line-clamp-2"
+                )}>
+                  The Anki Clinic is an adaptive question bank in the form of a flashcard game that allows you to treat patients to solve cards. Every question you see is picked for you based upon your results in AAMC, UWorld, and the ATS.
+                </p>
+                <button 
+                  className="text-xs mt-2 text-blue-500 hover:text-blue-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setTestingSuiteExpanded(!testingSuiteExpanded);
+                  }}
+                >
+                  {!testingSuiteExpanded ? 'Read more' : 'Show less'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Filtering MilesDown Video */}
+          <div 
+            className="rounded-xl overflow-hidden bg-[--theme-doctorsoffice-accent] cursor-pointer hover:opacity-90 transition-all duration-200"
+            onClick={() => setActiveVideo("https://my-mcat.s3.us-east-2.amazonaws.com/Anki.mp4")}
+          >
+            <video 
+              className="w-full"
+              preload="metadata"
+            >
+              <source src="https://my-mcat.s3.us-east-2.amazonaws.com/Anki.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            <div className="p-4">
+              <h4 className="text-lg font-medium mb-1">Filtering MilesDown By Concepts</h4>
+              <div className="relative">
+                <p className={clsx(
+                  "text-sm opacity-70 transition-all duration-300",
+                  !statsExpanded && "line-clamp-2"
+                )}>
+                  For those of you using Anki, we recommend filtering it by the subject you studied that day using this method. Simply, create a custom study, sort by tags, as many new cards as you can, and then study.
+                </p>
+                <button 
+                  className="text-xs mt-2 text-blue-500 hover:text-blue-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setStatsExpanded(!statsExpanded);
+                  }}
+                >
+                  {!statsExpanded ? 'Read more' : 'Show less'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xs text-center opacity-60 uppercase tracking-wide">
+              Anki Decks
+            </h3>
             <a 
-              href="https://www.reddit.com/r/Mcat/comments/p1tlkf/milesdown_anki_deck_subdivided_by_kaplan_chapter/"
+              href="https://drive.google.com/file/d/1v4gIfTwr9xCyjqVxj7xmYquDpmsY3y8t/view?usp=drive_link"
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-4 py-3 bg-[--theme-doctorsoffice-accent] rounded-lg hover:opacity-80 transition-opacity w-full"
@@ -416,7 +1276,7 @@ const ResourcePack: React.FC = () => {
             </a>
 
             <a 
-              href="https://www.reddit.com/r/AnkiMCAT/comments/p7h0g3/aidan_6_million_card_anki_deck/"
+              href="https://drive.google.com/file/d/1lYHJG0t8NZqvaQQk8s1l5rold-0h6amR/view?usp=drive_link"
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-4 py-3 bg-[--theme-doctorsoffice-accent] rounded-lg hover:opacity-80 transition-opacity w-full"
@@ -533,6 +1393,51 @@ const ResourcePack: React.FC = () => {
           </div>
         ) : (
           renderContent()
+        )}
+
+        {/* Need Help section - Only show in initial view */}
+        {!activeSection && (
+          <div className="mt-8 text-center">
+            <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+              Need help?
+            </h3>
+            <div className="flex flex-col gap-2">
+              {/* Reset Tutorials and Email Settings */}
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={onResetTutorials}
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Reset Tutorials</span>
+                </button>
+                <Link
+                  href="/preferences"
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span>Email Settings</span>
+                </Link>
+              </div>
+
+              {/* Discord Link */}
+              <a
+                href="https://discord.gg/DcHWnEu8Xb"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
+              >
+                <FaDiscord className="w-5 h-5" />
+                <span>Join Discord Community</span>
+              </a>
+              
+              <MessageButton 
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
+              />
+            </div>
+          </div>
         )}
       </div>
     </ScrollArea>
