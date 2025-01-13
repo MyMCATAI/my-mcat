@@ -20,9 +20,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import CompletionDialog from "@/components/home/CompletionDialog";
 import { useRouter } from "next/navigation";
 import UWorldPopup from '@/components/home/UWorldPopup';
-import HelpContent from "@/components/guides/HelpContent";
-import HelpContentCARS from "@/components/guides/HelpContentCARs";
-import HelpContentSchedule from "@/components/guides/HelpContentSchedule";
 import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";
 
 interface Task {
@@ -484,24 +481,7 @@ const SideBar: React.FC<SideBarProps> = ({
     } else if (content.type === 'tutors') {
         return renderTutors(content.schools);
     } else if (content.type === 'tutorial') {
-        switch (currentPage) {
-            case "CARS":
-                return <HelpContentCARS onClose={() => {}} />;
-            case "Schedule":
-                return <HelpContentSchedule onClose={() => {}} />;
-            case "AdaptiveTutoringSuite":
-                return <HelpContent onClose={() => {}} onResetTutorials={() => {}} />;
-            case "Tests":
-                return <HelpContentTestingSuite />;
-            default:
-                return (
-                    <div className="h-[calc(100vh-11.6rem)] flex items-center justify-center text-center p-4">
-                        <p className="text-[--theme-text-color]">
-                            Select a specific section to view its help content.
-                        </p>
-                    </div>
-                );
-        }
+        return <HelpContentTestingSuite onResetTutorials={() => {}} />;
     } else if (content.type === 'tasks') {
         return renderTasks();
     }
