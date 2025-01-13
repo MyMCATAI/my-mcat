@@ -754,7 +754,7 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
                     "text-sm opacity-70 transition-all duration-300",
                     !testingSuiteExpanded && "line-clamp-2"
                   )}>
-                    MyMCAT.ai allows you to intelligently review your exams and find where you can improve. Simply add your exam, whether it's AAMC or third party, and then it's scheduled. Then, you can complete exam and then add questions you got wrong for each section. When you're done with that, your weaknesses are automatically considered in the ATS, and you can generate a new day-by-day schedule until your next exam.
+                    {'MyMCAT.ai allows you to intelligently review your exams and find where you can improve. Simply add your exam, whether it&apos;s AAMC or third party, and then it&apos;s scheduled. Then, you can complete exam and then add questions you got wrong for each section. When you&apos;re done with that, your weaknesses are automatically considered in the ATS, and you can generate a new day-by-day schedule until your next exam.'}
                   </p>
                   <button 
                     className="text-xs mt-2 text-blue-500 hover:text-blue-600"
@@ -787,7 +787,7 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
                     "text-sm opacity-70 transition-all duration-300",
                     !statsExpanded && "line-clamp-2"
                   )}>
-                    We calculate the average of all of your FLs, let you know if you're within range of a target score, and also predict your FL score in stats. Here's how to navigate to it.
+                    {'We calculate the average of all of your FLs, let you know if youre within range of a target score, and also predict your FL score in stats. Here&apos;s how to navigate to it.'}
                   </p>
                   <button 
                     className="text-xs mt-2 text-blue-500 hover:text-blue-600"
@@ -1271,7 +1271,7 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
             >
               <div className="flex flex-col">
                 <span className="text-sm font-medium">MilesDown Anki Deck</span>
-                <span className="text-xs opacity-70">Popular comprehensive Anki deck</span>
+                <span className="text-xs opacity-70">Popular concise Anki deck</span>
               </div>
             </a>
 
@@ -1283,7 +1283,7 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
             >
               <div className="flex flex-col">
                 <span className="text-sm font-medium">Aiden Anki Deck</span>
-                <span className="text-xs opacity-70">Extensive 6M card collection</span>
+                <span className="text-xs opacity-70">Extensive card collection</span>
               </div>
             </a>
           </div>
