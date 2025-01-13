@@ -128,7 +128,7 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
       mymcat: (
         <div className="animate-fadeIn space-y-6">
           <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
-            Getting Started with MyMCAT
+            Starting with MyMCAT
           </h3>
           
           <p className="text-sm opacity-80 mb-6">
@@ -638,11 +638,11 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
         </div>
       ),
       taking: (
-        <div className="animate-fadeIn space-y-6">
+        <div className="animate-fadeIn space-y-6 flex flex-col items-center justify-center min-h-[50vh]">
           <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
             Test Taking
           </h3>
-          <div className="flex flex-col items-center justify-center p-8 bg-[--theme-doctorsoffice-accent] rounded-lg">
+          <div className="flex flex-col items-center justify-center p-8 bg-[--theme-doctorsoffice-accent] rounded-lg w-full max-w-md">
             <svg
               className="w-16 h-16 text-yellow-500 mb-4"
               fill="none"
@@ -665,11 +665,11 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
         </div>
       ),
       reviewing: (
-        <div className="animate-fadeIn space-y-6">
+        <div className="animate-fadeIn space-y-6 flex flex-col items-center justify-center min-h-[50vh]">
           <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
             Test Review
           </h3>
-          <div className="flex flex-col items-center justify-center p-8 bg-[--theme-doctorsoffice-accent] rounded-lg">
+          <div className="flex flex-col items-center justify-center p-8 bg-[--theme-doctorsoffice-accent] rounded-lg w-full max-w-md">
             <svg
               className="w-16 h-16 text-yellow-500 mb-4"
               fill="none"
@@ -840,7 +840,7 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
                 <div className="w-10 h-10 relative">
                   <Image src="/game-components/PixelWatch.png" alt="Watch" layout="fill" objectFit="contain" />
                 </div>
-                <span className="text-xs mt-1">per passage</span>
+                <span className="text-xs mt-1">time</span>
               </div>
               <div className="flex flex-col items-center w-1/4">
                 <div className="w-10 h-10 relative">
@@ -1430,7 +1430,7 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
                 className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
               >
                 <FaDiscord className="w-5 h-5" />
-                <span>Join Discord Community</span>
+                <span>Join Discord</span>
               </a>
               
               <MessageButton 
