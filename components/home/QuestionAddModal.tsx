@@ -214,12 +214,15 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" style={{ 
-      backgroundColor: 'var(--theme-mainbox-color)',
-      backgroundImage: 'var(--theme-interface-image)',
-      backgroundBlendMode: 'overlay'
-    }}>
-      <div className="max-w-[60rem] mx-auto px-4 py-6">
+    <div 
+      className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center backdrop-blur-sm bg-black/30"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="w-full max-w-[60rem] mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={onClose}
