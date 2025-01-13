@@ -222,12 +222,19 @@ const SectionReview: React.FC<SectionReviewProps> = ({
         />
       )}
       <div className="flex flex-col md:flex-row gap-6 mb-6">
-        <div className="w-full md:w-[12rem] h-[12rem] bg-[--theme-leaguecard-color] rounded-2xl shadow-xl overflow-hidden relative">
+        <div className="w-full md:w-[12rem] h-[12rem] bg-[--theme-leaguecard-color] rounded-2xl shadow-xl overflow-hidden relative group">
           <button
             onClick={onBack}
             className="absolute top-3 left-3 p-2 hover:bg-[--theme-hover-color] rounded-full transition-all duration-200 hover:scale-105"
           >
             <ArrowLeft className="h-5 w-5 text-[--theme-text-color]" />
+          </button>
+
+          <button
+            onClick={() => setIsEditingScore(true)}
+            className="absolute top-3 right-3 p-2 opacity-0 group-hover:opacity-100 hover:bg-[--theme-hover-color] rounded-full transition-all duration-200 hover:scale-105"
+          >
+            <Edit2 className="h-4 w-4 text-[--theme-text-color]" />
           </button>
 
           <div className="h-full flex flex-col items-center justify-center space-y-2">
@@ -264,21 +271,12 @@ const SectionReview: React.FC<SectionReviewProps> = ({
                 </div>
               </div>
             ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div 
-                      className="group flex items-center justify-center relative cursor-pointer w-full"
-                      onClick={() => setIsEditingScore(true)}
-                    >
-                      <span className="text-6xl font-bold group-hover:opacity-90">{section.score}</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Edit score</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <div 
+                className="text-6xl font-bold cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => setIsEditingScore(true)}
+              >
+                {section.score}
+              </div>
             )}
           </div>
         </div>

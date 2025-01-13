@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDisplayDate } from '@/lib/utils';
 
-const COMPANIES = ["AAMC", "Blueprint", "Jack Westin", "Altius"] as const;
+const COMPANIES = ["AAMC", "Blueprint", "Jack Westin", "Altius", "Kaplan", "Princeton Review"] as const;
 type Company = typeof COMPANIES[number];
 
 const COMPANY_INFO = {
@@ -27,6 +27,14 @@ const COMPANY_INFO = {
   },
   "Altius": {
     url: "https://altiustestprep.com/practice-exam/free-exam/",
+    note: "(One Free FL)"
+  },
+  "Kaplan": {
+    url: "https://www.kaptest.com/mcat/free/mcat-free-practice-test?srsltid=AfmBOorJX4XYIkNFESFKrB3XdzJubLdpDVBH0-aq6GFSjHE9QLKQPBS7",
+    note: "(One Free FL)"
+  },
+  "Princeton Review": {
+    url: "https://www.princetonreview.com/product/details/?id=MAR-MCAT15-OLTEST&z=23116",
     note: "(One Free FL)"
   }
 } as const;
