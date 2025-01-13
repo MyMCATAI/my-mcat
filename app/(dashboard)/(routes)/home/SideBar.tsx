@@ -408,27 +408,29 @@ const SideBar: React.FC<SideBarProps> = ({
                 onClick={() => handleButtonClick(activity.activityTitle)}
               >
                 <span>{activity.activityTitle}</span>
-                {isActivityCompleted(activity) ? (
-                  <FaCheckCircle
-                    className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
-                    style={{ color: "var(--theme-hover-text)" }}
-                  />
-                ) : (
-                  <svg
-                    className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
+                <div className="flex items-center gap-2">
+                  {isActivityCompleted(activity) ? (
+                    <FaCheckCircle
+                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                      style={{ color: "var(--theme-hover-text)" }}
                     />
-                  </svg>
-                )}
+                  ) : (
+                    <svg
+                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  )}
+                </div>
               </button>
 
               <div className="bg-[--theme-mainbox-color] p-3 mt-2 space-y-2 rounded-lg">
@@ -753,6 +755,53 @@ const SideBar: React.FC<SideBarProps> = ({
     });
   }
 
+  async function getATSTasks() {
+    const atsActivity = todayActivities.find(activity => activity.activityTitle === "Adaptive Tutoring Suite");
+    if (!atsActivity?.tasks) return [];
+    
+    // If tasks are already generated with a specific category, return them
+    if (atsActivity.tasks.some(task => !task.text.includes("Concept will be generated"))) {
+      return atsActivity.tasks;
+    }
+
+    // Only generate tasks for today
+    if (!isToday(new Date(atsActivity.scheduledDate))) {
+      return atsActivity.tasks;
+    }
+
+    // Fetch a category based on time and weakness
+    try {
+      const response = await fetch(`/api/category-time?minutes=${atsActivity.hours * 60}`);
+      if (!response.ok) throw new Error("Failed to fetch category");
+      
+      const data = await response.json();
+      if (data.items && data.items.length > 0) {
+        const category = data.items[0];
+        
+        const updatedTasks = atsActivity.tasks?.map(task => ({
+          ...task,
+          text: task.text.includes("Concept will be generated") 
+            ? `${category.name} (${category.contentType === 'video' ? 'Videos' : 'Readings'}), Do two practice quizzes`
+            : task.text
+        })) || [];
+
+        await fetch(`/api/calendar-activity`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: atsActivity.id,
+            tasks: updatedTasks,
+          }),
+        });
+
+        return updatedTasks;
+      }
+    } catch (error) {
+      toast.error("Failed to generate tasks");
+    }
+    return atsActivity.tasks || [];
+  }
+
   const router = useRouter();
 
   const handleButtonClick = (section: string) => {
@@ -777,6 +826,16 @@ const SideBar: React.FC<SideBarProps> = ({
   };
 
   const [showUWorldPopup, setShowUWorldPopup] = useState(false);
+  const [atsTasks, setAtsTasks] = useState<Task[]>([]);
+  const uWorldTasks = getUWorldTasks();
+
+  useEffect(() => {
+    const fetchATSTasks = async () => {
+      const tasks = await getATSTasks();
+      setAtsTasks(tasks);
+    };
+    fetchATSTasks();
+  }, [todayActivities]);
 
   const handleUWorldScoreSubmit = (scores: number[]) => {
     console.log("UWorld scores:", scores);
@@ -828,7 +887,7 @@ const SideBar: React.FC<SideBarProps> = ({
         isOpen={showUWorldPopup}
         onClose={() => setShowUWorldPopup(false)}
         onScoreSubmit={handleUWorldScoreSubmit}
-        tasks={getUWorldTasks()}
+        tasks={uWorldTasks}
       />
     </div>
   );
