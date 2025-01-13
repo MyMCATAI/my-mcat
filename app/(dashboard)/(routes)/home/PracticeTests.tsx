@@ -32,16 +32,8 @@ import TestCalendar from '@/components/calendar/TestCalendar';
 import { toUTCDate, formatDisplayDate } from "@/lib/utils";
 import AddPracticeTestDialog from '@/components/home/AddPracticeTestDialog';
 import EditPracticeTestDialog from '@/components/home/EditPracticeTestDialog';
+import { CalendarEvent as ImportedCalendarEvent } from '@/types/calendar';
 
-
-interface CalendarEvent {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  allDay?: boolean;
-  resource?: any;
-}
 
 interface PracticeTestsProps {
   handleSetTab?: (tab: string) => void;
@@ -90,7 +82,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
   const {  loading: studyLoading } = useStudyActivities();
   const [scheduledTests, setScheduledTests] = useState<Test[]>([]);
   const [date, setDate] = useState<Date>(new Date());
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<ImportedCalendarEvent[]>([]);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -152,10 +144,18 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
           start: new Date(activity.scheduledDate),
           end: new Date(activity.scheduledDate),
           allDay: true,
+          activityText: activity.activityText,
+          hours: activity.hours,
+          activityType: activity.activityType,
           resource: { 
             ...activity, 
-            eventType: 'exam',
-            fullTitle: activity.activityTitle
+            eventType: 'exam' as const,
+            fullTitle: activity.activityTitle,
+            activityText: activity.activityText,
+            hours: activity.hours,
+            activityType: activity.activityType,
+            activityTitle: activity.activityTitle,
+            status: activity.status
           }
         };
       });
@@ -168,10 +168,18 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
           start: new Date(activity.scheduledDate),
           end: new Date(activity.scheduledDate),
           allDay: true,
+          activityText: activity.activityText,
+          hours: activity.hours,
+          activityType: activity.activityType,
           resource: { 
             ...activity, 
-            eventType: 'study',
-            fullTitle: `${activity.activityTitle} (${activity.hours}h)`
+            eventType: 'study' as const,
+            fullTitle: `${activity.activityTitle} (${activity.hours}h)`,
+            activityText: activity.activityText,
+            hours: activity.hours,
+            activityType: activity.activityType,
+            activityTitle: activity.activityTitle,
+            status: activity.status
           }
         }));
 
@@ -307,7 +315,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
   };
 
   // Handle calendar event selection
-  const handleSelectEvent = (event: CalendarEvent) => {
+  const handleSelectEvent = (event: ImportedCalendarEvent) => {
     const activity = event.resource;
     if (activity.eventType === 'exam') {
       // Handle exam selection (existing logic)
@@ -389,11 +397,40 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     setShowSettings((prev) => !prev);
   };
 
-  const handleStudyPlanSaved = () => {
+  const handleStudyPlanSaved = async () => {
     setShowSettings(false);
+    // Refresh all activities immediately
+    await Promise.all([
+      fetchExamActivities(),
+      refetchAllActivities()
+    ]);
     if (handleSetTab) {
       handleSetTab('Tests');
     }
+  };
+
+  const handleWeeklyModalComplete = async ({ success, action }: { success: boolean; action?: 'generate' | 'save' }) => {
+    if (success) {
+      try {
+        // Refresh all activities immediately
+        await Promise.all([
+          fetchExamActivities(),
+          refetchAllActivities()
+        ]);
+        
+        if (action === 'generate') {
+          handleSetTab && handleSetTab('Tests');
+        }
+        if (showSettings) handleStudyPlanSaved();
+        setShowSettings(false);
+        setShowWeeklyModal(false);
+        return true; // Return success
+      } catch (error) {
+        console.error('Failed to refresh activities:', error);
+        return false; // Return failure
+      }
+    }
+    return false;
   };
 
   const handleEditTest = async (params: {
@@ -521,6 +558,13 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                           onNavigate={setDate}
                           onSelectEvent={handleSelectEvent}
                           chatbotRef={chatbotRef}
+                          onEventUpdate={async () => {
+                            // Refresh all activities immediately
+                            await Promise.all([
+                              fetchExamActivities(),
+                              refetchAllActivities()
+                            ]);
+                          }}
                         />
                       </div>
                     </div>
@@ -828,21 +872,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                 className="max-h-[90vh] overflow-auto"
               >
                 <WeeklyCalendarModal
-                  onComplete={async ({ success, action }) => {
-                    if (success) {
-                      if (action === 'generate') {
-                        // Refresh all activities
-                        await Promise.all([
-                          fetchExamActivities(),
-                          refetchAllActivities()
-                        ]);
-                        handleSetTab && handleSetTab('Tests');
-                      }
-                      if (showSettings) handleStudyPlanSaved();
-                      setShowSettings(false);
-                      setShowWeeklyModal(false);
-                    }
-                  }}
+                  onComplete={handleWeeklyModalComplete}
                   isInitialSetup={false}
                   onClose={() => {
                     setShowSettings(false);

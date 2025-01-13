@@ -789,16 +789,21 @@ const SideBar: React.FC<SideBarProps> = ({
       case "MyMCAT Daily CARs":
         handleSetTab("CARS");
         break;
-      case "Anki Clinic":
-        router.push("/doctorsoffice");
+      case "AAMC CARs":
+      case "AAMC Materials":
+        window.open('https://students-residents.aamc.org/prepare-mcat-exam/prepare-mcat-exam', '_blank');
         break;
       case "Adaptive Tutoring Suite":
         handleSetTab("AdaptiveTutoringSuite");
         break;
-      case "AAMC Materials":
+      case "Anki Clinic":
+        handleSetTab("AnkiClinic");
+        break;
+      case "Regular Anki":
+        handleSetTab("RegularAnki");
         break;
       case "UWorld":
-        setShowUWorldPopup(true);
+        handleSetTab("UWorld");
         break;
       default:
         break;

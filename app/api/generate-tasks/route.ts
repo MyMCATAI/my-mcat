@@ -29,7 +29,7 @@ const EVENT_CATEGORIES: EventCategory[] = [
     description: "Practice CARS passages to improve your critical analysis and reasoning skills. Focus on understanding complex arguments, identifying main ideas, and developing your reading speed and comprehension.",
   },
   {
-    name: 'Daily CARs',
+    name: 'AAMC CARs',
     optional: true,
     minDuration: 0.5,
     maxDuration: 1,
@@ -235,6 +235,10 @@ async function generateDailyTasks(
   // Use fixed content review ratio based on selection
   const contentReviewRatio = getContentReviewRatio(selectedBalance);
 
+  // Track total hours for content and review to maintain balance
+  let totalContentHours = 0;
+  let totalReviewHours = 0;
+
   // Get exam schedule from database
   const examActivities = await prisma.calendarActivity.findMany({
     where: {
@@ -276,15 +280,31 @@ async function generateDailyTasks(
       continue;
     }
 
+    // Calculate current ratio excluding CARS/Anki time
+    const totalHours = totalContentHours + totalReviewHours;
+    const currentRatio = totalHours === 0 ? 0 : totalReviewHours / totalHours;
+
+    // Determine if this should be a review day based on maintaining the target ratio
+    const shouldBeReviewDay = currentRatio < contentReviewRatio;
+
     const dayTasks = getAvailableTasks(
       resources,
-      contentReviewRatio,
+      shouldBeReviewDay,
       new Set<string>(),
       availableHours,
       carsDays.has(currentDate.getTime()),
       currentDate,
       examSchedule
     );
+
+    // Update running totals
+    for (const task of dayTasks) {
+      if (task.name === 'Adaptive Tutoring Suite' || task.name === 'Anki Clinic' || task.name === 'Regular Anki') {
+        totalReviewHours += task.duration;
+      } else if (task.name !== 'AAMC CARs' && task.name !== 'MyMCAT Daily CARs') {
+        totalContentHours += task.duration;
+      }
+    }
 
     // Create activities for each task
     for (const task of dayTasks) {
@@ -309,6 +329,11 @@ async function generateDailyTasks(
   }
 
   console.log('Total Activities Generated:', activities.length);
+  console.log('Final Content/Review Split:', {
+    contentHours: totalContentHours,
+    reviewHours: totalReviewHours,
+    ratio: totalReviewHours / (totalContentHours + totalReviewHours)
+  });
   console.log('=== Task Generation Complete ===\n');
 
   return activities;
@@ -367,7 +392,7 @@ function getCurrentFLMilestone(currentDate: Date, examSchedule: { date: Date; ex
 
 function getAvailableTasks(
   resources: Resources,
-  contentReviewRatio: number,
+  isReviewDay: boolean,
   scheduledTasksForDay: Set<string>,
   availableHours: number,
   isAamcCarsDay: boolean,
@@ -377,19 +402,19 @@ function getAvailableTasks(
   console.log('\n--- Task Generation Details ---');
   console.log('Date:', format(currentDate, 'yyyy-MM-dd'));
   console.log('Available Hours:', availableHours);
-  console.log('Is Review Day:', Math.random() < contentReviewRatio);
+  console.log('Is Review Day:', isReviewDay);
   console.log('Is AAMC CARS Day:', isAamcCarsDay);
   console.log('Current FL Milestone:', getCurrentFLMilestone(currentDate, examSchedule));
 
   const tasks: { name: string; duration: number; type: string }[] = [];
-  const isReviewDay = Math.random() < contentReviewRatio;
   let remainingHours = availableHours;
 
   // Get duration constants from EVENT_CATEGORIES with safe defaults
   const ATS = EVENT_CATEGORIES.find(c => c.name === 'Adaptive Tutoring Suite')!;
   const ANKI = EVENT_CATEGORIES.find(c => c.name === 'Anki Clinic')!;
   const REGULAR_ANKI = EVENT_CATEGORIES.find(c => c.name === 'Regular Anki')!;
-  const CARS = EVENT_CATEGORIES.find(c => c.name === 'Daily CARs')!;
+  const CARS = EVENT_CATEGORIES.find(c => c.name === 'AAMC CARs')!;
+  const DAILY_CARS = EVENT_CATEGORIES.find(c => c.name === 'MyMCAT Daily CARs')!;
   const UWORLD = EVENT_CATEGORIES.find(c => c.name === 'UWorld')!;
   const AAMC = EVENT_CATEGORIES.find(c => c.name === 'AAMC Materials')!;
 
@@ -397,8 +422,6 @@ function getAvailableTasks(
   const ATS_MAX = ATS.maxDuration ?? 3;
   const ANKI_MIN = ANKI.minDuration ?? 0.5;
   const ANKI_MAX = ANKI.maxDuration ?? 1.5;
-  const CARS_MIN = CARS.minDuration ?? 0.5;
-  const CARS_MAX = CARS.maxDuration ?? 1;
   const UWORLD_MIN = UWORLD.minDuration ?? 1;
   const UWORLD_MAX = UWORLD.maxDuration ?? 3;
   const AAMC_DUR = AAMC.duration ?? 2;
@@ -406,20 +429,38 @@ function getAvailableTasks(
   // Get current FL milestone
   const currentMilestone = getCurrentFLMilestone(currentDate, examSchedule);
 
-  if (isReviewDay) {
-    // Review day priority: Adaptive > Anki > CARs
-    if (resources.adaptive && remainingHours >= ATS_MIN) {
-      const duration = Math.min(ATS_MAX, remainingHours - (ANKI_MIN + CARS_MIN));
-      tasks.push({ name: 'Adaptive Tutoring Suite', duration, type: ATS.type });
-      remainingHours -= duration;
-    }
+  // Schedule CARS first
+  if (isAamcCarsDay && remainingHours >= 1) {
+    // AAMC CARS (60 mins)
+    tasks.push({
+      name: 'AAMC CARs',
+      duration: 1,
+      type: CARS.type
+    });
+    remainingHours -= 1;
+  } else if (remainingHours >= 0.5) {
+    // MyMCAT Daily CARS (30 mins)
+    tasks.push({
+      name: 'MyMCAT Daily CARs',
+      duration: 0.5,
+      type: DAILY_CARS.type
+    });
+    remainingHours -= 0.5;
 
-    // Handle either Anki Game or Regular Anki
-    if ((resources.ankigame || resources.anki) && remainingHours >= ANKI_MIN) {
-      const duration = Math.min(ANKI_MAX, remainingHours - CARS_MIN);
+    // Only add Anki on non-AAMC CARS days if there's time
+    if ((resources.ankigame || resources.anki) && remainingHours >= 0.5) {
       const ankiType = resources.ankigame ? 'Anki Clinic' : 'Regular Anki';
-      tasks.push({ name: ankiType, duration, type: ANKI.type });
-      remainingHours -= duration;
+      tasks.push({ name: ankiType, duration: 0.5, type: ANKI.type });
+      remainingHours -= 0.5;
+    }
+  }
+
+  // Allocate remaining hours based on day type
+  if (isReviewDay) {
+    // Review day priority: Adaptive
+    if (resources.adaptive && remainingHours >= ATS_MIN) {
+      const duration = Math.min(ATS_MAX, remainingHours);
+      tasks.push({ name: 'Adaptive Tutoring Suite', duration, type: ATS.type });
     }
   } else {
     // Practice day priority changes based on FL milestone
@@ -427,49 +468,21 @@ function getAvailableTasks(
       // After FL3, prioritize AAMC
       if (resources.aamc && remainingHours >= AAMC_DUR) {
         tasks.push({ name: 'AAMC Materials', duration: AAMC_DUR, type: AAMC.type });
-        remainingHours -= AAMC_DUR;
-      }
-      if (resources.uworld && remainingHours >= UWORLD_MIN) {
+      } else if (resources.uworld && remainingHours >= UWORLD_MIN) {
         const uWorldHours = Math.min(UWORLD_MAX, Math.floor(remainingHours));
         tasks.push({ name: 'UWorld', duration: uWorldHours, type: UWORLD.type });
-        remainingHours -= uWorldHours;
       }
     } else {
       // Before FL3, prioritize UWorld
       if (resources.uworld && remainingHours >= UWORLD_MIN) {
         const uWorldHours = Math.min(UWORLD_MAX, Math.floor(remainingHours));
         tasks.push({ name: 'UWorld', duration: uWorldHours, type: UWORLD.type });
-        remainingHours -= uWorldHours;
-      }
-      if (resources.aamc && remainingHours >= AAMC_DUR) {
+      } else if (resources.aamc && remainingHours >= AAMC_DUR) {
         tasks.push({ name: 'AAMC Materials', duration: AAMC_DUR, type: AAMC.type });
-        remainingHours -= AAMC_DUR;
       }
     }
-
-    // Handle either Anki Game or Regular Anki
-    if ((resources.ankigame || resources.anki) && remainingHours >= ANKI_MIN) {
-      const duration = Math.min(ANKI_MAX, remainingHours);
-      const ankiType = resources.ankigame ? 'Anki Clinic' : 'Regular Anki';
-      tasks.push({ name: ankiType, duration, type: ANKI.type });
-      remainingHours -= duration;
-    }
   }
 
-  // Always try to add CARS if there's time
-  if (remainingHours >= CARS_MIN) {
-    const duration = Math.min(CARS_MAX, remainingHours);
-    tasks.push({
-      name: isAamcCarsDay ? 'Daily CARs' : 'MyMCAT Daily CARs',
-      duration,
-      type: CARS.type
-    });
-  }
-
-  console.log('Generated Tasks:', tasks);
-  console.log('Remaining Hours:', remainingHours);
-  console.log('------------------------\n');
-  
   return tasks;
 }
 

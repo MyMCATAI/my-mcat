@@ -9,7 +9,7 @@ import DatePickerDialog from "@/components/DatePickerDialog";
 import { useStudyPlan } from '@/hooks/useStudyPlan';
 
 interface WeeklyCalendarModalProps {
-  onComplete?: (result: { success: boolean; action?: 'generate' | 'save' }) => void;
+  onComplete?: (result: { success: boolean; action?: 'generate' | 'save' }) => Promise<boolean>;
   isInitialSetup?: boolean;
   onClose?: () => void;
 }
@@ -265,17 +265,28 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
       });
 
       // After getting response, show remaining messages with delay
-      for (let i = 1; i < messages.length; i++) {
+      for (let i = 1; i < messages.length - 1; i++) {
         await new Promise(resolve => setTimeout(resolve, 1000));
         setLoadingMessages(prev => [...prev, messages[i]]);
       }
 
+      // Add a new loading message for refreshing activities
+      setLoadingMessages(prev => [...prev, "Refreshing your calendar..."]);
+
+      // Wait for activities to refresh
+      if (onComplete) {
+        const refreshSuccess = await onComplete({ success: true, action: 'generate' });
+        if (!refreshSuccess) {
+          throw new Error('Failed to refresh activities');
+        }
+      }
+
+      // Show final success message
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setLoadingMessages(prev => [...prev, messages[messages.length - 1]]);
+
       // Wait a final second before closing
       await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (onComplete) {
-        onComplete({ success: true, action: 'generate' });
-      }
 
       // Close the modal
       if (onClose) {
