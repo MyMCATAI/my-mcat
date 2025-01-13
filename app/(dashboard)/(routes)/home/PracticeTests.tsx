@@ -8,7 +8,8 @@ import {
   Trash2, 
   Settings, 
   BarChart,
-  CheckCircle2 
+  CheckCircle2,
+  Pen 
 } from "lucide-react";
 import {
   DragDropContext,
@@ -30,6 +31,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import TestCalendar from '@/components/calendar/TestCalendar';
 import { toUTCDate, formatDisplayDate } from "@/lib/utils";
 import AddPracticeTestDialog from '@/components/home/AddPracticeTestDialog';
+import EditPracticeTestDialog from '@/components/home/EditPracticeTestDialog';
 
 
 interface CalendarEvent {
@@ -99,6 +101,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyModal, setShowWeeklyModal] = useState(false);
+  const [editingTest, setEditingTest] = useState<UserTest | null>(null);
 
   // Replace previousCompletedTestsCount with completedTestRecords
   const [completedTestRecords, setCompletedTestRecords] = useState<CompletedTestRecord[]>(() => {
@@ -393,6 +396,75 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     }
   };
 
+  const handleEditTest = async (params: {
+    id: string;
+    company: string;
+    testNumber: string;
+    scores?: {
+      cp: number;
+      cars: number;
+      bb: number;
+      ps: number;
+    };
+    scheduledDate?: Date;
+  }) => {
+    try {
+      // Update the test name and company
+      const testName = `${params.company} FL${params.testNumber}`;
+      
+      // Calculate total score if section scores are provided
+      const totalScore = params.scores ? 
+        Math.round((params.scores.cp + params.scores.cars + params.scores.bb + params.scores.ps) / 4) : 
+        undefined;
+
+      // Create the breakdown string if section scores are provided
+      const breakdown = params.scores ? 
+        `${params.scores.cp}/${params.scores.cars}/${params.scores.bb}/${params.scores.ps}` : 
+        undefined;
+
+      // Update the calendar date if provided
+      if (params.scheduledDate) {
+        await updateExamDate(params.id, params.scheduledDate);
+      }
+
+      // Update the local state
+      setUserTests(prev => prev.map(test => 
+        test.id === params.id 
+          ? { 
+              ...test, 
+              name: testName, 
+              company: params.company,
+              score: totalScore,
+              breakdown,
+              startedAt: params.scheduledDate?.toISOString() || test.startedAt
+            }
+          : test
+      ));
+
+      // Refresh exam activities to get updated data
+      await fetchExamActivities();
+
+      // Close the dialog
+      setEditingTest(null);
+
+      // Show success toast
+      toast({
+        title: "Test updated",
+        description: "The test has been successfully updated.",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Failed to edit test:', error);
+      
+      // Show error toast
+      toast({
+        title: "Error",
+        description: "Failed to update the test. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className={`p-2 flex flex-col ${className}`}>
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -575,7 +647,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                         </Droppable>
                       </div>
 
-                      {/* Completed Section Header with Stats Button */}
+                      {/* Completed Tests Header */}
                       <div className="flex justify-between items-center mt-4 mb-2">
                         <h3 className="text-xs opacity-60 uppercase tracking-wide">
                           Completed Tests
@@ -590,50 +662,60 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                         </button>
                       </div>
 
-                      {/* Completed Tests Scrollable Area */}
-                      <div className="flex-1 overflow-auto">
-                        <div className="space-y-1.5 pb-2">
-                          {userTests.map((test: UserTest) => {
-                            const isCompleted = examActivities?.find(activity => 
-                              activity.id === test.id && 
-                              activity.fullLengthExam?.dataPulses?.filter(p => p.level === "section")?.every(p => p.reviewed)
-                            );
-                            
-                            return (
-                              <div
-                                key={test.id}
-                                onClick={() => setActiveTest(test)}
-                                className={`flex items-center h-[3.5rem] p-2 bg-[--theme-leaguecard-accent] rounded-lg
-                                  transition-all duration-200 cursor-pointer
-                                  hover:bg-[--theme-emphasis-color] hover:text-[--theme-hover-text]
-                                  ${isCompleted ? 'opacity-50' : 'opacity-100'}`}
-                              >
-                                {test.score && (
-                                  <div className="text-xl font-bold w-12 text-center">
-                                    {test.score}
+                      {/* Completed Tests Container */}
+                      <div className="relative flex-1 min-h-0">
+                        {/* Scrollable Area */}
+                        <div className="absolute inset-0 overflow-y-auto">
+                          <div className="space-y-1.5 pb-2">
+                            {userTests.map((test: UserTest) => {
+                              const isCompleted = examActivities?.find(activity => 
+                                activity.id === test.id && 
+                                activity.fullLengthExam?.dataPulses?.filter(p => p.level === "section")?.every(p => p.reviewed)
+                              );
+                              
+                              return (
+                                <div key={test.id} className="group relative">
+                                  {/* Test Card */}
+                                  <div
+                                    onClick={() => setActiveTest(test)}
+                                    className={`flex items-center h-[3.5rem] p-2 bg-[--theme-leaguecard-accent] rounded-lg
+                                      transition-all duration-200 cursor-pointer
+                                      hover:bg-[--theme-emphasis-color] hover:text-[--theme-hover-text]
+                                      ${isCompleted ? 'opacity-50' : 'opacity-100'}`}
+                                  >
+                                    {test.score && (
+                                      <div className="text-xl font-bold w-12 text-center">
+                                        {test.score}
+                                      </div>
+                                    )}
+                                    <div className="flex-grow min-w-0 flex flex-col justify-center">
+                                      <h4 className="text-sm opacity-70 truncate">
+                                        {test.name}
+                                      </h4>
+                                      {test.startedAt && (
+                                        <span className="text-xs opacity-70">
+                                          {new Date(test.startedAt).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric'
+                                          })}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingTest(test);
+                                      }}
+                                      className="p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200
+                                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-md"
+                                    >
+                                      <Pen className="w-3.5 h-3.5" />
+                                    </button>
                                   </div>
-                                )}
-                                <div className="flex-grow min-w-0 flex flex-col justify-center">
-                                  <h4 className="text-sm opacity-70 truncate">
-                                    {test.name}
-                                  </h4>
-                                  {test.startedAt && (
-                                    <span className="text-xs opacity-70">
-                                      {new Date(test.startedAt).toLocaleDateString('en-US', {
-                                        month: 'short',
-                                        day: 'numeric'
-                                      })}
-                                    </span>
-                                  )}
                                 </div>
-                                {isCompleted && (
-                                  <div className="ml-2">
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -682,6 +764,13 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
         onSubmit={handleCompleteTest}
         testTitle={selectedTestToComplete?.name || ''}
         calendarActivityId={selectedTestToComplete?.id}
+      />
+
+      <EditPracticeTestDialog
+        isOpen={!!editingTest}
+        onClose={() => setEditingTest(null)}
+        onEditTest={handleEditTest}
+        test={editingTest || undefined}
       />
 
       <div className="absolute top-7 right-7 flex items-center gap-4">
