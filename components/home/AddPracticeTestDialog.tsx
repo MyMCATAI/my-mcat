@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDisplayDate } from '@/lib/utils';
+import { toast } from "@/components/ui/use-toast";
 
 const COMPANIES = ["AAMC", "Blueprint", "Jack Westin", "Altius", "Kaplan", "Princeton Review"] as const;
 type Company = typeof COMPANIES[number];
@@ -61,6 +62,40 @@ const AddPracticeTestDialog: React.FC<AddPracticeTestDialogProps> = ({
     date: null as Date | null,
     useRecommendedDate: true
   });
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  useEffect(() => {
+    if (newTest.useRecommendedDate && newTest.company && newTest.testNumber) {
+      fetchNextAvailableDate();
+    }
+  }, [newTest.useRecommendedDate, newTest.company, newTest.testNumber]);
+
+  const fetchNextAvailableDate = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/calendar/next-available-test-date');
+      if (!response.ok) {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.error || "Failed to get next available date",
+          variant: "destructive",
+        });
+        return;
+      }
+      const data = await response.json();
+      setNewTest(prev => ({ ...prev, date: new Date(data.date) }));
+    } catch (error) {
+      console.error('Error fetching next available date:', error);
+      toast({
+        title: "Error",
+        description: "Failed to get next available date",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!newTest.company || !newTest.testNumber || (!newTest.date && !newTest.useRecommendedDate)) {
@@ -176,7 +211,13 @@ const AddPracticeTestDialog: React.FC<AddPracticeTestDialogProps> = ({
                 
                 {newTest.useRecommendedDate ? (
                   <div className="text-sm text-gray-600 italic p-2 bg-gray-50 rounded text-center">
-                    We&apos;ll recommend the next available test date based on your study schedule
+                    {isLoading ? (
+                      "Finding the next available test date..."
+                    ) : newTest.date ? (
+                      `Next available test date: ${formatDisplayDate(newTest.date)}`
+                    ) : (
+                      "We'll recommend the next available test date based on your study schedule"
+                    )}
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2">
@@ -199,7 +240,7 @@ const AddPracticeTestDialog: React.FC<AddPracticeTestDialogProps> = ({
                   </div>
                 )}
                 
-                {newTest.date && (
+                {newTest.date && !newTest.useRecommendedDate && (
                   <div className="text-sm text-gray-600 mt-1 text-center">
                     Selected date: {formatDisplayDate(newTest.date)}
                   </div>
@@ -217,7 +258,7 @@ const AddPracticeTestDialog: React.FC<AddPracticeTestDialogProps> = ({
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!newTest.company || !newTest.testNumber || (!newTest.date && !newTest.useRecommendedDate)}
+              disabled={!newTest.company || !newTest.testNumber || (!newTest.date && !newTest.useRecommendedDate) || isLoading}
               className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-70 disabled:cursor-not-allowed"
             >
               Add Test
