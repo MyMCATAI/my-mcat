@@ -43,7 +43,7 @@ export const GameOverDialog: React.FC<GameOverDialogProps> = ({ userCoinCount })
           </motion.div>
 
           <p className="text-center text-white text-lg">
-            {"You ran out of coins. We believe that you can do better. Want to try again?"}
+            {"You were inconsistent with your prep and ran out of coins. Want to try again?"}
           </p>
 
           <div className="flex flex-col gap-4 w-full max-w-sm">
