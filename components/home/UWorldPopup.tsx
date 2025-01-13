@@ -29,10 +29,15 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
   tasks,
   onScoreSubmit,
 }) => {
-  const [correctAnswers, setCorrectAnswers] = useState<number[]>(new Array(tasks.length).fill(0));
-  const [incorrectAnswers, setIncorrectAnswers] = useState<number[]>(new Array(tasks.length).fill(0));
+  const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
+  const [incorrectAnswers, setIncorrectAnswers] = useState<number[]>([]);
   const [recentPulses, setRecentPulses] = useState<DataPulse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setCorrectAnswers(new Array(tasks.length).fill(0));
+    setIncorrectAnswers(new Array(tasks.length).fill(0));
+  }, [tasks]);
 
   const calculateScore = (correct: number, incorrect: number) => {
     const total = correct + incorrect;

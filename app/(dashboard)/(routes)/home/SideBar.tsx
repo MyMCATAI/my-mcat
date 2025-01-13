@@ -732,17 +732,25 @@ const SideBar: React.FC<SideBarProps> = ({
     const uWorldActivity = todayActivities.find(activity => activity.activityTitle === "UWorld");
     if (!uWorldActivity?.tasks) return [];
     
-    return uWorldActivity.tasks
-      .filter(task => {
-        // Only include tasks that match the format "X Q UWorld - Subject"
-        const pattern = /^\d+\s*Q\s*UWorld\s*-\s*.+$/i;
-        return pattern.test(task.text);
-      })
-      .map(task => ({
-        text: task.text,
-        completed: task.completed,
-        subject: task.text.split(' - ')[1]?.trim()
-      }));
+    // Number of tasks should match the hours allocated
+    const numTasks = Math.floor(uWorldActivity.hours);
+    
+    // If tasks are already generated, return them
+    if (uWorldActivity.tasks.some(task => task.text !== "New tasks will be generated based on your test results")) {
+      return uWorldActivity.tasks
+        .filter(task => task.text !== "Review UWorld" && task.text.includes(" - ")) // Filter out review task and ensure proper format
+        .map(task => ({
+          ...task,
+          subject: task.text.split(' - ')[1]?.trim() || "Unknown"
+        }));
+    }
+    
+    // Return placeholder tasks based on duration
+    return Array(numTasks).fill({
+      text: "New tasks will be generated based on your test results",
+      completed: false,
+      subject: "Pending"
+    });
   }
 
   const router = useRouter();
