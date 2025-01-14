@@ -112,7 +112,7 @@ const FullLengthExamCompleteDialog: React.FC<FullLengthExamCompleteDialogProps> 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[28rem] text-black">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-bold mb-4">
+          <DialogTitle className="text-center text-sm font-medium text-gray-600 mb-4">
             Complete {testTitle}
           </DialogTitle>
         </DialogHeader>

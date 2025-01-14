@@ -40,6 +40,15 @@ const COMPANY_INFO = {
   }
 } as const;
 
+export const AAMC_TESTS = [
+  { value: "0", label: "Unscored Sample", backendName: "Unscored Sample" },
+  { value: "1", label: "FL1", backendName: "Full Length Exam 1" },
+  { value: "2", label: "FL2", backendName: "Full Length Exam 2" },
+  { value: "3", label: "FL3", backendName: "Full Length Exam 3" },
+  { value: "4", label: "FL4", backendName: "Full Length Exam 4" },
+  { value: "5", label: "Scored", backendName: "Sample Scored (FL5)" }
+] as const;
+
 interface AddPracticeTestDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -48,27 +57,31 @@ interface AddPracticeTestDialogProps {
     testNumber: string;
     date: Date | null;
     useRecommendedDate: boolean;
+    takenBefore: boolean;
   }) => Promise<void>;
+  existingTests?: { name: string }[];
 }
 
 const AddPracticeTestDialog: React.FC<AddPracticeTestDialogProps> = ({
   isOpen,
   onClose,
   onAddTest,
+  existingTests = []
 }) => {
   const [newTest, setNewTest] = React.useState({
     company: "" as Company,
     testNumber: "",
     date: null as Date | null,
-    useRecommendedDate: true
+    useRecommendedDate: true,
+    takenBefore: false
   });
   const [isLoading, setIsLoading] = React.useState(false);
 
   useEffect(() => {
-    if (newTest.useRecommendedDate && newTest.company && newTest.testNumber) {
+    if (newTest.useRecommendedDate && newTest.company && newTest.testNumber && !newTest.takenBefore) {
       fetchNextAvailableDate();
     }
-  }, [newTest.useRecommendedDate, newTest.company, newTest.testNumber]);
+  }, [newTest.useRecommendedDate, newTest.company, newTest.testNumber, newTest.takenBefore]);
 
   const fetchNextAvailableDate = async () => {
     try {
@@ -103,7 +116,12 @@ const AddPracticeTestDialog: React.FC<AddPracticeTestDialogProps> = ({
     }
 
     await onAddTest(newTest);
-    setNewTest({ company: "" as Company, testNumber: "", date: null, useRecommendedDate: true });
+    setNewTest({ company: "" as Company, testNumber: "", date: null, useRecommendedDate: true, takenBefore: false });
+  };
+
+  // Helper function to check if a test exists
+  const isTestExists = (testName: string) => {
+    return existingTests.some(test => test.name === testName);
   };
 
   return (
@@ -177,39 +195,93 @@ const AddPracticeTestDialog: React.FC<AddPracticeTestDialogProps> = ({
 
               <div className="grid gap-2">
                 <label className="text-sm font-medium text-gray-700">Full Length Number</label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={newTest.testNumber}
-                  onChange={(e) => setNewTest({ ...newTest, testNumber: e.target.value })}
-                  placeholder="Enter test number"
-                  className="bg-white border-gray-300 h-10"
-                />
+                {newTest.company === "AAMC" ? (
+                  <Select
+                    value={newTest.testNumber}
+                    onValueChange={(value) => setNewTest({ ...newTest, testNumber: value })}
+                  >
+                    <SelectTrigger className="bg-white border-gray-300 h-10">
+                      <SelectValue placeholder="Select AAMC test" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AAMC_TESTS.map((test) => {
+                        const exists = isTestExists(test.backendName);
+                        return (
+                          <SelectItem 
+                            key={test.value} 
+                            value={test.value}
+                            disabled={exists}
+                            className={exists ? 'opacity-50' : ''}
+                          >
+                            <span className="flex items-center justify-between w-full">
+                              <span>{test.label}</span>
+                              {exists && (
+                                <span className="text-xs text-gray-500 ml-2">
+                                  (Already added)
+                                </span>
+                              )}
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={newTest.testNumber}
+                    onChange={(e) => setNewTest({ ...newTest, testNumber: e.target.value })}
+                    placeholder="Enter test number"
+                    className="bg-white border-gray-300 h-10"
+                  />
+                )}
               </div>
 
               <div className="grid gap-2">
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium text-gray-700">Test Date</label>
-                  <div className="flex items-center gap-1 ml-auto">
-                    <input
-                      type="checkbox"
-                      checked={newTest.useRecommendedDate}
-                      onChange={(e) => setNewTest({ 
-                        ...newTest, 
-                        useRecommendedDate: e.target.checked,
-                        date: null
-                      })}
-                      className="rounded border-gray-300"
-                      id="pickForMe"
-                    />
-                    <label htmlFor="pickForMe" className="text-sm text-gray-600">
-                      Pick for me
-                    </label>
+                  <div className="flex items-center gap-4 ml-auto">
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="checkbox"
+                        checked={newTest.takenBefore}
+                        onChange={(e) => setNewTest({ 
+                          ...newTest, 
+                          takenBefore: e.target.checked,
+                          useRecommendedDate: e.target.checked ? false : newTest.useRecommendedDate,
+                          date: null
+                        })}
+                        className="rounded border-gray-300"
+                        id="takenBefore"
+                      />
+                      <label htmlFor="takenBefore" className="text-sm text-gray-600">
+                        Taken it before
+                      </label>
+                    </div>
+                    {!newTest.takenBefore && (
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="checkbox"
+                          checked={newTest.useRecommendedDate}
+                          onChange={(e) => setNewTest({ 
+                            ...newTest, 
+                            useRecommendedDate: e.target.checked,
+                            date: null
+                          })}
+                          className="rounded border-gray-300"
+                          id="pickForMe"
+                        />
+                        <label htmlFor="pickForMe" className="text-sm text-gray-600">
+                          Pick for me
+                        </label>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
-                {newTest.useRecommendedDate ? (
+                {newTest.useRecommendedDate && !newTest.takenBefore ? (
                   <div className="text-sm text-gray-600 italic p-2 bg-gray-50 rounded text-center">
                     {isLoading ? (
                       "Finding the next available test date..."
@@ -224,7 +296,8 @@ const AddPracticeTestDialog: React.FC<AddPracticeTestDialogProps> = ({
                     <input
                       type="date"
                       value={newTest.date ? newTest.date.toISOString().split('T')[0] : ''}
-                      min={new Date().toISOString().split('T')[0]}
+                      min={newTest.takenBefore ? undefined : new Date().toISOString().split('T')[0]}
+                      max={newTest.takenBefore ? new Date().toISOString().split('T')[0] : undefined}
                       onChange={(e) => {
                         if (!e.target.value) {
                           setNewTest({ ...newTest, date: null });

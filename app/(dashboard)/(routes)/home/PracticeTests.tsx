@@ -9,7 +9,8 @@ import {
   Settings, 
   BarChart,
   CheckCircle2,
-  Pen 
+  Pen,
+  RotateCw
 } from "lucide-react";
 import {
   DragDropContext,
@@ -33,6 +34,7 @@ import { toUTCDate, formatDisplayDate } from "@/lib/utils";
 import AddPracticeTestDialog from '@/components/home/AddPracticeTestDialog';
 import EditPracticeTestDialog from '@/components/home/EditPracticeTestDialog';
 import { CalendarEvent as ImportedCalendarEvent } from '@/types/calendar';
+import { AAMC_TESTS } from '@/components/home/AddPracticeTestDialog';
 
 
 interface PracticeTestsProps {
@@ -278,20 +280,62 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     testNumber: string;
     date: Date | null;
     useRecommendedDate: boolean;
+    takenBefore: boolean;
   }) => {
     try {
-      const testName = `${params.company} FL${params.testNumber}`;
+      let testName: string;
       
-      await createExamActivity({
+      // Special handling for AAMC tests to match backend naming
+      if (params.company === "AAMC") {
+        const aamcTest = AAMC_TESTS.find(test => test.value === params.testNumber);
+        if (!aamcTest) {
+          throw new Error('Invalid AAMC test number');
+        }
+        testName = aamcTest.backendName;
+
+        // Check if this test already exists in scheduled or completed tests
+        const existingTest = [...scheduledTests, ...userTests].find(
+          test => test.name === testName
+        );
+
+        if (existingTest) {
+          toast({
+            title: "Test already exists",
+            description: "You already have this test in your schedule. You can hover over it and click 'Complete' to mark it as completed with a past date.",
+            variant: "destructive",
+          });
+          setIsAddDialogOpen(false);
+          return;
+        }
+      } else {
+        testName = `${params.company} FL${params.testNumber}`;
+      }
+      
+      // Create the exam activity
+      const activity = await createExamActivity({
         activityTitle: testName,
         activityText: params.company,
         scheduledDate: params.date || new Date(),
-        hours: 8, 
+        hours: 8
       });
+
+      // If it's a test taken before, immediately open the complete dialog
+      if (params.takenBefore) {
+        setSelectedTestToComplete({ 
+          id: activity.id, 
+          name: testName 
+        });
+        setCompleteDialogOpen(true);
+      }
 
       setIsAddDialogOpen(false);
     } catch (error) {
       console.error('Failed to create test:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create test. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -745,16 +789,33 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                                         </span>
                                       )}
                                     </div>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setEditingTest(test);
-                                      }}
-                                      className="p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200
-                                        hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-md"
-                                    >
-                                      <Pen className="w-3.5 h-3.5" />
-                                    </button>
+                                    <div className="flex items-center gap-1">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          // TODO: Handle retake functionality
+                                          toast({
+                                            title: "Coming soon",
+                                            description: "Retake functionality will be available soon!",
+                                            variant: "default",
+                                          });
+                                        }}
+                                        className="p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200
+                                          hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-md"
+                                      >
+                                        <RotateCw className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setEditingTest(test);
+                                        }}
+                                        className="p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200
+                                          hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-md"
+                                      >
+                                        <Pen className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -775,6 +836,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
         onAddTest={handleAddTest}
+        existingTests={[...scheduledTests, ...userTests]}
       />
 
       <DeleteExamDialog
