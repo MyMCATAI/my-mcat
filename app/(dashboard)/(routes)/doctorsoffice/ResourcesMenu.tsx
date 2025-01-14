@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
 import { DoctorOfficeStats, ReportData } from "@/types";
 import { Progress } from "@/components/ui/progress";
 import { FaFire, FaUserInjured } from "react-icons/fa";
 import {
   calculatePlayerLevel,
-  getPatientsPerDay,
   calculateTotalQC,
   getClinicCostPerDay,
   getLevelNumber,
@@ -14,34 +12,6 @@ import { Plus, Globe, Headphones } from "lucide-react";
 import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
-// Dynamic import for ChatBotWidgetNoChatBot
-// const ChatBotWidgetNoChatBot = dynamic(
-//   () => import("@/components/chatbot/ChatBotWidgetDoctorsOffice"),
-//   {
-//     ssr: false,
-//     loading: () => <div>Loading...</div>,
-//   }
-// );
-
-// Mapping function to convert DoctorOfficeStats to ReportData
-const mapDoctorOfficeStatsToReportData = (
-  stats: DoctorOfficeStats
-): ReportData => {
-  return {
-    userScore: stats.qualityOfCare * 50,
-    totalTestsTaken: stats.patientsPerDay,
-    testsCompleted: stats.patientsPerDay,
-    testsReviewed: stats.patientsPerDay,
-    completionRate: 100,
-    totalQuestionsAnswered: stats.patientsPerDay * 10,
-    averageTestScore: stats.qualityOfCare * 50,
-    averageTimePerQuestion: 5,
-    averageTimePerTest: 50,
-    categoryAccuracy: {},
-    streak: stats.streak,
-  };
-};
-
 interface ResourcesMenuProps {
   reportData: DoctorOfficeStats | null;
   userRooms: string[];
@@ -49,15 +19,6 @@ interface ResourcesMenuProps {
   totalPatients: number;
   patientsPerDay: number;
 }
-
-// Add this interface near the top with other interfaces
-interface LeaderboardEntry {
-  id: number;
-  name: string;
-  title?: string;
-  streak: number;
-}
-
 interface GlobalLeaderboardEntry {
   id: number;
   name: string;
@@ -67,9 +28,6 @@ interface GlobalLeaderboardEntry {
 const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   reportData,
   userRooms,
-  totalCoins,
-  totalPatients,
-  patientsPerDay,
 }) => {
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
   const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
@@ -80,18 +38,11 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   const [globalLeaderboard, setGlobalLeaderboard] = useState<GlobalLeaderboardEntry[]>([]);
   const [leaderboardType, setLeaderboardType] = useState<"global" | "friends">("global");
 
-  const openTutorialDialog = (videoUrl: string) => {
-    setTutorialVideoUrl(videoUrl);
-    setIsTutorialDialogOpen(true);
-  };
-
   const toggleAddFriendDropdown = () => {
     setIsAddFriendOpen(!isAddFriendOpen);
   };
 
   const handleAddFriend = () => {
-    // Logic to add a friend using friendEmail
-    console.log("Adding friend:", friendEmail);
     setFriendEmail("");
     setIsAddFriendOpen(false);
   };
@@ -105,7 +56,6 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   };
 
   useEffect(() => {
-    // Fetch global leaderboard data when component mounts
     const fetchLeaderboard = async () => {
       try {
         const response = await fetch('/api/global-leaderboard');
@@ -135,10 +85,6 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   const levelNumber = getLevelNumber(playerLevel);
 
   const totalQC = calculateTotalQC(levelNumber, reportData.streak);
-  const displayQC = Math.min(totalQC, 5); // Cap at 5
-  const clinicCostPerDay = getClinicCostPerDay(levelNumber);
-
-  const mappedReportData = mapDoctorOfficeStatsToReportData(reportData);
 
   return (
     <div className="h-full">
