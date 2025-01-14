@@ -28,6 +28,7 @@ interface TopicStats {
 interface SectionReviewProps {
   section: Section;
   examId: string;
+  company: string;
   onBack: () => void;
   isCompleted: boolean;
   onComplete: () => void;
@@ -38,6 +39,7 @@ interface SectionReviewProps {
 const SectionReview: React.FC<SectionReviewProps> = ({ 
   section, 
   examId,
+  company,
   onBack, 
   isCompleted, 
   onComplete,
@@ -437,6 +439,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
           setIsAddingQuestion(false);
           setEditingQuestion(undefined);
         }}
+        company={company}
         examId={examId}
         editingQuestion={editingQuestion}
         sectionName={section.name}

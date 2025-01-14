@@ -90,7 +90,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [testToDelete, setTestToDelete] = useState<string | null>(null);
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
-  const [selectedTestToComplete, setSelectedTestToComplete] = useState<{ id: string; name: string } | null>(null);
+  const [selectedTestToComplete, setSelectedTestToComplete] = useState<{ id: string; name: string; company: string } | null>(null);
   const [userTests, setUserTests] = useState<UserTest[]>([]);
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showSettings, setShowSettings] = useState(false);
@@ -323,7 +323,8 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
       if (params.takenBefore) {
         setSelectedTestToComplete({ 
           id: activity.id, 
-          name: testName 
+          name: testName,
+          company: params.company
         });
         setCompleteDialogOpen(true);
       }
@@ -700,7 +701,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                                                 transition-opacity duration-200"
                                               onClick={(e) => {
                                                 e.stopPropagation();
-                                                setSelectedTestToComplete({ id: test.id, name: test.name });
+                                                setSelectedTestToComplete({ id: test.id, name: test.name, company: test.company });
                                                 setCompleteDialogOpen(true);
                                               }}
                                             >
@@ -870,6 +871,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
         onSubmit={handleCompleteTest}
         testTitle={selectedTestToComplete?.name || ''}
         calendarActivityId={selectedTestToComplete?.id}
+        company={selectedTestToComplete?.company || ''}
       />
 
       <EditPracticeTestDialog
