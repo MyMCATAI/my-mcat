@@ -4,13 +4,14 @@ import TestComponent from "@/components/test-component";
 import { useEffect, useState } from "react";
 import { VocabProvider } from '@/contexts/VocabContext';
 import { useUserActivity } from '@/hooks/useUserActivity';
+import { useExamVideoRedirect } from "@/hooks/useExamVideoRedirect";
 
 const TestQuestions = () => {
+  useExamVideoRedirect();
   const searchParams = useSearchParams();
   const testId = searchParams?.get('id');
   const { startActivity, updateActivityEndTime } = useUserActivity();
   const [currentActivityId, setCurrentActivityId] = useState<string | null>(null);
-  const pathname = usePathname();
 
   // Modify the useEffect for activity tracking
   useEffect(() => {

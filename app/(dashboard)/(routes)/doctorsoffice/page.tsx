@@ -28,8 +28,10 @@ import { imageGroups } from "./constants/imageGroups";
 import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { useUserInfo } from "@/hooks/useUserInfo";
+import { useExamVideoRedirect } from '@/hooks/useExamVideoRedirect';
 
 const DoctorsOfficePage: React.FC = () => {
+  useExamVideoRedirect();
   const { startActivity } = useUserActivity();
   const [activeTab, setActiveTab] = useState("doctorsoffice");
   const [userLevel, setUserLevel] = useState("PATIENT LEVEL");
@@ -149,37 +151,6 @@ const DoctorsOfficePage: React.FC = () => {
     completeAllRoom
   ]);
 
-  // useEffect(() => {
-  //   const handleCoinReward = async () => {
-  //     // User get 1 coin for 80% correct MCQs
-  //     if (completeAllRoom) {
-  //       const mcqQuestions = totalMCQQuestions;
-  //       const mcqCorrect = correctMCQQuestions;
-  //       const mcqPercentage = mcqQuestions > 0 ? Math.round((mcqCorrect / mcqQuestions) * 100) : 0;
-        
-  //       if (mcqQuestions > 0 && mcqPercentage >= 80) {
-  //         const response = await fetch("/api/user-info", {
-  //           method: "PUT",
-  //           headers: { "Content-Type": "application/json" },
-  //           body: JSON.stringify({ 
-  //             incrementScore: true
-  //           }),
-  //         });
-
-  //         if (!response.ok) {
-  //           throw new Error("Failed to increment coin");
-  //         }
-
-  //         toast.success("You earned 1 coin for 80%+ correct MCQs!");
-  //       } else if (mcqQuestions > 0) {
-  //         toast.error(`You need 80% correct MCQs to earn a coin. You got ${mcqPercentage.toFixed(1)}%`);
-  //       }
-  //     }
-  //   }
-
-  //   handleCoinReward();
-  // }, [completeAllRoom]);
-
   // Marketplace Dialog
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const marketplaceDialogRef = useRef<{ open: () => void } | null>(null);
@@ -202,11 +173,6 @@ const DoctorsOfficePage: React.FC = () => {
 
   const { userInfo, isLoading: isLoadingUserInfo } = useUserInfo();
 
-  useEffect(() => {
-    if (!isLoadingUserInfo && userInfo && !userInfo.hasSeenExamVideo) {
-      router.push('/examcalendar');
-    }
-  }, [isLoadingUserInfo, userInfo]);
 
   const fetchData = async () => {
     try {
