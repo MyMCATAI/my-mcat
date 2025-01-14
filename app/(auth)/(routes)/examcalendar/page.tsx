@@ -77,6 +77,11 @@ export default function ExamCalendarPage() {
                 isInitialSetup={true}
                 onComplete={async (result) => {
                   if (result.success) {
+                    await fetch('/api/user-info', {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ hasSeenExamVideo: true }),
+                    });
                     router.push('/home');
                   }
                 }}
