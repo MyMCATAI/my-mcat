@@ -14,6 +14,7 @@ export interface ExamQuestion {
   level: string;
   section: string;
   fullLengthExamId: string;
+  source?: string;
 }
 
 interface CreateQuestionParams {
@@ -26,6 +27,7 @@ interface CreateQuestionParams {
   level?: string;
   questionText?: string;
   answerText?: string;
+  source?: string;
 }
 
 interface UpdateQuestionParams extends CreateQuestionParams {
@@ -73,7 +75,8 @@ export function useExamQuestions(examId: string, section?: string) {
         status: params.status,
         questionText: params.questionText,
         answerText: params.answerText,
-        level: params.level || 'contentCategory'
+        level: params.level || 'contentCategory',
+        source: params.source
       });
 
       return response.data;
