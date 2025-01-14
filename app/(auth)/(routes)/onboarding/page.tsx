@@ -219,7 +219,7 @@ export default function OnboardingPage() {
         break;
       case 3:
         setKalypsoMessage(
-          "I've been saving (a LOT) and I can get you 9 coins for FREE. All you have to do is invite a friend and get the word out about MyMCAT.ai :3 🤝"
+          "I've been saving (a LOT) and I can get you 20 coins for FREE. All you have to do is invite a friend and get the word out about MyMCAT.ai :3 🤝"
         );
         setMessageId(4);
         break;
@@ -707,7 +707,7 @@ export default function OnboardingPage() {
                 <span className="text-4xl">🎁</span>
                 <div className="text-left">
                   <p className="text-white text-xl font-light">Kalypso{`'`}s Gift</p>
-                  <p className="text-blue-300/80">9 Coins • Starter Pack</p>
+                  <p className="text-blue-300/80">20 Coins • Starter Pack</p>
                 </div>
               </div>
 

@@ -68,10 +68,7 @@ export const calculateTotalQC = (playerLevel: number, streakDays: number): numbe
 };
 
 export const getClinicCostPerDay = (playerLevel: number): number => {
-  if (playerLevel === 0) return 0;  // PATIENT LEVEL
-  if (playerLevel <= 2) return 1;   // INTERN and RESIDENT LEVEL
-  if (playerLevel <= 4) return 2;   // FELLOWSHIP and ATTENDING LEVEL
-  return 3;  // PHYSICIAN and MEDICAL DIRECTOR LEVEL
+  return 0;  // Remove daily costs while keeping initial unlock costs
 };
 
 export const getLevelNumber = (levelString: string): number => {

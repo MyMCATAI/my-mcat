@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         create: {
           userId,
           bio: "Future doctor preparing to ace the MCAT! 🎯",
-          score: 5, // Initial score of 5 coins for new users
+          score: 20, // Initial score of 20 coins for new users
           hasPaid: false,
           firstName: user.firstName || "",
         },

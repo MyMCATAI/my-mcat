@@ -121,53 +121,12 @@ export async function updateUserStreak(userId: string, wasActive: boolean): Prom
 
 export async function handleUserInactivity(userId: string): Promise<{ 
   wasActivePastDay: boolean;
-  isFirstCoinLoss: boolean;
-  newScore?: number;
 }> {
   // Check activity for past day (for streak)
   const wasActivePastDay = await checkUserActivity(userId, 1);
   
-  // If active in past day, no need to check further
-  if (wasActivePastDay) {
-    return { wasActivePastDay: true, isFirstCoinLoss: false };
-  }
-
-  // Check if inactive for 2 days
-  const wasActivePastTwoDays = await checkUserActivity(userId, 2);
-  // Check if there was activity in the past 3 days
-  const wasActivePastThreeDays = await checkUserActivity(userId, 3);
-  
-  // isFirstCoinLoss is true only if:
-  // - User was not active in past 2 days (wasActivePastTwoDays = false)
-  // - BUT was active in past 3 days (wasActivePastThreeDays = true)
-  const isFirstCoinLoss = !wasActivePastTwoDays && wasActivePastThreeDays;
-  
-  if (!wasActivePastTwoDays) {
-    // User has been inactive for 2 days, decrement score
-    const user = await prisma.userInfo.findUnique({
-      where: { userId },
-      select: { score: true }
-    });
-
-    if (user) {
-      const newScore = Math.max(5, user.score - 1);
-      await prisma.userInfo.update({
-        where: { userId },
-        data: { score: newScore }
-      });
-
-      return {
-        wasActivePastDay: false,
-        isFirstCoinLoss,
-        newScore
-      };
-    }
-  }
-
-  return {
-    wasActivePastDay: false,
-    isFirstCoinLoss: false
-  };
+  // Return only activity status
+  return { wasActivePastDay };
 }
 
 export async function sendWelcomeEmail(userName: string, userEmail: string): Promise<boolean> {

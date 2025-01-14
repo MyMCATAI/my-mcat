@@ -4,8 +4,7 @@ import {
   getUserEmail, 
   updateUserStreak, 
   handleUserInactivity,
-  sendStreakLossEmail,
-  sendCoinLossEmail 
+  sendStreakLossEmail
 } from "@/lib/server-utils";
 
 export const dynamic = 'force-dynamic'
@@ -39,13 +38,12 @@ export async function GET(request: NextRequest) {
           gte: oneWeekAgo
         },
         createdAt: {
-          lt: oneDayAgo // This ensures the user was created more than 24 hours ago
+          lt: oneDayAgo
         }
       },
       select: {
         userId: true,
         streak: true,
-        score: true,
         firstName: true,
         notificationPreference: true,
       },
@@ -54,7 +52,6 @@ export async function GET(request: NextRequest) {
     console.log(`Found ${users.length} users active in the last week`);
 
     let streakLossCount = 0;
-    let coinLossCount = 0;
     const userResults = [];
 
     // Process each user
@@ -70,7 +67,7 @@ export async function GET(request: NextRequest) {
       console.log(`\n-------------------`);
       console.log(`Processing user: ${name} (${email})`);
 
-      // Check activity and handle streaks/scores
+      // Check activity and handle streaks
       const activityStatus = await handleUserInactivity(user.userId);
       
       // Update streak based on past day activity
@@ -84,8 +81,6 @@ export async function GET(request: NextRequest) {
         wasActive: activityStatus.wasActivePastDay,
         oldStreak,
         newStreak,
-        coinLoss: activityStatus.isFirstCoinLoss,
-        newScore: activityStatus.newScore,
         emailsSent: [] as string[]
       };
       
@@ -100,23 +95,10 @@ export async function GET(request: NextRequest) {
             console.log(`✉️ Sent streak loss email`);
           }
         }
-
-        // Send coin loss email only on first coin loss
-        if (activityStatus.isFirstCoinLoss && activityStatus.newScore !== undefined) {
-          const sent = await sendCoinLossEmail(email, name, activityStatus.newScore);
-          if (sent) {
-            coinLossCount++;
-            result.emailsSent.push('coin-loss');
-            console.log(`✉️ Sent coin loss email`);
-          }
-        }
       }
 
       console.log(`Status: ${activityStatus.wasActivePastDay ? '✅ Active' : '❌ Inactive'}`);
       console.log(`Streak: ${oldStreak} → ${newStreak}`);
-      if (activityStatus.newScore !== undefined) {
-        console.log(`Score updated to: ${activityStatus.newScore}`);
-      }
       console.log(`-------------------`);
 
       userResults.push(result);
@@ -126,7 +108,6 @@ export async function GET(request: NextRequest) {
     console.log(`Time: ${now.toLocaleString()}`);
     console.log(`Total users processed: ${users.length}`);
     console.log(`Streak loss emails sent: ${streakLossCount}`);
-    console.log(`Coin loss emails sent: ${coinLossCount}`);
     console.log("=============\n");
 
     return NextResponse.json({ 
@@ -134,7 +115,6 @@ export async function GET(request: NextRequest) {
       timestamp: now,
       paidUsersProcessed: users.length,
       streakLossEmails: streakLossCount,
-      coinLossEmails: coinLossCount,
       details: userResults
     });
 
