@@ -28,9 +28,9 @@ import {
 import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
-import { Loader2 } from "lucide-react";
 import PracticeTests from "./PracticeTests";
 import { GameOverDialog } from '@/components/home/GameOverDialog';
+import { useExamVideoRedirect } from '@/hooks/useExamVideoRedirect';
 
 // Loading component
 const LoadingSpinner = () => (
@@ -52,6 +52,7 @@ const ContentWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 const Page = () => {
+  useExamVideoRedirect();
   const searchParams = useSearchParams();
   const initialTab = searchParams?.get("tab") || "Schedule";
   const [activeTab, setActiveTab] = useState(initialTab);
