@@ -12,7 +12,6 @@ interface PurchaseButtonProps {
   className?: string;
   tooltipText?: string;
   children?: React.ReactNode;
-  showMDPremium?: boolean;
   autoOpen?: boolean;
   userCoinCount?: number;
 }
@@ -22,7 +21,6 @@ export function PurchaseButton({
   className = "bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color]",
   tooltipText = "Purchase additional coins to access more features",
   children,
-  showMDPremium = false,
   autoOpen = false,
   userCoinCount = 1
 }: PurchaseButtonProps) {
@@ -70,19 +68,8 @@ export function PurchaseButton({
       description: "One-time purchase of 25 coins. Best value for coins. Get extended access to advanced analytics, detailed AI feedback, and comprehensive feature access.",
       image: "/50coins.png",
       productType: ProductType.COINS_50
-    },
-    {
-      title: "MD Premium",
-      price: "$199.99",
-      description: "Monthly unlimited membership. No coins needed - unlimited learning with no restrictions or rate limits. Includes access to MD-Premium & direct access to Prynce.",
-      image: "/MDPremium.png",
-      productType: ProductType.MD_PREMIUM
-    },
+    }
   ];
-
-  const displayOptions = showMDPremium 
-    ? pricingOptions 
-    : pricingOptions.slice(0, 2);
 
   const content = children || (
     <Button 
@@ -136,25 +123,17 @@ export function PurchaseButton({
         >
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-center mb-4 text-[--theme-text-color]">
-              Purchase Options
+              Purchase Coins
             </DialogTitle>
           </DialogHeader>
-          <div className={`grid grid-cols-1 ${
-            showMDPremium 
-              ? 'md:grid-cols-3' 
-              : 'md:grid-cols-2'
-          } gap-6 p-4`}>
-            {displayOptions.map((option, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+            {pricingOptions.map((option, index) => (
               <button 
                 key={index}
                 onClick={() => handlePurchase(option.productType)}
                 disabled={loadingStates[option.productType]}
                 className={`rounded-lg p-6 flex flex-col items-center space-y-4 transition-all relative h-full w-full text-left
-                  ${
-                    index === displayOptions.length - 1 && showMDPremium 
-                      ? 'bg-gradient-to-br from-[--theme-gradient-start] via-[--theme-gradient-end] to-[--theme-doctorsoffice-accent] shadow-xl shadow-[--theme-doctorsoffice-accent]/30 hover:shadow-2xl hover:shadow-[--theme-doctorsoffice-accent]/40 hover:scale-[1.02] hover:-translate-y-1' 
-                      : 'bg-[--theme-leaguecard-color]'
-                  }
+                  bg-[--theme-leaguecard-color]
                   ${loadingStates[option.productType] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 style={{ 
                   boxShadow: 'var(--theme-button-boxShadow)'
@@ -166,31 +145,18 @@ export function PurchaseButton({
                   e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow)';
                 }}
               >
-                {index === displayOptions.length - 1 && showMDPremium && (
-                  <div className="absolute -top-3 -right-3 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] px-3 py-1 rounded-full text-sm font-bold shadow-lg transform rotate-12 pointer-events-none">
-                    Premium
-                  </div>
-                )}
                 <Image
                   src={option.image}
                   alt={option.title}
                   width={120}
                   height={120}
-                  className={`mb-4 rounded-lg object-contain h-[120px] w-[120px] pointer-events-none ${
-                    index === displayOptions.length - 1 && showMDPremium 
-                      ? 'scale-110 transition-transform duration-300 group-hover:scale-125' 
-                      : ''
-                  }`}
+                  className="mb-4 rounded-lg object-contain h-[120px] w-[120px] pointer-events-none"
                 />
                 <h3 className="text-l font-bold text-[--theme-text-color] pointer-events-none">{option.title}</h3>
                 <p className="text-2xl font-bold text-[--theme-text-color] pointer-events-none">{option.price}</p>
                 <p className="text-sm text-[--theme-text-color] text-center flex-grow pointer-events-none">{option.description}</p>
                 <div 
-                  className={`w-full mt-auto px-4 py-2 rounded-md text-center font-medium text-[--theme-text-color] pointer-events-none ${
-                    index === displayOptions.length - 1 && showMDPremium
-                      ? 'bg-[--theme-doctorsoffice-accent] shadow-md'
-                      : 'bg-[--theme-doctorsoffice-accent]'
-                  }`}
+                  className="w-full mt-auto px-4 py-2 rounded-md text-center font-medium text-[--theme-text-color] pointer-events-none bg-[--theme-doctorsoffice-accent]"
                 >
                   {loadingStates[option.productType] ? "Loading..." : "Purchase"}
                 </div>

@@ -84,7 +84,6 @@ const Page = () => {
     sendMessage: () => {},
   });
   const paymentStatus = searchParams?.get("payment");
-  const [hasPaid, setHasPaid] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [userStreak, setUserStreak] = useState(0);
