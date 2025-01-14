@@ -211,8 +211,8 @@ const SettingContent: React.FC<SettingContentProps> = ({
         throw new Error(data.error || 'Failed to fetch study plan');
       }
 
-      if (data.studyPlans && data.studyPlans.length > 0) {
-        const plan = data.studyPlans[0];
+      if (data.studyPlan) {
+        const plan = data.studyPlan
         setExistingStudyPlan(plan);
         
         // Update exam date

@@ -173,7 +173,6 @@ export function useAllCalendarActivities() {
         throw new Error('Failed to fetch activities');
       }
       const data = await response.json();
-      console.log(data);
       // Filter out exam activities
       const nonExamActivities = data.filter(
         (activity: CalendarActivity) => activity.activityType !== 'Exam'

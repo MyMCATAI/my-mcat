@@ -20,7 +20,6 @@ interface UserInfo {
     ps: string;
   };
   notificationPreference?: boolean;
-  hasSeenExamVideo: boolean
 }
 
 interface Referral {
