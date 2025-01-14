@@ -6,7 +6,8 @@ import {
   handleUserInactivity,
   sendStreakLossEmail,
   sendCoinLossWeekEmail,
-  sendCoinGainEmail
+  sendCoinGainEmail,
+  sendCoinLossDayEmail
 } from "@/lib/server-utils";
 
 export const dynamic = 'force-dynamic'
@@ -50,6 +51,7 @@ export async function GET(request: NextRequest) {
     console.log(`Found ${users.length} users active in the last two weeks`);
 
     let streakLossCount = 0;
+    let dayOneCoinLossCount = 0;
     let weekOneCoinLossCount = 0;
     let weekTwoCoinGainCount = 0;
     const userResults = [];
@@ -87,12 +89,21 @@ export async function GET(request: NextRequest) {
       // Only send emails if notificationPreference is "all"
       if (user.notificationPreference === "all") {
         // Send streak loss email if they just lost their streak
-        if (!activityStatus.wasActivePastDay && oldStreak > 0 && newStreak === 0) {
-          const sent = await sendStreakLossEmail(email, name);
+        if (!activityStatus.wasActivePastDay) {
+          // First, handle streak loss email
+          if (oldStreak > 0 && newStreak === 0) {
+            const sent = await sendStreakLossEmail(email, name);
+            if (sent) {
+              streakLossCount++;
+              result.emailsSent.push('streak-loss');
+            }
+          }
+          
+          // Then, handle daily coin loss email
+          const sent = await sendCoinLossDayEmail(email, name, activityStatus.weeklyInactivityStatus?.newScore || 0);
           if (sent) {
-            streakLossCount++;
-            result.emailsSent.push('streak-loss');
-            console.log(`✉️ Sent streak loss email`);
+            dayOneCoinLossCount++;
+            result.emailsSent.push('coin-loss-day');
           }
         }
 
@@ -100,23 +111,19 @@ export async function GET(request: NextRequest) {
         if (activityStatus.weeklyInactivityStatus) {
           const { isFirstWeekInactive, isSecondWeekInactive, newScore } = activityStatus.weeklyInactivityStatus;
 
-          // Send coin loss email after first week of inactivity
           if (isFirstWeekInactive && newScore !== undefined) {
             const sent = await sendCoinLossWeekEmail(email, name, newScore);
             if (sent) {
               weekOneCoinLossCount++;
               result.emailsSent.push('coin-loss-week');
-              console.log(`✉️ Sent weekly coin loss email`);
             }
           }
 
-          // Send encouragement email after two weeks of inactivity
           if (isSecondWeekInactive) {
             const sent = await sendCoinGainEmail(email, name);
             if (sent) {
               weekTwoCoinGainCount++;
               result.emailsSent.push('coin-gain');
-              console.log(`✉️ Sent coin gain encouragement email`);
             }
           }
         }
@@ -136,6 +143,7 @@ export async function GET(request: NextRequest) {
     console.log(`Time: ${now.toLocaleString()}`);
     console.log(`Total users processed: ${users.length}`);
     console.log(`Streak loss emails sent: ${streakLossCount}`);
+    console.log(`Day 1 coin loss emails sent: ${dayOneCoinLossCount}`);
     console.log(`Week 1 coin loss emails sent: ${weekOneCoinLossCount}`);
     console.log(`Week 2 encouragement emails sent: ${weekTwoCoinGainCount}`);
     console.log("=============\n");
@@ -145,6 +153,7 @@ export async function GET(request: NextRequest) {
       timestamp: now,
       paidUsersProcessed: users.length,
       streakLossEmails: streakLossCount,
+      dayOneCoinLossEmails: dayOneCoinLossCount,
       weekOneCoinLossEmails: weekOneCoinLossCount,
       weekTwoCoinGainEmails: weekTwoCoinGainCount,
       details: userResults

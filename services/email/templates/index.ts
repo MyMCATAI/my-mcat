@@ -5,6 +5,9 @@ import { referralLinkTemplate } from './referralLink';
 import { weeklyReportTemplate } from './weeklyReport';
 import { streakLossTemplate } from './streakLoss';
 import { dailyReminderTemplate } from './dailyreminder';
+import { coinLossWeekTemplate } from './coinLossWeek';
+import { coinLossDayTemplate } from './coinLossDay';
+import { coinGainTemplate } from './coinGain';
 
 export const templates = {
   welcome: welcomeTemplate,
@@ -13,5 +16,8 @@ export const templates = {
   referral: referralLinkTemplate,
   'weekly-report': weeklyReportTemplate,
   'streak-loss': streakLossTemplate,
-  'daily-reminder': dailyReminderTemplate
+  'daily-reminder': dailyReminderTemplate,
+  'coin-loss-week': coinLossWeekTemplate,
+  'coin-loss-day': coinLossDayTemplate,
+  'coin-gain': coinGainTemplate
 };

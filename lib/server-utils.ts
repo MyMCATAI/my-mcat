@@ -205,7 +205,7 @@ export async function sendStreakLossEmail(email: string, userName?: string): Pro
     const result = await emailService.sendEmail({
       to: email,
       template: 'streak-loss',
-      data: { userName },
+      data: { userName: userName || "Future Doctor" },
       useReminderEmail: false
     });
     return result.success;
@@ -288,6 +288,21 @@ export async function sendCoinGainEmail(email: string, userName: string): Promis
     return result.success;
   } catch (error) {
     console.error("Error sending coin gain email:", error);
+    return false;
+  }
+}
+
+export async function sendCoinLossDayEmail(email: string, userName: string, remainingCoins: number): Promise<boolean> {
+  try {
+    const result = await emailService.sendEmail({
+      to: email,
+      template: 'coin-loss-day',
+      data: { userName, remainingCoins },
+      useReminderEmail: false
+    });
+    return result.success;
+  } catch (error) {
+    console.error("Error sending daily coin loss email:", error);
     return false;
   }
 }

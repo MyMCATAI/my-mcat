@@ -1,4 +1,14 @@
-export type EmailTemplate = 'welcome' | 'reset-password' | 'notification' | 'referral' | 'weekly-report' | 'streak-loss' | 'daily-reminder'
+export type EmailTemplate = 
+  | 'welcome' 
+  | 'reset-password' 
+  | 'notification' 
+  | 'referral' 
+  | 'weekly-report' 
+  | 'streak-loss' 
+  | 'daily-reminder'
+  | 'coin-loss-week'
+  | 'coin-loss-day'
+  | 'coin-gain'
 
 export interface SendEmailProps {
   to: string;
