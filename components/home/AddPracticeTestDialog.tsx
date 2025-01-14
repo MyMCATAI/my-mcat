@@ -224,7 +224,6 @@ const AddPracticeTestDialog: React.FC<AddPracticeTestDialogProps> = ({
                     <input
                       type="date"
                       value={newTest.date ? newTest.date.toISOString().split('T')[0] : ''}
-                      min={new Date().toISOString().split('T')[0]}
                       onChange={(e) => {
                         if (!e.target.value) {
                           setNewTest({ ...newTest, date: null });
