@@ -4,7 +4,9 @@ import {
   getUserEmail, 
   updateUserStreak, 
   handleUserInactivity,
-  sendStreakLossEmail
+  sendStreakLossEmail,
+  sendCoinLossWeekEmail,
+  sendCoinGainEmail
 } from "@/lib/server-utils";
 
 export const dynamic = 'force-dynamic'
@@ -23,22 +25,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Get the date 7 days ago
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    // Get the date 14 days ago (for two week check)
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
 
-    // Get the date 24 hours ago
-    const oneDayAgo = new Date();
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-
-    // Get users who have been active in the last week AND were created more than 24 hours ago
+    // Get users who have been active in the last two weeks
     const users = await prisma.userInfo.findMany({
       where: {
         updatedAt: {
-          gte: oneWeekAgo
+          gte: twoWeeksAgo
         },
         createdAt: {
-          lt: oneDayAgo
+          lt: twoWeeksAgo // Only check users who have been registered for at least 2 weeks
         }
       },
       select: {
@@ -49,9 +47,11 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    console.log(`Found ${users.length} users active in the last week`);
+    console.log(`Found ${users.length} users active in the last two weeks`);
 
     let streakLossCount = 0;
+    let weekOneCoinLossCount = 0;
+    let weekTwoCoinGainCount = 0;
     const userResults = [];
 
     // Process each user
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       console.log(`\n-------------------`);
       console.log(`Processing user: ${name} (${email})`);
 
-      // Check activity and handle streaks
+      // Check activity and handle streaks/coins
       const activityStatus = await handleUserInactivity(user.userId);
       
       // Update streak based on past day activity
@@ -95,10 +95,38 @@ export async function GET(request: NextRequest) {
             console.log(`✉️ Sent streak loss email`);
           }
         }
+
+        // Handle weekly coin loss/gain emails
+        if (activityStatus.weeklyInactivityStatus) {
+          const { isFirstWeekInactive, isSecondWeekInactive, newScore } = activityStatus.weeklyInactivityStatus;
+
+          // Send coin loss email after first week of inactivity
+          if (isFirstWeekInactive && newScore !== undefined) {
+            const sent = await sendCoinLossWeekEmail(email, name, newScore);
+            if (sent) {
+              weekOneCoinLossCount++;
+              result.emailsSent.push('coin-loss-week');
+              console.log(`✉️ Sent weekly coin loss email`);
+            }
+          }
+
+          // Send encouragement email after two weeks of inactivity
+          if (isSecondWeekInactive) {
+            const sent = await sendCoinGainEmail(email, name);
+            if (sent) {
+              weekTwoCoinGainCount++;
+              result.emailsSent.push('coin-gain');
+              console.log(`✉️ Sent coin gain encouragement email`);
+            }
+          }
+        }
       }
 
       console.log(`Status: ${activityStatus.wasActivePastDay ? '✅ Active' : '❌ Inactive'}`);
       console.log(`Streak: ${oldStreak} → ${newStreak}`);
+      if (activityStatus.weeklyInactivityStatus?.newScore !== undefined) {
+        console.log(`Score updated to: ${activityStatus.weeklyInactivityStatus.newScore}`);
+      }
       console.log(`-------------------`);
 
       userResults.push(result);
@@ -108,6 +136,8 @@ export async function GET(request: NextRequest) {
     console.log(`Time: ${now.toLocaleString()}`);
     console.log(`Total users processed: ${users.length}`);
     console.log(`Streak loss emails sent: ${streakLossCount}`);
+    console.log(`Week 1 coin loss emails sent: ${weekOneCoinLossCount}`);
+    console.log(`Week 2 encouragement emails sent: ${weekTwoCoinGainCount}`);
     console.log("=============\n");
 
     return NextResponse.json({ 
@@ -115,6 +145,8 @@ export async function GET(request: NextRequest) {
       timestamp: now,
       paidUsersProcessed: users.length,
       streakLossEmails: streakLossCount,
+      weekOneCoinLossEmails: weekOneCoinLossCount,
+      weekTwoCoinGainEmails: weekTwoCoinGainCount,
       details: userResults
     });
 

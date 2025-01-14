@@ -121,12 +121,53 @@ export async function updateUserStreak(userId: string, wasActive: boolean): Prom
 
 export async function handleUserInactivity(userId: string): Promise<{ 
   wasActivePastDay: boolean;
+  weeklyInactivityStatus?: {
+    isFirstWeekInactive: boolean;
+    isSecondWeekInactive: boolean;
+    newScore?: number;
+  };
 }> {
   // Check activity for past day (for streak)
   const wasActivePastDay = await checkUserActivity(userId, 1);
   
-  // Return only activity status
-  return { wasActivePastDay };
+  // Check activity for past week
+  const wasActivePastWeek = await checkUserActivity(userId, 7);
+  // Check activity for past two weeks
+  const wasActivePastTwoWeeks = await checkUserActivity(userId, 14);
+
+  // Only proceed with coin deduction if user was inactive for a week
+  if (!wasActivePastWeek) {
+    const user = await prisma.userInfo.findUnique({
+      where: { userId },
+      select: { score: true }
+    });
+
+    if (user) {
+      // Deduct 5 coins if this is the first week of inactivity
+      const newScore = Math.max(5, user.score - 5);
+      await prisma.userInfo.update({
+        where: { userId },
+        data: { score: newScore }
+      });
+
+      return {
+        wasActivePastDay,
+        weeklyInactivityStatus: {
+          isFirstWeekInactive: true,
+          isSecondWeekInactive: !wasActivePastTwoWeeks,
+          newScore
+        }
+      };
+    }
+  }
+  
+  return { 
+    wasActivePastDay,
+    weeklyInactivityStatus: {
+      isFirstWeekInactive: false,
+      isSecondWeekInactive: !wasActivePastTwoWeeks
+    }
+  };
 }
 
 export async function sendWelcomeEmail(userName: string, userEmail: string): Promise<boolean> {
@@ -217,6 +258,36 @@ export async function sendWeeklyReportEmail(
     return result.success;
   } catch (error) {
     console.error("Error sending weekly report email:", error);
+    return false;
+  }
+}
+
+export async function sendCoinLossWeekEmail(email: string, userName: string, remainingCoins: number): Promise<boolean> {
+  try {
+    const result = await emailService.sendEmail({
+      to: email,
+      template: 'coin-loss-week',
+      data: { userName, remainingCoins },
+      useReminderEmail: false
+    });
+    return result.success;
+  } catch (error) {
+    console.error("Error sending weekly coin loss email:", error);
+    return false;
+  }
+}
+
+export async function sendCoinGainEmail(email: string, userName: string): Promise<boolean> {
+  try {
+    const result = await emailService.sendEmail({
+      to: email,
+      template: 'coin-gain',
+      data: { userName },
+      useReminderEmail: false
+    });
+    return result.success;
+  } catch (error) {
+    console.error("Error sending coin gain email:", error);
     return false;
   }
 }
