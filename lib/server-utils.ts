@@ -174,21 +174,6 @@ export async function sendStreakLossEmail(email: string, userName?: string): Pro
   }
 }
 
-export async function sendCoinLossEmail(email: string, userName: string, remainingCoins: number): Promise<boolean> {
-  try {
-    const result = await emailService.sendEmail({
-      to: email,
-      template: 'coin-loss',
-      data: { userName, remainingCoins },
-      useReminderEmail: false
-    });
-    return result.success;
-  } catch (error) {
-    console.error("Error sending coin loss email:", error);
-    return false;
-  }
-}
-
 export async function sendReminderEmail(email: string, name: string, pendingGoals?: string): Promise<boolean> {
   try {
     const result = await emailService.sendEmail({
