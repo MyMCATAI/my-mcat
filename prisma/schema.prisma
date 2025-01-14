@@ -25,7 +25,6 @@ model UserInfo {
   notificationPreference String   @default("all")
   unlocks                Json?    @default("[]")
   patientRecord          PatientRecord?
-  hasSeenExamVideo       Boolean  @default(false) 
 }
 
 model UserSubscription {

@@ -18,14 +18,18 @@ export const useExamVideoRedirect = () => {
 
       try {
         const response = await fetch('/api/study-plan');
+        if (!response.ok) {
+          throw new Error('Failed to fetch study plan');
+        }
+        
         const data = await response.json();
         
-        // Redirect if no study plan exists
-        if (!data?.studyPlan) {
+        if (!data.studyPlan) {
           router.push('/examcalendar');
         }
       } catch (error) {
-        console.error('Error checking study plan:', error);
+        // If there's an error fetching the study plan, redirect to be safe
+        router.push('/examcalendar');
       }
     };
 

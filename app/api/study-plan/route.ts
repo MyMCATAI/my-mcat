@@ -10,15 +10,14 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const studyPlans = await prisma.studyPlan.findMany({
+    const studyPlan = await prisma.studyPlan.findFirst({
       where: { userId },
       orderBy: {
         creationDate: 'desc'
-      },
-      take: 1
+      }
     });
 
-    return NextResponse.json({ studyPlans });
+    return NextResponse.json({ studyPlan });
   } catch (error) {
     console.error('Error fetching study plan:', error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
