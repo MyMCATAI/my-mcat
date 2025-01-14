@@ -53,6 +53,7 @@ import CompletionDialog from '@/components/home/CompletionDialog';
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { OptionsDialog } from "@/components/home/OptionsDialog";
 import { useClerk } from "@clerk/clerk-react";
+import { SubscriptionButton } from "@/components/subscription-button";
 
 ChartJS.register(
   CategoryScale,
@@ -743,6 +744,8 @@ const Schedule: React.FC<ScheduleProps> = ({
                 </Tooltip>
               </TooltipProvider>
             )}
+
+            <SubscriptionButton/>
           </div>
         )}
       </div>

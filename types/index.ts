@@ -209,7 +209,7 @@ export enum ProductType {
   COINS_10 = "coins_10",
   COINS_50 = "coins_50",
   COINS_10_DISCOUNT = "coins_10_discount",
-  MD_PREMIUM = "md_premium"
+  MD_PREMIUM = "md_premium",
 }
 
 export type ProductName = "TenCoins" | "FiftyCoins" | "MDPremium"; // these are set in the stripe product metadata in Stripe Dashboard
