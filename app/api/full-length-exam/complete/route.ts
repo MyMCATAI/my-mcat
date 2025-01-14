@@ -47,7 +47,8 @@ export async function POST(req: Request) {
     const { 
       calendarActivityId,
       title,
-      scores: { cp, cars, bb, ps }
+      scores: { cp, cars, bb, ps },
+      company
     } = body;
 
     // Create the FullLengthExam record
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
               name: "Chemical and Physical Foundations",
               level: "section",
               section: "C/P",
-              source: "full_length_exam",
+              source: company,
               positive: cp,
               weight: 1,
             },
@@ -72,7 +73,7 @@ export async function POST(req: Request) {
               userId,
               name: "Critical Analysis and Reasoning",
               level: "section",
-              source: "full_length_exam",
+              source: company,
               section: "CARs",
               positive: cars,
               weight: 1,
@@ -81,7 +82,7 @@ export async function POST(req: Request) {
               userId,
               name: "Biological and Biochemical Foundations",
               level: "section",
-              source: "full_length_exam",
+              source: company,
               section: "B/B",
               positive: bb,
               weight: 1,
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
               userId,
               name: "Psychological, Social, and Biological Foundations",
               level: "section",
-              source: "full_length_exam",
+              source: company,
               section: "P/S",
               positive: ps,
               weight: 1,
