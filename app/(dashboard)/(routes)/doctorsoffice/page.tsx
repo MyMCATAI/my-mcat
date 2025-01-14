@@ -27,6 +27,7 @@ import NewGameButton from "./components/NewGameButton";
 import { imageGroups } from "./constants/imageGroups";
 import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 import { useUserActivity } from '@/hooks/useUserActivity';
+import { useUserInfo } from "@/hooks/useUserInfo";
 
 const DoctorsOfficePage: React.FC = () => {
   const { startActivity } = useUserActivity();
@@ -198,6 +199,14 @@ const DoctorsOfficePage: React.FC = () => {
   const [streakDays, setStreakDays] = useState(0);
 
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
+  const { userInfo, isLoading: isLoadingUserInfo } = useUserInfo();
+
+  useEffect(() => {
+    if (!isLoadingUserInfo && userInfo && !userInfo.hasSeenExamVideo) {
+      router.push('/examcalendar');
+    }
+  }, [isLoadingUserInfo, userInfo]);
 
   const fetchData = async () => {
     try {
