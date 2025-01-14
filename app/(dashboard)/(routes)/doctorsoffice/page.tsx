@@ -281,21 +281,12 @@ const DoctorsOfficePage: React.FC = () => {
         newPatientsTreated,
         totalPatientsTreated,
         patientsPerDay,
-        clinicCostPerDay,
         error,
         alreadyUpdatedToday,
       } = data;
 
       if (error) {
-        // Handle insufficient funds case
-        toast.error(
-          <div>
-            <p>{error}</p>
-            <p>Your current balance is {userScore} coins.</p>
-            <p>Daily clinic cost: {clinicCostPerDay} coins</p>
-          </div>,
-          { duration: 5000 }
-        );
+        toast.error(error);
         return;
       }
 
@@ -320,7 +311,6 @@ const DoctorsOfficePage: React.FC = () => {
             <ul>
               <li>New patients treated: {newPatientsTreated}</li>
               <li>Total patients treated: {totalPatientsTreated}</li>
-              <li>New balance: {updatedScore} coins</li>
             </ul>
           </div>,
           { duration: 5000 }
@@ -329,8 +319,6 @@ const DoctorsOfficePage: React.FC = () => {
         toast(
           <div>
             <p>No new patients treated today.</p>
-            <p>Daily clinic cost: {clinicCostPerDay} coins</p>
-            <p>Current balance: {updatedScore} coins</p>
           </div>,
           { duration: 5000 }
         );

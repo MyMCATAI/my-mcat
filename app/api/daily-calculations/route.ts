@@ -3,8 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 import { calculatePlayerLevel, getPatientsPerDay, getClinicCostPerDay, getLevelNumber } from "@/utils/calculateResourceTotals";
 
-
-// Called each time the user visits the docts page, designed to update the user's score and patients treated based on their level
+// Called each time the user visits the docts page, designed to update patients treated based on their level
 export async function POST(req: Request) {
   try {
     const { userId } = auth();
@@ -33,7 +32,7 @@ export async function POST(req: Request) {
     
     if (clinicRooms.length === 0) {
       return new NextResponse(JSON.stringify({
-        message: "To start treating patients, you need to buy your firtst clinic room.",
+        message: "To start treating patients, you need to buy your first clinic room.",
         updatedScore: userInfo.score,
         newPatientsTreated: 0,
         totalPatientsTreated: 0,
@@ -62,7 +61,6 @@ export async function POST(req: Request) {
     const levelNumber = getLevelNumber(playerLevel);
     
     const patientsPerDay = getPatientsPerDay(levelNumber);
-    const clinicCostPerDay = getClinicCostPerDay(levelNumber);
 
     // Check if the record was updated today
     if (patientRecord.lastUpdated.toDateString() === new Date().toDateString()) {
@@ -70,7 +68,6 @@ export async function POST(req: Request) {
         updatedScore: userInfo.score,
         totalPatientsTreated: patientRecord.patientsTreated,
         patientsPerDay,
-        clinicCostPerDay,
         alreadyUpdatedToday: true
       }), { 
         status: 200,
@@ -78,50 +75,28 @@ export async function POST(req: Request) {
       });
     }
 
-    // Check if the user has insufficient funds
-    if (userInfo.score < clinicCostPerDay) {
-      return new NextResponse(JSON.stringify({
-        error: "Insufficient funds to run the office today",
-        updatedScore: userInfo.score,
-        updatedPatientsTreated: 0,
-        patientsPerDay,
-        clinicCostPerDay
-      }), { 
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // If the record was not updated today and user has sufficient funds, then update the score and patients treated
-    const updatedScore = userInfo.score - clinicCostPerDay;
+    // Update patients treated (no coin cost)
     const updatedPatientsTreated = (patientRecord?.patientsTreated || 0) + patientsPerDay;
     const newPatientsTreated = patientsPerDay;
 
-    await prisma.$transaction([
-      prisma.userInfo.update({
-        where: { userId },
-        data: { score: updatedScore }
-      }),
-      prisma.patientRecord.upsert({
-        where: { userId },
-        create: {
-          userId,
-          patientsTreated: newPatientsTreated,
-          lastUpdated: new Date()
-        },
-        update: {
-          patientsTreated: updatedPatientsTreated,
-          lastUpdated: new Date()
-        }
-      })
-    ]);
+    await prisma.patientRecord.upsert({
+      where: { userId },
+      create: {
+        userId,
+        patientsTreated: newPatientsTreated,
+        lastUpdated: new Date()
+      },
+      update: {
+        patientsTreated: updatedPatientsTreated,
+        lastUpdated: new Date()
+      }
+    });
 
     return new NextResponse(JSON.stringify({
-      updatedScore,
+      updatedScore: userInfo.score,
       newPatientsTreated,
       totalPatientsTreated: updatedPatientsTreated,
-      patientsPerDay,
-      clinicCostPerDay
+      patientsPerDay
     }), { 
       status: 200,
       headers: { 'Content-Type': 'application/json' }
