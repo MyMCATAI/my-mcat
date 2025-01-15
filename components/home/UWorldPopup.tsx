@@ -37,7 +37,7 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
   const [incorrectAnswers, setIncorrectAnswers] = useState<number[]>([]);
   const [recentPulses, setRecentPulses] = useState<DataPulse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasSubmittedScores, setHasSubmittedScores] = useState(false);
+  const [hasSubmittedToday, setHasSubmittedToday] = useState(false);
   const [customTaskInput, setCustomTaskInput] = useState({ subject: "", questionCount: 12 });
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [open, setOpen] = useState(false);
@@ -78,6 +78,13 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
 
         setRecentPulses(recentPulses);
 
+        // Check if there are any submissions today
+        const today = new Date();
+        const hasSubmittedToday = recentPulses.some(pulse => 
+          new Date(pulse.createdAt).toDateString() === today.toDateString()
+        );
+        setHasSubmittedToday(hasSubmittedToday);
+
         const newCorrect = [...correctAnswers];
         const newIncorrect = [...incorrectAnswers];
 
@@ -104,6 +111,7 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
   }, [isOpen]);
 
   const handleCorrectAnswersChange = (index: number, value: string) => {
+    if (hasSubmittedToday) return;
     const newCorrect = Math.max(0, parseInt(value) || 0);
     const newCorrectAnswers = [...correctAnswers];
     newCorrectAnswers[index] = newCorrect;
@@ -111,6 +119,7 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
   };
 
   const handleIncorrectAnswersChange = (index: number, value: string) => {
+    if (hasSubmittedToday) return;
     const newIncorrect = Math.max(0, parseInt(value) || 0);
     const newIncorrectAnswers = [...incorrectAnswers];
     newIncorrectAnswers[index] = newIncorrect;
@@ -118,6 +127,7 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (hasSubmittedToday) return;
     try {
       const createPromises = tasks.map(async (task, index) => {
         const positive = correctAnswers[index] || 0;
@@ -152,7 +162,7 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
       const calculatedScores = correctAnswers.map((correct, index) => 
         calculateScore(correct || 0, incorrectAnswers[index] || 0)
       );
-      setHasSubmittedScores(true);
+      setHasSubmittedToday(true);
       onScoreSubmit(calculatedScores);
       onClose();
     } catch (error) {
@@ -161,6 +171,7 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
   };
 
   const handleRegenerate = async () => {
+    if (hasSubmittedToday) return;
     try {
       const response = await fetch('/api/uworld/regenerate', {
         method: 'POST',
@@ -182,7 +193,7 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
       // Map the tasks to include subject field
       const tasksWithSubject: UWorldTask[] = newTasks.map((task: { text: string; completed: boolean }) => ({
         ...task,
-        subject: task.text.split(' - ')[1] || task.text // Extract subject from task text
+        subject: task.text.split(' - ')[1]?.trim() || task.text // Extract subject from task text
       }));
       
       // Update tasks through the parent component with the new tasks
@@ -209,7 +220,7 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
   };
 
   const handleCustomTaskAdd = () => {
-    if (!selectedCategory) return;
+    if (!selectedCategory || hasSubmittedToday) return;
     
     const categoryName = categoryMapping[selectedCategory];
     const newTask: UWorldTask = {
@@ -226,6 +237,7 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
   };
 
   const handleDeleteTask = (index: number) => {
+    if (hasSubmittedToday) return;
     const updatedTasks = tasks.filter((_, i) => i !== index);
     onScoreSubmit([], updatedTasks);
   };
@@ -242,20 +254,18 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowCustomInput(true)}
-                  className={`px-4 py-2 bg-gray-100 text-black rounded-lg transition-all shadow-sm ${
-                    hasSubmittedScores 
-                      ? 'opacity-50 cursor-not-allowed' 
-                      : 'hover:bg-gray-200 hover:shadow-md'
+                  disabled={hasSubmittedToday}
+                  className={`px-4 py-2 bg-gray-100 text-black rounded-lg transition-all shadow-sm hover:shadow-md ${
+                    hasSubmittedToday ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'
                   }`}
-                  disabled={hasSubmittedScores}
                 >
                   Add Task
                 </button>
                 <button
                   onClick={handleRegenerate}
-                  disabled={hasSubmittedScores}
-                  className={`px-4 py-2 bg-gray-100 text-black rounded-lg transition-all shadow-sm ${
-                    hasSubmittedScores ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200 hover:shadow-md'
+                  disabled={hasSubmittedToday}
+                  className={`px-4 py-2 bg-gray-100 text-black rounded-lg transition-all shadow-sm hover:shadow-md ${
+                    hasSubmittedToday ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'
                   }`}
                 >
                   Regenerate Tasks
@@ -284,17 +294,14 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
                 </a>
               </div>
             </div>
-            {showCustomInput && !hasSubmittedScores && (
+            {showCustomInput && !hasSubmittedToday && (
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
                   <div className="flex-1 max-w-[16rem]">
                     <select
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className={`w-full h-9 px-3 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        hasSubmittedScores ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                      disabled={hasSubmittedScores}
+                      className="w-full h-9 px-3 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select category...</option>
                       {categories.map((category) => (
@@ -309,17 +316,14 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
                     value={customTaskInput.questionCount}
                     onChange={(e) => setCustomTaskInput(prev => ({ ...prev, questionCount: parseInt(e.target.value) || 12 }))}
                     min="1"
-                    className={`w-20 h-9 text-sm bg-white border-gray-200 ${
-                      hasSubmittedScores ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                    className="w-20 h-9 text-sm bg-white border-gray-200"
                     placeholder="# Q's"
-                    disabled={hasSubmittedScores}
                   />
                   <button
                     onClick={handleCustomTaskAdd}
-                    disabled={!selectedCategory || hasSubmittedScores}
+                    disabled={!selectedCategory}
                     className={`h-9 px-3 text-sm bg-blue-600 text-white rounded-lg transition ${
-                      !selectedCategory || hasSubmittedScores ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
+                      !selectedCategory ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
                     }`}
                   >
                     Add
@@ -329,10 +333,7 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
                       setShowCustomInput(false);
                       setSelectedCategory("");
                     }}
-                    disabled={hasSubmittedScores}
-                    className={`h-9 px-3 text-sm text-gray-600 transition ${
-                      hasSubmittedScores ? 'opacity-50 cursor-not-allowed' : 'hover:text-gray-900'
-                    }`}
+                    className="h-9 px-3 text-sm text-gray-600 hover:text-gray-900 transition"
                   >
                     Cancel
                   </button>
@@ -363,7 +364,10 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
                     <div className="flex items-center space-x-4">
                       <button
                         onClick={() => handleDeleteTask(index)}
-                        className="text-gray-400 hover:text-red-500 transition-colors"
+                        disabled={hasSubmittedToday}
+                        className={`text-gray-400 transition-colors ${
+                          hasSubmittedToday ? 'opacity-50 cursor-not-allowed' : 'hover:text-red-500'
+                        }`}
                         title="Delete task"
                       >
                         <Trash2 className="h-5 w-5" />
@@ -375,9 +379,11 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
                           min="0"
                           value={correctAnswers[index] || ''}
                           onChange={(e) => handleCorrectAnswersChange(index, e.target.value)}
-                          className="w-24 text-center bg-green-50 border-green-400 focus:border-green-600 focus:ring-green-600 text-green-800 font-medium"
+                          className={`w-24 text-center bg-green-50 border-green-400 focus:border-green-600 focus:ring-green-600 text-green-800 font-medium ${
+                            hasSubmittedToday ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
                           placeholder=""
-                          disabled={isScoreReadOnly(task.subject)}
+                          disabled={hasSubmittedToday}
                         />
                       </div>
                       <div className="flex flex-col items-center gap-1">
@@ -387,9 +393,11 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
                           min="0"
                           value={incorrectAnswers[index] || ''}
                           onChange={(e) => handleIncorrectAnswersChange(index, e.target.value)}
-                          className="w-24 text-center bg-red-50 border-red-400 focus:border-red-600 focus:ring-red-600 text-red-800 font-medium"
+                          className={`w-24 text-center bg-red-50 border-red-400 focus:border-red-600 focus:ring-red-600 text-red-800 font-medium ${
+                            hasSubmittedToday ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
                           placeholder=""
-                          disabled={isScoreReadOnly(task.subject)}
+                          disabled={hasSubmittedToday}
                         />
                       </div>
                     </div>
@@ -400,9 +408,9 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
                       style={{ width: `${calculateScore(correctAnswers[index], incorrectAnswers[index])}%` }}
                     />
                   </div>
-                  {isScoreReadOnly(task.subject) && (
+                  {hasSubmittedToday && (
                     <div className="mt-2 text-xs text-gray-500">
-                      {"Score from today's previous attempt"}
+                      Score already submitted today
                     </div>
                   )}
                 </div>
@@ -419,7 +427,10 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
             </button>
             <button
               onClick={handleSubmit}
-              className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              disabled={hasSubmittedToday}
+              className={`px-4 py-1.5 bg-blue-600 text-white rounded-lg transition ${
+                hasSubmittedToday ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
+              }`}
             >
               Submit Scores
             </button>
