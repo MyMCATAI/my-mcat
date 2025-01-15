@@ -181,7 +181,7 @@ const Page = () => {
 
       // Only fetch UWorld updates if there are UWorld activities that need tasks
       if (uworldActivities.length > 0) {
-        const responseUWorld = await fetch("/api/uworld-update", {
+        const responseUWorld = await fetch("/api/uworld/update", {
           method: "POST",
           body: JSON.stringify({ todayUWorldActivity: uworldActivities }),
         });
