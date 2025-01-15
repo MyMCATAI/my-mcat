@@ -33,17 +33,24 @@ import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { OptionsDialog } from "@/components/home/OptionsDialog";
 import { useClerk } from "@clerk/clerk-react";
 import { SubscriptionButton } from "@/components/subscription-button";
+import { FetchedActivity } from "@/types";
 
 type Section = "AdaptiveTutoringSuite" | "MCATGameAnkiClinic" | "DailyCARsSuite" | "Tests";
 
 interface ScheduleProps {
   handleSetTab: (tab: string) => void;
   isActive: boolean;
+  activities: FetchedActivity[];
+  onActivitiesUpdate: () => void;
+  chatbotRef: React.MutableRefObject<{ sendMessage: (message: string, context?: string) => void }>;
 }
 
 const Schedule: React.FC<ScheduleProps> = ({
   handleSetTab,
   isActive,
+  activities,
+  onActivitiesUpdate,
+  chatbotRef,
 }) => {
   const { user } = useClerk();
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
