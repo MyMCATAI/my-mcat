@@ -50,6 +50,23 @@ export async function POST(req: Request) {
       scores: { cp, cars, bb, ps }
     } = body;
 
+    // Validate that we have a calendar activity
+    if (!calendarActivityId) {
+      return new Response("Calendar Activity ID is required", { status: 400 });
+    }
+
+    // Verify the calendar activity exists and belongs to the user
+    const calendarActivity = await prisma.calendarActivity.findUnique({
+      where: {
+        id: calendarActivityId,
+        userId,
+      }
+    });
+
+    if (!calendarActivity) {
+      return new Response("Calendar Activity not found", { status: 404 });
+    }
+
     // Create the FullLengthExam record
     const fullLengthExam = await prisma.fullLengthExam.create({
       data: {
@@ -109,20 +126,18 @@ export async function POST(req: Request) {
       }
     });
 
-    // If there's a calendar activity, update its status
-    if (calendarActivityId) {
-      await prisma.calendarActivity.update({
-        where: { id: calendarActivityId },
-        data: { 
-          status: "Completed",
-          fullLengthExam: {
-            connect: {
-              id: fullLengthExam.id
-            }
+    // Update calendar activity status in the same transaction
+    await prisma.calendarActivity.update({
+      where: { id: calendarActivityId },
+      data: { 
+        status: "Completed",
+        fullLengthExam: {
+          connect: {
+            id: fullLengthExam.id
           }
         }
-      });
-    }
+      }
+    });
 
     return Response.json(fullLengthExam);
   } catch (error) {
