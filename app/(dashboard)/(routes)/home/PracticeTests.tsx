@@ -436,7 +436,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     }
   };
 
-  const handleWeeklyModalComplete = async ({ success, action }: { success: boolean; action?: 'generate' | 'save' }) => {
+  const handleWeeklyModalComplete = async ({ success, action }: { success: boolean; action?: 'generate' | 'save' | 'reset' }) => {
     if (success) {
       try {
         // Refresh all activities immediately

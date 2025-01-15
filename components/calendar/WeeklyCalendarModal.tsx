@@ -709,7 +709,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
       <div className="bg-[--theme-mainbox-color] rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="text-lg font-medium text-[--theme-text-color] mb-2">Reset Schedule?</h3>
         <p className="text-[--theme-text-color] opacity-70 mb-6">
-          This will delete all your scheduled exams and study activities. You'll need to schedule your first exam again. This action cannot be undone.
+          This will delete all your scheduled exams and study activities. You&apos;ll need to schedule your first exam again. This action cannot be undone.
         </p>
         <div className="flex justify-end gap-3">
           <button
