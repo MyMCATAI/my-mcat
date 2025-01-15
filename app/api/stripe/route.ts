@@ -23,15 +23,27 @@ export async function GET() {
     });
 
     if (!userSubscription?.stripeCustomerId) {
-      // User doesn't have a Stripe customer ID
       return new NextResponse("No active subscription", { status: 400 });
     }
 
-      const session = await stripe.billingPortal.sessions.create({
-        customer: userSubscription.stripeCustomerId,
-        return_url: settingsUrl,
-      });
-      return new NextResponse(JSON.stringify(session));
+    // Get the actual subscription from Stripe
+    const stripeSubscription = userSubscription.stripeSubscriptionId ? 
+      await stripe.subscriptions.retrieve(userSubscription.stripeSubscriptionId) : 
+      null;
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: userSubscription.stripeCustomerId,
+      return_url: settingsUrl,
+    });
+
+    return new NextResponse(JSON.stringify({
+      url: session.url,
+      isActive: stripeSubscription?.status === 'active' || stripeSubscription?.status === 'trialing',
+      isCanceled: stripeSubscription?.cancel_at_period_end,
+      currentPeriodEnd: stripeSubscription?.current_period_end ? 
+        new Date(stripeSubscription.current_period_end * 1000) : 
+        null
+    }));
     
   } catch (error) {
     console.log("[STRIPE_ERROR]", error);
