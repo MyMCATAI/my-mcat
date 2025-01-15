@@ -40,7 +40,6 @@ const EditPracticeTestDialog: React.FC<EditPracticeTestDialogProps> = ({
   onEditTest,
   test
 }) => {
-  const { deleteExamActivity } = useExamActivities();
   const [editedTest, setEditedTest] = React.useState({
     scores: {
       cp: 118,
@@ -80,26 +79,6 @@ const EditPracticeTestDialog: React.FC<EditPracticeTestDialogProps> = ({
       ...editedTest
     });
     onClose();
-  };
-
-  const handleDelete = async () => {
-    if (!test?.id) return;
-    
-    try {
-      await deleteExamActivity(test.id);
-      toast({
-        title: "Test deleted",
-        description: "The test has been successfully deleted.",
-        variant: "default",
-      });
-      onClose();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete the test. Please try again.",
-        variant: "destructive",
-      });
-    }
   };
 
   if (!test) return null;
@@ -198,27 +177,19 @@ const EditPracticeTestDialog: React.FC<EditPracticeTestDialogProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-between items-center">
+          <div className="flex justify-end space-x-4">
             <button
-              onClick={handleDelete}
-              className="px-4 py-1.5 text-red-300 hover:text-red-800 transition text-sm"
+              onClick={onClose}
+              className="px-4 py-1.5 text-gray-600 hover:text-gray-900 transition"
             >
-              Delete Test
+              Cancel
             </button>
-            <div className="flex space-x-4">
-              <button
-                onClick={onClose}
-                className="px-4 py-1.5 text-gray-600 hover:text-gray-900 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-              >
-                Save Changes
-              </button>
-            </div>
+            <button
+              onClick={handleSubmit}
+              className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              Save Changes
+            </button>
           </div>
         </div>
       </DialogContent>
