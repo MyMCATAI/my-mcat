@@ -193,7 +193,8 @@ const FullLengthExamCompleteDialog: React.FC<FullLengthExamCompleteDialogProps> 
               <Button
                 type="submit"
                 disabled={!isFormValid() || isSubmitting}
-                className="bg-blue-600 hover:bg-blue-700"
+                variant="default"
+                size="sm"
               >
                 {isSubmitting ? "Saving..." : "Submit Scores"}
               </Button>

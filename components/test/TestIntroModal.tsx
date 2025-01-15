@@ -99,8 +99,8 @@ export function TestIntroModal({
                 router.push("/home?tab=CARS");
                 onClose();
               }}
-              variant="outline"
-              className="border-[--theme-doctorsoffice-accent] text-[--theme-text-color] min-w-[200px]"
+              variant="default"
+              className="min-w-[10.5rem]"
             >
               Return to Home
             </Button>
@@ -108,7 +108,8 @@ export function TestIntroModal({
               <Button
                 onClick={handleStartTest}
                 disabled={isStarting}
-                className="bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color] min-w-[200px]"
+                variant="default"
+                className="min-w-[10.5rem]"
               >
                 {isStarting ? "Starting..." : "Start Test (1 Coin)"}
               </Button>
@@ -119,7 +120,7 @@ export function TestIntroModal({
                 </p>
                 <PurchaseButton 
                   text="Purchase Coins to Start"
-                  className="bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color] min-w-[200px]"
+                  className="min-w-[12.5rem]"
                   tooltipText="Purchase coins to access this test"
                 />
               </div>

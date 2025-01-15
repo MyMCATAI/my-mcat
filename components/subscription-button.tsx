@@ -284,7 +284,7 @@ export function SubscriptionButton({
         >
           <div className="p-2 sm:p-4 md:p-6 overflow-visible">
             <div 
-              className="rounded-lg p-4 sm:p-6 flex flex-col items-center space-y-4 sm:space-y-6 transition-all relative overflow-visible
+              className="rounded-lg p-4 sm:p-6 flex flex-col items-center transition-all relative
                 bg-gradient-to-br from-sky-950 via-blue-900 to-sky-900
                 w-full max-h-[85vh]
                 sm:max-w-[35rem]"
@@ -324,64 +324,70 @@ export function SubscriptionButton({
               <div className="absolute -top-3 -right-3 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] px-3 py-1 rounded-full text-sm font-bold shadow-lg transform rotate-12 z-[103]">
                 Premium
               </div>
-              <Image
-                src={premiumFeatures.image}
-                alt={premiumFeatures.title}
-                width={150}
-                height={150}
-                className="rounded-lg object-contain h-[100px] w-[100px] sm:h-[150px] sm:w-[150px] scale-110 transition-transform duration-300"
-                style={{ animation: 'float 3s ease-in-out infinite' }}
-              />
+              <div className="w-full h-full overflow-y-auto">
+                <div className="flex flex-col items-center space-y-4 sm:space-y-6">
+                  <Image
+                    src={premiumFeatures.image}
+                    alt={premiumFeatures.title}
+                    width={150}
+                    height={150}
+                    className="rounded-lg object-contain h-[100px] w-[100px] sm:h-[150px] sm:w-[150px] scale-110 transition-transform duration-300"
+                    style={{ animation: 'float 3s ease-in-out infinite' }}
+                  />
 
-              <h3 className="text-lg sm:text-xl font-bold text-white">{premiumFeatures.title}</h3>
-              <p className="text-xs sm:text-sm text-white text-center">{premiumFeatures.fullDescription}</p>
+                  <h3 className="text-lg sm:text-xl font-bold text-white">{premiumFeatures.title}</h3>
+                  <p className="text-xs sm:text-sm text-white text-center">{premiumFeatures.fullDescription}</p>
 
-              <div className="w-full space-y-2 sm:space-y-3">
-                <div className="border-t border-sky-200/20 pt-3 sm:pt-4">
-                  <h4 className="font-semibold text-white mb-2">Meow Distinction Features:</h4>
-                  <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base">
-                    {premiumFeatures.features.map((feature, index) => (
-                      <li 
-                        key={index} 
-                        className="flex items-center text-white"
-                        style={{ 
-                          animation: 'shimmer 3s infinite linear',
-                          animationDelay: `${index * 0.2}s`,
-                          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
-                          backgroundSize: '80rem 100%'
-                        }}
-                      >
-                        <svg 
-                          className="w-5 h-5 mr-2 text-sky-300" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                          style={{ animation: 'pulse 1s ease-in-out infinite' }}
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="w-full space-y-2 sm:space-y-3">
+                    <div className="border-t border-sky-200/20 pt-3 sm:pt-4">
+                      <h4 className="font-semibold text-white mb-2">Meow Distinction Features:</h4>
+                      <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base">
+                        {premiumFeatures.features.map((feature, index) => (
+                          <li 
+                            key={index} 
+                            className="flex items-center text-white"
+                            style={{ 
+                              animation: 'shimmer 3s infinite linear',
+                              animationDelay: `${index * 0.2}s`,
+                              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
+                              backgroundSize: '80rem 100%'
+                            }}
+                          >
+                            <svg 
+                              className="w-5 h-5 mr-2 text-sky-300" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                              style={{ animation: 'pulse 1s ease-in-out infinite' }}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <p 
+                    className="text-2xl sm:text-3xl font-bold text-white"
+                    style={{ animation: 'pulse 2s ease-in-out infinite' }}
+                  >
+                    {premiumFeatures.price}
+                  </p>
                 </div>
               </div>
 
-              <p 
-                className="text-2xl sm:text-3xl font-bold text-white"
-                style={{ animation: 'pulse 2s ease-in-out infinite' }}
-              >
-                {premiumFeatures.price}
-              </p>
-
-              <Button
-                onClick={handleSubscribe}
-                disabled={isLoading}
-                className="w-full h-9 sm:h-10 px-4 rounded-md font-medium shadow-sm transition-all duration-300 
-                  bg-gradient-to-r from-sky-400 via-blue-400 to-sky-400 text-white hover:opacity-90"
-              >
-                {isLoading ? "Loading..." : "Apply for MD Premium"}
-              </Button>
+              <div className="sticky bottom-0 w-full pt-4 bg-inherit">
+                <Button
+                  onClick={handleSubscribe}
+                  disabled={isLoading}
+                  className="w-full h-9 sm:h-10 px-4 rounded-md font-medium shadow-sm transition-all duration-300 
+                    bg-gradient-to-r from-sky-400 via-blue-400 to-sky-400 text-white hover:opacity-90"
+                >
+                  {isLoading ? "Loading..." : "Apply for MD Premium"}
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>
