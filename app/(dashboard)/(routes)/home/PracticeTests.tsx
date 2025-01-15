@@ -93,7 +93,6 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
   const [selectedTestToComplete, setSelectedTestToComplete] = useState<{ id: string; name: string } | null>(null);
   const [userTests, setUserTests] = useState<UserTest[]>([]);
   const [activeTab, setActiveTab] = useState("upcoming");
-  const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyModal, setShowWeeklyModal] = useState(false);
   const [editingTest, setEditingTest] = useState<UserTest | null>(null);
 
@@ -437,22 +436,6 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     }
   };
 
-  const toggleSettings = () => {
-    setShowSettings((prev) => !prev);
-  };
-
-  const handleStudyPlanSaved = async () => {
-    setShowSettings(false);
-    // Refresh all activities immediately
-    await Promise.all([
-      fetchExamActivities(),
-      refetchAllActivities()
-    ]);
-    if (handleSetTab) {
-      handleSetTab('Tests');
-    }
-  };
-
   const handleWeeklyModalComplete = async ({ success, action }: { success: boolean; action?: 'generate' | 'save' }) => {
     if (success) {
       try {
@@ -465,13 +448,11 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
         if (action === 'generate') {
           handleSetTab && handleSetTab('Tests');
         }
-        if (showSettings) handleStudyPlanSaved();
-        setShowSettings(false);
         setShowWeeklyModal(false);
-        return true; // Return success
+        return true;
       } catch (error) {
         console.error('Failed to refresh activities:', error);
-        return false; // Return failure
+        return false;
       }
     }
     return false;
@@ -879,33 +860,8 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
         test={editingTest || undefined}
       />
 
-      <div className="absolute top-7 right-7 flex items-center gap-4">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={toggleSettings}
-                className={`settings-button p-2 rounded-full shadow-md ${
-                  showSettings ? "bg-[--theme-hover-color]" : "bg-white"
-                }`}
-              >
-                <Settings 
-                  className="w-4 h-4" 
-                  fill="none"
-                  stroke={showSettings ? "white" : "#333"}
-                  strokeWidth={2}
-                />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Settings</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-
       <AnimatePresence>
-        {(showSettings || showWeeklyModal) && (
+        {showWeeklyModal && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
@@ -913,7 +869,6 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black bg-opacity-70 z-40"
               onClick={() => {
-                if (showSettings) setShowSettings(false);
                 if (showWeeklyModal) setShowWeeklyModal(false);
               }}
             />
@@ -924,7 +879,6 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
               onClick={(e) => {
                 if (e.target === e.currentTarget) {
-                  if (showSettings) setShowSettings(false);
                   if (showWeeklyModal) setShowWeeklyModal(false);
                 }
               }}
@@ -937,7 +891,6 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                   onComplete={handleWeeklyModalComplete}
                   isInitialSetup={false}
                   onClose={() => {
-                    setShowSettings(false);
                     setShowWeeklyModal(false);
                   }}
                 />
