@@ -803,7 +803,7 @@ const SideBar: React.FC<SideBarProps> = ({
         handleSetTab("RegularAnki");
         break;
       case "UWorld":
-        handleSetTab("UWorld");
+        setShowUWorldPopup(true);
         break;
       default:
         break;
@@ -822,9 +822,36 @@ const SideBar: React.FC<SideBarProps> = ({
     fetchATSTasks();
   }, [todayActivities]);
 
-  const handleUWorldScoreSubmit = (scores: number[]) => {
+  const handleUWorldScoreSubmit = async (scores: number[], newTasks?: Task[]) => {
     console.log("UWorld scores:", scores);
-    // You can add additional score handling logic here if needed
+    
+    if (newTasks) {
+      // Find the UWorld activity
+      const uWorldActivity = todayActivities.find(activity => activity.activityTitle === "UWorld");
+      if (uWorldActivity) {
+        try {
+          // Update the activity with new tasks
+          await fetch(`/api/calendar-activity`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: uWorldActivity.id,
+              tasks: newTasks,
+            }),
+          });
+
+          // Update local state
+          setTodayActivities(prev => prev.map(activity => 
+            activity.id === uWorldActivity.id 
+              ? { ...activity, tasks: newTasks }
+              : activity
+          ));
+        } catch (error) {
+          console.error("Error updating UWorld tasks:", error);
+          toast.error("Failed to update UWorld tasks");
+        }
+      }
+    }
   };
 
   return (
