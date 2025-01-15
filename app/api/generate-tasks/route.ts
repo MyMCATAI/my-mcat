@@ -230,11 +230,7 @@ async function generateDailyTasks(
   console.log('Date Range:', format(startDate, 'yyyy-MM-dd'), 'to', format(endDate, 'yyyy-MM-dd'));
 
   const activities: CalendarActivity[] = [];
-  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   
-  // Use fixed content review ratio based on selection
-  const contentReviewRatio = getContentReviewRatio(selectedBalance);
-
   // Track total hours for content and review to maintain balance
   let totalContentHours = 0;
   let totalReviewHours = 0;
@@ -266,13 +262,12 @@ async function generateDailyTasks(
   let currentDate = new Date(startDate);
 
   while (currentDate <= endDate) {
-    const dayOfWeek = currentDate.getDay();
-    const dayName = daysOfWeek[dayOfWeek];
-    const availableHours = parseInt(hoursPerDay[dayName]) || 0;
+    const dateKey = format(currentDate, 'yyyy-MM-dd');
+    const availableHours = parseFloat(hoursPerDay[dateKey]) || 0;
 
     // Skip if it's a break day or an exam day
     const isExamDay = examActivities.some(exam => 
-      format(new Date(exam.scheduledDate), 'yyyy-MM-dd') === format(currentDate, 'yyyy-MM-dd')
+      format(new Date(exam.scheduledDate), 'yyyy-MM-dd') === dateKey
     );
 
     if (availableHours === 0 || isExamDay) {
@@ -285,7 +280,7 @@ async function generateDailyTasks(
     const currentRatio = totalHours === 0 ? 0 : totalReviewHours / totalHours;
 
     // Determine if this should be a review day based on maintaining the target ratio
-    const shouldBeReviewDay = currentRatio < contentReviewRatio;
+    const shouldBeReviewDay = currentRatio < getContentReviewRatio(selectedBalance);
 
     const dayTasks = getAvailableTasks(
       resources,

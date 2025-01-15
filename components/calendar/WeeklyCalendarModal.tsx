@@ -232,14 +232,6 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
       // Show first message immediately
       setLoadingMessages([messages[0]]);
 
-      // Convert date-based hours to day-based hours
-      const dayBasedHours = Object.entries(weeklyHours).reduce((acc, [dateStr, hours]) => {
-        const date = new Date(dateStr);
-        const dayName = format(date, 'EEEE');
-        acc[dayName] = hours;
-        return acc;
-      }, {} as Record<string, string>);
-
       // Get current date with time set to start of day in UTC
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -257,7 +249,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
           ankigame: resources.find(r => r.id === 'ankigame')?.selected || false,
           anki: resources.find(r => r.id === 'anki')?.selected || false,
         },
-        hoursPerDay: dayBasedHours,
+        hoursPerDay: weeklyHours,
         selectedBalance,
         startDate,
         endDate,
@@ -488,13 +480,13 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                         </div>
                         <button
                           onClick={() => handleHoursChange(date, isBreak ? '' : '0')}
-                          className={`px-3 py-1 rounded-md text-sm ${
-                            isBreak
-                              ? 'text-[--theme-text-color] opacity-70 hover:opacity-100'
-                              : 'opacity-50'
-                          } transition-opacity`}
+                          className={`min-w-[4.5rem] px-3 py-1.5 rounded-md text-sm border transition-all duration-200 ${
+                            isBreak 
+                              ? 'bg-[--theme-hover-color] text-[--theme-hover-text] border-[--theme-hover-color] opacity-90'
+                              : 'border-[--theme-border-color] text-[--theme-text-color] opacity-30 hover:opacity-100 hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] hover:border-[--theme-hover-color]'
+                          }`}
                         >
-                          {isBreak ? "Break" : "Work"}
+                          Break
                         </button>
                       </motion.div>
                     );
