@@ -8,6 +8,7 @@ import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
 import 'katex/dist/katex.min.css';
 import DOMPurify from 'dompurify';
+import type { Pluggable } from 'unified';
 
 // Import languages for syntax highlighting as needed
 import javascript from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
@@ -34,7 +35,7 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content, onLinkClick,
 
   return (
     <ReactMarkdown
-      remarkPlugins={[remarkMath]}
+      remarkPlugins={[remarkMath as Pluggable]}
       rehypePlugins={[rehypeKatex, rehypeRaw]}
       components={{
         code({node, inline, className, children, ...props}: any) {
