@@ -25,7 +25,8 @@ const premiumFeatures = {
   image: "/MDPremium.png",
   features: [
     "36 hours of expert instruction on MCAT strategy",
-    "Instructor/Tutor combination for learning and personalized feedback",
+    "Research-backed curriculum designed by medical educators",
+    "Both an instructor and a tutor for personalized feedback",
     "Access to our private discord server for rapid question-answering",
     "Access to a daily study channel to co-learn with your classmates",
     "Better score guarantee contract than any competitor in the market",
