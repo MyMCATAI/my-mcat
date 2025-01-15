@@ -65,23 +65,6 @@ ChartJS.register(
   Legend
 );
 
-interface Task {
-  text: string;
-  completed: boolean;
-}
-
-interface Activity {
-  id: string;
-  scheduledDate: string;
-  activityTitle: string;
-  activityText: string;
-  hours: number;
-  activityType: string;
-  link?: string | null;
-  tasks?: Task[];
-}
-
-
 interface ScheduleProps {
   activities: Activity[];
   onStudyPlanSaved?: () => void;
@@ -124,7 +107,6 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [isTutorialTypingComplete, setIsTutorialTypingComplete] =
     useState(false);
   const [tutorialStep, setTutorialStep] = useState(1);
-  const [showBreaksDialog, setShowBreaksDialog] = useState(false);
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
@@ -400,206 +382,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   }, [isActive]);
 
- 
-
-  const [todayActivities, setTodayActivities] = useState<Activity[]>([]);
-
-  // Fetch tasks for each activity that doesn't have tasks
-  // Reload the tasks for the UWorld activity
-  useEffect(() => {
-    const fetchTasksForToday = async () => {
-      const todaysActivities = activities.filter((activity) =>
-        isToday(new Date(activity.scheduledDate))
-      );
-
-      const activitiesWithTasks = await Promise.all(
-        todaysActivities.map(async (activity) => {
-          if (!Array.isArray(activity.tasks) || activity.tasks.length === 0) {
-            try {
-              const tasks = await fetch(
-                `/api/event-task?eventTitle=${activity.activityTitle}`
-              ).then((res) => res.json());
-              return {
-                ...activity,
-                tasks: tasks,
-              };
-            } catch (error) {
-              console.error("Error fetching tasks for activity:", error);
-              return activity;
-            }
-          }
-          return activity;
-        })
-      );
-
-      setTodayActivities(activitiesWithTasks);
-    };
-
-    fetchTasksForToday();
-  }, [activities]);
-
-  const handleTaskCompletion = async (
-    activityId: string,
-    taskIndex: number,
-    completed: boolean
-  ) => {
-    try {
-      const activity = todayActivities.find((a) => a.id === activityId);
-      if (!activity || !activity.tasks) return;
-
-      // If task is already completed, prevent unchecking
-      if (activity.tasks[taskIndex].completed) {
-        return;
-      }
-
-      const updatedTasks = activity.tasks.map((task, index) =>
-        index === taskIndex ? { ...task, completed: true } : task
-      );
-
-      // Update backend
-      const response = await fetch(`/api/calendar-activity`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: activityId,
-          tasks: updatedTasks,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update task");
-
-      // Update local state
-      const updatedActivities = todayActivities.map((a) =>
-        a.id === activityId ? { ...a, tasks: updatedTasks } : a
-      );
-      setTodayActivities(updatedActivities);
-
-      // Call onActivitiesUpdate to refresh parent state
-      onActivitiesUpdate();
-
-      // Check if all tasks are completed for this activity
-      const allTasksCompleted = updatedTasks.every((task) => task.completed);
-      if (allTasksCompleted) {
-        // Play success sound
-        if (audioRef.current) {
-          audioRef.current.play().catch(console.error);
-        }
-
-        // Get activity details from backend
-        const activityResponse = await fetch(`/api/calendar-activity`);
-        const activities = await activityResponse.json();
-        const completedActivity = activities.find((a: FetchedActivity) => a.id === activityId);
-
-        if (completedActivity.source === "generated" && isToday(new Date(completedActivity.scheduledDate))) {
-          await updateUserCoinCount();
-          try {
-            const response = await fetch("/api/user-info");
-            if (response.ok) {
-              const data = await response.json();
-              setUserCoinCount(data.score);
-            }
-          } catch (error) {
-            console.error("Error fetching user score:", error);
-          }
-        }
-
-        // Show success toast for individual activity
-        if (completedActivity.source === "generated") {
-          toast.success(
-            `You've completed all tasks for ${activity.activityTitle}! You earned a coin!`
-          );
-        } else {
-          toast.success(
-            `You've completed all tasks for ${activity.activityTitle}!`
-          );
-        }
-      }
-
-      // Check if ALL activities have ALL tasks completed using the updated activities array
-      const areAllTasksCompleted = updatedActivities.every((activity) => 
-        activity.tasks?.every((task) => task.completed)
-      );
-
-      // If everything is complete, play fanfare and show completion dialog
-      if (areAllTasksCompleted) {
-        if (fanfareRef.current) {
-          fanfareRef.current.play().catch(console.error);
-        }
-        setShowCompletionDialog(true);
-      }
-
-    } catch (error) {
-      console.error("Error updating task:", error);
-      toast.error("Failed to update task");
-    }
-  };
-
-  const handleTasksUpdate = (eventId: string, updatedTasks: Task[]) => {
-    // Update local state
-    setTodayActivities((current) =>
-      current.map((activity) =>
-        activity.id === eventId
-          ? { ...activity, tasks: updatedTasks }
-          : activity
-      )
-    );
-  };
-
-  const updateTodaySchedule = () => {
-    fetchActivitiesForToday();
-  };
-
-  const fetchActivitiesForToday = async () => {
-    const response = await fetch("/api/calendar-activity");
-    const activities = await response.json();
-    const todaysScheduleActivities = activities.filter((activity: any) =>
-      isToday(new Date(activity.scheduledDate))
-    );
-    setTodayActivities(todaysScheduleActivities);
-  };
-
-  const handleResetTutorial = () => {
-    // Reset localStorage values
-    localStorage.setItem("tutorialPart1Played", "false");
-    localStorage.setItem("tutorialPart2Played", "false");
-    localStorage.setItem("tutorialPart3Played", "false");
-    localStorage.setItem("tutorialPart4Played", "false");
-
-    // Reset tutorial states
-    setRunTutorialPart1(true);
-    setRunTutorialPart2(false);
-    setRunTutorialPart3(false);
-    setRunTutorialPart4(false);
-
-    // Play notification sound
-    if (audioRef.current) {
-      audioRef.current
-        .play()
-        .catch((error) => console.error("Audio playback failed:", error));
-    }
-  };
-
-  // Update the helper function to safely check tasks
-  const isActivityCompleted = (activity: Activity) => {
-    return (
-      activity.tasks &&
-      activity.tasks.length > 0 &&
-      activity.tasks.every((task) => task.completed)
-    );
-  };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  };
-
-  const handleTabChange = (tab: string) => {
-    handleSetTab(tab);
-  };
-
   useEffect(() => {
     const optionsDialogShown = localStorage.getItem('optionsDialogShown');
     if (!optionsDialogShown) {
@@ -610,7 +392,7 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   // Function to check if all welcome tasks are completed
   const checkAllWelcomeTasksCompleted = () => {
-    const welcomeTasks = todayActivities.flatMap(activity => activity.tasks);
+    const welcomeTasks = activities.flatMap(activity => activity.tasks);
     const allCompleted = welcomeTasks.every(task => task && task.completed);
     setAllWelcomeTasksCompleted(allCompleted);
   };
@@ -618,7 +400,7 @@ const Schedule: React.FC<ScheduleProps> = ({
   // Call this function whenever tasks are updated
   useEffect(() => {
     checkAllWelcomeTasksCompleted();
-  }, [todayActivities]);
+  }, [activities]);
 
   useEffect(() => {
     if (userCoinCount === 0) {
@@ -705,40 +487,33 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   return (
     <div className="w-full relative p-2">
-      {/* Purchase Button - Now conditionally rendered */}
+      {/* Purchase Button - Now only showing score display */}
       <div className="absolute top-6 left-8 z-30 ml-4">
         {!isCoinsLoading && !selectedSubject && (
-          <div className="pointer-events-auto flex items-center gap-2">
-            <PurchaseButton 
-              tooltipText="Click to purchase more coins!"
-              autoOpen={false}
-              userCoinCount={userCoinCount}
-              className="purchase-button"
-            >
+          <div className="pointer-events-auto flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <button className="hover:opacity-80 transition-opacity">
                 <ScoreDisplay score={userCoinCount} />
               </button>
-            </PurchaseButton>
-            
-            {userCoinCount <= 3 && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <div className="animate-vibrate">
-                      <AlertTriangle 
-                        className="h-6 w-6 text-red-500 drop-shadow-glow" 
-                        strokeWidth={3}
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-red-500 text-white border-red-600">
-                    <p>Low coin balance! Purchase more coins to continue accessing our features.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-
-            <SubscriptionButton/>
+              
+              {userCoinCount <= 3 && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div className="animate-vibrate">
+                        <AlertTriangle 
+                          className="h-6 w-6 text-red-500 drop-shadow-glow" 
+                          strokeWidth={3}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-red-500 text-white border-red-600">
+                      <p>Womp womp brokie!</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -829,6 +604,9 @@ const Schedule: React.FC<ScheduleProps> = ({
               })()}
             </div>
           )}
+
+          {/* Subscription Button */}
+          <SubscriptionButton />
 
           {/* Target Score Button */}
           <TooltipProvider>
@@ -991,23 +769,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         setRunPart4={setRunTutorialPart4}
       />
 
-      <Dialog open={showBreaksDialog} onOpenChange={setShowBreaksDialog}>
-        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
-          <DialogHeader>
-            <DialogTitle className="text-center text-black">
-              Breaks Coming Soon!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-center text-black">
-              Toggle holidays. Add difficult weeks in school. Ask for a break.
-              Your schedule will be updated automatically.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       <CompletionDialog 
         isOpen={showCompletionDialog} 
         onClose={() => setShowCompletionDialog(false)}
@@ -1016,7 +777,7 @@ const Schedule: React.FC<ScheduleProps> = ({
       <OptionsDialog 
         showOptionsModal={showOptionsModal}
         setShowOptionsModal={setShowOptionsModal}
-        handleTabChange={handleTabChange}
+        handleTabChange={handleSetTab}
         allWelcomeTasksCompleted={allWelcomeTasksCompleted}
       />
 

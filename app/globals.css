@@ -196,8 +196,8 @@ body.theme-sunsetCity * {
     --theme-flashcard-color: #001a3a; /* Darker shade for CyberSpace theme */
     --theme-flashcard-text-color: #ffffff; /* White text for CyberSpace theme */
     --theme-adaptive-tutoring-color: #001226;
-    --theme-adaptive-tutoring-boxShadow: 0 0 8px 2px rgba(0, 123, 255, 0.5);
-    --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 4px rgba(0, 123, 255, 0.8);
+    --theme-adaptive-tutoring-boxShadow: 0 0 8px 2px rgba(0, 123, 255, 0.3);
+    --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 4px rgba(0, 123, 255, 0.5);
     --theme-emphasis-color: #6cd0c493; /* Bright cyber green to contrast with blue */
     --theme-button-color: #011c3ce6; /* Slightly lighter than leaguecard-color: #000e2de6 */
     --theme-button-boxShadow: 0 0 2px 1px rgba(0, 123, 255, 0.5);
@@ -321,8 +321,8 @@ body.theme-sunsetCity * {
   --theme-flashcard-color: #ffffff; /* White for light SakuraTrees theme */
   --theme-flashcard-text-color: #4a0e37; /* Dark pink text for SakuraTrees theme */
   --theme-adaptive-tutoring-color: #faeef4;
-  --theme-adaptive-tutoring-boxShadow: 0 0 5px 2px rgba(255, 0, 89, 0.5);
-  --theme-adaptive-tutoring-boxShadow-hover: 0 0 10px 4px rgba(255, 0, 89, 0.8);
+  --theme-adaptive-tutoring-boxShadow: 0 0 8px 2px rgba(255, 0, 89, 0.3);
+  --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 4px rgba(255, 0, 89, 0.5);
   --theme-button-boxShadow: 0 0 2px 1px rgba(255, 0, 89, 0.4);
   --theme-emphasis-color: #eb80b0; /* Vibrant pink to contrast with soft pink */
   --theme-button-color: #fbf0f3e6; /* Slightly darker than leaguecard-color: #ffffffe6 */
@@ -360,7 +360,8 @@ body.theme-sunsetCity * {
   --theme-flashcard-color: #21133e; /* Matches --theme-mainbox-color for consistency */
   --theme-flashcard-text-color: #ffd1dc; /* Keeping the existing text color for readability */
   --theme-adaptive-tutoring-color: #001226;
-  --theme-adaptive-tutoring-boxShadow: 0 0 10px 1px rgba(255, 99, 71, 0.5);
+  --theme-adaptive-tutoring-boxShadow: 0 0 8px 2px rgba(255, 99, 71, 0.3);
+  --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 4px rgba(255, 99, 71, 0.5);
   --theme-button-boxShadow: 0 0 2px 1px rgba(255, 99, 71, 0.3);
   --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 5px rgba(255, 99, 71, 0.8);
   --theme-emphasis-color: #ff9baf; /* Changed from #ffeef6 to a warm coral color that matches the sunset theme */
@@ -662,8 +663,8 @@ body {
   --theme-flashcard-color: #ffffff; /* White for light MykonosBlue theme */
   --theme-flashcard-text-color: #1e81b0; /* Blue text for MykonosBlue theme */
   --theme-adaptive-tutoring-color: #f0f9fc;
-  --theme-adaptive-tutoring-boxShadow: 0 0 8px 3px rgba(63, 194, 255, 0.5);
-  --theme-adaptive-tutoring-boxShadow-hover: 0 0 11px 5px rgba(76, 181, 230, 0.8);
+  --theme-adaptive-tutoring-boxShadow: 0 0 8px 3px rgba(30, 129, 176, 0.3);
+  --theme-adaptive-tutoring-boxShadow-hover: 0 0 12px 4px rgba(30, 129, 176, 0.5);
   --theme-emphasis-color: #117bac98; /* Warm orange to contrast with blue */
   --theme-button-color: rgba(252, 254, 255, 0.9); /* Slightly lighter than leaguecard-color: rgba(255, 255, 255, 0.9) */
   --theme-button-boxShadow: 0 0 4px 3px rgba(66, 163, 208, 0.497); /* Increased spread/blur, reduced alpha by 18% from 0.5 */
