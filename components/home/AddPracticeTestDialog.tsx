@@ -314,22 +314,10 @@ const AddPracticeTestDialog: React.FC<AddPracticeTestDialogProps> = ({
                           return;
                         }
                         
-                        // Validate date format (YYYY-MM-DD)
-                        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                        if (!dateRegex.test(value)) {
-                          return;
-                        }
-                        
-                        // Create date in local time by parsing the YYYY-MM-DD string
-                        const [year, month, day] = value.split('-').map(Number);
-                        
-                        // Basic validation for month and day
-                        if (month < 1 || month > 12 || day < 1 || day > 31) {
-                          return;
-                        }
-                        
-                        const localDate = new Date(year, month - 1, day);
-                        setNewTest({ ...newTest, date: localDate });
+                        // Simply create a new Date object from the input value
+                        // This will handle the date in the user's local timezone
+                        const date = new Date(value);
+                        setNewTest({ ...newTest, date });
                       }}
                       className="w-full h-10 bg-white border-gray-300"
                     />
