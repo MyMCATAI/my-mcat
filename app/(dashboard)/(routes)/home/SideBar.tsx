@@ -47,6 +47,7 @@ interface SideBarProps {
     sendMessage: (message: string) => void;
   }>;
   handleSetTab: (tab: string) => void;
+  onActivitiesUpdate: () => void;
 }
 
 type TabContent = 
@@ -62,7 +63,8 @@ const SideBar: React.FC<SideBarProps> = ({
   currentPage, 
   chatbotContext, 
   chatbotRef,
-  handleSetTab 
+  handleSetTab,
+  onActivitiesUpdate 
 }) => {
   const getInitialActiveTab = () => {
     switch (currentPage) {
@@ -652,6 +654,9 @@ const SideBar: React.FC<SideBarProps> = ({
         a.id === activityId ? { ...a, tasks: updatedTasks } : a
       );
       setTodayActivities(updatedActivities);
+
+      // Call onActivitiesUpdate to refresh parent state
+      onActivitiesUpdate();
 
       // Check if all tasks are completed for this activity
       const allTasksCompleted = updatedTasks.every((task) => task.completed);

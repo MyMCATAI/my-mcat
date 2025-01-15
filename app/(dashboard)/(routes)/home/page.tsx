@@ -536,6 +536,7 @@ const Page = () => {
               currentPage={currentPage}
               chatbotContext={chatbotContext}
               chatbotRef={chatbotRef}
+              onActivitiesUpdate={fetchActivities}
             />
           </div>
         </div>
