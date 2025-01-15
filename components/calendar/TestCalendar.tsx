@@ -335,7 +335,7 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
         >
           <div className="w-[90vw] max-w-6xl max-h-[90vh] bg-[--theme-mainbox-color] rounded-xl overflow-hidden">
             <WeeklyCalendarModal
-              onComplete={async (result: { success: boolean; action?: 'generate' | 'save' }) => {
+              onComplete={async (result: { success: boolean; action?: 'generate' | 'save' | 'reset' }) => {
                 if (result.success) {
                   if (onEventUpdate) {
                     await onEventUpdate();
