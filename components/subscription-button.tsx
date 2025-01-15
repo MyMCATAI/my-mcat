@@ -21,14 +21,14 @@ interface SubscriptionButtonProps {
 const premiumFeatures = {
   title: "Enough talk. Get your target score.",
   price: "$2,999.99",
-  fullDescription: "The MD Premium Class is an inaugural class of 6 students dedicated to improving their MCAT scores, backed by the latest research on what makes learning more effective. From us, you can expect nothing less than the best. We expect that of you as well.",
+  fullDescription: "The MD Premium Class is a small class of students dedicated to improving their MCAT scores, backed by the latest research on medical education. From us, you can expect nothing less than the best. We expect that of you as well.",
   image: "/MDPremium.png",
   features: [
-    "Two-hour instructor-led class a week for insights into strategy",
-    "One-hour tutoring session a week for personalized feedback",
-    "A personalized student success coach and specialist",
+    "36 hours of expert instruction on MCAT strategy",
+    "Instructor/Tutor combination for learning and personalized feedback",
     "Access to our private discord server for rapid question-answering",
     "Access to a daily study channel to co-learn with your classmates",
+    "Better score guarantee contract than any competitor in the market",
   ]
 };
 
