@@ -3,18 +3,16 @@ import React, {
   useEffect,
   useMemo,
   useRef,
-  useCallback,
 } from "react";
-import { isSameDay, isToday, isTomorrow } from "date-fns";
-import { NewActivity, FetchedActivity } from "@/types";
-import { DialogHeader } from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import Statistics from "@/components/Statistics";
+import DonutChart from "./DonutChart";
+import { toast } from "react-hot-toast";
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogOverlay,
-} from "@radix-ui/react-dialog";
-import Image from "next/image";
+  Target,
+  ClipboardList,
+} from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
@@ -22,307 +20,46 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  Title,
-  Legend,
-  Tooltip as ChartTooltip,
-} from "chart.js";
-import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
-import Tutorial from "./Tutorial";
-import Statistics from "@/components/Statistics";
-import DonutChart from "./DonutChart";
-import { PurchaseButton } from "@/components/purchase-button";
-import { toast } from "react-hot-toast";
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogHeader,
+} from "@/components/ui/dialog";
 import {
-  Calendar as CalendarIcon,
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  ClipboardList,
-  Target,
-} from "lucide-react";
-import { useOutsideClick } from '@/hooks/use-outside-click';
-import CompletionDialog from '@/components/home/CompletionDialog';
+  DialogOverlay,
+} from "@radix-ui/react-dialog";
+import Tutorial from "./Tutorial";
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { OptionsDialog } from "@/components/home/OptionsDialog";
 import { useClerk } from "@clerk/clerk-react";
 import { SubscriptionButton } from "@/components/subscription-button";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  Title,
-  ChartTooltip,
-  Legend
-);
+type Section = "AdaptiveTutoringSuite" | "MCATGameAnkiClinic" | "DailyCARsSuite" | "Tests";
 
 interface ScheduleProps {
-  activities: Activity[];
-  onStudyPlanSaved?: () => void;
   handleSetTab: (tab: string) => void;
   isActive: boolean;
-  onActivitiesUpdate: () => void;
-  chatbotRef?: React.MutableRefObject<{ sendMessage: (message: string) => void }>;
 }
 
-type Section =
-  | "AdaptiveTutoringSuite"
-  | "MCATGameAnkiClinic"
-  | "DailyCARsSuite"
-  | "Tests";
-
 const Schedule: React.FC<ScheduleProps> = ({
-  activities,
   handleSetTab,
   isActive,
-  onActivitiesUpdate,
 }) => {
   const { user } = useClerk();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showNewActivityForm, setShowNewActivityForm] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [showRewardDialog, setShowRewardDialog] = useState(false);
-  const [rewardSection, setRewardSection] = useState("");
   const [userCoinCount, setUserCoinCount] = useState(0);
-  const [userStreak, setUserStreak] = useState(0);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const fanfareRef = useRef<HTMLAudioElement>(null);
-  const [runTutorialPart1, setRunTutorialPart1] = useState(false);
-  const [runTutorialPart2, setRunTutorialPart2] = useState(false);
-  const [runTutorialPart3, setRunTutorialPart3] = useState(false);
-  const [runTutorialPart4, setRunTutorialPart4] = useState(false);
-  const [isTutorialTypingComplete, setIsTutorialTypingComplete] =
-    useState(false);
-  const [tutorialStep, setTutorialStep] = useState(1);
-  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
-  const [showOptionsModal, setShowOptionsModal] = useState(false);
-  const [allWelcomeTasksCompleted, setAllWelcomeTasksCompleted] = useState(false);
   const [isCoinsLoading, setIsCoinsLoading] = useState(true);
   const [examScores, setExamScores] = useState<any[]>([]);
   const [showTargetScoreDialog, setShowTargetScoreDialog] = useState(false);
   const [targetScore, setTargetScore] = useState("500");
-
-  // todo fetch total stats, include streak, coins, grades for each subject
-  const [newActivity, setNewActivity] = useState<NewActivity>({
-    activityTitle: "",
-    activityText: "",
-    hours: "",
-    activityType: "",
-    scheduledDate: new Date().toISOString().split("T")[0],
-  });
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
 
   // Should be consistent with calendar events
-  // If table has the column "eventType", then we can use it to determine the section
   const buttonLabels: Record<Section, string> = {
     AdaptiveTutoringSuite: "Adaptive Tutoring Suite",
     MCATGameAnkiClinic: "Anki Clinic",
     DailyCARsSuite: "MyMCAT Daily CARs",
     Tests: "Tests"
-  };
-
-  const handleStartTutorialPart4 = () => {
-    setRunTutorialPart4(true);
-    localStorage.setItem("tutorialPart4Played", "true");
-  };
-
-  useEffect(() => {
-    const eventListener = () => {
-      setTimeout(handleStartTutorialPart4, 4000); // Delay by 10 seconds
-    };
-
-    window.addEventListener("startTutorialPart4", eventListener);
-
-    return () => {
-      window.removeEventListener("startTutorialPart4", eventListener);
-    };
-  }, []);
-
-  const updateUserCoinCount = async () => {
-    try {
-      const response = await fetch("/api/user-info", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: 1 }),
-      });
-
-      if (response.ok) {
-        const updatedUserInfo = await response.json();
-        setUserCoinCount(updatedUserInfo.coinCount);
-      }
-    } catch (error) {
-      console.error("Error updating user coin count:", error);
-    }
-  };
-
-  const getActivitiesText = useMemo(() => {
-    if (activities.length === 0) {
-      return "Welcome to myMCAT.ai! It looks like this is your first time here. Let's get started by answering some questions about your test and study schedule. Would you like to take a diagnostic test to help us personalize your learning experience?";
-    }
-
-    const todayActivities = activities.filter((activity) =>
-      isToday(new Date(activity.scheduledDate))
-    );
-    const tomorrowActivities = activities.filter((activity) =>
-      isTomorrow(new Date(activity.scheduledDate))
-    );
-
-    if (todayActivities.length > 0) {
-      const activityList = todayActivities
-        .map((activity) => activity.activityTitle)
-        .join(", ");
-      return `Welcome back to MyMCAT.ai! Here's what you have scheduled for today: ${activityList}. Let's get studying!`;
-    } else if (tomorrowActivities.length > 0) {
-      const activityList = tomorrowActivities
-        .map((activity) => activity.activityTitle)
-        .join(", ");
-      return `Welcome back to MyMCAT.ai! You don't have any activities scheduled for today, but tomorrow you'll be working on: ${activityList}. Take some time to prepare!`;
-    } else {
-      return "Welcome back to MyMCAT.ai! You don't have any activities scheduled for today or tomorrow. Would you like to add some new study tasks?";
-    }
-  }, [activities]);
-
-  useEffect(() => {
-    const tutorialPart1Played = localStorage.getItem("tutorialPart1Played");
-    if (!tutorialPart1Played || tutorialPart1Played === "false") {
-      setRunTutorialPart1(true);
-      localStorage.setItem("tutorialPart1Played", "true");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (
-      localStorage.getItem("tutorialPart1Played") === "true" &&
-      localStorage.getItem("tutorialPart2Played") === "true" &&
-      localStorage.getItem("tutorialPart3Played") === "true" &&
-      localStorage.getItem("tutorialPart4Played") === "true" &&
-      !localStorage.getItem("optionsDialogShown")
-    ) {
-      // Check if all welcome tasks are completed
-      const welcomeTasksCompleted = activities.some(activity => 
-        activity.activityTitle === "Welcome!" && 
-        activity.tasks?.every(task => task.completed)
-      );
-
-      if (welcomeTasksCompleted) {
-        setShowOptionsModal(true);
-        localStorage.setItem("optionsDialogShown", "true");
-      }
-    }
-  }, [activities, runTutorialPart1, runTutorialPart2, runTutorialPart3, runTutorialPart4]);
-
-  useEffect(() => {
-    setCurrentDate(new Date());
-    setIsTypingComplete(false);
-    setIsTutorialTypingComplete(false);
-
-    let text = getActivitiesText;
-    if (runTutorialPart1) {
-      if (tutorialStep === 1) {
-        text =
-          "Hi! Hello!\n\nThis is the dashboard. Here, you'll look at statistics on progress, look at your calendar, daily tasks, and ask Kalypso any questions related to the logistics of taking the test.";
-      } else {
-        text = "";
-      }
-    }
-
-    let index = 0;
-    const typingTimer = setInterval(() => {
-      index++;
-      if (index > text.length) {
-        clearInterval(typingTimer);
-        if (runTutorialPart1) {
-          setIsTutorialTypingComplete(true);
-        } else {
-          setIsTypingComplete(true);
-        }
-      }
-    }, 15);
-
-    return () => {
-      clearInterval(typingTimer);
-    };
-  }, [getActivitiesText, runTutorialPart1, tutorialStep]);
-
-  const handleStudyPlanSaved = useCallback(() => {
-    setShowAnalytics(false); // Switch to calendar mode
-
-    // Only start Part 2 if it hasn't been played yet
-    if (
-      !localStorage.getItem("tutorialPart2Played") ||
-      localStorage.getItem("tutorialPart2Played") === "false"
-    ) {
-      setTimeout(() => {
-        setRunTutorialPart2(true);
-        localStorage.setItem("tutorialPart2Played", "true");
-      }, 1000);
-    }
-  }, []);
-
-  const toggleNewActivityForm = () =>
-    setShowNewActivityForm(!showNewActivityForm);
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ): void => {
-    const { name, value } = e.target;
-    setNewActivity({ ...newActivity, [name]: value });
-  };
-
-  const createNewActivity = async (
-    e: React.FormEvent<HTMLFormElement>
-  ): Promise<void> => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/calendar-activity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...newActivity,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to create activity");
-
-      await response.json();
-      setShowNewActivityForm(false);
-      setNewActivity({
-        activityTitle: "",
-        activityText: "",
-        hours: "",
-        activityType: "",
-        scheduledDate: new Date().toISOString().split("T")[0],
-      });
-      // TODO: Update activities list or refetch activities
-      // TODO: Show a success message to the user
-    } catch (error) {
-      console.error("Error creating activity:", error);
-      setError(
-        error instanceof Error ? error.message : "An unexpected error occurred"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getActivitiesForDate = (date: Date) => {
-    return activities.filter((activity) =>
-      isSameDay(new Date(activity.scheduledDate), date)
-    );
   };
 
   const router = useRouter();
@@ -339,7 +76,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         if (response.ok) {
           const data = await response.json();
           setUserCoinCount(data.score);
-          setUserStreak(data.streak);
         }
       } catch (error) {
         console.error("Error fetching user coin count:", error);
@@ -357,50 +93,6 @@ const Schedule: React.FC<ScheduleProps> = ({
       setTargetScore(user.unsafeMetadata.targetScore.toString());
     }
   }, [user?.unsafeMetadata?.targetScore]);
-
-  const resetTutorials = () => {
-    localStorage.removeItem("tutorialPart1Played");
-    localStorage.removeItem("tutorialPart2Played");
-    localStorage.removeItem("tutorialPart3Played");
-    localStorage.removeItem("tutorialPart4Played");
-    setRunTutorialPart1(false);
-    setRunTutorialPart2(false);
-    setRunTutorialPart3(false);
-    setRunTutorialPart4(false);
-
-    // Set a timeout to start Tutorial Part 1 after 2 seconds
-    setTimeout(() => {
-      setRunTutorialPart1(true);
-      setTutorialStep(1);
-      localStorage.setItem("tutorialPart1Played", "true");
-    }, 2000);
-  };
-
-  useEffect(() => {
-    if (!isActive) {
-      // No action needed
-    }
-  }, [isActive]);
-
-  useEffect(() => {
-    const optionsDialogShown = localStorage.getItem('optionsDialogShown');
-    if (!optionsDialogShown) {
-      setShowOptionsModal(true);
-      localStorage.setItem('optionsDialogShown', 'true');
-    }
-  }, []);
-
-  // Function to check if all welcome tasks are completed
-  const checkAllWelcomeTasksCompleted = () => {
-    const welcomeTasks = activities.flatMap(activity => activity.tasks);
-    const allCompleted = welcomeTasks.every(task => task && task.completed);
-    setAllWelcomeTasksCompleted(allCompleted);
-  };
-
-  // Call this function whenever tasks are updated
-  useEffect(() => {
-    checkAllWelcomeTasksCompleted();
-  }, [activities]);
 
   useEffect(() => {
     if (userCoinCount === 0) {
@@ -495,24 +187,6 @@ const Schedule: React.FC<ScheduleProps> = ({
               <button className="hover:opacity-80 transition-opacity">
                 <ScoreDisplay score={userCoinCount} />
               </button>
-              
-              {userCoinCount <= 3 && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <div className="animate-vibrate">
-                        <AlertTriangle 
-                          className="h-6 w-6 text-red-500 drop-shadow-glow" 
-                          strokeWidth={3}
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-red-500 text-white border-red-600">
-                      <p>Womp womp brokie!</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
             </div>
           </div>
         )}
@@ -535,35 +209,33 @@ const Schedule: React.FC<ScheduleProps> = ({
         <div className="relative w-full h-full flex-grow overflow-auto">
           {/* Analytics View - now always visible */}
           <div className="absolute inset-0 flex flex-col overflow-auto">
-            {(isTypingComplete || isTutorialTypingComplete) && (
-              <div className="flex-grow flex flex-col">
-                <AnimatePresence mode="wait">
-                  {!selectedSubject ? (
-                    <motion.div
-                      key="donut"
-                      className="flex-grow flex justify-center items-center relative"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <DonutChart onProgressClick={(label) => setSelectedSubject(label)} />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="statistics"
-                      className="flex-grow"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Statistics onReturn={() => setSelectedSubject(null)} subject={selectedSubject} />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
+            <div className="flex-grow flex flex-col">
+              <AnimatePresence mode="wait">
+                {!selectedSubject ? (
+                  <motion.div
+                    key="donut"
+                    className="flex-grow flex justify-center items-center relative"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <DonutChart onProgressClick={(label) => setSelectedSubject(label)} />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="statistics"
+                    className="flex-grow"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Statistics onReturn={() => setSelectedSubject(null)} subject={selectedSubject} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
 
@@ -652,135 +324,6 @@ const Schedule: React.FC<ScheduleProps> = ({
         </div>
       </div>
 
-      {/* New Activity Form */}
-      {showNewActivityForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-96">
-            <h3 className="text-lg font-bold mb-4 text-black">
-              Add New Activity
-            </h3>
-            <form onSubmit={createNewActivity}>
-              <input
-                type="text"
-                name="activityTitle"
-                value={newActivity.activityTitle}
-                onChange={handleInputChange}
-                placeholder="Activity Title"
-                className="w-full p-2 mb-2 border rounded text-black"
-                required
-              />
-              <textarea
-                name="activityText"
-                value={newActivity.activityText}
-                onChange={handleInputChange}
-                placeholder="Activity Description"
-                className="w-full p-2 mb-2 border rounded text-black"
-                required
-              ></textarea>
-              <input
-                type="number"
-                name="hours"
-                value={newActivity.hours}
-                onChange={handleInputChange}
-                placeholder="Hours"
-                className="w-full p-2 mb-2 border rounded text-black"
-                required
-              />
-              <input
-                type="text"
-                name="activityType"
-                value={newActivity.activityType}
-                onChange={handleInputChange}
-                placeholder="Activity Type"
-                className="w-full p-2 mb-2 border rounded text-black"
-                required
-              />
-              <input
-                type="date"
-                name="scheduledDate"
-                value={newActivity.scheduledDate}
-                onChange={handleInputChange}
-                className="w-full p-2 mb-2 border rounded text-black"
-                required
-              />
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={toggleNewActivityForm}
-                  className="bg-gray-300 text-black px-4 py-2 rounded mr-2"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Adding..." : "Add Activity"}
-                </button>
-              </div>
-              {error && <p className="text-red-500 mt-2">{error}</p>}
-            </form>
-          </div>
-        </div>
-      )}
-
-      <Dialog open={showRewardDialog} onOpenChange={setShowRewardDialog}>
-        <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
-        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50">
-          <DialogHeader className="text-center">
-            <DialogTitle className="text-center text-black">
-              Congratulations!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col items-center justify-center p-4 space-y-2">
-            <div className="relative w-64 h-64">
-              <Image
-                src="/game-components/CupcakeCoin.gif"
-                alt="Reward"
-                layout="fill"
-                objectFit="contain"
-              />
-            </div>
-            <p className="text-center text-lg text-black">
-              You&apos;ve completed all tasks in the{" "}
-              {rewardSection && buttonLabels[rewardSection as Section]}!
-            </p>
-            <p className="text-center text-lg text-black">
-              You&apos;ve earned{" "}
-              <span className="font-bold">1 studycoin</span> for your hard
-              work!
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <audio ref={audioRef} src="/levelup.mp3" />
-      <audio ref={fanfareRef} src="/fanfare.mp3" />
-
-      <Tutorial
-        runPart1={runTutorialPart1}
-        setRunPart1={setRunTutorialPart1}
-        runPart2={runTutorialPart2}
-        setRunPart2={setRunTutorialPart2}
-        runPart3={runTutorialPart3}
-        setRunPart3={setRunTutorialPart3}
-        runPart4={runTutorialPart4}
-        setRunPart4={setRunTutorialPart4}
-      />
-
-      <CompletionDialog 
-        isOpen={showCompletionDialog} 
-        onClose={() => setShowCompletionDialog(false)}
-      />
-
-      <OptionsDialog 
-        showOptionsModal={showOptionsModal}
-        setShowOptionsModal={setShowOptionsModal}
-        handleTabChange={handleSetTab}
-        allWelcomeTasksCompleted={allWelcomeTasksCompleted}
-      />
-
       {/* Target Score Dialog */}
       <Dialog open={showTargetScoreDialog} onOpenChange={setShowTargetScoreDialog}>
         <DialogOverlay className="fixed inset-0 bg-black/50 z-50" />
@@ -832,8 +375,6 @@ const Schedule: React.FC<ScheduleProps> = ({
                     return;
                   }
 
-                  const numValue = parseInt(value);
-                  // Allow any number input, validation will happen on form submit
                   setTargetScore(value);
                 }}
                 className="w-24 text-center text-3xl font-bold bg-transparent border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 text-black"
@@ -860,6 +401,13 @@ const Schedule: React.FC<ScheduleProps> = ({
           </form>
         </DialogContent>
       </Dialog>
+
+      <OptionsDialog 
+        showOptionsModal={showOptionsModal}
+        setShowOptionsModal={setShowOptionsModal}
+        handleTabChange={handleSetTab}
+        allWelcomeTasksCompleted={false}
+      />
     </div>
   );
 };
