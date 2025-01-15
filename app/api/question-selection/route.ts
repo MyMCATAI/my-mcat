@@ -40,14 +40,17 @@ export async function POST(req: Request) {
       }
     });
 
-    // Calculate Thompson sampling parameters for each category
+    // Calculate Thompson sampling parameters with added randomness
     const categoryScores = knowledgeProfiles.map(profile => {
+      let sample = Math.random() * 0.2; // Base randomness (20%)
+      
       // Calculate alpha and beta from correct/incorrect answers
-      const alpha = profile.correctAnswers + 1; // Add 1 for Laplace smoothing
+      const alpha = profile.correctAnswers + 1;
       const beta = (profile.totalAttempts - profile.correctAnswers) + 1;
       
-      // Sample from beta distribution
-      const sample = sampleBeta(alpha, beta);
+      // Blend Thompson sampling (80%) with randomness (20%)
+      const thompsonSample = sampleBeta(alpha, beta);
+      sample = (thompsonSample * 0.8) + (Math.random() * 0.2);
       
       return {
         categoryId: profile.categoryId,
@@ -56,7 +59,9 @@ export async function POST(req: Request) {
       };
     });
 
-    // Sort by sample value (ascending - we want to focus on categories with lower mastery)
+    // Shuffle before sorting to break ties randomly
+    categoryScores.sort(() => Math.random() - 0.5);
+    // Then sort by sample value
     categoryScores.sort((a, b) => a.sample - b.sample);
 
     // If we're just selecting rooms, return the categories
