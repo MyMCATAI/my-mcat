@@ -32,6 +32,7 @@ import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { OptionsDialog } from "@/components/home/OptionsDialog";
 import { useClerk } from "@clerk/clerk-react";
 import { SubscriptionButton } from "@/components/subscription-button";
+import { PurchaseButton } from "@/components/purchase-button";
 
 type Section = "AdaptiveTutoringSuite" | "MCATGameAnkiClinic" | "DailyCARsSuite" | "Tests";
 
@@ -182,14 +183,14 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   return (
     <div className="w-full relative p-2">
-      {/* Purchase Button - Now only showing score display */}
+      {/* Purchase Button with Score Display */}
       <div className="absolute top-6 left-8 z-30 ml-4">
         {!isCoinsLoading && !selectedSubject && (
           <div className="pointer-events-auto flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <button className="hover:opacity-80 transition-opacity">
+            <div className="flex items-center gap-2 relative">
+              <PurchaseButton userCoinCount={userCoinCount}>
                 <ScoreDisplay score={userCoinCount} />
-              </button>
+              </PurchaseButton>
             </div>
           </div>
         )}
