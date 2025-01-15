@@ -8,6 +8,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FaDiscord } from 'react-icons/fa';
 import MessageButton from '@/components/MessageButton';
 import Link from 'next/link';
+import { SubscriptionButton } from '@/components/subscription-button';
 
 type Section = 'mcat' | 'mymcat' | 'taking' | 'reviewing' | 'strategies' | 'testing' | 'cars' | 'ats' | 'anki' | null;
 
@@ -722,9 +723,7 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
               <p className="text-[--theme-text-color] opacity-80 mb-6">
                 No coin limits. Once-a-week masterclasses on MCAT strategies. Access to a private discord community. Now, you can apply content rather than just learn it.
               </p>
-              <button className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-semibold px-6 py-2 rounded-lg hover:opacity-90 transition-opacity">
-                Upgrade to Premium
-              </button>
+              <SubscriptionButton variant="traditional" />
             </div>
           </div>
         </div>
