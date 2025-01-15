@@ -4,6 +4,21 @@ import prisma from "@/lib/prismadb";
 import { FetchedActivity } from "@/types";
 import { categoryMapping } from "@/constants/categoryMappings";
 
+// Helper function for Thompson sampling
+function sampleBeta(alpha: number, beta: number): number {
+  const mean = alpha / (alpha + beta);
+  const variance = (alpha * beta) / (Math.pow(alpha + beta, 2) * (alpha + beta + 1));
+  const stdDev = Math.sqrt(variance);
+  
+  // Box-Muller transform for normal distribution
+  const u1 = Math.random();
+  const u2 = Math.random();
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  
+  // Transform to match Beta distribution parameters
+  return Math.max(0, Math.min(1, mean + z * stdDev));
+}
+
 export async function POST(req: Request) {
   const { userId } = auth();
   if (!userId) {
@@ -11,12 +26,16 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Get the calendar activity ID from the request
+    // Get the calendar activity from the request
     const { todayUWorldActivity } = await req.json();
     const firstUWorldActivity = todayUWorldActivity[0];
     if (firstUWorldActivity?.activityTitle !== "UWorld") {
       return NextResponse.json({ error: "Calendar activity is not UWorld" }, { status: 400 });
     }
+
+    // Get number of tasks based on hours allocated
+    const hours = firstUWorldActivity.hours;
+    const numTasks = Math.floor(hours);
 
     // Filter activities that need task generation
     const activitiesNeedingTasks = todayUWorldActivity.filter((activity: FetchedActivity) => 
@@ -34,30 +53,45 @@ export async function POST(req: Request) {
 
     const calendarActivityIds = activitiesNeedingTasks.map((activity: FetchedActivity) => activity.id);
 
-    // Define the type for our query result
-    type MasteryCategory = {
-      contentCategory: string;
-      averageMastery: number;
-    }
+    // Get all categories with their knowledge profiles
+    const categories = await prisma.category.findMany({
+      where: {
+        contentCategory: {
+          not: "CARS"
+        }
+      },
+      include: {
+        knowledgeProfiles: {
+          where: { userId }
+        }
+      }
+    });
 
-    // Get the 3 content categories with lowest average content mastery
-    const lowestMasteryCategories = await prisma.$queryRaw<MasteryCategory[]>`
-      SELECT 
-        c.contentCategory,
-        AVG(kp.contentMastery) as averageMastery
-      FROM KnowledgeProfile kp
-      JOIN Category c ON kp.categoryId = c.id
-      WHERE kp.userId = ${userId}
-        AND kp.contentMastery IS NOT NULL
-        AND LOWER(c.contentCategory) != 'cars'
-      GROUP BY c.contentCategory
-      ORDER BY averageMastery ASC
-      LIMIT 3
-    `;
+    // Apply Thompson sampling to each category
+    const sampledCategories = categories
+      .map(category => {
+        const profile = category.knowledgeProfiles[0];
+        let sample = 1;
+        
+        if (profile) {
+          const alpha = profile.correctAnswers + 1; // Laplace smoothing
+          const beta = (profile.totalAttempts - profile.correctAnswers) + 1;
+          sample = sampleBeta(alpha, beta);
+        }
 
-    // Create UWorld tasks based on the unique content categories
+        return {
+          contentCategory: category.contentCategory,
+          sample
+        };
+      })
+      // Sort by sample score (lower is weaker)
+      .sort((a, b) => a.sample - b.sample)
+      // Take top N weakest based on hours
+      .slice(0, numTasks);
+
+    // Create UWorld tasks based on the sampled categories
     const tasks = [
-      ...lowestMasteryCategories.map((category) => ({
+      ...sampledCategories.map((category) => ({
         text: `12 Q UWorld - ${categoryMapping[category.contentCategory] || category.contentCategory}`,
         completed: false
       })),
@@ -86,4 +120,4 @@ export async function POST(req: Request) {
     console.error('Error updating UWorld tasks:', error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+} 

@@ -11,16 +11,33 @@ interface ReplacementData {
 // Helper function to get default tasks for an event type
 async function getDefaultTasks(eventTitle: string) {
   try {
-    // Instead of making an HTTP request, directly read from the CSV file
-    const { parseDefaultTasks } = await import('@/lib/utils');
     const { promises: fs } = await import('fs');
     const path = await import('path');
-    
     const csvPath = path.join(process.cwd(), 'app', 'api', 'event-task', 'taskList.csv');
     const csvContent = await fs.readFile(csvPath, 'utf8');
-    const taskMapping = parseDefaultTasks(csvContent);
     
-    return taskMapping[eventTitle] || [];
+    // Parse CSV content
+    const lines = csvContent.split('\n');
+    
+    // Find the row for this event type
+    const eventRow = lines.slice(1).find(line => {
+      const columns = line.split(',');
+      return columns[1]?.trim() === eventTitle;
+    });
+
+    if (!eventRow) return [];
+
+    const columns = eventRow.split(',');
+    
+    // Collect all non-empty tasks
+    const tasks = columns.slice(2)
+      .filter(task => task && task.trim())
+      .map(task => ({
+        text: task.trim(),
+        completed: false
+      }));
+
+    return tasks;
   } catch (error) {
     console.error('Error getting default tasks:', error);
     return [];
@@ -84,6 +101,21 @@ export async function POST(req: Request) {
         where: { id: eventId },
         data: updateData
       });
+
+      // If it's UWorld, immediately trigger task generation
+      if (taskType === 'UWorld') {
+        const generatedTasks = [
+          ...Array(Math.floor(duration)).fill(null).map(() => ({
+            text: "New tasks will be generated based on your test results",
+            completed: false
+          }))
+        ];
+        
+        await prisma.calendarActivity.update({
+          where: { id: eventId },
+          data: { tasks: generatedTasks }
+        });
+      }
     } else {
       // Update this and all future events with the same title
       const currentDate = originalEvent.scheduledDate;
