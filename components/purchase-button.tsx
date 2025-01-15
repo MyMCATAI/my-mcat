@@ -57,14 +57,14 @@ export function PurchaseButton({
   const pricingOptions = [
     {
       title: "10 StudyCoins",
-      price: "$24.99",
+      price: "$4.99",
       description: "One-time purchase of 10 coins. Use them to unlock premium features, AI-powered analytics, and Kalypso AI assistance. Perfect for focused study sessions.",
       image: "/10coins.png",
       productType: ProductType.COINS_10
     },
     {
       title: "25 StudyCoins",
-      price: "$49.99",
+      price: "$9.99",
       description: "One-time purchase of 25 coins. Best value for coins. Get extended access to advanced analytics, detailed AI feedback, and comprehensive feature access.",
       image: "/50coins.png",
       productType: ProductType.COINS_50
