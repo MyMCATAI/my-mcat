@@ -27,7 +27,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { FaSpotify, FaApple, FaHeadphones } from "react-icons/fa";
 import ATSSettingContent from "./ATSSettingContent";
-import HelpContent from "../../../../components/guides/HelpContent";
 import {
   TooltipProvider,
   Tooltip,
