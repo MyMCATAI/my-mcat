@@ -242,24 +242,11 @@ const EditPracticeTestDialog: React.FC<EditPracticeTestDialogProps> = ({
                       return;
                     }
                     
-                    // Validate date format (YYYY-MM-DD)
-                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                    if (!dateRegex.test(value)) {
-                      return;
-                    }
-                    
-                    // Create date in local time by parsing the YYYY-MM-DD string
-                    const [year, month, day] = value.split('-').map(Number);
-                    
-                    // Basic validation for month and day
-                    if (month < 1 || month > 12 || day < 1 || day > 31) {
-                      return;
-                    }
-                    
-                    const localDate = new Date(year, month - 1, day);
+                    // Simply create a new Date object from the input value
+                    const date = new Date(value);
                     setEditedTest(prev => ({
                       ...prev,
-                      scheduledDate: localDate
+                      scheduledDate: date
                     }));
                   }}
                   className="w-full h-10 bg-white border-gray-300"
