@@ -492,11 +492,24 @@ const TestComponent: React.FC<TestComponentProps> = ({
       const techniqueStars = technique;
       
       const totalStars = scoreStars + timingStars + techniqueStars;
+ 
+      // Calculate percentage of correct answers
+  const correctPercentage = (correctAnswers / (test?.questions?.length || 1)) * 100;
 
-      // Award coin if total stars >= 8
-      const cupcakesEarned = totalStars >= 8 ? 1 : 0;
+      // Award coins based on correct percentage
+      let cupcakesEarned = totalStars >= 8 ? 1 : 0; // Existing logic
+      if (correctPercentage >= 100) {
+        // Check if test level is 3 or higher
+        if (test && test.difficulty !== undefined && test.difficulty >= 3) {
+          cupcakesEarned += 3; // 3 additional coins for difficulty 3 or higher
+        } else {
+          cupcakesEarned += 2; // 2 additional coins for 100% correct
+        }
+      } else if (correctPercentage >= 60) {
+        cupcakesEarned += 1; // 1 additional coin for 60% or more correct
+      }
 
-      const scoreChange = cupcakesEarned;
+  const scoreChange = cupcakesEarned;
 
       // Update user's score
       const scoreResponse = await fetch("/api/user-info/", {
