@@ -491,10 +491,10 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                           className={`px-3 py-1 rounded-md text-sm ${
                             isBreak
                               ? 'text-[--theme-text-color] opacity-70 hover:opacity-100'
-                              : 'opacity-0'
+                              : 'opacity-50'
                           } transition-opacity`}
                         >
-                          {isBreak ? "Work" : "Break"}
+                          {isBreak ? "Break" : "Work"}
                         </button>
                       </motion.div>
                     );

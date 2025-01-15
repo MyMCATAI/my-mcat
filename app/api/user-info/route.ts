@@ -47,7 +47,7 @@ export async function POST(req: Request) {
         bio: bio || DEFAULT_BIO,
         firstName: firstName || "",
         apiCount: 0,
-        score: 0,
+        score: 30,
         clinicRooms: "",
         hasPaid: false,
         subscriptionType: "",

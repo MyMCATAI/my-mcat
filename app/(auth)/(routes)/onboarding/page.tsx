@@ -706,8 +706,8 @@ export default function OnboardingPage() {
               <div className="flex items-center justify-center gap-3">
                 <span className="text-4xl">🎁</span>
                 <div className="text-left">
-                  <p className="text-white text-xl font-light">Kalypso{`'`}s Gift</p>
-                  <p className="text-blue-300/80">20 Coins • Starter Pack</p>
+                  <p className="text-white text-xl font-light">Kalypso's Gift</p>
+                  <p className="text-blue-300/80">30 Coins • Starter Pack</p>
                 </div>
               </div>
 
