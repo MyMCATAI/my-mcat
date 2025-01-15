@@ -900,6 +900,7 @@ const SideBar: React.FC<SideBarProps> = ({
         onClose={() => setShowUWorldPopup(false)}
         onScoreSubmit={handleUWorldScoreSubmit}
         tasks={uWorldTasks}
+        hours={todayActivities.find(activity => activity.activityTitle === "UWorld")?.hours || 1}
       />
     </div>
   );
