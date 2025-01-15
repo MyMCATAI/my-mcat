@@ -721,7 +721,7 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
                 <h3 className="text-lg font-bold text-[--theme-text-color]">MD Premium Exclusive</h3>
               </div>
               <p className="text-[--theme-text-color] opacity-80 mb-6">
-                No coin limits. Once-a-week masterclasses on MCAT strategies. Access to a private discord community. Now, you can apply content rather than just learn it.
+                Get your target score. Once-a-week masterclasses on MCAT strategies. Access to a private discord community. Now, you can apply content rather than just learn it.
               </p>
               <SubscriptionButton variant="traditional" />
             </div>

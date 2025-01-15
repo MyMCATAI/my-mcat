@@ -293,7 +293,6 @@ const Page = () => {
       case "Schedule":
         content = (
           <Schedule
-            activities={activities}
             handleSetTab={(tab) => {
               if (tab === "SUMMARIZE_WEEK") {
                 // First switch to Schedule tab if not already there
@@ -308,9 +307,6 @@ const Page = () => {
               handleTabChange(tab);
             }}
             isActive={activeTab === "Schedule"}
-            onActivitiesUpdate={() => {
-              fetchActivities();
-            }}
             chatbotRef={chatbotRef}
           />
         );
