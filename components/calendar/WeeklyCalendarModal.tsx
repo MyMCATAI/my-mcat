@@ -394,106 +394,112 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
           <div className="space-y-6 p-6">
             <div className="text-center">
               <h3 className="text-xl text-[--theme-text-color] mb-2">Study Schedule</h3>
-              {getNextExam() && (
+              {getNextExam() ? (
                 <p className="text-[--theme-emphasis-color] text-sm">
                   {format(new Date(), 'MMMM do')} → {format(new Date(getNextExam()!.scheduledDate), 'MMMM do')} ({getNextExam()!.activityTitle})
+                </p>
+              ) : (
+                <p className="text-[--theme-emphasis-color] text-sm">
+                  Please add a future test before scheduling your weel;y schedule.
                 </p>
               )}
             </div>
 
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="show"
-              className="max-w-2xl mx-auto"
-            >
-              <div className="bg-[--theme-leaguecard-color] rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-[--theme-border-color] flex items-center justify-between">
-                  <span className="text-[--theme-text-color] text-sm">Quick Actions</span>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const hours = prompt('Enter hours for all days:');
-                        if (hours !== null) handleSetForAllDays(hours);
-                      }}
-                      className="bg-[--theme-button-color] text-[--theme-text-color] border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
-                    >
-                      Set All Days
-                    </Button>
-                    <select
-                      onChange={(e) => {
-                        const [day, hours] = e.target.value.split('|');
-                        if (hours) handleSetForWeekday(day, hours);
-                        e.target.value = '';
-                      }}
-                      className="bg-[--theme-button-color] text-[--theme-text-color] border border-[--theme-border-color] rounded-md px-3 py-1 text-sm hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] cursor-pointer"
-                    >
-                      <option value="">Set by weekday...</option>
-                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                        <optgroup key={day} label={`Set all ${day}s`}>
-                          {[0, 2, 4, 6].map(hours => (
-                            <option key={`${day}-${hours}`} value={`${day}|${hours}`}>
-                              {hours === 0 ? 'Break day' : `${hours} hours`}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="divide-y divide-[--theme-border-color]">
-                  {availableDays.map(({ date, dayName, dayDate }) => {
-                    const dateKey = format(date, 'yyyy-MM-dd');
-                    const hours = weeklyHours[dateKey] || '';
-                    const isBreak = hours === '0';
-
-                    return (
-                      <motion.div
-                        key={dateKey}
-                        variants={itemVariants}
-                        className={`flex items-center justify-between p-4 ${
-                          isBreak ? 'bg-[--theme-border-color] bg-opacity-10' : ''
-                        }`}
+            {getNextExam() ? (
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="max-w-2xl mx-auto"
+              >
+                <div className="bg-[--theme-leaguecard-color] rounded-xl overflow-hidden">
+                  <div className="p-4 border-b border-[--theme-border-color] flex items-center justify-between">
+                    <span className="text-[--theme-text-color] text-sm">Quick Actions</span>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const hours = prompt('Enter hours for all days:');
+                          if (hours !== null) handleSetForAllDays(hours);
+                        }}
+                        className="bg-[--theme-button-color] text-[--theme-text-color] border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
                       >
-                        <div className="flex items-center gap-6">
-                          <div>
-                            <div className="text-[--theme-text-color] font-medium">{dayName}</div>
-                            <div className="text-[--theme-text-color] opacity-70 text-sm">{dayDate}</div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              min="0"
-                              max="24"
-                              value={hours}
-                              onChange={(e) => handleHoursChange(date, e.target.value)}
-                              placeholder="0"
-                              className={`w-16 bg-transparent border border-[--theme-border-color] rounded-md px-2 py-1 text-center text-[--theme-text-color] placeholder-[--theme-text-color]/50 focus:outline-none focus:border-[--theme-hover-color] ${
-                                isBreak ? 'opacity-50' : ''
-                              }`}
-                            />
-                            <span className="text-[--theme-text-color] opacity-70 text-sm">hours</span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleHoursChange(date, isBreak ? '' : '0')}
-                          className={`min-w-[4.5rem] px-3 py-1.5 rounded-md text-sm border transition-all duration-200 ${
-                            isBreak 
-                              ? 'bg-[--theme-hover-color] text-[--theme-hover-text] border-[--theme-hover-color] opacity-90'
-                              : 'border-[--theme-border-color] text-[--theme-text-color] opacity-30 hover:opacity-100 hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] hover:border-[--theme-hover-color]'
+                        Set All Days
+                      </Button>
+                      <select
+                        onChange={(e) => {
+                          const [day, hours] = e.target.value.split('|');
+                          if (hours) handleSetForWeekday(day, hours);
+                          e.target.value = '';
+                        }}
+                        className="bg-[--theme-button-color] text-[--theme-text-color] border border-[--theme-border-color] rounded-md px-3 py-1 text-sm hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] cursor-pointer"
+                      >
+                        <option value="">Set by weekday...</option>
+                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                          <optgroup key={day} label={`Set all ${day}s`}>
+                            {[0, 2, 4, 6].map(hours => (
+                              <option key={`${day}-${hours}`} value={`${day}|${hours}`}>
+                                {hours === 0 ? 'Break day' : `${hours} hours`}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="divide-y divide-[--theme-border-color]">
+                    {availableDays.map(({ date, dayName, dayDate }) => {
+                      const dateKey = format(date, 'yyyy-MM-dd');
+                      const hours = weeklyHours[dateKey] || '';
+                      const isBreak = hours === '0';
+
+                      return (
+                        <motion.div
+                          key={dateKey}
+                          variants={itemVariants}
+                          className={`flex items-center justify-between p-4 ${
+                            isBreak ? 'bg-[--theme-border-color] bg-opacity-10' : ''
                           }`}
                         >
-                          Break
-                        </button>
-                      </motion.div>
-                    );
-                  })}
+                          <div className="flex items-center gap-6">
+                            <div>
+                              <div className="text-[--theme-text-color] font-medium">{dayName}</div>
+                              <div className="text-[--theme-text-color] opacity-70 text-sm">{dayDate}</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min="0"
+                                max="24"
+                                value={hours}
+                                onChange={(e) => handleHoursChange(date, e.target.value)}
+                                placeholder="0"
+                                className={`w-16 bg-transparent border border-[--theme-border-color] rounded-md px-2 py-1 text-center text-[--theme-text-color] placeholder-[--theme-text-color]/50 focus:outline-none focus:border-[--theme-hover-color] ${
+                                  isBreak ? 'opacity-50' : ''
+                                }`}
+                              />
+                              <span className="text-[--theme-text-color] opacity-70 text-sm">hours</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleHoursChange(date, isBreak ? '' : '0')}
+                            className={`min-w-[4.5rem] px-3 py-1.5 rounded-md text-sm border transition-all duration-200 ${
+                              isBreak 
+                                ? 'bg-[--theme-hover-color] text-[--theme-hover-text] border-[--theme-hover-color] opacity-90'
+                                : 'border-[--theme-border-color] text-[--theme-text-color] opacity-30 hover:opacity-100 hover:text-[--theme-hover-text] hover:bg-[--theme-hover-color] hover:border-[--theme-hover-color]'
+                            }`}
+                          >
+                            Break
+                          </button>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            ) : null}
           </div>
         );
 

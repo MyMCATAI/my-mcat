@@ -639,8 +639,8 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
         </div>
       ),
       taking: (
-        <div className="animate-fadeIn space-y-6 flex flex-col items-center justify-center min-h-[50vh]">
-          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+        <div className="animate-fadeIn flex flex-col items-center justify-center min-h-[50vh]">
+          <h3 className="text-xs mb-6 text-center opacity-60 uppercase tracking-wide">
             Test Taking
           </h3>
           <div className="flex flex-col items-center justify-center p-8 bg-[--theme-doctorsoffice-accent] rounded-lg w-full max-w-md">
@@ -658,7 +658,7 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-            <h2 className="text-xl font-semibold mb-2">Under Construction</h2>
+            <h2 className="text-lg font-semibold mb-2">Under Construction</h2>
             <p className="text-sm opacity-70 text-center">
               This section is currently being built. Check back soon!
             </p>
@@ -666,8 +666,8 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
         </div>
       ),
       reviewing: (
-        <div className="animate-fadeIn space-y-6 flex flex-col items-center justify-center min-h-[50vh]">
-          <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+        <div className="animate-fadeIn flex flex-col items-center justify-center min-h-[50vh]">
+          <h3 className="text-xs mb-6 text-center opacity-60 uppercase tracking-wide">
             Test Review
           </h3>
           <div className="flex flex-col items-center justify-center p-8 bg-[--theme-doctorsoffice-accent] rounded-lg w-full max-w-md">
@@ -685,7 +685,7 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-            <h2 className="text-xl font-semibold mb-2">Under Construction</h2>
+            <h2 className="text-lg font-semibold mb-2">Under Construction</h2>
             <p className="text-sm opacity-70 text-center">
               This section is currently being built. Check back soon!
             </p>
@@ -699,8 +699,8 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
           </h3>
 
           {/* Premium Content Section */}
-          <div className="relative overflow-hidden rounded-xl bg-[--theme-leaguecard-color] p-8 shadow-lg mt-6">
-            <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
+          <div className="relative overflow-hidden rounded-xl bg-[--theme-leaguecard-color] p-4 shadow-lg mt-2 w-[14rem] mx-auto min-h-[24rem]">
+            <div className="absolute top-0 right-0 w-28 h-28 opacity-10">
               <Image
                 src="/MDPremium.png"
                 alt="MD Premium"
@@ -709,20 +709,22 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
                 className="object-contain"
               />
             </div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-4 mb-6">
-                <Image
-                  src="/MDPremium.png"
-                  alt="MD Premium"
-                  width={48}
-                  height={48}
-                  className="object-contain"
-                />
-                <h3 className="text-lg font-bold text-[--theme-text-color]">MD Premium Exclusive</h3>
+            <div className="relative z-10 h-full flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-4 mb-6">
+                  <Image
+                    src="/MDPremium.png"
+                    alt="MD Premium"
+                    width={48}
+                    height={48}
+                    className="object-contain"
+                  />
+                  <h3 className="text-lg font-bold text-[--theme-text-color]">MD Premium Exclusive</h3>
+                </div>
+                <p className="text-[--theme-text-color] opacity-80 mb-6">
+                  Get your target score. Once-a-week masterclasses on MCAT strategies. Access to a private discord community. Now, you can apply content rather than just learn it.
+                </p>
               </div>
-              <p className="text-[--theme-text-color] opacity-80 mb-6">
-                Get your target score. Once-a-week masterclasses on MCAT strategies. Access to a private discord community. Now, you can apply content rather than just learn it.
-              </p>
               <SubscriptionButton variant="traditional" />
             </div>
           </div>
@@ -1362,7 +1364,7 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
                 </h3>
                 <button
                   onClick={() => handleSectionChange('strategies')}
-                  className="w-full p-6 rounded-xl text-left transition-all duration-200 bg-[--theme-leaguecard-color] hover:opacity-90 group relative overflow-hidden"
+                  className="w-full max-w-xl mx-auto p-6 rounded-xl text-left transition-all duration-200 bg-[--theme-leaguecard-color] hover:opacity-90 group relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
                     <Image
