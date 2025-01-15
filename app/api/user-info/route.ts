@@ -39,6 +39,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { firstName, bio } = body;
 
+    console.log("user-info 42 Creating new user info for user:", userId);
     // Create or update UserInfo matching our schema exactly
     const userInfo = await prismadb.userInfo.upsert({
       where: { userId },

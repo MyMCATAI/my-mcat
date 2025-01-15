@@ -46,6 +46,7 @@ export async function POST(request: Request) {
 
       const userEmail = user.emailAddresses[0]?.emailAddress;
 
+      console.log("stripe 49 Creating new user info for user:", userId);
       // Create or update UserInfo with bonus score
       const userInfo = await prismadb.userInfo.upsert({
         where: { userId },
@@ -129,16 +130,6 @@ export async function POST(request: Request) {
       priceId = process.env.STRIPE_PRICE_ID!; // Default to 10 coins if invalid type
     }
 
-    // Create basic UserInfo for non-referred users
-    const userInfo = await prismadb.userInfo.upsert({
-      where: { userId },
-      create: {
-        userId,
-        bio: "Future doctor preparing to ace the MCAT! 🎯 Committed to learning and growing every day.",
-      },
-      update: {},
-    });
-
     const stripeSession = await stripe.checkout.sessions.create({
       success_url: absoluteUrl("/home?payment=success"),
       cancel_url: absoluteUrl("/home?payment=cancelled"),
@@ -149,6 +140,9 @@ export async function POST(request: Request) {
       metadata: {
         userId: userId,
         productType: productType,
+        productName: mode === 'subscription' ? (
+          priceId === process.env.STRIPE_PRICE_PREMIUM_ID ? 'MDPremium' : 'MDGold'
+        ) : 'one_time_purchase'
       },
       line_items: [
         {
@@ -156,6 +150,13 @@ export async function POST(request: Request) {
           quantity: 1,
         },
       ],
+    });
+
+    console.log('Created checkout session:', {
+      userId,
+      mode,
+      productType,
+      metadata: stripeSession.metadata
     });
 
     return NextResponse.json(
