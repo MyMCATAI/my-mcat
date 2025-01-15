@@ -115,6 +115,15 @@ const AddPracticeTestDialog: React.FC<AddPracticeTestDialogProps> = ({
       return;
     }
 
+    if (newTest.takenBefore && !newTest.date) {
+      toast({
+        title: "Date required",
+        description: "Please select the date when you took this test",
+        variant: "destructive",
+      });
+      return;
+    }
+
     await onAddTest(newTest);
     setNewTest({ company: "" as Company, testNumber: "", date: null, useRecommendedDate: true, takenBefore: false });
   };
@@ -293,22 +302,24 @@ const AddPracticeTestDialog: React.FC<AddPracticeTestDialogProps> = ({
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2">
-                    <input
+                    <Input
                       type="date"
                       value={newTest.date ? newTest.date.toISOString().split('T')[0] : ''}
                       min={newTest.takenBefore ? undefined : new Date().toISOString().split('T')[0]}
                       max={newTest.takenBefore ? new Date().toISOString().split('T')[0] : undefined}
                       onChange={(e) => {
-                        if (!e.target.value) {
+                        const value = e.target.value;
+                        if (!value) {
                           setNewTest({ ...newTest, date: null });
                           return;
                         }
-                        // Create date in local time by parsing the YYYY-MM-DD string
-                        const [year, month, day] = e.target.value.split('-').map(Number);
-                        const localDate = new Date(year, month - 1, day); // month is 0-indexed
-                        setNewTest({ ...newTest, date: localDate });
+                        
+                        // Simply create a new Date object from the input value
+                        // This will handle the date in the user's local timezone
+                        const date = new Date(value);
+                        setNewTest({ ...newTest, date });
                       }}
-                      className="w-full p-2 rounded-lg border border-gray-300 bg-white"
+                      className="w-full h-10 bg-white border-gray-300"
                     />
                   </div>
                 )}
@@ -331,7 +342,10 @@ const AddPracticeTestDialog: React.FC<AddPracticeTestDialogProps> = ({
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!newTest.company || !newTest.testNumber || (!newTest.date && !newTest.useRecommendedDate) || isLoading}
+              disabled={!newTest.company || !newTest.testNumber || 
+                (!newTest.takenBefore && !newTest.date && !newTest.useRecommendedDate) || 
+                (newTest.takenBefore && !newTest.date) || 
+                isLoading}
               className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-70 disabled:cursor-not-allowed"
             >
               Add Test

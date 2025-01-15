@@ -47,8 +47,11 @@ const EditPracticeTestDialog: React.FC<EditPracticeTestDialogProps> = ({
       bb: 118,
       ps: 118
     },
-    scheduledDate: undefined as Date | undefined
+    scheduledDate: undefined as Date | undefined,
+    dateInputValue: ''
   });
+
+  const [showError, setShowError] = React.useState(false);
 
   // Initialize form when test changes
   React.useEffect(() => {
@@ -62,7 +65,8 @@ const EditPracticeTestDialog: React.FC<EditPracticeTestDialogProps> = ({
           bb: scores[2],
           ps: scores[3]
         },
-        scheduledDate: test.startedAt ? new Date(test.startedAt) : undefined
+        scheduledDate: test.startedAt ? new Date(test.startedAt) : undefined,
+        dateInputValue: test.startedAt ? new Date(test.startedAt).toISOString().split('T')[0] : ''
       });
     }
   }, [test]);
@@ -72,13 +76,62 @@ const EditPracticeTestDialog: React.FC<EditPracticeTestDialogProps> = ({
       return;
     }
 
-    await onEditTest({
-      id: test.id,
-      company: test.company,
-      testNumber: test.name.match(/\d+/)?.[0] || "",
-      ...editedTest
-    });
-    onClose();
+    // Validate total score instead of individual scores
+    const totalScore = Object.values(editedTest.scores).reduce((a, b) => a + b, 0);
+    if (totalScore < 472 || totalScore > 528) {
+      setShowError(true);
+      toast({
+        title: "Invalid total score",
+        description: "Total score must be between 472 and 528",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowError(false);
+
+    try {
+      // Update the full length exam scores
+      const response = await fetch(`/api/full-length-exam/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          calendarActivityId: test.id,
+          scores: {
+            total: Object.values(editedTest.scores).reduce((a, b) => a + b, 0),
+            ...editedTest.scores
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update exam scores');
+      }
+
+      // Then update the calendar activity date if changed
+      await onEditTest({
+        id: test.id,
+        company: test.company,
+        testNumber: test.name.match(/\d+/)?.[0] || "",
+        scores: editedTest.scores,
+        scheduledDate: editedTest.scheduledDate
+      });
+
+      toast({
+        title: "Success",
+        description: "Test scores and details updated successfully",
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error('Failed to update test:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update test scores. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!test) return null;
@@ -88,7 +141,7 @@ const EditPracticeTestDialog: React.FC<EditPracticeTestDialogProps> = ({
       <DialogContent className="sm:max-w-[40rem] bg-[#f8fafc] text-black">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-black">
-            Edit Practice Test
+            Edit {test.name}
           </DialogTitle>
         </DialogHeader>
 
@@ -105,10 +158,13 @@ const EditPracticeTestDialog: React.FC<EditPracticeTestDialogProps> = ({
                       min="118"
                       max="132"
                       value={editedTest.scores.cp}
-                      onChange={(e) => setEditedTest({
-                        ...editedTest,
-                        scores: { ...editedTest.scores, cp: Number(e.target.value) }
-                      })}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                        setEditedTest({
+                          ...editedTest,
+                          scores: { ...editedTest.scores, cp: value }
+                        });
+                      }}
                       className="bg-white border-gray-300 h-10"
                     />
                   </div>
@@ -119,10 +175,13 @@ const EditPracticeTestDialog: React.FC<EditPracticeTestDialogProps> = ({
                       min="118"
                       max="132"
                       value={editedTest.scores.cars}
-                      onChange={(e) => setEditedTest({
-                        ...editedTest,
-                        scores: { ...editedTest.scores, cars: Number(e.target.value) }
-                      })}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                        setEditedTest({
+                          ...editedTest,
+                          scores: { ...editedTest.scores, cars: value }
+                        });
+                      }}
                       className="bg-white border-gray-300 h-10"
                     />
                   </div>
@@ -133,10 +192,13 @@ const EditPracticeTestDialog: React.FC<EditPracticeTestDialogProps> = ({
                       min="118"
                       max="132"
                       value={editedTest.scores.bb}
-                      onChange={(e) => setEditedTest({
-                        ...editedTest,
-                        scores: { ...editedTest.scores, bb: Number(e.target.value) }
-                      })}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                        setEditedTest({
+                          ...editedTest,
+                          scores: { ...editedTest.scores, bb: value }
+                        });
+                      }}
                       className="bg-white border-gray-300 h-10"
                     />
                   </div>
@@ -147,10 +209,13 @@ const EditPracticeTestDialog: React.FC<EditPracticeTestDialogProps> = ({
                       min="118"
                       max="132"
                       value={editedTest.scores.ps}
-                      onChange={(e) => setEditedTest({
-                        ...editedTest,
-                        scores: { ...editedTest.scores, ps: Number(e.target.value) }
-                      })}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                        setEditedTest({
+                          ...editedTest,
+                          scores: { ...editedTest.scores, ps: value }
+                        });
+                      }}
                       className="bg-white border-gray-300 h-10"
                     />
                   </div>
@@ -159,20 +224,42 @@ const EditPracticeTestDialog: React.FC<EditPracticeTestDialogProps> = ({
 
               <div className="grid gap-2">
                 <label className="text-sm font-medium text-gray-700">Test Date</label>
-                <input
+                <Input
                   type="date"
-                  value={editedTest.scheduledDate ? editedTest.scheduledDate.toISOString().split('T')[0] : ''}
+                  value={editedTest.dateInputValue}
                   onChange={(e) => {
-                    if (!e.target.value) {
-                      setEditedTest({ ...editedTest, scheduledDate: undefined });
+                    const value = e.target.value;
+                    setEditedTest(prev => ({
+                      ...prev,
+                      dateInputValue: value
+                    }));
+                    
+                    if (!value) {
+                      setEditedTest(prev => ({
+                        ...prev,
+                        scheduledDate: undefined
+                      }));
                       return;
                     }
-                    const [year, month, day] = e.target.value.split('-').map(Number);
-                    const localDate = new Date(year, month - 1, day);
-                    setEditedTest({ ...editedTest, scheduledDate: localDate });
+                    
+                    // Simply create a new Date object from the input value
+                    const date = new Date(value);
+                    setEditedTest(prev => ({
+                      ...prev,
+                      scheduledDate: date
+                    }));
                   }}
-                  className="w-full p-2 rounded-lg border border-gray-300 bg-white"
+                  className="w-full h-10 bg-white border-gray-300"
                 />
+              </div>
+
+              <div className="text-sm text-gray-500 mt-2">
+                Total Score: {Object.values(editedTest.scores).reduce((a, b) => a + b, 0)}
+                {showError && (
+                  <div className="text-red-500 mt-1">
+                    Your score is not between 472 and 528!
+                  </div>
+                )}
               </div>
             </div>
           </div>
