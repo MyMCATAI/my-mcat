@@ -17,6 +17,7 @@ interface UWorldPopupProps {
   onClose: () => void;
   tasks: UWorldTask[];
   onScoreSubmit: (scores: number[], newTasks?: UWorldTask[]) => void;
+  hours: number;
 }
 
 interface DataPulse {
@@ -32,6 +33,7 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
   onClose,
   tasks,
   onScoreSubmit,
+  hours,
 }) => {
   const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
   const [incorrectAnswers, setIncorrectAnswers] = useState<number[]>([]);
@@ -177,7 +179,8 @@ const UWorldPopup: React.FC<UWorldPopupProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({ hours })
       });
 
       if (!response.ok) {
