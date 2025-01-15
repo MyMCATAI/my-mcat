@@ -7,12 +7,7 @@ import { DataPulse } from '@/hooks/useCalendarActivities';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Confetti from 'react-confetti';
 import { useDataPulse } from '@/hooks/useDataPulse';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+
 
 export interface Section {
   name: keyof typeof DISPLAY_TO_FULL_SECTION;

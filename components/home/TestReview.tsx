@@ -7,6 +7,7 @@ import { FULL_TO_DISPLAY_SECTION, SECTION_MAPPINGS } from '@/lib/constants';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { differenceInWeeks, differenceInMonths } from 'date-fns';
 
 interface TestReviewProps {
   test: {
@@ -81,6 +82,27 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack, onRefresh }) => {
       setAnalysis(test.aiResponse);
     }
   }, [test.dataPulses, test.aiResponse]);
+
+  useEffect(() => {
+    const testDate = test.dateTaken ? new Date(test.dateTaken) : test.calendarDate;
+    
+    if (testDate) {
+      const monthsAgo = differenceInMonths(new Date(), testDate);
+      const weeksAgo = differenceInWeeks(new Date(), testDate);
+
+      if (monthsAgo >= 2) {
+        toast.error(
+          "This test was taken more than 2 months ago. Consider retaking it for more accurate practice rather than reviewing an old test, because you likely can't input question-by-question analysis.",
+          { duration: 6000 }
+        );
+      } else if (weeksAgo >= 2) {
+        toast.error(
+          "This test was taken more than 2 weeks ago, which makes it difficult to review. Our model can update your knowledge profile from just your section scores so no need to do question by question.",
+          { duration: 6000 }
+        );
+      }
+    }
+  }, [test.dateTaken, test.calendarDate]);
 
   const handleScoreUpdate = async (section: Section, newScore: number) => {
     await refetchExamData();
