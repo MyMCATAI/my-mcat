@@ -25,6 +25,7 @@ import toast from "react-hot-toast";
 import { ExplanationImages } from "./ExplanationImages";
 import { QuizIntroDialog } from "./ATS/QuizIntroDialogue";
 import { useUserInfo } from "@/hooks/useUserInfo";
+import { useToast } from "@/components/ui/use-toast";
 
 export interface QuizQuestion {
   categoryId: string;
@@ -109,6 +110,7 @@ const Quiz: React.FC<QuizProps> = ({
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [isQuizComplete, setIsQuizComplete] = useState(false);
   const [hasAwardedCoins, setHasAwardedCoins] = useState(false);
+  const { toast } = useToast();
 
   const handleStartQuiz = async () => {
     try {
@@ -117,10 +119,16 @@ const Quiz: React.FC<QuizProps> = ({
       setShowIntroDialog(false);
       setHasStarted(true);
       await fetchQuestions();
-      toast.success("Quiz started! Good luck!");
+      toast({
+        title: "Quiz started! Good luck!",
+        variant: "default",
+      });
     } catch (error) {
       console.error("Error starting quiz:", error);
-      toast.error("Failed to start quiz. Please try again.");
+      toast({
+        title: "Failed to start quiz. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsStarting(false);
     }
@@ -144,13 +152,18 @@ const Quiz: React.FC<QuizProps> = ({
           )}&page=${page}&pageSize=10&simple=true&types=${types.join("&types=")}`
         );
 
-        if (!response.ok) throw new Error("Failed to fetch questions");
+        if (!response.ok) {
+          throw new Error("Failed to fetch questions");
+        }
 
         const data = await response.json();
 
         if (!data.questions || data.questions.length === 0) {
           if (page === 1) {
-            toast.error("No quiz questions found for this category.");
+            toast({
+              title: "No quiz questions found for this category.",
+              variant: "destructive",
+            });
           }
           return;
         }
@@ -230,7 +243,10 @@ const Quiz: React.FC<QuizProps> = ({
       } catch (error: unknown) {
         if (error instanceof Error) {
           console.error("Error fetching questions:", error);
-          toast.error("Failed to load quiz questions. Please try again.");
+          toast({
+            title: "Failed to load quiz questions. Please try again.",
+            variant: "destructive",
+          });
         }
       } finally {
         setIsLoading(false);
@@ -262,10 +278,16 @@ const Quiz: React.FC<QuizProps> = ({
       if (!response.ok) throw new Error("Failed to create user test");
       const data = await response.json();
       setCurrentUserTestId(data.id);
-      toast.success("Quiz Started");
+      toast({
+        title: "Quiz Started",
+        variant: "default",
+      });
     } catch (err) {
       console.error("Error creating user test:", err);
-      toast.error("Failed to create test session. Please try again.");
+      toast({
+        title: "Failed to create test session. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -304,7 +326,10 @@ const Quiz: React.FC<QuizProps> = ({
       }
     } catch (error) {
       console.error("Error saving response:", error);
-      toast.error("Failed to save your answer. Please try again.");
+      toast({
+        title: "Failed to save your answer. Please try again.",
+        variant: "destructive",
+      }); 
     }
   };
 
@@ -388,17 +413,27 @@ const Quiz: React.FC<QuizProps> = ({
         try {
           if (score >= 100) {
             await updateScore(2);
-            toast.success("Congratulations! You earned 2 coins for a perfect score! 🎉");
+            toast({
+              title: "C ongratulations! You earned 2 coins for a perfect score! 🎉",
+              variant: "default",
+            });
           } else if (score >= 60) {
             await updateScore(1);
-            toast.success("Congratulations! You earned 1 coin for scoring above 60%! 🎉");
+            toast({
+              title: "Congratulations! You earned 1 coin for scoring above 60%! 🎉",
+              variant: "default",
+            });
           }
           setHasAwardedCoins(true);
         } catch (error) {
           console.error("Error incrementing score:", error);
-          toast.error("Failed to award coin");
+          toast({
+            title: "Failed to award coin",
+            variant: "destructive",
+          });
         }
       }
+      
       
       setShowSummary(true);
       return;
@@ -546,7 +581,10 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
   const handleDownvote = async () => {
     if (!currentQuestion) return;
 
-    toast.success("Question reported! Thank you for helping us improve.");
+    toast({
+      title: "Question reported! Thank you for helping us improve.",
+      variant: "default",
+    });
 
     try {
       const response = await fetch("/api/send-message", {
@@ -562,7 +600,10 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
       }
     } catch (error) {
       console.error("Error sending downvote:", error);
-      toast.error("Failed to send feedback. Please try again.");
+      toast({
+        title: "Failed to send feedback. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
