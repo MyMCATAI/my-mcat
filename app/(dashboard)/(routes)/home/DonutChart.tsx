@@ -297,7 +297,10 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
                     ? 'var(--theme-button-boxShadow-hover)'
                     : 'var(--theme-button-color)',
                   border: `1px solid ${hoveredButton === label ? 'var(--theme-border-color)' : 'transparent'}`,
-                  transition: 'all 0.3s ease-in-out'
+                  transition: 'all 0.3s ease-in-out',
+                  borderLeft: `0.25rem solid ${hoveredButton === label 
+                    ? 'var(--theme-hover-color)' 
+                    : 'color-mix(in srgb, var(--theme-hover-color) 40%, transparent)'}`
                 }}
                 onHoverStart={() => setHoveredButton(label)}
                 onHoverEnd={() => setHoveredButton(null)}
@@ -343,16 +346,6 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
                     </>
                   )}
                 </div>
-
-                {/* Hover Indicator */}
-                <motion.div
-                  className="absolute right-2 w-0.5 h-8 rounded-full"
-                  animate={{
-                    opacity: hoveredButton === label ? 0.2 : 0,
-                    backgroundColor: hoveredButton === label ? 'var(--theme-hover-color)' : 'transparent',
-                  }}
-                  transition={{ duration: 0.3 }}
-                />
               </motion.button>
             );
           })}
