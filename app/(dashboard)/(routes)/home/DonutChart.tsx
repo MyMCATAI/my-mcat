@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,13 +13,14 @@ import {
   LineController
 } from "chart.js";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { Bar } from "react-chartjs-2";
 import { useTheme } from "@/contexts/ThemeContext";
-import { calculateGrade, PerformanceMetrics } from "@/utils/gradeCalculator";
 import { useClerk } from '@clerk/nextjs';
-import { differenceInDays, format } from 'date-fns';
+import { format } from 'date-fns';
 import { motion } from "framer-motion";
 import { Chart } from 'react-chartjs-2';
+import { useExamScores } from "@/hooks/useExamScores";
+import { SectionName } from "@/utils/examScores";
+import Image from "next/image";
 
 ChartJS.register(
   CategoryScale,
@@ -39,215 +40,58 @@ interface DonutChartProps {
   onProgressClick: (label: string) => void;
 }
 
-interface FullLengthExam {
-  id: string;
-  title: string;
-  createdAt: string;
-  score: number;
-  dataPulses: Array<{
-    name: string;
-    positive: number;
-    section: string;
-  }>;
-  calendarActivity: {
-    scheduledDate: string;
-  };
-}
-
 const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
   const { theme } = useTheme();
   const { user } = useClerk();
   const [hoveredButton, setHoveredButton] = React.useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = React.useState<string | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
   const [targetScore, setTargetScore] = React.useState(() => {
     return user?.unsafeMetadata?.targetScore?.toString() || "520";
   });
-  const [examScores, setExamScores] = React.useState<FullLengthExam[]>([]);
-  const [daysUntilExam, setDaysUntilExam] = React.useState<number | null>(null);
 
-  // Fetch exam scores
-  useEffect(() => {
-    const fetchExamScores = async () => {
-      try {
-        const response = await fetch('/api/full-length-exam/complete');
-        if (response.ok) {
-          const data = await response.json();
-          setExamScores(data);
-        }
-      } catch (error) {
-        console.error('Error fetching exam scores:', error);
-      } finally {
-        setIsLoading(false);
-      }
+  const { examScores, sectionAverages, isLoading, error } = useExamScores();
+
+  const getThemeColor = React.useCallback(() => {
+    const themeColors = {
+      cyberSpace: '#3b82f6',
+      sakuraTrees: '#b85475',
+      sunsetCity: '#ff6347',
+      mykonosBlue: '#4cb5e6'
     };
-
-    fetchExamScores();
-  }, []);
-
-  // Calculate average section scores
-  const sectionAverages = React.useMemo(() => {
-    if (!examScores.length) return {};
-
-    const sectionScores = {
-      "CARs": [] as number[],
-      "Psych/Soc": [] as number[],
-      "Chem/Phys": [] as number[],
-      "Bio/Biochem": [] as number[]
-    };
-
-    examScores.forEach(exam => {
-      exam.dataPulses.forEach(pulse => {
-        if (pulse.name.includes("Critical Analysis")) {
-          sectionScores["CARs"].push(pulse.positive);
-        } else if (pulse.name.includes("Psychological")) {
-          sectionScores["Psych/Soc"].push(pulse.positive);
-        } else if (pulse.name.includes("Chemical")) {
-          sectionScores["Chem/Phys"].push(pulse.positive);
-        } else if (pulse.name.includes("Biological")) {
-          sectionScores["Bio/Biochem"].push(pulse.positive);
-        }
-      });
-    });
-
-    return Object.entries(sectionScores).reduce((acc, [section, scores]) => {
-      acc[section] = scores.length > 0 
-        ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
-        : null;
-      return acc;
-    }, {} as Record<string, number | null>);
-  }, [examScores]);
+    return themeColors[theme];
+  }, [theme]);
 
   // Process exam scores for the chart
   const chartData = React.useMemo(() => {
     if (!examScores.length) return null;
 
-    const sortedExams = [...examScores].sort((a, b) => 
-      new Date(a.calendarActivity.scheduledDate).getTime() - new Date(b.calendarActivity.scheduledDate).getTime()
-    );
-
     return {
-      labels: sortedExams.map(exam => format(new Date(exam.calendarActivity.scheduledDate), 'MMM d')),
+      labels: examScores.map(exam => 
+        exam.scheduledDate ? format(new Date(exam.scheduledDate), 'MMM d') : format(new Date(exam.createdAt), 'MMM d')
+      ),
       datasets: [
         {
+          type: 'bar' as const,
           label: 'MCAT Score',
-          data: sortedExams.map(exam => {
-            // Calculate total score from section scores
-            const totalScore = exam.dataPulses.reduce((sum, pulse) => sum + pulse.positive, 0);
-            return totalScore;
-          }),
-          borderColor: 'rgb(75, 192, 192)',
-          tension: 0.4,
-          fill: false,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          pointBackgroundColor: 'rgb(75, 192, 192)',
+          data: examScores.map(exam => exam.totalScore),
+          backgroundColor: getThemeColor(),
+          hoverBackgroundColor: getThemeColor(),
+          borderRadius: 5,
+          barThickness: 30,
         },
         {
+          type: 'line' as const,
           label: 'Target Score',
-          data: Array(sortedExams.length).fill(parseInt(targetScore)),
-          borderColor: 'rgba(255, 99, 132, 0.5)',
+          data: Array(examScores.length).fill(parseInt(targetScore)),
+          borderColor: 'rgba(255, 99, 132, 0.8)',
+          borderWidth: 1.5,
           borderDash: [5, 5],
-          tension: 0,
-          fill: false,
           pointRadius: 0,
-        },
+          fill: false,
+        }
       ],
     };
-  }, [examScores, targetScore]);
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false,
-      },
-      title: {
-        display: false,
-      },
-      tooltip: {
-        mode: 'index' as const,
-        intersect: false,
-        callbacks: {
-          label: function(context: any) {
-            if (context.dataset.label === 'Target Score') {
-              return `Target Score: ${targetScore}`;
-            }
-            return `${context.dataset.label}: ${context.raw}`;
-          }
-        }
-      },
-      datalabels: {
-        color: 'var(--theme-text-color)',
-        anchor: 'start' as const,
-        align: 'bottom' as const,
-        offset: 10,
-        font: {
-          size: 12,
-        },
-        formatter: function(value: any, context: any) {
-          // Only show labels for MCAT Score dataset
-          return context.datasetIndex === 0 ? value : '';
-        }
-      }
-    },
-    scales: {
-      x: {
-        grid: {
-          display: false,
-        },
-        ticks: {
-          padding: 30,
-          color: 'var(--theme-text-color)',
-          font: {
-            size: 12,
-          }
-        },
-        border: {
-          display: true,
-          color: 'rgba(255, 255, 255, 0.1)',
-        },
-      },
-      y: {
-        display: true,
-        min: 472,
-        max: 528,
-        position: 'left' as const,
-        ticks: {
-          stepSize: 4,
-          color: 'var(--theme-text-color)',
-          font: {
-            size: 12,
-          },
-          padding: 10,
-        },
-        grid: {
-          display: true,
-          color: 'rgba(255, 255, 255, 0.05)',
-          drawBorder: false,
-        },
-        border: {
-          display: true,
-          color: 'rgba(255, 255, 255, 0.1)',
-        },
-      },
-    },
-    onClick: (event: any, elements: any[]) => {
-      if (!elements.length) return;
-      
-      const element = elements[0];
-      if (element.datasetIndex === 1) { // Target Score dataset
-        const yValue = Math.round(element.chart.scales.y.getValueForPixel(event.y));
-        const newTargetScore = Math.min(Math.max(yValue, 472), 528);
-        setTargetScore(newTargetScore.toString());
-      }
-    },
-    hover: {
-      mode: 'index' as const,
-      intersect: false
-    },
-  };
+  }, [examScores, targetScore, getThemeColor]);
 
   // Define color map for subjects
   const colorMap: { [key: string]: { backgroundColor: string; hoverBackgroundColor: string } } = {
@@ -269,9 +113,9 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
     },
   };
 
-  const labels = ["CARs", "Psych/Soc", "Chem/Phys", "Bio/Biochem"];
+  const labels: SectionName[] = ["CARs", "Psych/Soc", "Chem/Phys", "Bio/Biochem"];
 
-  const handleButtonClick = (label: string) => {
+  const handleButtonClick = (label: SectionName) => {
     setSelectedSubject(label);
     onProgressClick(label);
   };
@@ -376,23 +220,44 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
       50% { transform: translate(-50%, 50%) scale(0); opacity: 0; }
       75% { transform: translate(0, -50%) scale(1); opacity: 0.5; }
     }
+    @keyframes textPulse {
+      0%, 100% { 
+        transform: scale(1);
+        text-shadow: 0 0 10px var(--theme-hover-color);
+      }
+      50% { 
+        transform: scale(1.02);
+        text-shadow: 0 0 20px var(--theme-hover-color),
+                    0 0 30px var(--theme-hover-color);
+      }
+    }
+    @keyframes gradientText {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
     .pulse { animation: pulse 2s ease-in-out infinite; }
     .glow { animation: glow 2s ease-in-out infinite; }
     .float { animation: float 3s ease-in-out infinite; }
     .bounce { animation: bounce 2s ease-in-out infinite; }
     .sparkle { animation: float 3s ease-in-out infinite; }
+    .animated-text {
+      animation: textPulse 3s ease-in-out infinite;
+      background: linear-gradient(90deg, 
+        var(--theme-text-color) 0%, 
+        var(--theme-hover-color) 50%, 
+        var(--theme-text-color) 100%
+      );
+      background-size: 200% auto;
+      color: transparent;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: gradientText 6s linear infinite;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
   `;
   document.head.appendChild(style);
-
-  const getThemeColor = () => {
-    const themeColors = {
-      cyberSpace: '#3b82f6',
-      sakuraTrees: '#b85475',
-      sunsetCity: '#ff6347',
-      mykonosBlue: '#4cb5e6'
-    };
-    return themeColors[theme];
-  };
 
   return (
     <div className="w-full h-full flex flex-col p-3 md:p-4 lg:p-6">
@@ -410,29 +275,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
           {chartData ? (
             <Chart 
               type="bar"
-              data={{
-                labels: chartData.labels,
-                datasets: [
-                  {
-                    type: 'bar',
-                    data: chartData.datasets[0].data,
-                    backgroundColor: getThemeColor(),
-                    hoverBackgroundColor: getThemeColor(),
-                    borderRadius: 5,
-                    barThickness: 30,
-                  },
-                  {
-                    type: 'line',
-                    label: 'Target Score',
-                    data: Array(chartData.labels.length).fill(parseInt(targetScore)),
-                    borderColor: 'rgba(255, 99, 132, 0.8)',
-                    borderWidth: 1.5,
-                    borderDash: [5, 5],
-                    pointRadius: 0,
-                    fill: false,
-                  }
-                ]
-              }}
+              data={chartData}
               options={{
                 responsive: true,
                 maintainAspectRatio: false,
@@ -500,8 +343,34 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
               }}
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-white opacity-70">
-              No exam scores available yet
+            <div className="flex flex-col items-center justify-center h-full space-y-6">
+              {error ? (
+                <div className="text-[--theme-text-color] opacity-70">Error loading exam scores</div>
+              ) : (
+                <>
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Image
+                      src="/kalypsotyping.gif"
+                      alt="Kalypso typing"
+                      width={200}
+                      height={200}
+                      className="rounded-lg"
+                    />
+                  </motion.div>
+                  <motion.p 
+                    className="animated-text text-center text-lg md:text-lg max-w-[50%] mx-auto"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                  >
+                    Kalypso&apos;s working really hard on his first practice test and so should you!
+                  </motion.p>
+                </>
+              )}
             </div>
           )}
         </div>
