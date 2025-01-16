@@ -7,6 +7,7 @@ import { DataPulse } from '@/hooks/useCalendarActivities';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Confetti from 'react-confetti';
 import { useDataPulse } from '@/hooks/useDataPulse';
+import { toast } from 'react-hot-toast';
 
 
 export interface Section {
@@ -150,6 +151,20 @@ const SectionReview: React.FC<SectionReviewProps> = ({
         setShowConfetti(false);
       }, 5000);
       
+      // Increment user score by 2 coins
+      const response = await fetch('/api/user-info', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: 2 }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user score');
+      }
+      
+    // Show toast message
+    toast.success("Congratulations! You've earned 2 coins for reviewing the section!");
+
       // Call the onComplete callback to update frontend state
       onComplete();
     } catch (error) {
