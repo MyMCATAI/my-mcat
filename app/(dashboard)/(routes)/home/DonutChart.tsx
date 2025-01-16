@@ -17,6 +17,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useClerk } from '@clerk/nextjs';
 import { motion } from "framer-motion";
 import { Chart } from 'react-chartjs-2';
+import { Brain, BookText, Atom, Activity } from 'lucide-react';
 
 ChartJS.register(
   CategoryScale,
@@ -77,23 +78,23 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
     fetchProgressData();
   }, []);
 
-  // Define color map for subjects
+  // Define color map for subjects with more subtle hover states
   const colorMap: { [key: string]: { backgroundColor: string; hoverBackgroundColor: string } } = {
     "CARs": {
-      backgroundColor: "rgba(76, 175, 80, 0.15)", // Green
-      hoverBackgroundColor: "rgba(102, 187, 106)", // Hover Green
+      backgroundColor: "rgba(76, 175, 80, 0.08)", // More subtle green
+      hoverBackgroundColor: "rgba(76, 175, 80, 0.18)", // Slightly more intense on hover
     },
     "Psych/Soc": {
-      backgroundColor: "rgba(156, 39, 176, 0.15)", // Purple
-      hoverBackgroundColor: "rgba(186, 104, 200)", // Hover Purple
+      backgroundColor: "rgba(156, 39, 176, 0.08)", // More subtle purple
+      hoverBackgroundColor: "rgba(156, 39, 176, 0.18)", // Slightly more intense on hover
     },
     "Chem/Phys": {
-      backgroundColor: "rgba(251, 192, 45, 0.4)", // Darker yellow with higher opacity
-      hoverBackgroundColor: "rgba(251, 192, 45, 1)", // Full opacity darker yellow
+      backgroundColor: "rgba(251, 192, 45, 0.08)", // More subtle yellow
+      hoverBackgroundColor: "rgba(251, 192, 45, 0.18)", // Slightly more intense on hover
     },
     "Bio/Biochem": {
-      backgroundColor: "rgba(33, 150, 243, 0.15)", // Blue
-      hoverBackgroundColor: "rgba(66, 165, 245)", // Hover Blue
+      backgroundColor: "rgba(33, 150, 243, 0.08)", // More subtle blue
+      hoverBackgroundColor: "rgba(33, 150, 243, 0.18)", // Slightly more intense on hover
     },
   };
 
@@ -161,6 +162,14 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
     return themeColors[theme];
   };
 
+  // Define section icons
+  const sectionIcons = {
+    "CARs": BookText,
+    "Psych/Soc": Brain,
+    "Chem/Phys": Atom,
+    "Bio/Biochem": Activity,
+  };
+
   return (
     <div className="w-full h-full flex flex-col p-3 md:p-4 lg:p-6">
       <h2 className="text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center">
@@ -217,7 +226,6 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
                       size: 18
                     },
                     formatter: (value: number, context: any) => {
-                      // Only show labels for bar dataset
                       if (context.datasetIndex === 0) {
                         return value.toString();
                       }
@@ -273,46 +281,78 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
           )}
         </div>
 
-        {/* Subject Buttons */}
-        <div className="grid grid-cols-2 lg:grid-cols-1 gap-5 lg:w-40">
+        {/* Subject Buttons - Updated Design */}
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 lg:w-48">
           {labels.map((label) => {
             const avgScore = progressData?.sectionAverages[label as keyof typeof progressData.sectionAverages];
+            const Icon = sectionIcons[label as keyof typeof sectionIcons];
+            
             return (
               <motion.button
                 key={label}
-                className="relative group flex flex-col items-center justify-center p-1.5 md:p-2 lg:p-3 rounded-lg transition-all duration-200"
+                className="relative group flex items-center gap-3 p-3 rounded-lg transition-all duration-300"
                 style={{
-                  backgroundColor: hoveredButton === label 
-                    ? colorMap[label].hoverBackgroundColor 
-                    : colorMap[label].backgroundColor,
+                  background: 'linear-gradient(135deg, var(--theme-leaguecard-color) 0%, var(--theme-leaguecard-accent) 100%)',
                   boxShadow: hoveredButton === label
                     ? 'var(--theme-button-boxShadow-hover)'
-                    : 'var(--theme-button-boxShadow)'
+                    : 'var(--theme-button-color)',
+                  border: `1px solid ${hoveredButton === label ? 'var(--theme-border-color)' : 'transparent'}`,
+                  transition: 'all 0.3s ease-in-out'
                 }}
                 onHoverStart={() => setHoveredButton(label)}
                 onHoverEnd={() => setHoveredButton(null)}
                 onClick={() => handleButtonClick(label)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.01, y: -1 }}
+                whileTap={{ scale: 0.99 }}
               >
-                <div className="flex flex-col items-center gap-0.5">
+                {/* Icon Container */}
+                <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300
+                  ${hoveredButton === label ? 'bg-[--theme-hover-color]/10' : 'bg-[--theme-hover-color]/5'}`}
+                >
+                  <Icon className={`w-4 h-4 transition-all duration-300
+                    ${hoveredButton === label 
+                      ? 'text-[--theme-hover-color]' 
+                      : 'text-[--theme-text-color]'}`} 
+                    style={{
+                      opacity: hoveredButton === label ? 0.9 : 0.6
+                    }}
+                  />
+                </div>
+
+                {/* Score and Label */}
+                <div className="flex flex-col items-start">
                   {isLoading ? (
-                    <div className="animate-spin rounded-full h-3 w-3 md:h-4 md:w-4 border-b-2 border-[--theme-hover-color]" />
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[--theme-hover-color]" />
                   ) : (
                     <>
-                      <span className="text-sm md:text-base lg:text-lg font-bold" style={{ 
-                        color: hoveredButton === label ? 'white' : colorMap[label].hoverBackgroundColor 
+                      <span className="text-lg font-bold leading-none transition-all duration-300" style={{ 
+                        color: hoveredButton === label 
+                          ? 'var(--theme-hover-color)'
+                          : 'var(--theme-text-color)',
+                        opacity: hoveredButton === label ? 1 : 0.75,
+                        transform: `scale(${hoveredButton === label ? 1.02 : 1})`,
                       }}>
                         {avgScore !== null ? avgScore : 'N/A'}
                       </span>
-                      <span className="text-xs font-medium" style={{ 
-                        color: hoveredButton === label ? 'white' : 'var(--theme-text-color)' 
+                      <span className="text-xs font-medium mt-0.5 transition-all duration-300" style={{ 
+                        color: 'var(--theme-text-color)',
+                        opacity: hoveredButton === label ? 0.8 : 0.5
                       }}>
                         {label}
                       </span>
                     </>
                   )}
                 </div>
+
+                {/* Hover Indicator */}
+                <motion.div
+                  className="absolute right-2 w-0.5 h-8 rounded-full"
+                  animate={{
+                    opacity: hoveredButton === label ? 0.2 : 0,
+                    backgroundColor: hoveredButton === label ? 'var(--theme-hover-color)' : 'transparent',
+                  }}
+                  transition={{ duration: 0.3 }}
+                />
               </motion.button>
             );
           })}

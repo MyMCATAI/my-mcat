@@ -43,6 +43,7 @@ interface PracticeTestsProps {
   chatbotRef?: React.MutableRefObject<{
     sendMessage: (message: string, messageContext?: string) => void;
   }>;
+  onActivitiesUpdate?: () => void;
 }
 
 interface Test {
@@ -77,7 +78,8 @@ interface CompletedTestRecord {
 const PracticeTests: React.FC<PracticeTestsProps> = ({ 
   handleSetTab, 
   className = "", 
-  chatbotRef 
+  chatbotRef,
+  onActivitiesUpdate
 }) => {
   const { activities: examActivities, loading: examLoading, updateExamDate, createExamActivity, fetchExamActivities } = useExamActivities();
   const { activities: allActivities, loading: activitiesLoading, refetch: refetchAllActivities } = useAllCalendarActivities();
@@ -456,9 +458,6 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
         if (action === 'generate') {
           handleSetTab && handleSetTab('Tests');
         }
-
-        // Close the modal
-        setShowWeeklyModal(false);
         return true;
       } catch (error) {
         console.error('Failed to refresh activities:', error);
