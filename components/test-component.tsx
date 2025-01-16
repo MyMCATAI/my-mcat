@@ -458,11 +458,9 @@ const TestComponent: React.FC<TestComponentProps> = ({
     if (!userTest || !testStartTime) return;
 
     const testFinishTime = new Date();
-    const totalTimeInSeconds =
-      testHeaderRef.current?.getTotalElapsedTime() || 0;
+    const totalTimeInSeconds = testHeaderRef.current?.getTotalElapsedTime() || 0;
 
-    const { score, correctAnswers, technique, averageTimePerQuestion } =
-      calculateScore(totalTimeInSeconds);
+    const { score, correctAnswers, technique, averageTimePerQuestion } = calculateScore(totalTimeInSeconds);
 
     setScore(score);
     setCorrectAnswer(correctAnswers);
@@ -470,64 +468,61 @@ const TestComponent: React.FC<TestComponentProps> = ({
     setTechnique(technique);
 
     try {
-      // Update the user test record
-      const response = await fetch(`/api/user-test/${userTest.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          score,
-          finishedAt: testFinishTime.toISOString(),
-          totalTime: totalTimeInSeconds,
-        }),
-      });
+        // Update the user test record
+        const response = await fetch(`/api/user-test/${userTest.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                score,
+                finishedAt: testFinishTime.toISOString(),
+                totalTime: totalTimeInSeconds,
+            }),
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to update test");
-      }
-
-      // Calculate total stars (score stars + timing stars + technique stars)
-      const scoreStars = score === 100 ? 3 : score >= 80 ? 2 : 1;
-      const totalMinutes = totalTimeInSeconds / 60;
-      const timingStars = totalMinutes <= 10 ? 3 : totalMinutes <= 12 ? 2 : 1;
-      const techniqueStars = technique;
-      
-      const totalStars = scoreStars + timingStars + techniqueStars;
- 
-      // Calculate percentage of correct answers
-  const correctPercentage = (correctAnswers / (test?.questions?.length || 1)) * 100;
-
-      // Award coins based on correct percentage
-      let cupcakesEarned = totalStars >= 8 ? 1 : 0; // Existing logic
-      if (correctPercentage >= 100) {
-        // Check if test level is 3 or higher
-        if (test && test.difficulty !== undefined && test.difficulty >= 3) {
-          cupcakesEarned += 3; // 3 additional coins for difficulty 3 or higher
-        } else {
-          cupcakesEarned += 2; // 2 additional coins for 100% correct
+        if (!response.ok) {
+            throw new Error("Failed to update test");
         }
-      } else if (correctPercentage >= 60) {
-        cupcakesEarned += 1; // 1 additional coin for 60% or more correct
-      }
 
-  const scoreChange = cupcakesEarned;
+        // Calculate total stars (score stars + timing stars + technique stars)
+        const scoreStars = score === 100 ? 3 : score >= 80 ? 2 : 1;
+        const totalMinutes = totalTimeInSeconds / 60;
+        const timingStars = totalMinutes <= 10 ? 3 : totalMinutes <= 12 ? 2 : 1;
+        const techniqueStars = technique;
+        
+        const totalStars = scoreStars + timingStars + techniqueStars;
 
-      // Update user's score
-      const scoreResponse = await fetch("/api/user-info/", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: scoreChange }),
-      });
+        // New coin reward logic
+        let coinsEarned = 0;
+        if (totalStars === 9) {
+            // Check if test difficulty is 3 or higher for 3 coins
+            if (currentPassage && currentPassage.difficulty >= 3) {
+                coinsEarned = 3; // 3 coins for perfect score on difficult passage
+            } else {
+                coinsEarned = 2; // 2 coins for perfect score on easier passage
+            }
+        } else if (totalStars >= 6) {
+            coinsEarned = 1; // 1 coin for 6+ stars
+        }
 
-      if (!scoreResponse.ok) {
-        throw new Error("Failed to update user score");
-      }
+        // Update user's score if coins were earned
+        if (coinsEarned > 0) {
+            const scoreResponse = await fetch("/api/user-info/", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ amount: coinsEarned }),
+            });
 
-      setShowScorePopup(true);
-      onTestComplete && onTestComplete(score);
+            if (!scoreResponse.ok) {
+                throw new Error("Failed to update user score");
+            }
+        }
+
+        setShowScorePopup(true);
+        onTestComplete && onTestComplete(score);
     } catch (err) {
-      console.error("Error finishing test:", err);
+        console.error("Error finishing test:", err);
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
   };
   const getCurrentTestQuestion = (): TestQuestion | null => {
@@ -1091,13 +1086,23 @@ const TestComponent: React.FC<TestComponentProps> = ({
 
           {/* ChatBotInLine component */}
           {showChatbot && (
-            <div className="rounded-lg mx-4 flex-shrink-0">
-              <ChatBotInLine
-                chatbotContext={chatbotContext}
-                chatbotRef={chatbotRef}
-                question={currentQuestion}
-                handleShowHint={handleShowHint}
-              />
+            <div className="rounded-lg mx-4 flex-shrink-0 relative">
+                <button
+                    onClick={() => setShowChatbot(false)}
+                    className="absolute top-2 right-2 z-10 p-2 rounded-full hover:bg-gray-200 transition-colors"
+                    aria-label="Close chatbot"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+                <ChatBotInLine
+                    chatbotContext={chatbotContext}
+                    chatbotRef={chatbotRef}
+                    question={currentQuestion}
+                    handleShowHint={handleShowHint}
+                />
             </div>
           )}
         </div>
@@ -1134,6 +1139,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
               )
             : 0
         }
+        difficulty={currentPassage?.difficulty}
       />
       <audio ref={audioRef} src="/chatbot-open.mp3" />
 

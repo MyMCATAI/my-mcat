@@ -1399,10 +1399,10 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
         {/* Need Help section - Only show in initial view */}
         {!activeSection && (
           <div className="mt-8 text-center">
-            <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+            <h3 className="text-xs mb-4 text-center opacity-60 uppercase tracking-wide">
               Need help?
             </h3>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-4">  {/* Changed gap-2 to gap-4 */}
               {/* Reset Tutorials and Email Settings */}
               <div className="grid grid-cols-2 gap-4">
                 <button
