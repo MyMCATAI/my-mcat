@@ -1,0 +1,117 @@
+import { NextResponse } from 'next/server';
+import { auth, currentUser } from "@clerk/nextjs/server";
+import prisma from "@/lib/prismadb";
+
+export interface MCATProgressResponse {
+  chartData: {
+    labels: string[];
+    scores: number[];
+    targetScore: number;
+  };
+  sectionAverages: {
+    "CARs": number | null;
+    "Psych/Soc": number | null;
+    "Chem/Phys": number | null;
+    "Bio/Biochem": number | null;
+  };
+}
+
+export async function GET() {
+  try {
+    const { userId } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get user's target score from Clerk metadata
+    const user = await currentUser();
+    const targetScore = user?.unsafeMetadata?.targetScore || 520;
+
+    // Get all exams with their scores
+    const exams = await prisma.fullLengthExam.findMany({
+      where: { userId },
+      select: {
+        dataPulses: {
+          select: {
+            name: true,
+            positive: true,
+          }
+        },
+        calendarActivity: {
+          select: {
+            scheduledDate: true,
+          }
+        }
+      },
+      orderBy: {
+        calendarActivity: {
+          scheduledDate: 'asc'
+        }
+      }
+    });
+
+    // Process exam data for chart
+    const chartData = {
+      labels: [] as string[],
+      scores: [] as number[],
+      targetScore
+    };
+
+    // Process section scores
+    const sectionScores = {
+      "CARs": [] as number[],
+      "Psych/Soc": [] as number[],
+      "Chem/Phys": [] as number[],
+      "Bio/Biochem": [] as number[]
+    };
+
+    // Calculate scores and organize by section
+    exams.forEach(exam => {
+      if (exam.calendarActivity?.scheduledDate) {
+        const date = new Date(exam.calendarActivity.scheduledDate);
+        chartData.labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        
+        const totalScore = exam.dataPulses.reduce((sum, pulse) => sum + pulse.positive, 0);
+        chartData.scores.push(totalScore);
+
+        // Add to section scores
+        exam.dataPulses.forEach(pulse => {
+          if (pulse.name.includes("Critical Analysis")) {
+            sectionScores["CARs"].push(pulse.positive);
+          } else if (pulse.name.includes("Psychological")) {
+            sectionScores["Psych/Soc"].push(pulse.positive);
+          } else if (pulse.name.includes("Chemical")) {
+            sectionScores["Chem/Phys"].push(pulse.positive);
+          } else if (pulse.name.includes("Biological")) {
+            sectionScores["Bio/Biochem"].push(pulse.positive);
+          }
+        });
+      }
+    });
+
+    // Calculate section averages
+    const sectionAverages: MCATProgressResponse['sectionAverages'] = {
+      "CARs": sectionScores["CARs"].length > 0 
+        ? Math.round(sectionScores["CARs"].reduce((a, b) => a + b, 0) / sectionScores["CARs"].length)
+        : null,
+      "Psych/Soc": sectionScores["Psych/Soc"].length > 0
+        ? Math.round(sectionScores["Psych/Soc"].reduce((a, b) => a + b, 0) / sectionScores["Psych/Soc"].length)
+        : null,
+      "Chem/Phys": sectionScores["Chem/Phys"].length > 0
+        ? Math.round(sectionScores["Chem/Phys"].reduce((a, b) => a + b, 0) / sectionScores["Chem/Phys"].length)
+        : null,
+      "Bio/Biochem": sectionScores["Bio/Biochem"].length > 0
+        ? Math.round(sectionScores["Bio/Biochem"].reduce((a, b) => a + b, 0) / sectionScores["Bio/Biochem"].length)
+        : null
+    };
+
+    return NextResponse.json({
+      chartData,
+      sectionAverages
+    } as MCATProgressResponse);
+
+  } catch (error) {
+    console.error("[MCAT_PROGRESS_GET]", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+} 
