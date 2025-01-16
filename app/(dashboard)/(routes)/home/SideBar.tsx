@@ -911,4 +911,11 @@ const SideBar: React.FC<SideBarProps> = ({
   );
 };
 
-export default SideBar;
+export default React.memo(SideBar, (prevProps, nextProps) => {
+  // Only re-render if these props change
+  return (
+    prevProps.activities === nextProps.activities &&
+    prevProps.currentPage === nextProps.currentPage &&
+    prevProps.chatbotContext === nextProps.chatbotContext
+  );
+});
