@@ -531,6 +531,7 @@ const Page = () => {
 
           <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
             <SideBar
+              key={activities.length}
               handleSetTab={handleTabChange}
               activities={activities}
               currentPage={currentPage}

@@ -439,15 +439,25 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
   const handleWeeklyModalComplete = async ({ success, action }: { success: boolean; action?: 'generate' | 'save' | 'reset' }) => {
     if (success) {
       try {
-        // Refresh all activities immediately
+        // Add a small delay to ensure database is updated
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Refresh all activities
         await Promise.all([
           fetchExamActivities(),
           refetchAllActivities()
         ]);
         
+        // Update parent's activities state
+        if (onActivitiesUpdate) {
+          await onActivitiesUpdate();
+        }
+        
         if (action === 'generate') {
           handleSetTab && handleSetTab('Tests');
         }
+
+        // Close the modal
         setShowWeeklyModal(false);
         return true;
       } catch (error) {
