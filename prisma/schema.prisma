@@ -270,7 +270,7 @@ model Referral {
   referrerEmail String    @default("")
   friendEmail   String
   createdAt     DateTime  @default(now())
-  friendUserId  String    @default("")
+  friendUserId  String?    @default("")
   joinedAt      DateTime?
 
   @@index([userId])

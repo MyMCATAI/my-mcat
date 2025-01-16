@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
         let leaderboard: LeaderboardEntry[] = [];
         let counter = 1;
         for (let i = 0; i < usersInfo.length; i++) {
-            // Check if the name is not null and starts with a letter
+            // Check if the name is not null
             if (!usersInfo[i].userInfo?.firstName) {
                 continue;
             }

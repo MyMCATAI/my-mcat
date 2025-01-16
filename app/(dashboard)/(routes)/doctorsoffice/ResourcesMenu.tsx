@@ -1,16 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { DoctorOfficeStats, ReportData } from "@/types";
+import React, { useState, useEffect, useCallback } from "react";
+import { DoctorOfficeStats } from "@/types";
 import { Progress } from "@/components/ui/progress";
 import { FaFire, FaUserInjured } from "react-icons/fa";
 import {
   calculatePlayerLevel,
   calculateTotalQC,
-  getClinicCostPerDay,
   getLevelNumber,
 } from "@/utils/calculateResourceTotals";
 import { Plus, Globe, Headphones } from "lucide-react";
 import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import { toast } from "react-hot-toast";
+import { useUserInfo } from "@/hooks/useUserInfo";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ResourcesMenuProps {
   reportData: DoctorOfficeStats | null;
@@ -19,7 +26,8 @@ interface ResourcesMenuProps {
   totalPatients: number;
   patientsPerDay: number;
 }
-interface GlobalLeaderboardEntry {
+
+interface LeaderboardEntry {
   id: number;
   name: string;
   patientsTreated: number;
@@ -35,17 +43,81 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   const [friendEmail, setFriendEmail] = useState("");
   const [isHeadphonesDropdownOpen, setIsHeadphonesDropdownOpen] = useState(false);
   const { isAutoPlay, setIsAutoPlay } = useMusicPlayer();
-  const [globalLeaderboard, setGlobalLeaderboard] = useState<GlobalLeaderboardEntry[]>([]);
+  const [globalLeaderboard, setGlobalLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardType, setLeaderboardType] = useState<"global" | "friends">("global");
+  const [friendsLeaderboard, setFriendsLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const { referrals, userInfo, createReferral } = useUserInfo();
+  const userId = userInfo?.userId;
 
   const toggleAddFriendDropdown = () => {
     setIsAddFriendOpen(!isAddFriendOpen);
   };
 
-  const handleAddFriend = () => {
-    setFriendEmail("");
-    setIsAddFriendOpen(false);
+  const fetchLeaderboard = async () => {
+    try {
+      const response = await fetch('/api/global-leaderboard');
+      const data = await response.json();
+      setGlobalLeaderboard(data);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+    }
   };
+
+  const fetchFriendsLeaderboard = useCallback(async () => {
+    try {
+      const response = await fetch('/api/friend-leaderboard');
+      const data = await response.json();
+      setFriendsLeaderboard(data);
+    } catch (error) {
+      console.error("Error fetching friends leaderboard:", error);
+      toast.error("Failed to load leaderboard");
+    }
+  }, [userInfo, userId, referrals]);
+
+  const handleAddFriend = useCallback(async () => {
+    try {
+      if (!userInfo || !userId) {
+        toast.error("Please try again in a moment");
+        return;
+      }
+
+      if (!friendEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(friendEmail)) {
+        toast.error("Invalid email address");
+        return;
+      }
+
+      await createReferral({
+        friendEmail: friendEmail,
+      });
+
+      await fetchFriendsLeaderboard();
+      toast.success("Friend invitation sent!");
+      setFriendEmail("");
+      setIsAddFriendOpen(false);
+    } catch (error) {
+      console.error("Error adding friend:", error);
+      toast.error("Failed to send friend invitation");
+    }
+  }, [
+    userInfo, 
+    userId, 
+    referrals, 
+    friendEmail, 
+    createReferral, 
+    fetchFriendsLeaderboard, 
+    setFriendEmail, 
+    setIsAddFriendOpen
+  ]);
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
+  useEffect(() => {
+    if (userInfo && userId && referrals) {
+      fetchFriendsLeaderboard();
+    }
+  }, [userInfo, userId, referrals]);
 
   const showGlobalRankings = async () => {
     setLeaderboardType("global");
@@ -83,8 +155,6 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
 
   const playerLevel = calculatePlayerLevel(userRooms);
   const levelNumber = getLevelNumber(playerLevel);
-
-  const totalQC = calculateTotalQC(levelNumber, reportData.streak);
 
   return (
     <div className="h-full">
@@ -124,7 +194,11 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
 
         <div className="w-full max-w-md mt-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Global Leaderboard</h3>
+            {leaderboardType === "global" ? (
+              <h3 className="text-lg font-semibold">Global Leaderboard</h3>
+            ) : (
+              <h3 className="text-lg font-semibold">Friends Leaderboard</h3>
+            )}
             {/* todo: add friend leaderboard */}
             <div className="flex gap-2">
               <Plus
@@ -178,24 +252,56 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
           <div className="space-y-3">
             {leaderboardType === "global" ? (
               globalLeaderboard.map((entry) => (
-                <div key={entry.id} className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
-                      {entry.id}
-                    </div>
-                    <span className="font-medium">{entry.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FaUserInjured className="text-yellow-300" />
-                    <span>{entry.patientsTreated}</span>
-                  </div>
-                </div>
+                <TooltipProvider key={entry.id}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
+                            {entry.id}
+                          </div>
+                          <span className="font-medium">{entry.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaUserInjured className="text-yellow-300" />
+                          <span>{entry.patientsTreated}</span>
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{`${entry.name}'s clinic has treated ${entry.patientsTreated} patients so far!`}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               ))
             ) : (
-              <div className="bg-[--theme-doctorsoffice-accent] p-4 rounded-lg text-center">
-                <p className="text-lg font-medium mb-2">Friends Leaderboard Coming Soon!</p>
-                <p className="text-sm text-gray-400/40">{"You'll soon be able to compete with your friends and see their progress."}</p>
-              </div>
+              friendsLeaderboard.map((entry) => (
+                <TooltipProvider key={entry.id}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
+                            {entry.id}
+                          </div>
+                          <span className="font-medium">{entry.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaUserInjured className="text-yellow-300" />
+                          <span>{entry.patientsTreated}</span>
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{`${entry.name}'s clinic has treated ${entry.patientsTreated} patients so far!`}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ))
             )}
           </div>
 
