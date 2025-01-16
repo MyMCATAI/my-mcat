@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ImageIcon } from "lucide-react";
@@ -80,7 +81,7 @@ export const ExplanationImages: React.FC<ExplanationImagesProps> = ({
       <div className="mt-4">
         <Button
           onClick={fetchImages}
-          className="flex items-center gap-2 bg-[--theme-hover-color] text-white hover:bg-[--theme-hover-color]/90"
+          className="flex items-center gap-2 bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color]/90"
         >
           <ImageIcon className="w-4 h-4" />
           Show Related Images
@@ -116,11 +117,15 @@ export const ExplanationImages: React.FC<ExplanationImagesProps> = ({
               className="relative group cursor-pointer"
               onClick={() => handleImageClick(image)}
             >
-              <img
-                src={image.url}
-                alt={image.title || ''}
-                className="w-full h-48 object-cover rounded-lg transition-transform duration-200 group-hover:scale-[1.02]"
-              />
+              <div className="relative w-full h-48">
+                <Image
+                  src={image.url}
+                  alt={image.title || ''}
+                  fill
+                  className="object-cover rounded-lg transition-transform duration-200 group-hover:scale-[1.02]"
+                  unoptimized
+                />
+              </div>
               {image.title && image.title !== `Related image ${index + 1}` && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white p-2 text-sm rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   {image.title}
@@ -142,11 +147,15 @@ export const ExplanationImages: React.FC<ExplanationImagesProps> = ({
           }}
         >
           <div className="relative max-w-[90vw] max-h-[90vh]">
-            <img
-              src={selectedImage.url}
-              alt={selectedImage.title || ''}
-              className="max-w-full max-h-[90vh] object-contain rounded-lg"
-            />
+            <div className="relative w-full" style={{ height: '90vh' }}>
+              <Image
+                src={selectedImage.url}
+                alt={selectedImage.title || ''}
+                fill
+                className="object-contain rounded-lg"
+                unoptimized
+              />
+            </div>
             {selectedImage.title && selectedImage.title !== `Related image` && (
               <div className="absolute bottom-4 left-4 right-4 bg-black/60 text-white p-2 text-sm rounded-lg">
                 {selectedImage.title}

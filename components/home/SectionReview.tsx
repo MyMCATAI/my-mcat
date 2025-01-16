@@ -151,19 +151,19 @@ const SectionReview: React.FC<SectionReviewProps> = ({
         setShowConfetti(false);
       }, 5000);
       
-      // Increment user score by 2 coins
+      // Increment user score by 1 coin
       const response = await fetch('/api/user-info', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: 2 }),
+        body: JSON.stringify({ amount: 1 }),
       });
 
       if (!response.ok) {
         throw new Error('Failed to update user score');
       }
       
-    // Show toast message
-    toast.success("Congratulations! You've earned 2 coins for reviewing the section!");
+      // Show toast message
+      toast.success("Congratulations! You've earned 1 coin for reviewing the section!");
 
       // Call the onComplete callback to update frontend state
       onComplete();

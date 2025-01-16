@@ -282,7 +282,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
         </div>
 
         {/* Subject Buttons - Updated Design */}
-        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 lg:w-48">
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 lg:gap-6 lg:w-48">
           {labels.map((label) => {
             const avgScore = progressData?.sectionAverages[label as keyof typeof progressData.sectionAverages];
             const Icon = sectionIcons[label as keyof typeof sectionIcons];
@@ -290,12 +290,12 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
             return (
               <motion.button
                 key={label}
-                className="relative group flex items-center gap-3 p-3 rounded-lg transition-all duration-300"
+                className="relative group flex items-center gap-3 p-5 rounded-lg transition-all duration-300"
                 style={{
-                  background: 'linear-gradient(135deg, var(--theme-leaguecard-color) 0%, var(--theme-leaguecard-accent) 100%)',
+                  background: 'linear-gradient(315deg, var(--theme-leaguecard-color) 0%, var(--theme-leaguecard-accent) 100%)',
                   boxShadow: hoveredButton === label
-                    ? 'var(--theme-button-boxShadow-hover)'
-                    : 'var(--theme-button-color)',
+                    ? '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)'
+                    : '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
                   border: `1px solid ${hoveredButton === label ? 'var(--theme-border-color)' : 'transparent'}`,
                   transition: 'all 0.3s ease-in-out',
                   borderLeft: `0.25rem solid ${hoveredButton === label 
@@ -328,7 +328,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
                     <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[--theme-hover-color]" />
                   ) : (
                     <>
-                      <span className="text-lg font-bold leading-none transition-all duration-300" style={{ 
+                      <span className="text-2xl font-bold leading-none transition-all duration-300 drop-shadow-lg" style={{ 
                         color: hoveredButton === label 
                           ? 'var(--theme-hover-color)'
                           : 'var(--theme-text-color)',
