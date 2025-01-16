@@ -379,11 +379,11 @@ const Quiz: React.FC<QuizProps> = ({
             const fanfare = new Audio('/fanfare.mp3');
             fanfare.play();
             toast.success("Congratulations! You earned 2 coins for a perfect score! 🎉");
-          } else if (score >= 60) {
+          } else if (score >= 70) {
             await updateScore(1);
             const levelup = new Audio('/levelup.mp3');
             levelup.play();
-            toast.success("Congratulations! You earned 1 coin for scoring above 60%! 🎉");
+            toast.success("Congratulations! You earned 1 coin for scoring above 70%! 🎉");
           }
           setHasAwardedCoins(true);
         } catch (error) {

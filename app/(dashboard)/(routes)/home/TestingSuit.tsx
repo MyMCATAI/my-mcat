@@ -98,13 +98,6 @@ const TestingSuit: React.FC = () => {
     fetchTests(true);
   }, []);
 
-  const handleKalypsoInteraction = () => {
-    setKalypsoInteracted(true);
-    if (!localStorage.getItem("carsTutorialPlayed")) {
-      localStorage.setItem("carsTutorialPlayed", "true");
-    }
-  };
-
   const tabs = [
     { 
       label: "Exams", 

@@ -6,7 +6,8 @@ export interface Passage {
   id: string;
   text: string;
   citation: string;
-  title: string
+  title: string;
+  difficulty: number;
 }
 
 export interface Category {

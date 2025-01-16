@@ -20,8 +20,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import CompletionDialog from "@/components/home/CompletionDialog";
 import { useRouter } from "next/navigation";
 import UWorldPopup from '@/components/home/UWorldPopup';
-import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";
+import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";  
 import ScoreDisplay from '@/components/score/ScoreDisplay';
+import { PurchaseButton } from '@/components/purchase-button';
 
 interface Task {
   text: string;
@@ -340,10 +341,7 @@ const SideBar: React.FC<SideBarProps> = ({
                       <button 
                         className="text-sm font-medium text-blue-500 hover:text-[--theme-hover-color] transition-colors duration-200 underline-offset-4 hover:underline"
                       >
-                        {tutor.name === "Prynce K." 
-                          ? "Book (50 coins/meeting)"
-                          : `Book ($${tutor.price}/hr)`
-                        }
+                        Book (${tutor.price}/hr)
                       </button>
                     </DialogTrigger>
                     <BookTutorDialog tutor={tutor} />
@@ -359,124 +357,154 @@ const SideBar: React.FC<SideBarProps> = ({
 
   const [currentDate, setCurrentDate] = useState(new Date());
 
+  const [userScore, setUserScore] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchUserScore = async () => {
+      try {
+        const response = await fetch('/api/user-info');
+        if (!response.ok) throw new Error('Failed to fetch user score');
+        const data = await response.json();
+        setUserScore(data.score); // Assuming the score is in the response
+      } catch (error) {
+        console.error('Error fetching user score:', error);
+      }
+    };
+
+    fetchUserScore();
+  }, []);
+
   const renderTasks = () => (
-    <div className="h-[calc(100vh-12.3rem)] flex flex-col">
-      <div className="flex items-center justify-between px-4 py-2 bg-[--theme-leaguecard-color] rounded-lg mb-4">
-        <button
-          onClick={() => {
-            const newDate = new Date(currentDate);
-            newDate.setDate(newDate.getDate() - 1);
-            setCurrentDate(newDate);
-          }}
-          className="p-2 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-colors"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <span className="font-medium">
-          {isToday(currentDate) 
-            ? "Today"
-            : isTomorrow(currentDate)
-              ? "Tomorrow"
-              : format(currentDate, 'EEEE, MMMM d')}
-        </span>
-        <button
-          onClick={() => {
-            const newDate = new Date(currentDate);
-            newDate.setDate(newDate.getDate() + 1);
-            setCurrentDate(newDate);
-          }}
-          className="p-2 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-colors"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      </div>
-      <ScrollArea className="flex-grow">
-        <div className="px-4 space-y-6">
-          {todayActivities.map((activity) => (
-            <div key={activity.id} className="mb-6">
-              <button
-                className={`w-full py-2 px-3 
-                  ${
-                    isActivityCompleted(activity)
-                      ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                      : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
-                  }
-                  border border-[--theme-border-color]
-                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
-                  font-semibold rounded-lg transition relative flex items-center justify-between
-                  text-sm`}
-                onClick={() => handleButtonClick(activity.activityTitle)}
-              >
-                <span>{activity.activityTitle}</span>
-                <div className="flex items-center gap-2">
-                  {isActivityCompleted(activity) ? (
-                    <FaCheckCircle
-                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
-                      style={{ color: "var(--theme-hover-text)" }}
-                    />
-                  ) : (
-                    <svg
-                      className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  )}
-                </div>
-              </button>
-
-              <div className="bg-[--theme-mainbox-color] p-3 mt-2 space-y-2 rounded-lg">
-                {activity.tasks && activity.tasks.length > 0 ? (
-                  activity.tasks.map((task, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`task-${activity.id}-${index}`}
-                        checked={task.completed}
-                        onCheckedChange={(checked) =>
-                          isToday(currentDate)
-                            ? handleTaskCompletion(
-                                activity.id,
-                                index,
-                                checked as boolean
-                              )
-                            : null
-                        }
-                        disabled={!isToday(currentDate)}
-                        className={!isToday(currentDate) ? "opacity-50 cursor-not-allowed" : ""}
-                      />
-                      <label
-                        htmlFor={`task-${activity.id}-${index}`}
-                        className={`text-sm leading-tight cursor-pointer flex-grow ${
-                          !isToday(currentDate) ? "opacity-50" : ""
-                        }`}
-                      >
-                        {task.text}
-                      </label>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm italic">No tasks for this activity</p>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {todayActivities.length === 0 && (
-            <p className="text-center italic">
-              No activities scheduled for this day
-            </p>
-          )}
+    <div className="h-[calc(100vh-11rem)] flex flex-col">
+        <div className="flex items-center justify-between px-4 py-2 bg-[--theme-leaguecard-color] rounded-lg">
+            <button
+                onClick={() => {
+                    const newDate = new Date(currentDate);
+                    newDate.setDate(newDate.getDate() - 1);
+                    setCurrentDate(newDate);
+                }}
+                className="p-2 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-colors"
+            >
+                <ChevronLeft className="h-5 w-5" />
+            </button>
+            <span className="font-medium">
+                {isToday(currentDate) 
+                    ? "Today"
+                    : isTomorrow(currentDate)
+                        ? "Tomorrow"
+                        : format(currentDate, 'EEEE, MMMM d')}
+            </span>
+            <button
+                onClick={() => {
+                    const newDate = new Date(currentDate);
+                    newDate.setDate(newDate.getDate() + 1);
+                    setCurrentDate(newDate);
+                }}
+                className="p-2 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-colors"
+            >
+                <ChevronRight className="h-5 w-5" />
+            </button>
         </div>
-      </ScrollArea>
-      <audio ref={audioRef} src="/levelup.mp3" />
+        
+        <ScrollArea className="flex-grow mt-4">
+            <div className="px-4 space-y-6 pb-4">
+                {todayActivities.map((activity) => (
+                    <div key={activity.id} className="mb-6">
+                        <button
+                            className={`w-full py-2 px-3 
+                                ${
+                                    isActivityCompleted(activity)
+                                        ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
+                                        : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
+                                }
+                                border border-[--theme-border-color]
+                                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
+                                font-semibold rounded-lg transition relative flex items-center justify-between
+                                text-sm`}
+                            onClick={() => handleButtonClick(activity.activityTitle)}
+                        >
+                            <span>{activity.activityTitle}</span>
+                            <div className="flex items-center gap-2">
+                                {isActivityCompleted(activity) ? (
+                                    <FaCheckCircle
+                                        className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                                        style={{ color: "var(--theme-hover-text)" }}
+                                    />
+                                ) : (
+                                    <svg
+                                        className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M9 5l7 7-7 7"
+                                        />
+                                    </svg>
+                                )}
+                            </div>
+                        </button>
+
+                        <div className="bg-[--theme-mainbox-color] p-3 mt-2 space-y-2 rounded-lg">
+                            {activity.tasks && activity.tasks.length > 0 ? (
+                                activity.tasks.map((task, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                        <Checkbox
+                                            id={`task-${activity.id}-${index}`}
+                                            checked={task.completed}
+                                            onCheckedChange={(checked) =>
+                                                isToday(currentDate)
+                                                    ? handleTaskCompletion(
+                                                        activity.id,
+                                                        index,
+                                                        checked as boolean
+                                                      )
+                                                    : null
+                                            }
+                                            disabled={!isToday(currentDate)}
+                                            className={!isToday(currentDate) ? "opacity-50 cursor-not-allowed" : ""}
+                                        />
+                                        <label
+                                            htmlFor={`task-${activity.id}-${index}`}
+                                            className={`text-sm leading-tight cursor-pointer flex-grow ${
+                                                !isToday(currentDate) ? "opacity-50" : ""
+                                            }`}
+                                        >
+                                            {task.text}
+                                        </label>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm italic">No tasks for this activity</p>
+                            )}
+                        </div>
+                    </div>
+                ))}
+
+                {todayActivities.length === 0 && (
+                    <p className="text-center italic">
+                        No activities scheduled for this day
+                    </p>
+                )}
+            </div>
+        </ScrollArea>
+
+        <div className="mt-4 mb-3 bg-[--theme-leaguecard-color] rounded-lg flex items-center justify-between">
+            <span className="text-sm font-medium opacity-75 ml-6">Wallet</span>
+            <PurchaseButton 
+                userCoinCount={userScore}
+                tooltipText="Click to purchase more coins"
+            >
+                <div className="cursor-pointer hover:opacity-80 transition-opacity">
+                    <ScoreDisplay score={userScore} />
+                </div>
+            </PurchaseButton>
+        </div>
+        <audio ref={audioRef} src="/levelup.mp3" />
     </div>
   );
 
@@ -560,27 +588,6 @@ const SideBar: React.FC<SideBarProps> = ({
         toast.error('Failed to send message. Please try again.');
       }
     };
-
-    if (tutor.name === "Prynce K.") {
-      return (
-        <DialogContent className="max-w-[40rem] bg-[--theme-leaguecard-color] border text-[--theme-text-color] border-[--theme-border-color]">
-          <DialogHeader>
-            <DialogTitle className="text-[--theme-text-color] text-center">Book a Session</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-center mb-4">
-              Click the link below to meet with Prynce.
-            </p>
-            <div className="w-[calc(100%-2rem)] bg-white h-[calc(100vh-30rem)] rounded-lg overflow-hidden mx-auto">
-              <iframe 
-                src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ3hMOL4oJtFVHit6w6WyM2EuvBFRPoG59w6a-T0rU14-PWTIPMVRDlOx3PrYoVMpNYOVo4UhVXk?gv=true" 
-                className="w-full h-full border-0"
-              />
-            </div>
-          </div>
-        </DialogContent>
-      );
-    }
 
     return (
       <DialogContent className="max-w-[40rem] bg-[--theme-leaguecard-color] border text-[--theme-text-color] border-[--theme-border-color]">
@@ -859,23 +866,6 @@ const SideBar: React.FC<SideBarProps> = ({
       }
     }
   };
-
-  const [userScore, setUserScore] = useState<number>(0);
-
-  useEffect(() => {
-    const fetchUserScore = async () => {
-      try {
-        const response = await fetch('/api/user-info');
-        if (!response.ok) throw new Error('Failed to fetch user score');
-        const data = await response.json();
-        setUserScore(data.score); // Assuming the score is in the response
-      } catch (error) {
-        console.error('Error fetching user score:', error);
-      }
-    };
-
-    fetchUserScore();
-  }, []);
 
   return (
     <div className="relative p-2 rounded-lg overflow-hidden h-[calc(100vh-4.1rem)]">

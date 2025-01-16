@@ -23,6 +23,7 @@ interface ScoreDialogProps {
   totalQuestions: number; // Total number of questions
   userTestId: string | undefined; // User test ID
   totalTimeTaken: number; // Total time taken in seconds
+  difficulty?: number; // Added difficulty prop
 }
 
 const ScoreDialog: React.FC<ScoreDialogProps> = ({
@@ -35,6 +36,7 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
   totalQuestions,
   userTestId,
   totalTimeTaken, 
+  difficulty
 }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [animatedScore, setAnimatedScore] = useState(0);
@@ -145,28 +147,33 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
     );
   };
 
-  const getCupcakeImage = (point: number) => {
-    const totalStars = Math.round(point * 3); // Convert average back to total stars
-    if (totalStars >= 8) return "/gleamingcoin.gif";
+  const getCupcakeImage = (totalStars: number) => {
+    if (totalStars >= 6) return "/gleamingcoin.gif";
     return null;
   };
 
-  const getDialogContent = (point: number) => {
-    if (point === 3) {
-      return {
-        title: "AMAZING!",
-        description: "You won a studycoin!",
-      };
-    } else if (point === 2) {
-      return {
-        title: "GOOD!",
-        description: "Keep practicing!",
-      };
+  const getDialogContent = (totalStars: number, difficulty?: number) => {
+    if (totalStars === 9) {
+        if (difficulty && difficulty >= 3) {
+            return {
+                title: "PERFECT!",
+                description: "You earned 3 coins! Outstanding work on this difficult passage!",
+            };
+        }
+        return {
+            title: "PERFECT!",
+            description: "You earned 2 coins! Amazing work!",
+        };
+    } else if (totalStars >= 6) {
+        return {
+            title: "WELL DONE!",
+            description: "You earned 1 coin!",
+        };
     } else {
-      return {
-        title: "DECENT!",
-        description: "You'll get there!",
-      };
+        return {
+            title: "KEEP PRACTICING!",
+            description: "You need 6 stars to earn a coin.",
+        };
     }
   };
 
@@ -193,7 +200,10 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
     else return "Needs Improvement";
   };
 
-  const dialogContent = getDialogContent(Math.max(Math.round((scoreStars + timingStars + techniqueStars) / 3), 1));
+  const dialogContent = getDialogContent(
+    scoreStars + timingStars + techniqueStars,
+    difficulty
+  );
 
   const handleReviewClick = () => {
     onOpenChange(false);
@@ -215,9 +225,9 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-center mb-4">
-          {getCupcakeImage(Math.max(Math.round((scoreStars + timingStars + techniqueStars) / 3), 1)) && (
+          {getCupcakeImage(scoreStars + timingStars + techniqueStars) && (
             <Image
-              src={getCupcakeImage(Math.max(Math.round((scoreStars + timingStars + techniqueStars) / 3), 1))!}
+              src={getCupcakeImage(scoreStars + timingStars + techniqueStars)!}
               alt="Cupcake"
               width={200}
               height={200}

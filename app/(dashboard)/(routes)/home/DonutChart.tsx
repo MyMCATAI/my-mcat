@@ -18,6 +18,7 @@ import { useClerk } from '@clerk/nextjs';
 import { motion } from "framer-motion";
 import { Chart } from 'react-chartjs-2';
 import { Brain, BookText, Atom, Activity } from 'lucide-react';
+import Image from "next/image";
 
 ChartJS.register(
   CategoryScale,
@@ -178,12 +179,12 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
 
       <div className="flex flex-col lg:flex-row gap-3 lg:gap-6 h-[calc(100%-1rem)]">
         {/* Chart Container */}
-        <div className="relative flex-1 rounded-xl p-4" 
+        <div className="relative flex-1 rounded-xl p-4 flex flex-col items-center justify-center" 
           style={{
             background: 'linear-gradient(135deg, var(--theme-leaguecard-color) 0%, var(--theme-leaguecard-accent) 100%)',
             boxShadow: 'var(--theme-adaptive-tutoring-boxShadow)'
           }}>
-          {progressData ? (
+          {progressData && progressData.chartData?.scores?.length > 0 ? (
             <Chart 
               type="bar"
               data={{
@@ -275,8 +276,35 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
               }}
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-white opacity-70">
-              No exam scores available yet
+            <div className="flex flex-col items-center justify-center h-full gap-8">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="w-[300px] h-[200px] relative"
+              >
+                <Image
+                  src="/kalypsotyping.gif"
+                  alt="Kalypso typing"
+                  fill
+                  className="rounded-lg object-cover"
+                  priority
+                />
+              </motion.div>
+              <motion.p 
+                className="text-center text-xl md:text-2xl max-w-[60%] mx-auto font-semibold leading-relaxed"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                style={{
+                  background: 'linear-gradient(135deg, var(--theme-text-color) 0%, var(--theme-hover-color) 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                Kalypso&apos;s working really hard on his first practice test and so should you!
+              </motion.p>
             </div>
           )}
         </div>
