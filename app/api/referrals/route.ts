@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import prismadb from "@/lib/prismadb";
+import { getUserEmail, getUserIdByEmail, sendReferralEmail } from "@/lib/server-utils";
+import { getUserInfo } from "@/lib/user-info";
+
+interface ReferralRequestBody {
+  friendEmail: string;  // This is required
+}
 
 export async function GET(req: Request) {
   try {
@@ -13,6 +19,7 @@ export async function GET(req: Request) {
     // Check if we just want to check existence
     const { searchParams } = new URL(req.url);
     const checkExistence = searchParams.get("checkExistence") === "true";
+    const requestUserId = searchParams.get("requestUserId");
 
     if (checkExistence) {
       const referral = await prismadb.referral.findFirst({
@@ -21,6 +28,14 @@ export async function GET(req: Request) {
       });
 
       return NextResponse.json({ exists: !!referral });
+    }
+
+    if (requestUserId) {
+      const referrals = await prismadb.referral.findMany({
+        where: { userId: requestUserId },
+        orderBy: { createdAt: "asc" },
+      });
+      return NextResponse.json(referrals);
     }
 
     // Otherwise return all referrals
@@ -45,20 +60,55 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { referrerName, referrerEmail, friendEmail } = body;
+    const { friendEmail } = body as ReferralRequestBody;
 
-    if (!friendEmail) {
-      return new NextResponse("Friend's email is required", { status: 400 });
+    // Check existing referral
+    const existingReferral = await prismadb.referral.findFirst({
+      where: { userId, friendEmail: friendEmail.toLowerCase() },
+    });
+
+    if (existingReferral) {
+      return new NextResponse("Friend invitation already sent", { status: 400 });
+    }
+    
+    // Create referral
+    const userInfo = await getUserInfo();
+    const referrerName = userInfo?.firstName || "";
+    const referrerEmail = await getUserEmail(userId);
+
+    const friendUserId = await getUserIdByEmail(friendEmail);
+    const joinedAt = new Date();
+    let referral;
+    
+    if (friendUserId) {
+      referral = await prismadb.referral.create({
+        data: {
+          userId,
+          referrerName: referrerName,
+          referrerEmail: referrerEmail || "",
+          friendEmail,
+          friendUserId: friendUserId,
+          joinedAt: joinedAt,
+        },
+      });
+    } else {
+      referral = await prismadb.referral.create({
+        data: {
+          userId,
+          referrerName: referrerName,
+          referrerEmail: referrerEmail || "",
+          friendEmail,
+        },
+      });
     }
 
-    const referral = await prismadb.referral.create({
-      data: {
-        userId,
-        referrerName: referrerName || "",
-        referrerEmail: referrerEmail || "",
-        friendEmail,
-      },
+    const referralCount = await prismadb.referral.count({
+      where: { userId: friendUserId || "" },
     });
+
+    if (referralCount < 3) {
+      await sendReferralEmail(referrerName, friendEmail);
+    }
 
     return NextResponse.json(referral);
   } catch (error) {

@@ -7,7 +7,7 @@ import { incrementUserScore } from "@/lib/user-info";
 import prismadb from "@/lib/prismadb";
 import { DEFAULT_BIO } from "@/constants";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const { userId } = auth();
     
@@ -15,6 +15,21 @@ export async function GET() {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const url = new URL(req.url);
+    const userIds = url.searchParams.get("userIds");
+    if (userIds) {
+      const userIdArray = userIds.split(",");
+      const userInfo = await prismadb.userInfo.findMany({
+        where: {
+          userId: {
+            in: userIdArray,
+          },
+        },
+      });
+
+      return NextResponse.json(userInfo);
+    }
+      
     const userInfo = await getUserInfo();
 
     if (!userInfo) {
