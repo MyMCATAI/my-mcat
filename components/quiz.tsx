@@ -371,12 +371,17 @@ const Quiz: React.FC<QuizProps> = ({
       setIsQuizComplete(true);
       
       const score = calculateScore(answerSummaries);
-
-      if (score >= 80 && !hasAwardedCoins) {
+      
+      if (!hasAwardedCoins) {
         try {
-          await updateScore(1);
+          if (score >= 100) {
+            await updateScore(2);
+            toast.success("Congratulations! You earned 2 coins for a perfect score! 🎉");
+          } else if (score >= 60) {
+            await updateScore(1);
+            toast.success("Congratulations! You earned 1 coin for scoring above 60%! 🎉");
+          }
           setHasAwardedCoins(true);
-          toast.success("Congratulations! You earned a coin for scoring above 80%! 🎉");
         } catch (error) {
           console.error("Error incrementing score:", error);
           toast.error("Failed to award coin");

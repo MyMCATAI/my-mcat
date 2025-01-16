@@ -9,8 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-
+import toast from "react-hot-toast";
 interface CompleteTopicButtonProps {
   categoryId: string;
   categoryName: string;
@@ -27,7 +26,6 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     audioRef.current = new Audio('/levelup.mp3');
@@ -48,6 +46,17 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
         throw new Error('Failed to complete category');
       }
 
+      // Increment user score by 1
+      const scoreResponse = await fetch('/api/user-info', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: 1 }),
+      });
+
+      if (!scoreResponse.ok) {
+        throw new Error('Failed to update user score');
+      }
+
       // Play sound
       audioRef.current?.play();
 
@@ -57,10 +66,7 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
         setTimeout(() => setShowConfetti(false), 3000);
       }
 
-      toast({
-        title: "Topic Completed! 🎉",
-        description: `You've completed ${categoryName}. Great job!`,
-      });
+      toast.success("Topic Completed! 🎉");
       
       setIsOpen(false);
       
@@ -69,11 +75,7 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
         onComplete(categoryId);
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to mark topic as complete. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to mark topic as complete. Please try again.");
     } finally {
       setIsLoading(false);
     }
