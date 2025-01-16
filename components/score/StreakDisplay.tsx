@@ -45,7 +45,7 @@ const StreakPopup = ({ streak, isOpen, onClose }: StreakPopupProps) => {
             ? "/kalypsofloatinghappy.gif"
             : streak >= 7 
               ? "/kalypsothumbs.gif"
-              : "/kalypsotyping.gif",
+              : "/kalypsoyouate.gif",
         title: `${streak} DAY STREAK!`,
         subtitle: streak >= 30
           ? "You're a rockstar!"
@@ -53,7 +53,7 @@ const StreakPopup = ({ streak, isOpen, onClose }: StreakPopupProps) => {
             ? "I'm so proud of you! ❤️"
             : streak >= 7
               ? "You're becoming my bestie now!"
-              : "It's time to lock in!",
+              : "You ate with that!",
         style: {
           objectPosition: streak >= 30
             ? 'center -50%'  // Dancing Kalypso position

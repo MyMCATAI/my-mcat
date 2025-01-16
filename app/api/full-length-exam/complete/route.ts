@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
+import { SectionCode } from "@/utils/examScores";
 
 export async function GET(req: Request) {
   try {
@@ -10,26 +11,71 @@ export async function GET(req: Request) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    // Get all full length exams for the user, including their data pulses and calendar activities
-    const fullLengthExams = await prisma.fullLengthExam.findMany({
-      where: {
-        userId,
-      },
-      include: {
-        dataPulses: true,
-        calendarActivity: {
-          select: {
-            scheduledDate: true,
-            status: true,
+    // Get all full length exams with their scores
+    const [fullLengthExams, sectionAverages] = await Promise.all([
+      // Get exams with their scores
+      prisma.fullLengthExam.findMany({
+        where: { userId },
+        select: {
+          id: true,
+          title: true,
+          createdAt: true,
+          calendarActivity: {
+            select: {
+              scheduledDate: true,
+            }
+          },
+          dataPulses: {
+            select: {
+              section: true,
+              positive: true,
+            }
+          },
+        },
+        orderBy: {
+          calendarActivity: {
+            scheduledDate: 'asc'
           }
         }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+      }),
+      // Calculate section averages using SQL aggregation
+      prisma.dataPulse.groupBy({
+        by: ['section'],
+        where: {
+          userId,
+          fullLengthExam: { isNot: null }, // Only include pulses from full length exams
+          section: { in: ['CARs', 'P/S', 'C/P', 'B/B'] },
+        },
+        _avg: {
+          positive: true,
+        },
+      })
+    ]);
 
-    return Response.json(fullLengthExams);
+    // Process the data
+    const processedData = {
+      examScores: fullLengthExams.map(exam => ({
+        id: exam.id,
+        title: exam.title,
+        createdAt: exam.createdAt,
+        scheduledDate: exam.calendarActivity?.scheduledDate,
+        totalScore: exam.dataPulses.reduce((sum, pulse) => sum + pulse.positive, 0),
+        sectionScores: {
+          CARs: exam.dataPulses.find(p => p.section === "CARs")?.positive ?? null,
+          "Psych/Soc": exam.dataPulses.find(p => p.section === "P/S")?.positive ?? null,
+          "Chem/Phys": exam.dataPulses.find(p => p.section === "C/P")?.positive ?? null,
+          "Bio/Biochem": exam.dataPulses.find(p => p.section === "B/B")?.positive ?? null,
+        }
+      })),
+      sectionAverages: {
+        CARs: Math.round(sectionAverages.find(avg => avg.section === "CARs")?._avg.positive ?? 0) || null,
+        "Psych/Soc": Math.round(sectionAverages.find(avg => avg.section === "P/S")?._avg.positive ?? 0) || null,
+        "Chem/Phys": Math.round(sectionAverages.find(avg => avg.section === "C/P")?._avg.positive ?? 0) || null,
+        "Bio/Biochem": Math.round(sectionAverages.find(avg => avg.section === "B/B")?._avg.positive ?? 0) || null,
+      }
+    };
+
+    return Response.json(processedData);
   } catch (error) {
     console.error("[FULL_LENGTH_EXAM_GET]", error);
     return new Response("Internal Error", { status: 500 });
