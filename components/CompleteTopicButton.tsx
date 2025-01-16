@@ -48,6 +48,17 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
         throw new Error('Failed to complete category');
       }
 
+      // Increment user score by 1
+      const scoreResponse = await fetch('/api/user-info', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: 1 }),
+      });
+
+      if (!scoreResponse.ok) {
+        throw new Error('Failed to update user score');
+      }
+
       // Play sound
       audioRef.current?.play();
 
