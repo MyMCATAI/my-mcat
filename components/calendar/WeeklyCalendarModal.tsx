@@ -367,13 +367,15 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                       <div className="text-[--theme-text-color] text-lg">
                         Your next exam ({nextExam.activityTitle}) is scheduled for {format(new Date(nextExam.scheduledDate), 'MMMM do, yyyy')}
                       </div>
-                      <button
+                      <Button
                         onClick={() => handleOpenDatePicker(nextExam.id)}
-                        className="px-4 py-2 bg-[--theme-hover-color] text-[--theme-hover-text] rounded-lg hover:opacity-80 transition-opacity flex items-center gap-2"
+                        variant="secondary"
+                        size="sm"
+                        className="flex items-center gap-2"
                       >
                         <CalendarIcon className="w-4 h-4" />
                         Change Exam Date
-                      </button>
+                      </Button>
                     </div>
                   </>
                 ) : (
@@ -417,13 +419,12 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                     <span className="text-[--theme-text-color] text-sm">Quick Actions</span>
                     <div className="flex gap-2">
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         size="sm"
                         onClick={() => {
                           const hours = prompt('Enter hours for all days:');
                           if (hours !== null) handleSetForAllDays(hours);
                         }}
-                        className="bg-[--theme-button-color] text-[--theme-text-color] border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
                       >
                         Set All Days
                       </Button>
@@ -718,21 +719,23 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
           This will delete all your scheduled exams and study activities. You&apos;ll need to schedule your first exam again. This action cannot be undone.
         </p>
         <div className="flex justify-end gap-3">
-          <button
+          <Button
             onClick={() => setIsResetConfirmOpen(false)}
-            className="px-4 py-2 rounded-md text-sm text-[--theme-text-color] hover:bg-[--theme-border-color] transition-colors"
+            variant="secondary"
+            size="sm"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => {
               handleReset();
               setIsResetConfirmOpen(false);
             }}
-            className="px-4 py-2 rounded-md text-sm bg-red-500 text-white hover:bg-red-600 transition-colors"
+            variant="destructive"
+            size="sm"
           >
             Reset
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -795,8 +798,8 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
             <Button
               onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
               disabled={currentStep === 0}
-              variant="outline"
-              className="text-[--theme-text-color]"
+              variant="secondary"
+              size="sm"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Previous
@@ -804,8 +807,9 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
 
             <Button
               onClick={() => setIsResetConfirmOpen(true)}
-              variant="outline"
-              className="text-[--theme-text-color] hover:text-red-500 hover:border-red-500 transition-colors"
+              variant="secondary"
+              size="sm"
+              className="opacity-70 hover:opacity-100"
             >
               Reset Schedule
             </Button>
@@ -832,7 +836,8 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                   setCurrentStep(currentStep + 1);
                 }
               }}
-              className="bg-[--theme-hover-color] text-[--theme-hover-text] hover:bg-[--theme-hover-color] hover:opacity-80 transition-opacity"
+              variant="default"
+              size="sm"
             >
               {currentStep === 3 ? 'Create Schedule' : 'Next'}
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -842,12 +847,14 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
 
         {/* Close Button */}
         {onClose && (
-          <button
+          <Button
             onClick={onClose}
-            className="absolute top-6 right-6 text-[--theme-text-color] hover:opacity-70 transition-opacity"
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4"
           >
-            <X className="w-6 h-6" />
-          </button>
+            <X className="w-5 h-5" />
+          </Button>
         )}
       </div>
       <DatePickerDialog

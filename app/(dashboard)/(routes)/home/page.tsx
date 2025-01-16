@@ -198,7 +198,8 @@ const Page = () => {
         );
       }
 
-      setActivities(updatedActivities);
+      // Force a new reference to trigger re-render
+      setActivities([...updatedActivities]);
       updateCalendarChatContext(updatedActivities);
     } catch (error) {
       console.error("Error fetching activities:", error);
@@ -333,7 +334,11 @@ const Page = () => {
         content = <FlashcardDeck />;
         break;
       case "Tests":
-        content = <PracticeTests handleSetTab={handleTabChange} chatbotRef={chatbotRef} />;
+        content = <PracticeTests 
+          handleSetTab={handleTabChange} 
+          chatbotRef={chatbotRef}
+          onActivitiesUpdate={fetchActivities}
+        />;
         break;
       default:
         content = null;
@@ -531,7 +536,6 @@ const Page = () => {
 
           <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
             <SideBar
-              key={activities.length}
               handleSetTab={handleTabChange}
               activities={activities}
               currentPage={currentPage}
