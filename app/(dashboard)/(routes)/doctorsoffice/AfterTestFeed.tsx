@@ -719,22 +719,27 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
         const mcqTotal = mcqResponses.length;
         const mcqPercentage = mcqTotal > 0 ? Math.round((mcqCorrect / mcqTotal) * 100) : 0;
         
-        if (mcqTotal > 0 && mcqPercentage >= 80) {
+        let coinsEarned = 0;
+        if (mcqPercentage === 100) {
+          coinsEarned = 2;
+        } else if (mcqPercentage >= 60) {
+          coinsEarned = 1;
+        }
+
+        if (coinsEarned > 0) {
           const response = await fetch("/api/user-info", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              incrementScore: true
-            }),
+            body: JSON.stringify({ amount: coinsEarned }),
           });
 
           if (!response.ok) {
             throw new Error("Failed to increment coin");
           }
 
-          toast.success("You earned 1 coin for 80%+ correct MCQs!");
+          toast.success(`You earned ${coinsEarned} coin(s) for your performance!`);
         } else if (mcqTotal > 0) {
-          toast.error(`You need 80% correct MCQs to earn a coin. You got ${mcqPercentage.toFixed(1)}%`);
+          toast.error(`You need at least 60% correct MCQs to earn a coin. You got ${mcqPercentage.toFixed(1)}%`);
         }
       }
     };
