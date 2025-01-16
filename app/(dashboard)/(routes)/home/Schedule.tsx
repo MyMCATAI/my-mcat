@@ -257,7 +257,6 @@ const Schedule: React.FC<ScheduleProps> = ({
                     className="text-[--theme-text-color] ml-5 text-sm font-medium p-2 rounded-lg max-w-[24rem]"
                     style={{
                       background: 'var(--theme-leaguecard-color)',
-                      border: '1px solid var(--theme-border-color)',
                       boxShadow: 'var(--theme-button-boxShadow)'
                     }}
                   >

@@ -376,9 +376,13 @@ const Quiz: React.FC<QuizProps> = ({
         try {
           if (score >= 100) {
             await updateScore(2);
+            const fanfare = new Audio('/fanfare.mp3');
+            fanfare.play();
             toast.success("Congratulations! You earned 2 coins for a perfect score! 🎉");
           } else if (score >= 60) {
             await updateScore(1);
+            const levelup = new Audio('/levelup.mp3');
+            levelup.play();
             toast.success("Congratulations! You earned 1 coin for scoring above 60%! 🎉");
           }
           setHasAwardedCoins(true);
@@ -466,7 +470,7 @@ const Quiz: React.FC<QuizProps> = ({
 
         {/* Explanation Section */}
         {hasAnswered && explanations && (
-          <div className="mt-6 p-4 bg-transparent rounded-lg border border-[--theme-hover-color]">
+          <div className="mt-6 p-4 rounded-lg">
             <h3 className="text-lg font-semibold text-[--theme-hover-color] mb-2">
               Explanation
             </h3>
@@ -718,7 +722,7 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
         <button
           onClick={isQuizComplete ? handleReset : handleNextQuestion}
           disabled={isLoadingMore}
-          className="px-4 py-2 bg-[#0e2247] text-white rounded disabled:opacity-50"
+          className="px-4 py-2 bg-[--theme-button-color] text-[--theme-text-color] rounded-md border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
         >
           {isQuizComplete ? "Try Again" : "Next"}
         </button>
@@ -748,7 +752,7 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
             <div className="mt-6 flex justify-center">
               <button
                 onClick={handleReset}
-                className="px-6 py-2 bg-[#0e2247] text-white rounded hover:bg-[#1a3a6d]"
+                className="px-6 py-2 bg-[--theme-button-color] text-[--theme-text-color] rounded-md border border-[--theme-border-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
               >
                 Try Again
               </button>

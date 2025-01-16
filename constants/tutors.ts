@@ -8,7 +8,6 @@ export interface Tutor {
 
 export const tutors: Tutor[] = [
   { name: "Vivian Z.", university: "MS1 at California MD", stars: 5, reviews: 12, price: 150 },
-  { name: "Prynce K.", university: "Rice University", stars: 5, reviews: 16, price: 50 },
   { name: "Saanvi A.", university: "New York University", stars: 5, reviews: 3, price: 150 },
   { name: "Ethan K.", university: "Univ of Pennsylvania", stars: 4.5, reviews: 8, price: 150 }
 ];

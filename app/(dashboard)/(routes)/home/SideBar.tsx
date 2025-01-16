@@ -21,6 +21,7 @@ import CompletionDialog from "@/components/home/CompletionDialog";
 import { useRouter } from "next/navigation";
 import UWorldPopup from '@/components/home/UWorldPopup';
 import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";
+import ScoreDisplay from '@/components/score/ScoreDisplay';
 
 interface Task {
   text: string;
@@ -858,6 +859,23 @@ const SideBar: React.FC<SideBarProps> = ({
       }
     }
   };
+
+  const [userScore, setUserScore] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchUserScore = async () => {
+      try {
+        const response = await fetch('/api/user-info');
+        if (!response.ok) throw new Error('Failed to fetch user score');
+        const data = await response.json();
+        setUserScore(data.score); // Assuming the score is in the response
+      } catch (error) {
+        console.error('Error fetching user score:', error);
+      }
+    };
+
+    fetchUserScore();
+  }, []);
 
   return (
     <div className="relative p-2 rounded-lg overflow-hidden h-[calc(100vh-4.1rem)]">
