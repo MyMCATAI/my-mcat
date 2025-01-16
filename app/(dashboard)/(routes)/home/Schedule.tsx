@@ -28,11 +28,10 @@ import {
 import {
   DialogOverlay,
 } from "@radix-ui/react-dialog";
-import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { OptionsDialog } from "@/components/home/OptionsDialog";
 import { useClerk } from "@clerk/clerk-react";
 import { SubscriptionButton } from "@/components/subscription-button";
-import { PurchaseButton } from "@/components/purchase-button";
+import Tutorial from "./Tutorial";
 
 type Section = "AdaptiveTutoringSuite" | "MCATGameAnkiClinic" | "DailyCARsSuite" | "Tests";
 
@@ -182,23 +181,11 @@ const Schedule: React.FC<ScheduleProps> = ({
   }, []);
 
   return (
-    <div className="w-full relative p-2">
-      {/* Purchase Button with Score Display */}
-      <div className="absolute top-6 left-8 z-30 ml-4">
-        {!isCoinsLoading && !selectedSubject && (
-          <div className="pointer-events-auto flex items-center gap-4">
-            <div className="flex items-center gap-2 relative">
-              <PurchaseButton userCoinCount={userCoinCount}>
-                <ScoreDisplay score={userCoinCount} />
-              </PurchaseButton>
-            </div>
-          </div>
-        )}
-      </div>
-
+    <div className="w-full relative">
+      <Tutorial />
       {/* Main Container */}
       <div
-        className="flex-grow h-[calc(100vh-7.6rem)] w-full rounded-[10px] p-4 flex flex-col relative overflow-hidden"
+        className="flex-grow h-[calc(100vh-7.2rem)] w-full rounded-lg p-2 flex flex-col relative overflow-hidden"
         style={{
           backgroundImage: `linear-gradient(var(--theme-gradient-start), var(--theme-gradient-end)), var(--theme-interface-image)`,
           backgroundSize: "cover",
@@ -244,7 +231,7 @@ const Schedule: React.FC<ScheduleProps> = ({
         </div>
 
         {/* Bottom Buttons */}
-        <div className="mt-auto flex justify-end items-center gap-2 pt-2 mr-5">
+        <div className="mt-auto flex justify-end items-center gap-2 pt-2 mr-5 mb-2">
           {/* Score Feedback */}
           {examScores.length > 0 && (
             <div className="mr-auto">

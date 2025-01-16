@@ -35,7 +35,10 @@ export function QuizIntroDialog({
               • Starting this quiz costs 1 coin
             </p>
             <p className="text-sm text-[--theme-text-color]">
-              • You can earn coins by achieving a score of 80%
+              • Earn a coin for scoring 70% or higher
+            </p>
+            <p className="text-sm text-[--theme-text-color]">
+              • Earn two coins for scoring 100%
             </p>
             <p className="text-sm text-[--theme-text-color]">
               • Each quiz has a new set of questions 

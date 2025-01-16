@@ -705,7 +705,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
 
       if (mcqPercentage === 100) {
         fanfareSound.current?.play();
-      } else if (mcqPercentage >= 80 && mcqPercentage < 100) {
+      } else if (mcqPercentage >= 70 && mcqPercentage < 100) {
         levelUpSound.current?.play();
       }
     }
@@ -722,7 +722,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
         let coinsEarned = 0;
         if (mcqPercentage === 100) {
           coinsEarned = 2;
-        } else if (mcqPercentage >= 60) {
+        } else if (mcqPercentage >= 70) {
           coinsEarned = 1;
         }
 
@@ -739,7 +739,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
 
           toast.success(`You earned ${coinsEarned} coin(s) for your performance!`);
         } else if (mcqTotal > 0) {
-          toast.error(`You need at least 60% correct MCQs to earn a coin. You got ${mcqPercentage.toFixed(1)}%`);
+          toast.error(`You need at least 70% correct MCQs to earn a coin. You got ${mcqPercentage.toFixed(1)}%`);
         }
       }
     };
