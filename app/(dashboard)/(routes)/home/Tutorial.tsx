@@ -1,156 +1,50 @@
-import React, { useEffect, useRef } from "react";
-import Joyride, { CallBackProps, STATUS, Step, EVENTS } from "react-joyride";
-import { motion } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
+import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
 
-interface TutorialProps {
-  runPart1: boolean;
-  setRunPart1: (run: boolean) => void;
-  runPart2: boolean;
-  setRunPart2: (run: boolean) => void;
-  runPart3: boolean;
-  setRunPart3: (run: boolean) => void;
-  runPart4: boolean;
-  setRunPart4: (run: boolean) => void;
-}
-
-const Tutorial: React.FC<TutorialProps> = ({
-  runPart1,
-  setRunPart1,
-  runPart2,
-  setRunPart2,
-  runPart3,
-  setRunPart3,
-  runPart4,
-  setRunPart4,
-}) => {
+const Tutorial: React.FC = () => {
+  const [runTutorial, setRunTutorial] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const playNotification = () => {
-    if (audioRef.current) {
-      audioRef.current
-        .play()
-        .catch((error) => console.error("Audio playback failed:", error));
+  useEffect(() => {
+    // Check if user has seen tutorial
+    const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
+    if (!hasSeenTutorial) {
+      setRunTutorial(true);
+      // Play sound when tutorial first shows
+      audioRef.current?.play().catch(error => 
+        console.error("Audio playback failed:", error)
+      );
     }
-  };
+  }, []);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status, type, action } = data;
+    const { status } = data;
     
-    if (type === EVENTS.TOUR_START) {
-      playNotification();
-    }
-
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
-      if (runPart1) setRunPart1(false);
-      if (runPart2) setRunPart2(false);
-      if (runPart3) setRunPart3(false);
-      if (runPart4) setRunPart4(false);
+      setRunTutorial(false);
+      localStorage.setItem('hasSeenTutorial', 'true');
     }
   };
-
-  useEffect(() => {
-    if (runPart1 || runPart2 || runPart3 || runPart4) {
-      playNotification();
-    }
-  }, [runPart1, runPart2, runPart3, runPart4]);
-
-  const endAllTutorials = () => {
-    if (runPart1) setRunPart1(false);
-    if (runPart2) setRunPart2(false);
-    if (runPart3) setRunPart3(false);
-    if (runPart4) setRunPart4(false);
-  };
-
-  useEffect(() => {
-    const scheduleContent = document.querySelector(".schedule-content");
-    if (scheduleContent) {
-      const handleScheduleClick = (event: Event) => {
-        const target = event.target as HTMLElement;
-        if (runPart1 && target.closest(".settings-button")) {
-          endAllTutorials();
-        }
-      };
-
-      scheduleContent.addEventListener("click", handleScheduleClick);
-
-      return () => {
-        scheduleContent.removeEventListener("click", handleScheduleClick);
-      };
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runPart1]);
-
-  const createShakeAnimation = (delay: number) => ({
-    animate: { x: [0, -2, 2, -2, 2, 0] },
-    transition: {
-      duration: 0.4,
-      repeat: Infinity,
-      repeatType: "reverse" as const,
-      repeatDelay: 1.2,
-      delay: delay,
-    },
-  });
 
   const welcomeContent = (
     <div className="space-y-6 text-black">
       <h1 className="text-3xl font-bold text-center mb-4">
         Welcome to MyMCAT.ai!
       </h1>
-
       <section className="bg-white p-4 rounded-lg shadow-lg">
-        <p className="mb-4">
-          The MCAT is a beast of a test that requires your best.
+        <p className="text-lg mb-4">
+          Please play the minute video below to learn how to use MyMCAT.ai.
         </p>
-
-        <details className="mb-4">
-          <summary className="cursor-pointer text-blue-600 hover:text-blue-700 font-medium">
-            Watch Video Overview ▶️
-          </summary>
-          <div className="mt-4">
-            <video
-              src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/MyMCATVideo.mp4"
-              controls
-              className="w-full rounded-lg"
-            />
-          </div>
-        </details>
-
-        <p className="mb-4">
-          To beat your competition, some of the brightest students in the world, you must answer these three questions:
-        </p>
-        <ul className="list-none space-y-2">
-          {[
-            "When should I study?",
-            "What should I study?",
-            "How should I study?",
-          ].map((goal, index) => (
-            <li key={index}>
-              <motion.span
-                animate={createShakeAnimation(index * 0.1).animate}
-                transition={createShakeAnimation(index * 0.1).transition}
-                className="inline-block mr-2"
-              >
-                🎯
-              </motion.span>
-              <motion.span
-                animate={createShakeAnimation(index * 0.1 + 0.1).animate}
-                transition={createShakeAnimation(index * 0.1 + 0.1).transition}
-                className="inline-block"
-              >
-                {goal}
-              </motion.span>
-            </li>
-          ))}
-        </ul>
+        <video 
+          className="w-full rounded-lg"
+          controls
+          src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/introvideo.mp4"
+        />
       </section>
-      <p className="text-lg font-semibold">
-        Let&apos;s begin solving your first problem of{" "}
-        <span style={{ color: "blue" }}>when should I study?</span>
-      </p>
     </div>
   );
 
-  const part1Steps: Step[] = [
+  const steps: Step[] = [
     {
       target: "body",
       content: welcomeContent,
@@ -158,21 +52,10 @@ const Tutorial: React.FC<TutorialProps> = ({
       disableBeacon: true,
       styles: {
         options: {
-          width: 600,
+          width: '60vw',
         },
       },
-    },
-    {
-      target: ".tutorial-settings-button",
-      content: "Click the settings button ⚙️ to customize your study plan.",
-      placement: "left-start",
-      styles: {
-        options: {
-          width: 250,
-        },
-      },
-      spotlightPadding: 5,
-    },
+    }
   ];
 
   return (
@@ -182,12 +65,11 @@ const Tutorial: React.FC<TutorialProps> = ({
         callback={handleJoyrideCallback}
         continuous
         hideCloseButton
-        run={runPart1}
+        run={runTutorial}
         scrollToFirstStep
         showProgress
         showSkipButton
-        steps={part1Steps}
-        spotlightClicks={true}
+        steps={steps}
         styles={{
           options: {
             backgroundColor: "#ffffff",

@@ -210,12 +210,6 @@ const Exams: React.FC<TestListingProps> = ({ tests, onAssistantResponse, testsCo
                       alt: "Watch"
                     },
                     {
-                      icon: "/game-components/PixelCupcake.png",
-                      value: reportData ? reportData.userScore : "N/A",
-                      label: "Coins",
-                      alt: "Diamond"
-                    },
-                    {
                       icon: "/game-components/PixelBook.png",
                       value: reportData ? `${reportData.testsReviewed}/${reportData.testsCompleted}` : "N/A",
                       label: "Reviewed",
