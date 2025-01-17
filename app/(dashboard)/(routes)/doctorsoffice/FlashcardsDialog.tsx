@@ -174,20 +174,50 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   }, [roomId, setActiveRooms, onOpenChange, correctCount]);
 
   const handleDownvote = async () => {
-    if (!currentQuestion) return;
-
-    toast.success("Question reported! Thank you for helping us improve.");
+    if (!currentQuestion || !currentUserTestId) return;
 
     try {
-      const response = await fetch("/api/send-message", {
+      // Check if the UserResponse exists
+      const response = await fetch(`/api/user-test/response`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: `Question Downvoted\n\nQuestion ID: ${currentQuestion.id}\nQuestion Type: ${currentQuestion.questionType}\nQuestion Content: ${currentQuestion.questionContent}\nRoom ID: ${roomId}\n\nThis question was automatically flagged for review through the downvote system.`,
+          userTestId: currentUserTestId,
+          questionId: currentQuestion.id,
         }),
       });
 
       if (!response.ok) {
+        throw new Error("Failed to create or fetch user response");
+      }
+
+      const userResponseData = await response.json();
+
+      // Now perform the PUT request to update the flagged status
+      const updateResponse = await fetch("/api/user-test/response", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: userResponseData.id, // Use the correct UserResponse ID
+          flagged: true,
+        }),
+      });
+
+      if (!updateResponse.ok) {
+        throw new Error("Failed to update question flag status");
+      }
+
+      toast.success("Question reported! Thank you for helping us improve.");
+
+      const msgresponse = await fetch("/api/send-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: `Question Downvoted\n\nQuestion ID: ${currentQuestion.id}\nQuestion Content: ${currentQuestion.questionContent}\n\nThis question was automatically flagged for review through the downvote system.`,
+        }),
+      });
+
+      if (!msgresponse.ok) {
         throw new Error("Failed to send downvote message");
       }
     } catch (error) {
