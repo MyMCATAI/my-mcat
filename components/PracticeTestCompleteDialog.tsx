@@ -23,6 +23,7 @@ interface FullLengthExamCompleteDialogProps {
   }) => void;
   testTitle: string;
   calendarActivityId?: string;
+  company: string;
 }
 
 const FullLengthExamCompleteDialog: React.FC<FullLengthExamCompleteDialogProps> = ({
@@ -30,7 +31,8 @@ const FullLengthExamCompleteDialog: React.FC<FullLengthExamCompleteDialogProps> 
   onClose,
   onSubmit,
   testTitle,
-  calendarActivityId
+  calendarActivityId,
+  company
 }) => {
   const [scores, setScores] = useState({
     cp: '',
@@ -77,7 +79,8 @@ const FullLengthExamCompleteDialog: React.FC<FullLengthExamCompleteDialogProps> 
         body: JSON.stringify({
           calendarActivityId,
           title: testTitle,
-          scores: numericScores
+          scores: numericScores,
+          company: company
         })
       });
 

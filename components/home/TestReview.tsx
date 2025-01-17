@@ -287,6 +287,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack, onRefresh }) => {
     return (
       <SectionReview 
         examId={test.examId}
+        company={test.company}
         section={activeSection} 
         onBack={() => setActiveSection(null)}
         isCompleted={completedSections.includes(activeSection.name)}

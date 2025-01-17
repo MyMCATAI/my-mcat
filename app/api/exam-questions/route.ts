@@ -59,7 +59,8 @@ export async function POST(req: Request) {
       status,
       level = 'conceptCategory',
       questionText = '',
-      answerText = ''
+      answerText = '',
+      source
     } = body;
 
     // Validate required fields
@@ -106,8 +107,8 @@ export async function POST(req: Request) {
         correctedThoughtProcess: improvement || null,
         positive: status === 'correct' ? 1 : 0,
         negative: status === 'wrong' ? 1 : 0,
-        source: "exam_question",
-        weight: 1
+        weight: 1,
+        source: source
       }
     });
 
@@ -137,7 +138,8 @@ export async function PUT(req: Request) {
       mistake,
       improvement,
       status,
-      level = 'conceptCategory'
+      level = 'conceptCategory',
+      source
     } = body;
 
     if (!id || !questionNumber || !categoryId) {
@@ -166,7 +168,8 @@ export async function PUT(req: Request) {
         correctedThoughtProcess: improvement,
         positive: status === 'correct' ? 1 : 0,
         negative: status === 'wrong' ? 1 : 0,
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        source
       }
     });
 

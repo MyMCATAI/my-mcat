@@ -11,6 +11,7 @@ interface QuestionAddModalProps {
   isOpen: boolean;
   onClose: () => void;
   examId: string;
+  company: string;
   editingQuestion?: ExamQuestion;
   sectionName: keyof typeof DISPLAY_TO_FULL_SECTION;
   createQuestion: (params: any) => Promise<any>;
@@ -44,6 +45,7 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
   isOpen, 
   onClose, 
   examId,
+  company,
   editingQuestion,
   sectionName,
   createQuestion,
@@ -63,7 +65,8 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
     improvement: '',
     status: 'wrong' as 'wrong' | 'flagged' | 'correct',
     questionText: '',
-    answerText: ''
+    answerText: '',
+    source: company
   });
 
   const [mistakeError, setMistakeError] = useState<string>('');
@@ -85,7 +88,8 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
           status: editingQuestion.positive === 1 ? 'correct' : 
                  editingQuestion.negative === 1 ? 'wrong' : 'flagged',
           questionText: editingQuestion.questionText || '',
-          answerText: editingQuestion.answerText || ''
+          answerText: editingQuestion.answerText || '',
+          source: company
         });
       } else {
         setQuestion({
@@ -96,7 +100,8 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
           improvement: '',
           status: 'wrong',
           questionText: '',
-          answerText: ''
+          answerText: '',
+          source: company
         });
       }
     }
@@ -154,7 +159,8 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
         status: question.status,
         questionText: question.questionText,
         answerText: question.answerText,
-        level: 'contentCategory'
+        level: 'contentCategory',
+        source: company
       };
 
       if (editingQuestion) {
@@ -178,7 +184,8 @@ const QuestionAddModal: React.FC<QuestionAddModalProps> = ({
           improvement: '',
           status: 'wrong',
           questionText: '',
-          answerText: ''
+          answerText: '',
+          source:company
         });
       } else {
         onClose();
