@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const {
       userTestId,
-      questionId,
+      questionId, 
       userAnswer,
       isCorrect,
       timeSpent,
@@ -164,9 +164,11 @@ export async function PUT(req: Request) {
 
   try {
     const body = await req.json();
-    const { id, userTestId, questionId, ...updateData } = body;
+    const { id, userTestId, questionId, flagged, ...updateData } = body;
+    
     console.log("body PUT response");
     console.log(body);
+
     if (!id) {
       return NextResponse.json(
         { error: "Missing required field: id" },
@@ -180,6 +182,11 @@ export async function PUT(req: Request) {
     }
     if (updateData.reviewNotes) {
       updateData.reviewNotes = `${new Date().toISOString()} - ${updateData.reviewNotes}`;
+    }
+
+    // Conditionally add flagged to updateData if it is present in the request body
+    if (typeof flagged !== 'undefined') {
+      updateData.flagged = flagged;
     }
 
     // Update the response
