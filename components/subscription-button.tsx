@@ -9,6 +9,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
+import { useUserActivity } from "@/hooks/useUserActivity";
 
 interface SubscriptionButtonProps {
   text?: string;
@@ -55,6 +56,7 @@ export function SubscriptionButton({
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { isPremium, isCanceled, currentPeriodEnd, isLoading: isCheckingStatus } = useSubscriptionStatus();
+  const { startActivity } = useUserActivity();
 
   // Add audio effect when modal opens
   useEffect(() => {
@@ -64,13 +66,35 @@ export function SubscriptionButton({
       audio.play().catch(error => {
         console.log("Audio playback failed:", error);
       });
+      
+      // Track modal open activity
+      startActivity({
+        type: "premium_modal_open",
+        location: "subscription_button",
+        metadata: {
+          isPremium,
+          isCanceled
+        }
+      });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isModalOpen]);
 
   // Handle new subscription purchase
   const handleSubscribe = async () => {
     try {
       setIsLoading(true);
+      
+      // Track premium application click
+      await startActivity({
+        type: "premium_application_click",
+        location: "subscription_button",
+        metadata: {
+          isPremium,
+          isCanceled
+        }
+      });
+      
       // Open Tally form in new window
       window.open('https://tally.so/r/mBAgq7', '_blank');
     } catch (error) {
@@ -289,36 +313,20 @@ export function SubscriptionButton({
                 w-full max-h-[85vh]
                 sm:max-w-[35rem]"
               style={{
-                boxShadow: `
-                  0 0 40px rgba(186, 230, 253, 0.3),
-                  0 0 80px rgba(186, 230, 253, 0.2),
-                  0 0 120px rgba(186, 230, 253, 0.1)
-                `,
+                boxShadow: '0 0 20px rgba(186, 230, 253, 0.3)',
                 background: `
                   linear-gradient(135deg, 
                     rgba(12, 74, 110, 0.95) 0%,
-                    rgba(3, 105, 161, 0.9) 50%,
-                    rgba(56, 189, 248, 0.8) 100%
-                  ),
-                  radial-gradient(
-                    circle at 50% 0,
-                    rgba(186, 230, 253, 0.5) 0%,
-                    transparent 70%
+                    rgba(3, 105, 161, 0.9) 100%
                   )
                 `,
-                animation: 'heavenlyGlow 3s ease-in-out infinite alternate'
+                animation: 'heavenlyGlow 2s ease-in-out infinite alternate'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = `
-                  0 0 60px rgba(186, 230, 253, 0.4),
-                  0 0 100px rgba(186, 230, 253, 0.3)
-                `;
+                e.currentTarget.style.boxShadow = '0 0 30px rgba(186, 230, 253, 0.4)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = `
-                  0 0 40px rgba(186, 230, 253, 0.3),
-                  0 0 80px rgba(186, 230, 253, 0.2)
-                `;
+                e.currentTarget.style.boxShadow = '0 0 20px rgba(186, 230, 253, 0.3)';
               }}
             >
               <div className="absolute -top-3 -right-3 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] px-3 py-1 rounded-full text-sm font-bold shadow-lg transform rotate-12 z-[103]">
@@ -347,10 +355,9 @@ export function SubscriptionButton({
                             key={index} 
                             className="flex items-center text-white"
                             style={{ 
-                              animation: 'shimmer 3s infinite linear',
-                              animationDelay: `${index * 0.2}s`,
-                              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
-                              backgroundSize: '80rem 100%'
+                              animation: `shimmer 1.5s infinite linear`,
+                              animationDelay: `${index * 0.1}s`,
+                              backgroundSize: '40rem 100%'
                             }}
                           >
                             <svg 
@@ -358,7 +365,7 @@ export function SubscriptionButton({
                               fill="none" 
                               stroke="currentColor" 
                               viewBox="0 0 24 24"
-                              style={{ animation: 'pulse 1s ease-in-out infinite' }}
+                              style={{ animation: 'pulse 2s ease-in-out infinite' }}
                             >
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                             </svg>
@@ -371,22 +378,22 @@ export function SubscriptionButton({
 
                   <p 
                     className="text-2xl sm:text-3xl font-bold text-white"
-                    style={{ animation: 'pulse 2s ease-in-out infinite' }}
+                    style={{ animation: 'pulse 1.5s ease-in-out infinite' }}
                   >
                     {premiumFeatures.price}
                   </p>
-                </div>
-              </div>
 
-              <div className="sticky bottom-0 w-full pt-4 bg-inherit">
-                <Button
-                  onClick={handleSubscribe}
-                  disabled={isLoading}
-                  className="w-full h-9 sm:h-10 px-4 rounded-md font-medium shadow-sm transition-all duration-300 
-                    bg-gradient-to-r from-sky-400 via-blue-400 to-sky-400 text-white hover:opacity-90"
-                >
-                  {isLoading ? "Loading..." : "Apply for MD Premium"}
-                </Button>
+                  <div className="w-full pt-1">
+                    <Button
+                      onClick={handleSubscribe}
+                      disabled={isLoading}
+                      className="w-full h-9 sm:h-10 px-4 rounded-md font-medium shadow-sm transition-all duration-300 
+                        bg-gradient-to-r from-sky-400 via-blue-400 to-sky-400 text-white hover:opacity-90"
+                    >
+                      {isLoading ? "Loading..." : "Apply for MD Premium"}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -399,40 +406,25 @@ export function SubscriptionButton({
 <style jsx global>{`
   @keyframes heavenlyGlow {
     from {
-      box-shadow: 
-        0 0 40px rgba(255, 255, 255, 0.6),
-        0 0 80px rgba(255, 255, 255, 0.4),
-        0 0 120px rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
     }
     to {
-      box-shadow: 
-        0 0 60px rgba(255, 255, 255, 0.8),
-        0 0 100px rgba(255, 255, 255, 0.6),
-        0 0 140px rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 40px rgba(255, 255, 255, 0.6);
     }
-  }
-
-  @keyframes rays {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
   }
 
   @keyframes float {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-0.5rem); }
+    50% { transform: translateY(-4px); }
   }
 
   @keyframes pulse {
-    0%, 100% { transform: rotate(45deg) scale(1); }
-    50% { transform: rotate(45deg) scale(1.05); }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
   }
 
   @keyframes shimmer {
-    0% {
-      background-position: -40rem 0;
-    }
-    100% {
-      background-position: 40rem 0;
-    }
+    0% { background-position: -20rem 0; }
+    100% { background-position: 20rem 0; }
   }
 `}</style>
