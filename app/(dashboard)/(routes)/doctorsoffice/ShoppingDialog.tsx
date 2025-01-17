@@ -51,12 +51,12 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
   const [isMounted, setIsMounted] = useState(false);
 
   const levelInfo = [
-    { level: 1, title: "INTERN LEVEL", image: "/game-components/INTERNLEVEL.png", cost: 2 },
-    { level: 2, title: "RESIDENT LEVEL", image: "/game-components/RESIDENTLEVEL.png", cost: 4 },
-    { level: 3, title: "FELLOWSHIP LEVEL", image: "/game-components/FELLOWSHIPLEVEL.png", cost: 6 },
-    { level: 4, title: "ATTENDING LEVEL", image: "/game-components/ATTENDINGLEVEL.png", cost: 8 },
-    { level: 5, title: "PHYSICIAN LEVEL", image: "/game-components/PHYSICIANLEVEL.png", cost: 10 },
-    { level: 6, title: "MEDICAL DIRECTOR LEVEL", image: "/game-components/MEDICALDIRECTORLEVEL.png", cost: 12 },
+    { level: 1, title: "INTERN LEVEL", image: "/game-components/INTERNLEVEL.png", cost: 4 },
+    { level: 2, title: "RESIDENT LEVEL", image: "/game-components/RESIDENTLEVEL.png", cost: 8 },
+    { level: 3, title: "FELLOWSHIP LEVEL", image: "/game-components/FELLOWSHIPLEVEL.png", cost: 12 },
+    { level: 4, title: "ATTENDING LEVEL", image: "/game-components/ATTENDINGLEVEL.png", cost: 16 },
+    { level: 5, title: "PHYSICIAN LEVEL", image: "/game-components/PHYSICIANLEVEL.png", cost: 20 },
+    { level: 6, title: "MEDICAL DIRECTOR LEVEL", image: "/game-components/MEDICALDIRECTORLEVEL.png", cost: 24 },
   ];
 
   const handleLevelClick = (level: number) => {
