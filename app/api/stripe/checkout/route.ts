@@ -46,18 +46,19 @@ export async function POST(request: Request) {
 
       const userEmail = user.emailAddresses[0]?.emailAddress;
 
-      console.log("stripe 49 Creating new user info for user:", userId);
-      // Create or update UserInfo with bonus score
-      const userInfo = await prismadb.userInfo.upsert({
+      // Check if user exists
+      const existingUser = await prismadb.userInfo.findUnique({
+        where: { userId }
+      });
+
+      if (!existingUser) {
+        return new NextResponse("User not found. Please complete onboarding first.", { status: 404 });
+      }
+
+      // Update existing user
+      const userInfo = await prismadb.userInfo.update({
         where: { userId },
-        create: {
-          userId,
-          bio: "Future doctor preparing to ace the MCAT! 🎯",
-          score: 20, // Initial score of 20 coins for new users
-          hasPaid: false,
-          firstName: user.firstName || "",
-        },
-        update: {
+        data: {
           score: {
             increment: 5, // Add 5 to the existing score
           },

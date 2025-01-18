@@ -54,6 +54,7 @@ interface UseUserInfoReturn {
   }) => Promise<void>;
   checkHasReferrals: () => Promise<boolean>;
   unlockGame: () => Promise<void>;
+  createNewUser: (data: { firstName: string; bio?: string }) => Promise<UserInfo>;
 }
 
 const CLINIC_COST = 10;
@@ -71,17 +72,30 @@ export function useUserInfo(): UseUserInfoReturn {
       setError(null);
       const response = await fetch("/api/user-info");
 
+      // Handle 404 and other error statuses
       if (!response.ok) {
+        if (response.status === 404 || response.status === 500) {
+          // Only redirect if we're not already on the onboarding page
+          if (!window.location.pathname.includes('/onboarding')) {
+            window.location.href = '/onboarding';
+            return;
+          }
+          // If we are on onboarding, just set userInfo to null
+          setUserInfo(null);
+          return;
+        }
         throw new Error("Failed to fetch user info");
       }
 
       const data = await response.json();
       setUserInfo(data);
     } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error("Failed to fetch user info")
-      );
-      toast.error("Failed to load user information");
+      console.error("Error fetching user info:", err);
+      setError(err instanceof Error ? err : new Error("Failed to fetch user info"));
+      // Only show toast for non-404 errors
+      if (err instanceof Error && !err.message.includes('404')) {
+        toast.error("Failed to load user information");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -293,6 +307,27 @@ export function useUserInfo(): UseUserInfoReturn {
     }
   }, []);
 
+  const createNewUser = useCallback(async (data: { firstName: string; bio?: string }) => {
+    try {
+      const response = await fetch("/api/user-info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create user");
+      }
+
+      const newUserInfo = await response.json();
+      setUserInfo(newUserInfo);
+      return newUserInfo;
+    } catch (err) {
+      toast.error("Failed to create user profile");
+      throw err;
+    }
+  }, []);
+
   return {
     userInfo,
     isLoading,
@@ -309,6 +344,7 @@ export function useUserInfo(): UseUserInfoReturn {
     createReferral,
     checkHasReferrals,
     unlockGame,
+    createNewUser,
   };
 }
 
