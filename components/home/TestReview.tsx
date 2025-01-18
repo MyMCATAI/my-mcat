@@ -140,6 +140,7 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack, onRefresh }) => {
         ? prev.filter(name => name !== sectionName)
         : [...prev, sectionName]
     );
+    refetchExamData();
   };
 
   // Process dataPulses to find weaknesses
