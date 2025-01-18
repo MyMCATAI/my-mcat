@@ -146,34 +146,18 @@ User Feedback:
 ${userMessage}
       `.trim();
 
-       // Check if the UserResponse exists
-       const response = await fetch(`/api/user-test/response`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/user-test/flagged-responses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userTestId: userResponse.userTestId,
           questionId: question?.id,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create or fetch user response");
-      }
-
-      const userResponseData = await response.json();
-
-      // Now perform the PUT request to update the flagged status
-      const updateResponse = await fetch("/api/user-test/response", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: userResponseData.id, // Use the correct UserResponse ID
           flagged: feedbackType === 'downvote' ? true : false,
         }),
       });
-
-      if (!updateResponse.ok) {
-        throw new Error("Failed to update question flag status");
+  
+      if (!response.ok) {
+        throw new Error('Failed to update question flag status');
       }
 
       toast.success("Question reported! Thank you for helping us improve.");
