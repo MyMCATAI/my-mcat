@@ -398,10 +398,10 @@ const MethodologyAndTestimonials = () => {
               Our pricing, as the ONLY software solution in MCAT Prep:
             </h3>
             <p className="text-green-400 text-6xl font-bold mb-4">
-              $24.99
+              $9.99
             </p>
             <p className="text-white text-3xl mb-16">
-              for a 10 coin pack
+              for a 25 coin pack
             </p>
             <p className="text-green-400 text-6xl font-bold mb-4">
               $150/mo
