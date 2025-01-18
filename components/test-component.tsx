@@ -20,7 +20,6 @@ import { VocabContext } from "@/contexts/VocabContext";
 import VocabList from "@/components/VocabList";
 import { fetchDefinitionAndAddToVocab } from "@/lib/utils";
 import { TestIntroModal } from "@/components/test/TestIntroModal";
-import Link from 'next/link';
 
 interface TestComponentProps {
   testId: string;
@@ -32,6 +31,14 @@ interface DictionaryPosition {
   top: number | null;
   bottom: number | null;
   left: number;
+}
+
+// Define a type for active editor identifiers
+type ActiveEditor = "passage" | "question" | null;
+
+interface Annotation {
+  style: string;
+  text: string;
 }
 
 const TestComponent: React.FC<TestComponentProps> = ({
@@ -78,10 +85,10 @@ const TestComponent: React.FC<TestComponentProps> = ({
   const [tempHighlightedStrings, setTempHighlightedStrings] = useState<
     string[]
   >([]); // Temporary highlights
-  const passageRef = useRef<{ applyStyle: (style: string) => void } | null>(
+  const passageRef = useRef<{ applyStyle: (style: string) => void, getAnnotations: () => Annotation[], setAnnotations: (annotations: Annotation[]) => void } | null>(
     null
   );
-  const questionRef = useRef<{ applyStyle: (style: string) => void } | null>(
+  const questionRef = useRef<{ applyStyle: (style: string) => void} | null>(
     null
   );
   const testHeaderRef = useRef<TestHeaderRef>(null);
@@ -125,6 +132,16 @@ const TestComponent: React.FC<TestComponentProps> = ({
 
   const [showIntroModal, setShowIntroModal] = useState(true);
   const [userScore, setUserScore] = useState(0);
+
+  // State to track the currently active editor
+  const [activeEditor, setActiveEditor] = useState<ActiveEditor>(null);
+
+  const [canApplyStyle, setCanApplyStyle] = useState(true);
+
+  // Handler to set the active editor
+  const handleSetActiveEditor = (editor: ActiveEditor) => {
+    setActiveEditor(editor);
+  };
 
   useEffect(() => {
     const fetchUserScore = async () => {
@@ -293,12 +310,12 @@ const TestComponent: React.FC<TestComponentProps> = ({
     }
   };
 
-  const handleUserResponse = async (
+  const handleUserResponse = (
     questionId: string,
     userAnswer: string,
     isCorrect: boolean
   ) => {
-    updateActivityEndTime ?updateActivityEndTime() : null
+    updateActivityEndTime ? updateActivityEndTime() : null;
     if (!hasAnsweredFirstQuestion) {
       setHasAnsweredFirstQuestion(true);
       testHeaderRef.current?.startQuestionTimer();
@@ -315,15 +332,6 @@ const TestComponent: React.FC<TestComponentProps> = ({
       return;
     }
 
-    const timestamp = new Date().toISOString();
-    const formattedAction = `[${timestamp}] - Answered: "${userAnswer}" (${isCorrect ? "Correct" : "Incorrect"})`;
-
-    const existingResponse = getCurrentUserResponse(questionId);
-    let updatedUserNotes = formattedAction;
-    if (existingResponse?.userNotes) {
-      updatedUserNotes = `${existingResponse.userNotes}\n${formattedAction}`;
-    }
-
     const optimisticResponse: UserResponse = {
       id: `temp-${questionId}`,
       userTestId: userTest.id,
@@ -331,7 +339,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
       userAnswer,
       isCorrect,
       timeSpent,
-      userNotes: updatedUserNotes,
+      userNotes: "",
       answeredAt: new Date(),
     };
 
@@ -349,62 +357,11 @@ const TestComponent: React.FC<TestComponentProps> = ({
       setAnsweredQuestions((prev) => prev + 1);
     }
 
-    try {
-      const response = await fetch("/api/user-test/response", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userTestId: userTest.id,
-          questionId,
-          userAnswer,
-          isCorrect,
-          timeSpent,
-          userNotes: updatedUserNotes,
-          answeredAt: new Date().toISOString(),
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error response:", errorData);
-        throw new Error(
-          `Failed to save user response: ${response.status} ${response.statusText}`
-        );
-      }
-
-      const savedResponse: UserResponse = await response.json();
-
-      setUserResponses((prev) => ({
-        ...prev,
-        [savedResponse.id]: savedResponse,
-      }));
-
-      setQuestionIdToResponseId((prev) => ({
-        ...prev,
-        [questionId]: savedResponse.id,
-      }));
-
-      setPendingResponses((prev) => {
-        const { [questionId]: _, ...rest } = prev;
-        return rest;
-      });
-
-      // Update chatbot context
-      setChatbotContext((prevContext) => ({
-        ...prevContext,
-        context: `${prevContext.context}\n\nI just answered this question: "${currentQuestion.questionContent}"\nMy answer was: "${userAnswer}" (${isCorrect ? "Correct" : "Incorrect"})`,
-      }));
-    } catch (err) {
-      console.error("Error saving user response:", err);
-      setPendingResponses((prev) => {
-        const { [questionId]: _, ...rest } = prev;
-        return rest;
-      });
-      setQuestionIdToResponseId((prev) => {
-        const { [questionId]: _, ...rest } = prev;
-        return rest;
-      });
-    }
+    // Update chatbot context
+    setChatbotContext((prevContext) => ({
+      ...prevContext,
+      context: `${prevContext.context}\n\nI just answered this question: "${currentQuestion.questionContent}"\nMy answer was: "${userAnswer}" (${isCorrect ? "Correct" : "Incorrect"})`,
+    }));
   };
 
   const createUserTest = async (
@@ -454,6 +411,9 @@ const TestComponent: React.FC<TestComponentProps> = ({
   };
 
   const handleFinishTest = async () => {
+    if (currentQuestion) {
+      await saveAnnotations(currentQuestion.id);
+    }
     setIsSubmitting(true);
     if (!userTest || !testStartTime) return;
 
@@ -468,63 +428,109 @@ const TestComponent: React.FC<TestComponentProps> = ({
     setTechnique(technique);
 
     try {
-        // Update the user test record
-        const response = await fetch(`/api/user-test/${userTest.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                score,
-                finishedAt: testFinishTime.toISOString(),
-                totalTime: totalTimeInSeconds,
-            }),
+      // Save all pending responses
+      for (const questionId in pendingResponses) {
+        await saveUserResponse(questionId);
+      }
+
+      // Update the user test record
+      const response = await fetch(`/api/user-test/${userTest.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          score,
+          finishedAt: testFinishTime.toISOString(),
+          totalTime: totalTimeInSeconds,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update test");
+      }
+
+      // Calculate total stars (score stars + timing stars + technique stars)
+      const scoreStars = score === 100 ? 3 : score >= 80 ? 2 : 1;
+      const totalMinutes = totalTimeInSeconds / 60;
+      const timingStars = totalMinutes <= 10 ? 3 : totalMinutes <= 12 ? 2 : 1;
+      const techniqueStars = technique;
+      
+      const totalStars = scoreStars + timingStars + techniqueStars;
+
+      // New coin reward logic
+      let coinsEarned = 0;
+      if (totalStars === 9) {
+        // Check if test difficulty is 3 or higher for 3 coins
+        if (currentPassage && currentPassage.difficulty >= 3) {
+          coinsEarned = 3; // 3 coins for perfect score on difficult passage
+        } else {
+          coinsEarned = 2; // 2 coins for perfect score on easier passage
+        }
+      } else if (totalStars >= 6) {
+        coinsEarned = 1; // 1 coin for 6+ stars
+      }
+
+      // Update user's score if coins were earned
+      if (coinsEarned > 0) {
+        const scoreResponse = await fetch("/api/user-info/", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: coinsEarned }),
         });
 
-        if (!response.ok) {
-            throw new Error("Failed to update test");
+        if (!scoreResponse.ok) {
+          throw new Error("Failed to update user score");
         }
+      }
 
-        // Calculate total stars (score stars + timing stars + technique stars)
-        const scoreStars = score === 100 ? 3 : score >= 80 ? 2 : 1;
-        const totalMinutes = totalTimeInSeconds / 60;
-        const timingStars = totalMinutes <= 10 ? 3 : totalMinutes <= 12 ? 2 : 1;
-        const techniqueStars = technique;
-        
-        const totalStars = scoreStars + timingStars + techniqueStars;
-
-        // New coin reward logic
-        let coinsEarned = 0;
-        if (totalStars === 9) {
-            // Check if test difficulty is 3 or higher for 3 coins
-            if (currentPassage && currentPassage.difficulty >= 3) {
-                coinsEarned = 3; // 3 coins for perfect score on difficult passage
-            } else {
-                coinsEarned = 2; // 2 coins for perfect score on easier passage
-            }
-        } else if (totalStars >= 6) {
-            coinsEarned = 1; // 1 coin for 6+ stars
-        }
-
-        // Update user's score if coins were earned
-        if (coinsEarned > 0) {
-            const scoreResponse = await fetch("/api/user-info/", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ amount: coinsEarned }),
-            });
-
-            if (!scoreResponse.ok) {
-                throw new Error("Failed to update user score");
-            }
-        }
-
-        setShowScorePopup(true);
-        onTestComplete && onTestComplete(score);
+      setShowScorePopup(true);
+      onTestComplete && onTestComplete(score);
     } catch (err) {
-        console.error("Error finishing test:", err);
+      console.error("Error finishing test:", err);
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
+
+  const saveUserResponse = async (questionId: string) => {
+    const response = pendingResponses[questionId];
+    if (!response) return;
+
+    try {
+      const apiResponse = await fetch("/api/user-test/response", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(response),
+      });
+
+      if (!apiResponse.ok) {
+        const errorData = await apiResponse.json();
+        console.error("Error response:", errorData);
+        throw new Error(
+          `Failed to save user response: ${apiResponse.status} ${apiResponse.statusText}`
+        );
+      }
+
+      const savedResponse: UserResponse = await apiResponse.json();
+
+      setUserResponses((prev) => ({
+        ...prev,
+        [savedResponse.id]: savedResponse,
+      }));
+
+      setQuestionIdToResponseId((prev) => ({
+        ...prev,
+        [questionId]: savedResponse.id,
+      }));
+
+      setPendingResponses((prev) => {
+        const { [questionId]: _, ...rest } = prev;
+        return rest;
+      });
+    } catch (err) {
+      console.error("Error saving user response:", err);
+    }
+  };
+
   const getCurrentTestQuestion = (): TestQuestion | null => {
     if (!test || !test.questions || test.questions.length === 0) return null;
     return test.questions[currentQuestionIndex];
@@ -541,14 +547,25 @@ const TestComponent: React.FC<TestComponentProps> = ({
     return null;
   };
 
-  const handleNextQuestion = () => {
+  const currentTestQuestion = getCurrentTestQuestion();
+  const currentQuestion = getCurrentQuestion();
+  
+  const handleNextQuestion = async () => {
+    if (currentQuestion) {
+      await saveAnnotations(currentQuestion.id); // Save before moving forward
+      await saveUserResponse(currentQuestion.id); // Save user response
+    }
     if (test && currentQuestionIndex < test.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       testHeaderRef.current?.resetQuestionTimer();
     }
   };
 
-  const handlePreviousQuestion = () => {
+  const handlePreviousQuestion = async () => {
+    if (currentQuestion) {
+      await saveAnnotations(currentQuestion.id); // Save before moving backward
+      await saveUserResponse(currentQuestion.id); // Save user response
+    }
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
       testHeaderRef.current?.resetQuestionTimer();
@@ -577,24 +594,49 @@ const TestComponent: React.FC<TestComponentProps> = ({
   }, [currentPassage, currentQuestionIndex]);
 
   const handleHighlight = () => {
+    if (!activeEditor || !canApplyStyle) {
+      console.log("Cannot apply style yet.");
+      return;
+    }
+
     setFlashHighlight(true);
-    passageRef.current?.applyStyle("HIGHLIGHT");
-    questionRef.current?.applyStyle("HIGHLIGHT");
-    setNumberOfPassageHighlights((prev) => prev + 1);
+    setCanApplyStyle(false);
+
+    if (activeEditor === "passage") {
+      passageRef.current?.applyStyle("HIGHLIGHT");
+      setNumberOfPassageHighlights((prev) => prev + 1);
+    } else if (activeEditor === "question") {
+      questionRef.current?.applyStyle("HIGHLIGHT");
+    }
+
+    setTimeout(() => setCanApplyStyle(true), 1000);
     setTimeout(() => setFlashHighlight(false), 300);
   };
 
   const handleStrikethrough = () => {
+    if (!activeEditor || !canApplyStyle) {
+      console.log("Cannot apply style yet.");
+      return;
+    }
+
     setFlashStrikethrough(true);
-    passageRef.current?.applyStyle("STRIKETHROUGH");
-    questionRef.current?.applyStyle("STRIKETHROUGH");
-    setNumberOfPassageStrikethroughs((prev) => prev + 1);
+    setCanApplyStyle(false);
+
+    if (activeEditor === "passage") {
+      passageRef.current?.applyStyle("STRIKETHROUGH");
+      setNumberOfPassageStrikethroughs((prev) => prev + 1);
+    } else if (activeEditor === "question") {
+      questionRef.current?.applyStyle("STRIKETHROUGH");
+    }
+
+    setTimeout(() => setCanApplyStyle(true), 1000);
     setTimeout(() => setFlashStrikethrough(false), 300);
   };
 
   const onOptionCrossedOut = (optionText: string) => {
+    // TODO: called onece in question.tsx, but twice in test-componet.tsx
     // Save a note in the userResponse
-    saveNote(`crossed out option: ${optionText}`);
+    // saveNote(`crossed out option: ${optionText}`);
 
     // Increment the total options crossed out counter
     setTotalOptionsCrossedOut((prev) => prev + 1);
@@ -625,13 +667,6 @@ const TestComponent: React.FC<TestComponentProps> = ({
 
     const timeSpent = testHeaderRef.current?.getElapsedTime() || 0;
 
-    const responseData = {
-      userTestId: currentUserTest.id,
-      questionId: currentQuestion.id,
-      timeSpent,
-      userNotes: text,
-    };
-
     try {
       // First, try to fetch the existing response
       const checkResponse = await fetch(
@@ -640,10 +675,26 @@ const TestComponent: React.FC<TestComponentProps> = ({
           method: "GET",
         }
       );
+      const checkResponseJson = await checkResponse.json();
+
+      let responseData: {
+        id?: string;
+        userTestId: string;
+        questionId: string;
+        timeSpent: number;
+        userNotes: string;
+      } = {
+        userTestId: currentUserTest.id,
+        questionId: currentQuestion.id,
+        timeSpent,
+        userNotes: text,
+      };
 
       let method = "PUT";
       if (checkResponse.status === 404) {
         method = "POST";
+      } else if (checkResponse.ok) {
+        responseData.id = checkResponseJson.id;
       } else if (!checkResponse.ok) {
         throw new Error(
           `Failed to check existing response: ${checkResponse.status} ${checkResponse.statusText}`
@@ -833,6 +884,70 @@ const TestComponent: React.FC<TestComponentProps> = ({
     }
   };
 
+  const saveAnnotations = async (questionId: string) => {
+    if (!userTest) {
+      console.error("UserTest is null");
+      return;
+    }
+    if (passageRef.current) {
+      const annotations: Annotation[] = passageRef.current.getAnnotations();
+
+      if (annotations.length > 0) {
+        const delimiter = "|||";
+        const userNotes = annotations.map((anno) => `${anno.style} : ${anno.text}`).join(delimiter);
+
+        try {
+          const timeSpent = 0; // Replace with actual time tracking logic
+
+          const responseData: Partial<UserResponse> = {
+            userTestId: userTest.id,
+            questionId,
+            timeSpent,
+            userNotes,
+          };
+
+          // Determine the method based on existing response
+          const checkResponse = await fetch(
+            `/api/user-test/response?userTestId=${userTest.id}&questionId=${questionId}`,
+            {
+              method: "GET",
+            }
+          );
+          const checkResponseJson = await checkResponse.json();
+
+          let method = "PUT";
+          if (checkResponse.status === 404) {
+            method = "POST";
+          } else if (checkResponse.ok) {
+            responseData.id = checkResponseJson.id;
+          } else {
+            throw new Error(
+              `Failed to check existing response: ${checkResponse.status} ${checkResponse.statusText}`
+            );
+          }
+
+          const response = await fetch("/api/user-test/response", {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(responseData),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Error saving annotations:", errorData);
+          } else {
+            // Optionally clear annotations or handle accordingly
+            if (passageRef.current) {
+              passageRef.current.setAnnotations([]);
+            }
+          }
+        } catch (err) {
+          console.error("Error saving annotations:", err);
+        }
+      }
+    }
+  };
+
   if (loading)
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -892,9 +1007,6 @@ const TestComponent: React.FC<TestComponentProps> = ({
         </div>
       </div>
     );
-
-  const currentTestQuestion = getCurrentTestQuestion();
-  const currentQuestion = getCurrentQuestion();
 
   const userAnswer = currentQuestion?.id
     ? getCurrentUserResponse(currentQuestion?.id)?.userAnswer
@@ -1018,6 +1130,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
                 passageData={currentPassage}
                 onNote={saveNote}
                 tempHighlightedStrings={tempHighlightedStrings}
+                onFocus={() => handleSetActiveEditor("passage")}
               />
             </div>
           </div>
@@ -1075,6 +1188,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
                   onStartQuestionTimer={() =>
                     testHeaderRef.current?.startQuestionTimer()
                   }
+                  onFocus={() => handleSetActiveEditor("question")}
                 />
               </>
             ) : (

@@ -20,11 +20,18 @@ interface PassageProps {
   onNote: (text: string) => void;
   tempHighlightedStrings?: string[];
   userResponse?: UserResponse;
+  onFocus?: () => void;
 }
 
 interface Annotation {
   style: string;
   text: string;
+}
+
+interface PassageRef {
+  applyStyle: (style: string) => void;
+  getAnnotations: () => Annotation[];
+  setAnnotations: (annotations: Annotation[]) => void;
 }
 
 function applyAnnotations(editorState: EditorState, annotations: Annotation[]): EditorState {
@@ -34,18 +41,30 @@ function applyAnnotations(editorState: EditorState, annotations: Annotation[]): 
   annotations.sort((a, b) => contentState.getPlainText().indexOf(a.text) - contentState.getPlainText().indexOf(b.text));
 
   annotations.forEach(({ style, text }) => {
+    // UserNotes might contain newlines symbol
+    const textArray = text.split("\n");
     const blocks: ContentBlock[] = contentState.getBlocksAsArray();
     blocks.forEach((block) => {
       const blockText: string = block.getText();
       let start: number = 0;
-      while (true) {
-        const index: number = blockText.indexOf(text, start);
-        if (index === -1) break;
+      for (const txt of textArray) {
+        const index: number = blockText.indexOf(txt, start);
+        if (index === -1) continue;
+
         const selection: SelectionState = SelectionState.createEmpty(block.getKey()).merge({
           anchorOffset: index,
-          focusOffset: index + text.length,
+          focusOffset: index + txt.length,
         });
-        contentState = Modifier.applyInlineStyle(contentState, selection, style);
+
+        const currentStyle = editorState.getCurrentInlineStyle();
+        if (currentStyle.has(style)) {
+          // If the current style is the same, toggle (remove) it
+          contentState = Modifier.removeInlineStyle(contentState, selection, style);
+        } else {
+          // If the current style is different, apply the new style
+          contentState = Modifier.applyInlineStyle(contentState, selection, style);
+        }
+
         start = index + 1; // Move only one character to catch overlapping annotations
       }
     });
@@ -54,17 +73,32 @@ function applyAnnotations(editorState: EditorState, annotations: Annotation[]): 
   return EditorState.push(editorState, contentState, 'change-inline-style');
 }
 
-const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps>(
-  ({ passageData, onNote, tempHighlightedStrings, userResponse }, ref) => {
+const Passage = forwardRef<PassageRef, PassageProps>(
+  (
+    { passageData, onNote, tempHighlightedStrings, userResponse, onFocus },
+    ref
+  ) => {
     const [editorState, setEditorState] = useState(() => {
-      const initialState = EditorState.createWithContent(ContentState.createFromText(passageData?.text || ""));
+      const initialState = EditorState.createWithContent(
+        ContentState.createFromText(passageData?.text || "")
+      );
       return initialState;
     });
-    const notesAppliedRef = useRef(false);
+
+    const [annotations, setAnnotations] = useState<Annotation[]>([]);
 
     useImperativeHandle(ref, () => ({
       applyStyle,
+      getAnnotations: () => annotations,
+      setAnnotations: (loadedAnnotations: Annotation[]) => {
+        setAnnotations(loadedAnnotations);
+      },
     }));
+
+    const handleEditorFocus = () => {
+      if (onFocus) onFocus();
+    };
+
     const getSelectedText = (editorState: EditorState): string => {
       const selectionState = editorState.getSelection();
       const startKey = selectionState.getStartKey();
@@ -142,12 +176,20 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     };
 
     const applyStyle = (style: string) => {
-      const newState = RichUtils.toggleInlineStyle(editorState, style);
-      const selectionInfo = getSelectedText(newState);
+      const selectionState = editorState.getSelection();
+      if (!selectionState.isCollapsed()) { // Check if there is a valid selection
+        const currentStyle = editorState.getCurrentInlineStyle();
+        const newState = RichUtils.toggleInlineStyle(editorState, style);
 
-      onNote(style + " : " + selectionInfo);
+        if (!currentStyle.has(style)) { // Check if the style was not already applied
+          const selectionInfo = getSelectedText(newState);
+          const newAnnotation: Annotation = { style, text: selectionInfo };
+          setAnnotations((prev) => [...prev, newAnnotation]);
+          // onNote(`${style} : ${selectionInfo}`);
+        }
 
-      setEditorState(newState);
+        setEditorState(newState);
+      }
     };
 
     const handleKeyCommand = (command: string): DraftHandleValue => {
@@ -199,8 +241,6 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
     }
           
     useEffect(() => {
-      if (!userResponse?.userNotes || notesAppliedRef.current) return;
-    
       const contentState = editorState.getCurrentContent();
       if (contentState.getPlainText().trim() === '') return; // Ensure content is loaded
     
@@ -211,39 +251,41 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
         newContentState = removeInlineStyleFromContentState(newContentState, "HIGHLIGHT");
         newContentState = removeInlineStyleFromContentState(newContentState, "STRIKETHROUGH");
 
+        // Update the editor state with the new content state
+        let newEditorState = EditorState.push(editorState, newContentState, 'change-inline-style');
+        setEditorState(newEditorState);
+
+        if (!userResponse?.userNotes) return;
+
         const annotations = parseUserNotes(userResponse.userNotes!);
 
         if (annotations.length > 0) {
-          const newEditorState = applyAnnotations(EditorState.createWithContent(newContentState), annotations);
+          newEditorState = applyAnnotations(EditorState.createWithContent(newContentState), annotations);
           setEditorState(newEditorState);
-          notesAppliedRef.current = true;
         }
       }, 3000); 
     
       return () => clearTimeout(timer);
       
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userResponse?.userNotes]);
-
-    // Reset the ref when userResponse?.userNotes changes
-    useEffect(() => {
-      notesAppliedRef.current = false;
-    }, [userResponse?.userNotes]);
+    }, [userResponse?.questionId]);
 
     // Function to parse userNotes and extract annotations
     function parseUserNotes(userNotes: string): Annotation[] {
       const annotations: Annotation[] = [];
-      const lines = userNotes.split("\n");
+      const delimiter = "|||";
+      const lines = userNotes.split(delimiter);
       for (let line of lines) {
         line = line.trim();
         if (line === "") continue;
         // New regex pattern to match the actual format
-        const regex = /^\[([^\]]+)\]\s*-\s*(HIGHLIGHT|STRIKETHROUGH)\s*:\s*"(.*)"$/;
+        const regex = /^\[([^\]]+)\]\s*-\s*(HIGHLIGHT|STRIKETHROUGH)\s*:\s*"([\s\S]*)"$/;
         const match = line.match(regex);
         if (match) {
           const style = match[2];
           const text = match[3];
           annotations.push({ style, text });
+          console.log(`Style: ${style}, Text: ${text}`);
         }
       }
       return annotations;
@@ -300,6 +342,11 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tempHighlightedStrings, userResponse?.userNotes]);
 
+    // Reset annotations when question changes
+    useEffect(() => {
+      setAnnotations([]);
+    }, [passageData]);
+
     return (
       <div className="bg-[#ffffff] h-[80vh] flex flex-col font-serif">
         <div className="sticky top-0 bg-white p-4 z-10">
@@ -309,9 +356,8 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
           <div className="text-black" style={editorStyle}>
             <Editor
               editorState={editorState}
-              onChange={(newState) => {
-                setEditorState(newState);
-              }}
+              onChange={setEditorState}
+              onFocus={handleEditorFocus}
               customStyleMap={styleMap}
               handleBeforeInput={handleBeforeInput}
               handlePastedText={handlePastedText}
