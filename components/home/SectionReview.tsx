@@ -380,6 +380,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
                     ? 'bg-green-500/20 text-green-500' 
                     : 'bg-[--theme-leaguecard-accent] hover:bg-[--theme-hover-color]'
                   }`}
+                  disabled={isCompleted}
               >
                 {isCompleted ? 'Completed' : 'Mark Complete'}
               </button>
