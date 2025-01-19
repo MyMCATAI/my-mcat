@@ -1,23 +1,16 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { DoctorOfficeStats } from "@/types";
 import { Progress } from "@/components/ui/progress";
-import { FaFire, FaUserInjured } from "react-icons/fa";
+import { FaFire } from "react-icons/fa";
 import {
   calculatePlayerLevel,
   calculateTotalQC,
   getLevelNumber,
 } from "@/utils/calculateResourceTotals";
-import { Plus, Globe, Headphones } from "lucide-react";
+import { Headphones } from "lucide-react";
 import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
-import { toast } from "react-hot-toast";
-import { useUserInfo } from "@/hooks/useUserInfo";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import Leaderboard from "@/components/leaderboard/Leaderboard";
 
 interface ResourcesMenuProps {
   reportData: DoctorOfficeStats | null;
@@ -27,119 +20,14 @@ interface ResourcesMenuProps {
   patientsPerDay: number;
 }
 
-interface LeaderboardEntry {
-  id: number;
-  name: string;
-  patientsTreated: number;
-}
-
 const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   reportData,
   userRooms,
 }) => {
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
   const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
-  const [isAddFriendOpen, setIsAddFriendOpen] = useState(false);
-  const [friendEmail, setFriendEmail] = useState("");
   const [isHeadphonesDropdownOpen, setIsHeadphonesDropdownOpen] = useState(false);
   const { isAutoPlay, setIsAutoPlay } = useMusicPlayer();
-  const [globalLeaderboard, setGlobalLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [leaderboardType, setLeaderboardType] = useState<"global" | "friends">("global");
-  const [friendsLeaderboard, setFriendsLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const { referrals, userInfo, createReferral } = useUserInfo();
-  const userId = userInfo?.userId;
-
-  const toggleAddFriendDropdown = () => {
-    setIsAddFriendOpen(!isAddFriendOpen);
-  };
-
-  const fetchLeaderboard = async () => {
-    try {
-      const response = await fetch('/api/global-leaderboard');
-      const data = await response.json();
-      setGlobalLeaderboard(data);
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error);
-    }
-  };
-
-  const fetchFriendsLeaderboard = useCallback(async () => {
-    try {
-      const response = await fetch('/api/friend-leaderboard');
-      const data = await response.json();
-      setFriendsLeaderboard(data);
-    } catch (error) {
-      console.error("Error fetching friends leaderboard:", error);
-      toast.error("Failed to load leaderboard");
-    }
-  }, [userInfo, userId, referrals]);
-
-  const handleAddFriend = useCallback(async () => {
-    try {
-      if (!userInfo || !userId) {
-        toast.error("Please try again in a moment");
-        return;
-      }
-
-      if (!friendEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(friendEmail)) {
-        toast.error("Invalid email address");
-        return;
-      }
-
-      await createReferral({
-        friendEmail: friendEmail,
-      });
-
-      await fetchFriendsLeaderboard();
-      toast.success("Friend invitation sent!");
-      setFriendEmail("");
-      setIsAddFriendOpen(false);
-    } catch (error) {
-      console.error("Error adding friend:", error);
-      toast.error("Failed to send friend invitation");
-    }
-  }, [
-    userInfo, 
-    userId, 
-    referrals, 
-    friendEmail, 
-    createReferral, 
-    fetchFriendsLeaderboard, 
-    setFriendEmail, 
-    setIsAddFriendOpen
-  ]);
-
-  useEffect(() => {
-    fetchLeaderboard();
-  }, []);
-
-  useEffect(() => {
-    if (userInfo && userId && referrals) {
-      fetchFriendsLeaderboard();
-    }
-  }, [userInfo, userId, referrals]);
-
-  const showGlobalRankings = async () => {
-    setLeaderboardType("global");
-  };
-
-  const showFriendsRankings = () => {
-    setLeaderboardType("friends");
-  };
-
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        const response = await fetch('/api/global-leaderboard');
-        const data = await response.json();
-        setGlobalLeaderboard(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Error fetching leaderboard:', error);
-        setGlobalLeaderboard([]);
-      }
-    };
-    fetchLeaderboard();
-  }, []);
 
   const toggleHeadphonesDropdown = () => {
     setIsHeadphonesDropdownOpen(!isHeadphonesDropdownOpen);
@@ -193,117 +81,11 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
         <DaysStreak days={reportData.streak} />
 
         <div className="w-full max-w-md mt-6">
-          <div className="flex justify-between items-center mb-4">
-            {leaderboardType === "global" ? (
-              <h3 className="text-lg font-semibold">Global Leaderboard</h3>
-            ) : (
-              <h3 className="text-lg font-semibold">Friends Leaderboard</h3>
-            )}
-            {/* todo: add friend leaderboard */}
-            <div className="flex gap-2">
-              <Plus
-                className="cursor-pointer text-[--theme-hover-color] hover:opacity-50 transition-opacity duration-200"
-                size={20}
-                onClick={toggleAddFriendDropdown}
-              />
-              <Globe
-                className={`cursor-pointer hover:opacity-50 transition-opacity duration-200 ${
-                  leaderboardType === "global" ? "text-[--theme-hover-color]" : "text-[--theme-text-color]"
-                }`}
-                size={20}
-                onClick={leaderboardType === "global" ? showFriendsRankings : showGlobalRankings}
-              />
-              <Headphones
-                className="cursor-pointer text-[--theme-hover-color] hover:opacity-50 transition-opacity duration-200"
-                size={20}
-                onClick={toggleHeadphonesDropdown}
-              />
-              {isHeadphonesDropdownOpen && (
-                <div className="absolute right-4 mt-6 bg-[--theme-doctorsoffice-accent] border border-[--theme-border-color] rounded-lg shadow-lg w-48 z-50">
-                  <div 
-                    className="p-3 cursor-pointer hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors duration-200 rounded-lg text-sm"
-                    onClick={handleAutoPlayChange}
-                  >
-                    {isAutoPlay ? "Disable Auto Play" : "Enable Auto Play"}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {isAddFriendOpen && (
-            <div className="mb-4 flex items-center gap-2">
-              <input
-                type="email"
-                value={friendEmail}
-                onChange={(e) => setFriendEmail(e.target.value)}
-                placeholder="Eventually you can add friends..."
-                className="w-full p-2 border rounded"
-              />
-              <button
-                onClick={handleAddFriend}
-                className="bg-[--theme-hover-color] text-[--theme-hover-text] p-2 rounded hover:opacity-50 transition-opacity duration-200"
-              >
-                Send
-              </button>
-            </div>
-          )}
-
-          <div className="space-y-3">
-            {leaderboardType === "global" ? (
-              globalLeaderboard.map((entry) => (
-                <TooltipProvider key={entry.id}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div
-                        className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
-                            {entry.id}
-                          </div>
-                          <span className="font-medium">{entry.name}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <FaUserInjured className="text-yellow-300" />
-                          <span>{entry.patientsTreated}</span>
-                        </div>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{`${entry.name}'s clinic has treated ${entry.patientsTreated} patients so far!`}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ))
-            ) : (
-              friendsLeaderboard.map((entry) => (
-                <TooltipProvider key={entry.id}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div
-                        className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
-                            {entry.id}
-                          </div>
-                          <span className="font-medium">{entry.name}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <FaUserInjured className="text-yellow-300" />
-                          <span>{entry.patientsTreated}</span>
-                        </div>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{`${entry.name}'s clinic has treated ${entry.patientsTreated} patients so far!`}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ))
-            )}
-          </div>
+          <Leaderboard 
+            variant="resources"
+            showAddFriend={true}
+            className="w-full"
+          />
 
           <p className="text-sm text-gray-400/40 mt-4 text-center italic">
             {"You'll eventually be able to add friends, see their scores, and also check the global rankings."}
