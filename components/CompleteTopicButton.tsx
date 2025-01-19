@@ -66,7 +66,7 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
         setTimeout(() => setShowConfetti(false), 3000);
       }
 
-      toast.success("Topic Completed! 🎉");
+      toast.success("Cha-ching! Topic completed! One coin! 🎉");
       
       setIsOpen(false);
       
