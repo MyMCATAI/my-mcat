@@ -33,10 +33,10 @@ export const getUserInfo = async () => {
   const userInfo = await prismadb.userInfo.findUnique({
     where: { userId }
   });
-
   if (!userInfo) {
     throw new Error('User info not found. Please complete onboarding first.');
   }
+  return userInfo
 };
 
 export const updateUserInfo = async (data: Partial<{ bio: string; [key: string]: any }>) => {
