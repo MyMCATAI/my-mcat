@@ -23,6 +23,7 @@ import UWorldPopup from '@/components/home/UWorldPopup';
 import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";  
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { PurchaseButton } from '@/components/purchase-button';
+import Leaderboard from "@/components/leaderboard/Leaderboard";
 
 interface Task {
   text: string;
@@ -56,7 +57,8 @@ type TabContent =
   | { type: 'insights'; videos: { id: string; title: string }[] }
   | { type: 'tutors'; schools: Tutor[] }
   | { type: 'tutorial' }
-  | { type: 'tasks' };
+  | { type: 'tasks' }
+  | { type: 'leaderboard' };
 
 type VideoCategory = 'RBT' | 'RWT' | 'CMP';
 
@@ -508,6 +510,17 @@ const SideBar: React.FC<SideBarProps> = ({
     </div>
   );
 
+  const renderLeaderboard = () => (
+    <div className="h-[calc(100vh-11.6rem)] flex flex-col">
+      <Leaderboard 
+        variant="sidebar"
+        showAddFriend={true}
+        className="p-4"
+        compact={true}
+      />
+    </div>
+  );
+
   const renderContent = (content: TabContent) => {
     if (content.type === 'insights') {
         return renderInsights();
@@ -517,6 +530,8 @@ const SideBar: React.FC<SideBarProps> = ({
         return <HelpContentTestingSuite onResetTutorials={() => {}} />;
     } else if (content.type === 'tasks') {
         return renderTasks();
+    } else if (content.type === 'leaderboard') {
+        return renderLeaderboard();
     }
     return null;
   };
@@ -526,6 +541,7 @@ const SideBar: React.FC<SideBarProps> = ({
     { id: "tab2", label: "Tasks", content: { type: 'tasks' } },
     { id: "tab3", label: "Tutors", content: { type: 'tutors', schools: tutors } },
     { id: "tab4", label: "Help", content: { type: 'tutorial' } },
+    { id: "tab5", label: "Leaderboard", content: { type: 'leaderboard' } },
   ];
 
   const AddTutorDialog = () => (
