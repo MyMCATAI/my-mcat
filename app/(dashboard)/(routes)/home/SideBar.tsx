@@ -3,7 +3,7 @@ import Image from "next/image";
 import { FetchedActivity } from '@/types';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, HelpCircle, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, HelpCircle, CheckCircle, Cat } from 'lucide-react';
 import { FaCheckCircle, FaYoutube } from 'react-icons/fa';
 import { toast } from "react-hot-toast";
 import { isToday, isSameDay, isTomorrow, format } from "date-fns";
@@ -537,11 +537,10 @@ const SideBar: React.FC<SideBarProps> = ({
   };
 
   const tabs: { id: string; label: string; content: TabContent }[] = [
-    { id: "tab1", label: "Insights", content: { type: 'insights', videos: videos } },
     { id: "tab2", label: "Tasks", content: { type: 'tasks' } },
     { id: "tab3", label: "Tutors", content: { type: 'tutors', schools: tutors } },
     { id: "tab4", label: "Help", content: { type: 'tutorial' } },
-    { id: "tab5", label: "Leaderboard", content: { type: 'leaderboard' } },
+    { id: "tab5", label: "Friends", content: { type: 'leaderboard' } },
   ];
 
   const AddTutorDialog = () => (
@@ -886,28 +885,40 @@ const SideBar: React.FC<SideBarProps> = ({
   return (
     <div className="relative p-2 rounded-lg overflow-hidden h-[calc(100vh-4.1rem)]">
       <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
-        <div className="flex w-full flex-shrink-0 p-[1%] bg-[--theme-leaguecard-color] rounded-lg">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              data-tab={tab.id}
-              className={`flex-1 text-m py-[2%] px-[3%] rounded-lg transition-all duration-300 ${
-                activeTab === tab.id
-                  ? "bg-[--theme-hover-color] text-[--theme-hover-text] shadow-md transform scale-105"
-                  : "bg-transparent text-[--theme-text-color] hover:opacity-50 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
-              }`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-4 mb-3">
+          <button
+            className={`p-2 rounded-full transition-all duration-300 ${
+              activeTab === "tab1"
+                ? "bg-[--theme-hover-color] text-[--theme-hover-text] shadow-md transform scale-105"
+                : "bg-transparent text-[--theme-text-color] hover:opacity-50 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+            }`}
+            onClick={() => setActiveTab("tab1")}
+          >
+            <Cat className="w-6 h-6" />
+          </button>
+          <div className="flex flex-1 bg-[--theme-leaguecard-color] rounded-lg p-[1%]">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                data-tab={tab.id}
+                className={`flex-1 text-m py-[2%] px-[3%] rounded-lg transition-all duration-300 ${
+                  activeTab === tab.id
+                    ? "bg-[--theme-hover-color] text-[--theme-hover-text] shadow-md transform scale-105"
+                    : "bg-transparent text-[--theme-text-color] hover:opacity-50 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+                }`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className={`mt-4 ${
+        <div className={`${
           activeTab === 'tab3'
             ? 'bg-transparent' 
             : 'bg-[--theme-mainbox-color]'
           } flex-1 min-h-0 mb-8 overflow-hidden relative rounded-lg transition-all duration-300`}>
-          {renderContent(tabs.find(tab => tab.id === activeTab)!.content)}
+          {renderContent({ type: activeTab === "tab1" ? 'insights' : tabs.find(tab => tab.id === activeTab)?.content.type || 'tasks', videos: activeTab === "tab1" ? videos : [], schools: tutors })}
         </div>
       </div>
       <audio ref={audioRef} src="/levelup.mp3" />
