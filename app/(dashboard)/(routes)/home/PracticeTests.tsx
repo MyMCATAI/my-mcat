@@ -187,8 +187,13 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
         }));
 
       setCalendarEvents([...examEvents, ...studyEvents]);
+      
+      // Call onActivitiesUpdate after activities are fetched and processed
+      if (onActivitiesUpdate) {
+        onActivitiesUpdate();
+      }
     }
-  }, [examActivities, allActivities]);
+  }, [examActivities, allActivities, onActivitiesUpdate]);
 
   useEffect(() => {
     if (examActivities) {
@@ -384,6 +389,12 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
         // Convert to UTC date without time component
         const utcDate = toUTCDate(date);
         await updateExamDate(selectedTestId, utcDate);
+        
+        // Call onActivitiesUpdate to sync with parent
+        if (onActivitiesUpdate) {
+          await onActivitiesUpdate();
+        }
+        
         setDatePickerOpen(false);
         setSelectedTestId(null);
       } catch (error) {
@@ -396,6 +407,12 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
     try {
       // After successful completion, refresh the activities to update both lists
       await fetchExamActivities();
+      
+      // Call onActivitiesUpdate to sync with parent
+      if (onActivitiesUpdate) {
+        await onActivitiesUpdate();
+      }
+      
       setCompleteDialogOpen(false);
       setSelectedTestToComplete(null);
       // Switch to completed tab
