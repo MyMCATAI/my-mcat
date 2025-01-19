@@ -539,37 +539,19 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
     if (!currentQuestion || !currentUserTestId) return;
 
     try {
-       // Check if the UserResponse exists
-       const response = await fetch(`/api/user-test/response`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/user-test/flagged-responses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userTestId: currentUserTestId,
           questionId: currentQuestion.id,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create or fetch user response");
-      }
-
-      const userResponseData = await response.json();
-
-      // Now perform the PUT request to update the flagged status
-      const updateResponse = await fetch("/api/user-test/response", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: userResponseData.id, // Use the correct UserResponse ID
           flagged: true,
         }),
       });
-
-      if (!updateResponse.ok) {
-        throw new Error("Failed to update question flag status");
+  
+      if (!response.ok) {
+        throw new Error('Failed to update question flag status');
       }
-
-      toast.success("Question reported! Thank you for helping us improve.");
 
       const msgresponse = await fetch("/api/send-message", {
         method: "POST",
@@ -582,7 +564,8 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
       if (!msgresponse.ok) {
         throw new Error("Failed to send downvote message");
       }
-      
+      toast.success("Question reported! Thank you for helping us improve.");
+
     } catch (error) {
       console.error("Error sending downvote:", error);
       toast.error("Failed to send feedback. Please try again.");
