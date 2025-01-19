@@ -210,19 +210,19 @@ export default function OnboardingPage() {
     switch (messageId) {
       case 1:
         setKalypsoMessage(
-          "We don't charge thousands like test prep companies do. Our model is more equitable: coins."
+          "We are a premium product that will eventually be subscription-based. However, we are starting off with an equitable financial mode: coins."
         );
         setMessageId(2);
         break;
       case 2:
         setKalypsoMessage(
-          "You buy coins to access features. Overtime, you can earn coins and access more features. However, if you slack off, you lose coins and have to buy more. We force you to be accountable!"
+          "Coins help access features. Overtime, you can earn coins and access more. However, if you slack off, you lose coins and have to buy more. We force you to be accountable!"
         );
         setMessageId(3);
         break;
       case 3:
         setKalypsoMessage(
-          "I've been saving (a LOT) and I can get you 20 coins for FREE. All you have to do is invite a friend and get the word out about MyMCAT.ai :3 🤝"
+          "I've been saving (a LOT) and I can get you 20 coins for free. All you have to do is invite a friend and get the word out about MyMCAT.ai 🤝"
         );
         setMessageId(4);
         break;
@@ -727,7 +727,7 @@ export default function OnboardingPage() {
                 <span className="text-4xl">🎁</span>
                 <div className="text-left">
                   <p className="text-white text-xl font-light">Kalypso&apos;s Gift</p>
-                  <p className="text-blue-300/80">30 Coins • Starter Pack</p>
+                  <p className="text-blue-300/80">20 Coins • Starter Pack</p>
                 </div>
               </div>
 
