@@ -1,7 +1,5 @@
 import {auth} from "@clerk/nextjs/server"
-
 import prismadb from "@/lib/prismadb"
-import { DEFAULT_BIO } from "@/constants"
 
 
 export const incrementUserScore = async (amount: number) => {
@@ -36,21 +34,9 @@ export const getUserInfo = async () => {
     where: { userId }
   });
 
-<<<<<<< HEAD
   if (!userInfo) {
     throw new Error('User info not found. Please complete onboarding first.');
   }
-
-  return userInfo;
-=======
-    if(userInfo){
-        return
-    }else{
-        await prismadb.userInfo.create({
-            data: {userId: userId, bio:DEFAULT_BIO, score: 20 } // default 20
-        })
-    }
->>>>>>> 9badc84 (changed some copy and dropped 30 to 20 for initial coins)
 };
 
 export const updateUserInfo = async (data: Partial<{ bio: string; [key: string]: any }>) => {
