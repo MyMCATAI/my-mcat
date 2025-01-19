@@ -8,6 +8,8 @@ import { useClerk } from "@clerk/nextjs";
 import axios from "axios";
 import { MedicalSchool } from "@/types";
 import { Tooltip } from "./Tooltip";
+import { useUserInfo } from "@/hooks/useUserInfo";
+import toast from "react-hot-toast";
 
 // Add this email validation function
 const isValidEmail = (email: string) => {
@@ -39,6 +41,7 @@ const useTypewriter = (text: string, speed: number = 20) => {
 
 export default function OnboardingPage() {
   const { user } = useClerk();
+  const { createReferral } = useUserInfo();
   const [loading, setLoading] = useState(false);
   const [isNonTraditional, setIsNonTraditional] = useState(false);
   const [collegeQuery, setCollegeQuery] = useState("");
@@ -235,6 +238,23 @@ export default function OnboardingPage() {
   };
 
   const emailIsValid = isValidEmail(friendEmail);
+
+  const handleOnboardingComplete = async () => {
+    if (!emailIsValid) return;
+    
+    try {
+      setLoading(true);
+      // Create referral first
+      await createReferral({ friendEmail });
+      // Then redirect to exam calendar
+      window.location.href = '/examcalendar';
+    } catch (error) {
+      console.error('Error creating referral:', error);
+      toast.error('Failed to send invitation. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#001226]">
@@ -733,15 +753,13 @@ export default function OnboardingPage() {
                 </div>
 
                 <button
-                  onClick={() => {
-                    window.location.href = '/examcalendar';
-                  }}
-                  disabled={!emailIsValid}
+                  onClick={handleOnboardingComplete}
+                  disabled={!emailIsValid || loading}
                   className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white 
                            py-3 px-6 rounded-xl font-medium hover:opacity-90 transition-opacity
                            disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Continue to Study Plan
+                  {loading ? "Sending invitation..." : "Continue to Study Plan"}
                 </button>
               </div>
             </div>
