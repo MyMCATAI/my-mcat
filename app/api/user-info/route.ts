@@ -6,6 +6,9 @@ import { getUserInfo, updateNotificationPreference } from "@/lib/user-info";
 import { incrementUserScore } from "@/lib/user-info";
 import prismadb from "@/lib/prismadb";
 import { DEFAULT_BIO } from "@/constants";
+import { getUserEmail } from "@/lib/server-utils";
+
+const REFERRAL_REWARD = 10;
 
 export async function GET(req: Request) {
   try {
@@ -54,11 +57,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { firstName, bio } = body;
 
-    console.log("user-info 42 Creating new user info for user:", userId);
-    // Create or update UserInfo matching our schema exactly
-    const userInfo = await prismadb.userInfo.upsert({
-      where: { userId },
-      create: {
+    // Create the new user info first - this is the primary operation
+    const userInfo = await prismadb.userInfo.create({
+      data: {
         userId,
         bio: bio || DEFAULT_BIO,
         firstName: firstName || "",
@@ -74,12 +75,55 @@ export async function POST(req: Request) {
           bb: "",
           ps: ""
         }
-      },
-      update: {
-        firstName: firstName || "",
-        bio: bio || DEFAULT_BIO,
       }
     });
+
+    // Handle referral updates in a separate try-catch
+    try {
+      // Get the user's email - if this fails, we'll just skip referral handling
+      console.log("updating referrals")
+      const userEmail = await getUserEmail(userId);
+      console.log("userEmail",userEmail)
+      if (userEmail) {
+        // Update all referrals where this user was referred
+        await prismadb.referral.updateMany({
+          where: {
+            friendEmail: userEmail,
+            friendUserId: null || ""
+          },
+          data: {
+            friendUserId: userId,
+            joinedAt: new Date()
+          }
+        });
+
+        // Find the oldest referral for this email to reward the referrer
+        const oldestReferral = await prismadb.referral.findFirst({
+          where: {
+            friendEmail: userEmail
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        });
+
+        // If there was a referral, reward the referrer with coins
+        if (oldestReferral && oldestReferral.userId !== userId) {
+          await prismadb.userInfo.update({
+            where: { userId: oldestReferral.userId },
+            data: {
+              score: {
+                increment: REFERRAL_REWARD
+              }
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error handling referral updates:", error);
+      // We don't want to fail the user creation if referral handling fails
+      // Just log the error and continue
+    }
 
     return NextResponse.json(userInfo);
   } catch (error) {

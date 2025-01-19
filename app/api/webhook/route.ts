@@ -182,31 +182,22 @@ export async function POST(req: Request) {
             where: { userId }
           });
 
-          if (existingUser) {
-            // If exists, increment score and update subscription type if needed
-            await prismadb.userInfo.update({
-              where: { userId },
-              data: { 
-                score: {
-                  increment: coinAmount
-                },
-                hasPaid: true,
-                subscriptionType: isPremium ? "premium" : "coins",
-              }
-            });
-          } else {
-            // If doesn't exist, create new
-            console.log("webhook 199 Creating new user info for user:", userId);
-            await prismadb.userInfo.create({
-              data: { 
-                userId,
-                bio: "Future doctor preparing to ace the MCAT! 🎯 Committed to learning and growing every day.",
-                score: coinAmount,
-                hasPaid: true,
-                subscriptionType: isPremium ? "premium" : "coins",
-              }
-            });
+          if (!existingUser) {
+            console.error("User info not found for user:", userId);
+            return new NextResponse("User not found. Please complete onboarding first.", { status: 404 });
           }
+
+          // Update existing user
+          await prismadb.userInfo.update({
+            where: { userId },
+            data: { 
+              score: {
+                increment: coinAmount
+              },
+              hasPaid: true,
+              subscriptionType: isPremium ? "premium" : "coins",
+            }
+          });
 
           // If this is a subscription (premium or gold), create/update UserSubscription
           if (session.mode === 'subscription' && session.customer && session.subscription) {
