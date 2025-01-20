@@ -5,43 +5,53 @@ import { searchUniversities } from "@/utils/universities";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useClerk } from "@clerk/nextjs";
-import axios from "axios";
 import { MedicalSchool } from "@/types";
-import { Tooltip } from "./Tooltip";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 // Add this email validation function
 const isValidEmail = (email: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
-// Add this custom hook at the top of your file
-const useTypewriter = (text: string, speed: number = 20) => {
-  const [displayedText, setDisplayedText] = useState("");
 
-  useEffect(() => {
-    let i = 0;
-    setDisplayedText(""); // Reset text when input changes
-
-    const typing = setInterval(() => {
-      if (i < text.length) {
-        setDisplayedText(prev => prev + text.charAt(i));
-        i++;
-      } else {
-        clearInterval(typing);
-      }
-    }, speed);
-
-    return () => clearInterval(typing);
-  }, [text, speed]);
-
-  return displayedText;
+// Add this component at the top of the file, after imports
+const MigrationLoading = () => {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#001226]">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center space-y-6"
+      >
+        <div className="w-24 h-24 mx-auto mb-8">
+          <Image
+            src="/kalypsoend.gif"
+            alt="Kalypso Loading"
+            width={96}
+            height={96}
+            className="rounded-full"
+          />
+        </div>
+        <h2 className="text-2xl font-light text-white">
+          Migrating Your Study Plan...
+        </h2>
+        <p className="text-blue-300/80 max-w-md mx-auto">
+          Please wait while we restore your data. Kalypso is working hard to bring back all your progress!
+        </p>
+        <div className="flex justify-center mt-8">
+          <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+        </div>
+      </motion.div>
+    </div>
+  );
 };
 
 export default function OnboardingPage() {
   const { user } = useClerk();
   const { createReferral } = useUserInfo();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isNonTraditional, setIsNonTraditional] = useState(false);
   const [collegeQuery, setCollegeQuery] = useState("");
@@ -71,6 +81,7 @@ export default function OnboardingPage() {
   const [attemptValue, setAttemptValue] = useState<string>("");
   const [firstName, setFirstName] = useState("");
   const [messageId, setMessageId] = useState(1);
+  const [isMigrating, setIsMigrating] = useState(false);
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -109,6 +120,38 @@ export default function OnboardingPage() {
     const debounceTimer = setTimeout(fetchMedSchools, 300);
     return () => clearTimeout(debounceTimer);
   }, [medSchoolQuery]);
+
+  useEffect(() => {
+    const checkMigration = async () => {
+      try {
+        setIsMigrating(true);
+        const response = await fetch("/api/user-migration", {
+          method: "POST"
+        });
+        
+        const data = await response.json();
+        
+        if (data.needsMigration && data.migrationComplete) {
+          // Show success toast
+          toast.success(`Successfully migrated account for ${data.email}!`);
+          // Migration successful, redirect to home
+          router.push("/home");
+        } else {
+          setIsMigrating(false);
+        }
+      } catch (error) {
+        console.error("Migration check failed:", error);
+        setIsMigrating(false);
+        // Show error toast with contact info
+        toast.error(
+          "Migration failed. Please reach out to josh on Discord or email josh@mymcat.ai for assistance.",
+          { duration: 6000 }
+        );
+      }
+    };
+
+    checkMigration();
+  }, [router]);
 
   const handleNextStep = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -255,6 +298,10 @@ export default function OnboardingPage() {
       setLoading(false);
     }
   };
+
+  if (isMigrating) {
+    return <MigrationLoading />;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#001226]">
