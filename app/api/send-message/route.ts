@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     }
 
     const userEmail = user.emailAddresses[0].emailAddress;
-    const { message } = await req.json();
+    const { message, recipient } = await req.json();
 
     let transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     await transporter.sendMail({
       from: userEmail,
-      to: 'vivian@mymcat.ai',
+      to: recipient || 'vivian@mymcat.ai',
       subject: `New message from ${user.firstName} ${user.lastName}`,
       text: `Name: ${user.firstName} ${user.lastName}\nEmail: ${userEmail}\n\nMessage:\n${message}`,
       html: `<p><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
