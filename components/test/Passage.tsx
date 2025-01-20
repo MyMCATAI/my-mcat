@@ -322,7 +322,7 @@ const Passage = forwardRef<{ applyStyle: (style: string) => void }, PassageProps
             />
           </div>
           {passageData.citation && (
-            <p className="text-black mt-4 text-sm">{passageData.citation}</p>
+            <p className="text-black mt-4 text-xs">{passageData.citation}</p>
           )}
         </div>
       </div>
