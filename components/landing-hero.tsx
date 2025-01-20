@@ -99,12 +99,10 @@ const LandingHero = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-10 max-w-6xl w-full">
             <div className="text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-white font-krungthep mb-4">
-                <span>
-                  <span className="text-[#f2f64f]">Score</span> beyond <span className="text-[#f2f64f]">a 520.</span>
-                </span>
+                Score your <span className="text-[#f2f64f]">best.</span>
               </h1>
               <p className="text-2xl md:text-3xl text-white my-8">
-             Start for free on our tutoring platform.
+             Start studying with Kalypso for free.
               </p>
               <div className="flex justify-center">
                 <Link href="/sign-up">
