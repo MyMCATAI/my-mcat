@@ -11,6 +11,7 @@ datasource db {
 model UserInfo {
   id                     String   @id @default(cuid())
   userId                 String   @unique
+  devUserId              String?
   bio                    String
   updatedAt              DateTime @updatedAt
   apiCount               Int      @default(0)
