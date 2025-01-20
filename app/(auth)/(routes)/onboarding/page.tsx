@@ -25,12 +25,12 @@ const MigrationLoading = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center space-y-6"
       >
-        <div className="w-24 h-24 mx-auto mb-8">
+        <div className="w-64 h-64 mx-auto mb-8">
           <Image
-            src="/kalypsoend.gif"
+            src="/kalypsodiagnostic.png"
             alt="Kalypso Loading"
-            width={96}
-            height={96}
+            width={256}
+            height={256}
             className="rounded-full"
           />
         </div>
@@ -38,7 +38,7 @@ const MigrationLoading = () => {
           Migrating Your Study Plan...
         </h2>
         <p className="text-blue-300/80 max-w-md mx-auto">
-          Please wait while we restore your data. Kalypso is working hard to bring back all your progress!
+          Please wait while we migrate your study data. Kalypso is working hard to transfer all your progress!
         </p>
         <div className="flex justify-center mt-8">
           <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
