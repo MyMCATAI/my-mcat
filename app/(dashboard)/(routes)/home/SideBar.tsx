@@ -615,21 +615,34 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
         setIsModalOpen(open);
       }}>
         <DialogTrigger asChild>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-opacity">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            <span className="text-sm font-medium">Schedule meeting with a tutor</span>
+          <button 
+            className="group relative flex items-center gap-3 px-6 py-3 rounded-lg 
+              bg-[--theme-button-color] hover:bg-[--theme-hover-color] 
+              transition-all duration-300 ease-in-out
+              shadow-[var(--theme-button-boxShadow)]
+              hover:shadow-[var(--theme-button-boxShadow-hover)]
+              transform hover:scale-[1.02]"
+          >
+            <div className="relative">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="transition-transform duration-300 group-hover:rotate-90"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              <div className="absolute inset-0 animate-ping opacity-75 rounded-full bg-[--theme-hover-color] group-hover:opacity-0"></div>
+            </div>
+            <span className="text-base font-semibold text-[--theme-text-color] group-hover:text-[--theme-hover-text]">
+              Schedule meeting with a tutor
+            </span>
           </button>
         </DialogTrigger>
         <DialogContent className="max-w-4xl bg-[--theme-mainbox-color] text-[--theme-text-color] border border-transparent">
