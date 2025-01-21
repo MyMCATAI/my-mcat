@@ -16,7 +16,9 @@ export default function Page() {
         },
         elements: {
           cardBox: {
-            border: '1px solid #5F7E92'
+            border: '1px solid #5F7E92',
+            width: '30rem',
+            maxWidth: '100%'
           }
         }
       }}
