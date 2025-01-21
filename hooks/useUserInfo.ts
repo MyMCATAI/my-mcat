@@ -55,6 +55,8 @@ interface UseUserInfoReturn {
   checkHasReferrals: () => Promise<boolean>;
   unlockGame: () => Promise<void>;
   createNewUser: (data: { firstName: string; bio?: string }) => Promise<UserInfo>;
+  isGoldMember: boolean;
+  hasActiveSubscription: boolean;
 }
 
 const CLINIC_COST = 10;
@@ -65,6 +67,10 @@ export function useUserInfo(): UseUserInfoReturn {
   const [error, setError] = useState<Error | null>(null);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [isLoadingReferrals, setIsLoadingReferrals] = useState(false);
+
+  // Add computed properties for subscription status
+  const isGoldMember = userInfo?.subscriptionType === "gold";
+  const hasActiveSubscription = userInfo?.hasPaid && (userInfo?.subscriptionType === "gold" || userInfo?.subscriptionType === "premium") || false
 
   const fetchUserInfo = useCallback(async () => {
     try {
@@ -345,6 +351,8 @@ export function useUserInfo(): UseUserInfoReturn {
     checkHasReferrals,
     unlockGame,
     createNewUser,
+    isGoldMember,
+    hasActiveSubscription,
   };
 }
 
