@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
-import { useProModal } from "@/hooks/use-pro-modal";
 import { FaLinkedin, FaInstagram } from 'react-icons/fa';
 import MusicPlayer from "@/components/musicplayer";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import { useUserInfo } from "@/hooks/useUserInfo";
+import { SubscriptionManagementButton } from "@/components/subscription-management-button";
 
 // Define the Song type
 type Song = {
@@ -16,42 +17,17 @@ type Song = {
   url: string;
 };
 
-// Add the playlists object
-const playlists: Record<string, Song[]> = {
-  cyberSpace: [
-    { title: "CS1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace2.mp3" },
-    { title: "CS2", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace1.mp3" },
-    { title: "CS3", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace3.mp3" },
-    { title: "CS4", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/cyberspace4.mp3" },
-  ],
-  sakuraTrees: [
-    { title: "ST1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees1.mp3" },
-    { title: "ST2", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuraTrees2.mp3" },
-    { title: "ST3", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuratrees3.mp3" },
-    { title: "ST4", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sakuratrees3.mp3" },
-  ],
-  sunsetCity: [
-    { title: "SC1", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity1.mp3" },
-    { title: "SC2", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity2.mp3" },
-    { title: "SC4", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity4.mp3" },
-    { title: "SC3", url: "https://my-mcat.s3.us-east-2.amazonaws.com/music/sunsetCity3.mp3" },
-  ],
-};
-
 export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
   const pathname = usePathname();
   const ballerSectionRef = useRef(null);
-  const proModal = useProModal();
-  // const [isLoading, setIsLoading] = useState(false);
-  const { theme } = useTheme(); // Use the theme from context
+  const { theme } = useTheme();
   const { isAutoPlay } = useMusicPlayer();
+  const { isGoldMember } = useUserInfo();
 
   // Hiding navbar on test questions page
   if (pathname?.includes('/test/testquestions')) {
     return null;
   }
-
-  // const isPro = subscription !== "free";
 
   return (
     <nav className="flex items-center justify-between bg-transparent shadow-sm h-24">
@@ -66,8 +42,9 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
         </div>
       </div>
       <div className="flex items-center h-full">
-        <div className="flex items-center space-x-4 mr-5 mb-3">
-          <div className="scale-150">
+        <div className="flex items-center mr-5">
+          <SubscriptionManagementButton isGoldMember={isGoldMember} />
+          <div className="flex items-center scale-150">
             <UserButton />
           </div>
         </div>

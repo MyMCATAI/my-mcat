@@ -80,7 +80,7 @@ export function PurchaseButton({
       productType: ProductType.COINS_50
     },
     {
-      title: "MD Gold Membership",
+      title: "MD Gold Subscription",
       price: "$149.99/month",
       description: "Monthly subscription for serious MCAT students. Get unlimited access to advanced features, priority support, and exclusive content. Cancel anytime.",
       image: "/MD_Premium_Pro.png",
