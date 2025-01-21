@@ -6,6 +6,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
+import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 
 interface PurchaseButtonProps {
   text?: string;
@@ -26,6 +27,7 @@ export function PurchaseButton({
 }: PurchaseButtonProps) {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [isModalOpen, setIsModalOpen] = useState(autoOpen);
+  const { isGold, isLoading: isCheckingSubscription } = useSubscriptionStatus();
 
   useEffect(() => {
     setIsModalOpen(autoOpen);
@@ -42,6 +44,14 @@ export function PurchaseButton({
   const handlePurchase = async (productType: ProductType) => {
     try {
       setLoadingStates(prev => ({ ...prev, [productType]: true }));
+      
+      // If user has gold subscription and clicks the gold option, redirect to management
+      if (isGold && productType === ProductType.MD_GOLD) {
+        const response = await axios.get("/api/stripe");
+        window.location.href = response.data.url;
+        return;
+      }
+
       const response = await axios.post("/api/stripe/checkout", {
         priceType: productType
       });
@@ -68,6 +78,14 @@ export function PurchaseButton({
       description: "One-time purchase of 25 coins. Best value for coins. Get extended access to advanced analytics, detailed AI feedback, and comprehensive feature access.",
       image: "/50coins.png",
       productType: ProductType.COINS_50
+    },
+    {
+      title: "MD Gold Membership",
+      price: "$149.99/month",
+      description: "Monthly subscription for serious MCAT students. Get unlimited access to advanced features, priority support, and exclusive content. Cancel anytime.",
+      image: "/MD_Premium_Pro.png",
+      productType: ProductType.MD_GOLD,
+      isSubscribed: isGold
     }
   ];
 
@@ -126,39 +144,60 @@ export function PurchaseButton({
               Purchase Coins
             </DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
             {pricingOptions.map((option, index) => (
               <button 
                 key={index}
                 onClick={() => handlePurchase(option.productType)}
-                disabled={loadingStates[option.productType]}
+                disabled={loadingStates[option.productType] || (option.productType !== ProductType.MD_GOLD && isCheckingSubscription)}
                 className={`rounded-lg p-6 flex flex-col items-center space-y-4 transition-all relative h-full w-full text-left
-                  bg-[--theme-leaguecard-color]
+                  ${option.isSubscribed 
+                    ? 'bg-gradient-to-br from-sky-950 via-blue-900 to-sky-900 border-2 border-sky-400'
+                    : 'bg-[--theme-leaguecard-color]'}
                   ${loadingStates[option.productType] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 style={{ 
-                  boxShadow: 'var(--theme-button-boxShadow)'
+                  boxShadow: option.isSubscribed 
+                    ? '0 0 20px rgba(186, 230, 253, 0.3)'
+                    : 'var(--theme-button-boxShadow)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow-hover)';
+                  e.currentTarget.style.boxShadow = option.isSubscribed
+                    ? '0 0 30px rgba(186, 230, 253, 0.4)'
+                    : 'var(--theme-button-boxShadow-hover)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'var(--theme-button-boxShadow)';
+                  e.currentTarget.style.boxShadow = option.isSubscribed
+                    ? '0 0 20px rgba(186, 230, 253, 0.3)'
+                    : 'var(--theme-button-boxShadow)';
                 }}
               >
+                {option.isSubscribed && (
+                  <div className="absolute -top-3 -right-3 bg-sky-400 text-[--theme-text-color] px-3 py-1 rounded-full text-sm font-bold shadow-lg transform rotate-12 z-[103]">
+                    Active
+                  </div>
+                )}
                 <Image
                   src={option.image}
                   alt={option.title}
                   width={120}
                   height={120}
-                  className="mb-4 rounded-lg object-contain h-[120px] w-[120px] pointer-events-none"
+                  className={`mb-4 rounded-lg object-contain h-[120px] w-[120px] pointer-events-none
+                    ${option.isSubscribed ? 'scale-110 transition-transform duration-300' : ''}`}
                 />
                 <h3 className="text-l font-bold text-[--theme-text-color] pointer-events-none">{option.title}</h3>
                 <p className="text-2xl font-bold text-[--theme-text-color] pointer-events-none">{option.price}</p>
                 <p className="text-sm text-[--theme-text-color] text-center flex-grow pointer-events-none">{option.description}</p>
                 <div 
-                  className="w-full mt-auto px-4 py-2 rounded-md text-center font-medium text-[--theme-text-color] pointer-events-none bg-[--theme-doctorsoffice-accent]"
+                  className={`w-full mt-auto px-4 py-2 rounded-md text-center font-medium text-[--theme-text-color] pointer-events-none
+                    ${option.isSubscribed 
+                      ? 'bg-gradient-to-r from-sky-400 via-blue-400 to-sky-400'
+                      : 'bg-[--theme-doctorsoffice-accent]'}`}
                 >
-                  {loadingStates[option.productType] ? "Loading..." : "Purchase"}
+                  {loadingStates[option.productType] 
+                    ? "Loading..." 
+                    : option.isSubscribed 
+                      ? "Manage Subscription"
+                      : "Purchase"}
                 </div>
               </button>
             ))}

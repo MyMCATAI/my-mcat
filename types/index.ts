@@ -211,9 +211,10 @@ export enum ProductType {
   COINS_50 = "coins_50",
   COINS_10_DISCOUNT = "coins_10_discount",
   MD_PREMIUM = "md_premium",
+  MD_GOLD = "md_gold",
 }
 
-export type ProductName = "TenCoins" | "FiftyCoins" | "MDPremium"; // these are set in the stripe product metadata in Stripe Dashboard
+export type ProductName = "TenCoins" | "FiftyCoins" | "MDPremium" | "MDGold"; // these are set in the stripe product metadata in Stripe Dashboard
 
 // Type guard to check if a string is a valid ProductType
 export function isValidProductType(type: string): type is ProductType {
@@ -230,6 +231,7 @@ export function getCoinAmountForProduct(productType: ProductType, productName?: 
       case "TenCoins":
         return 10;
       case "MDPremium":
+      case "MDGold":
         return 0;
     }
   }
@@ -242,7 +244,8 @@ export function getCoinAmountForProduct(productType: ProductType, productName?: 
     case ProductType.COINS_10_DISCOUNT:
       return 10;
     case ProductType.MD_PREMIUM:
-      return 0; // Premium subscription doesn't use coins
+    case ProductType.MD_GOLD:
+      return 0; // Premium/Gold subscriptions don't use coins
     default:
       return 10;
   }
