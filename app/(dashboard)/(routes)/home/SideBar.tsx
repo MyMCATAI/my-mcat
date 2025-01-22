@@ -964,10 +964,7 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
         handleSetTab("AdaptiveTutoringSuite");
         break;
       case "Anki Clinic":
-        handleSetTab("AnkiClinic");
-        break;
-      case "Regular Anki":
-        handleSetTab("RegularAnki");
+        router.push("/doctorsoffice");
         break;
       case "UWorld":
         setShowUWorldPopup(true);
