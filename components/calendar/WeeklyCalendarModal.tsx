@@ -7,6 +7,8 @@ import "react-day-picker/dist/style.css";
 import { useExamActivities, CalendarActivity } from "@/hooks/useCalendarActivities";
 import DatePickerDialog from "@/components/DatePickerDialog";
 import { useStudyPlan } from '@/hooks/useStudyPlan';
+import { toast } from "react-hot-toast";
+import ResetConfirmDialog from "@/components/calendar/ResetConfirmDialog";
 
 interface WeeklyCalendarModalProps {
   onComplete?: (result: { success: boolean; action?: 'generate' | 'save' | 'reset' }) => Promise<boolean>;
@@ -24,12 +26,6 @@ interface StudyBalance {
   id: string;
   ratio: string;
   description: string;
-}
-
-interface Subject {
-  id: string;
-  name: string;
-  selected: boolean;
 }
 
 const examDescriptions = {
@@ -58,12 +54,6 @@ interface StudyBalance {
   id: string;
   ratio: string;
   description: string;
-}
-
-interface Subject {
-  id: string;
-  name: string;
-  selected: boolean;
 }
 
 const steps = [
@@ -221,7 +211,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
     
     const nextExam = getNextExam();
     if (!nextExam) {
-      alert('Please schedule an exam first');
+      toast.error('Please schedule an exam first');
       return;
     }
 
@@ -286,7 +276,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
       }
     } catch (error) {
       console.error('Failed to create schedule:', error);
-      alert('Failed to create schedule. Please try again.');
+      toast.error('Failed to create schedule. Please try again.');
       setCurrentStep(3); // Return to previous step on failure
     } finally {
       setIsGenerating(false);
@@ -308,26 +298,11 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 }
   };
-
-  const getTestDateDescription = () => {
-    // Find the next scheduled exam
-    const nextExam = examSchedule.find(exam => {
-      const examDate = new Date(exam.date);
-      return examDate >= new Date();
-    });
-
-    if (!nextExam) {
-      // Default to Unscored Sample description if no exam is scheduled
-      return `${examDescriptions["Unscored Sample"]}\n\nYour test is scheduled for ${testDate ? format(testDate, 'MMMM do, yyyy') : 'January 24th'}.`;
-    }
-
-    return `${examDescriptions[nextExam.examName]}\n\nYour next exam (${nextExam.examName}) is scheduled for ${format(nextExam.date, 'MMMM do, yyyy')}.`;
-  };
-
+  
   const handleDateSelect = async (date: Date) => {
     if (selectedExamId) {
       if (date < new Date()) {
-        alert("Cannot schedule exams in the past");
+        toast.error("Cannot schedule exams in the past");
         return;
       }
       
@@ -336,7 +311,7 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
         setDatePickerOpen(false);
         setSelectedExamId(null);
       } catch (error) {
-        alert('Failed to update exam date');
+        toast.error('Failed to update exam date');
       }
     }
   };
@@ -379,9 +354,20 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                     </div>
                   </>
                 ) : (
-                  <p className="text-lg text-[--theme-text-color]">
-                    No upcoming exams scheduled.
-                  </p>
+                  <div className="flex flex-col items-center gap-6">
+                    <p className="text-lg text-[--theme-text-color]">
+                      No upcoming exams scheduled.
+                    </p>
+                    <Button
+                      onClick={() => window.location.href = '/examcalendar'}
+                      variant="default"
+                      size="lg"
+                      className="flex items-center gap-2"
+                    >
+                      <CalendarIcon className="w-5 h-5" />
+                      Regenerate Your Exam Schedule
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
@@ -662,85 +648,6 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
 
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
-  const handleReset = async () => {
-    try {
-      // Delete all calendar activities
-      const response = await fetch('/api/calendar-activity/reset', {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to reset calendar activities');
-      }
-
-      // Clear weekly hours
-      setWeeklyHours({});
-      
-      // Reset resources to default state
-      setResources(resources.map(r => ({
-        ...r,
-        selected: r.id === 'adaptive' // Only keep adaptive selected
-      })));
-
-      // Reset balance to default
-      setSelectedBalance('50-50');
-
-      // Reset current step to 0
-      setCurrentStep(0);
-
-      // Clear loading messages
-      setLoadingMessages([]);
-
-      // Reset generating state
-      setIsGenerating(false);
-
-      // Clear local storage
-      localStorage.removeItem('studySchedule');
-
-      // Notify parent to refresh
-      if (onComplete) {
-        await onComplete({ success: true, action: 'reset' });
-      }
-
-      // Show success message
-      alert('Your schedule has been reset. Please schedule your first exam to continue.');
-    } catch (error) {
-      console.error('Failed to reset schedule:', error);
-      alert('Failed to reset schedule. Please try again.');
-    }
-  };
-
-  // Add confirmation dialog component
-  const ResetConfirmDialog = () => (
-    <div className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 ${isResetConfirmOpen ? '' : 'hidden'}`}>
-      <div className="bg-[--theme-mainbox-color] rounded-lg p-6 max-w-md w-full mx-4">
-        <h3 className="text-lg font-medium text-[--theme-text-color] mb-2">Reset Schedule?</h3>
-        <p className="text-[--theme-text-color] opacity-70 mb-6">
-          This will delete all your scheduled exams and study activities. You&apos;ll need to schedule your first exam again. This action cannot be undone.
-        </p>
-        <div className="flex justify-end gap-3">
-          <Button
-            onClick={() => setIsResetConfirmOpen(false)}
-            variant="secondary"
-            size="sm"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={() => {
-              handleReset();
-              setIsResetConfirmOpen(false);
-            }}
-            variant="destructive"
-            size="sm"
-          >
-            Reset
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <>
       <div className="bg-[--theme-mainbox-color] w-full h-[90vh] flex flex-col rounded-lg">
@@ -820,13 +727,13 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                   // Validate before proceeding
                   const hasNoHours = Object.values(weeklyHours).every(hours => !hours || hours === '0');
                   if (hasNoHours) {
-                    alert('Please set study hours for at least one day before generating the schedule.');
+                    toast.error('Please set study hours for at least one day before generating the schedule.');
                     return;
                   }
                   
                   const hasNoResources = resources.every(r => !r.selected || r.id === 'adaptive');
                   if (hasNoResources) {
-                    alert('Please select at least one additional resource besides Adaptive Tutoring.');
+                    toast.error('Please select at least one additional resource besides Adaptive Tutoring.');
                     return;
                   }
 
@@ -867,7 +774,33 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
         currentDate={selectedExamId && examActivities ? new Date(examActivities.find(a => a.id === selectedExamId)?.scheduledDate || '') : undefined}
         testName={selectedExamId && examActivities ? examActivities.find(a => a.id === selectedExamId)?.activityTitle : undefined}
       />
-      <ResetConfirmDialog />
+      <ResetConfirmDialog 
+        isOpen={isResetConfirmOpen}
+        onClose={() => setIsResetConfirmOpen(false)}
+        onComplete={async (result) => {
+          if (result.success) {
+            // Reset local state after successful reset
+            setWeeklyHours({});
+            setResources(resources.map(r => ({
+              ...r,
+              selected: r.id === 'adaptive'
+            })));
+            setSelectedBalance('50-50');
+            setCurrentStep(0);
+            setLoadingMessages([]);
+            setIsGenerating(false);
+            
+            // Show success toast
+            toast.success('Schedule reset successfully');
+            
+            // Notify parent
+            if (onComplete) {
+              return await onComplete(result);
+            }
+          }
+          return true;
+        }}
+      />
     </>
   );
 };

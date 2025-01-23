@@ -120,7 +120,7 @@ const Schedule: React.FC<ScheduleProps> = ({
         new Date(a.calendarActivity.scheduledDate).getTime() - new Date(b.calendarActivity.scheduledDate).getTime()
       );
 
-    const recentScore = sortedExams[sortedExams.length - 1].score;
+    const recentScore = sortedExams[sortedExams.length - 1]?.score || 0
     const previousScore = sortedExams.length > 1 ? sortedExams[sortedExams.length - 2].score : recentScore;
     const isImproving = recentScore > previousScore;
 

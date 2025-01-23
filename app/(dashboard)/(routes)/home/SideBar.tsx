@@ -1021,9 +1021,9 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
   return (
     <div className="relative p-2 rounded-lg overflow-hidden h-[calc(100vh-4.1rem)]">
       <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
-        <div className="flex items-center gap-4 mb-3">
+        <div className="flex items-center gap-4 mb-3 min-w-0">
           <button
-            className={`p-2 rounded-full transition-all duration-300 ${
+            className={`flex-shrink-0 p-2 rounded-full transition-all duration-300 ${
               activeTab === "tab1"
                 ? "bg-[--theme-hover-color] text-[--theme-hover-text] shadow-md transform scale-105"
                 : "bg-transparent text-[--theme-text-color] hover:opacity-50 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
@@ -1032,12 +1032,12 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
           >
             <Cat className="w-6 h-6" />
           </button>
-          <div className="flex flex-1 bg-[--theme-leaguecard-color] rounded-lg p-[1%]">
+          <div className="flex flex-1 min-w-0 bg-[--theme-leaguecard-color] rounded-lg p-[1%]">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 data-tab={tab.id}
-                className={`flex-1 text-m py-[2%] px-[3%] rounded-lg transition-all duration-300 ${
+                className={`flex-1 min-w-0 text-m py-[2%] px-[3%] rounded-lg transition-all duration-300 whitespace-nowrap overflow-hidden text-ellipsis ${
                   activeTab === tab.id
                     ? "bg-[--theme-hover-color] text-[--theme-hover-text] shadow-md transform scale-105"
                     : "bg-transparent text-[--theme-text-color] hover:opacity-50 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
