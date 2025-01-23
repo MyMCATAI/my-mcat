@@ -3,7 +3,6 @@ import { Inter, Roboto_Slab } from 'next/font/google'
 import './globals.css'
 import { ClerkProvider } from '@clerk/nextjs'
 import { ModalProvider } from '@/components/modal-provider'
-import { ToasterProvider } from '@/components/toaster-provider'
 import Script from 'next/script'
 import ThemeInitializer from '@/components/home/ThemeInitializer'
 import { Analytics } from '@vercel/analytics/react';
@@ -77,7 +76,6 @@ export default function RootLayout({
             <MobileRedirect />
             <ThemeInitializer />
             <ModalProvider />
-            <ToasterProvider />
             <FullscreenPrompt />
             {children}
             <Analytics />
