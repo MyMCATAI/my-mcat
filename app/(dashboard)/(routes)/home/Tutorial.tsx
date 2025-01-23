@@ -1,21 +1,22 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
 
-const Tutorial: React.FC = () => {
-  const [runTutorial, setRunTutorial] = useState(false);
+interface TutorialProps {
+  runTutorial: boolean;
+  setRunTutorial: (run: boolean) => void;
+}
+
+const Tutorial: React.FC<TutorialProps> = ({ runTutorial, setRunTutorial }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    // Check if user has seen tutorial
-    const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
-    if (!hasSeenTutorial) {
-      setRunTutorial(true);
+    if (runTutorial) {
       // Play sound when tutorial first shows
       audioRef.current?.play().catch(error => 
         console.error("Audio playback failed:", error)
       );
     }
-  }, []);
+  }, [runTutorial]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status } = data;
