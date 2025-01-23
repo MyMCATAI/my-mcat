@@ -10,13 +10,6 @@ import { roomToSubjectMap } from './OfficeContainer';
 import { roomToContentMap } from './OfficeContainer';
 import toast from 'react-hot-toast';
 import { tutorialQuestions } from './constants/tutorialQuestions';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
 
 export interface Flashcard {
   questionType: string;
