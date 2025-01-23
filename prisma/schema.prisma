@@ -315,7 +315,7 @@ model FullLengthExam {
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   dataPulses         DataPulse[]
-  calendarActivity   CalendarActivity? @relation(fields: [calendarActivityId], references: [id], onDelete: Cascade)
+  calendarActivity   CalendarActivity? @relation(fields: [calendarActivityId], references: [id])
 
   @@index([userId])
   @@index([calendarActivityId])

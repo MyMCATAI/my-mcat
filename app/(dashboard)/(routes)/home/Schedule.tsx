@@ -114,9 +114,11 @@ const Schedule: React.FC<ScheduleProps> = ({
   const getScoreFeedback = () => {
     if (!examScores.length) return null;
 
-    const sortedExams = [...examScores].sort((a, b) => 
-      new Date(a.calendarActivity.scheduledDate).getTime() - new Date(b.calendarActivity.scheduledDate).getTime()
-    );
+    const sortedExams = [...examScores]
+      .filter(exam => exam.calendarActivity?.scheduledDate) // Only include exams with valid calendar activities
+      .sort((a, b) => 
+        new Date(a.calendarActivity.scheduledDate).getTime() - new Date(b.calendarActivity.scheduledDate).getTime()
+      );
 
     const recentScore = sortedExams[sortedExams.length - 1].score;
     const previousScore = sortedExams.length > 1 ? sortedExams[sortedExams.length - 2].score : recentScore;
