@@ -340,7 +340,10 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
                   if (onEventUpdate) {
                     await onEventUpdate();
                   }
-                  setIsWeeklyModalOpen(false);
+                  // Only close the modal if it's not a reset action
+                  if (result.action !== 'reset') {
+                    setIsWeeklyModalOpen(false);
+                  }
                   return true;
                 }
                 return false;

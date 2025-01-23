@@ -77,7 +77,7 @@ export default function ExamCalendarPage() {
                 isInitialSetup={true}
                 onComplete={async (result) => {
                   if (result.success) {
-                    router.push('/home');
+                    router.push('/home?tab=Tests');
                   }
                 }}
               />

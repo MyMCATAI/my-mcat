@@ -138,9 +138,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Delete existing activities
+    // Delete existing activities, but preserve exams with FullLengthExam records
     await prisma.calendarActivity.deleteMany({
-      where: { userId }
+      where: {
+        userId,
+        NOT: {
+          AND: [
+            { activityType: 'Exam' },
+            { fullLengthExam: { isNot: null } }
+          ]
+        }
+      }
     });
 
     // Find existing study plan
