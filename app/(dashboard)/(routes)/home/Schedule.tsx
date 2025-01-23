@@ -56,6 +56,10 @@ const Schedule: React.FC<ScheduleProps> = ({
   const [showTargetScoreDialog, setShowTargetScoreDialog] = useState(false);
   const [targetScore, setTargetScore] = useState("500");
   const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [runTutorial, setRunTutorial] = useState(() => {
+    const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
+    return hasSeenTutorial === null || hasSeenTutorial === "false";
+  });
 
   // Should be consistent with calendar events
   const buttonLabels: Record<Section, string> = {
@@ -180,9 +184,16 @@ const Schedule: React.FC<ScheduleProps> = ({
     fetchExamScores();
   }, []);
 
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
+    if (hasSeenTutorial === null || hasSeenTutorial === "false") {
+      setRunTutorial(true);
+    }
+  }, []);
+
   return (
     <div className="w-full relative">
-      <Tutorial />
+      <Tutorial runTutorial={runTutorial} setRunTutorial={setRunTutorial} />
       {/* Main Container */}
       <div
         className="flex-grow h-[calc(100vh-7.2rem)] w-full rounded-lg p-2 flex flex-col relative overflow-hidden"

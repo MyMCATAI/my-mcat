@@ -9,14 +9,12 @@ import { FaDiscord } from 'react-icons/fa';
 import MessageButton from '@/components/MessageButton';
 import Link from 'next/link';
 import { SubscriptionButton } from '@/components/subscription-button';
+import { useRouter } from "next/navigation"; 
+import toast from "react-hot-toast";
 
 type Section = 'mcat' | 'mymcat' | 'taking' | 'reviewing' | 'strategies' | 'testing' | 'cars' | 'ats' | 'anki' | null;
 
-interface ResourcePackProps {
-  onResetTutorials: () => void;
-}
-
-const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
+const ResourcePack: React.FC = () => {
   const [activeSection, setActiveSection] = useState<Section>(null);
   const [activeATSSubsection, setActiveATSSubsection] = useState<string | null>(null);
   const [previousSection, setPreviousSection] = useState<Section>(null);
@@ -28,6 +26,7 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
     setPreviousSection(activeSection);
     setActiveSection(newSection);
   };
+  const router = useRouter(); // Initialize router here
 
   const handleBack = () => {
     setActiveSection(previousSection);
@@ -1406,7 +1405,14 @@ const ResourcePack: React.FC<ResourcePackProps> = ({ onResetTutorials }) => {
               {/* Reset Tutorials and Email Settings */}
               <div className="grid grid-cols-2 gap-4">
                 <button
-                  onClick={onResetTutorials}
+                  onClick={() => {
+                    localStorage.setItem('carsTutorialPlayed', 'false');
+                    localStorage.setItem('hasSeenTutorial', 'false');
+                    localStorage.setItem('initialTutorialPlayed', 'false');
+                    
+                    // Show success toast
+                    toast.success(`Tutorials Reset! They'll pop up again when you visit new pages.`);
+                  }}
                   className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -495,7 +495,7 @@ const SideBar: React.FC<SideBarProps> = ({
     } else if (content.type === 'tutors') {
         return renderTutors(content.schools);
     } else if (content.type === 'tutorial') {
-        return <HelpContentTestingSuite onResetTutorials={() => {}} />;
+        return <HelpContentTestingSuite />;
     } else if (content.type === 'tasks') {
         return renderTasks();
     } else if (content.type === 'leaderboard') {
