@@ -113,7 +113,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const [initialCategories, setInitialCategories] = useState<Category[]>([]);
   const [showDiagnosticDialog, setShowDiagnosticDialog] = useState(false);
   const [runTutorialPart1, setRunTutorialPart1] = useState(() => {
-    return !localStorage.getItem("initialTutorialPlayed");
+    const initialTutorialPlayed = localStorage.getItem("initialTutorialPlayed");
+    return initialTutorialPlayed === null || initialTutorialPlayed === "false";
   });
   const [runTutorialPart2, setRunTutorialPart2] = useState(false);
   const [runTutorialPart3, setRunTutorialPart3] = useState(false);
@@ -628,19 +629,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     };
   }, [isEmptyButtonHovered]);
 
-  const handleResetTutorials = () => {
-    // Reset all tutorial states
-    setRunTutorialPart1(true);
-    setRunTutorialPart2(false);
-    setRunTutorialPart3(false);
-    setRunTutorialPart4(false);
-    setCatIconInteracted(false);
-    setTutorialKey((prev) => prev + 1);
 
-    // Clear both types of stored categories
-    localStorage.removeItem("checkedCategories");
-    localStorage.removeItem("selectedSubjects");
-  };
   const handleTopicComplete = async (categoryId: string) => {
     try {
       // Mark category as complete
@@ -727,6 +716,13 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   const refreshCategories = async () => {
     await fetchCategories();
   };
+
+  useEffect(() => {
+    const initialTutorialPlayed = localStorage.getItem("initialTutorialPlayed");
+    if (initialTutorialPlayed === null || initialTutorialPlayed === "false") {
+      setRunTutorialPart1(true);
+    }
+  }, []);
 
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">

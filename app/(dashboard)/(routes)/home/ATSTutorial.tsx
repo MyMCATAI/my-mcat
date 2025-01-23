@@ -141,7 +141,7 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
       placement: 'center',
     }
   ];
-
+  
   // const topicSelectionStep: Step[] = [
   //   {
   //     target: '.ats-topic-icons',
