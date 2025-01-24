@@ -904,6 +904,14 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                         ) && (
                           <span className="flex items-center text-green-500 mr-2">
                             <Check className="w-4 h-4" />
+                            {categories.find(
+                              (cat) => cat.conceptCategory === selectedCategory
+                            )?.conceptMastery !== undefined && 
+                            categories.find(
+                              (cat) => cat.conceptCategory === selectedCategory
+                            )?.conceptMastery! < 0.3 && (
+                              <span className="text-xs text-yellow-500 ml-1">(Review Needed)</span>
+                            )}
                           </span>
                         )}
                       {selectedCategory || ""}

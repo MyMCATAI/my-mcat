@@ -45,31 +45,22 @@ export async function GET(req: Request) {
       }
     });
 
-    // Transform and apply Thompson sampling
+    // Transform and sort by mastery instead of Thompson sampling
     let sortedCategories = categories.map(category => {
       const profile = category.knowledgeProfiles[0];
       const hasContent = category.contents.length > 0;
-
-      // Calculate Thompson sampling parameters
-      let sample = 1; // Default to lowest priority
-      if (profile) {
-        const alpha = profile.correctAnswers + 1; // Laplace smoothing
-        const beta = (profile.totalAttempts - profile.correctAnswers) + 1;
-        sample = sampleBeta(alpha, beta);
-      }
 
       return {
         ...category,
         hasProfile: !!profile,
         completedAt: profile?.completedAt ?? null,
         completionPercentage: profile?.completionPercentage ?? 0,
-        conceptMastery: profile?.conceptMastery ?? null,
-        contentMastery: profile?.contentMastery ?? null,
+        conceptMastery: profile?.conceptMastery ?? 0,
+        contentMastery: profile?.contentMastery ?? 0,
         isCompleted: !!profile?.completedAt,
         hasContent,
-        sample,
-        knowledgeProfiles: undefined, // Remove from response
-        contents: undefined // Remove from response
+        knowledgeProfiles: undefined,
+        contents: undefined
       };
     });
 
@@ -87,18 +78,25 @@ export async function GET(req: Request) {
       );
     }
 
-    // Apply sorting and filtering
+    // Apply filtering and sorting
     if (useKnowledgeProfiles) {
       sortedCategories = sortedCategories
-        .filter(cat => cat.hasContent) // Only include categories with content
-        .filter(cat => !excludeCompleted || !cat.isCompleted) // Exclude completed if requested
+        .filter(cat => cat.hasContent)
+        .filter(cat => {
+          // If excludeCompleted is true, we still want to include completed categories
+          // that have very low mastery (below 30%)
+          if (excludeCompleted) {
+            return !cat.isCompleted || (cat.conceptMastery < 0.3);
+          }
+          return true;
+        })
         .sort((a, b) => {
           // Prioritize uncompleted categories
           if (a.isCompleted !== b.isCompleted) {
             return a.isCompleted ? 1 : -1;
           }
-          // Then sort by Thompson sampling score
-          return a.sample - b.sample;
+          // Then sort by concept mastery (lowest first)
+          return a.conceptMastery - b.conceptMastery;
         });
     }
 
