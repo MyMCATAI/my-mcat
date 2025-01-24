@@ -4,19 +4,6 @@ import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 import { Category } from "@/types";
 
-// Helper function for Thompson sampling
-function sampleBeta(alpha: number, beta: number): number {
-  const mean = alpha / (alpha + beta);
-  const variance = (alpha * beta) / (Math.pow(alpha + beta, 2) * (alpha + beta + 1));
-  const stdDev = Math.sqrt(variance);
-  
-  const u1 = Math.random();
-  const u2 = Math.random();
-  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  
-  return Math.max(0, Math.min(1, mean + z * stdDev));
-}
-
 export async function GET(req: Request) {
   try {
     const { userId } = auth();
@@ -45,7 +32,7 @@ export async function GET(req: Request) {
       }
     });
 
-    // Transform and sort by mastery instead of Thompson sampling
+    // Transform categories focusing purely on mastery
     let sortedCategories = categories.map(category => {
       const profile = category.knowledgeProfiles[0];
       const hasContent = category.contents.length > 0;
@@ -64,66 +51,54 @@ export async function GET(req: Request) {
       };
     });
 
-    // Apply search filtering if query exists
-    if (searchQuery) {
-      sortedCategories = sortedCategories.filter(category => 
-        category.conceptCategory.toLowerCase().includes(searchQuery)
-      );
-    }
-
-    // Apply subject filtering if subjects are specified
-    if (subjects?.length) {
-      sortedCategories = sortedCategories.filter(category => 
-        subjects.includes(category.subjectCategory)
-      );
-    }
-
-    // Apply filtering and sorting
+    // Apply sorting based on pure weakness
     if (useKnowledgeProfiles) {
       sortedCategories = sortedCategories
         .filter(cat => cat.hasContent)
-        .filter(cat => {
-          // If excludeCompleted is true, we still want to include completed categories
-          // that have very low mastery (below 30%)
-          if (excludeCompleted) {
-            return !cat.isCompleted || (cat.conceptMastery < 0.3);
-          }
-          return true;
-        })
         .sort((a, b) => {
-          // Prioritize uncompleted categories
-          if (a.isCompleted !== b.isCompleted) {
-            return a.isCompleted ? 1 : -1;
-          }
-          // Then sort by concept mastery (lowest first)
+          // Sort by mastery (weakest first)
           return a.conceptMastery - b.conceptMastery;
         });
     }
 
-    // Handle specific concept categories if requested
-    if (conceptCategories?.length) {
-      type TransformedCategory = typeof sortedCategories[0];
-      const categoryMap = new Map(sortedCategories.map(cat => [cat.conceptCategory, cat]));
-      const orderedCategories = conceptCategories
-        .map(concept => categoryMap.get(concept))
-        .filter((cat): cat is TransformedCategory => cat !== undefined);
-      
-      const remainingCategories = sortedCategories.filter(
-        cat => !conceptCategories.includes(cat.conceptCategory)
+    // Apply filters after sorting
+    if (excludeCompleted) {
+      sortedCategories = sortedCategories.filter(cat => 
+        !cat.isCompleted || (cat.conceptMastery < 0.3) // Keep completed cats with low mastery
       );
+    }
 
-      sortedCategories = [...orderedCategories, ...remainingCategories];
+    if (conceptCategories?.length) {
+      sortedCategories = sortedCategories.filter(cat => 
+        conceptCategories.includes(cat.conceptCategory)
+      );
+    }
+
+    if (subjects?.length) {
+      sortedCategories = sortedCategories.filter(cat => 
+        subjects.includes(cat.subjectCategory)
+      );
+    }
+
+    if (searchQuery) {
+      sortedCategories = sortedCategories.filter(cat => 
+        cat.conceptCategory.toLowerCase().includes(searchQuery) ||
+        cat.contentCategory.toLowerCase().includes(searchQuery) ||
+        cat.subjectCategory.toLowerCase().includes(searchQuery)
+      );
     }
 
     // Paginate results
-    const skip = (page - 1) * pageSize;
-    const items = sortedCategories.slice(skip, skip + pageSize);
-    const total = sortedCategories.length;
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    const paginatedCategories = sortedCategories.slice(start, end);
 
     return NextResponse.json({
-      items,
-      totalPages: Math.ceil(total / pageSize),
-      currentPage: page,
+      items: paginatedCategories,
+      totalCategories: sortedCategories.length,
+      page,
+      pageSize,
+      totalPages: Math.ceil(sortedCategories.length / pageSize)
     });
 
   } catch (error) {
