@@ -910,7 +910,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                             categories.find(
                               (cat) => cat.conceptCategory === selectedCategory
                             )?.conceptMastery! < 0.3 && (
-                              <span className="text-xs text-yellow-500 ml-1">(Review Needed)</span>
+                              <span className="text-xs text-green-500 ml-1">(Review Needed)</span>
                             )}
                           </span>
                         )}
