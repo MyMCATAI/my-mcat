@@ -2,14 +2,11 @@ import type { Metadata } from 'next'
 import { Inter, Roboto_Slab } from 'next/font/google'
 import './globals.css'
 import { ClerkProvider } from '@clerk/nextjs'
-import { ModalProvider } from '@/components/modal-provider'
-import Script from 'next/script'
 import ThemeInitializer from '@/components/home/ThemeInitializer'
 import { Analytics } from '@vercel/analytics/react';
 import MobileRedirect from '@/components/MobileRedirect'
 import { FullscreenPrompt } from '@/components/FullscreenPrompt'
 
-const inter = Inter({ subsets: ['latin'] })
 const robotoSlab = Roboto_Slab({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -65,17 +62,12 @@ export default function RootLayout({
     >
       <html lang="en">
         <head>
-          <Script
-            src="https://js.stripe.com/v3/pricing-table.js"
-            strategy="lazyOnload"
-          />
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"></meta>
         </head>
         <body className={robotoSlab.className}>
           <div id="app-root">
             <MobileRedirect />
             <ThemeInitializer />
-            <ModalProvider />
             <FullscreenPrompt />
             {children}
             <Analytics />

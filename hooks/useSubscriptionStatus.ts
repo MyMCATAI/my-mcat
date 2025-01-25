@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useUserInfo } from './useUserInfo';
 import axios from 'axios';
+import { useState, useEffect } from 'react';
 
 interface SubscriptionStatus {
   status: 'none' | 'active' | 'trialing' | 'canceled' | 'past_due';
   subscription: {
-    productName: 'MDPremium' | 'MDGold';
-    currentPeriodEnd: Date;
-    cancelAtPeriodEnd: boolean;
+    currentPeriodEnd?: Date;
+    cancelAtPeriodEnd?: boolean;
+    subscriptionType: string;
   } | null;
 }
 
 export function useSubscriptionStatus() {
-  const [data, setData] = useState<{
+  const { userInfo, isLoading: userInfoLoading, error: userInfoError } = useUserInfo();
+  const [stripeData, setStripeData] = useState<{
     status: SubscriptionStatus | null;
     isLoading: boolean;
     error: string | null;
@@ -28,7 +30,7 @@ export function useSubscriptionStatus() {
       try {
         const response = await axios.get('/api/subscription/status');
         if (isMounted) {
-          setData({
+          setStripeData({
             status: response.data,
             isLoading: false,
             error: null
@@ -36,8 +38,8 @@ export function useSubscriptionStatus() {
         }
       } catch (error) {
         if (isMounted) {
-          setData({
-            status: { status: 'none', subscription: null },
+          setStripeData({
+            status: null,
             isLoading: false,
             error: 'Failed to check subscription status'
           });
@@ -45,28 +47,32 @@ export function useSubscriptionStatus() {
       }
     };
 
-    checkStatus();
+    if (userInfo?.subscriptionType === 'premium' || userInfo?.subscriptionType === 'gold') {
+      checkStatus();
+    } else {
+      setStripeData({
+        status: null,
+        isLoading: false,
+        error: null
+      });
+    }
 
     return () => {
       isMounted = false;
     };
-  }, []); // Empty dependency array - only runs once on mount
+  }, [userInfo?.subscriptionType]);
 
-  const isPremium = data.status?.subscription?.productName === 'MDPremium' && 
-    (data.status.status === 'active' || data.status.status === 'trialing');
-
-  const isGold = data.status?.subscription?.productName === 'MDGold' && 
-    (data.status.status === 'active' || data.status.status === 'trialing');
+  const isPremium = userInfo?.subscriptionType === 'premium';
+  const isGold = userInfo?.subscriptionType === 'gold';
+  const isCanceled = stripeData.status?.subscription?.cancelAtPeriodEnd ?? false;
 
   return {
-    isLoading: data.isLoading,
-    error: data.error,
+    isLoading: userInfoLoading || stripeData.isLoading,
+    error: userInfoError?.message || stripeData.error,
     isPremium,
     isGold,
-    isCanceled: data.status?.subscription?.cancelAtPeriodEnd ?? false,
-    currentPeriodEnd: data.status?.subscription?.currentPeriodEnd 
-      ? new Date(data.status.subscription.currentPeriodEnd)
-      : null,
+    isCanceled,
+    currentPeriodEnd: stripeData.status?.subscription?.currentPeriodEnd,
     isActive: isPremium || isGold,
   };
 } 
