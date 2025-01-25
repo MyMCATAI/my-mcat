@@ -8,7 +8,6 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import FlashcardDeck, { Flashcard } from './FlashcardDeck';
 import { useSpring, animated, config } from '@react-spring/web';
-import { roomToSubjectMap } from './OfficeContainer';
 import { ThumbsDown } from 'lucide-react';
 import {
   Tooltip,
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import toast from 'react-hot-toast';
+import { roomToSubjectMap } from './constants';
 // import Interruption from './Interruption';
 
 interface WrongCard {

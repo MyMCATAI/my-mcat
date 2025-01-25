@@ -3,13 +3,6 @@ import { Plus, Globe } from 'lucide-react';
 import { FaUserInjured } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import { useUserInfo } from '@/hooks/useUserInfo';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 
 interface LeaderboardEntry {
   id: number;
