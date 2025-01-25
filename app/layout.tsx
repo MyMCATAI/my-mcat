@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Roboto_Slab } from 'next/font/google'
+import { Roboto_Slab } from 'next/font/google'
 import './globals.css'
 import { ClerkProvider } from '@clerk/nextjs'
 import ThemeInitializer from '@/components/home/ThemeInitializer'

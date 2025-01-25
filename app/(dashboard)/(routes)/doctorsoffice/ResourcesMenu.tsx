@@ -1,13 +1,10 @@
 import React, { useState } from "react";
 import { DoctorOfficeStats } from "@/types";
-import { Progress } from "@/components/ui/progress";
 import { FaFire } from "react-icons/fa";
 import {
   calculatePlayerLevel,
-  calculateTotalQC,
   getLevelNumber,
 } from "@/utils/calculateResourceTotals";
-import { Headphones } from "lucide-react";
 import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import Leaderboard from "@/components/leaderboard/Leaderboard";
@@ -26,16 +23,6 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
 }) => {
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
   const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
-  const [isHeadphonesDropdownOpen, setIsHeadphonesDropdownOpen] = useState(false);
-  const { isAutoPlay, setIsAutoPlay } = useMusicPlayer();
-
-  const toggleHeadphonesDropdown = () => {
-    setIsHeadphonesDropdownOpen(!isHeadphonesDropdownOpen);
-  };
-
-  const handleAutoPlayChange = () => {
-    setIsAutoPlay(!isAutoPlay);
-  };
 
   if (!reportData) {
     return <div>Loading...</div>;
@@ -97,34 +84,6 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
         onClose={() => setIsTutorialDialogOpen(false)}
         videoUrl={tutorialVideoUrl}
       />
-    </div>
-  );
-};
-
-interface StatBarProps {
-  label: string;
-  value: number;
-  max: number;
-  showDecimals?: boolean;
-}
-
-const StatBar: React.FC<StatBarProps> = ({
-  label,
-  value,
-  max,
-  showDecimals = false,
-}) => {
-  const percentage = (value / max) * 100;
-
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-between text-sm">
-        <span>{label}</span>
-        <span>
-          {showDecimals ? value.toFixed(2) : value} / {max}
-        </span>
-      </div>
-      <Progress value={percentage} className="h-2" />
     </div>
   );
 };
