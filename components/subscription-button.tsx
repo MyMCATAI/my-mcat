@@ -2,10 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ProductType } from "@/types";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
-import axios from "axios";
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
