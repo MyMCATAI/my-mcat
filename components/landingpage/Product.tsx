@@ -11,18 +11,18 @@ const Product = () => {
   const [background, setBackground] = useState(250);
   const [isMobile, setIsMobile] = useState(false);
 
-  const parallaxRef = useRef(null);
-  const mountain3 = useRef(null);
-  const mountain2 = useRef(null);
-  const mountain1 = useRef(null);
-  const cloudsBottom = useRef(null);
-  const cloudsLeft = useRef(null);
-  const cloudsRight = useRef(null);
-  const stars = useRef(null);
-  const sun = useRef(null);
-  const copy = useRef(null);
-  const btn = useRef(null);
-  const video = useRef(null);
+  const parallaxRef = useRef<HTMLDivElement>(null);
+  const mountain3 = useRef<HTMLImageElement>(null);
+  const mountain2 = useRef<HTMLImageElement>(null);
+  const mountain1 = useRef<HTMLImageElement>(null);
+  const cloudsBottom = useRef<HTMLImageElement>(null);
+  const cloudsLeft = useRef<HTMLImageElement>(null);
+  const cloudsRight = useRef<HTMLImageElement>(null);
+  const stars = useRef<HTMLImageElement>(null);
+  const sun = useRef<HTMLImageElement>(null);
+  const copy = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  const video = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -32,42 +32,82 @@ const Product = () => {
   }, []);
 
   useEffect(() => {
+    if (!parallaxRef.current || !mountain3.current || !mountain2.current || !mountain1.current ||
+        !sun.current || !stars.current || !cloudsBottom.current || !cloudsLeft.current ||
+        !cloudsRight.current || !copy.current || !video.current) {
+      return; // Exit if any refs are null
+    }
+
+    // Batch DOM reads/writes for better performance
+    const elements = {
+      mountain3: mountain3.current,
+      mountain2: mountain2.current,
+      mountain1: mountain1.current,
+      sun: sun.current,
+      stars: stars.current,
+      cloudsBottom: cloudsBottom.current,
+      cloudsLeft: cloudsLeft.current,
+      cloudsRight: cloudsRight.current,
+      copy: copy.current,
+      video: video.current
+    };
+
+    // Add will-change to optimize animations
+    Object.values(elements).forEach(el => {
+      if (el) {
+        el.style.willChange = 'transform, opacity';
+      }
+    });
+
     let ctx = gsap.context(() => {
-      var tl = gsap.timeline({
-        defaults: { duration: 1, ease: "power2.in" }, // Added ease: "power2.in"
+      const tl = gsap.timeline({
+        defaults: { duration: 1, ease: "power2.out" },
         scrollTrigger: {
           trigger: parallaxRef.current,
           start: "top top",
-          end: "2500 bottom",
-          scrub: 1, // Changed from true to 1 for smoother scrubbing
+          end: "1500 bottom",
+          scrub: 2,
           pin: true,
           onUpdate: (self) => {
-            setBackground(Math.ceil(self.progress * 100 + 20));
+            requestAnimationFrame(() => {
+              setBackground(Math.ceil(self.progress * 100 + 20));
+            });
           },
         },
       });
 
+      // Batch animations for better performance
       if (isMobile) {
-        tl.to(mountain3.current, { y: "-=40" }, 0);
-        tl.to(mountain2.current, { y: "-=15" }, 0);
-        tl.to(mountain1.current, { y: "+=25" }, 0);
+        tl.to([mountain3.current, mountain2.current, mountain1.current], {
+          y: (i) => ["-=40", "-=15", "+=25"][i],
+          stagger: 0.1
+        }, 0);
         tl.to(sun.current, { y: "+=120", scale: 0.8 }, 0);
       } else {
-        tl.to(mountain3.current, { y: "-=80" }, 0);
-        tl.to(mountain2.current, { y: "-=30" }, 0);
-        tl.to(mountain1.current, { y: "+=50" }, 0);
+        tl.to([mountain3.current, mountain2.current, mountain1.current], {
+          y: (i) => ["-=80", "-=30", "+=50"][i],
+          stagger: 0.1
+        }, 0);
         tl.to(sun.current, { y: "+=210" }, 0);
       }
 
-      tl.to(stars.current, { top: 0 }, 0.3);
-      tl.to(cloudsBottom.current, { opacity: 0 }, 0);
-      tl.to(cloudsLeft.current, { x: "-20%", opacity: 0 }, 0);
-      tl.to(cloudsRight.current, { x: "20%", opacity: 0 }, 0);
-      tl.to(copy.current, { opacity: 1 }, 0.5);
-      tl.to(video.current, { opacity: 1 }, 0.6);
-      tl.to(btn.current, { opacity: 1 }, 0.9);
+      // Optimize cloud animations
+      const cloudElements = [cloudsBottom.current, cloudsLeft.current, cloudsRight.current];
+      tl.to(cloudElements, { opacity: 0, stagger: 0.1 }, 0);
+      
+      // Optimize content fade-ins
+      tl.to([copy.current, video.current], { opacity: 1, stagger: 0.1 }, 0.5);
     });
-    return () => ctx.revert();
+
+    return () => {
+      ctx.revert();
+      // Clean up will-change
+      Object.values(elements).forEach(el => {
+        if (el) {
+          el.style.willChange = 'auto';
+        }
+      });
+    };
   }, [isMobile]);
 
   return (
@@ -78,49 +118,53 @@ const Product = () => {
         <div
           ref={parallaxRef}
           style={{
-            background: `linear-gradient(#021125, #143A6B ${background}%, #A74A67, #EDFC54 )`,
+            background: `linear-gradient(#021125, #143A6B ${background}%, #A74A67, #EDFC54)`,
           }}
           className="parallax overflow-hidden relative"
         >
           <Image
             ref={sun}
-            className="sun absolute"
+            className="sun absolute transform-gpu" // Added transform-gpu
             src="/parallax/sun.svg"
             alt="Sun"
             width={300}
             height={300}
             style={{ bottom: isMobile ? "10%" : "5%" }}
+            priority // Added priority loading
           />
           <Image
             ref={mountain3}
-            className="mountain-3 absolute bottom-0 left-0 w-full"
+            className="mountain-3 absolute bottom-0 left-0 w-full transform-gpu"
             src="/parallax/mountain-3.svg"
             alt="Mountain 3"
             layout="responsive"
             width={300}
             height={100}
+            priority
           />
           <Image
             ref={mountain2}
-            className="mountain-2 absolute bottom-0 left-0 w-full"
+            className="mountain-2 absolute bottom-0 left-0 w-full transform-gpu"
             src="/parallax/mountain-2.svg"
             alt="Mountain 2"
             layout="responsive"
             width={300}
             height={120}
+            priority
           />
           <Image
             ref={mountain1}
-            className="mountain-1 absolute bottom-0 left-0 w-full"
+            className="mountain-1 absolute bottom-0 left-0 w-full transform-gpu"
             src="/parallax/mountain-1.svg"
             alt="Mountain 1"
             layout="responsive"
             width={300}
             height={150}
+            priority
           />
           <Image
             ref={cloudsBottom}
-            className="clouds-bottom"
+            className="clouds-bottom transform-gpu"
             src="/parallax/cloud-bottom.svg"
             alt="Clouds Bottom"
             width={300}
@@ -128,7 +172,7 @@ const Product = () => {
           />
           <Image
             ref={cloudsLeft}
-            className="clouds-left"
+            className="clouds-left transform-gpu"
             src="/parallax/clouds-left.svg"
             alt="Clouds Left"
             width={300}
@@ -136,7 +180,7 @@ const Product = () => {
           />
           <Image
             ref={cloudsRight}
-            className="clouds-right"
+            className="clouds-right transform-gpu"
             src="/parallax/clouds-right.svg"
             alt="Clouds Right"
             width={300}
@@ -144,7 +188,7 @@ const Product = () => {
           />
           <Image
             ref={stars}
-            className="stars"
+            className="stars transform-gpu"
             src="/parallax/stars.svg"
             alt="Stars"
             width={300}
