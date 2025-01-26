@@ -177,7 +177,7 @@ export default function UserTestReviewPage() {
     </div>
   );
 
-  const currentResponse = userTest.responses[currentResponseIndex];
+  const currentResponseFromUserTest = userTest.responses[currentResponseIndex];
 
   return (
     <div className="relative bg-white h-screen flex flex-col text-white">
@@ -212,7 +212,7 @@ export default function UserTestReviewPage() {
         </div>
       </div>
       <div className="flex flex-grow overflow-hidden">
-        {currentResponse ? (
+        {currentResponseFromUserTest ? (
           <>
             {currentPassage ? (
               <>
@@ -220,7 +220,7 @@ export default function UserTestReviewPage() {
                   <div className="flex-grow overflow-auto">
                     <PassageComponent 
                       passageData={currentPassage} 
-                      userResponse={currentResponse}
+                      userResponse={currentResponseFromUserTest}
                       onNote={()=>{console.log("note")}}
                     />
                   </div>
@@ -228,9 +228,9 @@ export default function UserTestReviewPage() {
                 <div className="w-1/2 flex flex-col">
                   <div className="flex-grow overflow-auto">
                     <ReviewQuestionComponent
-                      question={currentResponse.question}
+                      question={currentResponseFromUserTest.question}
                       passageData={currentPassage}
-                      userResponse={currentResponse}
+                      userResponse={currentResponseFromUserTest}
                       onNext={handleNextQuestion}
                       onPrevious={handlePreviousQuestion}
                       isFirst={currentResponseIndex === 0}
@@ -246,8 +246,8 @@ export default function UserTestReviewPage() {
               <div className="w-full flex flex-col">
                 <div className="flex-grow overflow-auto">
                   <ReviewQuestionComponent
-                      question={currentResponse.question}
-                      userResponse={currentResponse}
+                      question={currentResponseFromUserTest.question}
+                      userResponse={currentResponseFromUserTest}
                       onNext={handleNextQuestion}
                       onPrevious={handlePreviousQuestion}
                       isFirst={currentResponseIndex === 0}
