@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 
+const delimiter = "|||";
+
 export async function GET(req: Request) {
   const { userId } = auth();
   if (!userId) {
@@ -74,10 +76,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Truncate values to prevent exceeding column limits
-    const truncatedUserAnswer = userAnswer?.substring(0, 200) || "";
-    const truncatedUserNotes = userNotes?.substring(0, 750) || "";
-
     // First, fetch the question to get its categoryId
     const question = await prisma.question.findUnique({
       where: { id: questionId },
@@ -102,15 +100,22 @@ export async function POST(req: Request) {
 
     if (existingResponse) {
       const timestamp = new Date().toISOString();
-      const formattedNote = `[${timestamp}] - ${truncatedUserNotes}`;
-      const updatedUserNotes = existingResponse.userNotes
-        ? `${existingResponse.userNotes}\n${formattedNote}`.substring(0, 1000)
-        : formattedNote;
+      let updatedUserNotes = existingResponse.userNotes;
+      if (userNotes) {
+        let formattedNote = "";
+        let notes = userNotes.split(delimiter);
+        for (let note of notes) {
+          formattedNote += `[${timestamp}] - ${note}${delimiter}`;
+        }
+        updatedUserNotes = existingResponse.userNotes
+          ? `${existingResponse.userNotes}${delimiter}${formattedNote}`
+          : formattedNote;
+      }
 
       const updatedResponse = await prisma.userResponse.update({
         where: { id: existingResponse.id },
         data: {
-          userAnswer: truncatedUserAnswer || existingResponse.userAnswer,
+          userAnswer: (userAnswer || "") || existingResponse.userAnswer,
           isCorrect:
             isCorrect !== undefined ? isCorrect : existingResponse.isCorrect,
           timeSpent: timeSpent || existingResponse.timeSpent,
@@ -125,18 +130,23 @@ export async function POST(req: Request) {
 
       return NextResponse.json(updatedResponse);
     } else {
+      let formattedNote = "";
+      if (userNotes) {  
+        let notes = userNotes.split(delimiter);
+        for (let note of notes) {
+          formattedNote += `[${new Date().toISOString()}] - ${note}${delimiter}`;
+        }
+      }
       const newResponse = await prisma.userResponse.create({
         data: {
           userId,
           ...(userTestId && { userTestId }),
           questionId,
           categoryId: question.categoryId,
-          userAnswer: truncatedUserAnswer,
+          userAnswer: userAnswer || "",
           isCorrect: isCorrect || false,
           timeSpent: timeSpent || 0,
-          userNotes: truncatedUserNotes
-            ? `[${new Date().toISOString()}] - ${truncatedUserNotes}`
-            : "",
+          userNotes: formattedNote,
         },
         include: {
           question: true,
@@ -176,12 +186,42 @@ export async function PUT(req: Request) {
       );
     }
 
-    // Handle notes separately to append timestamps
-    if (updateData.userNotes) {
-      updateData.userNotes = `${new Date().toISOString()} - ${updateData.userNotes}`;
+    // Fetch the existing response to retrieve current notes
+    const existingResponse = await prisma.userResponse.findUnique({
+      where: { id, userId },
+      select: { userNotes: true, reviewNotes: true },
+    });
+
+    if (!existingResponse) {
+      return NextResponse.json(
+        { error: "Response not found" },
+        { status: 404 }
+      );
     }
+
+    // Append
+    if (updateData.userNotes) {
+      const timestamp = new Date().toISOString();
+      let formattedNote = "";
+      let notes = updateData.userNotes.split(delimiter);
+
+      for (let note of notes) {
+        formattedNote += `[${timestamp}] - ${note}${delimiter}`;
+      }
+
+      const updatedUserNotes = existingResponse.userNotes
+        ? `${existingResponse.userNotes}${formattedNote}`
+        : formattedNote;
+      updateData.userNotes = updatedUserNotes;
+    }
+
     if (updateData.reviewNotes) {
-      updateData.reviewNotes = `${new Date().toISOString()} - ${updateData.reviewNotes}`;
+      const timestamp = new Date().toISOString();
+      const formattedNote = `[${timestamp}] - ${updateData.reviewNotes}`;
+      const updatedReviewNotes = existingResponse.reviewNotes
+        ? `${existingResponse.reviewNotes}${delimiter}${formattedNote}`
+        : formattedNote;
+      updateData.reviewNotes = updatedReviewNotes;
     }
 
     // Conditionally add flagged to updateData if it is present in the request body
