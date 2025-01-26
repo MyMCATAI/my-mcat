@@ -29,6 +29,7 @@ import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useExamVideoRedirect } from '@/hooks/useExamVideoRedirect';
+import { GridImage } from './types';
 
 const DoctorsOfficePage: React.FC = () => {
   useExamVideoRedirect();
@@ -156,10 +157,6 @@ const DoctorsOfficePage: React.FC = () => {
   const marketplaceDialogRef = useRef<{ open: () => void } | null>(null);
 
   const [isWelcomeDialogOpen, setIsWelcomeDialogOpen] = useState(false);
-
-  // Add this state for clinic name
-  const [clinicName, setClinicName] = useState<string | null>(null);
-
   const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
   const [clinicCostPerDay, setClinicCostPerDay] = useState(0);
 
@@ -170,9 +167,6 @@ const DoctorsOfficePage: React.FC = () => {
   const [streakDays, setStreakDays] = useState(0);
 
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
-
-  const { userInfo, isLoading: isLoadingUserInfo } = useUserInfo();
-
 
   const fetchData = async () => {
     try {
@@ -315,11 +309,6 @@ const DoctorsOfficePage: React.FC = () => {
     setActiveTab(tab);
   };
 
-  // Add this function to update user score
-  const handleUpdateUserScore = (newScore: number) => {
-    setUserScore(newScore);
-  };
-
   // Flashcards Dialog handlers
   useEffect(() => {
     if (flashcardRoomId !== "") {
@@ -411,12 +400,6 @@ const DoctorsOfficePage: React.FC = () => {
     await fetchData(); // Refetch all data to update scores and other stats
   };
 
-  const handleOpenAfterTestFeed = () => {
-    if(!currentUserTestId) return
-    fetchUserResponses(currentUserTestId);
-    setIsAfterTestDialogOpen(true);
-  };
-
   const { setIsAutoPlay } = useMusicPlayer();
 
   useEffect(() => {
@@ -424,10 +407,10 @@ const DoctorsOfficePage: React.FC = () => {
     return () => setIsAutoPlay(false);
   }, [setIsAutoPlay]);
 
-  const [populateRoomsFn, setPopulateRoomsFn] = useState<(() => void) | null>(null);
+  const [populateRoomsFn, setPopulateRoomsFn] = useState<(() => GridImage[]) | null>(null);
 
   // Create a stable callback for setting the function
-  const handleSetPopulateRooms = useCallback((fn: () => void) => {
+  const handleSetPopulateRooms = useCallback((fn: () => GridImage[]) => {
     setPopulateRoomsFn(() => fn);
   }, []);
 
@@ -458,11 +441,9 @@ const DoctorsOfficePage: React.FC = () => {
     afterTestFeedRef.current?.setWrongCards([])
   };
 
-  // Update the handleGameStart function to accept userTestId
   const handleGameStart = async (userTestId: string) => {
-
     // Start new testing activity
-    const activity = await startActivity({
+    await startActivity({
       type: 'testing',
       location: 'Game',
       metadata: {
@@ -475,7 +456,27 @@ const DoctorsOfficePage: React.FC = () => {
     setCurrentUserTestId(userTestId);
     
     if (typeof populateRoomsFn === 'function') {
-      populateRoomsFn();
+      const selectedRooms = populateRoomsFn();
+      const roomNames = selectedRooms.map(room => {
+        // Remove numbers from room names and add spaces before capitals
+        return room.id
+          .replace(/\d+/g, '')
+          .replace(/([A-Z])/g, ' $1')
+          .trim();
+      });
+      
+      toast.success(
+        <div>
+          <p className="font-bold mb-1">New game started!</p>
+          <p className="text-sm mb-1">Selected rooms:</p>
+          <ul className="text-sm list-disc list-inside">
+            {roomNames.map((name, index) => (
+              <li key={index}>{name}</li>
+            ))}
+          </ul>
+        </div>,
+        { duration: 5000 }
+      );
     } else {
       console.error("populateRoomsFn is not a function");
       toast.error("Failed to start new game. Please try refreshing the page.");
@@ -507,6 +508,14 @@ const DoctorsOfficePage: React.FC = () => {
     initializeActivity();
   }, []);
 
+  const handleAfterTestDialogClose = () => {
+    setIsAfterTestDialogOpen(false);
+    // Reset game state when dialog is closed
+    resetGameState();
+    setIsGameInProgress(false);
+    setCurrentUserTestId(null);
+  };
+
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
       <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
@@ -523,15 +532,9 @@ const DoctorsOfficePage: React.FC = () => {
           <OfficeContainer
             onNewGame={handleSetPopulateRooms}
             visibleImages={visibleImages}
-            clinicName={clinicName}
-            userScore={userScore}
             userRooms={userRooms}
             imageGroups={imageGroups}
-            flashcardRoomId={flashcardRoomId}
             setFlashcardRoomId={setFlashcardRoomId}
-            toggleGroup={toggleGroup}
-            onUpdateUserScore={handleUpdateUserScore}
-            setUserRooms={setUserRooms}
             updateVisibleImages={updateVisibleImages}
             activeRooms={activeRooms}
             setActiveRooms={setActiveRooms}
@@ -726,7 +729,11 @@ const DoctorsOfficePage: React.FC = () => {
       <AfterTestFeed
         ref={afterTestFeedRef}
         open={isAfterTestDialogOpen}
-        onOpenChange={setIsAfterTestDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleAfterTestDialogClose();
+          }
+        }}
         userResponses={userResponses}
         correctCount={correctCount}
         wrongCount={wrongCount}

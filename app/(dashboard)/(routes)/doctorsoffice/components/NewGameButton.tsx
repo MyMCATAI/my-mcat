@@ -92,9 +92,11 @@ const NewGameButton: FC<NewGameButtonProps> = ({
         }`}
     >
       <span className={`text-[--theme-hover-color] border-r border-[--theme-border-color] ${!isGameInProgress && 'hover:border-white/30'} pr-2`}>
-        New Game
+        {isGameInProgress ? 'Game in Progress' : 'New Game'}
       </span>
-      <span className="text-[--theme-hover-color]">-1</span>
+      <span className="text-[--theme-hover-color]">
+        {isGameInProgress ? '' : '-1'}
+      </span>
       <Image
         src="/game-components/PixelCupcake.png"
         alt="Coin"

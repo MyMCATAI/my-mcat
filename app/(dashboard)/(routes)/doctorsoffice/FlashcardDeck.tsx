@@ -6,10 +6,9 @@ import { useSpring, animated } from '@react-spring/web'
 import { useDrag } from '@use-gesture/react';
 import ContentRenderer from '@/components/ContentRenderer';
 import { FlattenedQuestionResponse } from '@/lib/question';
-import { roomToSubjectMap } from './OfficeContainer';
-import { roomToContentMap } from './OfficeContainer';
 import toast from 'react-hot-toast';
 import { tutorialQuestions } from './constants/tutorialQuestions';
+import { roomToContentMap, roomToSubjectMap } from './constants';
 
 export interface Flashcard {
   questionType: string;
