@@ -2,14 +2,10 @@ import { NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 
 export async function GET(req: Request) {
-  console.log("Entering GET function");
   try {
     const { searchParams } = new URL(req.url);
     const tier = parseInt(searchParams.get("tier") || "1");
     const rating = parseInt(searchParams.get("rating") || "5");
-
-    console.log(`Received request for tier: ${tier}, rating: ${rating}`);
-    console.log("Prisma instance:", prismadb);
 
     if (!prismadb) {
       console.error("Prisma client is undefined");
@@ -22,9 +18,7 @@ export async function GET(req: Request) {
       );
     }
 
-    console.log("Prisma client is defined, attempting to access 'review'");
-    console.log("Available Prisma models:", Object.keys(prismadb));
-
+    
     try {
       console.log("Attempting to count reviews");
       const totalReviews = await prismadb.review.count({
@@ -49,8 +43,6 @@ export async function GET(req: Request) {
         take: 1,
         skip: randomSkip,
       });
-
-      console.log(`Randomly selected review:`, reviews[0]);
 
       return new NextResponse(JSON.stringify(reviews), {
         status: 200,

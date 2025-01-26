@@ -78,10 +78,6 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
     }
   };
 
-  const handleAdditionalItemClick = (itemName: string) => {
-    toggleGroup(itemName);
-  };
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {

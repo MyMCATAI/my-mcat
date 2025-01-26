@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FaDiscord, FaLock } from "react-icons/fa";
+import { FaDiscord } from "react-icons/fa";
 import { useRouter } from 'next/navigation';
 import { useUserInfo } from '@/hooks/useUserInfo';
 
@@ -85,7 +85,6 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
   return (
     <Dialog 
       open={isOpen && !isClinicUnlocked}
-      // open={true} // Lock the Anki Clinic
       onOpenChange={handleOpenChange}
       modal={!isFullscreenPromptVisible}
     >
