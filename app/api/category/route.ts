@@ -56,8 +56,12 @@ export async function GET(req: Request) {
       sortedCategories = sortedCategories
         .filter(cat => cat.hasContent)
         .sort((a, b) => {
-          // Sort by mastery (weakest first)
-          return a.conceptMastery - b.conceptMastery;
+          // Calculate total mastery with content mastery weighted more heavily
+          // since it includes AAMC and UWorld data
+          const aTotalMastery = (a.conceptMastery * 0.3) + (a.contentMastery * 0.7);
+          const bTotalMastery = (b.conceptMastery * 0.3) + (b.contentMastery * 0.7);
+          // Sort by total mastery (weakest first)
+          return aTotalMastery - bTotalMastery;
         });
     }
 
