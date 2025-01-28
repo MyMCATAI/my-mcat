@@ -17,7 +17,6 @@ export async function checkProStatus(): Promise<boolean> {
       throw new Error('Failed to fetch subscription status');
     }
     const data = await response.json();
-    console.log(data)
     return data.isPro;
   } catch (error) {
     console.error('Error checking pro status:', error);

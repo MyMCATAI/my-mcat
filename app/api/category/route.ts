@@ -11,6 +11,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    console.log('fetching categories for user', userId);
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '10');
@@ -20,6 +21,15 @@ export async function GET(req: Request) {
     const searchQuery = searchParams.get('searchQuery')?.toLowerCase();
     const subjects = searchParams.get('subjects')?.split(',');
 
+    console.log('Input params:', {
+      page,
+      pageSize,
+      useKnowledgeProfiles,
+      conceptCategories,
+      excludeCompleted,
+      searchQuery,
+      subjects
+    });
     // Get categories with knowledge profiles
     const categories = await prisma.category.findMany({
       include: {
@@ -53,23 +63,32 @@ export async function GET(req: Request) {
 
     // Apply sorting based on pure weakness
     if (useKnowledgeProfiles) {
+      console.log('\nBefore sorting - Categories and their concept mastery:');
+      sortedCategories.forEach(cat => {
+        console.log(`${cat.conceptCategory}: concept mastery = ${cat.conceptMastery}, has profile = ${cat.hasProfile}`);
+      });
+
       sortedCategories = sortedCategories
         .filter(cat => cat.hasContent)
         .sort((a, b) => {
-          // Calculate total mastery with content mastery weighted more heavily
-          // since it includes AAMC and UWorld data
-          const aTotalMastery = (a.conceptMastery * 0.3) + (a.contentMastery * 0.7);
-          const bTotalMastery = (b.conceptMastery * 0.3) + (b.contentMastery * 0.7);
-          // Sort by total mastery (weakest first)
-          return aTotalMastery - bTotalMastery;
+          // Categories without profiles should come last
+          if (!a.hasProfile && !b.hasProfile) return 0;
+          if (!a.hasProfile) return 1;  // Move a to the end
+          if (!b.hasProfile) return -1; // Move b to the end
+
+          // Sort by concept mastery (weakest first)
+          return a.conceptMastery - b.conceptMastery;
         });
+
+      console.log('\nAfter sorting - Categories ordered by weakness:');
+      sortedCategories.forEach(cat => {
+        console.log(`${cat.conceptCategory}: concept mastery = ${cat.conceptMastery}, has profile = ${cat.hasProfile}`);
+      });
     }
 
     // Apply filters after sorting
     if (excludeCompleted) {
-      sortedCategories = sortedCategories.filter(cat => 
-        !cat.isCompleted || (cat.conceptMastery < 0.3) // Keep completed cats with low mastery
-      );
+      sortedCategories = sortedCategories.filter(cat => !cat.isCompleted);
     }
 
     if (conceptCategories?.length) {
