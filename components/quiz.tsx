@@ -626,6 +626,7 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
   return (
     <div
       ref={containerRef}
+      data-quiz-container="true"
       className="h-full flex flex-col px-6 rounded-lg mx-auto bg-[--theme-adaptive-tutoring-color]"
     >
       {/* Timer and Question Header */}

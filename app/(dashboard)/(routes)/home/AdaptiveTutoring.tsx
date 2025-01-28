@@ -148,7 +148,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
       
       const data = await response.json();
       const categories = data.items as CategoryWithCompletion[];
-      
+      console.log(categories)
       // Set checked categories to top 6 by mastery
       setCheckedCategories(categories);
       
