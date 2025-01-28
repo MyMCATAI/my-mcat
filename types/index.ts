@@ -206,6 +206,22 @@ export interface OnboardingFormData {
   medicalSchool: MedicalSchool | null;
 }
 
+export interface OnboardingInfo {
+  currentStep: number;
+  onboardingComplete: boolean;
+  firstName: string | null;
+  college: string | null;
+  isNonTraditional: boolean | null;
+  isCanadian: boolean | null;
+  gpa: number | null;
+  currentMcatScore: number | null;
+  hasNotTakenMCAT: boolean | null;
+  mcatAttemptNumber: string | null;
+  targetMedSchool: string | null;
+  targetScore: number | null;
+  referralEmail: string | null;
+}
+
 export enum ProductType {
   COINS_10 = "coins_10",
   COINS_50 = "coins_50",

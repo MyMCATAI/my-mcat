@@ -1,13 +1,13 @@
 "use client";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import TestComponent from "@/components/test-component";
 import { useEffect, useState } from "react";
 import { VocabProvider } from '@/contexts/VocabContext';
 import { useUserActivity } from '@/hooks/useUserActivity';
-import { useExamVideoRedirect } from "@/hooks/useExamVideoRedirect";
+import { useUserInfo } from "@/hooks/useUserInfo";
 
 const TestQuestions = () => {
-  useExamVideoRedirect();
+  useUserInfo()
   const searchParams = useSearchParams();
   const testId = searchParams?.get('id');
   const { startActivity, updateActivityEndTime } = useUserActivity();

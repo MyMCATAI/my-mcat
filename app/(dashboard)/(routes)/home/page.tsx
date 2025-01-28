@@ -29,7 +29,8 @@ import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
 import PracticeTests from "./PracticeTests";
-import { useExamVideoRedirect } from '@/hooks/useExamVideoRedirect';
+import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
+import { GameStats } from "@/components/home/GameStats";
 
 // Loading component
 const LoadingSpinner = () => (
@@ -51,7 +52,6 @@ const ContentWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 const Page = () => {
-  useExamVideoRedirect();
   const searchParams = useSearchParams();
   const initialTab = searchParams?.get("tab") || "Schedule";
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -74,9 +74,9 @@ const Page = () => {
   const {
     userInfo,
     isLoading: isLoadingUserInfo,
-    checkHasReferrals,
   } = useUserInfo();
-  const [hasReferral, setHasReferral] = useState(false);
+
+  const { isGold } = useSubscriptionStatus();
 
   const [currentPage, setCurrentPage] = useState("Schedule");
   const chatbotRef = useRef<{ sendMessage: (message: string, context?: string) => void }>({
@@ -232,10 +232,6 @@ const Page = () => {
         const proStatus = await checkProStatus();
         setIsPro(proStatus);
 
-        // Check for referrals
-        const hasExistingReferral = await checkHasReferrals();
-        setHasReferral(hasExistingReferral);
-
         // Check for streak increase
         if (userInfo?.streak && userInfo.streak > 1) {
           const lastSeenStreak = parseInt(localStorage.getItem('lastSeenStreak') || '0');
@@ -266,13 +262,17 @@ const Page = () => {
     };
 
     initializePage();
-  }, [checkHasReferrals, isLoadingUserInfo, userInfo?.streak, fetchActivities]);
+  }, [isLoadingUserInfo, userInfo?.streak, fetchActivities]);
 
   useEffect(() => {
     updateCalendarChatContext(activities);
   }, [activities]);
 
   const renderContent = () => {
+    if (!isGold) {
+      return <GameStats />;
+    }
+
     if (isUpdatingProfile || isGeneratingActivities) {
       return (
         <div className="flex justify-center items-center h-full">
@@ -295,9 +295,7 @@ const Page = () => {
           <Schedule
             handleSetTab={(tab) => {
               if (tab === "SUMMARIZE_WEEK") {
-                // First switch to Schedule tab if not already there
                 setActiveTab("Schedule");
-                // Find the SideBar's Insights tab and activate it
                 const sidebarInsightsTab = document.querySelector('[data-tab="tab1"]');
                 if (sidebarInsightsTab instanceof HTMLElement) {
                   sidebarInsightsTab.click();
@@ -308,6 +306,7 @@ const Page = () => {
             }}
             isActive={activeTab === "Schedule"}
             chatbotRef={chatbotRef}
+            userInfo={userInfo}
           />
         );
         break;
@@ -322,9 +321,6 @@ const Page = () => {
             />
           </div>
         );
-        break;
-      case "AdaptiveTutoring":
-        content = "";
         break;
       case "CARS":
         content = <TestingSuit />;
@@ -538,6 +534,7 @@ const Page = () => {
               chatbotContext={chatbotContext}
               chatbotRef={chatbotRef}
               onActivitiesUpdate={fetchActivities}
+              isSubscribed={isGold}
             />
           </div>
         </div>

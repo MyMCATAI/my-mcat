@@ -32,6 +32,7 @@ import { OptionsDialog } from "@/components/home/OptionsDialog";
 import { useClerk } from "@clerk/clerk-react";
 import { SubscriptionButton } from "@/components/subscription-button";
 import Tutorial from "./Tutorial";
+import { UserInfo } from "@/hooks/useUserInfo";
 
 type Section = "AdaptiveTutoringSuite" | "MCATGameAnkiClinic" | "DailyCARsSuite" | "Tests";
 
@@ -41,17 +42,14 @@ interface ScheduleProps {
   chatbotRef: React.MutableRefObject<{
     sendMessage: (message: string, context?: string) => void;
   }>;
+  userInfo: UserInfo | null
 }
 
 const Schedule: React.FC<ScheduleProps> = ({
   handleSetTab,
-  isActive,
-  chatbotRef,
+  userInfo,
 }) => {
-  const { user } = useClerk();
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [userCoinCount, setUserCoinCount] = useState(0);
-  const [isCoinsLoading, setIsCoinsLoading] = useState(true);
   const [examScores, setExamScores] = useState<any[]>([]);
   const [showTargetScoreDialog, setShowTargetScoreDialog] = useState(false);
   const [targetScore, setTargetScore] = useState("500");
@@ -61,45 +59,18 @@ const Schedule: React.FC<ScheduleProps> = ({
     return hasSeenTutorial === null || hasSeenTutorial === "false";
   });
 
-  // Should be consistent with calendar events
-  const buttonLabels: Record<Section, string> = {
-    AdaptiveTutoringSuite: "Adaptive Tutoring Suite",
-    MCATGameAnkiClinic: "Anki Clinic",
-    DailyCARsSuite: "MyMCAT Daily CARs",
-    Tests: "Tests"
-  };
-
-  const router = useRouter();
+  const userCoinCount = userInfo?.score
 
   const handleButtonClick = (section: Section) => {
     handleSetTab("Tests");
   };
 
+  // Initialize target score from userInfo prop
   useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        setIsCoinsLoading(true);
-        const response = await fetch("/api/user-info");
-        if (response.ok) {
-          const data = await response.json();
-          setUserCoinCount(data.score);
-        }
-      } catch (error) {
-        console.error("Error fetching user coin count:", error);
-      } finally {
-        setIsCoinsLoading(false);
-      }
-    };
-
-    fetchUserInfo();
-  }, []);
-
-  // Initialize target score from user metadata
-  useEffect(() => {
-    if (user?.unsafeMetadata?.targetScore) {
-      setTargetScore(user.unsafeMetadata.targetScore.toString());
+    if (userInfo?.onboardingInfo?.targetScore) {
+      setTargetScore(userInfo.onboardingInfo.targetScore.toString());
     }
-  }, [user?.unsafeMetadata?.targetScore]);
+  }, [userInfo?.onboardingInfo?.targetScore]);
 
   useEffect(() => {
     if (userCoinCount === 0) {
@@ -110,7 +81,6 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   }, [userCoinCount]);
 
-  // Add this function to calculate score feedback
   const getScoreFeedback = () => {
     if (!examScores.length) return null;
 
@@ -192,6 +162,37 @@ const Schedule: React.FC<ScheduleProps> = ({
       setRunTutorial(true);
     }
   }, []);
+
+  // Update the form submission to use API instead of Clerk
+  const handleTargetScoreSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const numValue = parseInt(targetScore);
+    
+    // Validate the score range on submit
+    if (numValue < 472 || numValue > 528 || isNaN(numValue)) {
+      toast.error('Please enter a score between 472 and 528');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/user-info/onboarding', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetScore: numValue
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to update target score');
+
+      toast.success('Target score updated successfully!');
+      setShowTargetScoreDialog(false);
+    } catch (error) {
+      console.error("Error updating target score:", error);
+      toast.error('Failed to update target score');
+    }
+  };
 
   return (
     <div className="w-full relative">
@@ -334,31 +335,7 @@ const Schedule: React.FC<ScheduleProps> = ({
           <DialogHeader>
             <DialogTitle className="text-center text-black">Set Target Score</DialogTitle>
           </DialogHeader>
-          <form onSubmit={async (e) => {
-            e.preventDefault();
-            
-            const numValue = parseInt(targetScore);
-            
-            // Validate the score range on submit
-            if (numValue < 472 || numValue > 528 || isNaN(numValue)) {
-              toast.error('Please enter a score between 472 and 528');
-              return;
-            }
-
-            try {
-              await user?.update({
-                unsafeMetadata: {
-                  ...user.unsafeMetadata,
-                  targetScore: numValue
-                }
-              });
-              toast.success('Target score updated successfully!');
-              setShowTargetScoreDialog(false);
-            } catch (error) {
-              console.error("Error updating target score:", error);
-              toast.error('Failed to update target score');
-            }
-          }}>
+          <form onSubmit={handleTargetScoreSubmit}>
             <div className="p-4 flex flex-col items-center gap-4">
               <input
                 type="text"

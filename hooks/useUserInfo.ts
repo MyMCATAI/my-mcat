@@ -1,7 +1,8 @@
+import { OnboardingInfo } from "@/types";
 import { useState, useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
 
-interface UserInfo {
+export interface UserInfo {
   unlocks?: string[];
   userId: string;
   bio: string;
@@ -20,6 +21,7 @@ interface UserInfo {
     ps: string;
   };
   notificationPreference?: boolean;
+  onboardingInfo?: OnboardingInfo;
 }
 
 interface Referral {
@@ -55,11 +57,85 @@ interface UseUserInfoReturn {
   checkHasReferrals: () => Promise<boolean>;
   unlockGame: () => Promise<void>;
   createNewUser: (data: { firstName: string; bio?: string }) => Promise<UserInfo>;
-  isGoldMember: boolean;
-  hasActiveSubscription: boolean;
+  isSubscribed: boolean;
 }
 
 const CLINIC_COST = 10;
+
+// Helper function to check if onboarding is complete
+function isOnboardingComplete(onboardingInfo?: OnboardingInfo): boolean {
+  if (!onboardingInfo) return false;
+  
+  // Only check for targetScore
+  const targetScore = onboardingInfo.targetScore;
+  return targetScore !== undefined && targetScore !== null && targetScore > 0;
+}
+
+// Helper function to check if a path is accessible based on subscription
+function canAccessPath(subscriptionType: string | undefined, currentPath: string): boolean {
+  // Paths that are always accessible
+  const publicPaths = ['/onboarding', '/home', '/doctorsoffice', '/api', '/auth'];
+  if (publicPaths.some(path => currentPath.startsWith(path))) {
+    return true;
+  }
+
+  // Only subscribed users can access other paths
+  return subscriptionType === 'gold' || subscriptionType === 'premium';
+}
+
+// Helper function to determine if and where to redirect
+async function checkRedirectPath(userInfo: UserInfo | null, currentPath: string): Promise<string | null> {
+  // Don't redirect to onboarding if we're already there
+  if (currentPath.startsWith('/onboarding')) return null;
+
+  // No user info -> onboarding
+  if (!userInfo) return '/onboarding';
+
+  // Incomplete onboarding -> onboarding
+  if (!isOnboardingComplete(userInfo.onboardingInfo)) return '/onboarding';
+
+  // Check subscription-based access
+  if (!canAccessPath(userInfo.subscriptionType, currentPath)) {
+    return '/home';
+  }
+
+  // Only exempt paths from study plan check
+  const studyPlanExemptPaths = ['/examcalendar', '/api', '/auth', '/onboarding'];
+  const shouldCheckStudyPlan = !studyPlanExemptPaths.some(path => currentPath.startsWith(path));
+
+  // Subscribed users -> check study plan (unless on exempt path)
+  if (shouldCheckStudyPlan && (userInfo.subscriptionType === 'gold' || userInfo.subscriptionType === 'premium')) {
+    try {
+      const studyPlanResponse = await fetch('/api/study-plan');
+      if (!studyPlanResponse.ok) {
+        throw new Error('Failed to fetch study plan');
+      }
+      const studyPlanData = await studyPlanResponse.json();
+      
+      if (!studyPlanData.studyPlan) return '/examcalendar';
+    } catch (error) {
+      console.error('Error fetching study plan:', error);
+    }
+  }
+
+  return null;
+}
+
+// Helper function to handle redirect checks and navigation
+async function handleRedirect(userInfo: UserInfo | null): Promise<boolean> {
+  const redirectPath = await checkRedirectPath(userInfo, window.location.pathname);
+  if (redirectPath) {
+    window.location.href = redirectPath;
+    return true;
+  }
+  return false;
+}
+
+// Helper function to check if user has a subscription
+function checkSubscription(userInfo: UserInfo | null): boolean {
+  if (!userInfo) return false;
+  return userInfo.hasPaid && (userInfo.subscriptionType === 'gold' || userInfo.subscriptionType === 'premium');
+}
 
 export function useUserInfo(): UseUserInfoReturn {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -68,37 +144,36 @@ export function useUserInfo(): UseUserInfoReturn {
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [isLoadingReferrals, setIsLoadingReferrals] = useState(false);
 
-  // Add computed properties for subscription status
-  const isGoldMember = userInfo?.subscriptionType === "gold";
-  const hasActiveSubscription = userInfo?.hasPaid && (userInfo?.subscriptionType === "gold" || userInfo?.subscriptionType === "premium") || false
+  // Add computed property for subscription status
+  const isSubscribed = checkSubscription(userInfo);
 
   const fetchUserInfo = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
+      
       const response = await fetch("/api/user-info");
+      
+      // Handle non-existent user case
+      if (response.status === 404 || response.status === 500) {
+        if (await handleRedirect(null)) return;
+        setUserInfo(null);
+        return;
+      }
 
-      // Handle 404 and other error statuses
+      // Handle other errors
       if (!response.ok) {
-        if (response.status === 404 || response.status === 500) {
-          // Only redirect if we're not already on the onboarding page
-          if (!window.location.pathname.includes('/onboarding')) {
-            window.location.href = '/onboarding';
-            return;
-          }
-          // If we are on onboarding, just set userInfo to null
-          setUserInfo(null);
-          return;
-        }
         throw new Error("Failed to fetch user info");
       }
 
+      // Handle successful response
       const data = await response.json();
       setUserInfo(data);
+      await handleRedirect(data);
+      
     } catch (err) {
       console.error("Error fetching user info:", err);
       setError(err instanceof Error ? err : new Error("Failed to fetch user info"));
-      // Only show toast for non-404 errors
       if (err instanceof Error && !err.message.includes('404')) {
         toast.error("Failed to load user information");
       }
@@ -296,7 +371,7 @@ export function useUserInfo(): UseUserInfoReturn {
         },
         body: JSON.stringify({
           unlockGame: true,
-          decrementScore: CLINIC_COST
+          // decrementScore: CLINIC_COST
         }),
       });
 
@@ -351,8 +426,7 @@ export function useUserInfo(): UseUserInfoReturn {
     checkHasReferrals,
     unlockGame,
     createNewUser,
-    isGoldMember,
-    hasActiveSubscription,
+    isSubscribed,
   };
 }
 
