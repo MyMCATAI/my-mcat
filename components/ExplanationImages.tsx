@@ -29,7 +29,9 @@ export const ExplanationImages: React.FC<ExplanationImagesProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
   const [hasLoadedImages, setHasLoadedImages] = useState(false);
+  const [wasFullScreen, setWasFullScreen] = useState(false);
   const imageDialogRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useOutsideClick(imageDialogRef, () => {
     setSelectedImage(null);
@@ -73,6 +75,12 @@ export const ExplanationImages: React.FC<ExplanationImagesProps> = ({
   };
 
   const handleImageClick = (image: ImageData) => {
+    if (document.fullscreenElement) {
+      setWasFullScreen(true);
+      document.exitFullscreen();
+    } else {
+      setWasFullScreen(false);
+    }
     setSelectedImage(image);
   };
 
@@ -137,32 +145,40 @@ export const ExplanationImages: React.FC<ExplanationImagesProps> = ({
       </div>
 
       {selectedImage && (
-        <div 
-          ref={imageDialogRef}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
+        <Dialog 
+          open={!!selectedImage} 
+          onOpenChange={(open) => {
+            if (!open) {
               setSelectedImage(null);
+              if (wasFullScreen && !document.fullscreenElement) {
+                const parentContainer = document.querySelector('[data-quiz-container="true"]');
+                parentContainer?.requestFullscreen();
+              }
             }
           }}
         >
-          <div className="relative max-w-[90vw] max-h-[90vh]">
-            <div className="relative w-full" style={{ height: '90vh' }}>
+          <DialogOverlay className="bg-black/50" />
+          <DialogContent 
+            className="max-w-[90vw] max-h-[90vh] p-0 border-none bg-white" 
+            style={{ zIndex: 9999 }}
+          >
+            <div className="relative w-full h-[90vh]">
               <Image
                 src={selectedImage.url}
                 alt={selectedImage.title || ''}
                 fill
                 className="object-contain rounded-lg"
                 unoptimized
+                priority
               />
+              {selectedImage.title && selectedImage.title !== `Related image` && (
+                <div className="absolute bottom-4 left-4 right-4 bg-black/60 text-white p-2 text-sm rounded-lg">
+                  {selectedImage.title}
+                </div>
+              )}
             </div>
-            {selectedImage.title && selectedImage.title !== `Related image` && (
-              <div className="absolute bottom-4 left-4 right-4 bg-black/60 text-white p-2 text-sm rounded-lg">
-                {selectedImage.title}
-              </div>
-            )}
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </>
   );
