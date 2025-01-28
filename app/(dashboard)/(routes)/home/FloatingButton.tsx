@@ -123,7 +123,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
   ];
 
   const labelTexts: Record<string, string> = {
-    "Tests": "Practice Tests",
+    "Tests": "Home",
     "doctorsoffice": "The Anki Clinic",
     "CARS": "Daily CARs Suite",
     "AdaptiveTutoringSuite": "Tutoring Suite",
@@ -136,19 +136,6 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
       if (!response.ok) throw new Error("Failed to fetch user info");
       const data = await response.json();
       const unlocks = Array.isArray(data.unlocks) ? data.unlocks : [];
-
-      // Check for required unlocks
-      if (tab === "doctorsoffice" && !unlocks.includes("game")) {
-        setUnlockType("game");
-        setShowUnlockDialog(true);
-        return;
-      }
-
-      if (tab === "AdaptiveTutoringSuite" && !unlocks.includes("ts")) {
-        setUnlockType("ts");
-        setShowUnlockDialog(true);
-        return;
-      }
 
       // If we reach here, user has the required unlock
       // Execute the navigation logic
@@ -350,17 +337,6 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
           })}
         </div>
       </span>
-
-      <UnlockDialog
-        isOpen={showUnlockDialog}
-        onClose={() => setShowUnlockDialog(false)}
-        unlockType={unlockType || "game"}
-        title={unlockType === "game" ? "Unlock Anki Clinic" : "Unlock Tutoring Suite"}
-        description={unlockType === "game" 
-          ? "Access the Anki Clinic to practice spaced repetition and master MCAT concepts."
-          : "Access the Adaptive Tutoring Suite to get personalized MCAT guidance."}
-        cost={5}
-      />
     </>
   );
 };

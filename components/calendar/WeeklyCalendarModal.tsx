@@ -403,17 +403,22 @@ const WeeklyCalendarModal: React.FC<WeeklyCalendarModalProps> = ({
                 <div className="bg-[--theme-leaguecard-color] rounded-xl overflow-hidden">
                   <div className="p-4 border-b border-[--theme-border-color] flex items-center justify-between">
                     <span className="text-[--theme-text-color] text-sm">Quick Actions</span>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          const hours = prompt('Enter hours for all days:');
-                          if (hours !== null) handleSetForAllDays(hours);
-                        }}
-                      >
-                        Set All Days
-                      </Button>
+                    <div className="flex gap-2 items-center">
+                      <div className="flex items-center gap-2">
+                      <span className="text-[--theme-text-color] opacity-70 text-sm">Set all days </span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="24"
+                          placeholder="0"
+                          className="w-16 bg-transparent border border-[--theme-border-color] rounded-md px-2 py-1 text-center text-[--theme-text-color] placeholder-[--theme-text-color]/50 focus:outline-none focus:border-[--theme-hover-color]"
+                          onChange={(e) => {
+                            if (e.target.value && Number(e.target.value) >= 0) {
+                              handleSetForAllDays(e.target.value);
+                            }
+                          }}
+                        />
+                      </div>
                       <select
                         onChange={(e) => {
                           const [day, hours] = e.target.value.split('|');

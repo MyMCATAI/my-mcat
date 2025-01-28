@@ -17,7 +17,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
   onClinicUnlocked
 }) => {
   const router = useRouter();
-  const { userInfo } = useUserInfo();
+  const { userInfo, unlockGame } = useUserInfo();
   const [isFullscreenPromptVisible, setIsFullscreenPromptVisible] = useState(false);
 
   useEffect(() => {
@@ -54,19 +54,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
 
   const unlock = async () => {
     try {
-      const response = await fetch('/api/user-info', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          unlockGame: true
-        }),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to unlock clinic');
-      }
-      const data = await response.json();
+      await unlockGame();
       setIsClinicUnlocked(true);
       
       if (onClinicUnlocked) {
@@ -118,7 +106,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
                   onClick={unlock}
                   className="w-full py-6 text-lg font-semibold bg-[--theme-hover-color] text-[--theme-hover-text] hover:bg-opacity-75"
                 >
-                  Unlock the Anki Clinic!
+                  Let's Play!
                 </Button>
               </div>
             )}
