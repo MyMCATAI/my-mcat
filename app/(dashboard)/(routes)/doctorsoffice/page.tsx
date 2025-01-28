@@ -28,11 +28,10 @@ import { imageGroups } from "./constants/imageGroups";
 import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { useUserInfo } from "@/hooks/useUserInfo";
-import { useExamVideoRedirect } from '@/hooks/useExamVideoRedirect';
 import { GridImage } from './types';
 
 const DoctorsOfficePage: React.FC = () => {
-  useExamVideoRedirect();
+  useUserInfo()
   const { startActivity } = useUserActivity();
   const [activeTab, setActiveTab] = useState("doctorsoffice");
   const [userLevel, setUserLevel] = useState("PATIENT LEVEL");
