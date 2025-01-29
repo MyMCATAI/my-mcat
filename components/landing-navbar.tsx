@@ -81,6 +81,11 @@ export const LandingNavbar = () => {
           ))}
         </div> */}
         <div className="flex items-center hidden lg:block">
+          <Link href={"/blog"}>
+            <button className="border border-white text-white py-2 text-lg md:text-[16px] px-4 rounded-[8px] mr-4 hover:bg-white/10 transition-colors duration-300">
+              Blog
+            </button>
+          </Link>
           <Link href={"/sign-in"}>
             <button className="bg-white text-black py-2 text-lg md:text-[16px] px-4 rounded-[8px]">
               Login
@@ -141,7 +146,12 @@ export const LandingNavbar = () => {
             </a>
           ))}
         </div> */}
-        <div className="p-4">
+        <div className="p-4 space-y-3">
+          <Link href={"/blog"}>
+            <button className="border border-white text-white py-2 text-lg w-full rounded-[8px] hover:bg-white/10 transition-colors duration-300">
+              Blog
+            </button>
+          </Link>
           <Link href={"/sign-in"}>
             <button className="bg-white text-black py-2 text-lg w-full rounded-[8px]">
               Login
