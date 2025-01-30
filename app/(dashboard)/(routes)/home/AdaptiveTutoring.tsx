@@ -170,11 +170,12 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     }
   }, [selectedCategory, toast]);
 
-  // Initial fetch of categories on mount only
   useEffect(() => {
-    fetchCategories();
-  }, []); // Empty dependency array means this runs once on mount
-
+    const savedCategories = localStorage.getItem("checkedCategories");
+    if (!savedCategories || JSON.parse(savedCategories).length === 0) {
+      fetchCategories();
+    }
+  }, []);
   const handleDiagnosticSubmit = async (scores: any) => {
     setShowDiagnosticDialog(false);
     await fetchCategories();

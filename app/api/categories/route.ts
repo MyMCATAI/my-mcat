@@ -11,6 +11,34 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const section = searchParams.get('section');
+    const conceptCategory = searchParams.get('conceptCategory');
+
+    if (conceptCategory) {
+      // Fetch category details for the specified concept category
+      const category = await prisma.category.findFirst({
+        where: {
+          conceptCategory: conceptCategory,
+        },
+        select: {
+          id: true,
+          subjectCategory: true,
+          contentCategory: true,
+          conceptCategory: true,
+          generalWeight: true,
+          section: true,
+          color: true,
+          icon: true,
+          podcastLinks: true,
+          knowledgeProfiles: true,
+        },
+      });
+
+      if (!category) {
+        return NextResponse.json({ error: "Category not found" }, { status: 404 });
+      }
+
+      return NextResponse.json(category);
+    }
 
     if (!section) {
       return NextResponse.json({ error: "Section parameter is required" }, { status: 400 });

@@ -877,17 +877,33 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
 
   const router = useRouter();
 
-  const handleNavigateToTutoring = () => {
+  const handleNavigateToTutoring = async () => {
     // Get the top 4 most missed categories
     const weakestCategories = Object.entries(mostMissed)
       .slice(0, 6)
       .map(([concept]) => encodeURIComponent(concept));
 
-    // Create the URL with the categories as a comma-separated list
-    const url = `/home?tab=AdaptiveTutoringSuite&conceptCategories=${weakestCategories.join(',')}`;
+    console.log('Weakest Categories:', weakestCategories);
+    
+    if (weakestCategories.length > 0) {
+        const detailedConcepts = await Promise.all(
+          weakestCategories.map(async (concept) => {
+            const response = await fetch(`/api/categories/?conceptCategory=${concept}`);
+            return response.json();
+          })
+        );
+        console.log('Detailed Concepts:', detailedConcepts);
 
-    // Navigate to the tutoring page with the weak categories
-    router.push(url);
+        if (detailedConcepts.length > 0) {
+          localStorage.setItem('checkedCategories', JSON.stringify(detailedConcepts));
+          const url = `/home?tab=AdaptiveTutoringSuite`;
+          window.location.href = url;
+        } else {
+          toast.error('No concept categories found to review');
+        }
+    } else {
+      toast.error('No weak categories found to review');
+    }
   };
 
   if(userResponses.length === 0) {

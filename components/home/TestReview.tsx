@@ -234,8 +234,10 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack, onRefresh }) => {
     // If specific content category provided, only use that one
     const weakContentCategories = specificContentCategory 
       ? [specificContentCategory]
-      : getWeaknesses(test.dataPulses).map(item => item.topic);
-    
+      : getWeaknesses(test.dataPulses)
+          .map((item: { topic: string }) => item.topic)
+          .filter((topic: string) => topic !== 'CARs'); // Filter out CARs
+
     if (weakContentCategories.length > 0) {
         try {
             // Query prisma to get all concept categories for these content categories
@@ -248,28 +250,38 @@ const TestReview: React.FC<TestReviewProps> = ({ test, onBack, onRefresh }) => {
             }).then(res => res.json());
 
             if (!conceptCategories || !Array.isArray(conceptCategories)) {
-                throw new Error('Invalid response from server');
+              throw new Error('Invalid response from server');
             }
 
-            // If specific content category, use all concepts, otherwise take 6 weakest
-            const selectedConcepts = specificContentCategory
-                ? conceptCategories.map(concept => encodeURIComponent(concept))
-                : conceptCategories
-                    .slice(0, 6)
-                    .map(concept => encodeURIComponent(concept));
+        // Sort by concept mastery and take the first 6 weakest
+            const selectedConcepts = conceptCategories
+              .sort((a, b) => (a.conceptMastery || 0) - (b.conceptMastery || 0))
+              .slice(0, 6);
 
-            if (selectedConcepts.length > 0) {
-                const url = `/home?tab=AdaptiveTutoringSuite&conceptCategories=${selectedConcepts.join(',')}`;
-                window.location.href = url;
+
+            // Fetch full details for the selected concepts
+            const detailedConcepts = await Promise.all(
+              selectedConcepts.map(async (concept) => {
+                const response = await fetch(`/api/categories/?conceptCategory=${concept}`);
+                return response.json();
+              })
+            );
+
+            if (detailedConcepts.length > 0) {
+              // Store in local storage
+              localStorage.setItem('checkedCategories', JSON.stringify(detailedConcepts));
+
+              const url = `/home?tab=AdaptiveTutoringSuite`;
+              window.location.href = url;
             } else {
-                toast.error('No concept categories found to review');
+              toast.error('No concept categories found to review');
             }
-        } catch (error) {
-            console.error('Error fetching concept categories:', error);
-            toast.error('Failed to load review content');
-        }
+      } catch (error) {
+        console.error('Error fetching concept categories:', error);
+        toast.error('Failed to load review content');
+      }
     } else {
-        toast.error('No weak categories found to review');
+      toast.error('No weak categories found to review');
     }
   };
 
