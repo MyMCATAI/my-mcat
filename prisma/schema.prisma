@@ -25,6 +25,7 @@ model UserInfo {
   streak                 Int      @default(0)
   notificationPreference String   @default("all")
   unlocks                Json?    @default("[]")
+  onboardingInfo         Json?    @default("{}")
   patientRecord          PatientRecord?
 }
 
