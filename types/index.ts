@@ -206,6 +206,10 @@ export interface OnboardingFormData {
   medicalSchool: MedicalSchool | null;
 }
 
+export interface Annotation {
+  style: string;
+  text: string;
+}
 export enum ProductType {
   COINS_10 = "coins_10",
   COINS_50 = "coins_50",

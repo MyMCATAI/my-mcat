@@ -89,37 +89,39 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check for existing response
+    const timestamp = new Date().toISOString();
+    let formattedNote = "";
+    if (userNotes) {
+      let notes = userNotes.split(delimiter);
+      for (let note of notes) {
+        formattedNote += `[${timestamp}] - ${note}${delimiter}`;
+      }
+    }
+
+    // Find existing response
     const existingResponse = await prisma.userResponse.findFirst({
       where: {
         userId,
         questionId,
-        ...(userTestId && { userTestId }),
+        userTestId,
       },
     });
 
+    let response;
     if (existingResponse) {
-      const timestamp = new Date().toISOString();
-      let updatedUserNotes = existingResponse.userNotes;
-      if (userNotes) {
-        let formattedNote = "";
-        let notes = userNotes.split(delimiter);
-        for (let note of notes) {
-          formattedNote += `[${timestamp}] - ${note}${delimiter}`;
-        }
-        updatedUserNotes = existingResponse.userNotes
-          ? `${existingResponse.userNotes}${delimiter}${formattedNote}`
-          : formattedNote;
-      }
-
-      const updatedResponse = await prisma.userResponse.update({
-        where: { id: existingResponse.id },
+      // Update existing response
+      response = await prisma.userResponse.update({
+        where: {
+          id: existingResponse.id,
+        },
         data: {
-          userAnswer: (userAnswer || "") || existingResponse.userAnswer,
-          isCorrect:
-            isCorrect !== undefined ? isCorrect : existingResponse.isCorrect,
-          timeSpent: timeSpent || existingResponse.timeSpent,
-          userNotes: updatedUserNotes,
+          userAnswer: userAnswer || "",
+          isCorrect: isCorrect !== undefined ? isCorrect : undefined,
+          timeSpent: timeSpent || undefined,
+          userNotes: formattedNote ? {
+            set: formattedNote
+          } : undefined,
+          answeredAt: new Date(),
         },
         include: {
           question: true,
@@ -127,26 +129,19 @@ export async function POST(req: Request) {
           Category: true,
         },
       });
-
-      return NextResponse.json(updatedResponse);
     } else {
-      let formattedNote = "";
-      if (userNotes) {  
-        let notes = userNotes.split(delimiter);
-        for (let note of notes) {
-          formattedNote += `[${new Date().toISOString()}] - ${note}${delimiter}`;
-        }
-      }
-      const newResponse = await prisma.userResponse.create({
+      // Create new response
+      response = await prisma.userResponse.create({
         data: {
           userId,
-          ...(userTestId && { userTestId }),
+          userTestId,
           questionId,
           categoryId: question.categoryId,
           userAnswer: userAnswer || "",
           isCorrect: isCorrect || false,
           timeSpent: timeSpent || 0,
           userNotes: formattedNote,
+          answeredAt: new Date(),
         },
         include: {
           question: true,
@@ -154,9 +149,9 @@ export async function POST(req: Request) {
           Category: true,
         },
       });
-
-      return NextResponse.json(newResponse);
     }
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Error handling user response:", error);
     return NextResponse.json(
@@ -175,9 +170,6 @@ export async function PUT(req: Request) {
   try {
     const body = await req.json();
     const { id, userTestId, questionId, flagged, ...updateData } = body;
-    
-    console.log("body PUT response");
-    console.log(body);
 
     if (!id) {
       return NextResponse.json(

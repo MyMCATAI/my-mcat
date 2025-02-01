@@ -7,11 +7,10 @@ import React, {
   useCallback,
   useContext,
 } from "react";
-import toast from "react-hot-toast";
 import PassageComponent from "@/components/test/Passage";
-import QuestionComponent from "@/components/test/Question";
+import QuestionComponent from "@/components/test/QuestionComponent";
 import { Test, TestQuestion, Passage, Question, UserResponse } from "@/types";
-import { Pencil, Highlighter, Flag, Cat, Mail } from "lucide-react";
+import { Cat } from "lucide-react";
 import ChatBotInLine from "@/components/chatbot/ChatBotInLine";
 import ScoreDialog from "@/components/ScoreDialog";
 import TestHeader, { TestHeaderRef } from "@/components/test/TestHeader";
@@ -20,6 +19,12 @@ import { VocabContext } from "@/contexts/VocabContext";
 import VocabList from "@/components/VocabList";
 import { fetchDefinitionAndAddToVocab } from "@/lib/utils";
 import { TestIntroModal } from "@/components/test/TestIntroModal";
+import TestToolbar from "@/components/test/TestToolbar";
+import { useUserInfo } from "@/hooks/useUserInfo";
+import MessageButton from "@/components/MessageButton";
+import { calculateScore, extractQuotedStrings, saveAnnotations } from "@/lib/test-utils";
+import { testApi } from "@/services/testApi";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 interface TestComponentProps {
   testId: string;
@@ -60,15 +65,12 @@ const TestComponent: React.FC<TestComponentProps> = ({
   >({});
   const passageCacheRef = useRef<Record<string, Passage>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [testCreated, setTestCreated] = useState(false);
   const [isCreatingTest, setIsCreatingTest] = useState(false);
   const [questionIdToResponseId, setQuestionIdToResponseId] = useState<
     Record<string, string>
   >({});
   const [showScorePopup, setShowScorePopup] = useState(false);
-
   const [testStartTime, setTestStartTime] = useState<Date | null>(null);
-
   const [numberOfPassageHighlights, setNumberOfPassageHighlights] = useState(0);
   const [numberOfPassageStrikethroughs, setNumberOfPassageStrikethroughs] =
     useState(0);
@@ -94,13 +96,11 @@ const TestComponent: React.FC<TestComponentProps> = ({
   const testHeaderRef = useRef<TestHeaderRef>(null);
   const wasQuestionTimerRunningRef = useRef(false);
   const wasTotalTimerRunningRef = useRef(false);
-
   const [score, setScore] = useState(0);
   const [timing, setTiming] = useState(0);
   const [correctAnswer, setCorrectAnswer] = useState(0);
   const [technique, setTechnique] = useState(0);
   const [answeredQuestions, setAnsweredQuestions] = useState(0);
-
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [showDefinition, setShowDefinition] = useState(false);
   const [dictionaryPosition, setDictionaryPosition] =
@@ -108,56 +108,29 @@ const TestComponent: React.FC<TestComponentProps> = ({
 
   const {
     isCmdIEnabled,
-    toggleCmdI,
-    addVocabWord,
-    removeVocabWord,
+    addVocabWord, 
     showVocabList,
     toggleVocabList,
-    vocabList,
   } = useContext(VocabContext);
 
   const [shouldShowChatbot, setShouldShowChatbot] = useState(false);
-
   const videoRef = useRef<HTMLVideoElement>(null);
-
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  const [showMessageForm, setShowMessageForm] = useState(false);
-  const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] =
-    useState(false);
-
+  const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] =useState(false);
+  const [showIntroModal, setShowIntroModal] = useState(true);
+  const [activeEditor, setActiveEditor] = useState<ActiveEditor>(null);
+  const [canApplyStyle, setCanApplyStyle] = useState(true);
+  
   const chatbotRef = useRef<{
     sendMessage: (message: string) => void;
   }>({ sendMessage: () => {} });
-
-  const [showIntroModal, setShowIntroModal] = useState(true);
-  const [userScore, setUserScore] = useState(0);
-
-  // State to track the currently active editor
-  const [activeEditor, setActiveEditor] = useState<ActiveEditor>(null);
-
-  const [canApplyStyle, setCanApplyStyle] = useState(true);
 
   // Handler to set the active editor
   const handleSetActiveEditor = (editor: ActiveEditor) => {
     setActiveEditor(editor);
   };
 
-  useEffect(() => {
-    const fetchUserScore = async () => {
-      try {
-        const response = await fetch("/api/user-info");
-        if (response.ok) {
-          const data = await response.json();
-          setUserScore(data.score);
-        }
-      } catch (error) {
-        console.error("Error fetching user score:", error);
-      }
-    };
-    
-    fetchUserScore();
-  }, []);
+  const { userInfo } = useUserInfo();
 
   useEffect(() => {
     fetchTest();
@@ -256,6 +229,24 @@ const TestComponent: React.FC<TestComponentProps> = ({
     }
   }, [showChatbot]);
 
+  useEffect(() => {
+    if (currentPassage) {
+      const currentQuestion = getCurrentQuestion();
+      setChatbotContext((prevContext) => ({
+        ...prevContext,
+        contentTitle: currentPassage.title || "Untitled Passage",
+        context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm looking at is: ${currentQuestion?.questionContent}\n\n
+        The question options, are: ${currentQuestion?.questionOptions}
+        
+        (secret note to you, the tutor: the first answer is correct, however, don't tell this to the student, we want to help them learn. Also note that they're presented these options in a random order)
+        `,
+      }));
+    }
+    testHeaderRef.current?.resetQuestionTimer(); // Reset question timer when question changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPassage, currentQuestionIndex]);
+
+
   const fetchTest = async () => {
     if (!testId) {
       setError("No test ID provided");
@@ -273,11 +264,12 @@ const TestComponent: React.FC<TestComponentProps> = ({
       setTest(data);
 
       // Create user test immediately after fetching the test data
-      const createdUserTest = await createUserTest(data.id);
-      if (createdUserTest) {
+      try {
+        const createdUserTest = await testApi.createUserTest(data.id);
         setUserTest(createdUserTest);
-        setTestCreated(true);
         setTestStartTime(new Date());
+      } catch (error) {
+        console.error("Error creating user test:", error);
       }
     } catch (err) {
       if (err instanceof Error) {
@@ -310,7 +302,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
     }
   };
 
-  const handleUserResponse = (
+  const handleUserResponse = async (
     questionId: string,
     userAnswer: string,
     isCorrect: boolean
@@ -332,6 +324,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
       return;
     }
 
+    // Create optimistic response for UI
     const optimisticResponse: UserResponse = {
       id: `temp-${questionId}`,
       userTestId: userTest.id,
@@ -343,6 +336,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
       answeredAt: new Date(),
     };
 
+    // Update UI immediately with optimistic response
     setPendingResponses((prev) => ({
       ...prev,
       [questionId]: optimisticResponse,
@@ -357,62 +351,51 @@ const TestComponent: React.FC<TestComponentProps> = ({
       setAnsweredQuestions((prev) => prev + 1);
     }
 
-    // Update chatbot context
-    setChatbotContext((prevContext) => ({
-      ...prevContext,
-      context: `${prevContext.context}\n\nI just answered this question: "${currentQuestion.questionContent}"\nMy answer was: "${userAnswer}" (${isCorrect ? "Correct" : "Incorrect"})`,
-    }));
-  };
-
-  const createUserTest = async (
-    testId: string
-  ): Promise<{ id: string } | null> => {
-    if (!testId || testCreated) return null;
-    setIsCreatingTest(true);
-
     try {
-      const response = await fetch("/api/user-test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ testId }),
+      // Save the response to the server
+      const savedResponse = await testApi.saveUserResponse({
+        questionId,
+        userTestId: userTest.id,
+        userAnswer,
+        isCorrect,
+        timeSpent,
       });
 
-      if (!response.ok) throw new Error("Failed to create user test");
-      const data = await response.json();
-      return data;
-    } catch (err) {
-      console.error("Error creating user test:", err);
-      return null;
-    } finally {
-      setIsCreatingTest(false);
+      // Update state with the saved response
+      setUserResponses((prev) => ({
+        ...prev,
+        [savedResponse.id]: savedResponse,
+      }));
+
+      setQuestionIdToResponseId((prev) => ({
+        ...prev,
+        [questionId]: savedResponse.id,
+      }));
+
+      // Remove from pending responses
+      setPendingResponses((prev) => {
+        const { [questionId]: _, ...rest } = prev;
+        return rest;
+      });
+
+      // Update chatbot context
+      setChatbotContext((prevContext) => ({
+        ...prevContext,
+        context: `${prevContext.context}\n\nI just answered this question: "${currentQuestion.questionContent}"\nMy answer was: "${userAnswer}" (${isCorrect ? "Correct" : "Incorrect"})`,
+      }));
+    } catch (error) {
+      console.error("Error saving user response:", error);
+      // Could add error handling UI here if needed
     }
-  };
-
-  const calculateScore = (totalTimeInSeconds: number) => {
-    if (!test) return { score: 0, correctAnswers: 0, technique: 0 };
-
-    const totalQuestions = test.questions.length;
-    const responses = Object.values(userResponses);
-
-    // Calculate correct answers
-    const correctAnswers = responses.filter((r) => r.isCorrect).length;
-    const score = (correctAnswers / totalQuestions) * 100;
-
-    const averageTimePerQuestion = totalTimeInSeconds / totalQuestions;
-
-    // Technique: highlight, passage strikethroughs, and crossed out options
-    let technique = 0;
-
-    if (numberOfPassageHighlights > 0) technique += 1;
-    if (numberOfPassageStrikethroughs > 0) technique += 1;
-    if (totalOptionsCrossedOut > 0) technique += 1;
-
-    return { score, correctAnswers, technique, averageTimePerQuestion };
   };
 
   const handleFinishTest = async () => {
     if (currentQuestion) {
-      await saveAnnotations(currentQuestion.id);
+      await saveAnnotations({
+        userTest,
+        questionId: currentQuestion.id,
+        annotations: passageRef.current?.getAnnotations() || [],
+      });
     }
     setIsSubmitting(true);
     if (!userTest || !testStartTime) return;
@@ -420,7 +403,14 @@ const TestComponent: React.FC<TestComponentProps> = ({
     const testFinishTime = new Date();
     const totalTimeInSeconds = testHeaderRef.current?.getTotalElapsedTime() || 0;
 
-    const { score, correctAnswers, technique, averageTimePerQuestion } = calculateScore(totalTimeInSeconds);
+    const { score, correctAnswers, technique, averageTimePerQuestion } = calculateScore({
+      test,
+      userResponses: Object.values(userResponses),
+      totalTimeInSeconds,
+      numberOfPassageHighlights,
+      numberOfPassageStrikethroughs,
+      totalOptionsCrossedOut,
+    });
 
     setScore(score);
     setCorrectAnswer(correctAnswers);
@@ -552,7 +542,11 @@ const TestComponent: React.FC<TestComponentProps> = ({
   
   const handleNextQuestion = async () => {
     if (currentQuestion) {
-      await saveAnnotations(currentQuestion.id); // Save before moving forward
+      await saveAnnotations({
+        userTest,
+        questionId: currentQuestion.id,
+        annotations: passageRef.current?.getAnnotations() || [],
+      });
       await saveUserResponse(currentQuestion.id); // Save user response
     }
     if (test && currentQuestionIndex < test.questions.length - 1) {
@@ -563,7 +557,11 @@ const TestComponent: React.FC<TestComponentProps> = ({
 
   const handlePreviousQuestion = async () => {
     if (currentQuestion) {
-      await saveAnnotations(currentQuestion.id); // Save before moving backward
+      await saveAnnotations({
+        userTest,
+        questionId: currentQuestion.id,
+        annotations: passageRef.current?.getAnnotations() || [],
+      });
       await saveUserResponse(currentQuestion.id); // Save user response
     }
     if (currentQuestionIndex > 0) {
@@ -579,19 +577,6 @@ const TestComponent: React.FC<TestComponentProps> = ({
     },
     [questionIdToResponseId, userResponses, pendingResponses]
   );
-
-  useEffect(() => {
-    if (currentPassage) {
-      const currentQuestion = getCurrentQuestion();
-      setChatbotContext((prevContext) => ({
-        ...prevContext,
-        contentTitle: currentPassage.title || "Untitled Passage",
-        context: `I'm currently reading this passage: ${currentPassage.text}\n\nThe question I'm looking at is: ${currentQuestion?.questionContent}\n\nThe question options are: ${currentQuestion?.questionOptions}`,
-      }));
-    }
-    testHeaderRef.current?.resetQuestionTimer(); // Reset question timer when question changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPassage, currentQuestionIndex]);
 
   const handleHighlight = () => {
     if (!activeEditor || !canApplyStyle) {
@@ -633,7 +618,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
     setTimeout(() => setFlashStrikethrough(false), 300);
   };
 
-  const onOptionCrossedOut = (optionText: string) => {
+  const onOptionCrossedOut = () => {
     // TODO: called onece in question.tsx, but twice in test-componet.tsx
     // Save a note in the userResponse
     // saveNote(`crossed out option: ${optionText}`);
@@ -645,13 +630,13 @@ const TestComponent: React.FC<TestComponentProps> = ({
   const saveNote = async (text: string) => {
     let currentUserTest = userTest;
     if (!currentUserTest) {
-      currentUserTest = await createUserTest(test?.id || "");
-      if (!currentUserTest) {
-        console.error("Failed to create user test");
+      try {
+        currentUserTest = await testApi.createUserTest(test?.id || "");
+        setUserTest(currentUserTest);
+      } catch (error) {
+        console.error("Failed to create user test:", error);
         return;
       }
-      setUserTest(currentUserTest);
-      setTestCreated(true);
     }
 
     if (!currentUserTest) {
@@ -782,17 +767,6 @@ const TestComponent: React.FC<TestComponentProps> = ({
     }
   };
 
-  // Function to extract quoted strings from context text
-  function extractQuotedStrings(inputText: string): string[] {
-    const regex = /"([^"]+)"/g;
-    const matches = [];
-    let match;
-    while ((match = regex.exec(inputText)) !== null) {
-      matches.push(match[1]);
-    }
-    return matches;
-  }
-
   const handleShowHint = (responseText: string) => {
     const quotedStrings = extractQuotedStrings(responseText);
     setTempHighlightedStrings(quotedStrings);
@@ -803,150 +777,37 @@ const TestComponent: React.FC<TestComponentProps> = ({
     }, 5000);
   };
 
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if (event.metaKey) {
-        if (event.key === "i") {
-          const selection = window.getSelection();
-          if (selection && selection.toString().trim() !== "") {
-            const word = selection.toString().trim();
+  const handleWordSelect = useCallback((word: string, rect: DOMRect) => {
+    // Pass addVocabWord as a callback
+    fetchDefinitionAndAddToVocab(word, addVocabWord);
 
-            // Pass addVocabWord as a callback
-            fetchDefinitionAndAddToVocab(word, addVocabWord);
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
 
-            // If Command-I is enabled, perform dictionary lookup
-            if (isCmdIEnabled) {
-              const range = selection.getRangeAt(0);
-              const rect = range.getBoundingClientRect();
+    const isBottomThird = rect.bottom > (viewportHeight * 2) / 3;
 
-              const viewportHeight = window.innerHeight;
-              const viewportWidth = window.innerWidth;
+    const leftPosition = Math.min(
+      rect.left + rect.width,
+      viewportWidth - 300
+    );
 
-              const isBottomThird = rect.bottom > (viewportHeight * 2) / 3;
+    setDictionaryPosition({
+      top: isBottomThird ? null : rect.bottom + 10,
+      bottom: isBottomThird ? viewportHeight - rect.top + 10 : null,
+      left: leftPosition,
+    });
 
-              const leftPosition = Math.min(
-                rect.left + rect.width,
-                viewportWidth - 300
-              );
+    setSelectedWord(word);
+    setShowDefinition(true);
+  }, [addVocabWord]);
 
-              setDictionaryPosition({
-                top: isBottomThird ? null : rect.bottom + 10,
-                bottom: isBottomThird ? viewportHeight - rect.top + 10 : null,
-                left: leftPosition,
-              });
-
-              setSelectedWord(word);
-              setShowDefinition(true);
-            }
-          }
-        } else if (event.key === "a") {
-          event.preventDefault();
-          setShowChatbot((prev) => !prev);
-        } else if (event.key === "s") {
-          event.preventDefault();
-          handleStrikethrough();
-        } else if (event.key === "h") {
-          event.preventDefault();
-          handleHighlight();
-        }
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    },
-    [isCmdIEnabled, addVocabWord]
-  );
-
-  useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleKeyDown]);
-
-  const handleSendMessage = async (message: string) => {
-    try {
-      const response = await fetch("/api/send-message", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message }),
-      });
-
-      if (response.ok) {
-        toast.success("Message sent successfully!");
-        setShowMessageForm(false);
-      } else {
-        throw new Error("Failed to send message");
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-      toast.error("Failed to send message. Please try again.");
-    }
-  };
-
-  const saveAnnotations = async (questionId: string) => {
-    if (!userTest) {
-      console.error("UserTest is null");
-      return;
-    }
-    if (passageRef.current) {
-      const annotations: Annotation[] = passageRef.current.getAnnotations();
-
-      if (annotations.length > 0) {
-        const delimiter = "|||";
-        const userNotes = annotations.map((anno) => `${anno.style} : ${anno.text}`).join(delimiter);
-
-        try {
-          const timeSpent = 0; // Replace with actual time tracking logic
-
-          const responseData: Partial<UserResponse> = {
-            userTestId: userTest.id,
-            questionId,
-            timeSpent,
-            userNotes,
-          };
-
-          // Determine the method based on existing response
-          const checkResponse = await fetch(
-            `/api/user-test/response?userTestId=${userTest.id}&questionId=${questionId}`,
-            {
-              method: "GET",
-            }
-          );
-          const checkResponseJson = await checkResponse.json();
-
-          let method = "PUT";
-          if (checkResponse.status === 404) {
-            method = "POST";
-          } else if (checkResponse.ok) {
-            responseData.id = checkResponseJson.id;
-          } else {
-            throw new Error(
-              `Failed to check existing response: ${checkResponse.status} ${checkResponse.statusText}`
-            );
-          }
-
-          const response = await fetch("/api/user-test/response", {
-            method,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(responseData),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Error saving annotations:", errorData);
-          } else {
-            // Optionally clear annotations or handle accordingly
-            if (passageRef.current) {
-              passageRef.current.setAnnotations([]);
-            }
-          }
-        } catch (err) {
-          console.error("Error saving annotations:", err);
-        }
-      }
-    }
-  };
+  useKeyboardShortcuts({
+    onHighlight: handleHighlight,
+    onStrikethrough: handleStrikethrough,
+    onToggleChatbot: () => setShowChatbot(prev => !prev),
+    isCmdIEnabled,
+    onWordSelect: handleWordSelect,
+  });
 
   if (loading)
     return (
@@ -1020,7 +881,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
         testTitle={test?.title || ""}
         testDescription={test?.description}
         passageTitle={currentPassage?.title}
-        userScore={userScore}
+        userScore={userInfo?.score ?? 0}
       />
 
       {showDefinition && selectedWord && (
@@ -1054,69 +915,18 @@ const TestComponent: React.FC<TestComponentProps> = ({
         hasAnsweredFirstQuestion={hasAnsweredFirstQuestion}
         homeLink="/home?tab=CARS"
       />
-      {/* Toolbar with highlight, strikethrough, flag, and vocab list toggle */}
-      <div className="h-9 border-t-2 border-b-2 border-white bg-[#84aedd] flex items-center justify-between px-4">
-        <div className="flex items-center space-x-2">
-          <button
-            className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
-              flashHighlight
-                ? "bg-transparent text-yellow-300"
-                : "bg-transparent text-white hover:bg-white/10"
-            }`}
-            onClick={handleHighlight}
-            aria-label="Highlight (Cmd+H)"
-            title="Highlight (Cmd+H)"
-          >
-            <Highlighter className="w-4 h-4 mr-2" />
-            Highlight <span className="ml-1 text-lg">(⌘H)</span>
-          </button>
-          <button
-            className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
-              flashStrikethrough
-                ? "bg-transparent text-yellow-300"
-                : "bg-transparent text-white hover:bg-white/10"
-            }`}
-            onClick={handleStrikethrough}
-            aria-label="Strikethrough (Cmd+S)"
-            title="Strikethrough (Cmd+S)"
-          >
-            <Pencil className="w-4 h-4 mr-2" />
-            Strikethrough <span className="ml-1 text-lg">(⌘S)</span>
-          </button>
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={toggleVocabList}
-            className={`rounded px-2 transition-colors duration-200 flex items-center ${
-              showVocabList ? "bg-blue-500" : "bg-transparent"
-            } text-white hover:bg-blue-600`}
-            aria-label={
-              showVocabList ? "Hide Vocabulary List" : "Show Vocabulary List"
-            }
-          >
-            📚
-          </button>
-          <button
-            className={`px-3 py-1 rounded transition-colors duration-200 flex items-center ${
-              flashFlag
-                ? "bg-transparent text-yellow-300"
-                : currentQuestion && getCurrentUserResponse(currentQuestion.id)
-                  ? "bg-transparent text-white hover:bg-white/10"
-                  : "bg-transparent text-gray-400 cursor-not-allowed"
-            }`}
-            onClick={handleFlag}
-            aria-label="Flag for Review"
-            disabled={
-              currentQuestion?.id
-                ? !getCurrentUserResponse(currentQuestion?.id)?.userAnswer
-                : true
-            }
-          >
-            <Flag className="w-4 h-4 mr-2" />
-            Flag for Review
-          </button>
-        </div>
-      </div>
+
+      <TestToolbar
+        onHighlight={handleHighlight}
+        onStrikethrough={handleStrikethrough}
+        onFlag={handleFlag}
+        onToggleVocabList={toggleVocabList}
+        showVocabList={showVocabList}
+        flashHighlight={flashHighlight}
+        flashStrikethrough={flashStrikethrough}
+        flashFlag={flashFlag}
+        canFlag={currentQuestion?.id ? !!getCurrentUserResponse(currentQuestion.id)?.userAnswer : false}
+      />
 
       <div className="h-7 bg-[#a6a6a6]"></div>
 
@@ -1142,15 +952,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
           <div className="flex-grow overflow-auto standard-scrollbar">
             {currentQuestion && currentTestQuestion ? (
               <>
-                {/* Message button */}
-                <button
-                  className="absolute top-4 right-16 p-2 rounded-full shadow-lg bg-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                  onClick={() => setShowMessageForm(true)}
-                  aria-label="Send Message"
-                >
-                  <Mail className="w-6 h-6" />
-                  <span className="sr-only">Send Message</span>
-                </button>
+                <MessageButton />
 
                 {/* AI Chat toggle button with Cat icon */}
                 <button
@@ -1256,49 +1058,6 @@ const TestComponent: React.FC<TestComponentProps> = ({
         difficulty={currentPassage?.difficulty}
       />
       <audio ref={audioRef} src="/chatbot-open.mp3" />
-
-      {/* Message Form */}
-      {showMessageForm && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[60]">
-          <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg shadow-lg w-96 max-w-[90%]">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
-              Send us a message
-            </h3>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                const message = formData.get("message") as string;
-                handleSendMessage(message);
-              }}
-              className="space-y-4"
-            >
-              <textarea
-                name="message"
-                placeholder="Your message"
-                className="w-full p-2 rounded resize-none text-gray-800 bg-white dark:bg-gray-700 dark:text-gray-200"
-                required
-                rows={4}
-              />
-              <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setShowMessageForm(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-800 dark:bg-gray-600 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
-                >
-                  Send
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
