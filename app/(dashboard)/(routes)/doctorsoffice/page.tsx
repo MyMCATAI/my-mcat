@@ -614,7 +614,7 @@ const DoctorsOfficePage: React.FC = () => {
                 group-hover:bg-[--theme-hover-color]`}>
                 <span>{userLevel || "PATIENT LEVEL"}</span>
               </button>
-              <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
+              <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 hidden group-hover:opacity-100 group-hover:block transition-all duration-300 ease-in-out">
                 <ShoppingDialog
                   ref={marketplaceDialogRef}
                   imageGroups={imageGroups}
