@@ -7,7 +7,6 @@ import VocabList from '@/components/VocabList';
 import DialogWrapper from './DialogWrapper';
 import { Question } from "@/types"; // Make sure to import the Question type
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
 
 const ChatBot = dynamic(() => import('react-chatbotify'), { ssr: false });
 
@@ -48,7 +47,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   const context = chatbotContext?.context;
   const contentTitle = chatbotContext?.contentTitle;
 
-  const { toggleVocabList, isCmdIEnabled, toggleCmdI } = useContext(VocabContext);
+  const { isCmdIEnabled, toggleCmdI } = useContext(VocabContext);
 
   useEffect(() => {
     setIsMounted(true);
@@ -131,10 +130,6 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
       audioRef.current.currentTime = 0;
       setIsPlaying(false);
     }
-  };
-
-  const handleScreenshot = (blob: Blob) => {
-    // Add logic here to handle the screenshot
   };
 
   const toggleAudio = () => {
