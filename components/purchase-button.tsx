@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -7,6 +9,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
+import { cn } from "@/lib/utils";
 
 interface PurchaseButtonProps {
   text?: string;
@@ -108,7 +111,8 @@ export function PurchaseButton({
               <button 
                 onClick={() => setIsModalOpen(true)}
                 disabled={loadingStates[ProductType.COINS_10]}
-                className="hover:opacity-80 transition-opacity disabled:opacity-50"
+                className={cn("hover:opacity-80 transition-opacity disabled:opacity-50 w-full", className)}
+                data-state={isModalOpen ? "open" : "closed"}
               >
                 {content}
               </button>

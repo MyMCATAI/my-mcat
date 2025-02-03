@@ -174,9 +174,9 @@ export default function OnboardingPage() {
         {currentStep === ONBOARDING_STEPS.KALYPSO_DIALOGUE && (
           <KalypsoDialogueStep
             onComplete={handleKalypsoComplete}
-            firstName={onboardingInfo?.firstName}
-            targetScore={onboardingInfo?.targetScore}
-            targetMedSchool={onboardingInfo?.targetMedSchool}
+            firstName={onboardingInfo?.firstName || undefined}
+            targetScore={onboardingInfo?.targetScore|| undefined}
+            targetMedSchool={onboardingInfo?.targetMedSchool|| undefined}
           />
         )}
 

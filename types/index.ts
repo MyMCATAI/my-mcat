@@ -206,6 +206,10 @@ export interface OnboardingFormData {
   medicalSchool: MedicalSchool | null;
 }
 
+export interface Annotation {
+  style: string;
+  text: string;
+}
 export interface OnboardingInfo {
   currentStep: number;
   onboardingComplete: boolean;

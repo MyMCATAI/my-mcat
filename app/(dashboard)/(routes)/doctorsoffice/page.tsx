@@ -29,9 +29,10 @@ import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { GridImage } from './types';
+import { PurchaseButton } from "@/components/purchase-button";
 
 const DoctorsOfficePage: React.FC = () => {
-  useUserInfo()
+  const { isSubscribed } =  useUserInfo()
   const { startActivity } = useUserActivity();
   const [activeTab, setActiveTab] = useState("doctorsoffice");
   const [userLevel, setUserLevel] = useState("PATIENT LEVEL");
@@ -588,14 +589,22 @@ const DoctorsOfficePage: React.FC = () => {
             </div>
             {/* Coins display */}
             <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
-              <Image
-                src="/game-components/PixelCupcake.png"
-                alt="Studycoin"
-                width={32}
-                height={32}
-                className="mr-2"
-              />
-              <span className="text-[--theme-hover-color] font-bold">{userScore}</span>
+              <PurchaseButton 
+                className="flex items-center hover:opacity-90 transition-opacity"
+                tooltipText="Click to purchase more coins"
+                userCoinCount={userScore}
+              >
+                <div className="flex items-center">
+                  <Image
+                    src="/game-components/PixelCupcake.png"
+                    alt="Studycoin"
+                    width={32}
+                    height={32}
+                    className="mr-2"
+                  />
+                  <span className="text-[--theme-hover-color] font-bold">{userScore}</span>
+                </div>
+              </PurchaseButton>
             </div>
             {/* Fellowship Level button with dropdown */}
             <div className="relative group">
@@ -726,6 +735,7 @@ const DoctorsOfficePage: React.FC = () => {
         </div>
       </div>
       <AfterTestFeed
+      isSubscribed={isSubscribed}
         ref={afterTestFeedRef}
         open={isAfterTestDialogOpen}
         onOpenChange={(open) => {
@@ -746,6 +756,7 @@ const DoctorsOfficePage: React.FC = () => {
           initialTab={activeTab}
           activities={activities}
           onTasksUpdate={fetchActivities}
+          isSubscribed={isSubscribed}
         />
       </div>
       <WelcomeDialog

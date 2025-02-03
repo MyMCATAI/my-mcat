@@ -35,7 +35,8 @@
     "delete-categories": "ts-node --project tsconfig.server.json scripts/deleteCategories.ts",
     "create-cars-passages": "ts-node --project tsconfig.server.json scripts/createCARsPassages.ts",
     "create-cars-tests-and-questions": "ts-node --project tsconfig.server.json scripts/createCARsTestsAndQuestions.ts",
-    "log-recent-entries": "ts-node --project tsconfig.server.json scripts/logRecentEntries.ts"
+    "log-recent-entries": "ts-node --project tsconfig.server.json scripts/logRecentEntries.ts",
+    "update-subscription-type": "ts-node --project tsconfig.server.json scripts/updateSubscriptionType.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.633.0",

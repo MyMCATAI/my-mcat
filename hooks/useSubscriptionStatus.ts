@@ -47,23 +47,16 @@ export function useSubscriptionStatus() {
       }
     };
 
-    if (userInfo?.subscriptionType === 'premium' || userInfo?.subscriptionType === 'gold') {
-      checkStatus();
-    } else {
-      setStripeData({
-        status: null,
-        isLoading: false,
-        error: null
-      });
-    }
+    // Always check status regardless of userInfo.subscriptionType
+    checkStatus();
 
     return () => {
       isMounted = false;
     };
-  }, [userInfo?.subscriptionType]);
+  }, [userInfo?.userId]); // Only depend on userId to prevent unnecessary rechecks
 
-  const isPremium = userInfo?.subscriptionType === 'premium';
-  const isGold = userInfo?.subscriptionType === 'gold';
+  const isPremium = userInfo?.subscriptionType === 'premium' && stripeData.status?.status === 'active';
+  const isGold = userInfo?.subscriptionType === 'gold' && stripeData.status?.status === 'active';
   const isCanceled = stripeData.status?.subscription?.cancelAtPeriodEnd ?? false;
 
   return {
@@ -74,5 +67,6 @@ export function useSubscriptionStatus() {
     isCanceled,
     currentPeriodEnd: stripeData.status?.subscription?.currentPeriodEnd,
     isActive: isPremium || isGold,
+    stripeStatus: stripeData.status?.status || 'none'
   };
 } 

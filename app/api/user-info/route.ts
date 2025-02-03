@@ -28,12 +28,22 @@ export async function GET(req: Request) {
             in: userIdArray,
           },
         },
+        include: {
+          patientRecord: true
+        }
       });
 
       return NextResponse.json(userInfo);
     }
       
-    const userInfo = await getUserInfo();
+    const userInfo = await prismadb.userInfo.findUnique({
+      where: {
+        userId
+      },
+      include: {
+        patientRecord: true
+      }
+    });
 
     if (!userInfo) {
       return new NextResponse("User info not found", { status: 404 });
