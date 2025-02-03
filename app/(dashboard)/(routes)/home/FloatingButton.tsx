@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { AnimatePresence } from "framer-motion";
 import FloatingTaskList from './FloatingTaskList';
 import { toast } from "react-hot-toast";
-import { UnlockDialog } from "@/components/UnlockDialog";
+import { UpgradeToGoldButton } from "@/components/upgrade-to-gold-button";
 
 interface FloatingButtonProps {
   activities?: any[];
@@ -16,6 +16,7 @@ interface FloatingButtonProps {
   currentPage: string;
   initialTab: string;
   className?: string;
+  isSubscribed?: boolean;
 }
 
 interface ButtonPosition {
@@ -23,18 +24,6 @@ interface ButtonPosition {
   left: number;
   tab: string;
   icon: string;
-}
-
-interface Activity {
-  id: string;
-  scheduledDate: string;
-  activityTitle: string;
-  activityText: string;
-  hours: number;
-  activityType: string;
-  link?: string | null;
-  tasks?: { text: string; completed: boolean; }[];
-  source?: string;
 }
 
 // Updated Typewriter component
@@ -68,17 +57,17 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
   initialTab, 
   className,
   activities = [],
-  onTasksUpdate 
+  onTasksUpdate,
+  isSubscribed = false
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [recentlyChangedTab, setRecentlyChangedTab] = useState(false);
+  const [showSubscriptionPrompt, setShowSubscriptionPrompt] = useState(false);
   const hoverTimeout = useRef<number | null>(null);
   const tabChangeTimeout = useRef<number | null>(null);
   const router = useRouter();
   const [showTutoringMessage, setShowTutoringMessage] = useState(false);
-  const [showUnlockDialog, setShowUnlockDialog] = useState(false);
-  const [unlockType, setUnlockType] = useState<"game" | "ts" | null>(null);
 
   const handleMouseEnter = () => {
     if (hoverTimeout.current) {
@@ -130,6 +119,11 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
   };
 
   const handleButtonClick = async (tab: string) => {
+    if (!isSubscribed && tab !== 'doctorsoffice') {
+      setShowSubscriptionPrompt(true);
+      return;
+    }
+
     // First check if user has the required unlock
     try {
       const response = await fetch("/api/user-info");
@@ -240,6 +234,32 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
       )}
 
+      {showSubscriptionPrompt && (
+        <div className="fixed bottom-32 left-32 z-[60] bg-[--theme-mainbox-color] p-6 rounded-lg shadow-xl border border-[--theme-border-color] w-80">
+          <div className="flex flex-col space-y-4">
+            <h3 className="text-lg font-bold text-[--theme-text-color]">Unlock Premium Features</h3>
+            <p className="text-sm text-[--theme-text-color] opacity-80">
+              Upgrade to Gold to access:
+            </p>
+            <ul className="text-sm text-[--theme-text-color] space-y-2 list-disc list-inside">
+              <li>Daily CARS Practice</li>
+              <li>Adaptive Tutoring Suite</li>
+              <li>Advanced Analytics</li>
+              <li>Personalized Study Plans</li>
+            </ul>
+            <div className="pt-2 flex justify-center">
+              <UpgradeToGoldButton />
+            </div>
+            <button 
+              onClick={() => setShowSubscriptionPrompt(false)}
+              className="text-sm text-[--theme-text-color] opacity-60 hover:opacity-100"
+            >
+              Maybe later
+            </button>
+          </div>
+        </div>
+      )}
+
       <AnimatePresence>
         {isHovered && 
          currentPage === "doctorsoffice" && 
@@ -266,6 +286,8 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
             const inactiveIndex = buttonPositions
               .filter((p) => p.tab !== activeTab)
               .findIndex((p) => p.tab === pos.tab);
+
+            const isDisabled = !isSubscribed && pos.tab !== 'doctorsoffice';
 
             const top = isActive
               ? 0
@@ -306,7 +328,15 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
                     alt={pos.tab} 
                     width={isActive ? 44 : 32} 
                     height={isActive ? 44 : 32} 
+                    className={isDisabled ? "opacity-50" : ""}
                   />
+                  {isDisabled && isHovered && (
+                    <div className="absolute -top-2 -right-2">
+                      <svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
                 </button>
                 <span
                   className="absolute"

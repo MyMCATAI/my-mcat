@@ -29,8 +29,6 @@ import StreakPopup from "@/components/score/StreakDisplay";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
 import PracticeTests from "./PracticeTests";
-import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
-import { GameStats } from "@/components/home/GameStats";
 
 // Loading component
 const LoadingSpinner = () => (
@@ -74,9 +72,8 @@ const Page = () => {
   const {
     userInfo,
     isLoading: isLoadingUserInfo,
+    isSubscribed
   } = useUserInfo();
-
-  const { isGold } = useSubscriptionStatus();
 
   const [currentPage, setCurrentPage] = useState("Schedule");
   const chatbotRef = useRef<{ sendMessage: (message: string, context?: string) => void }>({
@@ -269,9 +266,6 @@ const Page = () => {
   }, [activities]);
 
   const renderContent = () => {
-    if (!isGold) {
-      return <GameStats />;
-    }
 
     if (isUpdatingProfile || isGeneratingActivities) {
       return (
@@ -519,6 +513,7 @@ const Page = () => {
           className="z-50"
           activities={activities}
           onTasksUpdate={fetchActivities}
+          isSubscribed={isSubscribed}
         />
 
         <div className="w-1/4">
@@ -534,7 +529,7 @@ const Page = () => {
               chatbotContext={chatbotContext}
               chatbotRef={chatbotRef}
               onActivitiesUpdate={fetchActivities}
-              isSubscribed={isGold}
+              isSubscribed={isSubscribed}
             />
           </div>
         </div>
