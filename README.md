@@ -1,6 +1,26 @@
 # MYMCAT MVP
-
 Created by Joshua Karki and Prynce Wade
+
+---
+## Table of Contents
+1. [Important Links](#important-link)
+2. [Architecture Overview](#architecture-overview)
+   - [Core Components](#core-components)
+   - [System Flow](#system-flow)
+   - [Key Subsystems](#key-subsystems)
+3. [Development Guide](#development-guide)
+   - [Environment Setup](#environment-setup)
+   - [Database Management](#database-management)
+   - [Running Scripts](#running-scripts)
+4. [Feature Documentation](#feature-documentation)
+   - [Testing Suite](#testing-suite)
+   - [Feature Gating](#feature-gating)
+   - [Onboarding System](#onboarding-system)
+5. [Services & Integration](#services--integration)
+6. [Development Guidelines](#development-guidelines)
+
+
+---
 
 WIP deployed at
 https://my-mcatmy-mcat.vercel.app/
