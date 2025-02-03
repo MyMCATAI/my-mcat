@@ -16,6 +16,11 @@ export interface MCATProgressResponse {
   };
 }
 
+interface OnboardingInfo {
+  targetScore?: number;
+  // add other onboarding fields as needed
+}
+
 export async function GET() {
   try {
     const { userId } = auth();
@@ -28,7 +33,10 @@ export async function GET() {
       where: { userId },
       select: { onboardingInfo: true }
     });
-    const targetScore = userInfo?.onboardingInfo?.targetScore || 520;
+    
+    // Parse the JSON string and provide type safety
+    const onboardingInfo = userInfo?.onboardingInfo ? JSON.parse(userInfo.onboardingInfo as string) as OnboardingInfo : {};
+    const targetScore = onboardingInfo.targetScore || 520;
 
     // Get all exams with their scores
     const exams = await prisma.fullLengthExam.findMany({

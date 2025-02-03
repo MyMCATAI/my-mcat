@@ -20,7 +20,7 @@ export interface UserInfo {
     bb: string;
     ps: string;
   };
-  notificationPreference?: boolean;
+  notificationPreference?: string;
   onboardingInfo?: OnboardingInfo;
 }
 
@@ -73,13 +73,19 @@ function isOnboardingComplete(onboardingInfo?: OnboardingInfo): boolean {
 
 // Helper function to check if a path is accessible based on subscription
 function canAccessPath(subscriptionType: string | undefined, currentPath: string): boolean {
-  // Paths that are always accessible
-  const publicPaths = ['/onboarding', '/home', '/doctorsoffice', '/api', '/auth'];
-  if (publicPaths.some(path => currentPath.startsWith(path))) {
+  // System paths that are always accessible
+  const systemPaths = ['/api', '/auth'];
+  if (systemPaths.some(path => currentPath.startsWith(path))) {
     return true;
   }
 
-  // Only subscribed users can access other paths
+  // Paths accessible to all users
+  const unrestrictedPaths = ['/onboarding', '/doctorsoffice','/preferences'];
+  if (unrestrictedPaths.some(path => currentPath.startsWith(path))) {
+    return true;
+  }
+
+  // All other paths require gold or premium subscription
   return subscriptionType === 'gold' || subscriptionType === 'premium';
 }
 
@@ -96,7 +102,7 @@ async function checkRedirectPath(userInfo: UserInfo | null, currentPath: string)
 
   // Check subscription-based access
   if (!canAccessPath(userInfo.subscriptionType, currentPath)) {
-    return '/home';
+    return '/doctorsoffice';
   }
 
   // Only exempt paths from study plan check
@@ -134,7 +140,7 @@ async function handleRedirect(userInfo: UserInfo | null): Promise<boolean> {
 // Helper function to check if user has a subscription
 function checkSubscription(userInfo: UserInfo | null): boolean {
   if (!userInfo) return false;
-  return userInfo.hasPaid && (userInfo.subscriptionType === 'gold' || userInfo.subscriptionType === 'premium');
+  return  (userInfo.subscriptionType === 'gold' || userInfo.subscriptionType === 'premium');
 }
 
 export function useUserInfo(): UseUserInfoReturn {
@@ -145,8 +151,7 @@ export function useUserInfo(): UseUserInfoReturn {
   const [isLoadingReferrals, setIsLoadingReferrals] = useState(false);
 
   // Add computed property for subscription status
-  const isSubscribed = checkSubscription(userInfo);
-
+  const isSubscribed = checkSubscription(userInfo); // note this just checks if the userInfo subscriptiontype is "gold" or "premium", we dont actually check if there is a stripe subscription record
   const fetchUserInfo = useCallback(async () => {
     try {
       setIsLoading(true);
