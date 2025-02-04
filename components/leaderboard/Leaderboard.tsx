@@ -127,8 +127,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
   return (
     <div className={`space-y-3 ${className}`}>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">
-          {leaderboardType === 'global' ? 'Global Leaderboard' : 'Friends Leaderboard'}
+        <h3 className="text-md text-[--theme-hover-color] opacity-60 ml-2 uppercase tracking-wide">
+          {leaderboardType === 'global' ? 'GLOBAL' : 'FriendS'}
         </h3>
         <div className="flex gap-2">
           {showAddFriend && (
@@ -195,6 +195,20 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                   ? 'No global rankings available' 
                   : 'No friends added yet'}
               </p>
+            )}
+
+            {leaderboardType === 'friends' && currentLeaderboard.length === 1 && (
+              <div 
+                className="mt-4 p-4 border border-dashed border-[--theme-border-color] rounded-lg bg-transparent cursor-pointer opacity-70 hover:opacity-100 transition-opacity duration-200"
+                onClick={() => setIsAddFriendOpen(true)}
+              >
+                <div className="flex items-center justify-center gap-3 text-[--theme-text-color]">
+                  <div className="w-8 h-8 rounded-full border-2 border-dashed border-[--theme-border-color] flex items-center justify-center">
+                    ?
+                  </div>
+                  <p className="text-sm italic">Invite a friend to compete with them and track progress!</p>
+                </div>
+              </div>
             )}
           </>
         )}

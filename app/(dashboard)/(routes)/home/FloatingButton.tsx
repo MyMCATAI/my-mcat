@@ -5,7 +5,6 @@ import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import { AnimatePresence } from "framer-motion";
-import FloatingTaskList from './FloatingTaskList';
 import { toast } from "react-hot-toast";
 import { UpgradeToGoldButton } from "@/components/upgrade-to-gold-button";
 
@@ -112,7 +111,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
   ];
 
   const labelTexts: Record<string, string> = {
-    "Tests": "Home",
+    "Tests": "Practice Tests",
     "doctorsoffice": "The Anki Clinic",
     "CARS": "Daily CARs Suite",
     "AdaptiveTutoringSuite": "Tutoring Suite",
@@ -259,18 +258,6 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
           </div>
         </div>
       )}
-
-      <AnimatePresence>
-        {isHovered && 
-         currentPage === "doctorsoffice" && 
-         !recentlyChangedTab && (
-          <FloatingTaskList 
-            activities={activities}
-            onTasksUpdate={() => onTasksUpdate?.([])}
-            onHover={handleTaskListHover}
-          />
-        )}
-      </AnimatePresence>
 
       <span className="fixed bottom-[8rem] left-[0.625rem] z-50">
         <div

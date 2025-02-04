@@ -6,7 +6,6 @@ import {
   getLevelNumber,
 } from "@/utils/calculateResourceTotals";
 import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import Leaderboard from "@/components/leaderboard/Leaderboard";
 
 interface ResourcesMenuProps {
@@ -68,15 +67,14 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
         <DaysStreak days={reportData.streak} />
 
         <div className="w-full max-w-md mt-6">
-          <Leaderboard 
-            variant="resources"
-            showAddFriend={true}
-            className="w-full"
-          />
-
-          <p className="text-sm text-gray-400/40 mt-4 text-center italic">
-            {"You'll eventually be able to add friends, see their scores, and also check the global rankings."}
-          </p>
+          <div className="bg-[--theme-doctorsoffice-accent] p-6 rounded-xl shadow-lg border border-[--theme-border-color] h-[24rem] overflow-auto leaderboard-scrollbar">
+            <Leaderboard 
+              variant="resources"
+              showAddFriend={true}
+              className="w-full"
+              defaultTab="friends"
+            />
+          </div>
         </div>
       </div>
       <TutorialVidDialog

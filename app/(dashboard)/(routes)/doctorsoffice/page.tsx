@@ -403,7 +403,7 @@ const DoctorsOfficePage: React.FC = () => {
   const { setIsAutoPlay } = useMusicPlayer();
 
   useEffect(() => {
-    setIsAutoPlay(true);
+    setIsAutoPlay(false);
     return () => setIsAutoPlay(false);
   }, [setIsAutoPlay]);
 
