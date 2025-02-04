@@ -22,7 +22,7 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
   const ballerSectionRef = useRef(null);
   const { theme } = useTheme();
   const { isAutoPlay } = useMusicPlayer();
-  const { isGoldMember } = useUserInfo();
+  const { isSubscribed } = useUserInfo();
 
   // Hiding navbar on test questions page
   if (pathname?.includes('/test/testquestions')) {
@@ -43,7 +43,7 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
       </div>
       <div className="flex items-center h-full">
         <div className="flex items-center mr-5">
-          <SubscriptionManagementButton isGoldMember={isGoldMember} />
+          <SubscriptionManagementButton isGoldMember={isSubscribed} />
           <div className="flex items-center scale-150">
             <UserButton />
           </div>

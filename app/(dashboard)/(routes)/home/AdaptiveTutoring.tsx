@@ -132,24 +132,38 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
   const [tutorialKey, setTutorialKey] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [lastSelectedCategory, setLastSelectedCategory] = useState<string | null>(
-    localStorage.getItem("lastSelectedCategory")
-  );
+  const [lastSelectedCategory, setLastSelectedCategory] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchCategories = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(
-        "/api/category?useKnowledgeProfiles=true&page=1&pageSize=6&excludeCompleted=true"
-      );
+      
+      // Get URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const conceptCategoriesParam = urlParams.get('conceptCategories');
+      
+      // Construct API URL with parameters
+      const apiUrl = new URL('/api/category', window.location.origin);
+      apiUrl.searchParams.append('useKnowledgeProfiles', 'true');
+      apiUrl.searchParams.append('page', '1');
+      apiUrl.searchParams.append('pageSize', '6');
+      apiUrl.searchParams.append('excludeCompleted', 'true');
+      
+      // Add concept categories if they exist in URL
+      if (conceptCategoriesParam) {
+        apiUrl.searchParams.append('conceptCategories', conceptCategoriesParam);
+      }
+      
+      const response = await fetch(apiUrl.toString());
       
       if (!response.ok) throw new Error("Failed to fetch categories");
       
       const data = await response.json();
       const categories = data.items as CategoryWithCompletion[];
       console.log(categories)
-      // Set checked categories to top 6 by mastery
+      
+      // Set checked categories to returned categories
       setCheckedCategories(categories);
       
       // Select first category if none selected
@@ -455,9 +469,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
     const selectedCategory = selectedCategoryItem.conceptCategory;
     setSelectedCategory(selectedCategory);
-    
-    // Persist the selected category
-    localStorage.setItem("lastSelectedCategory", selectedCategory);
     setLastSelectedCategory(selectedCategory);
     
     // Instead of fetching new content, filter from existing content
@@ -669,24 +680,17 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   useEffect(() => {
     // Cleanup function to ensure we don't have an invalid selected category
     return () => {
-      const lastSelectedCategory = localStorage.getItem("lastSelectedCategory");
-      const checkedCategories = localStorage.getItem("checkedCategories");
-      
-      if (lastSelectedCategory && checkedCategories) {
-        const parsedCategories = JSON.parse(checkedCategories);
-        const categoryExists = parsedCategories.some(
-          (cat: Category) => cat.conceptCategory === lastSelectedCategory
+      if (checkedCategories.length > 0) {
+        const categoryExists = checkedCategories.some(
+          (cat) => cat.conceptCategory === lastSelectedCategory
         );
         
-        if (!categoryExists && parsedCategories.length > 0) {
-          localStorage.setItem(
-            "lastSelectedCategory", 
-            parsedCategories[0].conceptCategory
-          );
+        if (!categoryExists) {
+          setLastSelectedCategory(checkedCategories[0].conceptCategory);
         }
       }
     };
-  }, []);
+  }, [checkedCategories, lastSelectedCategory]);
 
   useEffect(() => {
     // Check if initial tutorial should play (first visit and not played)

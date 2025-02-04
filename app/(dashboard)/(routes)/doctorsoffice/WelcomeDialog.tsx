@@ -17,7 +17,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
   onClinicUnlocked
 }) => {
   const router = useRouter();
-  const { userInfo } = useUserInfo();
+  const { userInfo, unlockGame } = useUserInfo();
   const [isFullscreenPromptVisible, setIsFullscreenPromptVisible] = useState(false);
 
   useEffect(() => {
@@ -54,19 +54,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
 
   const unlock = async () => {
     try {
-      const response = await fetch('/api/user-info', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          unlockGame: true
-        }),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to unlock clinic');
-      }
-      const data = await response.json();
+      await unlockGame();
       setIsClinicUnlocked(true);
       
       if (onClinicUnlocked) {
@@ -105,11 +93,11 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
               controls
               className="w-full"
             >
-              Your browser does not support the video tag.
+              {"Your browser does not support the video tag."}
             </video>
           </div>
           <p className="text-center mb-4">
-            Welcome to the Anki Clinic, a fun and competitive Anki experience! Join our Discord community to connect with other students and access additional study resources.
+            {"Welcome to the Anki Clinic, a fun and competitive Anki experience! Join our Discord community to connect with other students and access additional study resources."}
           </p>
           <div className="space-y-4">
             {!isClinicUnlocked && (
@@ -118,7 +106,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
                   onClick={unlock}
                   className="w-full py-6 text-lg font-semibold bg-[--theme-hover-color] text-[--theme-hover-text] hover:bg-opacity-75"
                 >
-                  Unlock the Anki Clinic!
+                  {"Let's Play!"}
                 </Button>
               </div>
             )}
@@ -138,7 +126,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
                 onClick={handleGoToDashboard}
                 className="flex-1 bg-gray-600 hover:bg-gray-700 text-white text-sm"
               >
-                Go to Dashboard
+                {"Go to Dashboard"}
               </Button>
             </div>
           </div>

@@ -229,3 +229,11 @@ The onboarding system is designed to provide different experiences based on user
 - Use the `useSubscriptionStatus` hook for access control
 - Implement graceful fallbacks for unauthorized access attempts
 - Maintain clear upgrade paths throughout the application
+
+
+- I need to add some kind of blocker on all non premium pages that redirects to the onboarding page if the user is not subscribed
+
+- remove score deductions for unlocks
+
+
+- todo remove functionality for ts unlock, this can be tied to the subscription type

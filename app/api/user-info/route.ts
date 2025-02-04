@@ -28,12 +28,22 @@ export async function GET(req: Request) {
             in: userIdArray,
           },
         },
+        include: {
+          patientRecord: true
+        }
       });
 
       return NextResponse.json(userInfo);
     }
       
-    const userInfo = await getUserInfo();
+    const userInfo = await prismadb.userInfo.findUnique({
+      where: {
+        userId
+      },
+      include: {
+        patientRecord: true
+      }
+    });
 
     if (!userInfo) {
       return new NextResponse("User info not found", { status: 404 });
@@ -155,7 +165,7 @@ export async function PUT(req: Request) {
       const currentUnlocks = Array.isArray(userInfo.unlocks) ? userInfo.unlocks : [];
       
       // Check if already unlocked
-      if (currentUnlocks.includes(unlockType)) {
+      if (currentUnlocks.includes('game')) {
         return NextResponse.json({ 
           message: "Already unlocked",
           unlocks: currentUnlocks,
@@ -164,11 +174,10 @@ export async function PUT(req: Request) {
       }
 
       // Add new unlock and decrement score
-      const newUnlocks = [...currentUnlocks, unlockType];
+      const newUnlocks = [...currentUnlocks, 'game'];
       const updatedInfo = await prismadb.userInfo.update({
         where: { userId },
         data: {
-          score: userInfo.score - decrementScore,
           unlocks: newUnlocks
         }
       });
