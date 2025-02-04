@@ -1,0 +1,226 @@
+"use client";
+import Image from "next/image";
+import Link from "next/link";
+import { useLayoutEffect, useRef, useState, useEffect } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { motion, useReducedMotion } from "framer-motion";
+// Import assets using @/ alias
+import cat from "@/public/hero.gif";
+import laptop from "@/public/laptop.png";
+import BernieSvg from "@/public/Bernie.svg";
+
+gsap.registerPlugin(ScrollTrigger);
+
+/* ----------------------------------------- Constants ------------------------------------------ */
+const VIDEO_URL = "https://my-mcat.s3.us-east-2.amazonaws.com/public/brush3.mp4";
+const BROWSER_REGEX = {
+  safari: /^((?!chrome|android).)*safari/i,
+  firefox: /firefox/i
+};
+
+/* ------------------------------------------ Types --------------------------------------------- */
+interface BrowserState {
+  isSafari: boolean;
+  isFirefox: boolean;
+}
+
+interface VideoRefState {
+  ref: React.RefObject<HTMLVideoElement>;
+  loaded: boolean;
+}
+
+const LandingHero = () => {
+  /* -------------------------------------- State & Refs ---------------------------------------- */
+  const shouldReduceMotion = useReducedMotion();
+  const quoteRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const catContainerRef = useRef<HTMLDivElement>(null);
+  const [videoLoaded, setVideoLoaded] = useState<boolean>(false);
+  const [browserType, setBrowserType] = useState<BrowserState>({
+    isSafari: false,
+    isFirefox: false
+  });
+
+  /* -------------------------------- Animations & Effects -------------------------------------- */
+  // Browser detection
+  useEffect(() => {
+    setBrowserType({
+      isSafari: BROWSER_REGEX.safari.test(navigator.userAgent),
+      isFirefox: BROWSER_REGEX.firefox.test(navigator.userAgent)
+    });
+  }, []);
+
+  // Video loading
+  useLayoutEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleLoadedData = () => setVideoLoaded(true);
+    video.load();
+    video.addEventListener('loadeddata', handleLoadedData);
+    
+    return () => video.removeEventListener('loadeddata', handleLoadedData);
+  }, []);
+
+  // Video animation
+  useLayoutEffect(() => {
+    if (!videoLoaded || !videoRef.current) return;
+
+    gsap.to(videoRef.current, {
+      opacity: 1,
+      duration: 1,
+      ease: "power2.inOut"
+    });
+  }, [videoLoaded]);
+
+  // Cat animation
+  useLayoutEffect(() => {
+    if (!catContainerRef.current) return;
+
+    gsap.fromTo(catContainerRef.current, 
+      { y: '100%', opacity: 0 },
+      { 
+        y: '0%', 
+        opacity: 1, 
+        duration: 1.2, 
+        ease: "power2.out",
+        delay: 0.5
+      }
+    );
+  }, []);
+
+  /* --------------------------------------- Event Handlers ------------------------------------ */
+  const scrollToNext = () => {
+    const nextSection = document.getElementById('product-section');
+    nextSection?.scrollIntoView({ 
+      behavior: shouldReduceMotion ? 'auto' : 'smooth' 
+    });
+  };
+
+  /* --------------------------------------- Render Methods ------------------------------------ */
+  const renderHeroContent = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-10 max-w-6xl w-full">
+      {/* Left side - Text content */}
+      <div className="text-center">
+        <h1 className="text-4xl md:text-5xl font-bold text-white font-krungthep mb-4">
+          Score your <span className="text-[#f2f64f]">best.</span>
+        </h1>
+        <p className="text-2xl md:text-3xl text-white my-8">
+          Start studying with Kalypso for free.
+        </p>
+        <div className="flex justify-center">
+          <Link href="/sign-up">
+            <button className="bg-[#ffffff] text-[#0e2247] py-4 text-xl md:text-2xl px-10 rounded-[20px]">
+              Register
+            </button>
+          </Link>
+        </div>
+      </div>
+      {/* Right side - Laptop and Cat */}
+      <div className="relative flex justify-center mt-6 lg:mt-0">
+        <div className="w-full">
+          <Image 
+            src={laptop} 
+            alt="Laptop" 
+            className="w-full"
+            priority
+          />
+        </div>
+        <div className="absolute top-[5%] left-[10%] w-[80%] h-[80%] overflow-hidden">
+          <div ref={catContainerRef} className="w-full h-full opacity-0">
+            <Image 
+              src={cat} 
+              alt="Hero Animation" 
+              layout="fill" 
+              objectFit="contain"
+              priority
+              quality={75}
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderScrollArrow = () => (
+    <motion.div 
+      className="absolute bottom-16 left-1/2 transform -translate-x-1/2 cursor-pointer z-20"
+      animate={shouldReduceMotion ? {} : { y: [0, 10, 0] }}
+      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+      onClick={scrollToNext}
+      whileHover={shouldReduceMotion ? {} : { scale: 1.1 }}
+      role="button"
+      tabIndex={0}
+      aria-label="Scroll to next section"
+      onKeyDown={(e) => e.key === 'Enter' && scrollToNext()}
+    >
+      <svg 
+        width="40" 
+        height="40" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="white" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      >
+        <path d="M7 13l5 5 5-5"/>
+        <path d="M7 6l5 5 5-5"/>
+      </svg>
+    </motion.div>
+  );
+
+  return (
+    <>
+      <section 
+        className="relative h-screen overflow-hidden bg-[#171234]" 
+        id="home"
+      >
+        <video 
+          ref={videoRef}
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{ opacity: videoLoaded ? 1 : 0 }}
+        >
+          <source src={VIDEO_URL} type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 container mx-auto px-4 h-full flex items-center justify-center">
+          {renderHeroContent()}
+        </div>
+        {renderScrollArrow()}
+      </section>
+
+      {/* Bernie Quote Section */}
+      <section className="w-full py-16 bg-[#000c1e] relative">
+        <div 
+          className="absolute inset-0 opacity-20 bg-cover bg-center bg-no-repeat mix-blend-screen"
+          style={{ backgroundImage: 'url("/stars.jpeg")' }}
+        />
+        <div 
+          ref={quoteRef} 
+          className="flex flex-col md:flex-row items-center justify-center gap-8 mx-3 mb-12"
+        >
+          <div>
+            <BernieSvg width={260} height={260} />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-4 font-krungthep">
+              &ldquo;Higher education should be a right for all, not a privilege for the few.&rdquo;
+            </h1>
+            <p className="text-xl text-white font-bold">
+              Senator Bernie Sanders of Vermont
+            </p>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+};
+
+export default LandingHero;
