@@ -14,6 +14,7 @@ import { useUser } from "@clerk/nextjs";
 import { GraduationCap, Cat } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { UpgradeToGoldButton } from "@/components/upgrade-to-gold-button";
 
 interface LargeDialogProps {
   open: boolean;
@@ -25,6 +26,7 @@ interface LargeDialogProps {
   wrongCount: number;
   largeDialogQuit: boolean;
   setLargeDialogQuit: (quit: boolean) => void;
+  isSubscribed: boolean;
 }
 
 interface FeedItem {
@@ -103,7 +105,8 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   correctCount, 
   wrongCount, 
   largeDialogQuit, 
-  setLargeDialogQuit 
+  setLargeDialogQuit,
+  isSubscribed
 }, ref) => {
   const { user } = useUser();
   const score = correctCount/(correctCount+wrongCount) * 100;
@@ -175,6 +178,8 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     contentTitle: "",
     context: "",
   });
+
+  const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
 
   useImperativeHandle(ref, () => ({
     setWrongCards
@@ -668,6 +673,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
         animate={{ opacity: 1 }}
         className="flex flex-col gap-6 p-5 max-w-5xl mx-auto"
       >
+        {isSubscribed?"yes":"no"}
         {/* Updated header section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -878,6 +884,11 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   const router = useRouter();
 
   const handleNavigateToTutoring = () => {
+    if (!isSubscribed) {
+      setShowSubscriptionDialog(true);
+      return;
+    }
+
     // Get the top 4 most missed categories
     const weakestCategories = Object.entries(mostMissed)
       .slice(0, 6)
@@ -894,59 +905,82 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     return null;
   }
   return (
-    <Dialog open={open} onOpenChange={handleExit}>
-      <DialogContent className="bg-[--theme-mainbox-color] text-center p-4 max-w-[95vw] w-[65rem] max-h-[95vh] overflow-y-auto shadow-lg border border-transparent">
-        {showReviewFeed ? (
-          <div className="flex-1 flex gap-4 relative">
-            {/* Back Button - Subtle circular design */}
-            <button
-              onClick={() => setShowReviewFeed(false)}
-              className="absolute top-4 left-4 z-50 w-8 h-8 rounded-full 
-                bg-[--theme-leaguecard-color] text-[--theme-text-color]
-                flex items-center justify-center
-                transition-all duration-300
-                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
-            >
-              <svg 
-                width="16" 
-                height="16" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
+    <>
+      <Dialog open={open} onOpenChange={handleExit}>
+        <DialogContent className="bg-[--theme-mainbox-color] text-center p-4 max-w-[95vw] w-[65rem] max-h-[95vh] overflow-y-auto shadow-lg border border-transparent">
+          {showReviewFeed ? (
+            <div className="flex-1 flex gap-4 relative">
+              {/* Back Button - Subtle circular design */}
+              <button
+                onClick={() => setShowReviewFeed(false)}
+                className="absolute top-4 left-4 z-50 w-8 h-8 rounded-full 
+                  bg-[--theme-leaguecard-color] text-[--theme-text-color]
+                  flex items-center justify-center
+                  transition-all duration-300
+                  hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
               >
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-            </button>
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+              </button>
 
-            {/* Left Side - Review Section */}
-            <div className="w-[35%] h-full pr-4">
-              {renderReviewSection()}
-            </div>
+              {/* Left Side - Review Section */}
+              <div className="w-[35%] h-full pr-4">
+                {renderReviewSection()}
+              </div>
 
-            {/* Right Side - Chat Interface */}
-            <div className="w-[65%] h-full flex flex-col">
-              <div className="flex-1 min-h-0">
-                <ChatBot
-                  width="100%"
-                  height="100%"
-                  backgroundColor="var(--theme-mainbox-color)"
-                  chatbotContext={chatbotContext}
-                  chatbotRef={chatbotRef}
-                />
+              {/* Right Side - Chat Interface */}
+              <div className="w-[65%] h-full flex flex-col">
+                <div className="flex-1 min-h-0">
+                  <ChatBot
+                    width="100%"
+                    height="100%"
+                    backgroundColor="var(--theme-mainbox-color)"
+                    chatbotContext={chatbotContext}
+                    chatbotRef={chatbotRef}
+                  />
+                </div>
               </div>
             </div>
+          ) : (
+            <div className="flex flex-col justify-center">
+              {renderInitialScore()}
+            </div>
+          )}
+          {children}
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showSubscriptionDialog} onOpenChange={setShowSubscriptionDialog}>
+        <DialogContent className="bg-[--theme-mainbox-color] p-6 rounded-lg border border-[--theme-border-color]">
+          <div className="flex flex-col space-y-4">
+            <h3 className="text-xl font-bold text-[--theme-text-color]">
+              Unlock Personalized Learning
+            </h3>
+            <p className="text-[--theme-text-color] opacity-90">
+              The Adaptive Tutoring Suite is a premium feature that provides:
+            </p>
+            <ul className="list-disc list-inside text-[--theme-text-color] space-y-2 opacity-80">
+              <li>Personalized content based on your weak areas</li>
+              <li>AI-powered learning recommendations</li>
+              <li>Detailed performance analytics</li>
+              <li>Curated study materials</li>
+            </ul>
+            <div className="pt-4">
+              <UpgradeToGoldButton />
+            </div>
           </div>
-        ) : (
-          <div className="flex flex-col justify-center">
-            {renderInitialScore()}
-          </div>
-        )}
-        {children}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 });
 

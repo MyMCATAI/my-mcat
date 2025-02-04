@@ -24,6 +24,7 @@ import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { PurchaseButton } from '@/components/purchase-button';
 import Leaderboard from "@/components/leaderboard/Leaderboard";
+import { UpgradeToGoldButton } from "@/components/upgrade-to-gold-button";
 
 interface Task {
   text: string;
@@ -51,6 +52,7 @@ interface SideBarProps {
   }>;
   handleSetTab: (tab: string) => void;
   onActivitiesUpdate: () => void;
+  isSubscribed: boolean;
 }
 
 type TabContent = 
@@ -68,9 +70,14 @@ const SideBar: React.FC<SideBarProps> = ({
   chatbotContext, 
   chatbotRef,
   handleSetTab,
-  onActivitiesUpdate 
+  onActivitiesUpdate,
+  isSubscribed
 }) => {
   const getInitialActiveTab = () => {
+    if (!isSubscribed) {
+      return "tab5"; // Leaderboard tab
+    }
+
     switch (currentPage) {
       case "Schedule":
         return "tab2"; // Tasks tab
@@ -80,7 +87,7 @@ const SideBar: React.FC<SideBarProps> = ({
       case "Tests":
         return "tab4"; // Help tab
       default:
-        return "tab1";
+        return "tab1"; // Default to Insights tab
     }
   };
 
@@ -344,139 +351,179 @@ const SideBar: React.FC<SideBarProps> = ({
     fetchUserScore();
   }, []);
 
-  const renderTasks = () => (
-    <div className="h-[calc(100vh-11rem)] flex flex-col">
+  const renderTasks = () => {
+    if (!isSubscribed) {
+      return (
+        <div className="h-[calc(100vh-11rem)] flex flex-col items-center justify-center p-6 text-center space-y-6">
+          <div className="max-w-md space-y-6">
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 mb-4 rounded-full bg-[--theme-hover-color] flex items-center justify-center">
+                <svg 
+                  className="w-8 h-8 text-[--theme-hover-text]" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth="2" 
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Unlock Calendar</h3>
+              <p className="text-[--theme-text-color] opacity-80 mb-6 text-center">
+                Get access to personalized daily tasks, study planning, and progress tracking with a Gold subscription.
+              </p>
+            </div>
+            <div className="flex flex-col space-y-4">
+              <UpgradeToGoldButton size="lg" className="w-full">
+                Upgrade to Gold
+              </UpgradeToGoldButton>
+              <p className="text-sm text-[--theme-text-color] opacity-60 text-center">
+                Cancel anytime. Instant access to all features.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="h-[calc(100vh-11rem)] flex flex-col">
         <div className="flex items-center justify-between px-4 py-2 bg-[--theme-leaguecard-color] rounded-lg">
-            <button
-                onClick={() => {
-                    const newDate = new Date(currentDate);
-                    newDate.setDate(newDate.getDate() - 1);
-                    setCurrentDate(newDate);
-                }}
-                className="p-2 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-colors"
-            >
-                <ChevronLeft className="h-5 w-5" />
-            </button>
-            <span className="font-medium">
-                {isToday(currentDate) 
-                    ? "Today"
-                    : isTomorrow(currentDate)
-                        ? "Tomorrow"
-                        : format(currentDate, 'EEEE, MMMM d')}
-            </span>
-            <button
-                onClick={() => {
-                    const newDate = new Date(currentDate);
-                    newDate.setDate(newDate.getDate() + 1);
-                    setCurrentDate(newDate);
-                }}
-                className="p-2 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-colors"
-            >
-                <ChevronRight className="h-5 w-5" />
-            </button>
+          <button
+            onClick={() => {
+              const newDate = new Date(currentDate);
+              newDate.setDate(newDate.getDate() - 1);
+              setCurrentDate(newDate);
+            }}
+            className="p-2 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-colors"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <span className="font-medium">
+            {isToday(currentDate) 
+              ? "Today"
+              : isTomorrow(currentDate)
+                ? "Tomorrow"
+                : format(currentDate, 'EEEE, MMMM d')}
+          </span>
+          <button
+            onClick={() => {
+              const newDate = new Date(currentDate);
+              newDate.setDate(newDate.getDate() + 1);
+              setCurrentDate(newDate);
+            }}
+            className="p-2 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] rounded-lg transition-colors"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
         
         <ScrollArea className="flex-grow mt-4">
-            <div className="px-4 space-y-6 pb-4">
-                {todayActivities.map((activity) => (
-                    <div key={activity.id} className="mb-6">
-                        <button
-                            className={`w-full py-2 px-3 
-                                ${
-                                    isActivityCompleted(activity)
-                                        ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
-                                        : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
-                                }
-                                border border-[--theme-border-color]
-                                hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
-                                font-semibold rounded-lg transition relative flex items-center justify-between
-                                text-sm`}
-                            onClick={() => handleButtonClick(activity.activityTitle)}
+          <div className="px-4 space-y-6 pb-4">
+            {todayActivities.map((activity) => (
+              <div key={activity.id} className="mb-6">
+                <button
+                  className={`w-full py-2 px-3 
+                    ${
+                      isActivityCompleted(activity)
+                        ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
+                        : "bg-[--theme-leaguecard-color] text-[--theme-text-color]"
+                    }
+                    border border-[--theme-border-color]
+                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]
+                    font-semibold rounded-lg transition relative flex items-center justify-between
+                    text-sm`}
+                  onClick={() => handleButtonClick(activity.activityTitle)}
+                >
+                  <span>{activity.activityTitle}</span>
+                  <div className="flex items-center gap-2">
+                    {isActivityCompleted(activity) ? (
+                      <FaCheckCircle
+                        className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                        style={{ color: "var(--theme-hover-text)" }}
+                      />
+                    ) : (
+                      <svg
+                        className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+
+                <div className="bg-[--theme-mainbox-color] p-3 mt-2 space-y-2 rounded-lg">
+                  {activity.tasks && activity.tasks.length > 0 ? (
+                    activity.tasks.map((task, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`task-${activity.id}-${index}`}
+                          checked={task.completed}
+                          onCheckedChange={(checked) =>
+                            isToday(currentDate)
+                              ? handleTaskCompletion(
+                                  activity.id,
+                                  index,
+                                  checked as boolean
+                                )
+                              : null
+                          }
+                          disabled={!isToday(currentDate)}
+                          className={!isToday(currentDate) ? "opacity-50 cursor-not-allowed" : ""}
+                        />
+                        <label
+                          htmlFor={`task-${activity.id}-${index}`}
+                          className={`text-sm leading-tight cursor-pointer flex-grow ${
+                            !isToday(currentDate) ? "opacity-50" : ""
+                          }`}
                         >
-                            <span>{activity.activityTitle}</span>
-                            <div className="flex items-center gap-2">
-                                {isActivityCompleted(activity) ? (
-                                    <FaCheckCircle
-                                        className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
-                                        style={{ color: "var(--theme-hover-text)" }}
-                                    />
-                                ) : (
-                                    <svg
-                                        className="min-w-[1.25rem] min-h-[1.25rem] w-[1.25rem] h-[1.25rem]"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M9 5l7 7-7 7"
-                                        />
-                                    </svg>
-                                )}
-                            </div>
-                        </button>
+                          {task.text}
+                        </label>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm italic">No tasks for this activity</p>
+                  )}
+                </div>
+              </div>
+            ))}
 
-                        <div className="bg-[--theme-mainbox-color] p-3 mt-2 space-y-2 rounded-lg">
-                            {activity.tasks && activity.tasks.length > 0 ? (
-                                activity.tasks.map((task, index) => (
-                                    <div key={index} className="flex items-center gap-2">
-                                        <Checkbox
-                                            id={`task-${activity.id}-${index}`}
-                                            checked={task.completed}
-                                            onCheckedChange={(checked) =>
-                                                isToday(currentDate)
-                                                    ? handleTaskCompletion(
-                                                        activity.id,
-                                                        index,
-                                                        checked as boolean
-                                                      )
-                                                    : null
-                                            }
-                                            disabled={!isToday(currentDate)}
-                                            className={!isToday(currentDate) ? "opacity-50 cursor-not-allowed" : ""}
-                                        />
-                                        <label
-                                            htmlFor={`task-${activity.id}-${index}`}
-                                            className={`text-sm leading-tight cursor-pointer flex-grow ${
-                                                !isToday(currentDate) ? "opacity-50" : ""
-                                            }`}
-                                        >
-                                            {task.text}
-                                        </label>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-sm italic">No tasks for this activity</p>
-                            )}
-                        </div>
-                    </div>
-                ))}
-
-                {todayActivities.length === 0 && (
-                    <p className="text-center italic">
-                        No activities scheduled for this day
-                    </p>
-                )}
-            </div>
+            {todayActivities.length === 0 && (
+              <p className="text-center italic">
+                No activities scheduled for this day
+              </p>
+            )}
+          </div>
         </ScrollArea>
 
         <div className="mt-4 mb-3 bg-[--theme-leaguecard-color] rounded-lg flex items-center justify-between">
-            <span className="text-sm font-medium opacity-75 ml-6">Wallet</span>
-            <PurchaseButton 
-                userCoinCount={userScore}
-                tooltipText="Click to purchase more coins"
-            >
-                <div className="cursor-pointer hover:opacity-80 transition-opacity">
-                    <ScoreDisplay score={userScore} />
-                </div>
-            </PurchaseButton>
+          <span className="text-sm font-medium opacity-75 ml-6">Wallet</span>
+          <PurchaseButton 
+            userCoinCount={userScore}
+            tooltipText="Click to purchase more coins"
+          >
+            <div className="cursor-pointer hover:opacity-80 transition-opacity">
+              <ScoreDisplay score={userScore} />
+            </div>
+          </PurchaseButton>
         </div>
         <audio ref={audioRef} src="/levelup.mp3" />
-    </div>
-  );
+      </div>
+    );
+  };
 
   const renderLeaderboard = () => (
     <div className="h-[calc(100vh-11.6rem)] flex flex-col">
