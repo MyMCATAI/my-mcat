@@ -10,12 +10,14 @@ interface LeaderboardEntry {
   patientsTreated: number;
 }
 
+type LeaderboardType = 'global' | 'friends';
+
 interface LeaderboardProps {
   variant?: 'sidebar' | 'resources';
   showAddFriend?: boolean;
   className?: string;
   compact?: boolean;
-  defaultTab?: 'global' | 'friends';
+  defaultTab?: LeaderboardType;
 }
 
 const LeaderboardSkeleton = ({ count = 3 }: { count?: number }) => (
@@ -44,7 +46,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
   compact = false,
   defaultTab = 'global'
 }) => {
-  const [leaderboardType, setLeaderboardType] = useState<'global' | 'friends'>(defaultTab);
+  const [leaderboardType, setLeaderboardType] = useState<LeaderboardType>(defaultTab);
   const [globalLeaderboard, setGlobalLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [friendsLeaderboard, setFriendsLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isAddFriendOpen, setIsAddFriendOpen] = useState(false);
@@ -70,7 +72,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
   };
 
   const fetchFriendsLeaderboard = useCallback(async () => {
-    if (friendsLeaderboard.length > 0) return; // Don't fetch if we already have data
     setIsLoadingFriends(true);
     try {
       const response = await fetch('/api/friend-leaderboard');
@@ -82,7 +83,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
     } finally {
       setIsLoadingFriends(false);
     }
-  }, [friendsLeaderboard.length]);
+  }, []);
 
   useEffect(() => {
     fetchGlobalLeaderboard();
@@ -110,7 +111,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
         friendEmail: friendEmail,
       });
 
-      setIsLoadingFriends(true);
       await fetchFriendsLeaderboard();
       toast.success('Friend invitation sent!');
       setFriendEmail('');
@@ -123,6 +123,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
 
   const currentLeaderboard = leaderboardType === 'global' ? globalLeaderboard : friendsLeaderboard;
   const isLoading = leaderboardType === 'global' ? isLoadingGlobal : isLoadingFriends;
+  const shouldShowLeaderboard = leaderboardType === 'global' || friendsLeaderboard.length > 1;
 
   return (
     <div className={`space-y-3 ${className}`}>
@@ -169,7 +170,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
       <div className={`space-y-3 ${compact ? 'text-sm' : ''}`}>
         {isLoading ? (
           <LeaderboardSkeleton count={5} />
-        ) : (
+        ) : shouldShowLeaderboard ? (
           <>
             {currentLeaderboard.map((entry) => (
               <div
@@ -177,7 +178,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                 className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white">
+                  <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white select-none">
                     {entry.id}
                   </div>
                   <span className="font-medium">{entry.name}</span>
@@ -188,15 +189,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                 </div>
               </div>
             ))}
-
-            {currentLeaderboard.length === 0 && (
-              <p className="text-center italic text-sm">
-                {leaderboardType === 'global' 
-                  ? 'No global rankings available' 
-                  : 'No friends added yet'}
-              </p>
-            )}
           </>
+        ) : (
+          <p className="text-center italic text-sm">
+            {leaderboardType as LeaderboardType === 'global' ? 'No global rankings available' : 'No friends added'}
+          </p>
         )}
       </div>
     </div>
