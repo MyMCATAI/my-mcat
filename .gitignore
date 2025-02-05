@@ -44,3 +44,6 @@ next-env.d.ts
 # tmp file
 /app/api/event-task/taskMapping.json
 /app/api/delete-all-calendar-events/route.ts
+
+# Developer specific files
+README_Docs/config/developer.json
