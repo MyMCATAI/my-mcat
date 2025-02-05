@@ -118,6 +118,11 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   const [shuffledOptions, setShuffledOptions] = useState<{ options: string[], correctIndex: number }>({ options: [], correctIndex: -1 });
   const [selectedOption, setSelectedOption] = useState<number>(-1);
 
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Ref for scrolling and question container
+  const answerSectionRef = useRef<HTMLDivElement>(null);
+  const questionContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     correctSound.current = new Audio('/correct.mp3');
@@ -409,6 +414,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
       return;
     }
 
+    setIsTransitioning(true);
     api.start({
       opacity: 0,
       config: { duration: 200 },
@@ -416,7 +422,12 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
         setCurrentCardIndex(prevIndex => prevIndex + 1);
         setIsRevealed(false);
         setSelectedOption(-1);
-        api.start({ opacity: 1 });
+        api.start({ 
+          opacity: 1,
+          onRest: () => {
+            setIsTransitioning(false);
+          }
+        });
       }
     });
 
@@ -474,9 +485,26 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Prevent key handling during transitions
+      if (isTransitioning) return;
+
       const currentCard = flashcards[currentCardIndex];
       const isMCQ = currentCard?.questionType === 'normal';
 
+      // Any key for MCQ to progress to next question after answering
+      if (isMCQ) {
+        if (answeredMCQ) {
+          event.preventDefault();
+          if (selectedOption === shuffledOptions.correctIndex) {
+            handleSwipe('right');
+          } else {
+            handleSwipe('left');
+          }
+        }
+        return;
+      }
+
+      // Swipe controls for flashcard questions
       switch (event.key) {
         case 'ArrowLeft':
         case 'a':
@@ -485,12 +513,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
             showAnswerCheckReminder();
             return;
           }
-          // Only allow marking incorrect if MCQ was wrong
-          if (isMCQ && (selectedOption !== shuffledOptions.correctIndex)) {
-            handleSwipe('left');
-          } else if (!isMCQ) {
-            handleSwipe('left');
-          }
+          handleSwipe('left');
           break;
         case 'ArrowRight':
         case 'd':
@@ -499,26 +522,18 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
             showAnswerCheckReminder();
             return;
           }
-          // Only allow marking correct if MCQ was right
-          if (isMCQ && (selectedOption === shuffledOptions.correctIndex)) {
-            handleSwipe('right');
-          } else if (!isMCQ) {
-            handleSwipe('right');
-          }
+          handleSwipe('right');
           break;
         case ' ':
-          // Disable spacebar for MCQ questions
-          if (!isMCQ) {
-            event.preventDefault();
-            toggleReveal();
-          }
+          event.preventDefault();
+          toggleReveal();
           break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hasSeenAnswer, flashcards, currentCardIndex, selectedOption, shuffledOptions.correctIndex]);
+  }, [hasSeenAnswer, flashcards, currentCardIndex, selectedOption, shuffledOptions.correctIndex, isTransitioning, answeredMCQ]);
 
   useEffect(() => {
     return () => {
@@ -560,10 +575,24 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     }
   }, [currentCardIndex, flashcards, onQuestionChange]);
 
+  // Add scroll effect when answer is revealed for MCQ
+  useEffect(() => {
+    if (answeredMCQ && answerSectionRef.current) {
+      answerSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [answeredMCQ]);
+
+  // Update the useEffect that handles scrolling
+  useEffect(() => {
+    if (questionContainerRef.current) {
+      questionContainerRef.current.scrollIntoView({ behavior: 'instant' });
+    }
+  }, [currentCardIndex]);
+
   return (
     <div className="flex flex-col items-center justify-center w-full h-full relative focus-visible:outline-none">
       {isLoading && flashcards.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2">
+        <div className="h-full w-full flex flex-col items-center gap-2">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[--theme-text-color]" />
           <div className="text-[--theme-text-color]">Curating flashcards for you...</div>
         </div>
@@ -581,144 +610,169 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
           </button>
         </div>
       ) : (
-        <div className="w-full max-w-3xl px-4" {...bind()}>
+        <div className="w-full max-w-3xl px-4 min-h-full" {...bind()}>
           {flashcards.length - currentCardIndex > 0 && (
             <animated.div
               className="w-full cursor-pointer"
               style={{ opacity }}
               onClick={handleCardClick}
             >
-              {/* Question Section */}
-              <div className="w-full mb-8">
-                <div className="w-full overflow-y-auto flex flex-col justify-center items-center">
-                  <ContentRenderer 
-                    content={getQuestionContent()} 
-                    onLinkClick={handleLinkClick} 
-                  />
-                  
-                  {/* Add options display for normal questions */}
-                  {flashcards[currentCardIndex]?.questionType === 'normal' && 
-                   flashcards[currentCardIndex]?.questionOptions?.length > 0 && (
-                    <div className="w-full mt-4 space-y-2">
-                      {shuffledOptions.options.map((option: string, index: number) => (
-                        <button 
-                          key={index}
-                          onClick={(e) => handleOptionClick(index, e)}
-                          type="button"
-                          className={`w-full p-3 rounded-lg border transition-colors focus:outline-none
-                            ${answeredMCQ ? 'cursor-default' : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]'} 
-                            ${
-                              isRevealed && index === shuffledOptions.correctIndex
-                                ? 'border-green-500 bg-green-500 text-white'
-                                : isRevealed && index === selectedOption && index !== shuffledOptions.correctIndex
-                                ? 'border-red-500 bg-red-500 text-white'
-                                : 'border-[--theme-border-color]'
-                            }
-                            disabled:cursor-default
-                          `}
-                        >
-                          <div className="text-left">
-                            <ContentRenderer 
-                              content={option}
-                              className={`${
-                                isRevealed && (
-                                  index === shuffledOptions.correctIndex || 
-                                  (index === selectedOption && index !== shuffledOptions.correctIndex)
-                                ) ? 'text-white' : ''
-                              }`}
-                            />
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Dividing Line */}
-              <div className="w-full border-t border-gray-300 my-4" />
-
-              {/* Answer Section */}
-              <div className={`w-full transition-opacity duration-300 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
-                <div className="w-full overflow-y-auto flex flex-col justify-center items-center">
-                  {isRevealed && (
-                    <>
-                      {/* Only show "Answer:" header for non-MCQ questions */}
-                      {flashcards[currentCardIndex]?.questionType !== 'normal' && (
-                        <div className="text-lg font-semibold mb-2 text-green-600">
-                          Answer:
-                        </div>
-                      )}
-                      {/* Only show answer content for non-MCQ questions */}
-                      {flashcards[currentCardIndex]?.questionType !== 'normal' && (
-                        <ContentRenderer 
-                          content={getAnswerContent()} 
-                          onLinkClick={handleLinkClick} 
-                        />
-                      )}
-                      {/* Show explanation for MCQ questions */}
-                      {flashcards[currentCardIndex]?.questionType === 'normal' && 
-                       flashcards[currentCardIndex]?.questionOptions?.length > 0 && (
-                        <div className="mt-4 text-[--theme-text-color]">
-                          <p>
-                            {(() => {
-                              try {
-                                const notes = flashcards[currentCardIndex].questionAnswerNotes;
-                                if (Array.isArray(notes)) {
-                                  return notes[0] || 'No additional explanation available.';
-                                }
-                                if (typeof notes === 'string') {
-                                  try {
-                                    const parsedNotes = JSON.parse(notes);
-                                    return Array.isArray(parsedNotes) ? parsedNotes[0] : notes;
-                                  } catch {
-                                    return notes;
-                                  }
-                                }
-                                return 'No additional explanation available.';
-                              } catch (e) {
-                                return 'No additional explanation available.';
+              <div className="w-full min-h-full flex flex-col">
+                {/* Question Section */}
+                <div className="w-full mb-8" ref={questionContainerRef}>
+                  <div className="w-full flex flex-col items-center">
+                    <ContentRenderer 
+                      content={getQuestionContent()} 
+                      onLinkClick={handleLinkClick} 
+                    />
+                    
+                    {/* MCQ Options */}
+                    {flashcards[currentCardIndex]?.questionType === 'normal' && 
+                     flashcards[currentCardIndex]?.questionOptions?.length > 0 && (
+                      <div className="w-full mt-4 space-y-2">
+                        {shuffledOptions.options.map((option: string, index: number) => (
+                          <button 
+                            key={index}
+                            onClick={(e) => handleOptionClick(index, e)}
+                            type="button"
+                            className={`w-full p-3 rounded-lg border transition-colors focus:outline-none
+                              ${answeredMCQ ? 'cursor-default' : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]'} 
+                              ${
+                                isRevealed && index === shuffledOptions.correctIndex
+                                  ? 'border-green-500 bg-green-500 text-white'
+                                  : isRevealed && index === selectedOption && index !== shuffledOptions.correctIndex
+                                  ? 'border-red-500 bg-red-500 text-white'
+                                  : 'border-[--theme-border-color]'
                               }
-                            })()}
-                          </p>
-                        </div>
-                      )}
-                      {/* Show links if available */}
-                      {flashcards[currentCardIndex]?.links?.length && (
-                        <div className="mt-4 w-full">
-                          <div className="text-sm font-semibold mb-2 text-[--theme-text-color]">
-                            Additional Resources:
-                          </div>
-                          <ul className="list-disc list-inside space-y-1">
-                            {flashcards[currentCardIndex].links?.map((link, index) => (
-                              <li key={index}>
-                                <a
-                                  href={link}
-                                  onClick={(e) => handleLinkClick(link, e)}
-                                  className="text-blue-500 hover:text-blue-600 underline text-sm"
-                                >
-                                  {link}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </>
-                  )}
+                              disabled:cursor-default
+                            `}
+                          >
+                            <div className="text-left">
+                              <ContentRenderer 
+                                content={option}
+                                className={`${
+                                  isRevealed && (
+                                    index === shuffledOptions.correctIndex || 
+                                    (index === selectedOption && index !== shuffledOptions.correctIndex)
+                                  ) ? 'text-white' : ''
+                                }`}
+                              />
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Answer Section */}
+                <div className={`w-full transition-opacity duration-300 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className="w-full overflow-y-auto flex flex-col justify-center items-center">
+                    {isRevealed && (
+                      <>
+                        {/* Only show "Answer:" header for non-MCQ questions */}
+                        {flashcards[currentCardIndex]?.questionType !== 'normal' && (
+                          <div className="text-lg font-semibold mb-2 text-green-600">
+                            Answer:
+                          </div>
+                        )}
+                        {/* Only show answer content for non-MCQ questions */}
+                        {flashcards[currentCardIndex]?.questionType !== 'normal' && (
+                          <ContentRenderer 
+                            content={getAnswerContent()} 
+                            onLinkClick={handleLinkClick} 
+                          />
+                        )}
+                        {/* Show explanation for MCQ questions */}
+                        {flashcards[currentCardIndex]?.questionType === 'normal' && 
+                         flashcards[currentCardIndex]?.questionOptions?.length > 0 && (
+                          <div ref={answerSectionRef} className="mt-4 text-[--theme-text-color]">
+                            <div className="mb-3 font-semibold text-green-600">
+                              Correct answer: <span className="text-[--theme-text-color]">{getAnswerContent()}</span>
+                            </div>
+                            <p>
+                              {(() => {
+                                try {
+                                  const notes = flashcards[currentCardIndex].questionAnswerNotes;
+                                  if (Array.isArray(notes)) {
+                                    return notes[0] || 'No additional explanation available.';
+                                  }
+                                  if (typeof notes === 'string') {
+                                    try {
+                                      const parsedNotes = JSON.parse(notes);
+                                      return Array.isArray(parsedNotes) ? parsedNotes[0] : notes;
+                                    } catch {
+                                      return notes;
+                                    }
+                                  }
+                                  return 'No additional explanation available.';
+                                } catch (e) {
+                                  return 'No additional explanation available.';
+                                }
+                              })()}
+                            </p>
+                            {/* Show controls after answering MCQ */}
+                            {answeredMCQ && (
+                              <div className="text-center my-7 text-sm text-gray-400">
+                                <div className="flex items-center justify-center gap-2">
+                                  <span className="px-2 py-1 bg-gray-100 border border-gray-200 rounded text-gray-600 font-normal">any key</span>
+                                  <span>to continue</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {/* Show links if available */}
+                        {flashcards[currentCardIndex]?.links && flashcards[currentCardIndex]?.links.length > 0 && (
+                          <div className="mt-4 w-full">
+                            <div className="text-sm font-semibold mb-2 text-[--theme-text-color]">
+                              Additional Resources:
+                            </div>
+                            <ul className="list-disc list-inside space-y-1">
+                              {flashcards[currentCardIndex].links?.map((link, index) => (
+                                <li key={index}>
+                                  <a
+                                    href={link}
+                                    onClick={(e) => handleLinkClick(link, e)}
+                                    className="text-blue-500 hover:text-blue-600 underline text-sm"
+                                  >
+                                    {link}
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Flashcard controls */}
+                {flashcards[currentCardIndex]?.questionType === 'flashcard' && (
+                  <div className="w-full text-center mt-7 text-sm text-gray-400">
+                    {!isRevealed ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <kbd className="px-2 py-1 bg-gray-100 rounded text-gray-600">Space</kbd>
+                        <span>to reveal answer</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-5">
+                        <div className="flex items-center gap-2">
+                          <kbd className="px-2 py-1 bg-gray-100 rounded text-gray-600">←</kbd>
+                          <span>to mark flashcard as missed</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <kbd className="px-2 py-1 bg-gray-100 rounded text-gray-600">→</kbd>
+                          <span>to mark flashcard as correct</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </animated.div>
           )}
-          
-          <div className="fixed bottom-1 left-1/2 transform -translate-x-1/2 text-xs text-gray-400">
-            <span className="mr-3">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">Space</kbd> reveal
-            </span>
-            <span>
-              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">←→</kbd> answer
-            </span>
-          </div>
         </div>
       )}
     </div>
