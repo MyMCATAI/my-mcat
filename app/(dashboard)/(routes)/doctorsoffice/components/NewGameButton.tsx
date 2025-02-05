@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { FC } from "react";
 import { toast } from "react-hot-toast";
@@ -17,6 +18,7 @@ const NewGameButton: FC<NewGameButtonProps> = ({
   isGameInProgress,
   resetGameState
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const createNewUserTest = async () => {
     try {
       const response = await fetch("/api/user-test", {
@@ -46,6 +48,7 @@ const NewGameButton: FC<NewGameButtonProps> = ({
     }
 
     try {
+      setIsLoading(true);
       const response = await fetch("/api/user-info", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -77,34 +80,42 @@ const NewGameButton: FC<NewGameButtonProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (isGameInProgress) {
+      setIsLoading(false);
+    }
+  }, [isGameInProgress]);
+
   return (
-    <button
-      onClick={handleNewGame}
-      disabled={isGameInProgress}
-      className={`border-2 border-[--theme-border-color] 
-        px-6 py-3 rounded-lg transition-all duration-300 
-        shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 
-        font-bold text-lg flex items-center gap-2
-        opacity-90 hover:opacity-100
-        ${isGameInProgress 
-          ? 'cursor-not-allowed opacity-50 hover:transform-none hover:shadow-lg bg-transparent' 
-          : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] text-[--theme-hover-color] animate-pulse [animation-duration:0.75s] bg-green-500/20'
-        }`}
-    >
-      <span className={`text-[--theme-hover-color] border-r border-[--theme-border-color] ${!isGameInProgress && 'hover:border-white/30'} pr-2`}>
-        {isGameInProgress ? 'Game in Progress' : 'New Game'}
-      </span>
-      <span className="text-[--theme-hover-color]">
-        {isGameInProgress ? '' : '-1'}
-      </span>
-      <Image
-        src="/game-components/PixelCupcake.png"
-        alt="Coin"
-        width={24}
-        height={24}
-        className="inline-block"
-      />
-    </button>
+    <div className="hover:-translate-y-0.5">
+      <button
+        onClick={handleNewGame}
+        disabled={isGameInProgress || isLoading}
+        className={`border-2 border-[--theme-border-color] 
+          px-6 py-3 rounded-lg transition-all duration-300 
+          shadow-lg hover:shadow-xl transform
+          font-bold text-lg flex items-center gap-2
+          opacity-90 hover:opacity-100
+          ${isGameInProgress 
+            ? 'cursor-not-allowed opacity-50 hover:transform-none hover:shadow-lg bg-transparent' 
+            : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] text-[--theme-hover-text] animate-pulse [animation-duration:0.75s] bg-green-500/20'
+          }`}
+      >
+        <span className={`text-[--theme-hover-text] border-r border-[--theme-border-color] ${!isGameInProgress && 'hover:border-white/30'} pr-2`}>
+          {isGameInProgress && 'Game in Progress' || isLoading && 'Loading Game...' || 'New Game'}
+        </span>
+        <span className="text-[--theme-hover-text]">
+          {isGameInProgress || isLoading ? '' : '-1'}
+        </span>
+        <Image
+          src="/game-components/PixelCupcake.png"
+          alt="Coin"
+          width={24}
+          height={24}
+          className="inline-block"
+        />
+      </button>
+    </div>
   );
 };
 
