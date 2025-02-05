@@ -1,5 +1,38 @@
 # Technical Specifications
 
+## Directory
+**Core Setup**
+- [Technology Stack](#technology-stack)
+- [Project Structure](#project-structure)
+
+**Component Guidelines**
+- [Component Organization](#component-organization)
+- [Component Structure](#component-structure)
+  - Section Headers
+  - Import Standards
+  - Component Naming
+  - Props & Types
+
+**Development Guidelines**
+- [Development Standards](#development-standards)
+- [Routing & File Organization](#routing--file-organization)
+  - Route Structure
+  - Route-Component Relationship
+  - File Naming
+- [State Management](#state-management)
+  - Local State
+  - Context
+  - Server State
+- [Feature Implementation](#feature-implementation)
+  - Premium Features
+  - Authentication
+  - Error Handling
+- [Performance](#performance)
+  - Loading States
+  - Optimization
+  - Testing
+
+--- 
 ## Technology Stack
 - Next.js 13+ (App Router)
 - TypeScript
@@ -95,22 +128,50 @@ my-mcat/
 
 ## Development Standards
 
-### Component Structure
+### Component Structure and Organization
+
+Make sure to organize any functional React component with Section Headers:
+
+Sections Headers (in order):
+/* ------------------------------------------ Constants ----------------------------------------- */
+/* -------------------------------------------- Types ------------------------------------------- */
+/* ------------------------------------------- State -------------------------------------------- */
+/* ------------------------------------------- Refs --------------------------------------------- */
+/* ----------------------------------------- Callbacks ------------------------------------------ */
+/* ------------------------------------ Animations & Effects ------------------------------------ */
+/* ---------------------------------------- Event Handlers -------------------------------------- */
+/* ---------------------------------------- Render Methods -------------------------------------- */
+
+
+Note that each header is 100 characters wide in total
+"Constants" and "Types" Section Headers should exist outside of the component
+
+### Example component structure
+
 ```typescript
-// Example component structure
+import { useState, useRef, useCallback } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { cn } from "@/lib/utils";
+
+/* ------------------------------------------ Constants ----------------------------------------- */
+/* -------------------------------------------- Types ------------------------------------------- */
+
 interface ComponentProps {
   className?: string;
   // Additional props
 }
 
-/* ----------------------------------------- Constants ------------------------------------------ */
-/* ------------------------------------------ Types --------------------------------------------- */
+const Component = ({ className }: ComponentProps) => {
+/* ------------------------------------------- State -------------------------------------------- */
+/* ------------------------------------------- Refs --------------------------------------------- */
+/* ----------------------------------------- Callbacks ------------------------------------------ */
+/* ------------------------------------ Animations & Effects ------------------------------------ */
+/* ---------------------------------------- Event Handlers -------------------------------------- */
+/* ---------------------------------------- Render Methods -------------------------------------- */
 
-const Component = () => {
-  /* -------------------------------------- State & Refs ---------------------------------------- */
-  /* -------------------------------- Animations & Effects -------------------------------------- */
-  /* --------------------------------------- Event Handlers ------------------------------------ */
-  /* --------------------------------------- Render Methods ------------------------------------ */
+
+
+  // Implementation following above structure
   return (/* JSX */);
 };
 ```
@@ -179,3 +240,29 @@ try {
 - Auth: Clerk.dev session management
 - API: `/api/[feature]/[action]`
 - Rate Limiting: Per route basis
+
+### Import Standards
+
+Standard import order:
+```typescript
+// 1. React and Next.js imports
+import { useState, useRef, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+
+// 2. External libraries
+import { motion, useReducedMotion } from "framer-motion";
+import { useClerk } from "@clerk/nextjs";
+import { toast } from "react-hot-toast";
+
+// 3. Internal utilities and types
+import { cn } from "@/lib/utils";
+import { useUserInfo } from "@/hooks/useUserInfo";
+import type { UserInfo } from "@/types";
+
+// 4. Internal components
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+```
+
+Import groups should be separated by a blank line and ordered by scope (external → internal).
