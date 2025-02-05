@@ -17,8 +17,9 @@ graph TD
     FeatureGates --> Premium[Premium Features]
     
     Free --> Game[Doctor's Office]
-    Free --> CARS[CARS Practice]
+    Game --> PassageQuestions[Basic Passage Questions]
     
+    Premium --> CARS[CARS Practice]
     Premium --> Calendar[Calendar System]
     Premium --> Testing[Testing Suite]
     Premium --> Analytics[Advanced Analytics]

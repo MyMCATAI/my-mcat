@@ -5,18 +5,25 @@ import { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion, useReducedMotion } from "framer-motion";
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 // Import assets using @/ alias
 import cat from "@/public/hero.gif";
 import laptop from "@/public/laptop.png";
 import BernieSvg from "@/public/Bernie.svg";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 /* ----------------------------------------- Constants ------------------------------------------ */
 const VIDEO_URL = "https://my-mcat.s3.us-east-2.amazonaws.com/public/brush3.mp4";
 const BROWSER_REGEX = {
   safari: /^((?!chrome|android).)*safari/i,
   firefox: /firefox/i
+};
+
+// Add scroll configuration
+const SCROLL_CONFIG = {
+  duration: 1,
+  ease: "power2.inOut"
 };
 
 /* ------------------------------------------ Types --------------------------------------------- */
@@ -30,7 +37,11 @@ interface VideoRefState {
   loaded: boolean;
 }
 
-const LandingHero = () => {
+interface LandingHeroProps {
+  onScrollClick?: () => void;
+}
+
+const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
   /* -------------------------------------- State & Refs ---------------------------------------- */
   const shouldReduceMotion = useReducedMotion();
   const quoteRef = useRef<HTMLDivElement>(null);
@@ -43,6 +54,28 @@ const LandingHero = () => {
   });
 
   /* -------------------------------- Animations & Effects -------------------------------------- */
+  // Prevent auto-scroll on page load
+  useLayoutEffect(() => {
+    // Force scroll to top immediately
+    if (typeof window !== 'undefined') {
+      // Disable scroll restoration
+      window.history.scrollRestoration = 'manual';
+      
+      // Force scroll to top
+      window.scrollTo(0, 0);
+      
+      // Clear any existing scroll position
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
+      
+      // Remove hash without scrolling
+      if (window.location.hash) {
+        history.pushState("", document.title, window.location.pathname);
+      }
+    }
+  }, []);
+
   // Browser detection
   useEffect(() => {
     setBrowserType({
@@ -91,11 +124,17 @@ const LandingHero = () => {
   }, []);
 
   /* --------------------------------------- Event Handlers ------------------------------------ */
-  const scrollToNext = () => {
-    const nextSection = document.getElementById('product-section');
-    nextSection?.scrollIntoView({ 
-      behavior: shouldReduceMotion ? 'auto' : 'smooth' 
-    });
+  const handleScrollClick = () => {
+    if (quoteRef.current) {
+      gsap.to(window, {
+        duration: SCROLL_CONFIG.duration,
+        scrollTo: {
+          y: quoteRef.current,
+          offsetY: 0
+        },
+        ease: SCROLL_CONFIG.ease
+      });
+    }
   };
 
   /* --------------------------------------- Render Methods ------------------------------------ */
@@ -132,9 +171,10 @@ const LandingHero = () => {
             <Image 
               src={cat} 
               alt="Hero Animation" 
-              layout="fill" 
-              objectFit="contain"
+              className="w-full h-full object-contain"
+              fill
               priority
+              unoptimized
               quality={75}
               sizes="(max-width: 768px) 100vw, 50vw"
             />
@@ -149,12 +189,12 @@ const LandingHero = () => {
       className="absolute bottom-16 left-1/2 transform -translate-x-1/2 cursor-pointer z-20"
       animate={shouldReduceMotion ? {} : { y: [0, 10, 0] }}
       transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-      onClick={scrollToNext}
+      onClick={handleScrollClick}
       whileHover={shouldReduceMotion ? {} : { scale: 1.1 }}
       role="button"
       tabIndex={0}
       aria-label="Scroll to next section"
-      onKeyDown={(e) => e.key === 'Enter' && scrollToNext()}
+      onKeyDown={(e) => e.key === 'Enter' && handleScrollClick()}
     >
       <svg 
         width="40" 
@@ -197,13 +237,15 @@ const LandingHero = () => {
       </section>
 
       {/* Bernie Quote Section */}
-      <section className="w-full py-16 bg-[#000c1e] relative">
+      <section 
+        ref={quoteRef} 
+        className="w-full py-16 bg-[#000c1e] relative"
+      >
         <div 
           className="absolute inset-0 opacity-20 bg-cover bg-center bg-no-repeat mix-blend-screen"
           style={{ backgroundImage: 'url("/stars.jpeg")' }}
         />
         <div 
-          ref={quoteRef} 
           className="flex flex-col md:flex-row items-center justify-center gap-8 mx-3 mb-12"
         >
           <div>
