@@ -12,24 +12,86 @@
 - Stripe (Payments)
 
 ## Project Structure
-```typescript
-app/
-├── (auth)/                  # Auth-related routes
-├── (dashboard)/             # Protected dashboard routes
-│   ├── game/               # Doctor's Office Game
-│   ├── practice/           # CARS Practice
-│   ├── calendar/           # Premium Calendar
-│   └── testing/            # Premium Testing Suite
-├── (marketing)/            # Public marketing pages
-└── api/                    # API routes
-
-components/                 # Root components directory
-├── (auth)/                # Auth route components
-├── (dashboard)/           # Dashboard route components
-├── landing/              # Landing page components
-├── ui/                   # Shared UI components
-└── forms/                # Shared form components
 ```
+my-mcat/
+├── app/                    # Next.js app directory
+│   ├── (auth)/            # Auth-related routes
+│   ├── (dashboard)/       # Protected dashboard routes
+│   │   └── game/         # Doctor's Office Game
+│   ├── (home)/           # Home routes
+│   │   ├── calendar/    # Premium Calendar
+│   │   ├── testing/     # Premium Testing Suite
+│   │   └── practice/    # CARS Practice (Premium)
+│   ├── (landingpage)/    # Landing page routes
+│   ├── (marketing)/      # Public marketing pages
+│   └── api/             # API routes
+│
+├── components/            # Root components directory
+│   ├── auth/            # Auth components
+│   ├── dashboard/       # Dashboard components
+│   ├── home/           # Home components
+│   ├── landing/        # Landing page components
+│   ├── landingpage/    # Landing page specific components
+│   ├── ui/             # Shared UI components
+│   └── forms/          # Shared form components
+│
+└── ... other project files
+```
+
+### Component Organization
+1. Route Structure:
+   ✅ Correct: Keep route folders minimal
+   ```
+   app/(landingpage)/
+   ├── page.tsx           # Page component
+   └── layout.tsx         # Layout wrapper
+   ```
+   
+   ✅ Correct: Store components in dedicated component directory
+   components/landingpage/
+   ```
+   ├── landing-navbar.tsx
+   ├── hero-section.tsx
+   └── feature-grid.tsx
+   ```
+   ❌ Incorrect: Don't put components in route folders
+   ```
+   app/(landingpage)/
+   ├── page.tsx
+   ├── layout.tsx
+   ├── navbar.tsx        // Should be in components/landingpage/
+   └── hero.tsx         // Should be in components/landingpage/
+   ```
+
+2. Route-Component Relationship:
+   - Keep route folders (`app/*`) minimal with just:
+     - `page.tsx`: Main page component
+     - `layout.tsx`: Route layout wrapper
+     - `loading.tsx`: Loading states
+     - `error.tsx`: Error boundaries
+   - Store all components in corresponding `components/[route-name]` directory
+   - Example:
+     ```
+     app/(landingpage)/* → components/landingpage/*
+     app/(dashboard)/* → components/dashboard/*
+     app/(home)/* → components/home/*
+     ```
+
+3. Component Naming:
+   ✅ Correct: CamelCase with default export
+
+   ```
+   const GameCard = () => { ... }
+   export default GameCard;
+   ```
+   ❌ Incorrect: Named exports or kebab-case
+
+   ``` 
+   export const game_card = () => { ... }
+   ```
+
+4. Shared Components:
+   - UI: `components/ui/`
 
 ## Development Standards
 
@@ -67,10 +129,17 @@ const animation = prefersReducedMotion ? {} : {
 ```
 
 ### Feature Control & Auth
-- Free Features: Game, CARS Practice, Basic Stats
-- Premium Features: Calendar, Testing Suite, Analytics
-- Auth Flow: Clerk.dev -> Onboarding -> Feature Gates
-- Subscription: Premium feature management
+- Free Features: 
+  - Doctor's Office Game
+  - Basic Statistics
+  - Basic Passage Questions (in Game)
+  
+- Premium Features: 
+  - CARS Practice (in /home/practice)
+  - Calendar System (in /home/calendar)
+  - Testing Suite (in /home/testing)
+  - Analytics
+  - Advanced Features
 
 ### State & Error Management
 ```typescript
@@ -110,48 +179,3 @@ try {
 - Auth: Clerk.dev session management
 - API: `/api/[feature]/[action]`
 - Rate Limiting: Per route basis
-
-### Component Organization
-1. Route Components:
-   ```typescript
-   // ✅ Correct: Page components in app/
-   app/(dashboard)/game/page.tsx
-   
-   // ✅ Correct: Route components in components/
-   components/(dashboard)/game/GameCard.tsx
-   ```
-
-2. Component Naming:
-   ```typescript
-   // ✅ Correct: CamelCase with default export
-   const GameCard = () => { ... }
-   export default GameCard;
-   
-   // ❌ Incorrect: Named exports or kebab-case
-   export const game_card = () => { ... }
-   ```
-
-3. Shared Components:
-   - UI: `components/ui/`
-   - Forms: `components/forms/`
-   - Layout: `components/layout/`
-
-### Documentation Standards
-```typescript
-// Markdown Code Blocks
-// ✅ Correct: Use bash for all markdown content
-```bash
-## Section Title
-- List item
-- Another item
-```
-
-// ❌ Incorrect: Don't use markdown
-```markdown
-## Section Title
-- List item
-- Another item
-```
-
-// Rationale: Using bash provides better syntax highlighting 
-// and consistency across our documentation

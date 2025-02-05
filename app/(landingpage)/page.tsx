@@ -1,11 +1,13 @@
+"use client";
 import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 // First fold - load immediately with high priority
 const LandingHero = dynamic(
   () => import("@/components/landingpage/LandingHero"),
   {
-    ssr: true // This means the component will be initially server-rendered
+    ssr: true
   }
 );
 
@@ -39,6 +41,15 @@ const Faqs = dynamic(
 );
 
 const LandingPage = () => {
+  const router = useRouter();
+
+  // Prevent scroll restoration on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
   return (
     <div className="w-full bg-[#12233c] relative">
       {/* First fold - load immediately */}
