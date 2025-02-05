@@ -1,4 +1,4 @@
-import { LandingNavbar } from "@/components/landing-navbar";
+import LandingNavbar from "@/components/landingpage/landing-navbar";
 import Footer from "@/components/landingpage/Footer";
 import { Metadata } from 'next';
 import Script from 'next/script';

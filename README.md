@@ -1,116 +1,122 @@
 # MYMCAT MVP
-
 Created by Joshua Karki and Prynce Wade
 
-WIP deployed at
-https://my-mcatmy-mcat.vercel.app/
+---
 
-## Getting Started - Dev
+## Documentation Directory
+- 📘 [README.md](./README.md) - Project overview & quickstart guide
+- 🤖 [README_Developer-Instructions.md](./README_Developer-Instructions.md) - AI development setup
+- 📚 [README_Docs/](./README_Docs/) - Technical documentation
+  - 🏗️ [Architecture](README_Docs/architecture/architecture.md) - System design
+  - 📋 [Technical Guide](README_Docs/technical.md) - Development standards
 
-First, run the development server:
+---
+## Table of Contents
 
-```bash
-npm run dev
-```
+### Core Documentation
+- [Documentation Directory](#documentation-directory)
+- [Important Links](#important-links)
+- [Getting Started](#getting-started)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Technical Stack
+- [Architecture and Tech Stack](#architecture-and-tech-stack)
+  - [Frontend](#frontend)
+  - [Backend / Services](#backend--services)
+  - [Database Management](#database-management)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Features & Systems
+- [Testing Suite](#testing-suite)
+- [Feature Gating and Onboarding](#feature-gating-and-onboarding-system)
+  - [Overview](#overview)
+  - [Onboarding Flow](#onboarding-flow)
+  - [Legacy User Support](#legacy-user-support)
+  - [Feature Access Control](#feature-access-control)
+  - [Implementation Notes](#implementation-notes)
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+### Development
+- [Development Guidelines](#development-guidelines)
+  - [Database Management](#database-management-planetscale--prisma-orm)
+  - [Implementation Details](#implementation-details)
 
+---
 
+## Important Links
+- 💻 [GitHub Repo](https://github.com/MyMCATAI/my-mcat)
+- 🎨 [Figma Design System](https://www.figma.com/design/1zHyaMNuWrFZMlFbZrQRqn/MyMCAT?node-id=0-1&t=1NwzkUWINHYYRDQ4-1)
+- 🌐 [Vercel Deployed Production](https://my-mcat.vercel.app/)
+- 🔐 [Clerk Auth Dashboard](https://dashboard.clerk.com)
+- 💾 [PlanetScale Database](https://app.planetscale.com)
+- 💳 [Payments (Stripe)](https://dashboard.stripe.com)
 
-# Notes
+---
 
-- Shadcn framework 
-- folders and url structure
-- clerk auth setup
-- PlanetScale prisma MySQL DB
+## Getting Started
+Follow these steps to set up the project locally:
 
-## Current Services
-Services
-- AI LLM - https://openai.com/
-- sql db - app.planetscale.com
-- auth - dashboard.clerk.com
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/MyMCATAI/my-mcat.git
+   cd my-mcat
+   ```
 
-Backend DB
-- prisma and planetscale
-- run prisma with `npx prisma studio`
-- run prisma db changes with `npx prisma generate`, `npx prisma db push `
-- reset with `npx prisma migrate reset`
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-Stripe
-- stripe login
-- stripe listen --forward-to localhost:4242/webhook
+3. Obtain the `.env` file from the staff.
 
-run 
-`stripe listen --forward-to localhost:3000/api/webhook`
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
+5. Open your browser at [http://localhost:3000](http://localhost:3000) to view the app.
 
+---
 
-# Prisma DB
+## Architecture and Tech Stack
 
-Initial setup (optional)
-```
-npm i @prisma/client
-npx prisma init
-```
+### Frontend
+- **Framework**: Next.js 13+ with App Router
+- **Styling**: Tailwind CSS + Shadcn components
+- **State Management**: React hooks + Context
 
-pushing changes (talk to josh before trying to push anything)
+### Backend / Services
+- **Authentication**: Clerk.dev
+- **AI Services**: OpenAI API
+- **Payments**: Stripe
+  - Run Stripe webhook listener:
+    ```bash
+    stripe listen --forward-to localhost:3000/api/webhook
+    ```
 
-```
-npx prisma db push
-npx prisma generate
-```
+### Database Management (PlanetScale + Prisma ORM)
 
-See data (this is mostly safe, and will allow you to view and update records one at a time if you like)
+- #### Initial Setup:
+   ```bash
+   npm i @prisma/client
+   npx prisma init
+   ```
 
-```npx prisma studio```
+- #### Making Database Changes:
+   ⚠️ Always contact Josh before making schema changes.
+   ```bash
+   npx prisma db push       # Apply schema changes to the database
+   npx prisma generate      # Update Prisma client after schema changes
+   ```
 
+- #### Viewing/Editing Data:
+   ```bash
+   npx prisma studio        # Safe way to view/edit records in the database
+   ```
 
-### Important: Database Migrations
+- #### Resetting the Database (if needed):
+   ```bash
+   npx prisma migrate reset # WARNING: This will erase all data!
+   ```
 
-⚠️ Always message Josh before making any database migrations or schema changes. Safety first!
-- We do this to avoid breaking any of our sql tables.
-- in order to make a change, we need to update out schema.prisma file, then generate a new migration file with `npx prisma migrate dev --name <name>`
-
-
-
-### Running scripts
-
-```
-npm run "script-name"
-```
-
-
-## How to view/edit content
-
-To update content/questions, etc. we can open prisma studio. to do this run
-
-```
-npx prisma studio
-```
-
-in your terminal.
-
-
-Sometimes we update the backend content system, when this happens, you need to run a quick update to access it. (Also try this if you run into any errors with Prisma)
-
-
-Run
-
-```
-git pull
-```
-Then run:
-```
-npx prisma generate
-```
-
-in your terminal.
-
-
+---
 
 # Testing Suite
 - When we generate our schedule, we create events of type "Exam" these are full length tests
@@ -118,6 +124,8 @@ in your terminal.
 - When we Complete an exam activity, we create a new FullLengthExam record associated to it, 
     - users should have to input their 4 scores for each section into it. For each one, we create a data pulse at that the Section level (cp, bb, ps, cars)
     - Users can then add additional data pulses as questions to the tests (2nd PR)
+
+---
 
 # Feature Gating and Onboarding System
 
