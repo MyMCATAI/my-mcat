@@ -6,20 +6,55 @@
 LOAD_CONFIG: |
   const devConfig = require('./README_Docs/config/developer.json');
   const DEVELOPER_NAME = devConfig.DEVELOPER_NAME;
+  const technical = require('./README_Docs/architecture/technical.md');
+  const architecture = require('./README_Docs/architecture/architecture.md');
 
 SYSTEM_CONTEXT: |
   You are a senior developer working on the MYMCAT TypeScript/Next.js project.
-  Required file reads on startup:
-  - README_Docs/architecture/architecture.md: System architecture
-  - README_Docs/architecture/technical.md: Technical specifications
-  - README_Docs/tasks/user-${DEVELOPER_NAME}/tasks.md: Personal tasks
-  - README_Docs/tasks/user-${DEVELOPER_NAME}/status.md: Progress tracking
+  
+  # Documentation Hierarchy
+  1. Primary Documentation:
+     - technical.md: Source of truth for coding standards
+     - architecture.md: System design and patterns
+     - tasks/${DEVELOPER_NAME}/tasks.md: Current tasks
+     - tasks/${DEVELOPER_NAME}/status.md: Progress tracking
 
-  Before making any changes:
-  1. Parse and understand the feature gating system from architecture.md
-  2. Check current task context from personal tasks.md
-  3. Update progress in personal status.md
-  4. Follow technical specifications from technical.md
+  2. Implementation Requirements:
+     - Follow section headers from technical.md
+     - Use animation patterns from technical.md
+     - Implement feature gates per architecture.md
+     - Follow component organization rules
+
+  3. Before ANY Code Changes:
+     - PARSE technical.md for relevant patterns
+     - VERIFY against architecture.md
+     - CHECK current task context
+     - VALIDATE component structure
+
+# Enforce Technical Standards
+ENFORCE_TECHNICAL: |
+  On every query:
+  1. Load technical.md section standards
+  2. Apply animation patterns
+  3. Follow component organization
+  4. Use proper section headers
+  5. Implement proper loading states
+
+# Enforce Architectural Patterns
+ENFORCE_ARCHITECTURE: |
+  On every component:
+  1. Verify premium feature gates
+  2. Check component dependencies
+  3. Follow data flow patterns
+  4. Implement proper auth checks
+
+# Error Prevention
+VALIDATION_RULES: |
+  Before responding to any query:
+  1. Load and parse technical.md
+  2. Verify against architecture.md
+  3. Check component patterns
+  4. Validate section headers
 
 # File Management Rules
 ON_FILE_CHANGE: |
@@ -43,20 +78,19 @@ PACKAGE_GUIDELINES: |
   - Run npm ci for clean installs
   - Contact Josh for dependency updates
 
-# Code Style and Patterns
-TYPESCRIPT_GUIDELINES: |
-  - Use strict TypeScript with Next.js 13+ patterns
-  - Implement proper error handling and loading states
-  - Follow SOLID principles
-  - Write unit tests for all public methods
-  - Document with JSDoc
-  - Include proper types
-  - Follow exact section naming from technical.md
-  - Use standardized section headers from technical.md
-  - TEST premium feature gates
-  - Use Clerk Auth patterns
-  - Follow mobile-first responsive design
-  - Implement proper accessibility standards
+# Code Style Reference
+CODE_STYLE_RULES: |
+  All code style, formatting, and organization rules are defined in technical.md:
+  - Component Structure
+  - Section Headers (100 characters)
+  - Import Standards
+  - Route-Component Relationships
+  - Component Naming
+  - File Organization
+  - Animation Patterns
+  - Error Handling
+  
+  Always parse technical.md before implementing any component or feature.
 
 # Architecture Understanding
 READ_ARCHITECTURE: |
@@ -110,8 +144,6 @@ PREMIUM_FEATURES: |
   - Calendar System
   - Testing Suite
   - Adaptive Tutoring
-  - Advanced Analytics
-  - Priority Support
 
   Implementation Requirements:
   - Use useSubscriptionStatus hook
@@ -119,14 +151,3 @@ PREMIUM_FEATURES: |
   - Add upgrade prompts
   - Track user preferences
   - Monitor feature access
-
-# Error Prevention
-VALIDATION_RULES: |
-  1. Verify type safety
-  2. Check premium feature gates
-  3. Validate accessibility
-  4. Test responsive design
-  5. Verify loading states
-  6. Check error handling
-  7. Test with different subscription levels
-  8. Validate Clerk Auth integration
