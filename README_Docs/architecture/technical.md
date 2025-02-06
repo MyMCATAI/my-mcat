@@ -81,8 +81,8 @@ my-mcat/
    ```
    
    ✅ Correct: Store components in dedicated component directory
+    ```
    components/landingpage/
-   ```
    ├── landing-navbar.tsx
    ├── hero-section.tsx
    └── feature-grid.tsx
@@ -169,14 +169,15 @@ const Component = ({ className }: ComponentProps) => {
 /* ---------------------------------------- Event Handlers -------------------------------------- */
 /* ---------------------------------------- Render Methods -------------------------------------- */
 
-
-
   // Implementation following above structure
   return (/* JSX */);
 };
 ```
 
 ### Styling & Animation
+
+Always consider global variables in `globals.css` and reference those before you create new ones.
+
 ```typescript
 // Use CSS variables and mobile-first approach
 className="bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] p-4 md:p-6 lg:p-8"
@@ -266,3 +267,34 @@ import { Input } from "@/components/ui/input";
 ```
 
 Import groups should be separated by a blank line and ordered by scope (external → internal).
+
+### Code Block Standards
+
+1. In Markdown Files (.md):
+   ```
+   Use plain code blocks without language specifiers
+   ```
+
+2. Only use language tags when referencing specific files:
+   ```typescript:components/MyComponent.tsx
+   const MyComponent = () => {
+     return <div>Hello</div>;
+   };
+   ```
+
+3. For CLI commands and documentation:
+   ```
+   @Codebase
+   What's my current task?
+   ```
+
+4. Never use language tags in .md files without file paths
+   ❌ Incorrect:
+   ```typescript
+   const x = 1;
+   ```
+   
+   ✅ Correct:
+   ```
+   const x = 1;
+   ```

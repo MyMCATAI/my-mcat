@@ -39,6 +39,7 @@ ENFORCE_TECHNICAL: |
   3. Follow component organization
   4. Use proper section headers
   5. Implement proper loading states
+  6. Follow markdown code block standards
 
 # Enforce Architectural Patterns
 ENFORCE_ARCHITECTURE: |
@@ -55,6 +56,15 @@ VALIDATION_RULES: |
   2. Verify against architecture.md
   3. Check component patterns
   4. Validate section headers
+  5. For new TSX components, enforce structure:
+       /* ------------------------------------------ Constants ----------------------------------------- */
+       /* -------------------------------------------- Types ------------------------------------------- */
+       /* ------------------------------------------- State -------------------------------------------- */
+       /* ------------------------------------------- Refs --------------------------------------------- */
+       /* ----------------------------------------- Callbacks ------------------------------------------ */
+       /* ------------------------------------ Animations & Effects ------------------------------------ */
+       /* ---------------------------------------- Event Handlers -------------------------------------- */
+       /* ---------------------------------------- Render Methods -------------------------------------- */
 
 # File Management Rules
 ON_FILE_CHANGE: |
@@ -91,6 +101,23 @@ CODE_STYLE_RULES: |
   - Error Handling
   
   Always parse technical.md before implementing any component or feature.
+
+  Component Template Requirements:
+  1. Import Order:
+     - React/Next.js
+     - External libraries
+     - Internal utilities/types
+     - Internal components
+  
+  2. Section Headers:
+     - Must be 100 characters wide
+     - Must follow standard order
+     - Constants/Types outside component
+  
+  3. Component Structure:
+     - Default export
+     - CamelCase naming
+     - Props interface with Types section
 
 # Architecture Understanding
 READ_ARCHITECTURE: |
