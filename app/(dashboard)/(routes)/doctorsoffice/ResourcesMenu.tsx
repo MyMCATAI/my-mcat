@@ -73,10 +73,6 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
             showAddFriend={true}
             className="w-full"
           />
-
-          <p className="text-sm text-gray-400/40 mt-4 text-center italic">
-            {"You'll eventually be able to add friends, see their scores, and also check the global rankings."}
-          </p>
         </div>
       </div>
       <TutorialVidDialog

@@ -70,7 +70,7 @@ export async function POST(req: Request) {
     if (existingReferral) {
       return new NextResponse("Friend invitation already sent", { status: 400 });
     }
-    
+
     // Create referral
     const userInfo = await getUserInfo();
     const referrerName = userInfo?.firstName || "";
@@ -79,8 +79,9 @@ export async function POST(req: Request) {
     const friendUserId = await getUserIdByEmail(friendEmail);
     const joinedAt = new Date();
     let referral;
-    
+
     if (friendUserId) {
+      // Existing user
       referral = await prismadb.referral.create({
         data: {
           userId,
@@ -92,6 +93,7 @@ export async function POST(req: Request) {
         },
       });
     } else {
+      // New user
       referral = await prismadb.referral.create({
         data: {
           userId,
@@ -100,14 +102,15 @@ export async function POST(req: Request) {
           friendEmail,
         },
       });
-    }
 
-    const referralCount = await prismadb.referral.count({
-      where: { userId: friendUserId || "" },
-    });
+      // Send referral email if under referral limit
+      const referralCount = await prismadb.referral.count({
+        where: { userId },
+      });
 
-    if (referralCount < 3) {
-      await sendReferralEmail(referrerName, friendEmail);
+      if (referralCount < 3) {
+        await sendReferralEmail(referrerName, friendEmail);
+      }
     }
 
     return NextResponse.json(referral);
