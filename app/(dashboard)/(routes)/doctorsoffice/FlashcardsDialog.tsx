@@ -221,9 +221,9 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     <>
       {buttonContent}
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-[80vw] h-[80vh] gradientbg border text-[--theme-text-color] border-[--theme-border-color] flex flex-col z-[100]">
-          <DialogHeader className="mb-2 flex-shrink-0">
-            <DialogTitle className="text-[--theme-hover-text] text-center items-center justify-center rounded-md bg-[--theme-hover-color] p-2 flex">
+        <DialogContent className="max-w-[80vw] h-[80vh] gradientbg border text-[--theme-text-color] border-[--theme-border-color] flex flex-col z-[100] focus:outline-none">
+          <DialogHeader className="mb-2 flex-shrink-0 px-6">
+            <DialogTitle className="w-full text-[--theme-hover-text] text-center items-center justify-center rounded-md bg-[--theme-hover-color] p-2 flex">
               <span className="flex-grow">
                 {Array.isArray(roomToSubjectMap[roomId]) 
                   ? roomToSubjectMap[roomId].length === 1
@@ -235,57 +235,64 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
             </DialogTitle>
           </DialogHeader>
           
-          <div className="flex flex-grow min-h-0 relative">
-            <div className="absolute top-4 left-6 z-10 flex justify-between items-start" style={{ width: 'calc(100% - 33.33% - 2rem)' }}>
-              <div className="relative">
-                <animated.div 
-                  style={counterSpring}
-                  className="text-[--theme-hover-color] flex items-center justify-center"
-                >
-                  <span className="text-5xl font-bold">
-                    {correctCount}
-                  </span>
-                  <animated.span 
-                    style={plusOneSpring}
-                    className="absolute -right-8 top-0 text-green-500 font-bold text-2xl"
-                  >
-                    +1
-                  </animated.span>
-                </animated.div>
-                {encouragement && (
-                  <animated.div 
-                    style={plusOneSpring}
-                    className="absolute left-16 top-6 whitespace-nowrap text-green-500 font-bold text-xl"
-                  >
-                    {encouragement}
-                  </animated.div>
-                )}
-              </div>
-
-              {currentQuestion && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleDownvote}
-                        className="hover:bg-transparent text-[--theme-text-color] hover:text-[--theme-hover-color] mr-4 mt-2 transition-colors"
+          <div className="flex flex-grow min-h-0 relative flex-col">
+            <div className="flex flex-grow min-h-0 px-6 space-x-4">
+              {/* Flashcard Deck */}
+              <div className="w-2/3 bg-[--theme-leaguecard-color] p-2 rounded-md flex flex-col">
+                {/* Controls Section */}
+                <div className="flex justify-between items-center p-4 mb-4">
+                  <div className="flex items-center space-x-4">
+                    {/* Score and Encouragement */}
+                    <div className="relative">
+                      <animated.div 
+                        style={counterSpring}
+                        className="text-[--theme-hover-color] flex items-center justify-center"
                       >
-                        <ThumbsDown className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="left">
-                      <p>Report this question</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
+                        <span className="text-5xl font-bold">
+                          {correctCount}
+                        </span>
+                        <animated.span 
+                          style={plusOneSpring}
+                          className="absolute -right-8 top-0 text-green-500 font-bold text-2xl"
+                        >
+                          +1
+                        </animated.span>
+                      </animated.div>
+                      {encouragement && (
+                        <animated.div 
+                          style={plusOneSpring}
+                          className="absolute left-16 top-6 whitespace-nowrap text-green-500 font-bold text-xl"
+                        >
+                          {encouragement}
+                        </animated.div>
+                      )}
+                    </div>
+                  </div>
 
-            <div className="w-2/3 pr-2 flex flex-col h-full relative">
-              <div className="flex-grow bg-[--theme-leaguecard-color] p-2 rounded-md flex flex-col h-full">
-                <ScrollArea className="h-full">
+                  {/* Downvote Button */}
+                  {currentQuestion && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleDownvote}
+                            className="hover:bg-transparent text-[--theme-text-color] hover:text-[--theme-hover-color] transition-colors group"
+                          >
+                            <ThumbsDown className="h-5 w-5 transition-transform duration-200 group-hover:rotate-12 origin-[70%_30%]" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left">
+                          <p>Report this question</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
+
+                {/* Flashcard content */}
+                <div className="flex-grow overflow-y-auto">
                   <div className="h-full w-full flex items-center justify-center min-h-[60vh]">
                     <FlashcardDeck 
                       handleCompleteAllRoom={handleCompleteAllRoom}
@@ -303,23 +310,11 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                       onQuestionChange={setCurrentQuestion}
                     />
                   </div>
-                </ScrollArea>
+                </div>
               </div>
 
-              {/* Comment out Interruption component
-              <Interruption 
-                isVisible={showInterruption}
-                onClose={() => setShowInterruption(false)}
-                message="Oh! A patient needs your help! 🏥 Quick!"
-                imageUrl="/kalypsodistressed.gif"
-                duration={5000}
-                position="top-left"
-              />
-              */}
-            </div>
-            
-            <div className="w-1/3 flex flex-col min-h-0">
-              <div className="flex-grow bg-[--theme-leaguecard-color] p-3 rounded-md flex flex-col min-h-0">
+              {/* Kitty Litter */}
+              <div className="w-1/3 bg-[--theme-leaguecard-color] p-3 rounded-md flex flex-col min-h-0">
                 <h3 className="text-lg font-semibold mb-2 flex-shrink-0">Kitty Litter</h3>
                 <ScrollArea className="flex-grow">
                   <div className="space-y-4">
@@ -344,6 +339,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     </>
   );
 });
+
 
 FlashcardsDialog.displayName = 'FlashcardsDialog';
 
