@@ -52,19 +52,11 @@ ENFORCE_ARCHITECTURE: |
 # Error Prevention
 VALIDATION_RULES: |
   Before responding to any query:
-  1. Load and parse technical.md
-  2. Verify against architecture.md
-  3. Check component patterns
-  4. Validate section headers
-  5. For new TSX components, enforce structure:
-       /* ------------------------------------------ Constants ----------------------------------------- */
-       /* -------------------------------------------- Types ------------------------------------------- */
-       /* ------------------------------------------- State -------------------------------------------- */
-       /* ------------------------------------------- Refs --------------------------------------------- */
-       /* ----------------------------------------- Callbacks ------------------------------------------ */
-       /* ------------------------------------ Animations & Effects ------------------------------------ */
-       /* ---------------------------------------- Event Handlers -------------------------------------- */
-       /* ---------------------------------------- Render Methods -------------------------------------- */
+  1. Load and parse technical.md completely
+  2. Check section dividers (100 dashes)
+  3. Validate heading hierarchy
+  4. Ensure code blocks follow documentation rules
+  5. Verify file paths in examples
 
 # File Management Rules
 ON_FILE_CHANGE: |
@@ -162,19 +154,54 @@ TASK_WORKFLOW: |
 
 # Feature Gate Implementation
 PREMIUM_FEATURES: |
-  Free Features:
-  - Doctor's Office Game
-  - Daily CARS Practice
-  - Basic Statistics
+  # AI Behavior for Premium Features
+  1. Source of Truth:
+     - Load feature definitions from "Feature Control" section in technical.md
+     - Follow implementation patterns from "Feature Gates" section
+     - Reference component examples from technical.md
   
-  Premium Features:
-  - Calendar System
-  - Testing Suite
-  - Adaptive Tutoring
+  2. Validation Requirements:
+     - Verify component against documented feature gate patterns
+     - Ensure proper hook usage (useSubscriptionStatus) as shown in examples
+     - Confirm implementation matches technical.md specifications
+     
+  3. Documentation Requirements:
+     - Reference "Free Features" and "Premium Features" sections in technical.md
+     - Link to relevant implementation examples
+     - Keep implementation aligned with documentation
 
-  Implementation Requirements:
-  - Use useSubscriptionStatus hook
-  - Implement graceful fallbacks
-  - Add upgrade prompts
-  - Track user preferences
-  - Monitor feature access
+  4. Response Guidelines:
+     - Always cite specific sections from technical.md
+     - Point developers to relevant code examples
+     - Ensure responses align with documented patterns
+
+# Technical Documentation Parser
+PARSE_TECHNICAL_MD: |
+  1. Section Hierarchy:
+     - Parse h1 (#) for main document title
+     - Parse h2 (##) for major sections
+     - Parse h3 (###) for subsections
+     - Parse h4 (####) for detailed guidelines
+  
+  2. Special Sections:
+     - Always validate Feature Control section for premium gates
+     - Check Component Guidelines for structure requirements
+     - Verify Documentation Guidelines for formatting rules
+
+# Component Structure Enforcement
+ENFORCE_COMPONENT_STRUCTURE: |
+  For all .tsx files:
+  1. Verify file header comment
+  2. Check import order against technical.md standards
+  3. Validate section headers match technical.md template
+  4. Ensure premium feature gates are implemented
+  5. Check component naming conventions
+
+# Documentation Standards
+DOCUMENTATION_RULES: |
+  For all .md files:
+  1. Verify proper markdown link syntax
+  2. Check code block formatting
+  3. Validate section dividers
+  4. Ensure proper heading hierarchy
+  5. Check for complete examples in guidelines
