@@ -1,14 +1,21 @@
+// app/(dashboard)/(routes)/home/page.tsx
 "use client";
 
-import React, { useState, useEffect, useRef, Suspense, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useUserInfo } from "@/hooks/useUserInfo";
+import { useUserActivity } from '@/hooks/useUserActivity';
+import { FetchedActivity } from "@/types";
+import { isToday } from "date-fns";
 import Schedule from "./Schedule";
 import SideBar from "./SideBar";
 import AdaptiveTutoring from "./AdaptiveTutoring";
 import FloatingButton from "./FloatingButton";
-import { FetchedActivity } from "@/types";
 import TestingSuit from "./TestingSuit";
 import ThemeSwitcher from "@/components/home/ThemeSwitcher";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import FlashcardDeck from "./FlashcardDeck";
+import PracticeTests from "./PracticeTests";
+import StreakPopup from "@/components/score/StreakDisplay";
 import {
   Dialog,
   DialogContent,
@@ -17,31 +24,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { checkProStatus } from "@/lib/utils";
-import FlashcardDeck from "./FlashcardDeck";
+import { checkProStatus, shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
 import { toast } from "react-hot-toast";
-import { isToday } from "date-fns";
-import {
-  shouldUpdateKnowledgeProfiles,
-  updateKnowledgeProfileTimestamp,
-} from "@/lib/utils";
-import StreakPopup from "@/components/score/StreakDisplay";
-import { useUserInfo } from "@/hooks/useUserInfo";
-import { useUserActivity } from '@/hooks/useUserActivity';
-import PracticeTests from "./PracticeTests";
 
-// Loading component
-const LoadingSpinner = () => (
+/* ----------------------------------------- Types ------------------------------------------ */
+interface ContentWrapperProps {
+  children: React.ReactNode;
+}
+
+interface LoadingSpinnerProps {}
+
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = () => (
   <div className="fixed inset-0 flex justify-center items-center bg-black/50 z-50">
     <div className="text-center">
-      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4"></div>
+      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4" />
       <p className="text-sky-300 text-xl">Loading...</p>
     </div>
   </div>
 );
 
-// Content wrapper component
-const ContentWrapper = ({ children }: { children: React.ReactNode }) => (
+const ContentWrapper: React.FC<ContentWrapperProps> = ({ children }) => (
   <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
     <div className="text-[--theme-text-color] flex gap-[1.5rem] overflow-visible">
       {children}
@@ -49,45 +51,36 @@ const ContentWrapper = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-const Page = () => {
+const HomePage = () => {
+  /* ---------------------------------------- Hooks ---------------------------------------- */
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const initialTab = searchParams?.get("tab") || "Schedule";
-  const [activeTab, setActiveTab] = useState(initialTab);
-  const [isPro, setIsPro] = useState(false);
+  const { userInfo, isLoading: isLoadingUserInfo, isSubscribed } = useUserInfo();
+  const { startActivity, endActivity, updateActivityEndTime } = useUserActivity();
+  /* ---------------------------------------- State ---------------------------------------- */
+  const [activeTab, setActiveTab] = useState(searchParams?.get("tab") || "Schedule");
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
-  const scrollPosition = 7.125;
-  const [showScorePopup, setShowScorePopup] = useState(false);
-  const [testScore, setTestScore] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isGeneratingActivities, setIsGeneratingActivities] = useState(false);
-  const [kalypsoState, setKalypsoState] = useState<
-    "wait" | "talk" | "end" | "start"
-  >("wait");
+  const [currentStudyActivityId, setCurrentStudyActivityId] = useState<string | null>(null);
+  const [chatbotContext, setChatbotContext] = useState<{contentTitle: string; context: string;} | null>(null);
+  const [kalypsoState, setKalypsoState] = useState<"wait" | "talk" | "end" | "start">("wait");
+  const [isPro, setIsPro] = useState(false);
+  const [showScorePopup, setShowScorePopup] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+  const [showStreakPopup, setShowStreakPopup] = useState(false);
+  const [userStreak, setUserStreak] = useState(0);
+  const paymentStatus = searchParams?.get("payment");
+  const [currentPage, setCurrentPage] = useState("Schedule");
+  /* ----------------------------------------- Refs ---------------------------------------- */
   const kalypsoRef = useRef<HTMLImageElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [chatbotContext, setChatbotContext] = useState<{
-    contentTitle: string;
-    context: string;
-  } | null>(null);
-  const {
-    userInfo,
-    isLoading: isLoadingUserInfo,
-    isSubscribed
-  } = useUserInfo();
-
-  const [currentPage, setCurrentPage] = useState("Schedule");
   const chatbotRef = useRef<{ sendMessage: (message: string, context?: string) => void }>({
     sendMessage: () => {},
   });
-  const paymentStatus = searchParams?.get("payment");
-  const [isLoading, setIsLoading] = useState(true);
-  const [showStreakPopup, setShowStreakPopup] = useState(false);
-  const [userStreak, setUserStreak] = useState(0);
-  const router = useRouter();
-  const { startActivity, endActivity, updateActivityEndTime } = useUserActivity();
-  const [currentStudyActivityId, setCurrentStudyActivityId] = useState<string | null>(null);
-  const pathname = usePathname();
-
+  /* -------------------------------------- Callbacks -------------------------------------- */
   const updateCalendarChatContext = useCallback((currentActivities: FetchedActivity[]) => {
     const today = new Date();
     const yesterday = new Date(today);
@@ -203,182 +196,16 @@ const Page = () => {
     }
   }, [updateCalendarChatContext]);
 
-  // Combine loading states
-  const isPageLoading = isLoading || isLoadingUserInfo || isUpdatingProfile || isGeneratingActivities;
-
-  useEffect(() => {
-    // if returning from stripe, show toast depending on payment
-    if (!paymentStatus) return;
-
-    if (paymentStatus === "success") {
-      toast.success(
-        "Payment Successful! Your coins have been added to your account."
-      );
-    } else if (paymentStatus === "cancelled") {
-      toast.error("Payment Cancelled. Your payment was cancelled.");
-    }
-  }, [paymentStatus]);
-
-  useEffect(() => {
-    const initializePage = async () => {
-      if (isLoadingUserInfo) return; // Wait for user info to be loaded
-      
-      setIsLoading(true);
-      try {
-        await fetchActivities();
-        const proStatus = await checkProStatus();
-        setIsPro(proStatus);
-
-        // Check for streak increase
-        if (userInfo?.streak && userInfo.streak > 1) {
-          const lastSeenStreak = parseInt(localStorage.getItem('lastSeenStreak') || '0');
-          const currentStreak = userInfo.streak;
-          
-          if (currentStreak > lastSeenStreak) {
-            setUserStreak(currentStreak);
-            setShowStreakPopup(true);
-            localStorage.setItem('lastSeenStreak', currentStreak.toString());
-          }
-        }
-
-        // Only update knowledge profiles if needed
-        if (typeof window !== "undefined" && shouldUpdateKnowledgeProfiles()) {
-          const response = await fetch("/api/knowledge-profile/update", {
-            method: "POST",
-          });
-
-          if (response.ok) {
-            updateKnowledgeProfileTimestamp();
-          }
-        }
-      } catch (error) {
-        console.error("Error initializing page:", error);
-      } finally {
-        setIsLoading(false);
+  const handleTabChange = useCallback(async (newTab: string) => {
+    if (newTab === "SUMMARIZE_WEEK") {
+      setActiveTab("Schedule");
+      const sidebarInsightsTab = document.querySelector('[data-tab="tab1"]');
+      if (sidebarInsightsTab instanceof HTMLElement) {
+        sidebarInsightsTab.click();
       }
-    };
-
-    initializePage();
-  }, [isLoadingUserInfo, userInfo?.streak, fetchActivities]);
-
-  useEffect(() => {
-    updateCalendarChatContext(activities);
-  }, [activities]);
-
-  const renderContent = () => {
-
-    if (isUpdatingProfile || isGeneratingActivities) {
-      return (
-        <div className="flex justify-center items-center h-full">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4"></div>
-            <p className="text-sky-300 text-xl">
-              {isUpdatingProfile
-                ? "Updating knowledge profile..."
-                : "Generating new study plan..."}
-            </p>
-          </div>
-        </div>
-      );
+      return;
     }
 
-    let content;
-    switch (activeTab) {
-      case "Schedule":
-        content = (
-          <Schedule
-            handleSetTab={(tab) => {
-              if (tab === "SUMMARIZE_WEEK") {
-                setActiveTab("Schedule");
-                const sidebarInsightsTab = document.querySelector('[data-tab="tab1"]');
-                if (sidebarInsightsTab instanceof HTMLElement) {
-                  sidebarInsightsTab.click();
-                }
-                return;
-              }
-              handleTabChange(tab);
-            }}
-            isActive={activeTab === "Schedule"}
-            chatbotRef={chatbotRef}
-            userInfo={userInfo}
-          />
-        );
-        break;
-      case "AdaptiveTutoringSuite":
-        content = (
-          <div className="h-full overflow-hidden">
-            <AdaptiveTutoring
-              toggleChatBot={toggleChatBot}
-              setChatbotContext={setChatbotContext}
-              chatbotRef={chatbotRef}
-              onActivityChange={handleActivityChange}
-            />
-          </div>
-        );
-        break;
-      case "CARS":
-        content = <TestingSuit />;
-        break;
-      case "flashcards":
-        content = <FlashcardDeck />;
-        break;
-      case "Tests":
-        content = <PracticeTests 
-          handleSetTab={handleTabChange} 
-          chatbotRef={chatbotRef}
-          onActivitiesUpdate={fetchActivities}
-        />;
-        break;
-      default:
-        content = null;
-    }
-
-    return content;
-  };
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const remToPixels = (rem: number) =>
-        rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
-      const scrollToPosition = remToPixels(scrollPosition);
-
-      window.scrollTo({
-        top: scrollToPosition,
-        behavior: "smooth",
-      });
-    };
-
-    // Wait for content to load
-    const timer = setTimeout(() => {
-      handleScroll();
-    }, 100); // Small delay to ensure content is rendered
-
-    return () => clearTimeout(timer);
-  }, [activities, activeTab]); // Re-run when content changes
-
-  const switchKalypsoState = (newState: "wait" | "talk" | "end" | "start") => {
-    setKalypsoState(newState);
-    if (kalypsoRef.current) {
-      kalypsoRef.current.src = `/kalypso${newState}.gif`;
-    }
-  };
-
-  const toggleChatBot = () => {
-    console.log("todo, set this up to widget");
-  };
-
-  useEffect(() => {
-    switchKalypsoState("wait"); // Start with waiting animation
-    return () => {
-      if (timeoutRef.current) {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Handle tab changes
-  const handleTabChange = async (newTab: string) => {
     if (newTab === "doctorsoffice") {
       if (currentStudyActivityId) {
         await endActivity(currentStudyActivityId);
@@ -417,12 +244,124 @@ const Page = () => {
         router.push(`/home?tab=Schedule&view=${view}`);
       }
     }
+  }, [router, currentStudyActivityId, endActivity, updateCalendarChatContext, activities]);
+
+  const switchKalypsoState = (newState: "wait" | "talk" | "end" | "start") => {
+    setKalypsoState(newState);
+    if (kalypsoRef.current) {
+      kalypsoRef.current.src = `/kalypso${newState}.gif`;
+    }
   };
 
-  // Modify the useEffect for activity tracking
+  const toggleChatBot = () => {
+    console.log("todo, set this up to widget");
+  };
+
+  const handleActivityChange = async (newType: string, newLocation: string, metadata = {}) => {
+    if (currentStudyActivityId) {
+      await endActivity(currentStudyActivityId);
+      setCurrentStudyActivityId(null);
+    }
+
+    const activity = await startActivity({
+      type: newType,
+      location: newLocation,
+      metadata: {
+        ...metadata,
+        timestamp: new Date().toISOString()
+      }
+    });
+    setCurrentStudyActivityId(activity.id);
+  };
+
+  /* ---------------------------------------- Effects ------------------------------------- */
+  useEffect(() => {
+    const initializePage = async () => {
+      if (isLoadingUserInfo) return; // Wait for user info to be loaded
+      
+      setIsLoading(true);
+      try {
+        await fetchActivities();
+        const proStatus = await checkProStatus();
+
+        // Check for streak increase
+        if (userInfo?.streak && userInfo.streak > 1) {
+          const lastSeenStreak = parseInt(localStorage.getItem('lastSeenStreak') || '0');
+          const currentStreak = userInfo.streak;
+          
+          if (currentStreak > lastSeenStreak) {
+            localStorage.setItem('lastSeenStreak', currentStreak.toString());
+          }
+        }
+
+        // Only update knowledge profiles if needed
+        if (typeof window !== "undefined" && shouldUpdateKnowledgeProfiles()) {
+          const response = await fetch("/api/knowledge-profile/update", {
+            method: "POST",
+          });
+
+          if (response.ok) {
+            updateKnowledgeProfileTimestamp();
+          }
+        }
+      } catch (error) {
+        console.error("Error initializing page:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializePage();
+  }, [isLoadingUserInfo, userInfo?.streak, fetchActivities]);
+
+  useEffect(() => {
+    updateCalendarChatContext(activities);
+  }, [activities]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const remToPixels = (rem: number) =>
+        rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const scrollToPosition = remToPixels(7.125);
+
+      window.scrollTo({
+        top: scrollToPosition,
+        behavior: "smooth",
+      });
+    };
+
+    // Wait for content to load
+    const timer = setTimeout(() => {
+      handleScroll();
+    }, 100); // Small delay to ensure content is rendered
+
+    return () => clearTimeout(timer);
+  }, [activities, activeTab]); // Re-run when content changes
+
+  useEffect(() => {
+    switchKalypsoState("wait"); // Start with waiting animation
+    return () => {
+      if (timeoutRef.current) {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Payment status effect
+  useEffect(() => {
+    if (!paymentStatus) return;
+
+    if (paymentStatus === "success") {
+      toast.success("Payment Successful! Your coins have been added to your account.");
+    } else if (paymentStatus === "cancelled") {
+      toast.error("Payment Cancelled. Your payment was cancelled.");
+    }
+  }, [paymentStatus]);
+
+  // Activity tracking effects
   useEffect(() => {
     const initializeActivity = async () => {
-      // Only start a new activity if we're on the home page and don't have an active one
       if (pathname.startsWith('/home') && !currentStudyActivityId && !isLoading) {
         const activity = await startActivity({
           type: 'studying',
@@ -445,139 +384,204 @@ const Page = () => {
   useEffect(() => {
     if (!currentStudyActivityId) return;
 
-    // Update every 5 minutes 
     const intervalId = setInterval(() => {
       updateActivityEndTime(currentStudyActivityId);
     }, 300000);
 
-    // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
   }, [currentStudyActivityId, updateActivityEndTime]);
 
-  const handleActivityChange = async (newType: string, newLocation: string, metadata = {}) => {
-    // End current activity
-    if (currentStudyActivityId) {
-      await endActivity(currentStudyActivityId);
-      setCurrentStudyActivityId(null);
+  /* -------------------------------------- Rendering ------------------------------------- */
+  if (isLoading || isLoadingUserInfo) {
+    return <LoadingSpinner />;
+  }
+
+  // Combined loading state
+  const isPageLoading = isLoading || isLoadingUserInfo || isUpdatingProfile || isGeneratingActivities;
+
+  if (isPageLoading) {
+    return (
+      <div className="fixed inset-0 flex justify-center items-center bg-black/50 z-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4" />
+          <p className="text-sky-300 text-xl">
+            {isUpdatingProfile 
+              ? "Updating knowledge profile..."
+              : isGeneratingActivities
+                ? "Generating new study plan..."
+                : "Loading..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const renderContent = () => {
+    if (isUpdatingProfile || isGeneratingActivities) {
+      return (
+        <div className="flex justify-center items-center h-full">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4"></div>
+            <p className="text-sky-300 text-xl">
+              {isUpdatingProfile
+                ? "Updating knowledge profile..."
+                : "Generating new study plan..."}
+            </p>
+          </div>
+        </div>
+      );
     }
 
-    // Start new activity
-    const activity = await startActivity({
-      type: newType,
-      location: newLocation,
-      metadata: {
-        ...metadata,
-        timestamp: new Date().toISOString()
-      }
-    });
-      setCurrentStudyActivityId(activity.id);
+    switch (activeTab) {
+      case "Schedule":
+        return (
+          <Schedule
+            handleSetTab={(tab) => {
+              if (tab === "SUMMARIZE_WEEK") {
+                setActiveTab("Schedule");
+                const sidebarInsightsTab = document.querySelector('[data-tab="tab1"]');
+                if (sidebarInsightsTab instanceof HTMLElement) {
+                  sidebarInsightsTab.click();
+                }
+                return;
+              }
+              handleTabChange(tab);
+            }}
+            isActive={activeTab === "Schedule"}
+            chatbotRef={chatbotRef}
+            userInfo={userInfo}
+          />
+        );
+      case "AdaptiveTutoringSuite":
+        return (
+          <div className="h-full overflow-hidden">
+            <AdaptiveTutoring
+              toggleChatBot={toggleChatBot}
+              setChatbotContext={setChatbotContext}
+              chatbotRef={chatbotRef}
+              onActivityChange={handleActivityChange}
+            />
+          </div>
+        );
+      case "CARS":
+        return <TestingSuit />;
+      case "flashcards":
+        return <FlashcardDeck />;
+      case "Tests":
+        return (
+          <PracticeTests 
+            handleSetTab={handleTabChange} 
+            chatbotRef={chatbotRef}
+            onActivitiesUpdate={fetchActivities}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
-    <>
-      {(isLoading || isLoadingUserInfo) && <LoadingSpinner />}
-      <ContentWrapper>
-        <div className="w-3/4 relative overflow-visible">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <h2
-                className="text-white text-2xl ml-3 font-thin leading-normal shadow-text cursor-pointer"
-                onClick={() => (window.location.href = "/home")}
-              >
-                {activeTab === "Schedule"
-                  ? "Statistics"
-                  : activeTab === "Tests"
-                    ? "Testing Suite"
-                    : activeTab === "AdaptiveTutoringSuite"
-                      ? "Adaptive Tutoring Suite"
-                      : activeTab === "flashcards"
-                        ? "Flashcards"
-                        : activeTab === "CARS"
-                          ? "Daily CARs Practice"
-                          : "Home"}
-              </h2>
-              <ThemeSwitcher />
-            </div>
-          </div>
-          <div className="relative overflow-visible">
-            <div className="p-3 gradientbg h-[calc(100vh-5rem)] rounded-lg">
-              {renderContent()}
-            </div>
+    <ContentWrapper>
+      <div className="w-3/4 relative overflow-visible">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <h2
+              className="text-white text-2xl ml-3 font-thin leading-normal shadow-text cursor-pointer"
+              onClick={() => router.push("/home")}
+            >
+              {activeTab === "Schedule"
+                ? "Statistics"
+                : activeTab === "Tests"
+                  ? "Testing Suite"
+                  : activeTab === "AdaptiveTutoringSuite"
+                    ? "Adaptive Tutoring Suite"
+                    : activeTab === "flashcards"
+                      ? "Flashcards"
+                      : activeTab === "CARS"
+                        ? "Daily CARs Practice"
+                        : "Home"}
+            </h2>
+            <ThemeSwitcher />
           </div>
         </div>
-
-        <FloatingButton
-          onTabChange={handleTabChange}
-          currentPage={currentPage}
-          initialTab="Tests"
-          className="z-50"
-          activities={activities}
-          onTasksUpdate={fetchActivities}
-          isSubscribed={isSubscribed}
-        />
-
-        <div className="w-1/4">
-          <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
-            &nbsp;
-          </h2>
-
-          <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
-            <SideBar
-              handleSetTab={handleTabChange}
-              activities={activities}
-              currentPage={currentPage}
-              chatbotContext={chatbotContext}
-              chatbotRef={chatbotRef}
-              onActivitiesUpdate={fetchActivities}
-              isSubscribed={isSubscribed}
-            />
+        <div className="relative overflow-visible">
+          <div className="p-3 gradientbg h-[calc(100vh-5rem)] rounded-lg">
+            {renderContent()}
           </div>
         </div>
-        
-        {/* Score Popup */}
-        <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
-          <DialogContent className="bg-[#001226] text-white border border-sky-500 rounded-lg">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-semibold text-sky-300">
-                Test Completed!
-              </DialogTitle>
-              <DialogDescription className="text-gray-300">
-                Great job on completing the diagnostic test.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <p className="text-xl">
-                Your Score:{" "}
-                <span className="font-bold text-sky-300">
-                  {testScore.toFixed(2)}%
-                </span>
-              </p>
-            </div>
-            <div className="flex justify-end">
-              <Button
-                onClick={() => setShowScorePopup(false)}
-                className="bg-sky-500 hover:bg-sky-600 text-white"
-                disabled={isUpdatingProfile || isGeneratingActivities}
-              >
-                {isUpdatingProfile || isGeneratingActivities
-                  ? "Processing..."
-                  : "Close"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+      </div>
 
-        <StreakPopup
-          streak={userStreak}
-          isOpen={showStreakPopup}
-          onClose={() => {
-            console.log("Closing streak popup"); // Debug log
-            setShowStreakPopup(false);
-          }}
-        />
-      </ContentWrapper>
-    </>
+      <FloatingButton
+        onTabChange={handleTabChange}
+        currentPage={currentPage}
+        initialTab="Tests"
+        className="z-50"
+        activities={activities}
+        onTasksUpdate={fetchActivities}
+        isSubscribed={isSubscribed}
+      />
+
+      <div className="w-1/4">
+        <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
+          &nbsp;
+        </h2>
+
+        <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
+          <SideBar
+            handleSetTab={handleTabChange}
+            activities={activities}
+            currentPage={currentPage}
+            chatbotContext={chatbotContext}
+            chatbotRef={chatbotRef}
+            onActivitiesUpdate={fetchActivities}
+            isSubscribed={isSubscribed}
+          />
+        </div>
+      </div>
+      
+      {/* Score Popup */}
+      <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
+        <DialogContent className="bg-[#001226] text-white border border-sky-500 rounded-lg">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold text-sky-300">
+              Test Completed!
+            </DialogTitle>
+            <DialogDescription className="text-gray-300">
+              Great job on completing the diagnostic test.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-xl">
+              Your Score:{" "}
+              <span className="font-bold text-sky-300">
+                {testScore.toFixed(2)}%
+              </span>
+            </p>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              onClick={() => setShowScorePopup(false)}
+              className="bg-sky-500 hover:bg-sky-600 text-white"
+              disabled={isUpdatingProfile || isGeneratingActivities}
+            >
+              {isUpdatingProfile || isGeneratingActivities
+                ? "Processing..."
+                : "Close"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <StreakPopup
+        streak={userStreak}
+        isOpen={showStreakPopup}
+        onClose={() => {
+          console.log("Closing streak popup");
+          setShowStreakPopup(false);
+        }}
+      />
+    </ContentWrapper>
   );
 };
 
-export default Page;
+export default HomePage;
