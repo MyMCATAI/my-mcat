@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { useUser } from "@clerk/nextjs";
 import { Mail } from 'lucide-react';
+import ThemeSwitcher from '@/components/home/ThemeSwitcher';
 
 interface ImageItem {
   id: string;
@@ -214,41 +215,46 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
             <div className="flex-grow bg-[--theme-leaguecard-color] p-2 rounded-md mb-2 flex flex-col">
               <h3 className="text-lg font-semibold mb-2">Additional Items</h3>
               <div className="flex-grow flex flex-col items-center justify-center text-center gap-4">
-                <p>Do you want more features? Send us a message! :D</p>
-                {!showMessageForm ? (
-                  <button 
-                    onClick={() => setShowMessageForm(true)}
-                    className="p-2 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded-full hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-opacity"
-                  >
-                    <Mail size={24} />
-                  </button>
-                ) : (
-                  <form onSubmit={handleSendMessage} className="w-full">
-                    <textarea
-                      placeholder="Your message"
-                      value={messageForm.message}
-                      onChange={(e) => setMessageForm({ message: e.target.value })}
-                      className="w-full p-2 mb-2 rounded resize-none text-gray-800"
-                      required
-                      rows={6}
-                    />
-                    <div className="flex justify-between">
-                      <button
-                        type="button"
-                        onClick={() => setShowMessageForm(false)}
-                        className="py-2 px-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="py-2 px-4 bg-[--theme-hover-color] text-[--theme-hover-text] rounded-md hover:opacity-80 transition-opacity"
-                      >
-                        Send
-                      </button>
-                    </div>
-                  </form>
-                )}
+                <div className="flex flex-col items-center gap-4 w-full">
+                  <p>Change your theme:</p>
+                  <ThemeSwitcher />
+                  <div className="border-t border-[--theme-border-color] w-full my-4" />
+                  <p>Do you want more features? Send us a message! :D</p>
+                  {!showMessageForm ? (
+                    <button 
+                      onClick={() => setShowMessageForm(true)}
+                      className="p-2 bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] rounded-full hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-opacity"
+                    >
+                      <Mail size={24} />
+                    </button>
+                  ) : (
+                    <form onSubmit={handleSendMessage} className="w-full">
+                      <textarea
+                        placeholder="Your message"
+                        value={messageForm.message}
+                        onChange={(e) => setMessageForm({ message: e.target.value })}
+                        className="w-full p-2 mb-2 rounded resize-none text-gray-800"
+                        required
+                        rows={6}
+                      />
+                      <div className="flex justify-between">
+                        <button
+                          type="button"
+                          onClick={() => setShowMessageForm(false)}
+                          className="py-2 px-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="py-2 px-4 bg-[--theme-hover-color] text-[--theme-hover-text] rounded-md hover:opacity-80 transition-opacity"
+                        >
+                          Send
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
               </div>
             </div>
           </div>

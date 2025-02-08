@@ -115,7 +115,7 @@ const DaysStreak: React.FC<DaysStreakProps> = ({ days }) => {
 const getStreakMessage = (days: number): string => {
   if (days < 3) return "Great start! Keep the momentum going!";
   if (days < 7) return "Impressive! You're building a solid habit!";
-  if (days < 14) return "Wow! Your dedication is paying off!";
+  if (days < 14) return "Wow! Your dedication is awesome!";
   if (days < 30) return "Incredible streak! You're unstoppable!";
   return "Legendary! Your consistency is truly inspiring!";
 };
