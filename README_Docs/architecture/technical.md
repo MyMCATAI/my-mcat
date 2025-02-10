@@ -1,39 +1,36 @@
 # Technical Specifications
 
 ## Directory
-**Core Setup**
-- [Technology Stack](#technology-stack)
-- [Project Structure](#project-structure)
+  [Core Setup](#core-setup)
+   - [Technology Stack](#technology-stack)
+   - [Project Structure](#project-structure)
 
-**Component Guidelines**
-- [Component Organization](#component-organization)
-- [Component Structure](#component-structure)
-  - Section Headers
-  - Import Standards
-  - Component Naming
-  - Props & Types
+  [Feature Control](#feature-control)
+   - [Free Features](#free-features)
+   - [Premium Features](#premium-features)
+   - [Feature Gates](#feature-gates)
 
-**Development Guidelines**
-- [Development Standards](#development-standards)
-- [Routing & File Organization](#routing--file-organization)
-  - Route Structure
-  - Route-Component Relationship
-  - File Naming
-- [State Management](#state-management)
-  - Local State
-  - Context
-  - Server State
-- [Feature Implementation](#feature-implementation)
-  - Premium Features
-  - Authentication
-  - Error Handling
-- [Performance](#performance)
-  - Loading States
-  - Optimization
-  - Testing
+  [Component Guidelines](#component-guidelines)
+   - [Route Structure](#route-structure)
+   - [Route-Component Relationship](#route-component-relationship)
+   - [Component Naming](#component-naming)
+   - [Shared Components](#shared-components)
+   - [State & Error Management](#state--error-management)
+   - [File Headers & Comments](#file-headers--comments)
+   - [Import Standards](#import-standards)
+   - [Section Headers](#section-headers)
+   - [Styling & Animation](#styling--animation)
+   - [Component Optimization](#component-optimization)
+   - [Component Testing](#component-testing)
 
---- 
-## Technology Stack
+  [Database Guidelines](#database-guidelines)
+  [Authentication Guidelines](#authentication-guidelines)
+  [Documentation Guidelines](#documentation-guidelines)
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## Core Setup
+
+### Technology Stack
 - Next.js 13+ (App Router)
 - TypeScript
 - Tailwind CSS
@@ -44,7 +41,7 @@
 - Prisma ORM
 - Stripe (Payments)
 
-## Project Structure
+### Project Structure
 ```
 my-mcat/
 ├── app/                    # Next.js app directory
@@ -71,32 +68,83 @@ my-mcat/
 └── ... other project files
 ```
 
-### Component Organization
-1. Route Structure:
-   ✅ Correct: Keep route folders minimal
-   ```
-   app/(landingpage)/
-   ├── page.tsx           # Page component
-   └── layout.tsx         # Layout wrapper
-   ```
-   
-   ✅ Correct: Store components in dedicated component directory
-    ```
-   components/landingpage/
-   ├── landing-navbar.tsx
-   ├── hero-section.tsx
-   └── feature-grid.tsx
-   ```
-   ❌ Incorrect: Don't put components in route folders
-   ```
-   app/(landingpage)/
-   ├── page.tsx
-   ├── layout.tsx
-   ├── navbar.tsx        // Should be in components/landingpage/
-   └── hero.tsx         // Should be in components/landingpage/
-   ```
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## Feature Control
+This section details what features are available to free and premium users. 
 
-2. Route-Component Relationship:
+### Free Features
+- Doctor's Office Game
+- Basic Passage Questions
+- Basic Statistics
+- Core Game Features
+- Daily CARS Practice (limited)
+
+### Premium Features
+- CARS Practice (full access)
+- Calendar System
+- Testing Suite
+- Adaptive Tutoring
+- Analytics Dashboard
+- Advanced Features
+
+### Feature Gates
+All premium features must:
+- Use `useSubscriptionStatus` hook for access control
+- Implement graceful fallbacks for free users
+- Show upgrade prompts when appropriate
+- Track user preferences and feature access attempts
+
+Example implementation:
+```typescript
+import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
+import { trackFeatureAccess } from "@/lib/analytics";
+
+const PremiumFeature = () => {
+  const { isSubscribed } = useSubscriptionStatus();
+
+  useEffect(() => {
+    trackFeatureAccess("feature-name", isSubscribed);
+  }, [isSubscribed]);
+
+  if (!isSubscribed) {
+    return <UpgradePrompt feature="feature-name" />;
+  }
+
+  return <PremiumContent />;
+};
+```
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## Component Guidelines
+
+This section outlines the location to create and place components, as well as coding best practices and styling for all `.tsx` components.
+
+### Route Structure
+✅ Correct: Keep route folders minimal
+```
+app/(landingpage)/
+├── page.tsx           # Page component
+└── layout.tsx         # Layout wrapper
+```
+
+✅ Correct: Store components in dedicated component directory
+```
+components/landingpage/
+├── landing-navbar.tsx
+├── hero-section.tsx
+└── feature-grid.tsx
+```
+
+❌ Incorrect: Don't put components in route folders
+```
+app/(landingpage)/
+├── page.tsx
+├── layout.tsx
+├── navbar.tsx        // Should be in components/landingpage/
+└── hero.tsx         // Should be in components/landingpage/
+```
+
+### Route-Component Relationship:
    - Keep route folders (`app/*`) minimal with just:
      - `page.tsx`: Main page component
      - `layout.tsx`: Route layout wrapper
@@ -110,7 +158,7 @@ my-mcat/
      app/(home)/* → components/home/*
      ```
 
-3. Component Naming:
+### Component Naming:
    ✅ Correct: CamelCase with default export
 
    ```
@@ -123,16 +171,56 @@ my-mcat/
    export const game_card = () => { ... }
    ```
 
-4. Shared Components:
-   - UI: `components/ui/`
+### Shared Components:
+  Store all shared components in `components/ui`
 
-## Development Standards
+### State & Error Management
+```typescript
+// State Management
+- Local: useState
+- Complex: Context
+- Server: React Query
+- Forms: React Hook Form
 
-### Component Structure and Organization
+// Error Handling
+try {
+  await operation();
+} catch (error) {
+  toast.error("User-friendly message");
+  console.error(error);
+}
+```
 
-Make sure to organize any functional React component with Section Headers:
 
-Sections Headers (in order):
+### File Headers & Comments
+- Must include relative path as first line (this helps when we copy and paste full files into other LLM tools)
+- TypeScript/JavaScript: Use `// path/to/file`
+- Markdown: Use `<!-- path/to/file -->`
+- Never include root project folder
+- Always include file extension
+
+### Import Standards
+Import groups should be ordered by scope (external → internal).
+Standard import order:
+```typescript
+//path/to/file
+import { useState, useRef, useCallback } from "react"; // React and Next.js imports
+import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion"; // External libraries
+import { useClerk } from "@clerk/nextjs";
+import { toast } from "react-hot-toast";
+import { cn } from "@/lib/utils"; // Internal utilities and types
+import { useUserInfo } from "@/hooks/useUserInfo";
+import type { UserInfo } from "@/types";
+import { Button } from "@/components/ui/button"; // Internal components
+import { Input } from "@/components/ui/input";
+```
+
+
+### Section Headers
+All React components should use these headers in order (if they exist)
+```typescript
 /* ------------------------------------------ Constants ----------------------------------------- */
 /* -------------------------------------------- Types ------------------------------------------- */
 /* ------------------------------------------- State -------------------------------------------- */
@@ -141,16 +229,13 @@ Sections Headers (in order):
 /* ------------------------------------ Animations & Effects ------------------------------------ */
 /* ---------------------------------------- Event Handlers -------------------------------------- */
 /* ---------------------------------------- Render Methods -------------------------------------- */
+```
+Note: Each header is 100 characters wide. Constants and Types go outside the component.
 
-
-Note that each header is 100 characters wide in total
-"Constants" and "Types" Section Headers should exist outside of the component
-
-### Example component structure
-
+#### Component Example
 ```typescript
-import { useState, useRef, useCallback } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+//path/to/file
+import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------ Constants ----------------------------------------- */
@@ -172,11 +257,12 @@ const Component = ({ className }: ComponentProps) => {
   // Implementation following above structure
   return (/* JSX */);
 };
+
+export default Component;
 ```
 
 ### Styling & Animation
-
-Always consider global variables in `globals.css` and reference those before you create new ones.
+Use Tailwind CSS and consider global variables in `globals.css` and reference those before you create new ones.
 
 ```typescript
 // Use CSS variables and mobile-first approach
@@ -190,111 +276,151 @@ const animation = prefersReducedMotion ? {} : {
 };
 ```
 
-### Feature Control & Auth
-- Free Features: 
-  - Doctor's Office Game
-  - Basic Statistics
-  - Basic Passage Questions (in Game)
-  
-- Premium Features: 
-  - CARS Practice (in /home/practice)
-  - Calendar System (in /home/calendar)
-  - Testing Suite (in /home/testing)
-  - Analytics
-  - Advanced Features
+### Component Optimization
+Consider the following optimizations within components:
 
-### State & Error Management
-```typescript
-// State Management
-- Local: useState
-- Complex: Context
-- Server: React Query
-- Forms: React Hook Form
+#### Performance
+- Memoization
+  - `useMemo` for expensive computations
+  - `useCallback` for stable callbacks
+  - `memo` for expensive components
+- Rendering
+  - Virtualize long lists
+  - Use CSS transforms over layout props
+  - Avoid layout thrashing
 
-// Error Handling
-try {
-  await operation();
-} catch (error) {
-  toast.error("User-friendly message");
-  console.error(error);
-}
-```
-
-### Performance & Testing
-- Performance:
+#### Assets & Code
+- Loading
   - Next/Image optimization
+  - Lazy loading with `next/dynamic`
+  - Preload critical assets
+- Code Splitting
   - Dynamic imports
-  - React Query caching
+  - Route-based splitting
   - Suspense boundaries
-  - Skeleton loaders
-  - Loading indicators
 
-- Testing:
-  - Unit: Component logic
-  - Integration: Feature flows
-  - E2E: Critical paths
-  - Accessibility
+#### Data & State
+- Caching
+  - React Query/SWR strategies
+  - Local storage when appropriate
+- State
+  - Colocate state
+  - Batch updates
+  - Use context selectively
+
+#### Resource Management
+- Cleanup
+  - Clear timers/listeners
+  - Cancel pending requests
+  - Clean WebSocket connections
+- Loading States
+  - Skeleton loaders
+  - Progress indicators
+  - Transition animations
+
+
+
+### Component Testing
+Tests are not required, but if the developer prompts and asks for a test they should follow these guidelines:
+
+#### Test Categories
+- Unit Tests
+  - Component rendering
+  - Props validation
+  - State changes
+  - Event handlers
+  - Custom hooks
+  - Error boundaries
+
+- Integration Tests
+  - Component interactions
+  - Data flow
+  - Route transitions
+  - API interactions
+  - Authentication flows
+
+- User Flows
+  - Critical user paths
+  - Form submissions
+  - Premium feature access
+  - Error scenarios
   - Loading states
 
-### Integration Standards
-- Database: Prisma with error handling
-- Auth: Clerk.dev session management
-- API: `/api/[feature]/[action]`
-- Rate Limiting: Per route basis
-
-### Import Standards
-
-Standard import order:
+#### Testing Standards
 ```typescript
-// 1. React and Next.js imports
-import { useState, useRef, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
+// Component test template
+describe('ComponentName', () => {
+  // Setup
+  beforeEach(() => {
+    // Mock external dependencies
+    // Reset test state
+  });
 
-// 2. External libraries
-import { motion, useReducedMotion } from "framer-motion";
-import { useClerk } from "@clerk/nextjs";
-import { toast } from "react-hot-toast";
-
-// 3. Internal utilities and types
-import { cn } from "@/lib/utils";
-import { useUserInfo } from "@/hooks/useUserInfo";
-import type { UserInfo } from "@/types";
-
-// 4. Internal components
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+  // Rendering
+  it('renders without crashing', () => {});
+  it('matches snapshot', () => {});
+  
+  // Props & State
+  it('handles required props correctly', () => {});
+  it('manages state updates properly', () => {});
+  
+  // User Interaction
+  it('responds to user events correctly', () => {});
+  it('validates user input properly', () => {});
+  
+  // Integration
+  it('interacts with other components correctly', () => {});
+  it('handles API calls properly', () => {});
+  
+  // Error & Edge Cases
+  it('handles error states gracefully', () => {});
+  it('manages loading states correctly', () => {});
+});
 ```
 
-Import groups should be separated by a blank line and ordered by scope (external → internal).
+#### Accessibility Testing
+- Screen reader compatibility
+- Keyboard navigation
+- ARIA attributes
+- Color contrast
+- Focus management
 
-### Code Block Standards
+#### Performance Testing
+- Component render time
+- Memory leaks
+- Network requests
+- State updates
+- Animation performance
 
-1. In Markdown Files (.md):
-   ```
-   Use plain code blocks without language specifiers
-   ```
 
-2. Only use language tags when referencing specific files:
-   ```typescript:components/MyComponent.tsx
-   const MyComponent = () => {
-     return <div>Hello</div>;
-   };
-   ```
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## Database Guidelines
+<!-- TODO: Josh -->
+- Database: Prisma with error handling
 
-3. For CLI commands and documentation:
-   ```
-   @Codebase
-   What's my current task?
-   ```
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## Authentication Guidelines
+<!-- TODO: Josh -->
 
-4. Never use language tags in .md files without file paths
-   ❌ Incorrect:
-   ```typescript
-   const x = 1;
-   ```
-   
-   ✅ Correct:
-   ```
-   const x = 1;
-   ```
+- Auth: Clerk.dev session management
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## Documentation Guidelines
+> These rules apply to all .md documentation files in the project
+
+### Code Formatting
+Use code backticks (`) to format:
+- File paths: `app/components/Button.tsx`
+- Components: `<Button>`
+- Functions: `handleClick()`
+- Variables: `isLoading`
+- API endpoints: `/api/knowledge-profile/update`
+- Imports: `import { useState }`
+- Any technical reference
+
+### Code Blocks 
+Within Documentation
+- Do not use language tags for code examples...
+
+### Link Formatting
+- Use proper markdown links...
