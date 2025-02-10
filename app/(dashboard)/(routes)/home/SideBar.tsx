@@ -24,7 +24,6 @@ import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { PurchaseButton } from '@/components/purchase-button';
 import Leaderboard from "@/components/leaderboard/Leaderboard";
-import { UpgradeToGoldButton } from "@/components/upgrade-to-gold-button";
 
 interface Task {
   text: string;
@@ -378,9 +377,6 @@ const SideBar: React.FC<SideBarProps> = ({
               </p>
             </div>
             <div className="flex flex-col space-y-4">
-              <UpgradeToGoldButton size="lg" className="w-full">
-                Upgrade to Gold
-              </UpgradeToGoldButton>
               <p className="text-sm text-[--theme-text-color] opacity-60 text-center">
                 Cancel anytime. Instant access to all features.
               </p>
@@ -1128,6 +1124,7 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
     </div>
   );
 };
+
 
 export default React.memo(SideBar, (prevProps, nextProps) => {
   // Only re-render if these props change

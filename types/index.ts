@@ -66,6 +66,13 @@ export interface UserResponse {
   isReviewed?: Boolean | null;
 }
 
+export interface UserResponseWithCategory extends Omit<UserResponse, 'question'> {
+  question: Question & {
+    category?: Category;
+    types?: string;
+  };
+}
+
 export interface UserTest {
   id: string;
   userId: string;

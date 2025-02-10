@@ -1,7 +1,6 @@
 "use client";
 
 import { useUserInfo } from "@/hooks/useUserInfo";
-import { UpgradeToGoldButton } from "@/components/upgrade-to-gold-button";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -62,9 +61,15 @@ export function RestrictedContent() {
             </p>
 
             <div className="flex flex-col items-center gap-4">
-              <UpgradeToGoldButton size="lg" className="w-full max-w-md">
+              <button
+                onClick={() => router.push('/pitch')}
+                className="w-full max-w-md px-6 py-3 text-lg rounded-lg font-semibold
+                  bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-amber-900
+                  shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:shadow-[0_0_25px_rgba(245,158,11,0.5)]
+                  transform hover:scale-[1.02] transition-all duration-300"
+              >
                 Upgrade to Gold
-              </UpgradeToGoldButton>
+              </button>
               
               <button
                 onClick={() => router.push('/doctorsoffice')}

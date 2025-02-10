@@ -1,10 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import ResourcesMenu from "./ResourcesMenu";
-import OfficeContainer from "./OfficeContainer";
-import FloatingButton from "../home/FloatingButton";
-import ShoppingDialog, { ImageGroup } from "./ShoppingDialog";
 import { useRouter } from "next/navigation";
 import { DoctorOfficeStats } from "@/types";
 import { toast } from "react-hot-toast";
@@ -18,18 +15,44 @@ import {
   calculateQualityOfCare,
 } from "@/utils/calculateResourceTotals";
 import WelcomeDialog from "./WelcomeDialog";
-import FlashcardsDialog from "./FlashcardsDialog";
-import AfterTestFeed, { UserResponseWithCategory } from "./AfterTestFeed";
-import type { UserResponse } from "@prisma/client";
-import { FetchedActivity } from "@/types";
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
-import NewGameButton from "./components/NewGameButton";
 import { imageGroups } from "./constants/imageGroups";
-import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
-import { useUserActivity } from '@/hooks/useUserActivity';
-import { useUserInfo } from "@/hooks/useUserInfo";
-import { GridImage } from './types';
 import { PurchaseButton } from "@/components/purchase-button";
+import dynamic from 'next/dynamic';
+import { useUserInfo } from "@/hooks/useUserInfo";
+import { useUserActivity } from '@/hooks/useUserActivity';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import type { UserResponse } from "@prisma/client";
+import type { FetchedActivity } from "@/types";
+import { GridImage } from './types';
+import NewGameButton from "./components/NewGameButton";
+import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
+import type { UserResponseWithCategory } from "@/types";
+
+// Lazy load the heavy components
+const OfficeContainer = dynamic(() => import('./OfficeContainer'), {
+  loading: () => <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />,
+  ssr: false // Since this is a game component, we don't need SSR
+});
+
+const ShoppingDialog = dynamic(() => import('./ShoppingDialog'), {
+  loading: () => null,
+  ssr: false
+});
+
+const FlashcardsDialog = dynamic(() => import('./FlashcardsDialog'), {
+  loading: () => null,
+  ssr: false
+});
+
+const AfterTestFeed = dynamic(() => import('./AfterTestFeed'), {
+  loading: () => null,
+  ssr: false
+});
+
+const FloatingButton = dynamic(() => import('../home/FloatingButton'), {
+  loading: () => null,
+  ssr: false
+});
 
 const DoctorsOfficePage: React.FC = () => {
   const { isSubscribed } =  useUserInfo()
@@ -518,161 +541,134 @@ const DoctorsOfficePage: React.FC = () => {
 
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
-      <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
-        <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak]">
-          <ResourcesMenu
-            reportData={reportData}
-            userRooms={userRooms}
-            totalCoins={userScore}
-            totalPatients={totalPatients}
-            patientsPerDay={patientsPerDay}
-          />
-        </div>
-        <div className="w-3/4 font-krungthep relative rounded-r-lg">
-          <OfficeContainer
-            onNewGame={handleSetPopulateRooms}
-            visibleImages={visibleImages}
-            userRooms={userRooms}
-            imageGroups={imageGroups}
-            setFlashcardRoomId={setFlashcardRoomId}
-            updateVisibleImages={updateVisibleImages}
-            activeRooms={activeRooms}
-            setActiveRooms={setActiveRooms}
-            isFlashcardsOpen={isFlashcardsOpen}
-            setIsFlashcardsOpen={setIsFlashcardsOpen}
-          />
-          {/* Button on the top left corner */}
-          <div className="absolute top-4 left-4 flex gap-2 z-50">
-            {userLevel === "PATIENT LEVEL" 
-            ? 
-            <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
-              <p className="font-medium">{'To play, check out the marketplace! Hover over "PATIENT LEVEL" to see the marketplace. →'}</p>
-            </div>
-            :
-            <NewGameButton
-              userScore={userScore}
-              setUserScore={setUserScore}
-              onGameStart={handleGameStart}
-              isGameInProgress={isGameInProgress}
-              resetGameState={resetGameState}
-            />
-            }
-          </div>
-          {/* Fellowship Level button with coins and patients */}
-          <div className="absolute top-4 right-4 z-50 flex items-center">
-            {/* Patient count */}
-            <div className="group relative flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
-              <Image
-                src="/game-components/patient.png"
-                alt="Patient"
-                width={32}
-                height={32}
-                className="mr-2"
-              />
-              <div className="flex flex-col">
-                <span className="text-[--theme-hover-color] font-bold text-lg">{totalPatients}</span>
-              </div>
-              {/* Tooltip */}
-              <div className="absolute top-full left-0 mt-2 w-64 bg-[--theme-leaguecard-color] text-[--theme-text-color] text-sm rounded-lg p-3 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 border border-[--theme-border-color]">
-                <p className="mb-2">Total patients treated: {totalPatients}</p>
-                <p className="mb-2">You treat <span className="text-[--theme-hover-color]">{patientsPerDay} patients per day</span> at your current level.</p>
-                <p>Higher clinic levels allow you to treat more patients daily, which affects your total score.</p>
-                <ul className="text-xs mt-1 space-y-1">
-                  <li>• INTERN: 4/day</li>
-                  <li>• RESIDENT: 8/day</li>
-                  <li>• FELLOWSHIP: 10/day</li>
-                  <li>• ATTENDING: 16/day</li>
-                  <li>• PHYSICIAN: 24/day</li>
-                  <li>• MEDICAL DIRECTOR: 30/day</li>
-                </ul>
-              </div>
-            </div>
-            {/* Coins display */}
-            <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
-              <PurchaseButton 
-                className="flex items-center hover:opacity-90 transition-opacity"
-                tooltipText="Click to purchase more coins"
-                userCoinCount={userScore}
-              >
-                <div className="flex items-center">
-                  <Image
-                    src="/game-components/PixelCupcake.png"
-                    alt="Studycoin"
-                    width={32}
-                    height={32}
-                    className="mr-2"
-                  />
-                  <span className="text-[--theme-hover-color] font-bold">{userScore}</span>
-                </div>
-              </PurchaseButton>
-            </div>
-            {/* Fellowship Level button with dropdown */}
-            <div className="relative group">
-              <button className={`flex items-center justify-center px-6 py-3 
-                ${(!userLevel || userLevel === "PATIENT LEVEL") 
-                  ? "bg-green-500 animate-pulse" 
-                  : "bg-[--theme-doctorsoffice-accent]"
-                }
-                border-[--theme-border-color] 
-                text-[--theme-text-color] 
-                hover:text-[--theme-hover-text] 
-                hover:bg-[--theme-hover-color] 
-                transition-colors text-3xl font-bold uppercase 
-                group-hover:text-[--theme-hover-text] 
-                group-hover:bg-[--theme-hover-color]`}>
-                <span>{userLevel || "PATIENT LEVEL"}</span>
-              </button>
-              <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
-                <ShoppingDialog
-                  ref={marketplaceDialogRef}
-                  imageGroups={imageGroups}
-                  visibleImages={visibleImages}
-                  toggleGroup={toggleGroup}
-                  userScore={userScore}
-                  isOpen={isMarketplaceOpen}
-                  onOpenChange={setIsMarketplaceOpen}
-                  buttonContent={
-                    <a
-                      href="#"
-                      className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                      Marketplace
-                    </a>
-                  }
-                />
+      <WelcomeDialog
+        isOpen={isWelcomeDialogOpen}
+        onOpenChange={handleWelcomeDialogOpenChange}
+        onClinicUnlocked={handleClinicUnlocked}
+      />
 
-                <FlashcardsDialog
-                  ref={flashcardsDialogRef}
-                  isOpen={isFlashcardsOpen}
-                  onOpenChange={setIsFlashcardsOpen}
-                  roomId={flashcardRoomId}
-                  activeRooms={activeRooms}
-                  setActiveRooms={setActiveRooms}
-                  handleCompleteAllRoom={handleCompleteAllRoom}
-                  onMCQAnswer={handleMCQAnswer}
-                  setTotalMCQQuestions={setTotalMCQQuestions}
-                  buttonContent={
-                    <div className="relative">
+      <Suspense fallback={
+        <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
+          <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse" />
+          <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />
+        </div>
+      }>
+        <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
+          <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak]">
+            <ResourcesMenu
+              reportData={reportData}
+              userRooms={userRooms}
+              totalCoins={userScore}
+              totalPatients={totalPatients}
+              patientsPerDay={patientsPerDay}
+            />
+          </div>
+          <div className="w-3/4 font-krungthep relative rounded-r-lg">
+            <OfficeContainer
+              onNewGame={handleSetPopulateRooms}
+              visibleImages={visibleImages}
+              userRooms={userRooms}
+              imageGroups={imageGroups}
+              setFlashcardRoomId={setFlashcardRoomId}
+              updateVisibleImages={updateVisibleImages}
+              activeRooms={activeRooms}
+              setActiveRooms={setActiveRooms}
+              isFlashcardsOpen={isFlashcardsOpen}
+              setIsFlashcardsOpen={setIsFlashcardsOpen}
+            />
+            {/* Button on the top left corner */}
+            <div className="absolute top-4 left-4 flex gap-2 z-50">
+              {userLevel === "PATIENT LEVEL" 
+              ? 
+              <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
+                <p className="font-medium">{'To play, check out the marketplace! Hover over "PATIENT LEVEL" to see the marketplace. →'}</p>
+              </div>
+              :
+              <NewGameButton
+                userScore={userScore}
+                setUserScore={setUserScore}
+                onGameStart={handleGameStart}
+                isGameInProgress={isGameInProgress}
+                resetGameState={resetGameState}
+              />
+              }
+            </div>
+            {/* Fellowship Level button with coins and patients */}
+            <div className="absolute top-4 right-4 z-50 flex items-center">
+              {/* Patient count */}
+              <div className="group relative flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
+                <Image
+                  src="/game-components/patient.png"
+                  alt="Patient"
+                  width={32}
+                  height={32}
+                  className="mr-2"
+                />
+                <div className="flex flex-col">
+                  <span className="text-[--theme-hover-color] font-bold text-lg">{totalPatients}</span>
+                </div>
+                {/* Tooltip */}
+                <div className="absolute top-full left-0 mt-2 w-64 bg-[--theme-leaguecard-color] text-[--theme-text-color] text-sm rounded-lg p-3 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 border border-[--theme-border-color]">
+                  <p className="mb-2">Total patients treated: {totalPatients}</p>
+                  <p className="mb-2">You treat <span className="text-[--theme-hover-color]">{patientsPerDay} patients per day</span> at your current level.</p>
+                  <p>Higher clinic levels allow you to treat more patients daily, which affects your total score.</p>
+                  <ul className="text-xs mt-1 space-y-1">
+                    <li>• INTERN: 4/day</li>
+                    <li>• RESIDENT: 8/day</li>
+                    <li>• FELLOWSHIP: 10/day</li>
+                    <li>• ATTENDING: 16/day</li>
+                    <li>• PHYSICIAN: 24/day</li>
+                    <li>• MEDICAL DIRECTOR: 30/day</li>
+                  </ul>
+                </div>
+              </div>
+              {/* Coins display */}
+              <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
+                <PurchaseButton 
+                  className="flex items-center hover:opacity-90 transition-opacity"
+                  tooltipText="Click to purchase more coins"
+                  userCoinCount={userScore}
+                >
+                  <div className="flex items-center">
+                    <Image
+                      src="/game-components/PixelCupcake.png"
+                      alt="Studycoin"
+                      width={32}
+                      height={32}
+                      className="mr-2"
+                    />
+                    <span className="text-[--theme-hover-color] font-bold">{userScore}</span>
+                  </div>
+                </PurchaseButton>
+              </div>
+              {/* Fellowship Level button with dropdown */}
+              <div className="relative group">
+                <button className={`flex items-center justify-center px-6 py-3 
+                  ${(!userLevel || userLevel === "PATIENT LEVEL") 
+                    ? "bg-green-500 animate-pulse" 
+                    : "bg-[--theme-doctorsoffice-accent]"
+                  }
+                  border-[--theme-border-color] 
+                  text-[--theme-text-color] 
+                  hover:text-[--theme-hover-text] 
+                  hover:bg-[--theme-hover-color] 
+                  transition-colors text-3xl font-bold uppercase 
+                  group-hover:text-[--theme-hover-text] 
+                  group-hover:bg-[--theme-hover-color]`}>
+                  <span>{userLevel || "PATIENT LEVEL"}</span>
+                </button>
+                <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
+                  <ShoppingDialog
+                    ref={marketplaceDialogRef}
+                    imageGroups={imageGroups}
+                    visibleImages={visibleImages}
+                    toggleGroup={toggleGroup}
+                    userScore={userScore}
+                    isOpen={isMarketplaceOpen}
+                    onOpenChange={setIsMarketplaceOpen}
+                    buttonContent={
                       <a
                         href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setIsFlashcardsTooltipOpen(!isFlashcardsTooltipOpen);
-                        }}
                         className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
                       >
                         <svg
@@ -686,56 +682,178 @@ const DoctorsOfficePage: React.FC = () => {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
+                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                           />
                         </svg>
-                        Flashcards
+                        Marketplace
                       </a>
-                      <div 
-                        className={`absolute right-full top-1/2 -translate-y-1/2 mr-2 px-4 py-2 w-72 bg-[--theme-leaguecard-color] text-white text-sm rounded-lg transition-all duration-200 ${
-                          isFlashcardsTooltipOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-                        }`}
-                      >
-                        {"We're working on adding uploadable flashcards later. They'll be auto-tagged and made into multiple choice questions. If you REALLY, REALLY want us to prioritize this over the bajillion other things we gotta do, venmo Prynce $100 at @ShortKingsAnthem and say 'Pretty please uploadable flashcards.'"}
-                        <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-[--theme-leaguecard-color] rotate-45"></div>
+                    }
+                  />
+
+                  <FlashcardsDialog
+                    ref={flashcardsDialogRef}
+                    isOpen={isFlashcardsOpen}
+                    onOpenChange={setIsFlashcardsOpen}
+                    roomId={flashcardRoomId}
+                    activeRooms={activeRooms}
+                    setActiveRooms={setActiveRooms}
+                    handleCompleteAllRoom={handleCompleteAllRoom}
+                    onMCQAnswer={handleMCQAnswer}
+                    setTotalMCQQuestions={setTotalMCQQuestions}
+                    buttonContent={
+                      <div className="relative">
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setIsFlashcardsTooltipOpen(!isFlashcardsTooltipOpen);
+                          }}
+                          className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 mr-2"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
+                            />
+                          </svg>
+                          Flashcards
+                        </a>
+                        <div 
+                          className={`absolute right-full top-1/2 -translate-y-1/2 mr-2 px-4 py-2 w-72 bg-[--theme-leaguecard-color] text-white text-sm rounded-lg transition-all duration-200 ${
+                            isFlashcardsTooltipOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+                          }`}
+                        >
+                          {"We're working on adding uploadable flashcards later. They'll be auto-tagged and made into multiple choice questions. If you REALLY, REALLY want us to prioritize this over the bajillion other things we gotta do, venmo Prynce $100 at @ShortKingsAnthem and say 'Pretty please uploadable flashcards.'"}
+                          <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-[--theme-leaguecard-color] rotate-45"></div>
+                        </div>
                       </div>
-                    </div>
-                  }
-                  currentUserTestId={currentUserTestId}
-                  isLoading={isLoading}
-                  setIsLoading={setIsLoading}
-                />
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsTutorialOpen(true);
-                  }}
-                  className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                    }
+                    currentUserTestId={currentUserTestId}
+                    isLoading={isLoading}
+                    setIsLoading={setIsLoading}
+                  />
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsTutorialOpen(true);
+                    }}
+                    className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                  </svg>
-                  Tutorial
-                </a>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                    Tutorial
+                  </a>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      <AfterTestFeed
-      isSubscribed={isSubscribed}
+      </Suspense>
+
+      {isMarketplaceOpen && <ShoppingDialog
+        ref={marketplaceDialogRef}
+        imageGroups={imageGroups}
+        visibleImages={visibleImages}
+        toggleGroup={toggleGroup}
+        userScore={userScore}
+        isOpen={isMarketplaceOpen}
+        onOpenChange={setIsMarketplaceOpen}
+        buttonContent={
+          <a
+            href="#"
+            className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+            Marketplace
+          </a>
+        }
+      />}
+      {isFlashcardsOpen && <FlashcardsDialog
+        ref={flashcardsDialogRef}
+        isOpen={isFlashcardsOpen}
+        onOpenChange={setIsFlashcardsOpen}
+        roomId={flashcardRoomId}
+        activeRooms={activeRooms}
+        setActiveRooms={setActiveRooms}
+        handleCompleteAllRoom={handleCompleteAllRoom}
+        onMCQAnswer={handleMCQAnswer}
+        setTotalMCQQuestions={setTotalMCQQuestions}
+        buttonContent={
+          <div className="relative">
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setIsFlashcardsTooltipOpen(!isFlashcardsTooltipOpen);
+              }}
+              className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
+                />
+              </svg>
+              Flashcards
+            </a>
+            <div 
+              className={`absolute right-full top-1/2 -translate-y-1/2 mr-2 px-4 py-2 w-72 bg-[--theme-leaguecard-color] text-white text-sm rounded-lg transition-all duration-200 ${
+                isFlashcardsTooltipOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+              }`}
+            >
+              {"We're working on adding uploadable flashcards later. They'll be auto-tagged and made into multiple choice questions. If you REALLY, REALLY want us to prioritize this over the bajillion other things we gotta do, venmo Prynce $100 at @ShortKingsAnthem and say 'Pretty please uploadable flashcards.'"}
+              <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-[--theme-leaguecard-color] rotate-45"></div>
+            </div>
+          </div>
+        }
+        currentUserTestId={currentUserTestId}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+      />}
+      {isAfterTestDialogOpen && <AfterTestFeed
+        isSubscribed={isSubscribed}
         ref={afterTestFeedRef}
         open={isAfterTestDialogOpen}
         onOpenChange={(open) => {
@@ -748,7 +866,7 @@ const DoctorsOfficePage: React.FC = () => {
         wrongCount={wrongCount}
         largeDialogQuit={largeDialogQuit}
         setLargeDialogQuit={setLargeDialogQuit}
-      ></AfterTestFeed>
+      ></AfterTestFeed>}
       <div className="absolute bottom-4 right-4 z-[100]">
         <FloatingButton
           onTabChange={handleTabChange}
@@ -759,11 +877,6 @@ const DoctorsOfficePage: React.FC = () => {
           isSubscribed={isSubscribed}
         />
       </div>
-      <WelcomeDialog
-        isOpen={isWelcomeDialogOpen}
-        onOpenChange={handleWelcomeDialogOpenChange}
-        onClinicUnlocked={handleClinicUnlocked}
-      />
       <TutorialVidDialog
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}

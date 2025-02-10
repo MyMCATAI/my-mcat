@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { ProductType } from "@/types";
 import { useState } from "react";
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
+import { useRouter } from "next/navigation";
 
 const goldFeatures = {
   title: "MD Gold Plan",
@@ -22,6 +23,7 @@ const goldFeatures = {
 export function GoldSubscriptionCard() {
   const [isLoading, setIsLoading] = useState(false);
   const { isGold } = useSubscriptionStatus();
+  const router = useRouter();
 
   const handleAction = async () => {
     try {
@@ -32,11 +34,8 @@ export function GoldSubscriptionCard() {
         const response = await axios.get("/api/stripe");
         window.location.href = response.data.url;
       } else {
-        // Start new subscription
-        const response = await axios.post("/api/stripe/checkout", {
-          priceType: ProductType.MD_GOLD
-        });
-        window.location.href = response.data.url;
+        // Redirect to pitch page instead of direct checkout
+        router.push('/pitch');
       }
     } catch (error) {
       console.error("Error:", error);

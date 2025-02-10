@@ -1,13 +1,54 @@
+//components/home/GameStats.tsx 
 "use client";
-
-import { UpgradeToGoldButton } from "@/components/upgrade-to-gold-button";
-import Image from "next/image";
+/* ----------------------------------------- Imports ----------------------------------------- */
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { calculatePlayerLevel, getPatientsPerDay, getLevelNumber, tierRooms } from "@/utils/calculateResourceTotals";
-import { useEffect, useState } from "react";
+import Image from "next/image";
 import { PurchaseButton } from "@/components/purchase-button";
+import { calculatePlayerLevel, getPatientsPerDay, getLevelNumber, tierRooms } from "@/utils/calculateResourceTotals";
+import { useUserInfo } from "@/hooks/useUserInfo";
 
-// Add styles to the document
+
+/* ------------------------------------------ Types ------------------------------------------ */
+interface UserReport {
+  userScore: number;
+  totalTestsTaken: number;
+  testsCompleted: number;
+  testsReviewed: number;
+  completionRate: number;
+  totalQuestionsAnswered: number;
+  averageTestScore: number;
+  averageTimePerQuestion: number;
+  averageTimePerTest: number;
+  categoryAccuracy: Record<string, number>;
+  streak: number;
+}
+
+interface GameStatsProps {
+  name?: string;
+}
+
+/* ---------------------------------------- Constants --------------------------------------- */
+const ROOM_MESSAGES = {
+  'PATIENT LEVEL': 'Visit the marketplace to unlock your first clinic room!',
+  'INTERN LEVEL': 'Your intern room is up and running! We can handle 4 patients per day now.',
+  'RESIDENT LEVEL': 'The resident room is making great progress! We can now treat 8 patients per day.',
+  'FELLOWSHIP LEVEL': 'Your fellowship program is thriving with 10 patients per day!',
+  'ATTENDING LEVEL': 'The attending room is really making patients happy! We can handle 16 patients per day now.',
+  'PHYSICIAN LEVEL': 'Your physician level clinic is impressive, treating 24 patients daily!',
+  'MEDICAL DIRECTOR LEVEL': 'Amazing! Your medical director status lets us treat 30 patients every day!'
+} as const;
+
+const LEVEL_IMAGES = {
+  'PATIENT LEVEL': '/game-components/WaitingRoom0.png',
+  'INTERN LEVEL': '/game-components/INTERNLEVEL.png',
+  'RESIDENT LEVEL': '/game-components/RESIDENTLEVEL.png',
+  'FELLOWSHIP LEVEL': '/game-components/FELLOWSHIPLEVEL.png',
+  'ATTENDING LEVEL': '/game-components/ATTENDINGLEVEL.png',
+  'PHYSICIAN LEVEL': '/game-components/PHYSICIANLEVEL.png',
+  'MEDICAL DIRECTOR LEVEL': '/game-components/MEDICALDIRECTORLEVEL.png'
+} as const;
+
 const styles = `
   @keyframes fadeIn {
     from {
@@ -32,47 +73,19 @@ if (typeof document !== 'undefined') {
   document.head.appendChild(styleSheet);
 }
 
-interface UserReport {
-  userScore: number;
-  totalTestsTaken: number;
-  testsCompleted: number;
-  testsReviewed: number;
-  completionRate: number;
-  totalQuestionsAnswered: number;
-  averageTestScore: number;
-  averageTimePerQuestion: number;
-  averageTimePerTest: number;
-  categoryAccuracy: Record<string, number>;
-  streak: number;
-}
 
-const ROOM_MESSAGES = {
-  'PATIENT LEVEL': 'Visit the marketplace to unlock your first clinic room!',
-  'INTERN LEVEL': 'Your intern room is up and running! We can handle 4 patients per day now.',
-  'RESIDENT LEVEL': 'The resident room is making great progress! We can now treat 8 patients per day.',
-  'FELLOWSHIP LEVEL': 'Your fellowship program is thriving with 10 patients per day!',
-  'ATTENDING LEVEL': 'The attending room is really making patients happy! We can handle 16 patients per day now.',
-  'PHYSICIAN LEVEL': 'Your physician level clinic is impressive, treating 24 patients daily!',
-  'MEDICAL DIRECTOR LEVEL': 'Amazing! Your medical director status lets us treat 30 patients every day!'
-} as const;
+/* ----------------------------------------------------------------------------------------- */
+/* --------------------------------------- Component --------------------------------------- */
+/* ----------------------------------------------------------------------------------------- */
 
-const LEVEL_IMAGES = {
-  'PATIENT LEVEL': '/game-components/WaitingRoom0.png',
-  'INTERN LEVEL': '/game-components/INTERNLEVEL.png',
-  'RESIDENT LEVEL': '/game-components/RESIDENTLEVEL.png',
-  'FELLOWSHIP LEVEL': '/game-components/FELLOWSHIPLEVEL.png',
-  'ATTENDING LEVEL': '/game-components/ATTENDINGLEVEL.png',
-  'PHYSICIAN LEVEL': '/game-components/PHYSICIANLEVEL.png',
-  'MEDICAL DIRECTOR LEVEL': '/game-components/MEDICALDIRECTORLEVEL.png'
-} as const;
-
-export function GameStats({ name }: { name?: string }) {
+export function GameStats({ name }: GameStatsProps) {
+  /* ---------------------------------------- Hooks ---------------------------------------- */
   const router = useRouter();
+  const { isSubscribed } = useUserInfo();
+  /* ---------------------------------------- State ---------------------------------------- */
   const [clinicData, setClinicData] = useState<{ rooms: string[], score: number, totalPatientsTreated: number } | null>(null);
   const [reportData, setReportData] = useState<UserReport | null>(null);
-
-
-  // Fetch clinic data and user report
+  /* -------------------------------------- Effects --------------------------------------- */
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -100,17 +113,31 @@ export function GameStats({ name }: { name?: string }) {
     fetchData();
   }, []);
 
-  // Calculate player level and patients per day using clinic data
+  /* -------------------------------------- Handlers -------------------------------------- */
+  const handleMouseEnter = useCallback(() => {
+    // Prefetch the doctorsoffice route when user hovers
+    router.prefetch('/doctorsoffice');
+  }, [router]);
+
+  const handleAnkiClinicClick = useCallback(() => {
+    if (!isSubscribed) {
+      router.push('/pitch');
+    } else {
+      router.push('/doctorsoffice');
+    }
+  }, [isSubscribed, router]);
+
+  /* -------------------------------------- Helpers --------------------------------------- */
   const playerLevel = clinicData ? calculatePlayerLevel(clinicData.rooms) : 'PATIENT LEVEL';
   const levelNumber = getLevelNumber(playerLevel);
   const patientsPerDay = getPatientsPerDay(levelNumber);
 
-  // Format time function
   const formatTime = (milliseconds: number) => {
     const minutes = Math.floor(milliseconds / 60000);
     return `${minutes} min`;
   };
 
+  /* --------------------------------------- Render --------------------------------------- */
   return (
     <div className="h-full flex flex-col items-center justify-center p-8">
       {/* Upgrade Card - Subtle version in top right */}
@@ -123,9 +150,12 @@ export function GameStats({ name }: { name?: string }) {
             height={32}
             className="rounded"
           />
-          <UpgradeToGoldButton size="sm">
+          <button
+            onClick={() => router.push('/pitch')}
+            className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-amber-900 rounded-lg hover:shadow-lg transition-all duration-200"
+          >
             Upgrade to Gold
-          </UpgradeToGoldButton>
+          </button>
         </div>
       </div>
 
@@ -146,7 +176,8 @@ export function GameStats({ name }: { name?: string }) {
               {/* Level Display */}
               <div className="relative group">
                 <button 
-                  onClick={() => router.push('/doctorsoffice')}
+                  onMouseEnter={handleMouseEnter}
+                  onClick={handleAnkiClinicClick}
                   className="w-full bg-[--theme-mainbox-color] rounded-lg p-6 hover:bg-[--theme-hover-color] transition-all duration-200 transform hover:scale-[1.02]"
                 >
                   <div className="relative aspect-[4/3] mb-4">
@@ -217,7 +248,8 @@ export function GameStats({ name }: { name?: string }) {
 
               {/* Enter Clinic Button */}
               <button
-                onClick={() => router.push('/doctorsoffice')}
+                onMouseEnter={handleMouseEnter}
+                onClick={handleAnkiClinicClick}
                 className="w-full px-6 py-4 bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] text-[--theme-text-color] rounded-lg transition-all duration-200 transform hover:scale-[1.02] font-bold text-lg"
               >
                 Enter Anki Clinic →
