@@ -22,7 +22,7 @@ export function FriendReferral({ onComplete, createReferral }: FriendReferralPro
     try {
       setIsLoading(true);
       await createReferral({ friendEmail });
-      toast.success("Friend invited successfully! You'll get 5 bonus coins!");
+      toast.success("Friend invited successfully! You'll get 10 bonus coins!");
       onComplete(false);
     } catch (error) {
       console.error('Error creating referral:', error);
@@ -40,7 +40,7 @@ export function FriendReferral({ onComplete, createReferral }: FriendReferralPro
     >
       <div className="space-y-4">
         <h2 className="text-3xl font-light text-white">
-          {"Invite a Friend, Get 5 Bonus Coins!"}
+          {"Invite a Friend, Get 10 Bonus Coins!"}
         </h2>
         <p className="text-lg text-blue-200/80">
           {"Share MyMCAT with a fellow premed and earn extra coins to unlock more features"}
@@ -52,7 +52,7 @@ export function FriendReferral({ onComplete, createReferral }: FriendReferralPro
           <span className="text-4xl">🎁</span>
           <div className="text-left">
             <p className="text-white text-xl font-light">{"Bonus Reward"}</p>
-            <p className="text-blue-300/80">{"5 Extra Coins"}</p>
+            <p className="text-blue-300/80">{"10 Extra Coins"}</p>
           </div>
         </div>
 

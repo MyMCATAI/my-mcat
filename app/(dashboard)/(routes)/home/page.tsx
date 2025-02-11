@@ -26,6 +26,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { checkProStatus, shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
 import { toast } from "react-hot-toast";
+import { shouldShowRedeemReferralModal } from '@/lib/referral';
+import RedeemReferralModal from '@/components/modals/RedeemReferralModal';
 
 /* ----------------------------------------- Types ------------------------------------------ */
 interface ContentWrapperProps {
@@ -74,13 +76,14 @@ const HomePage = () => {
   const [userStreak, setUserStreak] = useState(0);
   const paymentStatus = searchParams?.get("payment");
   const [currentPage, setCurrentPage] = useState("Schedule");
+  const [showReferralModal, setShowReferralModal] = useState(false);
   /* ----------------------------------------- Refs ---------------------------------------- */
   const kalypsoRef = useRef<HTMLImageElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const chatbotRef = useRef<{ sendMessage: (message: string, context?: string) => void }>({
     sendMessage: () => {},
   });
-  /* -------------------------------------- Callbacks -------------------------------------- */
+
   const updateCalendarChatContext = useCallback((currentActivities: FetchedActivity[]) => {
     const today = new Date();
     const yesterday = new Date(today);
@@ -391,6 +394,11 @@ const HomePage = () => {
     return () => clearInterval(intervalId);
   }, [currentStudyActivityId, updateActivityEndTime]);
 
+  useEffect(() => {
+    setShowReferralModal(shouldShowRedeemReferralModal());
+    console.log("showReferralModal", shouldShowRedeemReferralModal());
+  }, []);
+
   /* -------------------------------------- Rendering ------------------------------------- */
   if (isLoading || isLoadingUserInfo) {
     return <LoadingSpinner />;
@@ -579,6 +587,10 @@ const HomePage = () => {
           console.log("Closing streak popup");
           setShowStreakPopup(false);
         }}
+      />
+      <RedeemReferralModal 
+        isOpen={showReferralModal}
+        onClose={() => setShowReferralModal(false)}
       />
     </ContentWrapper>
   );

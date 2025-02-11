@@ -53,6 +53,8 @@ const FloatingButton = dynamic(() => import('../home/FloatingButton'), {
   loading: () => null,
   ssr: false
 });
+import RedeemReferralModal from "@/components/modals/RedeemReferralModal";
+import { shouldShowRedeemReferralModal } from '@/lib/referral';
 
 const DoctorsOfficePage: React.FC = () => {
   const { isSubscribed } =  useUserInfo()
@@ -190,6 +192,8 @@ const DoctorsOfficePage: React.FC = () => {
   const [streakDays, setStreakDays] = useState(0);
 
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
+  const [showReferralModal, setShowReferralModal] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -539,6 +543,10 @@ const DoctorsOfficePage: React.FC = () => {
     setCurrentUserTestId(null);
   };
 
+  useEffect(() => {
+    setShowReferralModal(shouldShowRedeemReferralModal());
+  }, []);
+
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
       <WelcomeDialog
@@ -881,6 +889,10 @@ const DoctorsOfficePage: React.FC = () => {
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
         videoUrl="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TutorialAnkiClinic.mp4"
+      />
+      <RedeemReferralModal 
+        isOpen={showReferralModal}
+        onClose={() => setShowReferralModal(false)}
       />
     </div>
   );

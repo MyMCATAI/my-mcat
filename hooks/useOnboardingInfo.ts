@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { OnboardingInfo } from '@/types';
 import { toast } from 'react-hot-toast';
 
@@ -29,10 +29,10 @@ export function useOnboardingInfo() {
       try {
         const response = await fetch('/api/user-info/onboarding');
         if (!response.ok) throw new Error('Failed to fetch onboarding info');
-        
+
         const data = await response.json();
         setOnboardingInfo(data);
-        
+
         // If we have currentStep in data, use that
         if (data?.currentStep && isValidStep(data.currentStep)) {
           setCurrentStep(data.currentStep);
@@ -80,6 +80,11 @@ export function useOnboardingInfo() {
       });
 
       if (!response.ok) throw new Error("Failed to create user info");
+
+      const data = await response.json();
+
+      // Store referral redemption status
+      localStorage.setItem('mymcat_show_redeem_referral_modal', data.referralRedeemed ? 'true' : 'false');
 
       // Update onboarding info
       await updateOnboardingInfo({
