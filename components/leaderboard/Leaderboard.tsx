@@ -3,6 +3,7 @@ import { Plus, Globe } from 'lucide-react';
 import { FaUserInjured } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import { useUserInfo } from '@/hooks/useUserInfo';
+import FriendRequestModal from '@/components/modals/FriendRequestModal';
 
 interface LeaderboardEntry {
   id: number;
@@ -56,6 +57,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
   const { referrals, userInfo, createReferral } = useUserInfo();
   const userId = userInfo?.userId;
 
+  // Add state for modals
+  const [showUserProfileModal, setShowUserProfileModal] = useState(false);
+  const [selectedUserEmail, setSelectedUserEmail] = useState('');
+
   const fetchGlobalLeaderboard = async () => {
     if (globalLeaderboard.length > 0) return; // Don't fetch if we already have data
     setIsLoadingGlobal(true);
@@ -76,7 +81,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
     try {
       const response = await fetch('/api/friend-leaderboard');
       const data = await response.json();
-      setFriendsLeaderboard(data);
+      // Sort the leaderboard data by patientsTreated in descending order
+      const sortedData = [...data].sort((a, b) => b.patientsTreated - a.patientsTreated);
+      setFriendsLeaderboard(sortedData);
     } catch (error) {
       console.error('Error fetching friends leaderboard:', error);
       toast.error('Failed to load friends leaderboard');
@@ -96,17 +103,42 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
   }, [userInfo, userId, referrals, fetchFriendsLeaderboard, leaderboardType]);
 
   const handleAddFriend = useCallback(async () => {
+    if (!userInfo || !userId) {
+      toast.error('Please try again in a moment');
+      return;
+    }
+
+    if (!friendEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(friendEmail)) {
+      toast.error('Invalid email address');
+      return;
+    }
+
+    setSelectedUserEmail(friendEmail);
+    setShowUserProfileModal(true);
+  }, [userInfo, userId, friendEmail]);
+
+  const handleConfirmAddFriend = async () => {
     try {
-      if (!userInfo || !userId) {
-        toast.error('Please try again in a moment');
-        return;
-      }
+      const response = await fetch('/api/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ friendEmail })
+      });
 
-      if (!friendEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(friendEmail)) {
-        toast.error('Invalid email address');
-        return;
-      }
+      if (!response.ok) throw new Error('Failed to add friend');
 
+      await fetchFriendsLeaderboard();
+      toast.success('Friend added successfully!');
+      setFriendEmail('');
+      setShowUserProfileModal(false);
+    } catch (error) {
+      console.error('Error adding friend:', error);
+      toast.error('Failed to add friend');
+    }
+  };
+
+  const handleConfirmReferral = async () => {
+    try {
       await createReferral({
         friendEmail: friendEmail,
       });
@@ -114,16 +146,16 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
       await fetchFriendsLeaderboard();
       toast.success('Friend invitation sent!');
       setFriendEmail('');
-      setIsAddFriendOpen(false);
+      setShowUserProfileModal(false);
     } catch (error) {
-      console.error('Error adding friend:', error);
+      console.error('Error referring friend:', error);
       toast.error('Failed to send friend invitation');
     }
-  }, [userInfo, userId, friendEmail, createReferral, fetchFriendsLeaderboard]);
+  };
 
   const currentLeaderboard = leaderboardType === 'global' ? globalLeaderboard : friendsLeaderboard;
   const isLoading = leaderboardType === 'global' ? isLoadingGlobal : isLoadingFriends;
-  const shouldShowLeaderboard = leaderboardType === 'global' || friendsLeaderboard.length > 1;
+  const shouldShowLeaderboard = currentLeaderboard.length > 0;
 
   return (
     <div className={`space-y-3 ${className}`}>
@@ -144,7 +176,13 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
               leaderboardType === 'global' ? 'text-[--theme-hover-color]' : 'text-[--theme-text-color]'
             }`}
             size={20}
-            onClick={() => setLeaderboardType(leaderboardType === 'global' ? 'friends' : 'global')}
+            onClick={() => {
+              const newType = leaderboardType === 'global' ? 'friends' : 'global';
+              setLeaderboardType(newType);
+              if (newType === 'friends') {
+                setIsLoadingFriends(true);
+              }
+            }}
           />
         </div>
       </div>
@@ -155,6 +193,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
             type="email"
             value={friendEmail}
             onChange={(e) => setFriendEmail(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleAddFriend();
+              }
+            }}
             placeholder="Enter friend's email..."
             className="w-full p-2 border rounded bg-[--theme-mainbox-color] text-[--theme-text-color]"
           />
@@ -172,14 +215,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
           <LeaderboardSkeleton count={5} />
         ) : shouldShowLeaderboard ? (
           <>
-            {currentLeaderboard.map((entry) => (
+            {currentLeaderboard.map((entry, index) => (
               <div
                 key={entry.id}
                 className="flex items-center justify-between bg-[--theme-doctorsoffice-accent] p-3 rounded-lg"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white select-none">
-                    {entry.id}
+                    {index + 1}
                   </div>
                   <span className="font-medium">{entry.name}</span>
                 </div>
@@ -192,10 +235,17 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
           </>
         ) : (
           <p className="text-center italic text-sm">
-            {leaderboardType as LeaderboardType === 'global' ? 'No global rankings available' : 'No friends added'}
+            {leaderboardType === 'global' ? 'No global rankings available' : 'No friends added'}
           </p>
         )}
       </div>
+
+      <FriendRequestModal
+        isOpen={showUserProfileModal}
+        onClose={() => setShowUserProfileModal(false)}
+        userEmail={selectedUserEmail}
+        onSuccess={fetchFriendsLeaderboard}
+      />
     </div>
   );
 };
