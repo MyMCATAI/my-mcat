@@ -73,46 +73,77 @@ my-mcat/
 This section details what features are available to free and premium users. 
 
 ### Free Features
-- Doctor's Office Game
-- Basic Passage Questions
-- Basic Statistics
+- Doctor's Office Game (Basic Access)
+- Limited CARS Practice
+- Basic Statistics & Progress Tracking
 - Core Game Features
-- Daily CARS Practice (limited)
+  - Room System
+  - Coin Economy
+  - Basic Passage Questions
 
-### Premium Features
-- CARS Practice (full access)
+### Gold Features
+- Full CARS Practice Access
 - Calendar System
 - Testing Suite
-- Adaptive Tutoring
-- Analytics Dashboard
-- Advanced Features
+- AI-powered Tutoring
+- Advanced Analytics Dashboard
+- Personalized Study Plans
+- Price: $149.99/month
+
 
 ### Feature Gates
 All premium features must:
-- Use `useSubscriptionStatus` hook for access control
-- Implement graceful fallbacks for free users
-- Show upgrade prompts when appropriate
-- Track user preferences and feature access attempts
-
-Example implementation:
+1. Use `useUserInfo` hook for access control:
 ```typescript
-import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
-import { trackFeatureAccess } from "@/lib/analytics";
+import { useUserInfo } from "@/hooks/useUserInfo";
 
 const PremiumFeature = () => {
-  const { isSubscribed } = useSubscriptionStatus();
-
-  useEffect(() => {
-    trackFeatureAccess("feature-name", isSubscribed);
-  }, [isSubscribed]);
-
-  if (!isSubscribed) {
-    return <UpgradePrompt feature="feature-name" />;
+  const { userInfo } = useUserInfo();
+  
+  if (!userInfo?.isSubscribed) {
+    return <RestrictedContent />;
   }
-
+  
   return <PremiumContent />;
 };
 ```
+
+2. Implement graceful fallbacks:
+```typescript
+// Example from RestrictedContent.tsx
+<div className="flex flex-col items-center gap-4">
+  <button
+    onClick={() => router.push('/pitch')}
+    className="w-full max-w-md px-6 py-3 text-lg rounded-lg font-semibold
+      bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-amber-900"
+  >
+    Upgrade to Gold
+  </button>
+  
+  <button
+    onClick={() => router.push('/doctorsoffice')}
+    className="text-sm opacity-80 hover:opacity-100 transition-opacity"
+  >
+    Continue with Basic Access →
+  </button>
+</div>
+```
+
+3. Subscription Status:
+- `isSubscribed: boolean` - True if user has Gold or Premium access
+- Basic (Free) tier when `isSubscribed` is false
+- Gold/Premium features only accessible when `isSubscribed` is true
+
+4. Track Feature Access:
+- Monitor user interactions with premium features
+- Record upgrade prompt interactions
+- Track conversion rates from free to premium
+
+5. User Experience:
+- Clear premium feature indicators
+- Seamless upgrade flows
+- Consistent messaging about premium benefits
+- Maintain engaging free user experience
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ## Component Guidelines

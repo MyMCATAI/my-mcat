@@ -1,14 +1,41 @@
-'use client'
+//app/(dashboard)/(routes)/home/FloatingButton.tsx
+"use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import clsx from "clsx";
-import Image from "next/image";
 import { useRouter } from 'next/navigation';
+import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
-import FloatingTaskList from './FloatingTaskList';
+import clsx from "clsx";
 import { toast } from "react-hot-toast";
-import { UpgradeToGoldButton } from "@/components/upgrade-to-gold-button";
+import FloatingTaskList from './FloatingTaskList';
 
+/* ------------------------------------------ Constants ----------------------------------------- */
+const HOVER_TIMEOUT = 300;
+const TAB_CHANGE_TIMEOUT = 3000;
+
+const buttonPositions = [
+  { top: 0, left: 0, tab: "Tests", icon: "/icons/exam.svg" },
+  { top: 0, left: 0, tab: "doctorsoffice", icon: "/icons/gamecontroller.svg" },
+  { top: 0, left: 0, tab: "CARS", icon: "/icons/book.svg" },
+  { top: 0, left: 0, tab: "AdaptiveTutoringSuite", icon: "/graduationcap.svg" },
+] as const;
+
+const inactivePositions = [
+  { top: -70, left: 10 },
+  { top: -40, left: 80 },
+  { top: 30, left: 100 },
+] as const;
+
+const labelTexts = {
+  "Tests": "Practice Tests",
+  "doctorsoffice": "The Anki Clinic",
+  "CARS": "Daily CARs Suite",
+  "AdaptiveTutoringSuite": "Tutoring Suite",
+} as const;
+
+const PROTECTED_ROUTES = ['/pitch', '/onboarding'];
+
+/* -------------------------------------------- Types ------------------------------------------- */
 interface FloatingButtonProps {
   activities?: any[];
   onTasksUpdate?: (tasks: any[]) => void;
@@ -26,8 +53,13 @@ interface ButtonPosition {
   icon: string;
 }
 
-// Updated Typewriter component
-const Typewriter: React.FC<{ text: string; delay?: number }> = ({ text, delay = 0 }) => {
+interface TypewriterProps {
+  text: string;
+  delay?: number;
+}
+
+/* ---------------------------------------- Components ------------------------------------------ */
+const Typewriter: React.FC<TypewriterProps> = ({ text, delay = 0 }) => {
   const [displayedText, setDisplayedText] = useState('');
 
   useEffect(() => {
@@ -60,15 +92,28 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
   onTasksUpdate,
   isSubscribed = false
 }) => {
+  /* ------------------------------------------- State -------------------------------------------- */
   const [isHovered, setIsHovered] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [recentlyChangedTab, setRecentlyChangedTab] = useState(false);
-  const [showSubscriptionPrompt, setShowSubscriptionPrompt] = useState(false);
+  const [showTutoringMessage, setShowTutoringMessage] = useState(false);
+
+  /* ------------------------------------------- Refs --------------------------------------------- */
   const hoverTimeout = useRef<number | null>(null);
   const tabChangeTimeout = useRef<number | null>(null);
   const router = useRouter();
-  const [showTutoringMessage, setShowTutoringMessage] = useState(false);
 
+  /* ----------------------------------------- Callbacks ------------------------------------------ */
+  const getLabelPosition = (index: number) => {
+    switch (index) {
+      case 0: return { top: '-5.5rem', left: '10rem' };
+      case 1: return { top: '-1.2rem', left: '15.5rem' };
+      case 2: return { top: '4rem', left: '16.5rem' };
+      default: return { top: '2rem', left: '12.5rem' };
+    }
+  };
+
+  /* ---------------------------------------- Event Handlers -------------------------------------- */
   const handleMouseEnter = () => {
     if (hoverTimeout.current) {
       clearTimeout(hoverTimeout.current);
@@ -82,7 +127,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
     }
     hoverTimeout.current = window.setTimeout(() => {
       setIsHovered(false);
-    }, 300);
+    }, HOVER_TIMEOUT);
   };
 
   const handleTaskListHover = (hovering: boolean) => {
@@ -98,41 +143,29 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
     }
   };
 
-  const buttonPositions: ButtonPosition[] = [
-    { top: 0, left: 0, tab: "Tests", icon: "/icons/exam.svg" },
-    { top: 0, left: 0, tab: "doctorsoffice", icon: "/icons/gamecontroller.svg" },
-    { top: 0, left: 0, tab: "CARS", icon: "/icons/book.svg" },
-    { top: 0, left: 0, tab: "AdaptiveTutoringSuite", icon: "/graduationcap.svg" },
-  ];
-
-  const inactivePositions = [
-    { top: -70, left: 10 },
-    { top: -40, left: 80 },
-    { top: 30, left: 100 },
-  ];
-
-  const labelTexts: Record<string, string> = {
-    "Tests": "Home",
-    "doctorsoffice": "The Anki Clinic",
-    "CARS": "Daily CARs Suite",
-    "AdaptiveTutoringSuite": "Tutoring Suite",
-  };
-
+  // Used to direct free user (isSubscribed = false) to /pitch 
   const handleButtonClick = async (tab: string) => {
-    if (!isSubscribed && tab !== 'doctorsoffice') {
-      setShowSubscriptionPrompt(true);
+
+    // Check if current path is protected from auto-redirect
+    // Allow useres to stay on pitch page, preents auto-redirect to /doctorsoffice when on pitch page
+    const currentPath = window.location.pathname;
+    if (PROTECTED_ROUTES.some(route => currentPath.startsWith(route))) {
       return;
     }
 
-    // First check if user has the required unlock
+    // Check subscription status first, before any other logic
+    if (!isSubscribed && tab !== 'doctorsoffice') {
+      router.push('/pitch');
+      return;
+    }
+
+    // Move the try-catch block inside the subscription check
     try {
       const response = await fetch("/api/user-info");
       if (!response.ok) throw new Error("Failed to fetch user info");
       const data = await response.json();
       const unlocks = Array.isArray(data.unlocks) ? data.unlocks : [];
 
-      // If we reach here, user has the required unlock
-      // Execute the navigation logic
       const tabActions = {
         Tests: () => {
           if (currentPage === 'doctorsoffice') {
@@ -146,7 +179,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
           }
           tabChangeTimeout.current = window.setTimeout(() => {
             setRecentlyChangedTab(false);
-          }, 3000);
+          }, TAB_CHANGE_TIMEOUT);
         },
         AdaptiveTutoringSuite: () => {
           router.push('/home');
@@ -158,7 +191,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
           }
           tabChangeTimeout.current = window.setTimeout(() => {
             setRecentlyChangedTab(false);
-          }, 3000);
+          }, TAB_CHANGE_TIMEOUT);
         },
         doctorsoffice: () => {
           if (currentPage === 'home') {
@@ -181,7 +214,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
           }
           tabChangeTimeout.current = window.setTimeout(() => {
             setRecentlyChangedTab(false);
-          }, 3000);
+          }, TAB_CHANGE_TIMEOUT);
         },
         default: () => {
           if (currentPage === 'doctorsoffice') {
@@ -195,7 +228,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
           }
           tabChangeTimeout.current = window.setTimeout(() => {
             setRecentlyChangedTab(false);
-          }, 3000);
+          }, TAB_CHANGE_TIMEOUT);
         }
       };
 
@@ -207,18 +240,15 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
     }
   };
 
-  const getLabelPosition = (index: number) => {
-    switch (index) {
-      case 0:
-        return { top: '-5.5rem', left: '10rem' };
-      case 1:
-        return { top: '-1.2rem', left: '15.5rem' };
-      case 2:
-        return { top: '4rem', left: '16.5rem' };
-      default:
-        return { top: '2rem', left: '12.5rem' };
-    }
-  };
+  /* ------------------------------------ Animations & Effects ------------------------------------ */
+  useEffect(() => {
+    console.log({
+      isHovered,
+      activeTab,
+      recentlyChangedTab,
+      showTutoringMessage
+    });
+  }, [isHovered, activeTab, recentlyChangedTab, showTutoringMessage]);
 
   useEffect(() => {
     return () => {
@@ -228,42 +258,21 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    console.log('Subscription status:', isSubscribed);
+  }, [isSubscribed]);
+
+  /* ---------------------------------------- Render Methods -------------------------------------- */
   return (
     <>
+      {/* Overlay */}
       {isHovered && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40" />
       )}
 
-      {showSubscriptionPrompt && (
-        <div className="fixed bottom-32 left-32 z-[60] bg-[--theme-mainbox-color] p-6 rounded-lg shadow-xl border border-[--theme-border-color] w-80">
-          <div className="flex flex-col space-y-4">
-            <h3 className="text-lg font-bold text-[--theme-text-color]">Unlock Premium Features</h3>
-            <p className="text-sm text-[--theme-text-color] opacity-80">
-              Upgrade to Gold to access:
-            </p>
-            <ul className="text-sm text-[--theme-text-color] space-y-2 list-disc list-inside">
-              <li>Daily CARS Practice</li>
-              <li>Adaptive Tutoring Suite</li>
-              <li>Advanced Analytics</li>
-              <li>Personalized Study Plans</li>
-            </ul>
-            <div className="pt-2 flex justify-center">
-              <UpgradeToGoldButton />
-            </div>
-            <button 
-              onClick={() => setShowSubscriptionPrompt(false)}
-              className="text-sm text-[--theme-text-color] opacity-60 hover:opacity-100"
-            >
-              Maybe later
-            </button>
-          </div>
-        </div>
-      )}
-
+      {/* Task List */}
       <AnimatePresence>
-        {isHovered && 
-         currentPage === "doctorsoffice" && 
-         !recentlyChangedTab && (
+        {isHovered && currentPage === "doctorsoffice" && !recentlyChangedTab && (
           <FloatingTaskList 
             activities={activities}
             onTasksUpdate={() => onTasksUpdate?.([])}
@@ -272,6 +281,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
         )}
       </AnimatePresence>
 
+      {/* Main Button Group */}
       <span className="fixed bottom-[8rem] left-[0.625rem] z-50">
         <div
           className="relative group"

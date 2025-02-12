@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { UserResponseWithCategory } from './AfterTestFeed';
+import type { UserResponseWithCategory } from "@/types";
 import { cleanQuestion } from './FlashcardDeck';
 
 interface WrongAnswerCardProps {
@@ -34,7 +34,7 @@ const WrongAnswerCard: React.FC<WrongAnswerCardProps> = ({ response, index, onFl
     >
       <div className="h-full flex flex-col">
         <div className="text-xs text-[--theme-text-color] opacity-50 mb-2">
-          {new Date(response.answeredAt).toLocaleString()}
+          {new Date(response.answeredAt ?? new Date()).toLocaleString()}
         </div>
         
         <div className="flex-1 overflow-y-auto scrollbar-none">
