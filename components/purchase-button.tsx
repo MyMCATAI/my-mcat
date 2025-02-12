@@ -8,7 +8,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
-import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
+import { useUserInfo } from "@/hooks/useUserInfo";
 import { cn } from "@/lib/utils";
 
 interface PurchaseButtonProps {
@@ -30,7 +30,7 @@ export function PurchaseButton({
 }: PurchaseButtonProps) {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [isModalOpen, setIsModalOpen] = useState(autoOpen);
-  const { isGold, isLoading: isCheckingSubscription } = useSubscriptionStatus();
+  const { isSubscribed, isLoading } = useUserInfo();
 
   useEffect(() => {
     setIsModalOpen(autoOpen);
@@ -48,10 +48,13 @@ export function PurchaseButton({
     try {
       setLoadingStates(prev => ({ ...prev, [productType]: true }));
       
-      // If user has gold subscription and clicks the gold option, redirect to management
-      if (isGold && productType === ProductType.MD_GOLD) {
-        const response = await axios.get("/api/stripe");
-        window.location.href = response.data.url;
+      if (productType === ProductType.MD_GOLD) {
+        if (isSubscribed) {
+          const response = await axios.get("/api/stripe");
+          window.location.href = response.data.url;
+          return;
+        }
+        window.location.href = '/pitch';
         return;
       }
 
@@ -88,7 +91,7 @@ export function PurchaseButton({
       description: "Monthly subscription for serious MCAT students. Get unlimited access to advanced features, priority support, and exclusive content. Cancel anytime.",
       image: "/MD_Premium_Pro.png",
       productType: ProductType.MD_GOLD,
-      isSubscribed: isGold
+      isSubscribed: isSubscribed
     }
   ];
 
@@ -153,7 +156,7 @@ export function PurchaseButton({
               <button 
                 key={index}
                 onClick={() => handlePurchase(option.productType)}
-                disabled={loadingStates[option.productType] || (option.productType !== ProductType.MD_GOLD && isCheckingSubscription)}
+                disabled={loadingStates[option.productType] || (option.productType !== ProductType.MD_GOLD && isLoading)}
                 className={`rounded-lg p-6 flex flex-col items-center space-y-4 transition-all relative h-full w-full text-left
                   ${option.isSubscribed 
                     ? 'bg-[--theme-leaguecard-color] before:absolute before:inset-0 before:bg-gradient-to-br before:from-sky-400/10 before:via-blue-400/5 before:to-sky-400/10 before:rounded-lg border-2 border-sky-300'
