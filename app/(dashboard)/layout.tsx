@@ -8,12 +8,8 @@ import Script from 'next/script';
 import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
 import { useAuth } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
-
-const checkSubscription = async (): Promise<boolean> => {
-  // Implement your subscription check logic here
-  // For now, we'll return a mock value
-  return true; // return Promise.resolve(false); MANUAL EDIT ETHAN DO NOT LEAVE LIKE THIS
-};
+import { useRouter, usePathname } from "next/navigation";
+import { useUserInfo } from "@/hooks/useUserInfo";
 
 const DashboardLayoutContent = ({
   children,
@@ -21,28 +17,19 @@ const DashboardLayoutContent = ({
   children: React.ReactNode
 }) => {
   const { theme } = useTheme();
-  const [isPro, setIsPro] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState('');
   const { isLoaded, isSignedIn } = useAuth();
-  const [isInitialized, setIsInitialized] = useState(false);
+  const { isLoading, isSubscribed } = useUserInfo();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    const checkProStatus = async () => {
-      try {
-        const proStatus = await checkSubscription();
-        setIsPro(proStatus);
-        setIsInitialized(true);
-      } catch (error) {
-        console.error('Error checking subscription status:', error);
-        setIsPro(false);
-        setIsInitialized(true);
-      }
-    };
-
-    if (isLoaded && isSignedIn) {
-      checkProStatus();
+    if (isLoaded && isSignedIn && !isLoading) {
+      console.log('🎫 Subscription Status:', 
+        isSubscribed ? 'GOLD or PREMIUM' : 'FREE'
+      );
     }
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, isLoading, isSubscribed]);
 
   useEffect(() => {
     const updateBackgroundImage = () => {
@@ -67,7 +54,7 @@ const DashboardLayoutContent = ({
     return () => window.removeEventListener('resize', updateBackgroundImage);
   }, [theme]);
 
-  if (!isLoaded || !isInitialized) {
+  if (!isLoaded || isLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
@@ -75,7 +62,7 @@ const DashboardLayoutContent = ({
     );
   }
 
-  const subscription = isPro ? "pro" : "free";
+  const subscription = isSubscribed ? "pro" : "free";
 
   return ( 
     <div 
