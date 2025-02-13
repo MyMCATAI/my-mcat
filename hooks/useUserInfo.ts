@@ -65,7 +65,7 @@ const CLINIC_COST = 10;
 // Helper function to check if onboarding is complete
 function isOnboardingComplete(onboardingInfo?: OnboardingInfo): boolean {
   if (!onboardingInfo) return false;
-  
+
   // Only check for targetScore
   const targetScore = onboardingInfo.targetScore;
   return targetScore !== undefined && targetScore !== null && targetScore > 0;
@@ -80,7 +80,7 @@ function canAccessPath(subscriptionType: string | undefined, currentPath: string
   }
 
   // Paths accessible to all users
-  const unrestrictedPaths = ['/onboarding', '/doctorsoffice','/preferences'];
+  const unrestrictedPaths = ['/onboarding', '/doctorsoffice', '/preferences'];
   if (unrestrictedPaths.some(path => currentPath.startsWith(path))) {
     return true;
   }
@@ -117,7 +117,7 @@ async function checkRedirectPath(userInfo: UserInfo | null, currentPath: string)
         throw new Error('Failed to fetch study plan');
       }
       const studyPlanData = await studyPlanResponse.json();
-      
+
       if (!studyPlanData.studyPlan) return '/examcalendar';
     } catch (error) {
       console.error('Error fetching study plan:', error);
@@ -140,7 +140,7 @@ async function handleRedirect(userInfo: UserInfo | null): Promise<boolean> {
 // Helper function to check if user has a subscription
 function checkSubscription(userInfo: UserInfo | null): boolean {
   if (!userInfo) return false;
-  return  (userInfo.subscriptionType === 'gold' || userInfo.subscriptionType === 'premium');
+  return (userInfo.subscriptionType === 'gold' || userInfo.subscriptionType === 'premium');
 }
 
 export function useUserInfo(): UseUserInfoReturn {
@@ -156,9 +156,9 @@ export function useUserInfo(): UseUserInfoReturn {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const response = await fetch("/api/user-info");
-      
+
       // Handle non-existent user case
       if (response.status === 404 || response.status === 500) {
         if (await handleRedirect(null)) return;
@@ -175,7 +175,7 @@ export function useUserInfo(): UseUserInfoReturn {
       const data = await response.json();
       setUserInfo(data);
       await handleRedirect(data);
-      
+
     } catch (err) {
       console.error("Error fetching user info:", err);
       setError(err instanceof Error ? err : new Error("Failed to fetch user info"));

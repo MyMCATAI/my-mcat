@@ -6,7 +6,12 @@ import prismadb from "@/lib/prismadb";
 export async function GET(req: Request) {
   const userInfo = await getUserInfo();
   const referrals = await prismadb.referral.findMany({
-    where: { userId: userInfo?.userId || "" },
+    where: {
+      OR: [
+        { userId: userInfo?.userId || "" },         // User is referrer
+        { friendUserId: userInfo?.userId || "" }    // User is referee
+      ]
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -15,7 +20,7 @@ export async function GET(req: Request) {
   }
 
   // Get all connections where user is either referrer or friend
-  const connections = referrals.filter(referral => 
+  const connections = referrals.filter(referral =>
     referral.joinedAt !== null || referral.friendUserId !== null
   );
 
