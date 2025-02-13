@@ -52,6 +52,8 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
     isSafari: false,
     isFirefox: false
   });
+  const [isVisible, setIsVisible] = useState(true);
+  const [isScrolling, setIsScrolling] = useState(false);
 
   /* -------------------------------- Animations & Effects -------------------------------------- */
   // Prevent auto-scroll on page load
@@ -125,15 +127,17 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
 
   /* --------------------------------------- Event Handlers ------------------------------------ */
   const handleScrollClick = () => {
-    if (quoteRef.current) {
-      gsap.to(window, {
-        duration: SCROLL_CONFIG.duration,
-        scrollTo: {
-          y: quoteRef.current,
-          offsetY: 0
-        },
-        ease: SCROLL_CONFIG.ease
+    if (quoteRef.current && !isScrolling) {
+      setIsScrolling(true);
+      
+      quoteRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
       });
+
+      setTimeout(() => {
+        setIsScrolling(false);
+      }, 1000);
     }
   };
 
@@ -186,29 +190,39 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
 
   const renderScrollArrow = () => (
     <motion.div 
-      className="absolute bottom-16 left-1/2 transform -translate-x-1/2 cursor-pointer z-20"
-      animate={shouldReduceMotion ? {} : { y: [0, 10, 0] }}
-      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+      className="absolute bottom-16 left-1/2 transform -translate-x-1/2 cursor-pointer z-20 outline-none"
+      animate={{ y: [0, 10, 0] }}
+      transition={{ 
+        y: {
+          duration: 2,
+          repeat: Infinity,
+          repeatType: "loop",
+          ease: "linear"
+        }
+      }}
       onClick={handleScrollClick}
-      whileHover={shouldReduceMotion ? {} : { scale: 1.1 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      initial={{ scale: 1 }}
       role="button"
       tabIndex={0}
       aria-label="Scroll to next section"
       onKeyDown={(e) => e.key === 'Enter' && handleScrollClick()}
     >
-      <svg 
-        width="40" 
+      <motion.svg 
+        width="80" 
         height="40" 
-        viewBox="0 0 24 24" 
+        viewBox="0 0 80 40" 
         fill="none" 
-        stroke="white" 
-        strokeWidth="2" 
+        stroke="rgb(59, 130, 246)"
+        strokeWidth="3" 
         strokeLinecap="round" 
         strokeLinejoin="round"
+        className="filter drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]"
       >
-        <path d="M7 13l5 5 5-5"/>
-        <path d="M7 6l5 5 5-5"/>
-      </svg>
+        <path d="M10 15L40 35L70 15"/>
+        <path d="M10 5L40 25L70 5"/>
+      </motion.svg>
     </motion.div>
   );
 
@@ -233,20 +247,20 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
         <div className="relative z-10 container mx-auto px-4 h-full flex items-center justify-center">
           {renderHeroContent()}
         </div>
-        {renderScrollArrow()}
+        {isVisible && !isScrolling && renderScrollArrow()}
       </section>
 
       {/* Bernie Quote Section */}
       <section 
         ref={quoteRef} 
-        className="w-full py-16 bg-[#000c1e] relative"
+        className="w-full h-screen bg-[#000c1e] relative flex items-center justify-center"
       >
         <div 
           className="absolute inset-0 opacity-20 bg-cover bg-center bg-no-repeat mix-blend-screen"
           style={{ backgroundImage: 'url("/stars.jpeg")' }}
         />
         <div 
-          className="flex flex-col md:flex-row items-center justify-center gap-8 mx-3 mb-12"
+          className="flex flex-col md:flex-row items-center justify-center gap-8 mx-3"
         >
           <div>
             <BernieSvg width={260} height={260} />

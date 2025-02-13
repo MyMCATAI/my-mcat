@@ -51,33 +51,33 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div className="w-full bg-[#12233c] relative">
-      {/* First fold - load immediately */}
-      <Suspense fallback={<div className="h-screen bg-[#171234]" />}>
+    <div className="w-full bg-[#12233c]">
+      {/* First fold + Bernie Quote */}
+      <Suspense fallback={<div className="h-[200vh] bg-[#171234]" />}>
         <LandingHero />
       </Suspense>
 
-      {/* Second fold - load when approaching */}
-      <div className="relative z-10">
-        <Suspense fallback={<div className="h-screen bg-[#12233c]" />}>
+      {/* Product section */}
+      <section className="relative min-h-screen">
+        <Suspense fallback={<div className="min-h-screen bg-[#12233c]" />}>
           <ProductWrapper />
         </Suspense>
-      </div>
+      </section>
 
-      {/* Third fold */}
-      <div id="mission" className="relative z-20">
-        <Suspense fallback={<div className="h-screen bg-[#12233c]" />}>
+      {/* Mission section */}
+      <section id="mission" className="relative min-h-screen">
+        <Suspense fallback={<div className="min-h-screen bg-[#12233c]" />}>
           <Mission />
         </Suspense>
-      </div>
+      </section>
 
       {/* Below fold content */}
-      <div className="relative z-10 mt-[-100px] pt-[100px] bg-[#12233c]">
+      <section className="relative bg-[#12233c]">
         <Suspense fallback={<div className="min-h-screen bg-[#12233c]" />}>
           <CheckListing />
           <Faqs />      
         </Suspense>
-      </div>
+      </section>
     </div>
   );
 };

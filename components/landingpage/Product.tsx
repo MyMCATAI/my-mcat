@@ -196,23 +196,27 @@ const Product = () => {
           />
           <div
             ref={copy}
-            className="copy absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-screen-xl"
+            className="copy absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-screen-xl flex flex-col items-center justify-center gap-4"
           >
-            <h1 className="text-2xl md:text-2xl font-bold mb-8 text-center text-white font-krungthep">
+            <h1 className="text-2xl md:text-2xl font-bold text-center text-white font-krungthep">
               The Only MCAT Prep Software
             </h1>
             <div
               ref={video}
-              className="video-container animate-fadeIn"
+              className="video-container animate-fadeIn max-h-[70vh]"
               style={{ opacity: 0 }}
             >
               <div
                 className="video-wrapper border-4 border-white rounded-lg overflow-hidden shadow-1xl mx-auto"
-                style={{ maxWidth: "70vw", width: "100%" }}
+                style={{ 
+                  maxWidth: "70vw",
+                  width: "100%",
+                  height: "100%"
+                }}
               >
                 <video 
                   controls 
-                  className="w-full aspect-video"
+                  className="w-full h-full aspect-video object-contain"
                   playsInline 
                   preload="metadata"
                 >
