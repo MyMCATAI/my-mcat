@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { motion } from 'framer-motion';
 import AnimatedStar from "./AnimatedStar";
 import { Button } from "@/components/ui/button";
-import { cleanQuestion } from './FlashcardDeck';
+import { cleanQuestion, cleanAnswer } from './utils/testUtils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { animated, useSpring } from 'react-spring';
 import ChatBot from "@/components/chatbot/ChatBotFlashcard";
@@ -512,8 +512,8 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
       </ul>
     </div>
   );
-
-  const renderReviewSection = () => (
+  
+const renderReviewSection = () => (
     <ScrollArea className="h-[calc(90vh-6rem)] scrollbar-none">
       <div className="space-y-4 pr-4 pb-4">
         {wrongCards.map((card, index) => (
@@ -596,7 +596,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     const mcqCorrect = mcqResponses.filter(r => r.isCorrect).length;
     const mcqTotal = mcqResponses.length;
     const mcqPercentage = mcqTotal > 0 ? Math.round((mcqCorrect / mcqTotal) * 100) : 0;
-    
+
     return (
       <motion.div
         initial={{ opacity: 0 }}
