@@ -8,7 +8,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import FlashcardDeck, { Flashcard } from './FlashcardDeck';
 import { useSpring, animated, config } from '@react-spring/web';
-import { ThumbsDown } from 'lucide-react';
+import { ThumbsDown, HelpCircle } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -18,12 +18,22 @@ import {
 import { Button } from "@/components/ui/button";
 import toast from 'react-hot-toast';
 import { roomToSubjectMap } from './constants';
+import ChatBot from '@/components/chatbot/ChatBotFlashcard';
+import { cleanQuestion, cleanAnswer } from './utils/testUtils';
 // import Interruption from './Interruption';
 
 interface WrongCard {
   question: string;
   answer: string;
   timestamp: string;
+}
+
+interface QuestionContext {
+  question: string;
+  correctAnswer: string;
+  explanation: string;
+  otherOptions: string[];
+  type: string;
 }
 
 interface FlashcardsDialogProps {
@@ -64,6 +74,10 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   // const [isTypingComplete, setIsTypingComplete] = useState(false);
   // const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<Flashcard | null>(null);
+  const [currentQuestionContext, setCurrentQuestionContext] = useState<QuestionContext | null>(null);
+  const chatbotRef = useRef<{
+    sendMessage: (message: string) => void;
+  }>({ sendMessage: () => {} });
 
   const [springs, api] = useSpring(() => ({
     from: { x: 0 }
@@ -143,6 +157,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   };
 
   const handleOpenChange = (open: boolean) => {
+    setShowChat(false);
     onOpenChange(open);
   };
 
@@ -211,16 +226,92 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     }
   };
 
+  const [showChat, setShowChat] = useState(false);
+
+  const handleHintRequest = () => {
+    setIsChatFocused(!showChat);
+    setShowChat(prev => !prev);
+  };
+
+  const handleHideChat = () => {
+    setIsChatFocused(false);
+    setShowChat(false);
+  };
+
+  const handleQuestionChange = useCallback((question: Flashcard | null) => {
+    if (!question) {
+      setCurrentQuestionContext(null);
+      return;
+    }
+
+    setCurrentQuestion(question);
+
+    // Get the explanation from questionAnswerNotes
+    let explanation = '';
+    try {
+      const notes = question.questionAnswerNotes;
+      if (Array.isArray(notes)) {
+        explanation = notes[0] || '';
+      } else if (typeof notes === 'string') {
+        try {
+          const parsedNotes = JSON.parse(notes);
+          explanation = Array.isArray(parsedNotes) ? parsedNotes[0] : notes;
+        } catch {
+          explanation = notes;
+        }
+      }
+    } catch (e) {
+      explanation = '';
+    }
+
+    if (question.questionType === 'normal') {
+      const options = question.questionOptions || [];
+      setCurrentQuestionContext({
+        question: cleanQuestion(question.questionContent),
+        correctAnswer: options[0] || '',
+        explanation,
+        otherOptions: options,
+        type: 'normal'
+      });
+    } else {
+      setCurrentQuestionContext({
+        question: cleanQuestion(question.questionContent),
+        correctAnswer: cleanAnswer(question.questionContent),
+        explanation,
+        otherOptions: [],
+        type: 'flashcard'
+      });
+    }
+  }, []);
+
+  const [isChatFocused, setIsChatFocused] = useState(false);
+  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
+
+  // Reset if answer is revealed
+  useEffect(() => {
+    if (isOpen) setIsAnswerRevealed(false);
+  }, [isOpen]);
+
+  useEffect(() => {
+    setIsAnswerRevealed(false);
+    handleHideChat();
+  }, [currentQuestion]);
+
   useImperativeHandle(ref, () => ({
     open: () => onOpenChange(true),
     setWrongCards,
     setCorrectCount
   }));
 
+
+
   return (
     <>
       {buttonContent}
-      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <Dialog 
+        open={isOpen} 
+        onOpenChange={handleOpenChange}
+      >
         <DialogContent className="max-w-[80vw] h-[80vh] gradientbg border text-[--theme-text-color] border-[--theme-border-color] flex flex-col z-[100] focus:outline-none">
           <DialogHeader className="mb-2 flex-shrink-0 px-6">
             <DialogTitle className="w-full text-[--theme-hover-text] text-center items-center justify-center rounded-md bg-[--theme-hover-color] p-2 flex">
@@ -241,8 +332,8 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
               <div className="w-2/3 bg-[--theme-leaguecard-color] p-2 rounded-md flex flex-col">
                 {/* Controls Section */}
                 <div className="flex justify-between items-center p-4 mb-4">
+                  {/* Left side - Score and Encouragement */}
                   <div className="flex items-center space-x-4">
-                    {/* Score and Encouragement */}
                     <div className="relative">
                       <animated.div 
                         style={counterSpring}
@@ -268,27 +359,50 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                       )}
                     </div>
                   </div>
+                  {/* Right side - Control Buttons */}
+                  <div className="flex items-center space-x-2 ml-auto">
+                    {/* Hint Button */}
+                    {currentQuestionContext && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={handleHintRequest}
+                              className="hover:bg-transparent text-[--theme-text-color] hover:text-[--theme-hover-color] transition-colors group"
+                            >
+                              <HelpCircle className="h-5 w-5 transition-transform duration-200 group-hover:rotate-12" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">
+                            {isAnswerRevealed ? "Explain answer" : "Get a hint"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
 
-                  {/* Downvote Button */}
-                  {currentQuestion && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleDownvote}
-                            className="hover:bg-transparent text-[--theme-text-color] hover:text-[--theme-hover-color] transition-colors group"
-                          >
-                            <ThumbsDown className="h-5 w-5 transition-transform duration-200 group-hover:rotate-12 origin-[70%_30%]" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="left">
-                          <p>Report this question</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
+                    {/* Downvote Button */}
+                    {currentQuestionContext && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={handleDownvote}
+                              className="hover:bg-transparent text-[--theme-text-color] hover:text-[--theme-hover-color] transition-colors group"
+                            >
+                              <ThumbsDown className="h-5 w-5 transition-transform duration-200 group-hover:rotate-12 origin-[70%_30%]" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">
+                            <p>Report this question</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                 </div>
 
                 {/* Flashcard content */}
@@ -307,30 +421,72 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                       onClose={handleClose}
                       onMCQAnswer={onMCQAnswer}
                       setTotalMCQQuestions={setTotalMCQQuestions}
-                      onQuestionChange={setCurrentQuestion}
+                      onQuestionChange={handleQuestionChange}
+                      onAnswerReveal={(revealed: boolean) => setIsAnswerRevealed(revealed)}
+                      isChatFocused={isChatFocused}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Kitty Litter */}
-              <div className="w-1/3 bg-[--theme-leaguecard-color] p-3 rounded-md flex flex-col min-h-0">
-                <h3 className="text-lg font-semibold mb-2 flex-shrink-0">Kitty Litter</h3>
-                <ScrollArea className="flex-grow">
-                  <div className="space-y-4">
-                    {wrongCards.map((card, index) => (
-                      <animated.div 
-                        key={index} 
-                        style={index === 0 ? springs : undefined}
-                        className="p-4 border border-[--theme-border-color] rounded-md bg-[--theme-flashcard-color]"
+              {/* Right Side - Toggleable Chat/Kitty Litter */}
+              <div className="w-1/3 bg-[--theme-leaguecard-color] p-3 rounded-md flex flex-col min-h-0 h-full">
+                {showChat ? (
+                  <div className="flex flex-col h-full overflow-hidden">
+                    <div className="flex justify-between items-center mb-2 flex-shrink-0 px-2">
+                      <h3 className="text-lg font-semibold">Question Helper</h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleHideChat}
+                        className="text-[--theme-text-color] hover:text-[--theme-hover-color] whitespace-nowrap m-2"
                       >
-                        <div className="text-sm text-[--theme-text-color] opacity-50 mb-2">{card.timestamp}</div>
-                        <div className="font-semibold mb-2 text-[--theme-text-color]">{card.question}</div>
-                        <div className="text-[--theme-hover-color] font-medium">{card.answer}</div>
-                      </animated.div>
-                    ))}
+                        Back to Kitty Litter
+                      </Button>
+                    </div>
+                    <div className="flex-1 min-h-0 h-full">
+                      <ChatBot
+                        width="100%"
+                        height="100%"
+                        backgroundColor="var(--theme-leaguecard-color)"
+                        mode={isAnswerRevealed ? "questionReview" : "hint"}
+                        chatbotContext={{
+                          contentTitle: "Question Helper",
+                          context: currentQuestionContext 
+                            ? `${currentQuestionContext.type === 'normal' 
+                                ? `Multiple Choice Question:\n${currentQuestionContext.question}\n\nOptions:\n${currentQuestionContext.otherOptions.join('\n')}`
+                                : `Flashcard Question:\n${currentQuestionContext.question}`
+                              }${isAnswerRevealed ? `\n\nCorrect Answer: ${currentQuestionContext.correctAnswer}${
+                                currentQuestionContext.explanation ? `\n\nExplanation: ${currentQuestionContext.explanation}` : ''
+                              }` : ''}`
+                            : ""
+                        }}
+                        chatbotRef={chatbotRef}
+                        onFocus={() => setIsChatFocused(true)}
+                        onBlur={() => setIsChatFocused(false)}
+                      />
+                    </div>
                   </div>
-                </ScrollArea>
+                ) : (
+                  <>
+                    <h3 className="text-lg font-semibold mb-2 flex-shrink-0">Kitty Litter</h3>
+                    <ScrollArea className="flex-grow">
+                      <div className="space-y-4">
+                        {wrongCards.map((card, index) => (
+                          <animated.div 
+                            key={index} 
+                            style={index === 0 ? springs : undefined}
+                            className="p-4 border border-[--theme-border-color] rounded-md bg-[--theme-flashcard-color]"
+                          >
+                            <div className="text-sm text-[--theme-text-color] opacity-50 mb-2">{card.timestamp}</div>
+                            <div className="font-semibold mb-2 text-[--theme-text-color]">{card.question}</div>
+                            <div className="text-[--theme-hover-color] font-medium">{card.answer}</div>
+                          </animated.div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </>
+                )}
               </div>
             </div>
           </div>

@@ -9,6 +9,8 @@ import { FlattenedQuestionResponse } from '@/lib/question';
 import toast from 'react-hot-toast';
 import { tutorialQuestions } from './constants/tutorialQuestions';
 import { roomToContentMap, roomToSubjectMap } from './constants';
+import { cleanQuestion, cleanAnswer } from './utils/testUtils';
+import { cn } from '@/lib/utils';
 
 export interface Flashcard {
   questionType: string;
@@ -39,21 +41,13 @@ interface FlashcardDeckProps {
   handleCompleteAllRoom: () => void;
   setTotalMCQQuestions: React.Dispatch<React.SetStateAction<number>>;
   onQuestionChange?: (question: Flashcard | null) => void;
+  onAnswerReveal?: (revealed: boolean) => void;
+  isChatFocused?: boolean;
 }
 
 const physics = {
   touchResponsive: { friction: 50, tension: 2000 },
   animateBack: { friction: 10, tension: 200 }
-};
-
-export const cleanQuestion = (text: string): string => {
-  const cleanedContent = text.replace(/\.\.\.[^}]*(?=}})/g, '');
-  const answerMatches = cleanedContent.replace(/{{c1::(.*?)}}/g, '_________');
-  const finalAnswer = answerMatches.replace(/{{c1::|}}/g, '')
-      .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
-      .trim();
-  return finalAnswer;
 };
 
 // Add the interface for our extended array type
@@ -99,6 +93,8 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   handleCompleteAllRoom,
   setTotalMCQQuestions,
   onQuestionChange,
+  onAnswerReveal,
+  isChatFocused = false,
 }): JSX.Element => {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -123,6 +119,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   // Ref for scrolling and question container
   const answerSectionRef = useRef<HTMLDivElement>(null);
   const questionContainerRef = useRef<HTMLDivElement>(null);
+  const isMCQ = flashcards[currentCardIndex]?.questionType === 'normal';
 
   useEffect(() => {
     correctSound.current = new Audio('/correct.mp3');
@@ -247,10 +244,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   }, []);
 
   const handleCardClick = useCallback(() => {
-    // Only allow click to reveal for non-MCQ questions
-    if (flashcards[currentCardIndex]?.questionType === 'normal') {
-      return;
-    }
     toggleReveal();
   }, [currentCardIndex, flashcards]);
 
@@ -296,18 +289,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     
     const currentCard = flashcards[currentCardIndex];
     return currentCard.questionContent.replace(/{{(.*?)}}/g, '_________');
-  };
-
-  
-
-  const cleanAnswer = (text: string): string => {
-    const matches = [...text.matchAll(/{{c[^:]*::(.+?)(?=::|}})/g)];
-    const result = matches.map(match => match[1]).join(', ');
-    
-    return result
-        .replace(/<[^>]*>/g, '') // Remove HTML tags
-        .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
-        .trim();
   };
 
   const getAnswerContent = () => {
@@ -405,7 +386,6 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     
     // Guard against empty flashcards
     if (flashcardsRef.current.length === 0) {
-      console.log("No flashcards available");
       return;
     }
 
@@ -444,7 +424,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
   };
 
   const bind = useDrag(({ active, movement: [mx, my], velocity: [vx, vy], event, type }) => {
-    if (flashcards[currentCardIndex]?.questionType === 'normal') {
+    if (isMCQ) {
       return;
     }
 
@@ -476,39 +456,53 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
 
   const toggleReveal = () => {
     // Only allow space to reveal for non-MCQ questions
-    if (flashcards[currentCardIndex]?.questionType === 'normal') {
-      return;
-    }
-    setIsRevealed(prev => !prev);
+    if (isMCQ) return;
+    const newRevealState = !isRevealed;
+    setIsRevealed(newRevealState);
+    onAnswerReveal?.(newRevealState);
     setHasSeenAnswer(true);
   };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Prevent key handling during transitions
-      if (isTransitioning) return;
+      if (isTransitioning || isChatFocused) return;
 
-      const currentCard = flashcards[currentCardIndex];
-      const isMCQ = currentCard?.questionType === 'normal';
+      // If deck is complete, any key press closes dialog
+      if (currentCardIndex >= flashcards.length) {
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+        return;
+      }
 
-      // Any key for MCQ to progress to next question after answering
-      if (isMCQ) {
-        if (answeredMCQ) {
-          event.preventDefault();
-          if (selectedOption === shuffledOptions.correctIndex) {
-            handleSwipe('right');
-          } else {
-            handleSwipe('left');
-          }
+      // Progress MCQ on any key press after answering
+      if (isMCQ && answeredMCQ) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (selectedOption === shuffledOptions.correctIndex) {
+          handleSwipe('right');
+        } else {
+          handleSwipe('left');
         }
         return;
       }
 
-      // Swipe controls for flashcard questions
+      // Controls for flashcard questions
       switch (event.key) {
+        case ' ':
+          event.preventDefault();
+          event.stopPropagation();
+          if (!isMCQ) {
+            const newRevealState = !isRevealed;
+            setIsRevealed(newRevealState);
+            setHasSeenAnswer(true);
+            onAnswerReveal?.(newRevealState);
+          }
+          break;
         case 'ArrowLeft':
         case 'a':
         case 'A':
+          event.preventDefault();
           if (!hasSeenAnswer) {
             showAnswerCheckReminder();
             return;
@@ -518,22 +512,21 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
         case 'ArrowRight':
         case 'd':
         case 'D':
+          event.preventDefault();
           if (!hasSeenAnswer) {
             showAnswerCheckReminder();
             return;
           }
           handleSwipe('right');
           break;
-        case ' ':
-          event.preventDefault();
-          toggleReveal();
-          break;
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hasSeenAnswer, flashcards, currentCardIndex, selectedOption, shuffledOptions.correctIndex, isTransitioning, answeredMCQ]);
+    window.removeEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('keydown', handleKeyDown, true);
+
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [hasSeenAnswer, flashcards, currentCardIndex, selectedOption, shuffledOptions.correctIndex, isTransitioning, answeredMCQ, isChatFocused, onClose, isRevealed, onAnswerReveal]);
 
   useEffect(() => {
     return () => {
@@ -560,13 +553,11 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
     setIsRevealed(true);
     setHasSeenAnswer(true);
     setAnsweredMCQ(true);
+    onAnswerReveal?.(true);
 
-    const isCorrect = index === shuffledOptions.correctIndex;
-  
     // Track MCQ performance - will only be called once due to hasAnswered check
-    if (onMCQAnswer) {
-      onMCQAnswer(isCorrect);
-    }
+    const isCorrect = index === shuffledOptions.correctIndex;
+    onMCQAnswer?.(isCorrect);
   };
 
   useEffect(() => {
@@ -613,7 +604,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
         <div className="w-full max-w-3xl px-4 min-h-full" {...bind()}>
           {flashcards.length - currentCardIndex > 0 && (
             <animated.div
-              className="w-full cursor-pointer"
+              className={cn("w-full", isMCQ && "cursor-pointer")}
               style={{ opacity }}
               onClick={handleCardClick}
             >
@@ -627,8 +618,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
                     />
                     
                     {/* MCQ Options */}
-                    {flashcards[currentCardIndex]?.questionType === 'normal' && 
-                     flashcards[currentCardIndex]?.questionOptions?.length > 0 && (
+                    {isMCQ && flashcards[currentCardIndex]?.questionOptions?.length > 0 && (
                       <div className="w-full mt-4 space-y-2">
                         {shuffledOptions.options.map((option: string, index: number) => (
                           <button 
