@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import type { UserResponseWithCategory } from "@/types";
-import { cleanQuestion } from './FlashcardDeck';
+import { cleanQuestion } from './utils/testUtils';
 
 interface WrongAnswerCardProps {
   response: UserResponseWithCategory;
