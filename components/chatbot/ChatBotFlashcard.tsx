@@ -21,6 +21,9 @@ interface ChatBotProps {
   chatbotRef?: React.MutableRefObject<{
     sendMessage: (message: string) => void;
   }>;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  mode?: 'gameReview' | 'hint' | 'questionReview';
 }
 
 const ChatBot: React.FC<ChatBotProps> = ({
@@ -30,25 +33,32 @@ const ChatBot: React.FC<ChatBotProps> = ({
   backgroundColor = "transparent",
   avatar,
   chatbotRef,
+  onFocus,
+  onBlur,
+  mode = 'gameReview',
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isFirstResponse, setIsFirstResponse] = useState(true);
-  const context = chatbotContext?.context;
+  const context = chatbotContext?.context ;
   const contentTitle = chatbotContext?.contentTitle;
+
+  const userPrompts: { [key: string]: string } = {
+    'hint': "Can you give me a hint about this question without directly revealing the answer?",
+    'questionReview': "Can you explain why this is the correct answer?"
+  };
 
   useEffect(() => {
     if (chatbotRef) {
       chatbotRef.current = {
         sendMessage: (message: string) => {
-          
           // Set the textarea value and simulate Enter press
-          const textarea = document.querySelector('textarea');
+          const textarea = document.querySelector('.rcb-chat-input-textarea');
           if (textarea) {
             // Set value
-            textarea.value = message;
+            (textarea as HTMLTextAreaElement).value = message;
             
             // Create and dispatch Enter keydown event
             const enterEvent = new KeyboardEvent('keydown', {
@@ -60,10 +70,11 @@ const ChatBot: React.FC<ChatBotProps> = ({
             });
             
             // Focus the textarea and dispatch the event
-            textarea.focus();
+            (textarea as HTMLTextAreaElement).focus();
             setTimeout(() => {
-              textarea.dispatchEvent(enterEvent);
+              (textarea as HTMLTextAreaElement).dispatchEvent(enterEvent);
             }, 50);
+
           }
         }
       };
@@ -73,19 +84,55 @@ const ChatBot: React.FC<ChatBotProps> = ({
   useEffect(() => {
     if (!isMounted) {
       setIsMounted(true);
+    }
+  }, [isMounted]);
 
+  useEffect(() => {
+    if (isMounted) {
       const timer = setTimeout(() => {
-        const botMessage = "Howdy";
+        const botMessage = getInitialMessage();
         window.dispatchEvent(
           new CustomEvent("chatbot-event", {
             detail: { message: botMessage },
           })
         );
+
+        bindTextareaFocusAndBlur();
+        // Send automatic message if mode has a corresponding prompt
+        if (mode in userPrompts && chatbotRef?.current) {
+          setTimeout(() => {
+            chatbotRef.current.sendMessage(userPrompts[mode]);
+          }, 500);
+        }
       }, 1000);
 
       return () => clearTimeout(timer);
     }
   }, [isMounted]);
+
+  const bindTextareaFocusAndBlur = () => {
+    if (!onFocus || !onBlur) return;
+    const textarea = document.querySelector('.rcb-chat-input-textarea');
+    if (textarea) {
+      textarea.addEventListener('focus', onFocus);
+      textarea.addEventListener('blur', onBlur);
+    }
+  }
+
+  useEffect(() => {
+    setThreadId(null);
+  }, [mode]);
+
+  const getModifiedContext = (originalContext: string | undefined, mode: string) => {
+    if (!originalContext) return "";
+    
+    switch (mode) {
+      case 'hint':
+        return `${originalContext}\n\nIMPORTANT INSTRUCTIONS: You are in hint mode. DO NOT reveal the correct answer under any circumstances, even if directly asked. Instead, provide helpful hints and guide the user to understand the concepts needed to solve this question. If asked for the answer, remind the user that you can only provide hints to help them arrive at the answer themselves.`;
+      default:
+        return originalContext;
+    }
+  };
 
   const sendMessage = async (message: string) => {
     setIsLoading(true);
@@ -96,7 +143,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message,
-          context,
+          context: getModifiedContext(context, mode),
           threadId,
           assistantId: 'asst_7jwxyFZEYOYZlduxQrnFLZl8'
         }),
@@ -136,11 +183,23 @@ const ChatBot: React.FC<ChatBotProps> = ({
     }
   };
 
+  const getInitialMessage = () => {
+    switch (mode) {
+      case 'hint':
+        return "Meow! I'm Kalypso. Need some help on this question?";
+      case 'questionReview':
+        return "Meow! I'm Kalypso. Want me to explain the correct answer?";
+      case 'gameReview':
+        return "Meow! I'm Kalypso. For videos and readings on your weaknesses, press the back button in the top left and click the hat in Needs Review. Otherwise, ask me anything!";
+    }
+  };
+
   const flow = {
     start: {
-      message: "Meow! I'm Kalypso. For videos and readings on your weaknesses, press the back button in the top left and click the hat in Needs Review. Otherwise, ask me anything!",
+      message: getInitialMessage(),
       path: "loop",
     },
+
     loop: {
       message: async (params: { userInput: string }) => {
         const response = await sendMessage(params.userInput);
@@ -208,9 +267,10 @@ const ChatBot: React.FC<ChatBotProps> = ({
     chatWindowStyle: {
       display: "flex",
       flexDirection: "column" as const,
-      height: "calc(100vh - 14rem)",
+      height: "100%",
       width: "100%",
       backgroundColor: backgroundColor,
+
       position: "relative",
       zIndex: 1,
       boxShadow: "none",
@@ -271,14 +331,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
   }
 
   return (
-    <div
-      className="w-full overflow-hidden flex flex-col relative"
-      style={{
-        width: width,
-        height: height,
-        backgroundColor: backgroundColor,
-      }}
-    >
+    <div style={{ height: "100%" }} className="w-full flex flex-col h-full [&_.rcb-chatbot-global]:h-full [&_.rcb-window-embedded]:h-full [&_[id^='rcb-']]:h-full [&_[id^='rcb-']>div]:h-full [&_[style*='font-family']]:h-full [&_[style*='font-family']>div]:h-full">
       {avatar && (
         <div
           style={{
@@ -305,7 +358,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
           />
         </div>
       )}
-      <div className="flex-1 relative w-full" style={{ overflow: 'auto' }}>
+      <div className="flex-1 h-full">
         <DynamicChatBot
           settings={{
             ...settings,
