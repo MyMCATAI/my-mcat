@@ -162,7 +162,7 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { amount, notificationPreference, incrementScore, decrementScore, unlockGame, unlockType, bio } = body;
+    const { bio, unlockGame, amount, incrementScore, decrementScore, notificationPreference } = body;
 
     // Handle bio update
     if (bio !== undefined) {

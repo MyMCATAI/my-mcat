@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { FaLinkedin, FaInstagram } from 'react-icons/fa';
 import MusicPlayer from "@/components/musicplayer";
@@ -10,6 +9,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { SubscriptionManagementButton } from "@/components/subscription-management-button";
+import { ProfileButton } from '@/components/ProfileButton';
 
 // Define the Song type
 type Song = {
@@ -30,7 +30,7 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
   }
 
   return (
-    <nav className="flex items-center justify-between bg-transparent shadow-sm h-24">
+    <nav className="flex items-center justify-between bg-transparent shadow-sm h-24 relative z-[40]">
       <div className="flex items-center space-x-4 px-4">
         <Link href="/home" className="flex items-center">
           <div className="flex flex-col">
@@ -44,8 +44,8 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
       <div className="flex items-center h-full">
         <div className="flex items-center mr-5">
           <SubscriptionManagementButton isGoldMember={isSubscribed} />
-          <div className="flex items-center scale-150">
-            <UserButton />
+          <div className="flex items-center scale-150 relative z-[9999]">
+            <ProfileButton />
           </div>
         </div>
         <span
