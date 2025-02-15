@@ -8,6 +8,8 @@ import {
 import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import Leaderboard from "@/components/leaderboard/Leaderboard";
+import AnimatedProfileIcon from '@/components/ui/AnimatedProfileIcon';
+import { useProfileContext } from '@/contexts/UserProfileContext';
 
 interface ResourcesMenuProps {
   reportData: DoctorOfficeStats | null;
@@ -23,6 +25,7 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
 }) => {
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
   const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
+  const { profile } = useProfileContext();
 
   if (!reportData) {
     return <div>Loading...</div>;
@@ -56,13 +59,9 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
         `}</style>
 
         <div className="flex flex-col items-center mb-1 w-full">
-          <div className="w-48 h-48 bg-[--theme-doctorsoffice-accent] border-2 border-[--theme-border-color] rounded-lg mb-4 overflow-hidden relative">
-            <img
-              src="/kalypsoend.gif"
-              alt="Kalypso"
-              className="w-full h-full object-cover transform scale-[1.8] translate-y-[40%]"
-            />
-          </div>
+          <AnimatedProfileIcon 
+            photoName={profile?.profilePhoto || 'doctor.png'}
+          />
         </div>
 
         <DaysStreak days={reportData.streak} />

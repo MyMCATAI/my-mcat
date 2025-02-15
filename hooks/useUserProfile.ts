@@ -1,30 +1,62 @@
 import { useState, useEffect } from 'react';
+import React from 'react';
+
+export const PROFILE_PHOTOS = [
+    'doctor.png',  // Default photo
+    'gamer.png',
+    'cool.png',
+    'dino.png',
+    'king.png',
+    'raincoat.png',
+    'schoolgirl.png',
+    'ski.png',
+    'sushi.png',
+];
 
 interface UserProfile {
     firstName: string;
     bio: string;
     coins: number;
     patientsCount: number;
+    profilePhoto: string;
 }
 
-export function useUserProfile(email: string | null) {
+interface UserProfileParams {
+    email?: string;
+    userId?: string;
+}
+
+export const useUserProfile = (params: UserProfileParams | null) => {
     const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
+    // Memoize the params to prevent infinite fetches
+    const memoizedParams = React.useMemo(() => {
+        if (!params) return null;
+        return {
+            email: params.email,
+            userId: params.userId
+        };
+    }, [params?.email, params?.userId]);
+
     const updateProfile = async (updates: Partial<UserProfile>) => {
-        if (!email) return;
+        if (!params || !params.email && !params.userId) return;
         try {
-            const response = await fetch(`/api/user-info?email=${email}`, {
-                method: 'PUT',
+            const queryParam = params.email ?
+                `email=${params.email}` :
+                `userId=${params.userId}`;
+
+            const response = await fetch(`/api/user-info/profile?${queryParam}`, {
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bio: updates.bio })
+                body: JSON.stringify(updates)
             });
 
             if (!response.ok) throw new Error('Failed to update profile');
 
             const data = await response.json();
-            setProfile(prev => prev ? { ...prev, ...updates } : null);
+            setProfile(data);
         } catch (err) {
             setError(err instanceof Error ? err : new Error('Failed to update profile'));
         }
@@ -32,31 +64,27 @@ export function useUserProfile(email: string | null) {
 
     useEffect(() => {
         const fetchProfile = async () => {
-            if (!email) {
-                setProfile(null);
-                setIsLoading(false);
-                return;
-            }
+            if (!memoizedParams) return;
 
+            setIsLoading(true);
             try {
-                setIsLoading(true);
-                const response = await fetch(`/api/user-info/profile?email=${email}`);
+                const queryParam = memoizedParams.email ?
+                    `email=${memoizedParams.email}` :
+                    `userId=${memoizedParams.userId}`;
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch user profile');
-                }
-
+                const response = await fetch(`/api/user-info/profile?${queryParam}`);
                 const data = await response.json();
                 setProfile(data);
-            } catch (err) {
-                setError(err instanceof Error ? err : new Error('Failed to fetch user profile'));
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                setError(error instanceof Error ? error : new Error('Failed to fetch user profile'));
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchProfile();
-    }, [email]);
+    }, [memoizedParams]); // Use memoized params
 
     return { profile, isLoading, error, updateProfile };
-} 
+}; 

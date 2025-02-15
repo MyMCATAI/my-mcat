@@ -22,7 +22,7 @@ model UserInfo {
   subscriptionType       String   @default("")
   diagnosticScores       Json?
   firstName              String?  @default("")
-  profilePhoto           String?  @default("")
+  profilePhoto           String?  @default("doctor.png")
   streak                 Int      @default(0)
   notificationPreference String   @default("all")
   unlocks                Json?    @default("[]")

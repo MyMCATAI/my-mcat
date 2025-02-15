@@ -19,6 +19,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
   const router = useRouter();
   const { userInfo, unlockGame } = useUserInfo();
   const [isFullscreenPromptVisible, setIsFullscreenPromptVisible] = useState(false);
+  const [isClinicUnlocked, setIsClinicUnlocked] = useState(false);
 
   useEffect(() => {
     // Listen for a custom event from FullscreenPrompt
@@ -32,20 +33,17 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
     };
   }, []);
 
-  const [isClinicUnlocked, setIsClinicUnlocked] = useState(false);
-  
   useEffect(() => {
-    if (userInfo?.unlocks && Array.isArray(userInfo.unlocks)) {
-      setIsClinicUnlocked(userInfo.unlocks.includes('game'));
+    if (userInfo?.unlocks) {
+      const unlocksArray = typeof userInfo.unlocks === 'string' 
+        ? JSON.parse(userInfo.unlocks) 
+        : userInfo.unlocks;
+      setIsClinicUnlocked(Array.isArray(unlocksArray) && unlocksArray.includes('game'));
     }
   }, [userInfo]);
 
   const handleOpenChange = (open: boolean) => {
-    // Don't allow closing if clinic is not unlocked
-    if (!open && !isClinicUnlocked) {
-      return;
-    }
-    // Only allow closing if FullscreenPrompt is visible
+    // Only prevent closing if fullscreen prompt is not visible
     if (!open && !isFullscreenPromptVisible) {
       return;
     }
@@ -54,9 +52,11 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
 
   const unlock = async () => {
     try {
-      await unlockGame();
-      setIsClinicUnlocked(true);
+      // Close modal using handleOpenChange instead of onOpenChange
+      handleOpenChange(false);
       
+      // Handle async operations after
+      await unlockGame();
       if (onClinicUnlocked) {
         await onClinicUnlocked();
       }
@@ -71,18 +71,8 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
   };
 
   return (
-    <Dialog 
-      open={isOpen && !isClinicUnlocked}
-      onOpenChange={handleOpenChange}
-      modal={!isFullscreenPromptVisible}
-    >
-      <DialogContent 
-        className="max-w-[33rem] bg-[--theme-doctorsoffice-accent] border text-[--theme-text-color] border-[--theme-border-color]"
-        style={{ 
-          visibility: isFullscreenPromptVisible ? 'hidden' : 'visible' 
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="z-[100]">
         <DialogHeader>
           <DialogTitle className="text-[--theme-text-color] text-center">{"Welcome to The Anki Clinic!"}</DialogTitle>
         </DialogHeader>
@@ -96,7 +86,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
               {"Your browser does not support the video tag."}
             </video>
           </div>
-          <p className="text-center mb-4">
+          <p className="text-center text-[--theme-text-color] mb-4">
             {"Welcome to the Anki Clinic, a fun and competitive Anki experience! Join our Discord community to connect with other students and access additional study resources."}
           </p>
           <div className="space-y-4">
