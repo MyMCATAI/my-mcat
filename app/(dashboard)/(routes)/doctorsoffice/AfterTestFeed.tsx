@@ -13,6 +13,8 @@ import { GraduationCap, Cat } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import type { UserResponseWithCategory } from "@/types";
+import VideoRecommendations from './components/VideoRecommendations';
+
 
 /* ------------------------------------------ Types ------------------------------------------ */
 interface LargeDialogProps {
@@ -26,6 +28,7 @@ interface LargeDialogProps {
   largeDialogQuit: boolean;
   setLargeDialogQuit: (quit: boolean) => void;
   isSubscribed: boolean;
+  conceptCategories?: string[];
 }
 
 interface FeedItem {
@@ -84,6 +87,17 @@ interface TestResponse {
   question?: Question;
 }
 
+interface VideoRecommendation {
+  id: string;
+  title: string;
+  link: string;
+  minutes_estimate: number;
+  thumbnail: string;
+  category: {
+    conceptCategory: string;
+  };
+}
+
 /* ---------------------------------------- Constants --------------------------------------- */
 const STAR_THRESHOLDS = {
   PERFECT: 100,
@@ -117,7 +131,8 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   wrongCount, 
   largeDialogQuit, 
   setLargeDialogQuit,
-  isSubscribed
+  isSubscribed,
+  conceptCategories
 }, ref) => {
   /* ---------------------------------------- Hooks ---------------------------------------- */
   const router = useRouter();
@@ -127,6 +142,9 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   }>({ sendMessage: () => {} });
   const levelUpSound = useRef<HTMLAudioElement | null>(null);
   const fanfareSound = useRef<HTMLAudioElement | null>(null);
+  const videoScrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showLeftScroll, setShowLeftScroll] = useState(false);
+  const [showRightScroll, setShowRightScroll] = useState(false);
 
   /* --------------------------------------- State ---------------------------------------- */
   const [review, setReview] = useState<Review | null>(null);
@@ -141,6 +159,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     contentTitle: "",
     context: "",
   });
+  const [recommendedVideos, setRecommendedVideos] = useState<VideoRecommendation[]>([]);
 
   /* ------------------------------------ Computed Values --------------------------------- */
   const score = correctCount/(correctCount+wrongCount) * 100;
@@ -182,6 +201,27 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     const url = `/home?tab=AdaptiveTutoringSuite&conceptCategories=${weakestCategories.join(',')}`;
     router.push(url);
   }, [isSubscribed, mostMissed, router]);
+
+  const handleScroll = useCallback(() => {
+    if (videoScrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = videoScrollContainerRef.current;
+      setShowLeftScroll(scrollLeft > 0);
+      setShowRightScroll(scrollLeft < scrollWidth - clientWidth - 5);
+    }
+  }, []);
+  
+  const scrollTo = useCallback((direction: 'left' | 'right') => {
+    if (videoScrollContainerRef.current) {
+      const scrollAmount = 300;  
+      const newScrollLeft = videoScrollContainerRef.current.scrollLeft + 
+        (direction === 'left' ? -scrollAmount : scrollAmount);
+      
+      videoScrollContainerRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+      });
+    }
+  }, []);
 
   /* -------------------------------------- Helpers --------------------------------------- */
   const getStarCount = useCallback((score: number): number => {
@@ -453,6 +493,37 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
       context: contextIntro + contextContent,
     });
   }, [wrongCards]);
+
+  useEffect(() => {
+    const fetchRecommendedVideos = async () => {
+      if (!userResponses.length) return;
+      
+      // Get unique concept categories from responses
+      const categories = [...new Set(userResponses
+        .map(r => r.question?.category?.conceptCategory)
+        .filter(Boolean))];
+
+      try {
+        const response = await fetch(`/api/videos/recommendations?categories=${categories.join(',')}&maxDuration=300`);
+        if (!response.ok) throw new Error('Failed to fetch videos');
+        const videos = await response.json();
+        setRecommendedVideos(videos);
+      } catch (error) {
+        console.error('Error fetching recommended videos:', error);
+      }
+    };
+
+    fetchRecommendedVideos();
+  }, [userResponses]);
+
+  useEffect(() => {
+    const scrollContainer = videoScrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      handleScroll(); 
+      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    }
+  }, [handleScroll]);
 
   /* ------------------------------------ Render Methods ------------------------------------ */
   const renderStars = () => {
@@ -797,16 +868,16 @@ const renderReviewSection = () => (
   return (
     <>
       <Dialog open={open} onOpenChange={handleExit}>
-        <DialogContent className="bg-[--theme-mainbox-color] text-center p-4 max-w-[95vw] w-[65rem] max-h-[95vh] overflow-y-auto shadow-lg border border-transparent">
+        <DialogContent className="bg-[--theme-mainbox-color] text-center p-4 max-w-[95vw] h-[75rem] w-[55rem] max-h-[95vh] overflow-x-hidden overflow-y-auto shadow-lg border border-transparent">
           {showReviewFeed ? (
-            <div className="flex-1 flex gap-4 relative">
+            <div className="flex-1 flex relative w-[45rem] ">
               {/* Back Button */}
               <button
                 onClick={() => setShowReviewFeed(false)}
-                className="absolute top-4 left-4 z-50 w-8 h-8 rounded-full 
+                className="absolute left-4 z-50 w-8 h-8 rounded-full 
                   bg-[--theme-leaguecard-color] text-[--theme-text-color]
                   flex items-center justify-center
-                  transition-all duration-300
+                  transition-all duration-300 
                   hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
               >
                 <svg 
@@ -824,20 +895,25 @@ const renderReviewSection = () => (
               </button>
 
               {/* Left Side - Review Section */}
-              <div className="w-[35%] h-full pr-4">
+              <div className="w-1/3 flex-col min-w-[300px]">
                 {renderReviewSection()}
               </div>
 
               {/* Right Side - Chat Interface */}
-              <div className="w-[65%] h-full flex flex-col">
-                <div className="flex-1 min-h-0">
-                  <ChatBot
+              <div className=" flex-col w-2/3 h-screen relative">
+                <div className="h-2/3 relative">
+                <div className="absolute inset-0 overflow-y-auto">
+                  <ChatBot 
                     width="100%"
                     height="100%"
                     backgroundColor="var(--theme-mainbox-color)"
                     chatbotContext={chatbotContext}
                     chatbotRef={chatbotRef}
                   />
+                  </div>
+                </div>
+                <div className="h-1/3 overflow-hidden"> 
+                  <VideoRecommendations videos={recommendedVideos} />
                 </div>
               </div>
             </div>
