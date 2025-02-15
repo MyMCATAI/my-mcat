@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { userTestId, questionId, flagged } = body;
+    const { userTestId, questionId, flagged, reviewNotes } = body;
 
     if (!userTestId || !questionId) {
       return NextResponse.json(
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     // Update the flagged status
     userResponse = await prisma.userResponse.update({
       where: { id: userResponse.id },
-      data: { flagged },
+      data: { flagged, reviewNotes },
     });
 
     return NextResponse.json(userResponse);

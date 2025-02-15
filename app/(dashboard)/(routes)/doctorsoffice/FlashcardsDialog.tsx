@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 import { roomToSubjectMap } from './constants';
 import ChatBot from '@/components/chatbot/ChatBotFlashcard';
 import { cleanQuestion, cleanAnswer } from './utils/testUtils';
+import DownvoteFeedback from '@/components/DownvoteFeedback';
 // import Interruption from './Interruption';
 
 interface WrongCard {
@@ -78,6 +79,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   const chatbotRef = useRef<{
     sendMessage: (message: string) => void;
   }>({ sendMessage: () => {} });
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const [springs, api] = useSpring(() => ({
     from: { x: 0 }
@@ -188,8 +190,14 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     }
   }, [roomId, setActiveRooms, onOpenChange, correctCount]);
 
-  const handleDownvote = async () => {
+  const handleDownvote = () => {
+    setIsFeedbackOpen(true);
+  };
+
+  const handleFeedbackSubmit = async (feedback: string, category: string) => {
     if (!currentQuestion || !currentUserTestId) return;
+
+    console.log("submitted");
 
     try {
       const response = await fetch('/api/user-test/flagged-responses', {
@@ -198,7 +206,8 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
         body: JSON.stringify({
           userTestId: currentUserTestId,
           questionId: currentQuestion.id,
-          flagged: true,  
+          flagged: true,
+          reviewNotes: feedback
         }),
       });
 
@@ -210,7 +219,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: `Question Downvoted\n\nQuestion ID: ${currentQuestion.id}\nQuestion Content: ${currentQuestion.questionContent}\n\nThis question was automatically flagged for review through the downvote system.`,
+          message: `Question Downvoted\n\nQuestion ID: ${currentQuestion.id}\nQuestion Content: ${currentQuestion.questionContent}\n\nFeedback: ${feedback}\nCategory: ${category}`,
         }),
       });
 
@@ -219,6 +228,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
       }
 
       toast.success("Question reported! Thank you for helping us improve.");
+      setIsFeedbackOpen(false);
 
     } catch (error) {
       console.error("Error sending downvote:", error);
@@ -492,6 +502,11 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
           </div>
         </DialogContent>
       </Dialog>
+      <DownvoteFeedback
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        onSubmit={handleFeedbackSubmit}
+      />
     </>
   );
 });
