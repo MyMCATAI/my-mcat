@@ -232,7 +232,7 @@ export async function PUT(req: Request) {
 
       const updatedInfo = await incrementUserScore(scoreChange);
       return NextResponse.json({ score: updatedInfo.score });
-    }
+    } 
 
     // Handle notification preference update
     if (notificationPreference !== undefined) {
