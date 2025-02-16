@@ -18,6 +18,7 @@ interface PurchaseButtonProps {
   children?: React.ReactNode;
   autoOpen?: boolean;
   userCoinCount?: number;
+  onClose: () => void;
 }
 
 export function PurchaseButton({ 
@@ -26,7 +27,8 @@ export function PurchaseButton({
   tooltipText = "Purchase additional coins to access more features",
   children,
   autoOpen = false,
-  userCoinCount = 1
+  userCoinCount = 1,
+  onClose
 }: PurchaseButtonProps) {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [isModalOpen, setIsModalOpen] = useState(autoOpen);
@@ -37,10 +39,9 @@ export function PurchaseButton({
   }, [autoOpen]);
 
   const handleOpenChange = (open: boolean) => {
-    if (!open && userCoinCount > 0) {
-      setIsModalOpen(false);
-    } else if (open) {
-      setIsModalOpen(true);
+    setIsModalOpen(open);
+    if (!open) {
+      onClose();
     }
   };
 

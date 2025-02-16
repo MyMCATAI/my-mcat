@@ -678,6 +678,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                   className="flex items-center hover:opacity-90 transition-opacity"
                   tooltipText="Click to purchase more coins"
                   userCoinCount={userScore}
+                  onClose={() => {}}
                 >
                   <div className="flex items-center">
                     <Image
