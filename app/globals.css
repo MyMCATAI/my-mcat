@@ -1071,3 +1071,15 @@ html::-webkit-scrollbar {
     stroke-dashoffset: 0;
   }
 }
+
+@keyframes sparkle-float {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(var(--tx, -50px), var(--ty, -50px)) rotate(var(--r, 180deg)) scale(1);
+    opacity: 0;
+  }
+}

@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import FadingMessage from '../ui/FadingMessage';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import Image from 'next/image';
+import UserProfileModal from './UserProfileModal';
 
 interface FriendRequestModalProps {
   isOpen: boolean;
@@ -34,12 +35,18 @@ const messages = {
 } as const;
 
 const FriendRequestModal = ({ isOpen, onClose, userEmail, onSuccess }: FriendRequestModalProps) => {
-  const { profile, isLoading: profileLoading } = useUserProfile(isOpen ? userEmail : null);
+  const { profile, isLoading: profileLoading } = useUserProfile(
+    isOpen ? { email: userEmail } : null
+  );
   const [isSelf, setIsSelf] = useState(false);
   const [message, setMessage] = useState<(typeof messages)[keyof typeof messages] | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
-  const [referralData, setReferralData] = useState<{ hasPendingReferral: boolean } | null>(null);
+  const [referralData, setReferralData] = useState<{ 
+    hasPendingReferral: boolean;
+    exists?: boolean;
+    isActiveFriend?: boolean;
+  } | null>(null);
 
   useEffect(() => {
     const checkUserStatus = async () => {
@@ -99,14 +106,14 @@ const FriendRequestModal = ({ isOpen, onClose, userEmail, onSuccess }: FriendReq
 
   if (!isOpen) return null;
 
-  return createPortal(
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] overflow-hidden">
-      <div 
-        className="fixed inset-0 bg-black/50" 
-        onClick={onClose}
-        style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0 }}
-      />
-      {profileLoading || isSubmitting || isCheckingStatus ? (
+  if (profileLoading || isSubmitting || isCheckingStatus) {
+    return createPortal(
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] overflow-hidden">
+        <div 
+          className="fixed inset-0 bg-black/50" 
+          onClick={onClose}
+          style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0 }}
+        />
         <div className="bg-[--theme-mainbox-color] p-6 rounded-lg max-w-md w-full mx-4 z-10">
           <div className="flex flex-col gap-3 items-center justify-center py-8">
             <div className="text-[--theme-text-color]">
@@ -119,16 +126,39 @@ const FriendRequestModal = ({ isOpen, onClose, userEmail, onSuccess }: FriendReq
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[--theme-hover-color]" />
           </div>
         </div>
-      ) : message ? (
-        <FadingMessage
-          {...message}
-          duration={2000}
+      </div>,
+      document.body
+    );
+  }
+
+  if (message) {
+    return createPortal(
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] overflow-hidden">
+        <div 
+          className="fixed inset-0 bg-black/50" 
+          onClick={onClose}
+        />
+        <FadingMessage 
+          {...message} 
+          duration={2000} 
           onComplete={() => {
             setMessage(null);
             onClose();
-          }}
+          }} 
         />
-      ) : !profile ? (
+      </div>,
+      document.body
+    );
+  }
+
+  if (!profile) {
+    return createPortal(
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] overflow-hidden">
+        <div 
+          className="fixed inset-0 bg-black/50" 
+          onClick={onClose}
+          style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0 }}
+        />
         <div className="bg-[--theme-mainbox-color] p-6 rounded-lg max-w-md w-full mx-4 z-10">
           <div className="flex flex-col items-center gap-3">
             <div className="h-[53px] overflow-hidden">
@@ -176,41 +206,20 @@ const FriendRequestModal = ({ isOpen, onClose, userEmail, onSuccess }: FriendReq
             </button>
           </div>
         </div>
-      ) : (
-        <div className="bg-[--theme-mainbox-color] p-6 rounded-lg max-w-md w-full mx-4 z-10">
-          <div className="flex justify-between items-start mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-[--theme-border-color] flex items-center justify-center select-none">
-                👤
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-[--theme-text-color]">
-                  {profile?.firstName || 'User'}
-                </h3>
-                <p className="text-[--theme-text-color] opacity-90">{userEmail}</p>
-              </div>
-            </div>
-            {!isSelf && (
-              <button
-                onClick={handleAction}
-                className="px-4 py-2 bg-[--theme-hover-color] text-[--theme-hover-text] rounded hover:opacity-80 select-none"
-              >
-                Add Friend
-              </button>
-            )}
-          </div>
-          
-          <div className="space-y-4 mb-6">
-            <div>
-              <label className="text-sm text-[--theme-text-color]">Bio</label>
-              <p className="text-[--theme-text-color]">
-                {profile?.bio || 'No bio available'}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>,
+      </div>,
+      document.body
+    );
+  }
+
+  return createPortal(
+    <UserProfileModal
+      isOpen={isOpen}
+      onClose={onClose}
+      userEmail={userEmail}
+      isEditable={false}
+      showFriendButton={!isSelf && !referralData?.exists}
+      onFriendRequest={handleAction}
+    />,
     document.body
   );
 };

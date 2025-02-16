@@ -67,10 +67,10 @@ export async function GET(req: Request) {
   });
 
   // Create leaderboard
-  const leaderboard = Array.from(userIdMap.entries()).map(([_, value], index) => {
+  const leaderboard = Array.from(userIdMap.entries()).map(([userId, value]) => {
     const userInfo = value;
     return {
-      id: index + 1,
+      id: userId,
       name: userInfo.firstName,
       patientsTreated: userInfo.patientsTreated
     };
