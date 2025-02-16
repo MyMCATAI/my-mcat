@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { FC } from "react";
 import { toast } from "react-hot-toast";
+import FeedbackModal from "./FeedbackModal";
 
 interface NewGameButtonProps {
   userScore: number;
@@ -19,6 +20,8 @@ const NewGameButton: FC<NewGameButtonProps> = ({
   resetGameState
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+
   const createNewUserTest = async () => {
     try {
       const response = await fetch("/api/user-test", {
@@ -43,6 +46,11 @@ const NewGameButton: FC<NewGameButtonProps> = ({
 
   const handleNewGame = async () => {
     if (userScore < 1) {
+      const feedbackSubmitted = localStorage.getItem('feedbackSubmitted');
+      if (!feedbackSubmitted) {
+        setIsFeedbackModalOpen(true);
+        return;
+      }
       toast.error("You need 1 coin to start a new game!");
       return;
     }
@@ -80,6 +88,7 @@ const NewGameButton: FC<NewGameButtonProps> = ({
     }
   };
 
+
   useEffect(() => {
     if (isGameInProgress) {
       setIsLoading(false);
@@ -115,6 +124,11 @@ const NewGameButton: FC<NewGameButtonProps> = ({
           className="inline-block"
         />
       </button>
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+        setUserScore={setUserScore}
+      />
     </div>
   );
 };
