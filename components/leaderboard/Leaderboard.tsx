@@ -4,11 +4,13 @@ import { FaUserInjured } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import { useUserInfo } from '@/hooks/useUserInfo';
 import FriendRequestModal from '@/components/modals/FriendRequestModal';
+import UserProfileModal from '@/components/modals/UserProfileModal';
 
 interface LeaderboardEntry {
-  id: number;
+  id: string;
   name: string;
   patientsTreated: number;
+  email?: string;
 }
 
 type LeaderboardType = 'global' | 'friends';
@@ -60,6 +62,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
   // Add state for modals
   const [showUserProfileModal, setShowUserProfileModal] = useState(false);
   const [selectedUserEmail, setSelectedUserEmail] = useState('');
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
 
   const fetchGlobalLeaderboard = async () => {
     if (globalLeaderboard.length > 0) return; // Don't fetch if we already have data
@@ -224,7 +228,17 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                   <div className="w-8 h-8 rounded-full bg-[--theme-border-color] flex items-center justify-center text-white select-none">
                     {index + 1}
                   </div>
-                  <span className="font-medium">{entry.name}</span>
+                  <span 
+                    className={`font-medium ${leaderboardType === 'friends' ? 'cursor-pointer hover:text-[--theme-hover-color] transition-colors' : ''}`}
+                    onClick={() => {
+                      if (leaderboardType === 'friends') {
+                        setSelectedUserId(entry.id);
+                        setShowProfileModal(true);
+                      }
+                    }}
+                  >
+                    {entry.name}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <FaUserInjured className="text-yellow-300" />
@@ -245,6 +259,13 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
         onClose={() => setShowUserProfileModal(false)}
         userEmail={selectedUserEmail}
         onSuccess={fetchFriendsLeaderboard}
+      />
+
+      <UserProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        userId={selectedUserId}
+        isEditable={false}
       />
     </div>
   );
