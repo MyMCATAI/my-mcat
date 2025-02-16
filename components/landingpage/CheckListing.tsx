@@ -6,12 +6,36 @@ import { FaDiscord } from "react-icons/fa";
 
 const CheckListing = () => {
     const items = [
-        { heading: "Study With Friends", text: "Compete in the Anki Clinic with your friends, study content together, post on a forum, hire a tutor, get help for any and all questions.'", icon: icon },
-        { heading: "AAMC Full Lengths Made Easy", text: `Get the most out of your AAMC resources with a step-by-step review of an AAMC FL.`, icon: icon },
-        { heading: "Strategy Made Easy", text: `Analyze your performance on practice passages and compare you to a 528 scorer, to tweak your strategy`, icon: icon },
-        { heading: "Better Than UWorld QPack ", text: `We're working on analyzing AAMC passages and creating a QPack that is better and more accurate than UWorld.`, icon: icon },
-        { heading: "Diagnostic Tests", text: 'We are working on creating a diagnostic test that is more accurate than anything on the market.', icon: icon },
-        { heading: "And So Much More", text: `We are smart as hell and love what we do. You can expect a lot more amazing features to enhance your MCAT prep.`, icon: icon },
+        { 
+            heading: "Community-Driven Learning", 
+            text: "Join our thriving community of pre-med students. Study together in real-time, share resources, and get instant help from peers and tutors in our active Discord.", 
+            icon: icon 
+        },
+        { 
+            heading: "AI-Powered AAMC Analysis", 
+            text: "Our advanced AI breaks down AAMC Full Lengths question-by-question, providing personalized insights and comparing your approach with top scorers.", 
+            icon: icon 
+        },
+        { 
+            heading: "Adaptive Learning System", 
+            text: "Experience a learning algorithm that evolves with you. Get real-time feedback on your study strategy and personalized recommendations based on your performance.", 
+            icon: icon 
+        },
+        { 
+            heading: "Premium Practice Platform", 
+            text: "Access our curated question bank designed by 520+ scorers, featuring AAMC-style passages and detailed explanations that surpass traditional resources.", 
+            icon: icon 
+        },
+        { 
+            heading: "Smart Progress Tracking", 
+            text: "Monitor your improvement with our comprehensive analytics dashboard. Identify knowledge gaps and receive targeted study recommendations.", 
+            icon: icon 
+        },
+        { 
+            heading: "Continuous Innovation", 
+            text: "Join a platform that's constantly evolving. We're dedicated to developing cutting-edge features based on user feedback and MCAT research.", 
+            icon: icon 
+        },
     ];
 
     return (
@@ -19,7 +43,7 @@ const CheckListing = () => {
             <div className="container mx-auto">
                 <div className="text-center mb-10">
                     <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 font-krungthep">
-                        Features On The Way
+                        Features
                     </h1>
                 </div>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-8">
