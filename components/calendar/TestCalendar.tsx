@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Calendar, dateFnsLocalizer, ToolbarProps, View } from 'react-big-calendar';
 import { format, isToday, isTomorrow } from 'date-fns';
-import parse from 'date-fns/parse';
-import startOfWeek from 'date-fns/startOfWeek';
-import getDay from 'date-fns/getDay';
+import { parse } from 'date-fns/parse';
+import { startOfWeek } from 'date-fns/startOfWeek';
+import { getDay } from 'date-fns/getDay';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/components/styles/CustomCalendar.css";
