@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaFire } from "react-icons/fa";
+import { useAudio } from "@/contexts/AudioContext";
+import { useUserInfo } from "@/hooks/useUserInfo";
 
 interface StreakPopupProps {
   streak: number;
@@ -11,28 +13,22 @@ interface StreakPopupProps {
   onClose: () => void;
 }
 
-const StreakPopup = ({ streak, isOpen, onClose }: StreakPopupProps) => {
+const StreakDisplay = ({ streak, isOpen, onClose }: StreakPopupProps) => {
   const [previousStreak, setPreviousStreak] = useState(streak);
+  const audio = useAudio();
+  const { userInfo, isLoading } = useUserInfo();
 
-  useEffect(() => {
+  useEffect(() => {    
     if (streak > previousStreak && streak > 1) {  // Only play on streak increases
       if (streak >= 30) {
-        // Play only monthly streak sound for 30+ days
-        const audio = new Audio('/streakmonth.mp3');
-        audio.pause();
-        audio.currentTime = 0;
-        audio.play();
+        audio.playSound('streakmonth');
       } else {
-        // Play daily streak sound for streaks below 30
-        const audio = new Audio('/streakdaily.mp3');
-        audio.pause();
-        audio.currentTime = 0;
-        audio.play();
+        audio.playSound('streakdaily');
       }
     }
     
     setPreviousStreak(streak);
-  }, [streak, previousStreak]);
+  }, [streak, previousStreak, audio, isOpen, userInfo, isLoading]);
 
   const getStreakMessage = (streak: number) => {
     if (streak <= 1) {
@@ -144,4 +140,4 @@ const StreakPopup = ({ streak, isOpen, onClose }: StreakPopupProps) => {
   );
 };
 
-export default StreakPopup;
+export default StreakDisplay;

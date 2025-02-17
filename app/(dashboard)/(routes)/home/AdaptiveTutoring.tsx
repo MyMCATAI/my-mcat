@@ -1,24 +1,14 @@
+//app/(dashboard)/(routes)/home/AdaptiveTutoring.tsx
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
-import Quiz, { QuizQuestion } from "@/components/quiz";
+import Quiz from "../../../../components/Quiz";
 import ReactPlayer from "react-player";
 import { useToast } from "@/components/ui/use-toast";
 import { Category } from "@/types";
 import Icon from "@/components/ui/icon";
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
-import {
-  ChevronDown,
-  ChevronUp,
-  Podcast,
-  Maximize2,
-  Minimize2,
-  Check,
-} from "lucide-react";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp, Podcast, Maximize2, Minimize2, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSkeleton } from "./ATSSkeleton";
@@ -27,20 +17,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { FaSpotify, FaApple, FaHeadphones } from "react-icons/fa";
 import ATSSettingContent from "./ATSSettingContent";
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { getRelevantTranscript } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import DiagnosticDialog from "./DiagnosticDialog";
 import ATSTutorial from "./ATSTutorial";
 import CompleteTopicButton from "@/components/CompleteTopicButton";
@@ -1305,9 +1285,24 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         </div>
       </div>
 
-      {createPortal(
-        <AnimatePresence>
-          {isEmptyButtonHovered && (
+      <DiagnosticDialog
+        isOpen={showDiagnosticDialog}
+        onSubmit={handleDiagnosticSubmit}
+      />
+      <ATSTutorial
+        key={tutorialKey}
+        runPart1={runTutorialPart1}
+        setRunPart1={setRunTutorialPart1}
+        runPart2={runTutorialPart2}
+        setRunPart2={setRunTutorialPart2}
+        runPart3={runTutorialPart3}
+        setRunPart3={setRunTutorialPart3}
+        runPart4={runTutorialPart4}
+        setRunPart4={setRunTutorialPart4}
+        catIconInteracted={catIconInteracted}
+      />
+
+    {isEmptyButtonHovered && (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -1330,6 +1325,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               />
             </motion.div>
           )}
+          
           {showPodcast && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -1384,25 +1380,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               })()}
             </motion.div>
           )}
-        </AnimatePresence>,
-        document.body
-      )}
-      <DiagnosticDialog
-        isOpen={showDiagnosticDialog}
-        onSubmit={handleDiagnosticSubmit}
-      />
-      <ATSTutorial
-        key={tutorialKey}
-        runPart1={runTutorialPart1}
-        setRunPart1={setRunTutorialPart1}
-        runPart2={runTutorialPart2}
-        setRunPart2={setRunTutorialPart2}
-        runPart3={runTutorialPart3}
-        setRunPart3={setRunTutorialPart3}
-        runPart4={runTutorialPart4}
-        setRunPart4={setRunTutorialPart4}
-        catIconInteracted={catIconInteracted}
-      />
     </div>
   );
 };

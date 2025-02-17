@@ -16,18 +16,14 @@ import ThemeSwitcher from "@/components/home/ThemeSwitcher";
 import FlashcardDeck from "./FlashcardDeck";
 import PracticeTests from "./PracticeTests";
 import StreakPopup from "@/components/score/StreakDisplay";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { checkProStatus, shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
 import RedeemReferralModal from '@/components/modals/RedeemReferralModal';
+import { useAudio } from "@/contexts/AudioContext";
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 /* ----------------------------------------- Types ------------------------------------------ */
 interface ContentWrapperProps {
@@ -60,6 +56,9 @@ const HomePage = () => {
   const searchParams = useSearchParams();
   const { userInfo, isLoading: isLoadingUserInfo, isSubscribed } = useUserInfo();
   const { startActivity, endActivity, updateActivityEndTime } = useUserActivity();
+  const { playMusic, stopMusic, volume, setVolume, isPlaying } = useAudio();
+  const { setIsAutoPlay } = useMusicPlayer();
+
   /* ---------------------------------------- State ---------------------------------------- */
   const [activeTab, setActiveTab] = useState(searchParams?.get("tab") || "Schedule");
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
@@ -77,6 +76,7 @@ const HomePage = () => {
   const paymentStatus = searchParams?.get("payment");
   const [currentPage, setCurrentPage] = useState("Schedule");
   const [showReferralModal, setShowReferralModal] = useState(false);
+
   /* ----------------------------------------- Refs ---------------------------------------- */
   const kalypsoRef = useRef<HTMLImageElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -199,6 +199,23 @@ const HomePage = () => {
     }
   }, [updateCalendarChatContext]);
 
+  const handleActivityChange = useCallback(async (newType: string, newLocation: string, metadata = {}) => {
+    if (currentStudyActivityId) {
+      await endActivity(currentStudyActivityId);
+      setCurrentStudyActivityId(null);
+    }
+
+    const activity = await startActivity({
+      type: newType,
+      location: newLocation,
+      metadata: {
+        ...metadata,
+        timestamp: new Date().toISOString()
+      }
+    });
+    setCurrentStudyActivityId(activity.id);
+  }, [currentStudyActivityId, endActivity, startActivity]);
+
   const handleTabChange = useCallback(async (newTab: string) => {
     if (newTab === "SUMMARIZE_WEEK") {
       setActiveTab("Schedule");
@@ -226,8 +243,9 @@ const HomePage = () => {
     setActiveTab(tab);
     setCurrentPage(tab);
 
+    // Only start a new activity if we're not in AdaptiveTutoringSuite
     if (tab !== "AdaptiveTutoringSuite") {
-      handleActivityChange('studying', tab);
+      await handleActivityChange('studying', tab);
     }
 
     if (tab === "Schedule") {
@@ -247,7 +265,7 @@ const HomePage = () => {
         router.push(`/home?tab=Schedule&view=${view}`);
       }
     }
-  }, [router, currentStudyActivityId, endActivity, updateCalendarChatContext, activities]);
+  }, [router, currentStudyActivityId, endActivity, updateCalendarChatContext, activities, handleActivityChange]);
 
   const switchKalypsoState = (newState: "wait" | "talk" | "end" | "start") => {
     setKalypsoState(newState);
@@ -260,24 +278,9 @@ const HomePage = () => {
     console.log("todo, set this up to widget");
   };
 
-  const handleActivityChange = async (newType: string, newLocation: string, metadata = {}) => {
-    if (currentStudyActivityId) {
-      await endActivity(currentStudyActivityId);
-      setCurrentStudyActivityId(null);
-    }
+  /* ---------------------------------------- Callbacks ---------------------------------------- */
 
-    const activity = await startActivity({
-      type: newType,
-      location: newLocation,
-      metadata: {
-        ...metadata,
-        timestamp: new Date().toISOString()
-      }
-    });
-    setCurrentStudyActivityId(activity.id);
-  };
-
-  /* ---------------------------------------- Effects ------------------------------------- */
+  /* ---------------------------------------- Effects ---------------------------------------- */
   useEffect(() => {
     const initializePage = async () => {
       if (isLoadingUserInfo) return; // Wait for user info to be loaded
@@ -365,7 +368,7 @@ const HomePage = () => {
   // Activity tracking effects
   useEffect(() => {
     const initializeActivity = async () => {
-      if (pathname.startsWith('/home') && !currentStudyActivityId && !isLoading) {
+      if (pathname && pathname.startsWith('/home') && !currentStudyActivityId && !isLoading) {
         const activity = await startActivity({
           type: 'studying',
           location: activeTab,
@@ -396,8 +399,12 @@ const HomePage = () => {
 
   useEffect(() => {
     setShowReferralModal(shouldShowRedeemReferralModal());
-    console.log("showReferralModal", shouldShowRedeemReferralModal());
   }, []);
+
+  useEffect(() => {
+    setIsAutoPlay(true);
+    return () => setIsAutoPlay(false);
+  }, [setIsAutoPlay]);
 
   /* -------------------------------------- Rendering ------------------------------------- */
   if (isLoading || isLoadingUserInfo) {

@@ -1,5 +1,7 @@
+"use client";
 import React, { useRef, useEffect, useState } from "react";
 import Joyride, { CallBackProps, STATUS, Step, EVENTS } from "react-joyride";
+import { useAudio } from '@/contexts/AudioContext';
 
 interface ATSTutorialProps {
   runPart1: boolean;
@@ -24,7 +26,7 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
   setRunPart4,
   catIconInteracted,
 }) => {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audio = useAudio();
   const [showSettingsSteps, setShowSettingsSteps] = useState(false);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
@@ -44,6 +46,14 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
         setRunPart4(false);
         localStorage.setItem("atsIconTutorialPlayed", "true");
       }
+    }
+
+    if (type === EVENTS.STEP_AFTER) {
+      audio.playSound('notification');
+    }
+
+    if (type === EVENTS.TARGET_NOT_FOUND) {
+      console.warn('Could not find Joyride target');
     }
   };
 
@@ -201,7 +211,6 @@ const ATSTutorial: React.FC<ATSTutorialProps> = ({
 
   return (
     <>
-      <audio ref={audioRef} src="/notification.mp3" />
       <Joyride
         steps={initialSteps}
         run={runPart1}

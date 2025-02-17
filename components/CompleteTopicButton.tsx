@@ -1,15 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+//components/CompleteTopicButton.tsx
+import React, { useState } from 'react';
 import { Check } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
+import { useAudio } from "@/contexts/AudioContext";
+
 interface CompleteTopicButtonProps {
   categoryId: string;
   categoryName: string;
@@ -25,11 +21,7 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    audioRef.current = new Audio('/levelup.mp3');
-  }, []);
+  const audio = useAudio();
 
   const handleComplete = async () => {
     try {
@@ -58,18 +50,19 @@ const CompleteTopicButton: React.FC<CompleteTopicButtonProps> = ({
       }
 
       // Play sound
-      audioRef.current?.play();
+      audio.playSound('levelup');
 
       // Show confetti
       if (setShowConfetti) {
         setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 3000);
+        setTimeout(() => setShowConfetti(false), 4000);
       }
 
-      toast.success("Cha-ching! Topic completed! One coin! 🎉");
-      
+      // Close dialog
       setIsOpen(false);
-      
+
+      toast.success(`${categoryName} completed!`);
+
       // Call onComplete with the categoryId
       if (onComplete) {
         onComplete(categoryId);

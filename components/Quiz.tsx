@@ -1,3 +1,5 @@
+//components/Quiz.tsx
+"use client";
 import { Passage } from "@/types";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import ContentRenderer from "./ContentRenderer";
@@ -5,27 +7,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Timer, { TimerRef } from "./Timer";
 import { ThumbsDown, BarChart2, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import QuizProgress from "./QuizProgress";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Latex from "react-latex-next";
 import toast from "react-hot-toast";
 import { ExplanationImages } from "./ExplanationImages";
 import { QuizIntroDialog } from "./ATS/QuizIntroDialogue";
 import { useUserInfo } from "@/hooks/useUserInfo";
+import DownvoteFeedback from './DownvoteFeedback';
+import { useAudio } from "@/contexts/AudioContext";
 
+/* ---------------------------------------- Types ------------------------------------------ */
 export interface QuizQuestion {
   categoryId: string;
   contentCategory: string;
@@ -47,7 +40,17 @@ interface QuizProps {
   }) => void;
 }
 
-// Add utility function for shuffling
+interface AnswerSummary {
+  questionContent: string;
+  userAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+  timeSpent: number;
+  questionNumber: number;
+  explanation: string;
+}
+
+/* ---------------------------------------- Utilities ---------------------------------------- */
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -57,58 +60,50 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return shuffled;
 };
 
-// Update AnswerSummary interface
-interface AnswerSummary {
-  questionContent: string;
-  userAnswer: string;
-  correctAnswer: string;
-  isCorrect: boolean;
-  timeSpent: number; // Add timeSpent
-  questionNumber: number; // Add question number
-  explanation: string; // Add explanation field
-}
-
 const calculateScore = (summaries: AnswerSummary[]): number => {
-  const correctAnswers = summaries.filter(
-    (summary) => summary.isCorrect
-  ).length;
+  const correctAnswers = summaries.filter((summary) => summary.isCorrect).length;
   return (correctAnswers / summaries.length) * 100;
 };
 
-const Quiz: React.FC<QuizProps> = ({
-  category,
-  shuffle = false,
-  setChatbotContext,
-}) => {
+/* ---------------------------------------- Component ---------------------------------------- */
+const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContext }) => {
+  /* ---------------------------------------- Hooks ------------------------------------------ */
   const { userInfo, isLoading: isLoadingUserInfo, updateScore } = useUserInfo();
+  const audio = useAudio();
+
+  /* ---------------------------------------- Refs ------------------------------------------ */
+  const questionTimerRef = useRef<TimerRef>(null);
+  const totalTimerRef = useRef<TimerRef>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  /* ---------------------------------------- State ------------------------------------------ */
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [isStarting, setIsStarting] = useState(false);
+  const [answerSummaries, setAnswerSummaries] = useState<AnswerSummary[]>([]);
   const [shuffledOptions, setShuffledOptions] = useState<
     Record<string, string[]>
   >({});
   const [currentUserTestId, setCurrentUserTestId] = useState<string | null>(
     null
   );
-  const [answerSummaries, setAnswerSummaries] = useState<AnswerSummary[]>([]);
   const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] =
     useState(false);
   const [showIntroDialog, setShowIntroDialog] = useState(true);
-  const [isStarting, setIsStarting] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
-  const questionTimerRef = useRef<TimerRef>(null);
-  const totalTimerRef = useRef<TimerRef>(null);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(
     new Set()
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [isQuizComplete, setIsQuizComplete] = useState(false);
   const [hasAwardedCoins, setHasAwardedCoins] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+
 
   const handleStartQuiz = async () => {
     try {
@@ -246,6 +241,7 @@ const Quiz: React.FC<QuizProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, fetchQuestions, hasStarted]);
 
+
   const currentQuestion = questions[currentQuestionIndex];
 
   // Simplified create user test function
@@ -376,13 +372,11 @@ const Quiz: React.FC<QuizProps> = ({
         try {
           if (score >= 100) {
             await updateScore(2);
-            const fanfare = new Audio('/fanfare.mp3');
-            fanfare.play();
+            audio.playSound('fanfare');
             toast.success("Congratulations! You earned 2 coins for a perfect score! 🎉");
           } else if (score >= 70) {
             await updateScore(1);
-            const levelup = new Audio('/levelup.mp3');
-            levelup.play();
+            audio.playSound('levelup');
             toast.success("Congratulations! You earned 1 coin for scoring above 70%! 🎉");
           }
           setHasAwardedCoins(true);
@@ -482,7 +476,7 @@ const Quiz: React.FC<QuizProps> = ({
             </div>
 
             <ExplanationImages
-              questionContent={currentQuestion.questionContent}
+              questionContent={question.questionContent}
               isFullScreen={isFullScreen}
             />
           </div>
@@ -535,43 +529,11 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  const handleDownvote = async () => {
-    if (!currentQuestion || !currentUserTestId) return;
-
-    try {
-      const response = await fetch('/api/user-test/flagged-responses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userTestId: currentUserTestId,
-          questionId: currentQuestion.id,
-          flagged: true,
-        }),
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to update question flag status');
-      }
-
-      const msgresponse = await fetch("/api/send-message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: `Question Downvoted\n\nQuestion ID: ${currentQuestion.id}\nQuestion Content: ${currentQuestion.questionContent}\n\nThis question was automatically flagged for review through the downvote system.`,
-        }),
-      });
-
-      if (!msgresponse.ok) {
-        throw new Error("Failed to send downvote message");
-      }
-      toast.success("Question reported! Thank you for helping us improve.");
-
-    } catch (error) {
-      console.error("Error sending downvote:", error);
-      toast.error("Failed to send feedback. Please try again.");
-    }
+  const handleDownvote = () => {
+    setIsFeedbackOpen(true);
   };
 
+  /* ---------------------------------------- Render ----------------------------------------- */
   if (isLoading || isLoadingUserInfo) {
     return (
       <div className="h-full bg-transparent text-black px-6 rounded-lg mx-auto">
@@ -775,6 +737,13 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
           </div>
         </DialogContent>
       </Dialog>
+      <DownvoteFeedback
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        currentUserTestId={currentUserTestId}
+        currentQuestionId={currentQuestion?.id || null}
+        currentQuestionContent={currentQuestion?.questionContent || null}
+      />
     </div>
   );
 };

@@ -24,6 +24,7 @@ import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { PurchaseButton } from '@/components/purchase-button';
 import Leaderboard from "@/components/leaderboard/Leaderboard";
+import { useAudio } from '@/contexts/AudioContext';
 
 interface Task {
   text: string;
@@ -100,7 +101,7 @@ const SideBar: React.FC<SideBarProps> = ({
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<VideoCategory>('RBT');
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audio = useAudio();
 
   // Add task-related state
   const [todayActivities, setTodayActivities] = useState<Activity[]>([]);
@@ -516,7 +517,6 @@ const SideBar: React.FC<SideBarProps> = ({
             </div>
           </PurchaseButton>
         </div>
-        <audio ref={audioRef} src="/levelup.mp3" />
       </div>
     );
   };
@@ -826,9 +826,12 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
   }, [initialActivities, currentDate]);
 
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
-  const fanfareRef = useRef<HTMLAudioElement>(null);
 
-  const handleTaskCompletion = async (activityId: string, taskIndex: number, completed: boolean) => {
+  const handleTaskCompletion = async (
+    activityId: string, 
+    taskIndex: number,
+    completed: boolean
+  ) => {
     try {
       const activity = todayActivities.find((a: Activity) => a.id === activityId);
       if (!activity || !activity.tasks) return;
@@ -839,7 +842,7 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
       }
 
       const updatedTasks = activity.tasks.map((task: Task, index: number) =>
-        index === taskIndex ? { ...task, completed: true } : task
+        index === taskIndex ? { ...task, completed } : task
       );
 
       // Update backend
@@ -866,11 +869,9 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
       // Check if all tasks are completed for this activity
       const allTasksCompleted = updatedTasks.every((task) => task.completed);
       if (allTasksCompleted) {
-        // Play success sound
-        if (audioRef.current) {
-          audioRef.current.play().catch(console.error);
-        }
-
+        // Play levelup sound
+        audio.playSound('levelup');
+        
         // Get activity details from backend
         const activityResponse = await fetch(`/api/calendar-activity`);
         const activities = await activityResponse.json();
@@ -901,9 +902,7 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
 
       // If everything is complete, play fanfare and show completion dialog
       if (areAllTasksCompleted) {
-        if (fanfareRef.current) {
-          fanfareRef.current.play().catch(console.error);
-        }
+        audio.playSound('fanfare');
         setShowCompletionDialog(true);
       }
     } catch (error) {
@@ -1100,8 +1099,6 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
           {renderContent({ type: activeTab === "tab1" ? 'insights' : tabs.find(tab => tab.id === activeTab)?.content.type || 'tasks', videos: activeTab === "tab1" ? videos : [], schools: tutors })}
         </div>
       </div>
-      <audio ref={audioRef} src="/levelup.mp3" />
-      <audio ref={fanfareRef} src="/fanfare.mp3" />
       
       <CompletionDialog 
         isOpen={showCompletionDialog} 
