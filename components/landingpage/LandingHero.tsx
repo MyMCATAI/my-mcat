@@ -143,10 +143,10 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
       {/* Left side - Text content */}
       <div className="text-center">
         <h1 className="text-4xl md:text-5xl font-bold text-white font-krungthep mb-4">
-          Score your <span className="text-[#f2f64f]">best.</span>
+           Score your <span className="text-[#f2f64f]">best.</span>
         </h1>
-        <p className="text-2xl md:text-3xl text-white my-8">
-          Start studying with Kalypso for free.
+        <p className="text-xl md:text-2xl text-white my-8">
+        We’re an MCAT research company built by scientists and trusted by thousands.  
         </p>
         <div className="flex justify-center">
           <Link href="/sign-up">

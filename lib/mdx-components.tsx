@@ -4,7 +4,7 @@ import YouTube from 'react-youtube'
 const components = {
   Image: (props: any) => (
     <div className="my-8">
-      <Image {...props} />
+      <Image alt={props.alt || "Content image"} {...props} />
     </div>
   ),
   YouTube: ({ videoId }: { videoId: string }) => (
