@@ -339,3 +339,24 @@ model UserActivity {
   @@index([type])
   @@index([startTime])
 }
+
+model Notification {
+  // Primary identifiers
+  id          String    @id @default(cuid())
+  toUserId    String    // Recipient of the notification
+  fromUserId  String    // User who triggered notification or "system" for announcements
+  parentId    String?   // Optional - links to original notification when this is a reply
+
+  // Core notification data
+  type        String    // "coin", "reply", etc.
+  status      String    @default("active") // "active", "canceled", etc.
+  metadata    Json      // For coin type: { 
+                       //   action: "send" | "request" | "reject",
+                       //   amount: number,
+                       // }
+
+  // Timestamps
+  openedAt    DateTime? // When notification was first viewed
+  createdAt   DateTime  @default(now())
+  lastUpdated DateTime  @updatedAt
+}
