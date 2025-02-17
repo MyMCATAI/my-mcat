@@ -60,8 +60,6 @@ interface UseUserInfoReturn {
   isSubscribed: boolean;
 }
 
-const CLINIC_COST = 10;
-
 // Helper function to check if onboarding is complete
 function isOnboardingComplete(onboardingInfo?: OnboardingInfo): boolean {
   if (!onboardingInfo) return false;
@@ -80,7 +78,7 @@ function canAccessPath(subscriptionType: string | undefined, currentPath: string
   }
 
   // Paths accessible to all users
-  const unrestrictedPaths = ['/onboarding', '/doctorsoffice', '/preferences'];
+  const unrestrictedPaths = ['/onboarding', '/offer','/doctorsoffice', '/preferences'];
   if (unrestrictedPaths.some(path => currentPath.startsWith(path))) {
     return true;
   }
@@ -92,7 +90,7 @@ function canAccessPath(subscriptionType: string | undefined, currentPath: string
 // Helper function to determine if and where to redirect
 async function checkRedirectPath(userInfo: UserInfo | null, currentPath: string): Promise<string | null> {
   // Don't redirect to onboarding if we're already there
-  if (currentPath.startsWith('/onboarding')) return null;
+  if (currentPath.startsWith('/onboarding') || currentPath.startsWith('/offer')) return null;
 
   // No user info -> onboarding
   if (!userInfo) return '/onboarding';

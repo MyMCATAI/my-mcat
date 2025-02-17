@@ -7,6 +7,7 @@ import { Analytics } from '@vercel/analytics/react';
 import MobileRedirect from '@/components/MobileRedirect'
 import { FullscreenPrompt } from '@/components/FullscreenPrompt'
 import { UserProfileProvider } from '@/contexts/UserProfileContext'
+import { AudioProvider } from '@/contexts/AudioContext'
 
 const robotoSlab = Roboto_Slab({ subsets: ['latin'] })
 
@@ -62,22 +63,24 @@ export default function RootLayout({
     afterSignOutUrl={"/"}
     >
       <UserProfileProvider>
-        <html lang="en">
-          <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"></meta>
-          </head>
-          <body className={robotoSlab.className}>
-            <div id="app-root" className="relative">
-              <MobileRedirect />
-              <ThemeInitializer />
-              <FullscreenPrompt />
-              <div className="relative z-50">
-                {children}
+        <AudioProvider>
+          <html lang="en">
+            <head>
+              <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"></meta>
+            </head>
+            <body className={robotoSlab.className}>
+              <div id="app-root" className="relative">
+                <MobileRedirect />
+                <ThemeInitializer />
+                <FullscreenPrompt />
+                <div className="relative z-50">
+                  {children}
+                </div>
+                <Analytics />
               </div>
-              <Analytics />
-            </div>
-          </body>
-        </html>
+            </body>
+          </html>
+        </AudioProvider>
       </UserProfileProvider>
     </ClerkProvider>
   )

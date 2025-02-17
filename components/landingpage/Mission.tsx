@@ -12,6 +12,7 @@ import 'swiper/css/pagination';
 import dynamic from 'next/dynamic';
 import { WorldProps } from '../ui/globe';
 import { FaDiscord } from 'react-icons/fa';
+import Link from 'next/link';
 
 const World = dynamic(() => import('../ui/globe').then((mod) => mod.World), {
   ssr: false,
@@ -198,7 +199,7 @@ const MethodologyAndTestimonials = () => {
             </a>
 
             <a 
-              href="/pitch"
+              href="/offer"
               className="relative group overflow-hidden rounded-xl aspect-[4/3] transition-transform duration-300 hover:-translate-y-2"
             >
               <Image 
@@ -220,7 +221,7 @@ const MethodologyAndTestimonials = () => {
               className="relative group overflow-hidden rounded-xl aspect-[4/3] transition-transform duration-300 hover:-translate-y-2"
             >
               <Image 
-                src="/landingpage/drgraessar.png" 
+                src="/landingpage/DrGraessar.png" 
                 alt="Dr. Graesser" 
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105 opacity-90 mix-blend-soft-light"
@@ -467,7 +468,7 @@ const MethodologyAndTestimonials = () => {
             </div>
           </div>
           
-          <p className="text-white text-xl text-center max-w-2xl mx-auto mb-16">
+          <p className="text-white text-2xl text-center max-w-2xl mx-auto mb-16">
             We charge less than the value we bring. Although we hire the best from all over the world and pay them a fair wage, we&apos;re committed to our mission of educating better doctors.
           </p>
 
@@ -493,6 +494,35 @@ const MethodologyAndTestimonials = () => {
               <p className="text-green-400 text-5xl font-bold mb-4">$3000-5000</p>
               <p className="text-white/50 text-xl">Elite instruction.</p>
             </div>
+          </div>
+          
+          {/* Learn More CTA */}
+          <div className="mt-16 text-center">
+            <p className="text-white/80 text-2xl mb-6">
+              Want to learn more about our approach and see what our students say?
+            </p>
+            <Link 
+              href="/offer"
+              className="inline-flex items-center gap-2 px-8 py-4 text-lg font-bold text-white
+                bg-gradient-to-r from-green-500 to-blue-500 rounded-full
+                shadow-[0_0_30px_rgba(35,185,97,0.3)] hover:shadow-[0_0_50px_rgba(35,185,97,0.5)]
+                transform hover:scale-105 transition-all duration-300 group"
+            >
+              <span>See Our Full Story</span>
+              <svg 
+                className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M14 5l7 7m0 0l-7 7m7-7H3" 
+                />
+              </svg>
+            </Link>
           </div>
         </div>
       </section>

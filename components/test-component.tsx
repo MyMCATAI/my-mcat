@@ -1,12 +1,6 @@
+//components/test-component.tsx
 "use client";
-
-import React, {
-  useEffect,
-  useState,
-  useRef,
-  useCallback,
-  useContext,
-} from "react";
+import React, { useEffect, useState, useRef, useCallback, useContext } from "react";
 import PassageComponent from "@/components/test/Passage";
 import QuestionComponent from "@/components/test/QuestionComponent";
 import { Test, TestQuestion, Passage, Question, UserResponse } from "@/types";
@@ -25,6 +19,7 @@ import MessageButton from "@/components/MessageButton";
 import { calculateScore, extractQuotedStrings, saveAnnotations } from "@/lib/test-utils";
 import { testApi } from "@/services/testApi";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useAudio } from "@/contexts/AudioContext";
 
 interface TestComponentProps {
   testId: string;
@@ -114,8 +109,6 @@ const TestComponent: React.FC<TestComponentProps> = ({
   } = useContext(VocabContext);
 
   const [shouldShowChatbot, setShouldShowChatbot] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] =useState(false);
   const [showIntroModal, setShowIntroModal] = useState(true);
   const [activeEditor, setActiveEditor] = useState<ActiveEditor>(null);
@@ -124,6 +117,8 @@ const TestComponent: React.FC<TestComponentProps> = ({
   const chatbotRef = useRef<{
     sendMessage: (message: string) => void;
   }>({ sendMessage: () => {} });
+
+  const audio = useAudio();
 
   // Handler to set the active editor
   const handleSetActiveEditor = (editor: ActiveEditor) => {
@@ -218,16 +213,25 @@ const TestComponent: React.FC<TestComponentProps> = ({
   }, [currentQuestionIndex]);
 
   useEffect(() => {
-    if (showChatbot && videoRef.current) {
-      videoRef.current.play();
-    }
-  }, [showChatbot]);
-
-  useEffect(() => {
     if (showChatbot) {
-      audioRef.current?.play();
+      audio.playSound('chatbot-open');
+      
+      // Pause timers when chatbot opens
+      if (testHeaderRef.current) {
+        wasQuestionTimerRunningRef.current = testHeaderRef.current.isQuestionTimerRunning;
+        wasTotalTimerRunningRef.current = testHeaderRef.current.isTotalTimerRunning;
+        testHeaderRef.current.pauseTimers();
+      }
+    } else {
+      // Resume timers when chatbot closes
+      if (testHeaderRef.current) {
+        testHeaderRef.current.resumeTimers(
+          wasQuestionTimerRunningRef.current,
+          wasTotalTimerRunningRef.current
+        );
+      }
     }
-  }, [showChatbot]);
+  }, [showChatbot, audio]);
 
   useEffect(() => {
     if (currentPassage) {
@@ -245,7 +249,6 @@ const TestComponent: React.FC<TestComponentProps> = ({
     testHeaderRef.current?.resetQuestionTimer(); // Reset question timer when question changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPassage, currentQuestionIndex]);
-
 
   const fetchTest = async () => {
     if (!testId) {
@@ -383,8 +386,12 @@ const TestComponent: React.FC<TestComponentProps> = ({
         ...prevContext,
         context: `${prevContext.context}\n\nI just answered this question: "${currentQuestion.questionContent}"\nMy answer was: "${userAnswer}" (${isCorrect ? "Correct" : "Incorrect"})`,
       }));
+
+      // Play sound on successful submission
+      audio.playSound('correct');
     } catch (error) {
       console.error("Error saving user response:", error);
+      audio.playSound('warning');
       // Could add error handling UI here if needed
     }
   };
@@ -1057,7 +1064,6 @@ const TestComponent: React.FC<TestComponentProps> = ({
         }
         difficulty={currentPassage?.difficulty}
       />
-      <audio ref={audioRef} src="/chatbot-open.mp3" />
     </div>
   );
 };

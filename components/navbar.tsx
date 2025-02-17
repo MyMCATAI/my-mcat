@@ -38,7 +38,7 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
           </div>
         </Link>
         <div className="w-48">
-          <MusicPlayer theme={theme} autoPlay={isAutoPlay} />
+          <MusicPlayer theme={theme} />
         </div>
       </div>
       <div className="flex items-center h-full">

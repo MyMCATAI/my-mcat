@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
 const gameFeatures = {
-  title: "Start with the Doctor's Office",
-  description: "Jump into our gamified learning experience. Learn MCAT concepts while treating patients in our virtual doctor's office.",
+  title: "The Anki Clinic",
+  description: "Jump into our gamified learning experience that takes Anki and makes it actually fun.",
   image: "/kalypsotalk.gif",
   features: [
     "Engaging medical scenarios",
@@ -27,7 +27,7 @@ export function AnkiGameCard() {
       router.push('/doctorsoffice');
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Failed to activate free access. Please try again.");
+      toast.error("Failed to load page. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -45,11 +45,11 @@ export function AnkiGameCard() {
       </div> */}
 
       <div className="rounded-xl transition-all duration-300
-        bg-gradient-to-br from-emerald-950 via-green-900 to-emerald-900
-        hover:shadow-lg hover:shadow-emerald-400/20 h-full"
+        bg-gradient-to-br from-zinc-900 to-zinc-800
+        hover:shadow-lg hover:shadow-zinc-400/20 h-full"
       >
         {/* Glow Effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/0 via-emerald-400/10 to-emerald-400/0 
+        <div className="absolute inset-0 bg-gradient-to-r from-zinc-400/0 via-zinc-400/5 to-zinc-400/0 
           opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         <div className="flex flex-col items-center h-full p-4">
@@ -57,8 +57,8 @@ export function AnkiGameCard() {
             <Image
               src={gameFeatures.image}
               alt={gameFeatures.title}
-              width={100}
-              height={100}
+              width={90}
+              height={90}
               className="rounded-lg object-contain scale-110 transition-transform duration-300 group-hover:scale-125"
               style={{ animation: 'float 3s ease-in-out infinite' }}
             />
@@ -87,7 +87,7 @@ export function AnkiGameCard() {
                       }}
                     >
                       <svg 
-                        className="w-5 h-5 mr-2 text-emerald-300 flex-shrink-0" 
+                        className="w-4 h-4 mr-2 text-zinc-400 flex-shrink-0" 
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
@@ -95,7 +95,7 @@ export function AnkiGameCard() {
                         <path 
                           strokeLinecap="round" 
                           strokeLinejoin="round" 
-                          strokeWidth="2" 
+                          strokeWidth="1.5" 
                           d="M5 13l4 4L19 7" 
                         />
                       </svg>
@@ -109,19 +109,19 @@ export function AnkiGameCard() {
 
           <div className="w-full flex flex-col items-center">
             <p className="text-2xl font-bold text-white mb-[50px]">
-              {"Free"}
+              {"Freemium"}
             </p>
 
             <div
               className="w-full h-10 px-4 rounded-md font-medium shadow-sm 
                 transition-all duration-300
-                bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-400 
-                text-white group-hover:opacity-90 flex items-center justify-center
+                bg-emerald-500 text-white group-hover:bg-emerald-600 
+                flex items-center justify-center
                 text-xl disabled:opacity-50"
               role="button"
               aria-disabled={isLoading}
             >
-              {isLoading ? "Loading..." : "Start Playing Now"}
+              {isLoading ? "Loading..." : "Start Now"}
             </div>
           </div>
         </div>
