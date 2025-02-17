@@ -119,6 +119,15 @@ const MethodologyAndTestimonials = () => {
     },
   ];
 
+  const discordReviews = [
+    '/landingpage/review4.png',
+    '/landingpage/review1.png',
+    '/landingpage/review2.png',
+    '/landingpage/review3.png',
+    '/landingpage/review5.png',
+    '/landingpage/review6.png'
+  ];
+
   const openTallyPopup = () => {
     if (typeof window !== 'undefined' && window.Tally) {
       window.Tally.openPopup('31vBY4', {
@@ -280,8 +289,8 @@ const MethodologyAndTestimonials = () => {
               pagination={{ clickable: true }}
               className="mb-16"
             >
-              {[4, 1, 2, 3, 5, 6].map((num) => (
-                <SwiperSlide key={num} className="pb-12">
+              {discordReviews.map((reviewPath, index) => (
+                <SwiperSlide key={index} className="pb-12">
                   <div className="bg-[#00101e] rounded-lg p-8 shadow-lg" style={{ boxShadow: '0px 0px 15px 0px rgba(35,185,97,0.3)' }}>
                     <div className="flex justify-center mb-8">
                       <div className="flex items-center space-x-1">
@@ -293,8 +302,8 @@ const MethodologyAndTestimonials = () => {
                       </div>
                     </div>
                     <Image
-                      src={`/landingpage/review${num}.png`}
-                      alt={`Review ${num}`}
+                      src={reviewPath}
+                      alt={`Review ${index + 1}`}
                       width={800}
                       height={400}
                       className="rounded-lg mx-auto mb-8"
