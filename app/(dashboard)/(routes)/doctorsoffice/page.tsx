@@ -57,7 +57,7 @@ import RedeemReferralModal from "@/components/modals/RedeemReferralModal";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
 
 const DoctorsOfficePage: React.FC = () => {
-  const { isSubscribed } =  useUserInfo()
+  const { isSubscribed, userInfo } =  useUserInfo()
   const { startActivity } = useUserActivity();
   const [activeTab, setActiveTab] = useState("doctorsoffice");
   const [userLevel, setUserLevel] = useState("PATIENT LEVEL");
@@ -69,6 +69,7 @@ const DoctorsOfficePage: React.FC = () => {
   const [totalPatients, setTotalPatients] = useState(0);
   const [isAfterTestDialogOpen, setIsAfterTestDialogOpen] = useState(false);
   const [largeDialogQuit, setLargeDialogQuit] = useState(false);
+  const [showWelcomeDialogue, setShowWelcomeDialogue] = useState(false);
 
   // Flashcards Dialog
   const [isFlashcardsOpen, setIsFlashcardsOpen] = useState(false);
@@ -181,7 +182,6 @@ const DoctorsOfficePage: React.FC = () => {
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const marketplaceDialogRef = useRef<{ open: () => void } | null>(null);
 
-  const [isWelcomeDialogOpen, setIsWelcomeDialogOpen] = useState(false);
   const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
   const [clinicCostPerDay, setClinicCostPerDay] = useState(0);
 
@@ -235,13 +235,11 @@ const DoctorsOfficePage: React.FC = () => {
       });
       setVisibleImages(newVisibleImages);
 
-      // Always show the welcome dialog when entering the page
-      setIsWelcomeDialogOpen(true);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
-  // fetch user info
+
   useEffect(() => {
     fetchData();
     if (!hasCalculatedRef.current) {
@@ -343,11 +341,6 @@ const DoctorsOfficePage: React.FC = () => {
     }
   }, [flashcardRoomId]);
 
-
-  const handleWelcomeDialogOpenChange = (open: boolean) => {
-    setIsWelcomeDialogOpen(open);
-  };
-
   const toggleGroup = async (groupName: string) => {
     const group = imageGroups.find((g) => g.name === groupName);
     if (!group) return;
@@ -421,11 +414,6 @@ const DoctorsOfficePage: React.FC = () => {
   useEffect(() => {
     fetchActivities();
   }, []);
-
-  // Add this handler for when clinic is unlocked
-  const handleClinicUnlocked = async () => {
-    await fetchData(); // Refetch all data to update scores and other stats
-  };
 
   const { setIsAutoPlay } = useMusicPlayer();
 
@@ -543,18 +531,27 @@ const DoctorsOfficePage: React.FC = () => {
     setCurrentUserTestId(null);
   };
 
+
+  const isClinicUnlocked = userInfo?.unlocks && 
+    (typeof userInfo.unlocks === 'string' ? 
+      JSON.parse(userInfo.unlocks) : 
+      userInfo.unlocks
+    )?.includes('game');
+
   useEffect(() => {
     setShowReferralModal(shouldShowRedeemReferralModal());
-  }, []);
+    if(userInfo && !isClinicUnlocked) {
+      setShowWelcomeDialogue(true);
+    }
+  }, [isClinicUnlocked]);
 
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
-      <WelcomeDialog
-        isOpen={isWelcomeDialogOpen}
-        onOpenChange={handleWelcomeDialogOpenChange}
-        onClinicUnlocked={handleClinicUnlocked}
-      />
-
+      {showWelcomeDialogue&&
+      <WelcomeDialog 
+        isOpen={showWelcomeDialogue}
+        onUnlocked={()=>setShowWelcomeDialogue(false)}
+      />}
       <Suspense fallback={
         <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
           <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse" />
