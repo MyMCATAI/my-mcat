@@ -285,7 +285,7 @@ export default function PitchPage() {
             </div>
 
             <p className="text-white/80 text-lg mb-12">
-              All testimonials can be verified on our{" "}
+              To verify our testimonials, join our{" "}
               <a 
                 href="https://discord.gg/KPtDGJfK8t" 
                 target="_blank" 
