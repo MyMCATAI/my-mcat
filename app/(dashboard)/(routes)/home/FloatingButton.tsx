@@ -33,7 +33,7 @@ const labelTexts = {
   "AdaptiveTutoringSuite": "Tutoring Suite",
 } as const;
 
-const PROTECTED_ROUTES = ['/pitch', '/onboarding'];
+const PROTECTED_ROUTES = ['/offer', '/onboarding'];
 
 /* -------------------------------------------- Types ------------------------------------------- */
 interface FloatingButtonProps {
@@ -143,11 +143,11 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
     }
   };
 
-  // Used to direct free user (isSubscribed = false) to /pitch 
+  // Used to direct free user (isSubscribed = false) to /offer 
   const handleButtonClick = async (tab: string) => {
 
     // Check if current path is protected from auto-redirect
-    // Allow useres to stay on pitch page, preents auto-redirect to /doctorsoffice when on pitch page
+    // Allow useres to stay on offer page, preents auto-redirect to /doctorsoffice when on offer page
     const currentPath = window.location.pathname;
     if (PROTECTED_ROUTES.some(route => currentPath.startsWith(route))) {
       return;
@@ -155,7 +155,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
 
     // Check subscription status first, before any other logic
     if (!isSubscribed && tab !== 'doctorsoffice') {
-      router.push('/pitch');
+      router.push('/offer');
       return;
     }
 

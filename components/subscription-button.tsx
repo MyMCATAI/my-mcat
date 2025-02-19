@@ -28,8 +28,6 @@ const premiumFeatures = {
     "Both an instructor and a tutor for personalized feedback",
     "Access to our private discord server for rapid question-answering",
     "Access to a daily study channel to co-learn with your classmates",
-    "Better score guarantee contract than any competitor in the market",
-    "Lifetime access to all MyMCAT content and features",
   ]
 };
 
