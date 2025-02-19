@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useClerk } from "@clerk/nextjs";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useOnboardingInfo } from "@/hooks/useOnboardingInfo";
 import toast from "react-hot-toast";
@@ -61,7 +60,6 @@ const ONBOARDING_STEPS = {
 } as const;
 
 export default function OnboardingPage() {
-  const { user } = useClerk();
   const { createReferral } = useUserInfo();
   const { 
     onboardingInfo, 

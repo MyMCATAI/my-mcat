@@ -5,7 +5,7 @@ import UserProfileModal from './modals/UserProfileModal';
 import { useProfileContext } from '@/contexts/UserProfileContext';
 import Image from 'next/image';
 
-export const ProfileButton = () => {
+export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
@@ -81,16 +81,18 @@ export const ProfileButton = () => {
           }
         `}
       >
-        <button
-          onClick={() => {
-            setIsProfileModalOpen(true);
-            setIsMenuOpen(false);
-          }}
+        {!hideProfile && (
+          <button
+            onClick={() => {
+              setIsProfileModalOpen(true);
+              setIsMenuOpen(false);
+            }}
           className="w-full px-2 py-1.5 text-left hover:bg-gray-50 flex items-center gap-2"
         >
           <FaUser className="w-3 h-3" />
           Customize profile
         </button>
+        )}
         <button
           onClick={() => {
             openUserProfile();

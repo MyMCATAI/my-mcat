@@ -199,7 +199,7 @@ const MethodologyAndTestimonials = () => {
             </a>
 
             <a 
-              href="/pitch"
+              href="/offer"
               className="relative group overflow-hidden rounded-xl aspect-[4/3] transition-transform duration-300 hover:-translate-y-2"
             >
               <Image 
@@ -502,7 +502,7 @@ const MethodologyAndTestimonials = () => {
               Want to learn more about our approach and see what our students say?
             </p>
             <Link 
-              href="/pitch"
+              href="/offer"
               className="inline-flex items-center gap-2 px-8 py-4 text-lg font-bold text-white
                 bg-gradient-to-r from-green-500 to-blue-500 rounded-full
                 shadow-[0_0_30px_rgba(35,185,97,0.3)] hover:shadow-[0_0_50px_rgba(35,185,97,0.5)]

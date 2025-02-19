@@ -21,7 +21,7 @@ const goldFeatures = {
   ]
 };
 
-export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'pitch' }) {
+export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'offer' }) {
   const [isLoading, setIsLoading] = useState(false);
   const { isGold } = useSubscriptionStatus();
   const router = useRouter();
@@ -29,8 +29,15 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'pit
   const handleAction = async () => {
     try {
       setIsLoading(true);
+
+      if (isGold) {
+        // Manage existing subscription
+        const response = await axios.get("/api/stripe");
+        window.location.href = response.data.url;
+        return
+      }
       if (context === 'onboarding') {
-        router.push('/pitch');
+        router.push('/offer');
       } else {
         const response = await axios.post("/api/stripe/checkout", {
           priceType: ProductType.MD_GOLD
@@ -150,7 +157,7 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'pit
               role="button"
               aria-disabled={isLoading}
             >
-              {isLoading ? "Loading..." : context === 'pitch' ? "Upgrade to Gold" : "Learn More"}
+              {isLoading ? "Loading..." : context === 'offer' ? "Upgrade to Gold" : "Learn More"}
             </div>
           </div>
         </div>
