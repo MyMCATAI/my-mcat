@@ -1305,9 +1305,24 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         </div>
       </div>
 
-      {createPortal(
-        <AnimatePresence>
-          {isEmptyButtonHovered && (
+      <DiagnosticDialog
+        isOpen={showDiagnosticDialog}
+        onSubmit={handleDiagnosticSubmit}
+      />
+      <ATSTutorial
+        key={tutorialKey}
+        runPart1={runTutorialPart1}
+        setRunPart1={setRunTutorialPart1}
+        runPart2={runTutorialPart2}
+        setRunPart2={setRunTutorialPart2}
+        runPart3={runTutorialPart3}
+        setRunPart3={setRunTutorialPart3}
+        runPart4={runTutorialPart4}
+        setRunPart4={setRunTutorialPart4}
+        catIconInteracted={catIconInteracted}
+      />
+
+    {isEmptyButtonHovered && (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -1330,6 +1345,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               />
             </motion.div>
           )}
+          
           {showPodcast && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -1384,25 +1400,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
               })()}
             </motion.div>
           )}
-        </AnimatePresence>,
-        document.body
-      )}
-      <DiagnosticDialog
-        isOpen={showDiagnosticDialog}
-        onSubmit={handleDiagnosticSubmit}
-      />
-      <ATSTutorial
-        key={tutorialKey}
-        runPart1={runTutorialPart1}
-        setRunPart1={setRunTutorialPart1}
-        runPart2={runTutorialPart2}
-        setRunPart2={setRunTutorialPart2}
-        runPart3={runTutorialPart3}
-        setRunPart3={setRunTutorialPart3}
-        runPart4={runTutorialPart4}
-        setRunPart4={setRunTutorialPart4}
-        catIconInteracted={catIconInteracted}
-      />
     </div>
   );
 };
