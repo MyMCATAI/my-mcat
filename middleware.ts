@@ -27,6 +27,8 @@ const publicRoutes = [
   "/scores/(.*)",
   "/blog(.*)",
   "/offer",
+  "/MD_Premium_Pro.png",
+  "/MDPremium.png",
   
   // Consolidated static asset pattern
   "/(.+)\\.(jpg|jpeg|gif|png|ico|xml|txt|js|css|svg|webm|mp4)$",
