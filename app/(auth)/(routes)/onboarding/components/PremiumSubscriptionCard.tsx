@@ -18,7 +18,7 @@ const premiumFeatures = {
   ]
 };
 
-export function PremiumSubscriptionCard({ context }: { context: 'onboarding' | 'pitch' }) {
+export function PremiumSubscriptionCard({ context }: { context: 'onboarding' | 'offer' }) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -26,7 +26,7 @@ export function PremiumSubscriptionCard({ context }: { context: 'onboarding' | '
     try {
       setIsLoading(true);
       if (context === 'onboarding') {
-        router.push('/pitch');
+        router.push('/offer');
       } else {
         window.open('https://tally.so/r/mBAgq7', '_blank');
       }
@@ -126,7 +126,7 @@ export function PremiumSubscriptionCard({ context }: { context: 'onboarding' | '
               role="button"
               aria-disabled={isLoading}
             >
-              {isLoading ? "Loading..." : context === 'pitch' ? "Apply for the Class" : "Learn More"}
+              {isLoading ? "Loading..." : context === 'offer' ? "Apply for the Class" : "Learn More"}
             </div>
           </div>
         </div>

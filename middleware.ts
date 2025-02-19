@@ -23,7 +23,10 @@ const publicRoutes = [
   "/game-components/(.*)",
   "/icons/(.*)",
   "/landingpage/(.*)",
+  "/tutors/(.*)",
+  "/scores/(.*)",
   "/blog(.*)",
+  "/offer",
   
   // Consolidated static asset pattern
   "/(.+)\\.(jpg|jpeg|gif|png|ico|xml|txt|js|css|svg|webm|mp4)$",

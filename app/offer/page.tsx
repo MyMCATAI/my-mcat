@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { AnkiGameCard } from "@/app/(auth)/(routes)/onboarding/components/AnkiGameCard";
-import { GoldSubscriptionCard } from "@/app/(auth)/(routes)/onboarding/components/GoldSubscriptionCard";
-import { PremiumSubscriptionCard } from "@/app/(auth)/(routes)/onboarding/components/PremiumSubscriptionCard";
 import Image from 'next/image';
+import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
+import { useUser } from "@clerk/nextjs";
+import { ProfileButton } from "@/components/ProfileButton";
 
 // Constants
 const PITCH_VIDEO_URL = "p6TCox21rVg"; // YouTube video ID
@@ -21,12 +21,30 @@ export default function PitchPage() {
   const [activeTeam, setActiveTeam] = useState('mcat');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
-  const [selectedMember, setSelectedMember] = useState<typeof allTeam[0] | null>(null);
-  const [selectedScore, setSelectedScore] = useState<string | null>(null);
+  const { isGold } = useSubscriptionStatus();
+  const { user } = useUser();
 
   const handleUpgradeClick = async () => {
     try {
       setIsLoading(true);
+
+      if (isGold) {
+        // Manage existing subscription
+        const response = await axios.get("/api/stripe");
+        window.location.href = response.data.url;
+        return;
+      }
+
+      // Check if user is authenticated
+      const userId  = user?.id
+
+      if (!userId) {
+        // If not authenticated, redirect to sign-up with return URL
+        const returnUrl = encodeURIComponent(window.location.pathname);
+        window.location.href = `/sign-up?redirect_url=${returnUrl}`;
+        return;
+      }
+
       const response = await axios.post("/api/stripe/checkout", {
         priceType: ProductType.MD_GOLD
       });
@@ -44,76 +62,76 @@ export default function PitchPage() {
       name: "Immanuel C",
       role: "Tutor",
       university: "Yale",
-      image: "/tutors/ChasB..png",
+      image: "/tutors/ChasB.png",
     },
     {
       name: "Ethan K",
       role: "Tutor",
       university: "UPenn",
-      image: "/tutors/EthanK..png",
+      image: "/tutors/EthanK.png",
     },
     {
       name: "Prynce K",
       role: "MCAT Director",
       university: "Rice",
-      image: "/tutors/PrynceK..png",
+      image: "/tutors/PrynceK.png",
     },
     {
       name: "Vivian Z",
       role: "Instructor",
       university: "UCR",
-      image: "/tutors/VivianZ..png",
+      image: "/tutors/VivianZ.png",
     },
     {
       name: "Ali N",
       role: "Tutor",
       university: "Stanford",
-      image: "/tutors/AliN..png",
+      image: "/tutors/AliN.png",
     },
     {
       name: "Lauren N",
       role: "Instructor",
       university: "UCLA",
-      image: "/tutors/LauraN..png",
+      image: "/tutors/LauraN.png",
     },
     {
       name: "Dennis C",
       role: "Senior Engineer",
       university: "UCLA",
-      image: "/tutors/DennisC..png",
+      image: "/tutors/DennisC.png",
     },
     {
       name: "Esther C",
       role: "Data Scientist",
       university: "Berkeley",
-      image: "/tutors/EstherC..png",
+      image: "/tutors/EstherC.png",
     },
     {
       name: "Sophie L",
       role: "Game Developer",
       university: "UIUC",
-      image: "/tutors/SophieL..png",
+      image: "/tutors/SophieL.png",
     },
     {
       name: "Josh W",
       role: "Engineer",
       university: "Queen's University",
-      image: "/tutors/JoshW..png",
+      image: "/tutors/JoshW.png",
     },
     {
       name: "Armaan A",
       role: "Engineer",
       university: "UH",
-      image: "/tutors/ArmaanA..png",
+      image: "/tutors/ArmaanA.png",
     },
   ];
 
   const scores = [
-    { score: "525", name: "Cynthia", image: "/scores/525..png" },
-    { score: "523", name: "Barbara", image: "/scores/523..png" },
-    { score: "519", name: "Trinity", image: "/scores/519..png" },
-    { score: "516", name: "Kevin", image: "/scores/516..png" },
-    { score: "520", name: "Sahaj", image: "/scores/520..png" },
+    { score: "525", name: "Cynthia", image: "/scores/525.png" },
+    { score: "523", name: "Barbara", image: "/scores/523.png" },
+    { score: "519", name: "Trinity", image: "/scores/519.png" },
+    { score: "516", name: "Kevin", image: "/scores/516.png" },
+    { score: "520", name: "Sahaj", image: "/scores/520.png" },
   ];
 
   const nextSlide = () => {
@@ -131,6 +149,15 @@ export default function PitchPage() {
       <div className="relative pt-20 pb-32 overflow-hidden">
         <div className="absolute inset-0 bg-black/40" /> {/* Dark overlay for better text readability */}
         
+        {/* Profile Button */}
+        <div className="absolute right-8 top-8 z-10">
+          {user ? (
+            <ProfileButton 
+            hideProfile
+            />
+          ) : null}
+        </div>
+
         {/* Back Button */}
         <button
           onClick={() => router.push('/home')}
@@ -190,9 +217,7 @@ export default function PitchPage() {
             </p>
             <div className="space-y-6 text-lg md:text-xl leading-relaxed">
               <p className="text-white/80">
-                At MyMCAT.ai, you&apos;re not paying for marketing hype—you&apos;re paying for results. 
-                Every dollar goes into building the most advanced MCAT prep system ever created—from 
-                cutting-edge AI software to elite instructors who actually know how to teach.
+                {"At MyMCAT.ai, you're not paying for marketing hype—you're paying for results. Every dollar goes into building the most advanced MCAT prep system ever created—from cutting-edge AI software to elite instructors who actually know how to teach."}
               </p>
               <p className="text-white/80">
                 We do not rely on investors. We rely on the contributions of the students that we serve. 
@@ -217,11 +242,9 @@ export default function PitchPage() {
                         text-center flex flex-col items-center justify-center"
                       >
                         <div className="w-20 h-20 mb-3 rounded-full overflow-hidden border-2 border-white/10">
-                          <Image 
+                          <img 
                             src={member.image} 
                             alt={member.name} 
-                            width={80}
-                            height={80}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -285,12 +308,12 @@ export default function PitchPage() {
             </div>
 
             <p className="text-white/80 text-lg mb-12">
-              To verify our testimonials, join our{" "}
+              To verify our testimonials, join our {" "}
               <a 
                 href="https://discord.gg/KPtDGJfK8t" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="text-blue-400 hover:text-blue-300 underline transition-colors"
+                className="text-blue-400 hover:text-blue-300 transition-colors"
               >
                 Discord community
               </a>
@@ -305,7 +328,9 @@ export default function PitchPage() {
                 {/* Left side - Logo */}
                 <div className="w-full md:w-1/3 flex flex-col items-center">
                   <div className="relative w-48 h-48">
-                    <img
+                    <Image
+                      width={192}
+                      height={192}
                       src="/MD_Premium_Pro.png"
                       alt="MD Gold"
                       className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-300"
@@ -379,7 +404,11 @@ export default function PitchPage() {
 
                   <div className="border-t border-amber-200/20 pt-6 mt-6">
                     <p className="text-white/90 text-lg leading-relaxed">
-                      By joining MD Gold, you're supporting our team and our community. You're making MCAT prep better for everyone.
+                      {user ? (
+                        "By joining MD Gold, you're supporting our team and our community. You're making MCAT prep better for everyone."
+                      ) : (
+                        "Create your free account and upgrade to MD Gold to join our community. You'll be making MCAT prep better for everyone."
+                      )}
                     </p>
                   </div>
 
@@ -391,7 +420,9 @@ export default function PitchPage() {
                       transform hover:scale-105 transition-all duration-300 shadow-lg
                       disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isLoading ? "Loading..." : "Upgrade to Gold"}
+                    {isLoading ? "Loading..." : 
+                     isGold ? "Manage Subscription" : 
+                     user ? "Upgrade to Gold" : "Sign up & Get Gold"}
                   </button>
                 </div>
               </div>
@@ -406,8 +437,8 @@ export default function PitchPage() {
             </h2>
             <p className="text-white/80 mb-6">Summer 2024</p>
             <p className="text-white/90 text-lg md:text-xl max-w-3xl mx-auto mb-10 italic">
-              "These brave soldiers embarked on our first class when we were in our infancy as a company, 
-              and the entire cohort averaged a 14 point increase."
+              These brave soldiers embarked on our first class when we were in our infancy as a company, 
+              and the entire cohort averaged a 14 point increase.
             </p>
 
             {/* Video Section */}
@@ -439,13 +470,13 @@ export default function PitchPage() {
                       bg-black/30 p-4 rounded-xl border border-white/10 backdrop-blur-sm
                       shadow-[0_0_20px_rgba(0,123,255,0.1)] hover:shadow-[0_0_30px_rgba(0,123,255,0.2)]"
                   >
-                    <div className="w-20 h-20 mb-3 rounded-full overflow-hidden">
+                    <div className="w-80 h-56 rounded-lg overflow-hidden">
                       <Image 
                         src="/scores/525.png" 
                         alt="525 MCAT Score" 
-                        width={80}
-                        height={80}
-                        className="w-full h-full object-cover"
+                        width={320}
+                        height={224}
+                        className="w-full h-full object-contain"
                       />
                     </div>
                   </button>
@@ -460,13 +491,13 @@ export default function PitchPage() {
                       bg-black/30 p-4 rounded-xl border border-white/10 backdrop-blur-sm
                       shadow-[0_0_20px_rgba(0,123,255,0.1)] hover:shadow-[0_0_30px_rgba(0,123,255,0.2)]"
                   >
-                    <div className="w-20 h-20 mb-3 rounded-full overflow-hidden">
+                    <div className="w-80 h-56 rounded-lg overflow-hidden">
                       <Image 
                         src="/scores/519.png" 
                         alt="519 MCAT Score" 
-                        width={80}
-                        height={80}
-                        className="w-full h-full object-cover"
+                        width={320}
+                        height={224}
+                        className="w-full h-full object-contain"
                       />
                     </div>
                   </button>
@@ -481,7 +512,7 @@ export default function PitchPage() {
                 Next Class: March - May
               </h2>
               <p className="text-white/90 text-lg max-w-3xl mx-auto">
-                We're looking for people who are retakers to join this class.
+                {"We're looking for people who are retakers to join this class."}
               </p>
             </div>
 
@@ -494,9 +525,11 @@ export default function PitchPage() {
                 {/* Left side - Logo */}
                 <div className="w-full md:w-1/3 flex flex-col items-center">
                   <div className="relative w-48 h-48">
-                    <img
+                    <Image
                       src="/MDPremium.png"
                       alt="MD Platinum"
+                      width={192}
+                      height={192}
                       className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-300"
                       style={{ animation: 'float 3s ease-in-out infinite' }}
                     />
@@ -584,8 +617,8 @@ export default function PitchPage() {
               >
                 <div className="relative max-w-4xl max-h-[90vh] p-4">
                   <img 
-                    src={`/scores/${expandedCard}.png`} 
-                    alt={`${expandedCard} MCAT Score`} 
+                    src={`/scores/${expandedCard}.png`}
+                    alt={`${expandedCard} MCAT Score`}
                     className="w-full h-full object-contain"
                   />
                   <button 
@@ -615,4 +648,4 @@ function FeatureCard({ title, description, icon }: { title: string; description:
       <p className="text-white/80">{description}</p>
     </div>
   );
-} 
+}
