@@ -8,19 +8,20 @@ import { useRouter } from "next/navigation";
 
 const goldFeatures = {
   title: "MD Gold Plan",
-  price: "$149.99 / month",
-  description: "Unlock comprehensive MCAT preparation with advanced AI tools, daily practice materials, and personalized analytics to maximize your success.",
+  price: "$150 / month",
+  description: "When you're ready to take the MCAT more seriously, use our advanced testing software.",
   image: "/MD_Premium_Pro.png",
   features: [
-    "Daily CARS passages with detailed explanations",
-    "AI-curated study content based on your performance",
-    "Complete access to full-length practice tests",
-    "Advanced performance analytics and insights",
-    "Personalized study schedule optimization",
+    "Daily CARS Suite",
+    "Adaptive Tutoring Suite",
+    "Study Schedule Optimizer",
+    "Testing Suite",
+    "Analytics",
+    "Discord Tutoring Channel"
   ]
 };
 
-export function GoldSubscriptionCard() {
+export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'offer' }) {
   const [isLoading, setIsLoading] = useState(false);
   const { isGold } = useSubscriptionStatus();
   const router = useRouter();
@@ -28,18 +29,24 @@ export function GoldSubscriptionCard() {
   const handleAction = async () => {
     try {
       setIsLoading(true);
-      
+
       if (isGold) {
         // Manage existing subscription
         const response = await axios.get("/api/stripe");
         window.location.href = response.data.url;
+        return
+      }
+      if (context === 'onboarding') {
+        router.push('/offer');
       } else {
-        // Redirect to pitch page instead of direct checkout
-        router.push('/pitch');
+        const response = await axios.post("/api/stripe/checkout", {
+          priceType: ProductType.MD_GOLD
+        });
+        window.location.href = response.data.url;
       }
     } catch (error) {
       console.error("Error:", error);
-      toast.error(isGold ? "Failed to load subscription management. Please try again." : "Failed to initiate purchase. Please try again.");
+      toast.error("Failed to load page. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -62,11 +69,11 @@ export function GoldSubscriptionCard() {
 
       <div className={`rounded-xl transition-all duration-300
         ${isGold 
-          ? 'bg-gradient-to-br from-[--theme-mainbox-color] to-[--theme-mainbox-color] hover:shadow-lg hover:shadow-amber-400/20'
-          : 'bg-gradient-to-br from-amber-950 via-yellow-900 to-amber-900 hover:shadow-lg hover:shadow-amber-400/20'}`}
+          ? 'bg-gradient-to-br from-[#1a1a2e] via-[#1a1a24] to-[#1a1a1a] hover:shadow-lg hover:shadow-amber-400/20'
+          : 'bg-gradient-to-br from-[#1a1a2e] via-[#1a1a24] to-[#1a1a1a] hover:shadow-lg hover:shadow-amber-400/20'}`}
       >
         {/* Glow Effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-400/0 via-amber-400/10 to-amber-400/0 
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-400/0 via-amber-400/5 to-amber-400/0 
           opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         <div className="flex flex-col items-center h-full p-4">
@@ -114,8 +121,8 @@ export function GoldSubscriptionCard() {
                       }}
                     >
                       <svg 
-                        className={`w-5 h-5 mr-2 flex-shrink-0
-                          ${isGold ? 'text-amber-500' : 'text-amber-300'}`}
+                        className={`w-4 h-4 mr-2 flex-shrink-0
+                          ${isGold ? 'text-zinc-400' : 'text-zinc-400'}`}
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
@@ -123,7 +130,7 @@ export function GoldSubscriptionCard() {
                         <path 
                           strokeLinecap="round" 
                           strokeLinejoin="round" 
-                          strokeWidth="2" 
+                          strokeWidth="1.5" 
                           d="M5 13l4 4L19 7" 
                         />
                       </svg>
@@ -143,16 +150,14 @@ export function GoldSubscriptionCard() {
             </p>
 
             <div
-              className={`w-full h-10 px-4 rounded-md font-medium shadow-sm 
+              className={`w-full h-10 px-4 rounded-md font-medium shadow-lg 
                 transition-all duration-300 flex items-center justify-center
-                disabled:opacity-50
-                ${isGold 
-                  ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-400 text-amber-950 group-hover:opacity-90'
-                  : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-400 text-amber-950 group-hover:opacity-90'}`}
+                disabled:opacity-50 bg-gradient-to-r from-green-400 to-blue-500 text-white hover:from-green-500 hover:to-blue-600
+                transform hover:scale-105`}
               role="button"
               aria-disabled={isLoading}
             >
-              {isLoading ? "Loading..." : isGold ? "Manage Subscription" : "Choose Gold Plan"}
+              {isLoading ? "Loading..." : context === 'offer' ? "Upgrade to Gold" : "Learn More"}
             </div>
           </div>
         </div>
