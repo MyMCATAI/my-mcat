@@ -1307,7 +1307,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
 
       {createPortal(
         <AnimatePresence>
-          {isEmptyButtonHovered && (
+          {/* {isEmptyButtonHovered && (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -1329,7 +1329,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                 setCheckedCategories={setCheckedCategories}
               />
             </motion.div>
-          )}
+          )} */}
           {showPodcast && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -1403,6 +1403,30 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         setRunPart4={setRunTutorialPart4}
         catIconInteracted={catIconInteracted}
       />
+
+    {isEmptyButtonHovered && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+              className="fixed rounded-lg border-[--theme-border-color] border-2 shadow-lg z-[35] bg-[--theme-leaguecard-color] overflow-hidden"
+              style={{
+                top: `${emptyButtonPosition.top}rem`,
+                left: `${emptyButtonPosition.left + 8}rem`,
+                width: "40rem",
+                height: "80vh",
+                maxHeight: "calc(100vh - 4rem)",
+              }}
+              onMouseEnter={() => setIsEmptyButtonHovered(true)}
+              onMouseLeave={() => setIsEmptyButtonHovered(false)}
+            >
+              <ATSSettingContent
+                checkedCategories={checkedCategories}
+                setCheckedCategories={setCheckedCategories}
+              />
+            </motion.div>
+          )}
     </div>
   );
 };
