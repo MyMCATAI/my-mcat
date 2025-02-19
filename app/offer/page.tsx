@@ -7,7 +7,8 @@ import { toast } from "react-hot-toast";
 import Image from 'next/image';
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { useUser } from "@clerk/nextjs";
-import { ProfileButton } from "@/components/ProfileButton";
+import { UserButton } from "@clerk/nextjs";
+
 
 // Constants
 const PITCH_VIDEO_URL = "p6TCox21rVg"; // YouTube video ID
@@ -151,11 +152,7 @@ export default function PitchPage() {
         
         {/* Profile Button */}
         <div className="absolute right-8 top-8 z-10">
-          {user ? (
-            <ProfileButton 
-            hideProfile
-            />
-          ) : null}
+            <UserButton />
         </div>
 
         {/* Back Button */}
@@ -328,9 +325,7 @@ export default function PitchPage() {
                 {/* Left side - Logo */}
                 <div className="w-full md:w-1/3 flex flex-col items-center">
                   <div className="relative w-48 h-48">
-                    <Image
-                      width={192}
-                      height={192}
+                    <img
                       src="/MD_Premium_Pro.png"
                       alt="MD Gold"
                       className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-300"
@@ -525,11 +520,9 @@ export default function PitchPage() {
                 {/* Left side - Logo */}
                 <div className="w-full md:w-1/3 flex flex-col items-center">
                   <div className="relative w-48 h-48">
-                    <Image
+                    <img
                       src="/MDPremium.png"
                       alt="MD Platinum"
-                      width={192}
-                      height={192}
                       className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-300"
                       style={{ animation: 'float 3s ease-in-out infinite' }}
                     />
