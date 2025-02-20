@@ -15,10 +15,16 @@ export async function GET(req: Request) {
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
     const contentId = searchParams.get('id');
     const conceptCategory = searchParams.get('conceptCategory')?.replace(/_/g, ' ') || '';
+    const minDuration = 4
+
     if (contentId) {
       // Fetch a single content item by ID
       const content = await prisma.content.findUnique({
-        where: { id: contentId },
+        where: { id: contentId,
+        minutes_estimate: {
+          gt: minDuration
+        }
+      },
         include: {
           category: true
         }
@@ -52,7 +58,11 @@ export async function GET(req: Request) {
       const skip = (page - 1) * pageSize;
 
       const content = await prisma.content.findMany({
-        where: { categoryId: category.id },
+        where: { categoryId: category.id, 
+          minutes_estimate: {
+            gte: minDuration
+          }
+        },
         skip,
         take: pageSize,
         include: {

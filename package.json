@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.633.0",
-    "@clerk/nextjs": "5.7.5",
+    "@clerk/nextjs": "^5.7.5",
     "@clerk/themes": "^2.1.33",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
@@ -94,7 +94,7 @@
     "ffmpeg": "^0.0.4",
     "flowbite": "^2.4.1",
     "flowbite-react": "^0.10.1",
-    "framer-motion": "^11.3.28",
+    "framer-motion": "^11.18.2",
     "glass-js": "^1.3.5",
     "gray-matter": "^4.0.3",
     "gsap": "^3.12.5",
@@ -137,7 +137,7 @@
     "react-scroll-parallax": "^3.4.5",
     "react-share": "^5.1.0",
     "react-slick": "^0.30.2",
-    "react-spring": "^9.7.4",
+    "react-spring": "^9.7.5",
     "react-star-ratings": "^2.3.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-timer-hook": "^3.0.7",
@@ -167,6 +167,7 @@
     "zustand": "^4.5.5"
   },
   "devDependencies": {
+    "@clerk/types": "^4.46.0",
     "@hookform/resolvers": "^3.3.2",
     "@prisma/client": "^6.1.0",
     "@svgr/webpack": "^8.1.0",
