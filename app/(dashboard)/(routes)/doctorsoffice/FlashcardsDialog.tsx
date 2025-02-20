@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 import { roomToSubjectMap } from './constants';
 import ChatBot from '@/components/chatbot/ChatBotFlashcard';
 import { cleanQuestion, cleanAnswer } from './utils/testUtils';
+import DownvoteFeedback from '@/components/DownvoteFeedback';
 // import Interruption from './Interruption';
 
 interface WrongCard {
@@ -78,6 +79,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   const chatbotRef = useRef<{
     sendMessage: (message: string) => void;
   }>({ sendMessage: () => {} });
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const [springs, api] = useSpring(() => ({
     from: { x: 0 }
@@ -188,42 +190,8 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     }
   }, [roomId, setActiveRooms, onOpenChange, correctCount]);
 
-  const handleDownvote = async () => {
-    if (!currentQuestion || !currentUserTestId) return;
-
-    try {
-      const response = await fetch('/api/user-test/flagged-responses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userTestId: currentUserTestId,
-          questionId: currentQuestion.id,
-          flagged: true,  
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update question flag status");
-      }
-
-      const msgresponse = await fetch("/api/send-message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: `Question Downvoted\n\nQuestion ID: ${currentQuestion.id}\nQuestion Content: ${currentQuestion.questionContent}\n\nThis question was automatically flagged for review through the downvote system.`,
-        }),
-      });
-
-      if (!msgresponse.ok) {
-        throw new Error("Failed to send downvote message");
-      }
-
-      toast.success("Question reported! Thank you for helping us improve.");
-
-    } catch (error) {
-      console.error("Error sending downvote:", error);
-      toast.error("Failed to send feedback. Please try again.");
-    }
+  const handleDownvote = () => {
+    setIsFeedbackOpen(true);
   };
 
   const [showChat, setShowChat] = useState(false);
@@ -492,6 +460,13 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
           </div>
         </DialogContent>
       </Dialog>
+      <DownvoteFeedback
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        currentUserTestId={currentUserTestId}
+        currentQuestionId={currentQuestion?.id || null}
+        currentQuestionContent={currentQuestion?.questionContent || null}
+      />
     </>
   );
 });
