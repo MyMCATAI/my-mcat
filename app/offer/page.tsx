@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import Image from 'next/image';
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { useUser } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
+import { useUserActivity } from '@/hooks/useUserActivity';
 
 
 // Constants
@@ -24,6 +25,22 @@ export default function PitchPage() {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const { isGold } = useSubscriptionStatus();
   const { user } = useUser();
+  const { startActivity } = useUserActivity();
+
+
+  // Add audio effect when modal opens
+  useEffect(() => {
+    if (user?.id) {
+      // Track modal open activity
+      startActivity({
+        type: "offer_page_view",
+        location: "Offer",
+        metadata: {
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+  }, [user]);
 
   const handleUpgradeClick = async () => {
     try {
@@ -36,9 +53,17 @@ export default function PitchPage() {
         return;
       }
 
-      // Check if user is authenticated
       const userId  = user?.id
 
+      if(userId){
+        await startActivity({
+          type: 'offer_page_purchase_click',
+          location: "Offer",
+          metadata: {
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
       if (!userId) {
         // If not authenticated, redirect to sign-up with return URL
         const returnUrl = encodeURIComponent(window.location.pathname);
@@ -56,6 +81,21 @@ export default function PitchPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleApplyClick = async () => {
+      const userId  = user?.id
+      if(userId){
+        await startActivity({
+          type: 'offer_page_platinum_apply_click',
+          location: "Offer",
+          metadata: {
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+      window.open('https://tally.so/r/mBAgq7', '_blank')
+
   };
 
   const allTeam = [
@@ -591,7 +631,7 @@ export default function PitchPage() {
                   </div>
 
                   <button
-                    onClick={() => window.open('https://tally.so/r/mBAgq7', '_blank')}
+                    onClick={handleApplyClick}
                     className="w-full h-12 mt-6 px-8 rounded-lg font-medium text-white
                       bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600
                       transform hover:scale-105 transition-all duration-300 shadow-lg"
