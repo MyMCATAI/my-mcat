@@ -12,7 +12,7 @@ import { useUserActivity } from '@/hooks/useUserActivity';
 
 
 // Constants
-const PITCH_VIDEO_URL = "p6TCox21rVg"; // YouTube video ID
+const PITCH_VIDEO_URL = "TlfF-APm2DA"; // YouTube video ID
 enum ProductType {
   MD_GOLD = 'md_gold'
 }
@@ -549,6 +549,22 @@ export default function PitchPage() {
               <p className="text-white/90 text-lg max-w-3xl mx-auto">
                 {"We're looking for people who are retakers to join this class."}
               </p>
+
+              {/* Laura's Video */}
+              <div className="relative aspect-video max-w-4xl mx-auto rounded-xl overflow-hidden 
+                shadow-[0_0_50px_rgba(255,255,255,0.15)] mt-8 mb-12">
+                <video
+                  className="w-full h-full"
+                  controls
+                  preload="metadata"
+                >
+                  <source 
+                    src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/laura.mov" 
+                    type="video/mp4" 
+                  />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
             </div>
 
             {/* MD Platinum Feature Section */}
