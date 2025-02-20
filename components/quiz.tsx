@@ -25,6 +25,7 @@ import toast from "react-hot-toast";
 import { ExplanationImages } from "./ExplanationImages";
 import { QuizIntroDialog } from "./ATS/QuizIntroDialogue";
 import { useUserInfo } from "@/hooks/useUserInfo";
+import DownvoteFeedback from './DownvoteFeedback';
 
 export interface QuizQuestion {
   categoryId: string;
@@ -109,6 +110,7 @@ const Quiz: React.FC<QuizProps> = ({
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [isQuizComplete, setIsQuizComplete] = useState(false);
   const [hasAwardedCoins, setHasAwardedCoins] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const handleStartQuiz = async () => {
     try {
@@ -482,7 +484,7 @@ const Quiz: React.FC<QuizProps> = ({
             </div>
 
             <ExplanationImages
-              questionContent={currentQuestion.questionContent}
+              questionContent={question.questionContent}
               isFullScreen={isFullScreen}
             />
           </div>
@@ -535,41 +537,8 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  const handleDownvote = async () => {
-    if (!currentQuestion || !currentUserTestId) return;
-
-    try {
-      const response = await fetch('/api/user-test/flagged-responses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userTestId: currentUserTestId,
-          questionId: currentQuestion.id,
-          flagged: true,
-        }),
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to update question flag status');
-      }
-
-      const msgresponse = await fetch("/api/send-message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: `Question Downvoted\n\nQuestion ID: ${currentQuestion.id}\nQuestion Content: ${currentQuestion.questionContent}\n\nThis question was automatically flagged for review through the downvote system.`,
-        }),
-      });
-
-      if (!msgresponse.ok) {
-        throw new Error("Failed to send downvote message");
-      }
-      toast.success("Question reported! Thank you for helping us improve.");
-
-    } catch (error) {
-      console.error("Error sending downvote:", error);
-      toast.error("Failed to send feedback. Please try again.");
-    }
+  const handleDownvote = () => {
+    setIsFeedbackOpen(true);
   };
 
   if (isLoading || isLoadingUserInfo) {
@@ -775,6 +744,13 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
           </div>
         </DialogContent>
       </Dialog>
+      <DownvoteFeedback
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        currentUserTestId={currentUserTestId}
+        currentQuestionId={currentQuestion?.id || null}
+        currentQuestionContent={currentQuestion?.questionContent || null}
+      />
     </div>
   );
 };
