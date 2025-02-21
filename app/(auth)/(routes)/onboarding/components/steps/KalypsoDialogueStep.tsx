@@ -38,19 +38,14 @@ export const KalypsoDialogueStep = ({
         break;
       case 3:
         setKalypsoMessage(
-          `And for those aiming for excellence${targetMedSchool ? ` (perfect for ${targetMedSchool} aspirants)` : ''}, there's our <strong>MD Premium</strong> experience! 💫\n\nJoin an <strong>elite community</strong> of future physicians and get:\n• 1-on-1 expert tutoring sessions\n• Private Discord community access\n• Score improvement guarantee\n• Priority AI support\n• Exclusive study resources\n\nIt's the most comprehensive MCAT prep ever created! 🎓✨`
+          `And for those aiming for excellence${targetMedSchool ? ` (perfect for ${targetMedSchool} aspirants)` : ''}, there's <strong>MD Premium</strong> experience! 💫\n\nJoin an <strong>elite community</strong> of future physicians and get:\n• 1-on-1 expert tutoring sessions\n• Private Discord community access\n• Score improvement guarantee\n• Priority AI support\n• Exclusive study resources\n\nIt's the most comprehensive MCAT prep ever created! 🎓✨`
         );
         setMessageId(4);
         break;
+      
       case 4:
-        setKalypsoMessage(
-          `${firstName}, you've already taken the first step by being here - that's huge! 🌟\n\n${targetMedSchool ? `I know getting into ${targetMedSchool} is your dream, and ` : ''}I'll be right here to support your journey${targetScore ? ` to that ${targetScore}+ score` : ''}.\n\nReady to transform your MCAT prep into an exciting adventure? Let's make those med school dreams come true! 💪🎉`
-        );
-        setMessageId(5);
-        break;
-      case 5:
         onComplete();
-        setMessageId(6);
+        setMessageId(5);
         break;
     }
   }, [messageId, onComplete, firstName, targetScore, targetMedSchool]);
