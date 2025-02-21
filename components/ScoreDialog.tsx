@@ -1,17 +1,12 @@
+//components/ScoreDialog.tsx
 'use client';
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Star } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { useRouter } from 'next/navigation'; // Updated import
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useRouter } from 'next/navigation'; 
 import Link from 'next/link';
 import Image from 'next/image'; // Added import
+import { useAudio } from '@/contexts/AudioContext'; // Replace useAudioManager
 
 interface ScoreDialogProps {
   open: boolean;
@@ -44,18 +39,17 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
   const [timingStars, setTimingStars] = useState(0);
   const [techniqueStars, setTechniqueStars] = useState(0);
   const router = useRouter();
+  const audio = useAudio(); // Replace useAudioManager
 
   useEffect(() => {
     if (open) {
-      if (audioRef.current) {
-        if (score === 100) {
-          audioRef.current.src = "/fanfare.mp3";
-        } else if (score >= 60) {
-          audioRef.current.src = "/levelup.mp3";
-        } else {
-          audioRef.current.src = "/sadfanfare.mp3";
-        }
-        audioRef.current.play();
+      // Play appropriate sound based on score
+      if (score === 100) {
+        audio.playSound('fanfare');
+      } else if (score >= 60) {
+        audio.playSound('levelup');
+      } else {
+        audio.playSound('sadfanfare');
       }
 
       // Animate the score percentage
@@ -112,7 +106,7 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
         clearInterval(techniqueStarsInterval);
       };
     }
-  }, [open, score, timing, technique, totalQuestions]);
+  }, [open, score, audio]);
 
   const getStarCount = (score: number) => {
     if (score === 100) return 3;

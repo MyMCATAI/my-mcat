@@ -1,14 +1,16 @@
+//components/subscription-button.tsx
 "use client";
-
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
-import { useState, useEffect } from "react";
-import { toast } from "react-hot-toast";
-import Image from "next/image";
 import { useUserActivity } from "@/hooks/useUserActivity";
+import { useAudio } from "@/contexts/AudioContext";
+import { toast } from "react-hot-toast";
 
+/* ---------------------------------------- Types ---------------------------------------- */
 interface SubscriptionButtonProps {
   text?: string;
   className?: string;
@@ -17,6 +19,7 @@ interface SubscriptionButtonProps {
   variant?: 'icon' | 'traditional';
 }
 
+/* ---------------------------------------- Constants ---------------------------------------- */
 const premiumFeatures = {
   title: "Enough talk. Get your target score.",
   price: "$2,999.99",
@@ -29,7 +32,7 @@ const premiumFeatures = {
     "Access to our private discord server for rapid question-answering",
     "Access to a daily study channel to co-learn with your classmates",
   ]
-};
+} as const;
 
 // Add new object for subscription management content
 const subscriptionManagement = {
@@ -41,8 +44,9 @@ const subscriptionManagement = {
     "Change subscription plan",
     "Cancel subscription"
   ]
-};
+} as const;
 
+/* ---------------------------------------- Component ---------------------------------------- */
 export function SubscriptionButton({
   text = "Apply for MD Premium",
   className,
@@ -50,49 +54,35 @@ export function SubscriptionButton({
   children,
   variant = 'icon'
 }: SubscriptionButtonProps) {
+  /* ---------------------------------------- Hooks ---------------------------------------- */
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { isPremium, isCanceled, currentPeriodEnd, isLoading: isCheckingStatus } = useSubscriptionStatus();
   const { startActivity } = useUserActivity();
+  const audio = useAudio();
 
-  // Add audio effect when modal opens
+  /* ---------------------------------------- Effects ---------------------------------------- */
   useEffect(() => {
     if (isModalOpen) {
-      const audio = new Audio('/short-choir.mp3');
-      audio.volume = 0.5; // Set volume to 50%
-      audio.play().catch(error => {
-        console.log("Audio playback failed:", error);
-      });
+      audio.playSound('short-choir');
       
-      // Track modal open activity
       startActivity({
         type: "premium_modal_open",
         location: "subscription_button",
-        metadata: {
-          isPremium,
-          isCanceled
-        }
+        metadata: { isPremium, isCanceled }
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isModalOpen]);
+  }, [isModalOpen, startActivity, isPremium, isCanceled, audio]);
 
-  // Handle new subscription purchase
+  /* ---------------------------------------- Handlers ---------------------------------------- */
   const handleSubscribe = async () => {
     try {
       setIsLoading(true);
-      
-      // Track premium application click
       await startActivity({
         type: "premium_application_click",
         location: "subscription_button",
-        metadata: {
-          isPremium,
-          isCanceled
-        }
+        metadata: { isPremium, isCanceled }
       });
-      
-      // Open Tally form in new window
       window.open('https://tally.so/r/mBAgq7', '_blank');
     } catch (error) {
       console.error("Error:", error);
@@ -102,7 +92,6 @@ export function SubscriptionButton({
     }
   };
 
-  // Handle managing existing subscription
   const handleManageSubscription = async () => {
     try {
       setIsLoading(true);
@@ -116,12 +105,13 @@ export function SubscriptionButton({
     }
   };
 
-  // Show loading state while checking subscription status
+  /* ---------------------------------------- Loading State ---------------------------------------- */
   if (isCheckingStatus) {
     return <Button disabled className={variant === 'traditional' ? "w-full" : className}>Loading...</Button>;
   }
 
-  // Show manage subscription button for premium users
+  /* ---------------------------------------- Render ---------------------------------------- */
+  // Premium user view
   if (isPremium) {
     return (
       <>
@@ -400,14 +390,11 @@ export function SubscriptionButton({
   );
 }
 
+/* ---------------------------------------- Styles ---------------------------------------- */
 <style jsx global>{`
   @keyframes heavenlyGlow {
-    from {
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
-    }
-    to {
-      box-shadow: 0 0 40px rgba(255, 255, 255, 0.6);
-    }
+    from { box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); }
+    to { box-shadow: 0 0 40px rgba(255, 255, 255, 0.6); }
   }
 
   @keyframes float {

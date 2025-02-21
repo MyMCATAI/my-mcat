@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import type { UserResponseWithCategory } from "@/types";
 import VideoRecommendations from './components/VideoRecommendations';
-
+import { useAudio } from '@/contexts/AudioContext';
 
 /* ------------------------------------------ Types ------------------------------------------ */
 interface LargeDialogProps {
@@ -135,6 +135,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   conceptCategories
 }, ref) => {
   /* ---------------------------------------- Hooks ---------------------------------------- */
+  const audio = useAudio();
   const router = useRouter();
   const { user } = useUser();
   const chatbotRef = useRef<{
@@ -385,12 +386,12 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
       const mcqPercentage = mcqTotal > 0 ? Math.round((mcqCorrect / mcqTotal) * 100) : 0;
 
       if (mcqPercentage === COIN_THRESHOLDS.PERFECT_SCORE) {
-        fanfareSound.current?.play();
+        audio.playSound('fanfare');
       } else if (mcqPercentage >= COIN_THRESHOLDS.HIGH_SCORE) {
-        levelUpSound.current?.play();
+        audio.playSound('levelup');
       }
     }
-  }, [open, userResponses]);
+  }, [open, userResponses, audio]);
 
   useEffect(() => {
     const handleCoinReward = async () => {

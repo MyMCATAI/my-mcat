@@ -3,6 +3,7 @@ import React, { useRef, useImperativeHandle, forwardRef, useEffect, useState } f
 import Link from 'next/link';
 import { useStopwatch } from 'react-timer-hook';
 import { FaHome } from 'react-icons/fa'; // Import the home icon
+import { useAudio } from '@/contexts/AudioContext'; // Replace useAudioManager
 
 interface TestHeaderProps {
   title: string | undefined;
@@ -26,6 +27,8 @@ export interface TestHeaderRef {
 
 const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(
   ({ title, isCreatingTest, currentQuestionIndex, hasAnsweredFirstQuestion, homeLink }, ref) => {
+    const audio = useAudio(); // Replace useAudioManager hook
+
     const {
       seconds: questionSeconds,
       minutes: questionMinutes,
@@ -99,9 +102,7 @@ const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(
         setIsFlashing(true);
 
         if (!hasPlayedQuestionBeep) {
-          // Play beep sound
-          const audio = new Audio('/beep-tone.mp3');
-          audio.play();
+          audio.playSound('beep');
           setHasPlayedQuestionBeep(true);
         }
       } else if (totalQuestionSeconds >= 30) {
@@ -112,19 +113,17 @@ const TestHeader = forwardRef<TestHeaderRef, TestHeaderProps>(
         setTimerColor('text-sky-300');
         setIsFlashing(false);
       }
-    }, [questionSeconds, questionMinutes, questionHours, hasPlayedQuestionBeep, isQuestionTimerRunning, hasAnsweredFirstQuestion]);
+    }, [questionSeconds, questionMinutes, questionHours, hasPlayedQuestionBeep, isQuestionTimerRunning, hasAnsweredFirstQuestion, audio]);
 
     // Total Timer Beep at 5 Minutes, Only if Question Timer Hasn't Started
     useEffect(() => {
       const totalElapsedSeconds = totalHours * 3600 + totalMinutes * 60 + totalSeconds;
 
       if (totalElapsedSeconds >= 300 && !hasPlayedTotalBeep && !isQuestionTimerRunning) {
-        // Play beep sound at 5 minutes
-        const audio = new Audio('/beep-tone.mp3');
-        audio.play();
+        audio.playSound('beep');
         setHasPlayedTotalBeep(true);
       }
-    }, [totalSeconds, totalMinutes, totalHours, hasPlayedTotalBeep, isQuestionTimerRunning]);
+    }, [totalSeconds, totalMinutes, totalHours, hasPlayedTotalBeep, isQuestionTimerRunning, audio]);
 
     return (
       <div className="bg-[#006dab] p-2 h-15 flex justify-between items-center border-3 border-sky-500">
