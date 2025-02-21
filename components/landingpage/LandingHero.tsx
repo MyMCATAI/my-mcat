@@ -146,7 +146,7 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
            Score your <span className="text-[#f2f64f]">best.</span>
         </h1>
         <p className="text-xl md:text-2xl text-white my-8">
-        We’re an MCAT research company built by scientists and trusted by thousands.  
+        Kalypso invites you join him, and thousands of other premeds, in making MCAT prep into a video game.
         </p>
         <div className="flex justify-center">
           <Link href="/sign-up">

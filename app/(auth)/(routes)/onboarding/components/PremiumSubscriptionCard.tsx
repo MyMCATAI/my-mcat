@@ -7,7 +7,7 @@ const premiumFeatures = {
   title: "MD Platinum Class.",
   price: "$3000",
   image: "/MDPremium.png",
-  fullDescription: "For students who want to be VIP members of the best MCAT class that money can buy.",
+  fullDescription: "For students who want to be VIP — this is the best MCAT class that money can buy.",
   features: [
     "36 hours of MCAT instruction",
     "Peer-based learning groups",
