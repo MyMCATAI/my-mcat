@@ -166,6 +166,10 @@ export async function POST(request: Request) {
           priceId = process.env.STRIPE_PRICE_GOLD_ID!;
           mode = 'subscription';
           break;
+        case ProductType.MD_GOLD_ANNUAL:
+          priceId = process.env.STRIPE_PRICE_GOLD_ANNUAL_ID!;
+          mode = 'subscription';
+          break;
         case ProductType.COINS_10:
         default:
           priceId = process.env.STRIPE_PRICE_ID!;
@@ -186,7 +190,8 @@ export async function POST(request: Request) {
         productType: productType,
         productName: mode === 'subscription' ? (
           priceId === process.env.STRIPE_PRICE_PREMIUM_ID ? 'MDPremium' :
-          priceId === process.env.STRIPE_PRICE_GOLD_ID ? 'MDGold' : 'one_time_purchase'
+          priceId === process.env.STRIPE_PRICE_GOLD_ID ? 'MDGold' :
+          priceId === process.env.STRIPE_PRICE_GOLD_ANNUAL_ID ? 'MDGoldAnnual' : 'one_time_purchase'
         ) : 'one_time_purchase'
       },
       line_items: [
