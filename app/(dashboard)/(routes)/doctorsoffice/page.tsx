@@ -1,19 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import React, { useState, useEffect, useRef, useCallback, Suspense, forwardRef } from "react";
 import ResourcesMenu from "./ResourcesMenu";
 import { useRouter } from "next/navigation";
 import { DoctorOfficeStats } from "@/types";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
-import {
-  calculatePlayerLevel,
-  getPatientsPerDay,
-  calculateTotalQC,
-  getClinicCostPerDay,
-  getLevelNumber,
-  calculateQualityOfCare,
-} from "@/utils/calculateResourceTotals";
+import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, 
+  getClinicCostPerDay, getLevelNumber, calculateQualityOfCare } from "@/utils/calculateResourceTotals";
 import WelcomeDialog from "./WelcomeDialog";
 import { imageGroups } from "./constants/imageGroups";
 import { PurchaseButton } from "@/components/purchase-button";
@@ -27,11 +21,15 @@ import { GridImage } from './types';
 import NewGameButton from "./components/NewGameButton";
 import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 import type { UserResponseWithCategory } from "@/types";
+import { useAudio } from "@/contexts/AudioContext";
+import RedeemReferralModal from "@/components/modals/RedeemReferralModal";
+import { shouldShowRedeemReferralModal } from '@/lib/referral';
+
 
 // Lazy load the heavy components
 const OfficeContainer = dynamic(() => import('./OfficeContainer'), {
   loading: () => <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />,
-  ssr: false // Since this is a game component, we don't need SSR
+  ssr: false
 });
 
 const ShoppingDialog = dynamic(() => import('./ShoppingDialog'), {
@@ -53,51 +51,87 @@ const FloatingButton = dynamic(() => import('../home/FloatingButton'), {
   loading: () => null,
   ssr: false
 });
-import RedeemReferralModal from "@/components/modals/RedeemReferralModal";
-import { shouldShowRedeemReferralModal } from '@/lib/referral';
 
-const DoctorsOfficePage: React.FC = () => {
+interface DoctorsOfficePageProps {
+  // Add any props if needed
+}
+
+const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
+  /* ------------------------------------------- Hooks -------------------------------------------- */
+  const officeContainerRef = useRef<HTMLDivElement>(null);
+  const flashcardsDialogRef = useRef<{ 
+    open: () => void, 
+    setWrongCards: (cards: any[]) => void, 
+    setCorrectCount: (count: number) => void 
+  } | null>(null);
   const { isSubscribed, userInfo } =  useUserInfo()
+  const audio = useAudio();
+  const { setIsAutoPlay } = useMusicPlayer();
   const { startActivity } = useUserActivity();
+  const router = useRouter();
+  /* ------------------------------------------- State -------------------------------------------- */
   const [activeTab, setActiveTab] = useState("doctorsoffice");
   const [userLevel, setUserLevel] = useState("PATIENT LEVEL");
   const [userScore, setUserScore] = useState(0);
   const [patientsPerDay, setPatientsPerDay] = useState(4);
-  const router = useRouter();
   const [userRooms, setUserRooms] = useState<string[]>([]);
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
   const [totalPatients, setTotalPatients] = useState(0);
   const [isAfterTestDialogOpen, setIsAfterTestDialogOpen] = useState(false);
   const [largeDialogQuit, setLargeDialogQuit] = useState(false);
   const [showWelcomeDialogue, setShowWelcomeDialogue] = useState(false);
-
-  // Flashcards Dialog
+  //Flashcards
   const [isFlashcardsOpen, setIsFlashcardsOpen] = useState(false);
-  const flashcardsDialogRef = useRef<{ open: () => void, setWrongCards: (cards: any[]) => void, setCorrectCount: (count: number) => void } | null>(null);
+  const prevFlashcardsOpenRef = useRef(false); //this keeps track of previous state
+  const [isFlashcardsTooltipOpen, setIsFlashcardsTooltipOpen] = useState(false);
   const [flashcardRoomId, setFlashcardRoomId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [totalMCQQuestions, setTotalMCQQuestions] = useState(0);
   const [correctMCQQuestions, setCorrectMCQQuestions] = useState(0);
-
   const afterTestFeedRef = useRef<{ setWrongCards: (cards: any[]) => void } | null>(null);
-
   // Game functionality
   const [activeRooms, setActiveRooms] = useState<Set<string>>(() => new Set());
   const [completeAllRoom, setCompleteAllRoom] = useState(false);
-  const [currentUserTestId, setCurrentUserTestId] = useState<string | null>(
-    null
-  );
-
+  const [currentUserTestId, setCurrentUserTestId] = useState<string | null>(null);
   // User Responses
   const [userResponses, setUserResponses] = useState<UserResponseWithCategory[]>([]);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
   const [testScore, setTestScore] = useState(0);
   const [isGameInProgress, setIsGameInProgress] = useState(false);
+  // Marketplace Dialog
+  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
+  const marketplaceDialogRef = useRef<{
+    open: () => void
+  }>(null);
+  const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
+  const [clinicCostPerDay, setClinicCostPerDay] = useState(0);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const hasCalculatedRef = useRef(false);
+  // Add this new state for streak days
+  const [streakDays, setStreakDays] = useState(0);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [showReferralModal, setShowReferralModal] = useState(false);
+  const [populateRoomsFn, setPopulateRoomsFn] = useState<(() => GridImage[]) | null>(null);
+  const [activities, setActivities] = useState<FetchedActivity[]>([]);
+  // Add debug state to track audio lifecycle
+  const [debugId] = useState(() => Math.random().toString(36).substr(2, 9));
+  // Add a ref to track mounted state
+  const isMountedRef = useRef(false);
+  const audioTransitionInProgressRef = useRef(false);
 
-  const handleCompleteAllRoom = () => {
-    setCompleteAllRoom(true);
-  };
+  /* --- Constants ----- */
+  const AMBIENT_SOUND = '/audio/flashcard-loop-catfootsteps.mp3';
+
+  /* ----------------------------------------- Computation ----------------------------------------- */
+
+  const isClinicUnlocked = userInfo?.unlocks && 
+  (typeof userInfo.unlocks === 'string' ? 
+    JSON.parse(userInfo.unlocks) : 
+    userInfo.unlocks
+  )?.includes('game');
+
+  /* ----------------------------------------- Callbacks ------------------------------------------ */
 
   const fetchUserResponses = useCallback(async (testId: string) => {
     try {
@@ -127,15 +161,29 @@ const DoctorsOfficePage: React.FC = () => {
     }
   }, []);
 
+  const updateVisibleImages = useCallback((newVisibleImages: Set<string>) => {
+    setVisibleImages(newVisibleImages);
+  }, []);
+
+  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    audio.setVolume(newVolume);
+  }, [audio]);
+
+  // Create a stable callback for setting the function
+  const handleSetPopulateRooms = useCallback((fn: () => GridImage[]) => {
+    setPopulateRoomsFn(() => fn);
+  }, []);
+
+  /* ----------------------------------------- UseEffects ---------------------------------------- */
+  // Handles test completion, scoring, and updates database
   useEffect(() => {
     const finishTest = async () => {
       if (!isLoading && completeAllRoom) {
         // Finish all rooms
-
         // Fetch user responses
         if (currentUserTestId) {
           fetchUserResponses(currentUserTestId);
-
           // Dummy scoring logic
           const correctQuestionWeight = 1;
           const incorrectQuestionWeight = -0.5;
@@ -144,7 +192,6 @@ const DoctorsOfficePage: React.FC = () => {
             wrongCount * incorrectQuestionWeight;
           testScore = Math.max(testScore, 0);
           setTestScore(testScore);
-
           // Update the UserTest with score
           fetch(`/api/user-test/${currentUserTestId}`, {
             method: "PUT",
@@ -165,35 +212,104 @@ const DoctorsOfficePage: React.FC = () => {
     }
 
     finishTest();
-  }, [
-    currentUserTestId,
-    activeRooms.size,
-    isFlashcardsOpen,
-    fetchUserResponses,
-    correctCount,
-    wrongCount,
-    testScore,
-    isLoading,
-    largeDialogQuit,
-    completeAllRoom
-  ]);
+  }, [ currentUserTestId, activeRooms.size, isFlashcardsOpen, fetchUserResponses, correctCount,
+    wrongCount, testScore, isLoading, largeDialogQuit, completeAllRoom ]);
 
-  // Marketplace Dialog
-  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
-  const marketplaceDialogRef = useRef<{ open: () => void } | null>(null);
+  // Manages music autoplay when component mounts/unmounts
+  useEffect(() => {
+    setIsAutoPlay(true);
+    return () => setIsAutoPlay(false);
+  }, [setIsAutoPlay]);
 
-  const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
-  const [clinicCostPerDay, setClinicCostPerDay] = useState(0);
+  // Component mount: Initial data fetch and daily calculations setup
+  useEffect(() => {
+    fetchData();
+    if (!hasCalculatedRef.current) {
+      const timer = setTimeout(() => {
+        performDailyCalculations();
+        hasCalculatedRef.current = true;
+      }, 3000);
+      // Clean up the timer if the component unmounts
+      return () => clearTimeout(timer);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const [isCalculating, setIsCalculating] = useState(false);
-  const hasCalculatedRef = useRef(false);
+  // Component mount: fetches user activities 
+  useEffect(() => {
+    fetchActivities();
+  }, []);
 
-  // Add this new state for streak days
-  const [streakDays, setStreakDays] = useState(0);
+  // Component mount: Initializes activity tracking
+  useEffect(() => {
+    const initializeActivity = async () => {
+        await startActivity({
+          type: 'studying',
+          location: 'Game',
+          metadata: {
+            initialLoad: true,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+    initializeActivity();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  // Modify the existing useEffect for ambient sound and flashcard door sounds
+  useEffect(() => {
+    let isEffectActive = true; // Local flag to track if effect is still active
 
-  const [showReferralModal, setShowReferralModal] = useState(false);
+    const handleAudioTransition = async () => {
+      try {
+        if (!isEffectActive) return;
+
+        if (isFlashcardsOpen) {
+          await audio.stopAllLoops();
+          if (!isEffectActive) return;
+          audio.playSound('flashcard-door-open');
+        } else {
+          if (prevFlashcardsOpenRef.current) {
+            audio.playSound('flashcard-door-closed');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (!isEffectActive) return;
+            await audio.loopSound('flashcard-loop-catfootsteps');
+          } else {
+            await audio.loopSound('flashcard-loop-catfootsteps');
+          }
+        }
+        if (!isEffectActive) return;
+        prevFlashcardsOpenRef.current = isFlashcardsOpen;
+      } catch (error) {
+        if (isEffectActive) {
+          console.error(`🎵 [${debugId}] Audio transition error:`, error);
+        }
+      }
+    };
+
+    handleAudioTransition();
+
+    return () => {
+      isEffectActive = false;
+    };
+  }, [isFlashcardsOpen, debugId]); // Only depend on flashcards state and debugId
+
+  // Opens flashcard dialog when a room is selected
+  useEffect(() => {
+    if (flashcardRoomId !== "") {
+      setIsFlashcardsOpen(true);
+    }
+  }, [flashcardRoomId, debugId]);
+
+  // Shows welcome/referral modals based on user state
+  useEffect(() => {
+    setShowReferralModal(shouldShowRedeemReferralModal());
+    if(userInfo && !isClinicUnlocked) {
+      setShowWelcomeDialogue(true);
+    }
+  }, [isClinicUnlocked, userInfo]);
+
+  /* ---------------------------------------- Event Handlers -------------------------------------- */
 
   const fetchData = async () => {
     try {
@@ -239,19 +355,6 @@ const DoctorsOfficePage: React.FC = () => {
       console.error("Error fetching data:", error);
     }
   };
-
-  useEffect(() => {
-    fetchData();
-    if (!hasCalculatedRef.current) {
-      const timer = setTimeout(() => {
-        performDailyCalculations();
-        hasCalculatedRef.current = true;
-      }, 3000);
-
-      // Clean up the timer if the component unmounts
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   const performDailyCalculations = async () => {
     if (isCalculating) return;
@@ -334,12 +437,9 @@ const DoctorsOfficePage: React.FC = () => {
     setActiveTab(tab);
   };
 
-  // Flashcards Dialog handlers
-  useEffect(() => {
-    if (flashcardRoomId !== "") {
-      setIsFlashcardsOpen(true);
-    }
-  }, [flashcardRoomId]);
+  const handleCompleteAllRoom = () => {
+    setCompleteAllRoom(true);
+  };
 
   const toggleGroup = async (groupName: string) => {
     const group = imageGroups.find((g) => g.name === groupName);
@@ -391,12 +491,6 @@ const DoctorsOfficePage: React.FC = () => {
     }
   };
 
-  const updateVisibleImages = useCallback((newVisibleImages: Set<string>) => {
-    setVisibleImages(newVisibleImages);
-  }, []);
-
-  const [activities, setActivities] = useState<FetchedActivity[]>([]);
-
   const fetchActivities = async () => {
     try {
       const response = await fetch("/api/calendar-activity");
@@ -411,24 +505,6 @@ const DoctorsOfficePage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchActivities();
-  }, []);
-
-  const { setIsAutoPlay } = useMusicPlayer();
-
-  useEffect(() => {
-    setIsAutoPlay(true);
-    return () => setIsAutoPlay(false);
-  }, [setIsAutoPlay]);
-
-  const [populateRoomsFn, setPopulateRoomsFn] = useState<(() => GridImage[]) | null>(null);
-
-  // Create a stable callback for setting the function
-  const handleSetPopulateRooms = useCallback((fn: () => GridImage[]) => {
-    setPopulateRoomsFn(() => fn);
-  }, []);
-
   const resetGameState = async () => {
     // Start new studying activity
     await startActivity({
@@ -438,8 +514,6 @@ const DoctorsOfficePage: React.FC = () => {
         timestamp: new Date().toISOString()
       }
     });
-
-
     setActiveRooms(new Set());
     setCompleteAllRoom(false);
     setIsAfterTestDialogOpen(false);
@@ -457,14 +531,15 @@ const DoctorsOfficePage: React.FC = () => {
   };
 
   const handleGameStart = async (userTestId: string) => {
+    audio.playSound('flashcard-startup');// Play startup sound
     // Start new testing activity
     await startActivity({
-      type: 'testing',
-      location: 'Game',
-      metadata: {
-        userTestId,
-        timestamp: new Date().toISOString()
-      }
+        type: 'testing',
+        location: 'Game',
+        metadata: {
+            userTestId,
+            timestamp: new Date().toISOString()
+        }
     });
 
     setIsGameInProgress(true);
@@ -486,7 +561,7 @@ const DoctorsOfficePage: React.FC = () => {
           <p className="text-sm mb-1">Selected rooms:</p>
           <ul className="text-sm list-disc list-inside">
             {roomNames.map((name, index) => (
-              <li key={index}>{name}</li>
+              <li key={`room-name-${index}`}>{name}</li>
             ))}
           </ul>
         </div>,
@@ -504,25 +579,6 @@ const DoctorsOfficePage: React.FC = () => {
     }
   };
 
-  // Add this state near the top of the component with other state declarations
-  const [isFlashcardsTooltipOpen, setIsFlashcardsTooltipOpen] = useState(false);
-
-  // Add this useEffect for initial activity tracking when loading the page
-  useEffect(() => {
-    const initializeActivity = async () => {
-        await startActivity({
-          type: 'studying',
-          location: 'Game',
-          metadata: {
-            initialLoad: true,
-            timestamp: new Date().toISOString()
-          }
-        });
-      }
-
-    initializeActivity();
-  }, []);
-
   const handleAfterTestDialogClose = () => {
     setIsAfterTestDialogOpen(false);
     // Reset game state when dialog is closed
@@ -531,27 +587,15 @@ const DoctorsOfficePage: React.FC = () => {
     setCurrentUserTestId(null);
   };
 
-
-  const isClinicUnlocked = userInfo?.unlocks && 
-    (typeof userInfo.unlocks === 'string' ? 
-      JSON.parse(userInfo.unlocks) : 
-      userInfo.unlocks
-    )?.includes('game');
-
-  useEffect(() => {
-    setShowReferralModal(shouldShowRedeemReferralModal());
-    if(userInfo && !isClinicUnlocked) {
-      setShowWelcomeDialogue(true);
-    }
-  }, [isClinicUnlocked]);
+  /* ----------------------------------------- Render  ---------------------------------------- */
 
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
-      {showWelcomeDialogue&&
-      <WelcomeDialog 
-        isOpen={showWelcomeDialogue}
-        onUnlocked={()=>setShowWelcomeDialogue(false)}
-      />}
+      {showWelcomeDialogue && 
+        <WelcomeDialog 
+          isOpen={showWelcomeDialogue}
+          onUnlocked={()=>setShowWelcomeDialogue(false)}
+        />}
       <Suspense fallback={
         <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
           <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse" />
@@ -570,6 +614,7 @@ const DoctorsOfficePage: React.FC = () => {
           </div>
           <div className="w-3/4 font-krungthep relative rounded-r-lg">
             <OfficeContainer
+              innerRef={officeContainerRef}
               onNewGame={handleSetPopulateRooms}
               visibleImages={visibleImages}
               userRooms={userRooms}
@@ -663,57 +708,19 @@ const DoctorsOfficePage: React.FC = () => {
                   <span>{userLevel || "PATIENT LEVEL"}</span>
                 </button>
                 <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
-                  <ShoppingDialog
-                    ref={marketplaceDialogRef}
-                    imageGroups={imageGroups}
-                    visibleImages={visibleImages}
-                    toggleGroup={toggleGroup}
-                    userScore={userScore}
-                    isOpen={isMarketplaceOpen}
-                    onOpenChange={setIsMarketplaceOpen}
-                    buttonContent={
-                      <a
-                        href="#"
-                        className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                          />
-                        </svg>
-                        Marketplace
-                      </a>
-                    }
-                  />
-
-                  <FlashcardsDialog
-                    ref={flashcardsDialogRef}
-                    isOpen={isFlashcardsOpen}
-                    onOpenChange={setIsFlashcardsOpen}
-                    roomId={flashcardRoomId}
-                    activeRooms={activeRooms}
-                    setActiveRooms={setActiveRooms}
-                    handleCompleteAllRoom={handleCompleteAllRoom}
-                    onMCQAnswer={handleMCQAnswer}
-                    setTotalMCQQuestions={setTotalMCQQuestions}
-                    buttonContent={
-                      <div className="relative">
+                  {isMarketplaceOpen && (
+                    <ShoppingDialog
+                      ref={marketplaceDialogRef}
+                      imageGroups={imageGroups}
+                      visibleImages={visibleImages}
+                      toggleGroup={toggleGroup}
+                      userScore={userScore}
+                      isOpen={isMarketplaceOpen}
+                      onOpenChange={setIsMarketplaceOpen}
+                      buttonContent={
                         <a
                           href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setIsFlashcardsTooltipOpen(!isFlashcardsTooltipOpen);
-                          }}
-                          className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
+                          className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -726,32 +733,45 @@ const DoctorsOfficePage: React.FC = () => {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
+                              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                             />
                           </svg>
-                          Flashcards
+                          Marketplace
                         </a>
-                        <div 
-                          className={`absolute right-full top-1/2 -translate-y-1/2 mr-2 px-4 py-2 w-72 bg-[--theme-leaguecard-color] text-white text-sm rounded-lg transition-all duration-200 ${
-                            isFlashcardsTooltipOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-                          }`}
-                        >
-                          {"We're working on adding uploadable flashcards later. They'll be auto-tagged and made into multiple choice questions. If you REALLY, REALLY want us to prioritize this over the bajillion other things we gotta do, venmo Prynce $100 at @ShortKingsAnthem and say 'Pretty please uploadable flashcards.'"}
-                          <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-[--theme-leaguecard-color] rotate-45"></div>
-                        </div>
-                      </div>
-                    }
-                    currentUserTestId={currentUserTestId}
-                    isLoading={isLoading}
-                    setIsLoading={setIsLoading}
-                  />
+                      }
+                    />
+                  )}
+
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsFlashcardsTooltipOpen(!isFlashcardsTooltipOpen);
+                    }}
+                    className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
+                      />
+                    </svg>
+                    Flashcards
+                  </button>
                   <a
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
                       setIsTutorialOpen(true);
                     }}
-                    className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
+                    className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -776,92 +796,12 @@ const DoctorsOfficePage: React.FC = () => {
         </div>
       </Suspense>
 
-      {isMarketplaceOpen && <ShoppingDialog
-        ref={marketplaceDialogRef}
-        imageGroups={imageGroups}
-        visibleImages={visibleImages}
-        toggleGroup={toggleGroup}
-        userScore={userScore}
-        isOpen={isMarketplaceOpen}
-        onOpenChange={setIsMarketplaceOpen}
-        buttonContent={
-          <a
-            href="#"
-            className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-            Marketplace
-          </a>
-        }
-      />}
-      {isFlashcardsOpen && <FlashcardsDialog
-        ref={flashcardsDialogRef}
-        isOpen={isFlashcardsOpen}
-        onOpenChange={setIsFlashcardsOpen}
-        roomId={flashcardRoomId}
-        activeRooms={activeRooms}
-        setActiveRooms={setActiveRooms}
-        handleCompleteAllRoom={handleCompleteAllRoom}
-        onMCQAnswer={handleMCQAnswer}
-        setTotalMCQQuestions={setTotalMCQQuestions}
-        buttonContent={
-          <div className="relative">
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setIsFlashcardsTooltipOpen(!isFlashcardsTooltipOpen);
-              }}
-              className="block w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
-                />
-              </svg>
-              Flashcards
-            </a>
-            <div 
-              className={`absolute right-full top-1/2 -translate-y-1/2 mr-2 px-4 py-2 w-72 bg-[--theme-leaguecard-color] text-white text-sm rounded-lg transition-all duration-200 ${
-                isFlashcardsTooltipOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-              }`}
-            >
-              {"We're working on adding uploadable flashcards later. They'll be auto-tagged and made into multiple choice questions. If you REALLY, REALLY want us to prioritize this over the bajillion other things we gotta do, venmo Prynce $100 at @ShortKingsAnthem and say 'Pretty please uploadable flashcards.'"}
-              <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-[--theme-leaguecard-color] rotate-45"></div>
-            </div>
-          </div>
-        }
-        currentUserTestId={currentUserTestId}
-        isLoading={isLoading}
-        setIsLoading={setIsLoading}
-      />}
-      {isAfterTestDialogOpen && <AfterTestFeed
-        isSubscribed={isSubscribed}
-        ref={afterTestFeedRef}
+      {/* {isMarketplaceOpen && <ShoppingDialog ... />} */}
+      
+      {isAfterTestDialogOpen && <AfterTestFeed 
         open={isAfterTestDialogOpen}
         onOpenChange={(open) => {
+          setIsAfterTestDialogOpen(open);
           if (!open) {
             handleAfterTestDialogClose();
           }
@@ -871,26 +811,46 @@ const DoctorsOfficePage: React.FC = () => {
         wrongCount={wrongCount}
         largeDialogQuit={largeDialogQuit}
         setLargeDialogQuit={setLargeDialogQuit}
-      ></AfterTestFeed>}
+        isSubscribed={isSubscribed}
+      />}
+      
       <div className="absolute bottom-4 right-4 z-[100]">
         <FloatingButton
-          onTabChange={handleTabChange}
           currentPage="doctorsoffice"
           initialTab={activeTab}
           activities={activities}
           onTasksUpdate={fetchActivities}
           isSubscribed={isSubscribed}
+          onTabChange={handleTabChange}
         />
       </div>
+      
       <TutorialVidDialog
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
         videoUrl="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TutorialAnkiClinic.mp4"
       />
+
       <RedeemReferralModal 
         isOpen={showReferralModal}
         onClose={() => setShowReferralModal(false)}
       />
+
+      {isFlashcardsOpen && <FlashcardsDialog
+        ref={flashcardsDialogRef}
+        isOpen={isFlashcardsOpen}
+        onOpenChange={setIsFlashcardsOpen}
+        roomId={flashcardRoomId}
+        activeRooms={activeRooms}
+        setActiveRooms={setActiveRooms}
+        currentUserTestId={currentUserTestId}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        handleCompleteAllRoom={handleCompleteAllRoom}
+        onMCQAnswer={handleMCQAnswer}
+        setTotalMCQQuestions={setTotalMCQQuestions}
+        buttonContent={<div />}
+      />}
     </div>
   );
 };

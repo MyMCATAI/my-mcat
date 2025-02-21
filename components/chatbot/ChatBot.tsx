@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Styles } from "react-chatbotify";
 import Image from "next/image";
+import { useAudio } from "@/contexts/AudioContext";
 
 const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
   ssr: false,
@@ -31,13 +32,13 @@ const ChatBot: React.FC<ChatBotProps> = ({
   avatar,
   chatbotRef,
 }) => {
+  const audio = useAudio();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const context = chatbotContext?.context;
   const contentTitle = chatbotContext?.contentTitle;
   const [isFirstResponse, setIsFirstResponse] = useState(true);
@@ -203,31 +204,28 @@ const ChatBot: React.FC<ChatBotProps> = ({
     for (let i = 0; i < audioData.length; i++) {
       view[i] = audioData.charCodeAt(i);
     }
-    const audioBlob = new Blob([arrayBuffer], { type: "audio/mp3" });
+    const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
     const audioUrl = URL.createObjectURL(audioBlob);
-
-    if (audioRef.current) {
-      audioRef.current.src = audioUrl;
-      audioRef.current.play();
-    } else {
-      const audioElement = new Audio(audioUrl);
-      audioElement.onplay = () => setIsPlaying(true);
-      audioElement.onended = () => setIsPlaying(false);
-      audioElement.play();
-      audioRef.current = audioElement;
-    }
+    
+    setIsPlaying(true);
+    audio.playMusic(audioUrl);
+    // Clean up URL after a delay to ensure audio starts playing
+    setTimeout(() => {
+      setIsPlaying(false);
+      URL.revokeObjectURL(audioUrl);
+    }, 500);
   };
 
   const stopAudio = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setIsPlaying(false);
-    }
+    setIsPlaying(false);
+    audio.stopMusic();
   };
 
   const toggleAudio = () => {
-    setAudioEnabled((prev) => !prev);
+    if (!audioEnabled) {
+      audio.playSound('chatbot-open');
+    }
+    setAudioEnabled(!audioEnabled);
   };
 
   const flow = {

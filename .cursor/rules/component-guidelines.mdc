@@ -1,0 +1,207 @@
+---
+description: Guidelines for writing React Components
+globs: **/*.tsx
+---
+
+This section outlines the location to create and place components, as well as coding best practices and styling for all `.tsx` components.
+
+### Route Structure
+✅ Correct: Keep route folders minimal
+```
+app/(landingpage)/
+├── page.tsx           # Page component
+└── layout.tsx         # Layout wrapper
+```
+
+✅ Correct: Store components in dedicated component directory
+```
+components/landingpage/
+├── landing-navbar.tsx
+├── hero-section.tsx
+└── feature-grid.tsx
+```
+
+❌ Incorrect: Don't put components in route folders
+```
+app/(landingpage)/
+├── page.tsx
+├── layout.tsx
+├── navbar.tsx        // Should be in components/landingpage/
+└── hero.tsx         // Should be in components/landingpage/
+```
+
+### Route-Component Relationship:
+   - Keep route folders (`app/*`) minimal with just:
+     - `page.tsx`: Main page component
+     - `layout.tsx`: Route layout wrapper
+     - `loading.tsx`: Loading states
+     - `error.tsx`: Error boundaries
+   - Store all components in corresponding `components/[route-name]` directory
+   - Example:
+     ```
+     app/(landingpage)/* → components/landingpage/*
+     app/(dashboard)/* → components/dashboard/*
+     app/(home)/* → components/home/*
+     ```
+
+### Component Naming:
+   ✅ Correct: CamelCase with default export
+
+   ```
+   const GameCard = () => { ... }
+   export default GameCard;
+   ```
+   ❌ Incorrect: Named exports or kebab-case
+
+   ``` 
+   export const game_card = () => { ... }
+   ```
+
+### Shared Components:
+  Store all shared components in `components/ui`
+
+### State & Error Management
+```typescript
+// State Management
+- Local: useState
+- Complex: Context
+- Server: React Query
+- Forms: React Hook Form
+
+// Error Handling
+try {
+  await operation();
+} catch (error) {
+  toast.error("User-friendly message");
+  console.error(error);
+}
+```
+
+
+### File Headers & Comments
+- Must include relative path as first line (this helps when we copy and paste full files into other LLM tools)
+- TypeScript/JavaScript: Use `// path/to/file`
+- Markdown: Use `<!-- path/to/file -->`
+- Never include root project folder
+- Always include file extension
+
+### Import Standards
+Import groups should be ordered by scope (external → internal).
+
+Standard import order:
+```typescript
+//path/to/file
+import { useState, useRef, useCallback } from "react"; // React and Next.js imports
+import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion"; // External libraries
+import { useClerk } from "@clerk/nextjs";
+import { toast } from "react-hot-toast";
+import { cn } from "@/lib/utils"; // Internal utilities and types
+import { useUserInfo } from "@/hooks/useUserInfo";
+import type { UserInfo } from "@/types";
+import { Button } from "@/components/ui/button"; // Internal components
+import { Input } from "@/components/ui/input";
+```
+
+
+### Section Headers
+All React components should use these headers in order (if they exist)
+```typescript
+/* ------------------------------------------ Constants ----------------------------------------- */
+/* -------------------------------------------- Types ------------------------------------------- */
+/* ------------------------------------------- State -------------------------------------------- */
+/* ------------------------------------------- Refs --------------------------------------------- */
+/* ----------------------------------------- Callbacks ------------------------------------------ */
+/* ------------------------------------ Animations & Effects ------------------------------------ */
+/* ---------------------------------------- Event Handlers -------------------------------------- */
+/* ---------------------------------------- Render Methods -------------------------------------- */
+```
+Important: Each header is 100 characters wide. Constants and Types go outside the component.
+
+#### Component Example
+```typescript
+//path/to/file
+import { useState, useCallback } from "react";
+import { cn } from "@/lib/utils";
+
+/* ------------------------------------------ Constants ----------------------------------------- */
+/* -------------------------------------------- Types ------------------------------------------- */
+
+interface ComponentProps {
+  className?: string;
+  // Additional props
+}
+
+const Component = ({ className }: ComponentProps) => {
+/* ------------------------------------------- State -------------------------------------------- */
+/* ------------------------------------------- Refs --------------------------------------------- */
+/* ----------------------------------------- Callbacks ------------------------------------------ */
+/* ------------------------------------ Animations & Effects ------------------------------------ */
+/* ---------------------------------------- Event Handlers -------------------------------------- */
+/* ---------------------------------------- Render Methods -------------------------------------- */
+
+  // Implementation following above structure
+  return (/* JSX */);
+};
+
+export default Component;
+```
+
+### Styling & Animation
+Use Tailwind CSS and consider global variables in `globals.css` and reference those before you create new ones.
+
+```typescript
+// Use CSS variables and mobile-first approach
+className="bg-[--theme-doctorsoffice-accent] text-[--theme-text-color] p-4 md:p-6 lg:p-8"
+
+// Framer Motion with reduced motion support
+const prefersReducedMotion = useReducedMotion();
+const animation = prefersReducedMotion ? {} : {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 }
+};
+```
+
+### Component Optimization
+Consider the following optimizations within components:
+
+#### Performance
+- Memoization
+  - `useMemo` for expensive computations
+  - `useCallback` for stable callbacks
+  - `memo` for expensive components
+- Rendering
+  - Virtualize long lists
+  - Use CSS transforms over layout props
+  - Avoid layout thrashing
+
+#### Assets & Code
+- Loading
+  - Next/Image optimization
+  - Lazy loading with `next/dynamic`
+  - Preload critical assets
+- Code Splitting
+  - Dynamic imports
+  - Route-based splitting
+  - Suspense boundaries
+
+#### Data & State
+- Caching
+  - React Query/SWR strategies
+  - Local storage when appropriate
+- State
+  - Colocate state
+  - Batch updates
+  - Use context selectively
+
+#### Resource Management
+- Cleanup
+  - Clear timers/listeners
+  - Cancel pending requests
+  - Clean WebSocket connections
+- Loading States
+  - Skeleton loaders
+  - Progress indicators
+  - Transition animations
+

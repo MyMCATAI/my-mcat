@@ -161,6 +161,7 @@ interface Category {
 }
 
 interface OfficeContainerProps {
+  innerRef?: React.RefObject<HTMLDivElement>;
   onNewGame: (fn: () => GridImage[]) => void;
   visibleImages: Set<string>;
   userRooms: string[];
@@ -186,17 +187,18 @@ type SpritePositions = {
   [key: string]: SpritePosition;
 };
 
-const OfficeContainer: React.FC<OfficeContainerProps> = ({
-  onNewGame,
-  visibleImages,
-  userRooms,
-  setFlashcardRoomId,
-  updateVisibleImages,
-  activeRooms,
-  setActiveRooms,
-  isFlashcardsOpen,
-  setIsFlashcardsOpen,
-}) => {
+const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
+  const {
+    onNewGame,
+    visibleImages,
+    userRooms,
+    setFlashcardRoomId,
+    updateVisibleImages,
+    activeRooms,
+    setActiveRooms,
+    isFlashcardsOpen,
+    setIsFlashcardsOpen,
+  } = props;
 
   const [currentLevel, setCurrentLevel] = useState(1);
   const { userInfo } = useUserInfo();
@@ -457,7 +459,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = ({
   }, []);
 
   return (
-    <div className="flex flex-col w-full h-full relative overflow-hidden">
+    <div ref={innerRef} className="relative w-full h-full">
       {/* Pixi.js stage container */}
       <div className="absolute inset-0 z-20 flex justify-center items-center">
         <Stage

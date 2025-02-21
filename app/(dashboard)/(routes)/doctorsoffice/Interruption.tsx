@@ -1,5 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+//app/(dashboard)/(routes)/doctorsoffice/Interruption.tsx
+
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAudio } from '@/contexts/AudioContext';
 
 interface InterruptionProps {
   isVisible: boolean;
@@ -17,11 +20,12 @@ const Interruption = ({
   message,
   imageUrl,
   duration = 5000,
-  audioUrl = '/warning.mp3',
+  audioUrl = 'warning',
   position = 'top-left'
 }: InterruptionProps) => {
+
   const [typedText, setTypedText] = useState("");
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { playSound } = useAudio();
 
   const positionClasses = {
     'top-left': 'top-4 left-4',
@@ -48,17 +52,11 @@ const Interruption = ({
 
       // Play sound
       if (audioUrl) {
-        audioRef.current = new Audio(audioUrl);
-        audioRef.current.loop = false;
-        audioRef.current.play().catch(error => console.log('Audio play failed:', error));
+        playSound(audioUrl);
       }
 
       // Auto-dismiss
       dismissTimer = setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current = null;
-        }
         onClose();
       }, duration);
     }
@@ -66,18 +64,10 @@ const Interruption = ({
     return () => {
       clearInterval(typingTimer);
       clearTimeout(dismissTimer);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
     };
-  }, [isVisible, message, duration, audioUrl, onClose]);
+  }, [isVisible, message, duration, audioUrl, onClose, playSound]);
 
   const handleClick = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
     onClose();
   };
 
