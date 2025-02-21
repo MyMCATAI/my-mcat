@@ -3,6 +3,25 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
+function isMobileButNotIpad() {
+  if (typeof window === 'undefined') return false;
+  const toMatch = [
+    /Android/i,
+    /webOS/i,
+    /iPhone/i,
+    /iPod/i,
+    /BlackBerry/i,
+    /Windows Phone/i
+  ];
+  
+  const isIpad = /iPad/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  return toMatch.some((toMatchItem) => {
+    return navigator.userAgent.match(toMatchItem);
+  }) && !isIpad;
+}
+
 const gameFeatures = {
   title: "The Anki Clinic",
   description: "Jump into our gamified learning experience that takes Anki and makes it actually fun.",
@@ -24,7 +43,11 @@ export function AnkiGameCard() {
   const handleSelectFree = async () => {
     setIsLoading(true);
     try {
-      router.push('/doctorsoffice');
+      if (isMobileButNotIpad()) {
+        router.push('/redirect');
+      } else {
+        router.push('/doctorsoffice');
+      }
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to load page. Please try again.");

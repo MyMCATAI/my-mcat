@@ -34,6 +34,7 @@ export default function MobileRedirect() {
         pathname !== '/preferences' &&
         !pathname?.startsWith('/sign-in') &&
         !pathname?.startsWith('/sign-up') &&
+        !pathname?.startsWith('/offer') &&
         !pathname?.startsWith('/blog')) {
       router.replace('/redirect')
     }
@@ -47,6 +48,7 @@ export default function MobileRedirect() {
       pathname !== '/preferences' &&
       !pathname?.startsWith('/sign-in') &&
       !pathname?.startsWith('/sign-up') &&
+      !pathname?.startsWith('/offer') &&
       !pathname?.startsWith('/blog')) {
     return null
   }
