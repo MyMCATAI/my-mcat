@@ -14,7 +14,8 @@ import { useUserActivity } from '@/hooks/useUserActivity';
 // Constants
 const PITCH_VIDEO_URL = "TlfF-APm2DA"; // YouTube video ID
 enum ProductType {
-  MD_GOLD = 'md_gold'
+  MD_GOLD = 'md_gold',
+  MD_GOLD_ANNUAL = 'md_gold_annual'
 }
 
 export default function PitchPage() {
@@ -26,6 +27,7 @@ export default function PitchPage() {
   const { isGold } = useSubscriptionStatus();
   const { user } = useUser();
   const { startActivity } = useUserActivity();
+  const [isAnnual, setIsAnnual] = useState(true);
 
 
   // Add audio effect when modal opens
@@ -72,7 +74,7 @@ export default function PitchPage() {
       }
 
       const response = await axios.post("/api/stripe/checkout", {
-        priceType: ProductType.MD_GOLD
+        priceType: isAnnual ? ProductType.MD_GOLD_ANNUAL : ProductType.MD_GOLD
       });
       window.location.href = response.data.url;
     } catch (error) {
@@ -376,7 +378,24 @@ export default function PitchPage() {
                     <h3 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent">
                       MD Gold Course
                     </h3>
-                    <p className="text-xl font-bold text-white/90 mt-2">$150 / month</p>
+                    <div className="space-y-2">
+                      <p className="text-xl font-bold text-white/90">
+                        ${isAnnual ? '83' : '150'} / month
+                      </p>
+                      <div className="flex items-center justify-center gap-3 text-sm">
+                        <span className={`${isAnnual ? 'text-white/90' : 'text-white/60'}`}>Annual</span>
+                        <button 
+                          onClick={() => setIsAnnual(prev => !prev)}
+                          className="relative w-12 h-6 rounded-full bg-white/20 transition-colors duration-200"
+                        >
+                          <div 
+                            className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-blue-400 transition-transform duration-200 
+                            ${isAnnual ? 'translate-x-0' : 'translate-x-6'}`}
+                          />
+                        </button>
+                        <span className={`${!isAnnual ? 'text-white/90' : 'text-white/60'}`}>Monthly</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -457,7 +476,7 @@ export default function PitchPage() {
                   >
                     {isLoading ? "Loading..." : 
                      isGold ? "Manage Subscription" : 
-                     user ? "Upgrade to Gold" : "Sign up & Get Gold"}
+                     user ? "Join our Gold Course" : "Sign-up to join our Gold Course"}
                   </button>
                 </div>
               </div>
