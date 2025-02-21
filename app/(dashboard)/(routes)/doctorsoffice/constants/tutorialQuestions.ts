@@ -19,7 +19,7 @@ export const tutorialQuestions: Flashcard[] = [
     id: 'tutorial-2',
     questionContent: 'If I pay a coin, how do I get it back?',
     questionOptions: [
-      'Get at least 80% correct on multiple choice questions',
+      'Get at least half correct on multiple choice questions',
       'Steal the declaration of Independence',
       "Rob Josh's house",
       'Match with an attending on Tinder'
@@ -30,7 +30,7 @@ export const tutorialQuestions: Flashcard[] = [
       conceptCategory: 'Coins'
     },
     userResponses: [],
-    questionAnswerNotes: ["If you get 80% correct on multiple choice questions (NOT Flashcards: we don\'t grade flashcards so ALWAYS be honest if you got them right or wrong!) then you can get your coin back and a favorable review from a patient.", "", "", ""]
+    questionAnswerNotes: ["If you get 50%, you get your coin back. If you get 80% correct on multiple choice questions (NOT Flashcards: we don\'t grade flashcards so ALWAYS be honest if you got them right or wrong!) then you can get multiple coins and a favorable review from a patient.", "", "", ""]
   },
   {
     questionType: 'normal',
@@ -73,7 +73,7 @@ export const tutorialQuestions: Flashcard[] = [
     id: 'tutorial-5',
     questionContent: 'What happens if I see a bug?',
     questionOptions: [
-      'Text Prynce at 832-646-2445',
+      'Message Kalpso@mymcat.ai or join our discord',
       'Cry again (louder)',
       'Quit medicine and become a hindu monk',
       'Start a rap career'
@@ -84,7 +84,7 @@ export const tutorialQuestions: Flashcard[] = [
       conceptCategory: 'Bug'
     },
     userResponses: [],
-    questionAnswerNotes: ["Prynce will respond to texts. Just text him a photo or a complaint and it'll be fixed as soon as humanly possible."]
+    questionAnswerNotes: ["We respond to messages! Just message us and it'll be fixed as soon as humanly possible."]
   },
   {
     questionType: 'flashcard',

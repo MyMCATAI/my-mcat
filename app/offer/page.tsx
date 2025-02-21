@@ -374,7 +374,7 @@ export default function PitchPage() {
                   </div>
                   <div className="mt-4 text-center">
                     <h3 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent">
-                      MD Gold Plan
+                      MD Gold Course
                     </h3>
                     <p className="text-xl font-bold text-white/90 mt-2">$150 / month</p>
                   </div>
@@ -391,7 +391,7 @@ export default function PitchPage() {
                         rel="noopener noreferrer"
                         className="text-blue-400 hover:text-yellow-300 transition-colors"
                       >
-                        adaptive system
+                        adaptive MCAT course
                       </a>
                       {" "}that figures out when and what to study.
                     </p>
@@ -440,9 +440,9 @@ export default function PitchPage() {
                   <div className="border-t border-amber-200/20 pt-6 mt-6">
                     <p className="text-white/90 text-lg leading-relaxed">
                       {user ? (
-                        "By joining MD Gold, you're supporting our team and our community. You're making MCAT prep better for everyone."
+                        "We collect the best content, such as Khan Academy, Chad's Prep, and more, and make it available to you in one place — in a schedule that works with your AAMC and UWorld, all for the cost of a single tutoring session a month."
                       ) : (
-                        "Create your free account and upgrade to MD Gold to join our community. You'll be making MCAT prep better for everyone."
+                        "We collect the best content, such as Khan Academy, Chad's Prep, and more, and make it available to you in one place — in a schedule that works with your AAMC and UWorld, all for the cost of a single tutoring session a month."
                       )}
                     </p>
                   </div>

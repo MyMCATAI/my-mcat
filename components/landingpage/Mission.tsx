@@ -169,7 +169,10 @@ const MethodologyAndTestimonials = () => {
               But we don&apos;t just use research—we conduct it. Our team runs internal data science studies to refine our methods, testing what actually works to improve MCAT scores. Every feature we build is backed by real student performance data.
             </p>
             <p className="mb-4">
-              Our classes aren&apos;t like Kaplan&apos;s lecture halls—they&apos;re built like real medical school classrooms, with class sizes so small that we turn away nearly half of all applicants to maintain quality.
+              Unlike other test prep companies, our self-paced classes actually adapt to your needs — and collect the best resources from the sources you trust, like Khan Academy and Chad&apos;s Prep.
+            </p>
+            <p className="mb-4">
+              And our live classes aren&apos;t like Kaplan&apos;s lecture halls—they&apos;re built like real medical school classrooms, with class sizes so small that we turn away nearly half of all applicants to maintain quality.
             </p>
             <p className="mb-4">
               Unlike corporate test prep companies, we&apos;re a Public Benefit Corporation (PBC)—meaning we prioritize student outcomes over profits. Because our goal is the same as medical schools:
@@ -477,20 +480,20 @@ const MethodologyAndTestimonials = () => {
             {/* Basic Access */}
             <div className="text-center p-8 rounded-lg bg-[#0a1c36] hover:bg-[#0d2242] transition-all duration-300">
               <h3 className="text-white text-2xl mb-4">Basic Access</h3>
-              <p className="text-green-400 text-5xl font-bold mb-4">Freemium</p>
-              <p className="text-white/50 text-xl">Access to our Anki game.</p>
+              <p className="text-green-400 text-5xl font-bold mb-4">Free</p>
+              <p className="text-white/50 text-xl">Access to our awesome game.</p>
             </div>
             
             {/* Premium Access */}
             <div className="text-center p-8 rounded-lg bg-[#0a1c36] hover:bg-[#0d2242] transition-all duration-300">
-              <h3 className="text-white text-2xl mb-4">Premium Access</h3>
+              <h3 className="text-white text-2xl mb-4">Self-Paced MCAT Course</h3>
               <p className="text-green-400 text-5xl font-bold mb-4">$150/mo</p>
-              <p className="text-white/50 text-xl">Full platform access</p>
+              <p className="text-white/50 text-xl">Our course adapts to you.</p>
             </div>
             
             {/* VIP Classes */}
             <div className="text-center p-8 rounded-lg bg-[#0a1c36] hover:bg-[#0d2242] transition-all duration-300">
-              <h3 className="text-white text-2xl mb-4">VIP Classes</h3>
+              <h3 className="text-white text-2xl mb-4">Instructor-Led Classes</h3>
               <p className="text-green-400 text-5xl font-bold mb-4">$3000-5000</p>
               <p className="text-white/50 text-xl">Elite instruction.</p>
             </div>
