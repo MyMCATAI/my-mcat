@@ -33,15 +33,6 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
           <DialogTitle className="text-[--theme-text-color] text-center">{"Welcome to The Anki Clinic!"}</DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          <div className="mb-4">
-            <video
-              src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/MyMCATAnkiTeaser.mp4"
-              controls
-              className="w-full"
-            >
-              {"Your browser does not support the video tag."}
-            </video>
-          </div>
           <p className="text-center text-[--theme-text-color] mb-4">
             {"Welcome to the Anki Clinic, a fun and competitive Anki experience! Join our Discord community to connect with other students and access additional study resources."}
           </p>

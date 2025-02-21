@@ -136,7 +136,7 @@ export function AnkiGameCard() {
             </p>
 
             <div
-              className="w-full h-10 px-4 rounded-md font-medium shadow-sm 
+              className="w-full h-10 px-4 rounded-full font-medium shadow-sm 
                 transition-all duration-300
                 bg-emerald-500 text-white group-hover:bg-emerald-600 
                 flex items-center justify-center

@@ -7,9 +7,9 @@ import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { useRouter } from "next/navigation";
 
 const goldFeatures = {
-  title: "MD Gold Plan",
+  title: "MD Gold Course",
   price: "$150 / month",
-  description: "When you're ready to take the MCAT more seriously, use our advanced testing software.",
+  description: "When you're ready to take the MCAT more seriously, try our self-paced adaptive MCAT course",
   image: "/MD_Premium_Pro.png",
   features: [
     "Daily CARS Suite",
@@ -150,7 +150,7 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'off
             </p>
 
             <div
-              className={`w-full h-10 px-4 rounded-md font-medium shadow-lg 
+              className={`w-full h-10 px-4 rounded-full font-medium shadow-lg 
                 transition-all duration-300 flex items-center justify-center
                 disabled:opacity-50 bg-gradient-to-r from-green-400 to-blue-500 text-white hover:from-green-500 hover:to-blue-600
                 transform hover:scale-105`}
