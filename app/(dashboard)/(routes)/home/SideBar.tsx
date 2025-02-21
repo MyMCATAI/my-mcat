@@ -265,7 +265,7 @@ const SideBar: React.FC<SideBarProps> = ({
                 <div className="flex items-start">
                   <div className="mr-4 flex-shrink-0">
                     <Image
-                      src={`/tutors/${tutor.name.replace(/\s+/g, '')}.png`}
+                      src={`/tutors/${tutor.name.split('.')[0].replace(/\s+/g, '')}.png`}
                       alt={tutor.name}
                       width={80}
                       height={80}

@@ -592,6 +592,8 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
           <div className="text-[--theme-text-color] text-xl font-semibold">
             {"🎉 Great work! You've completed this flashcard deck."}
           </div>
+
+          {/* add video Here */}
           <button
             onClick={onClose}
             className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2 focus:outline-none"
