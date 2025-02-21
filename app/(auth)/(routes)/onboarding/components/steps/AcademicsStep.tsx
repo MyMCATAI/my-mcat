@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AcademicsStepProps {
   onSubmit: (data: {
@@ -136,25 +137,27 @@ export function AcademicsStep({ onSubmit, initialValues = {} }: AcademicsStepPro
               </div>
 
               <div className="space-y-4">
-                <label htmlFor="mcatAttempts" className="block text-sm text-blue-200/80">
+                <label className="block text-sm text-blue-200/80">
                   Which MCAT attempt was this?
                 </label>
-                <select
-                  id="mcatAttempts"
+                <Select
                   value={mcatAttemptNumber}
-                  onChange={(e) => setMcatAttemptNumber(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 
-                             rounded-xl text-white focus:outline-none focus:ring-2 
-                             focus:ring-blue-500/50 transition-all"
-                  required
+                  onValueChange={setMcatAttemptNumber}
                   disabled={loading}
                 >
-                  <option value="1">First attempt</option>
-                  <option value="2">Second attempt</option>
-                  <option value="3">Third attempt</option>
-                  <option value="4">Fourth attempt</option>
-                  <option value="5+">Fifth or more attempt</option>
-                </select>
+                  <SelectTrigger className="w-full bg-white/5 backdrop-blur-sm border border-white/10 
+                             rounded-xl text-white focus:outline-none focus:ring-2 
+                             focus:ring-blue-500/50 transition-all">
+                    <SelectValue placeholder="Select attempt number" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-900/95 border border-white/10 text-white">
+                    <SelectItem value="1" className="focus:bg-white/10 focus:text-white">First attempt</SelectItem>
+                    <SelectItem value="2" className="focus:bg-white/10 focus:text-white">Second attempt</SelectItem>
+                    <SelectItem value="3" className="focus:bg-white/10 focus:text-white">Third attempt</SelectItem>
+                    <SelectItem value="4" className="focus:bg-white/10 focus:text-white">Fourth attempt</SelectItem>
+                    <SelectItem value="5+" className="focus:bg-white/10 focus:text-white">Fifth or more attempt</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </>
           )}
@@ -169,7 +172,7 @@ export function AcademicsStep({ onSubmit, initialValues = {} }: AcademicsStepPro
             !gpa || 
             (!hasNotTakenMCAT && (!currentMcatScore || !isValidMcatScore(currentMcatScore)))
           }
-          className="w-full bg-white/10 backdrop-blur-md hover:bg-white/20 text-white 
+          className="w-full bg-white/10 backdrop-blur-md hover:bg-white/20 text-white hover:bg-white/20
                      px-6 py-3 rounded-xl transition-all duration-300 
                      focus:outline-none focus:ring-2 focus:ring-blue-500/50
                      disabled:opacity-50 disabled:cursor-not-allowed"

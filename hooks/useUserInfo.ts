@@ -89,6 +89,9 @@ function canAccessPath(subscriptionType: string | undefined, currentPath: string
 
 // Helper function to determine if and where to redirect
 async function checkRedirectPath(userInfo: UserInfo | null, currentPath: string): Promise<string | null> {
+  // Don't redirect if already on redirect page
+  if (currentPath === '/redirect') return null;
+
   // Don't redirect to onboarding if we're already there
   if (currentPath.startsWith('/onboarding') || currentPath.startsWith('/offer')) return null;
 
@@ -104,7 +107,7 @@ async function checkRedirectPath(userInfo: UserInfo | null, currentPath: string)
   }
 
   // Only exempt paths from study plan check
-  const studyPlanExemptPaths = ['/examcalendar', '/api', '/auth', '/onboarding'];
+  const studyPlanExemptPaths = ['/examcalendar', '/api', '/auth', '/onboarding', '/redirect'];
   const shouldCheckStudyPlan = !studyPlanExemptPaths.some(path => currentPath.startsWith(path));
 
   // Subscribed users -> check study plan (unless on exempt path)

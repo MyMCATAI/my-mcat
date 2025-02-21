@@ -186,7 +186,7 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
 
   const renderScrollArrow = () => (
     <motion.div 
-      className="absolute bottom-16 left-1/2 transform -translate-x-1/2 cursor-pointer z-20"
+      className="absolute bottom-20 left-[calc(50%-8px)] transform -translate-x-1/2 cursor-pointer z-20"
       animate={shouldReduceMotion ? {} : { y: [0, 10, 0] }}
       transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
       onClick={handleScrollClick}

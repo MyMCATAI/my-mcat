@@ -10,9 +10,8 @@ const premiumFeatures = {
   fullDescription: "For students who want to be VIP members of the best MCAT class that money can buy.",
   features: [
     "36 hours of MCAT instruction",
-    "Tutor and instructor combined",
     "Peer-based learning groups",
-    "Curriculum designed by medical educators",
+    "Your Curriculum designed by medical educators",
     "Full acesss to our software suite",
     "Direct access to the founders"
   ]
