@@ -10,10 +10,11 @@ export const PROFILE_PHOTOS = [
     'raincoat.png',
     'schoolgirl.png',
     'ski.png',
-    'sushi.png',
+    'diva.png',
 ];
 
 interface UserProfile {
+    userId: string;
     firstName: string;
     bio: string;
     coins: number;

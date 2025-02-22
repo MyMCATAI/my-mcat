@@ -402,7 +402,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                 {showChat ? (
                   <div className="flex flex-col h-full overflow-hidden">
                     <div className="flex justify-between items-center mb-2 flex-shrink-0 px-2">
-                      <h3 className="text-lg font-semibold">Question Helper</h3>
+                      <h3 className="text-lg font-semibold">Kalypso</h3>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -419,7 +419,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                         backgroundColor="var(--theme-leaguecard-color)"
                         mode={isAnswerRevealed ? "questionReview" : "hint"}
                         chatbotContext={{
-                          contentTitle: "Question Helper",
+                          contentTitle: "Kalypso",
                           context: currentQuestionContext 
                             ? `${currentQuestionContext.type === 'normal' 
                                 ? `Multiple Choice Question:\n${currentQuestionContext.question}\n\nOptions:\n${currentQuestionContext.otherOptions.join('\n')}`

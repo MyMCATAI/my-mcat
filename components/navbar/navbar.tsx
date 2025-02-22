@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FaLinkedin, FaInstagram } from 'react-icons/fa';
-import MusicPlayer from "@/components/musicplayer";
+import MusicPlayer from "@/components/navbar/musicplayer";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { SubscriptionManagementButton } from "@/components/subscription-management-button";
-import { ProfileButton } from '@/components/ProfileButton';
+import { ProfileButton } from '@/components/navbar/ProfileButton';
+import { MailButton } from '@/components/navbar/MailButton';
 
 // Define the Song type
 type Song = {
@@ -42,21 +43,22 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
         </div>
       </div>
       <div className="flex items-center h-full">
-        <div className="flex items-center mr-5">
+        <div className="flex flex-row w-full items-center gap-4">
           <SubscriptionManagementButton isGoldMember={isSubscribed} />
-          <div className="flex items-center scale-150 relative z-[9999]">
+          <MailButton />
+          <div className="flex items-center w-full h-full relative z-[9999]">
             <ProfileButton />
           </div>
         </div>
         <span
           ref={ballerSectionRef}
-          className="flex items-start h-full gradientbg mr-[-1px]"
+          className="flex items-start w-full h-full gradientbg mr-[-1px]"
           style={{
             clipPath: "polygon(100% 0%, 100% 51%, 100% 73%, 18% 72%, 11% 48%, 0 0)",
             opacity: 1,
           }}
         >
-          <p className="ms-12 mt-5 pr-1 text-xs" style={{ color: 'var(--theme-text-color)' }}>
+          <p className="ms-12 mt-5 pr-1 text-xs whitespace-nowrap" style={{ color: 'var(--theme-text-color)' }}>
             designed by <br />&nbsp;&nbsp;&nbsp;&nbsp;a certified baller
           </p>
           <div className="mt-6 mx-3">

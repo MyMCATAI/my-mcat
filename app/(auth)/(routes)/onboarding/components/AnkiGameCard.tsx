@@ -46,7 +46,7 @@ export function AnkiGameCard() {
       if (isMobileButNotIpad()) {
         router.push('/redirect');
       } else {
-        router.push('/doctorsoffice');
+        router.push('/ankiclinic');
       }
     } catch (error) {
       console.error("Error:", error);

@@ -166,7 +166,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
         handleSetTab("test");
         break;
       case "Anki Clinic":
-        router.push("/doctorsoffice");
+        router.push("/ankiclinic");
         break;
       case "Adaptive Tutoring Suite":
         handleSetTab("AdaptiveTutoringSuite");

@@ -32,7 +32,6 @@ export default function PitchPage() {
   const { startActivity } = useUserActivity();
   const [pricingPeriod, setPricingPeriod] = useState<PricingPeriod>('annual');
 
-
   // Add audio effect when modal opens
   useEffect(() => {
     if (user?.id) {

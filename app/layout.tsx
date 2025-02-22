@@ -8,7 +8,7 @@ import MobileRedirect from '@/components/MobileRedirect'
 import { FullscreenPrompt } from '@/components/FullscreenPrompt'
 import { UserProfileProvider } from '@/contexts/UserProfileContext'
 import { AudioProvider } from '@/contexts/AudioContext'
-
+import { UserInfoProvider } from '@/contexts/UserInfoContext'
 const robotoSlab = Roboto_Slab({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -62,26 +62,28 @@ export default function RootLayout({
     <ClerkProvider
     afterSignOutUrl={"/"}
     >
-      <UserProfileProvider>
-        <AudioProvider>
-          <html lang="en">
-            <head>
-              <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"></meta>
-            </head>
-            <body className={robotoSlab.className}>
-              <div id="app-root" className="relative">
-                <MobileRedirect />
-                <ThemeInitializer />
-                <FullscreenPrompt />
-                <div className="relative z-50">
-                  {children}
+      <AudioProvider>
+        <UserInfoProvider>
+          <UserProfileProvider>
+            <html lang="en">
+              <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"></meta>
+              </head>
+              <body className={robotoSlab.className}>
+                <div id="app-root" className="relative">
+                  <MobileRedirect />
+                  <ThemeInitializer />
+                  <FullscreenPrompt />
+                  <div className="relative z-50">
+                    {children}
+                  </div>
+                  <Analytics />
                 </div>
-                <Analytics />
-              </div>
-            </body>
-          </html>
+              </body>
+            </html>
+            </UserProfileProvider>
+          </UserInfoProvider>
         </AudioProvider>
-      </UserProfileProvider>
     </ClerkProvider>
   )
 }

@@ -25,6 +25,7 @@ import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { PurchaseButton } from '@/components/purchase-button';
 import Leaderboard from "@/components/leaderboard/Leaderboard";
 import { useAudio } from '@/contexts/AudioContext';
+import { useUserInfo } from '@/hooks/useUserInfo';
 
 interface Task {
   text: string;
@@ -73,6 +74,8 @@ const SideBar: React.FC<SideBarProps> = ({
   onActivitiesUpdate,
   isSubscribed
 }) => {
+  const { userInfo } = useUserInfo();
+  
   const getInitialActiveTab = () => {
     if (!isSubscribed) {
       return "tab5"; // Leaderboard tab
@@ -334,23 +337,6 @@ const SideBar: React.FC<SideBarProps> = ({
 
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  const [userScore, setUserScore] = useState<number>(0);
-
-  useEffect(() => {
-    const fetchUserScore = async () => {
-      try {
-        const response = await fetch('/api/user-info');
-        if (!response.ok) throw new Error('Failed to fetch user score');
-        const data = await response.json();
-        setUserScore(data.score); // Assuming the score is in the response
-      } catch (error) {
-        console.error('Error fetching user score:', error);
-      }
-    };
-
-    fetchUserScore();
-  }, []);
-
   const renderTasks = () => {
     if (!isSubscribed) {
       return (
@@ -509,11 +495,11 @@ const SideBar: React.FC<SideBarProps> = ({
         <div className="mt-4 mb-3 bg-[--theme-leaguecard-color] rounded-lg flex items-center justify-between">
           <span className="text-sm font-medium opacity-75 ml-6">Wallet</span>
           <PurchaseButton 
-            userCoinCount={userScore}
+            userCoinCount={userInfo?.score || 0}
             tooltipText="Click to purchase more coins"
           >
             <div className="cursor-pointer hover:opacity-80 transition-opacity">
-              <ScoreDisplay score={userScore} />
+              <ScoreDisplay score={userInfo?.score || 0} />
             </div>
           </PurchaseButton>
         </div>
@@ -1006,7 +992,7 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
         handleSetTab("AdaptiveTutoringSuite");
         break;
       case "Anki Clinic":
-        router.push("/doctorsoffice");
+        router.push("/ankiclinic");
         break;
       case "UWorld":
         setShowUWorldPopup(true);
