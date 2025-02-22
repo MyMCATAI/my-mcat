@@ -17,7 +17,6 @@ import { QuizIntroDialog } from "./ATS/QuizIntroDialogue";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import DownvoteFeedback from './DownvoteFeedback';
 import { useAudio } from "@/contexts/AudioContext";
-
 /* ---------------------------------------- Types ------------------------------------------ */
 export interface QuizQuestion {
   categoryId: string;
@@ -103,7 +102,6 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
   const [isQuizComplete, setIsQuizComplete] = useState(false);
   const [hasAwardedCoins, setHasAwardedCoins] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-
 
   const handleStartQuiz = async () => {
     try {

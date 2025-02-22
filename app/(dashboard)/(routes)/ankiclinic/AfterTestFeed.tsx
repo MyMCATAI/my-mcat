@@ -1,4 +1,4 @@
-//app/(dashboard)/(routes)/doctorsoffice/AfterTestFeed.tsx
+//app/(dashboard)/(routes)/ankiclinic/AfterTestFeed.tsx
 import React, { useState, useEffect, useRef, useCallback, ReactNode, forwardRef, useImperativeHandle } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { motion } from 'framer-motion';

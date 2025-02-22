@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { FaUser, FaUserCog, FaSignOutAlt } from 'react-icons/fa';
-import UserProfileModal from './modals/UserProfileModal';
+import UserProfileModal from '../social/profile/UserProfileModal';
 import { useProfileContext } from '@/contexts/UserProfileContext';
 import Image from 'next/image';
 
@@ -35,7 +35,7 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
       {/* Profile Button */}
       <button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="w-8 h-8 rounded-full overflow-hidden bg-[--theme-hover-color]/20 flex items-center justify-center hover:bg-[--theme-hover-color]/30 transition-colors relative group"
+        className="w-12 h-12 rounded-full overflow-hidden bg-[--theme-hover-color]/20 flex items-center justify-center hover:bg-[--theme-hover-color]/30 transition-colors relative group"
       >
         {/* Gleam effect */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
@@ -72,8 +72,8 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
       {/* Menu Dropdown */}
       <div 
         className={`
-          absolute right-0 top-full mt-1 w-36 rounded-md overflow-hidden bg-white shadow-lg 
-          border border-gray-200 text-gray-700 text-[10px] z-[9999]
+          absolute right-0 top-full mt-1 w-48 rounded-md overflow-hidden bg-white shadow-lg 
+          border border-gray-200 text-gray-700 text-base whitespace-nowrap z-[9999]
           transition-all duration-200 origin-top
           ${isMenuOpen 
             ? 'transform scale-y-100 opacity-100' 
@@ -89,7 +89,7 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
             }}
           className="w-full px-2 py-1.5 text-left hover:bg-gray-50 flex items-center gap-2"
         >
-          <FaUser className="w-3 h-3" />
+          <FaUser className="w-4 h-4" />
           Customize profile
         </button>
         )}
@@ -100,14 +100,14 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
           }}
           className="w-full px-2 py-1.5 text-left hover:bg-gray-50 flex items-center gap-2"
         >
-          <FaUserCog className="w-3 h-3" />
+          <FaUserCog className="w-4 h-4" />
           Account & Security
         </button>
         <button
           onClick={() => signOut()}
           className="w-full px-2 py-1.5 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
         >
-          <FaSignOutAlt className="w-3 h-3" />
+          <FaSignOutAlt className="w-4 h-4" />
           Sign out
         </button>
       </div>

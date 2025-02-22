@@ -7,6 +7,7 @@ import PhotoSelectionModal from './PhotoSelectionModal';
 import { useProfileContext } from '@/contexts/UserProfileContext';
 import { CUSTOM_PARTICLES } from '@/config/particleEffects';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import FriendMenu from '@/components/social/friend-interaction/FriendMenu';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -155,7 +156,6 @@ ProfilePhoto.displayName = 'ProfilePhoto';
 
 const UserProfileModal = ({ isOpen, onClose, userEmail, userId, isEditable = false, onFriendRequest, showFriendButton = false, isSelfProfile = false }: UserProfileModalProps) => {
   const { profile: selfProfile, isLoading: selfProfileLoading, updateProfile } = useProfileContext();
-  
   // Only use useUserProfile for other users' profiles
   const profileParams = React.useMemo(() => {
     if (!isOpen || isSelfProfile) return null;
@@ -246,6 +246,17 @@ const UserProfileModal = ({ isOpen, onClose, userEmail, userId, isEditable = fal
           ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}
         `}
       >
+        <div className="absolute top-4 right-4 z-50">
+          {!isLoading && !isEditable && !isSelfProfile && !showFriendButton && (
+            <FriendMenu 
+              friendId={displayProfile?.userId || ''}
+              friendName={displayProfile?.firstName || 'Friend'}
+              friendCoins={displayProfile?.coins || 0}
+              selfCoins={selfProfile?.coins || 0}
+            />
+          )}
+        </div>
+
         <div 
           className="transition-[max-height,opacity] duration-300 ease-in-out overflow-visible"
           style={{ 
@@ -309,7 +320,7 @@ const UserProfileModal = ({ isOpen, onClose, userEmail, userId, isEditable = fal
                         Add Friend
                       </button>
                     )}
-                </div>
+                  </div>
 
                   {/* User Info */}
                   <div className="space-y-2">

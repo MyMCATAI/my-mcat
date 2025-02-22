@@ -1,6 +1,8 @@
 import { OnboardingInfo } from "@/types";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
+import { useUser } from "@clerk/nextjs";
+import { useUserInfoContext } from "@/contexts/UserInfoContext";
 
 export interface UserInfo {
   unlocks?: string[];
@@ -22,6 +24,7 @@ export interface UserInfo {
   };
   notificationPreference?: string;
   onboardingInfo?: OnboardingInfo;
+  referrals?: any[];
 }
 
 interface Referral {
@@ -78,7 +81,7 @@ function canAccessPath(subscriptionType: string | undefined, currentPath: string
   }
 
   // Paths accessible to all users
-  const unrestrictedPaths = ['/onboarding', '/offer','/doctorsoffice', '/preferences'];
+  const unrestrictedPaths = ['/onboarding', '/offer', '/ankiclinic', '/preferences'];
   if (unrestrictedPaths.some(path => currentPath.startsWith(path))) {
     return true;
   }
@@ -103,7 +106,7 @@ async function checkRedirectPath(userInfo: UserInfo | null, currentPath: string)
 
   // Check subscription-based access
   if (!canAccessPath(userInfo.subscriptionType, currentPath)) {
-    return '/doctorsoffice';
+    return '/ankiclinic';
   }
 
   // Only exempt paths from study plan check
@@ -144,74 +147,51 @@ function checkSubscription(userInfo: UserInfo | null): boolean {
   return (userInfo.subscriptionType === 'gold' || userInfo.subscriptionType === 'premium');
 }
 
-export function useUserInfo(): UseUserInfoReturn {
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+export const useUserInfo = (): UseUserInfoReturn => {
+  const { user } = useUser();
+  const { userInfo, refreshUserInfo } = useUserInfoContext();
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [referrals, setReferrals] = useState<Referral[]>([]);
-  const [isLoadingReferrals, setIsLoadingReferrals] = useState(false);
+  const hasInitialized = useRef(false);
 
-  // Add computed property for subscription status
-  const isSubscribed = checkSubscription(userInfo); // note this just checks if the userInfo subscriptiontype is "gold" or "premium", we dont actually check if there is a stripe subscription record
   const fetchUserInfo = useCallback(async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await fetch("/api/user-info");
-
-      // Handle non-existent user case
-      if (response.status === 404 || response.status === 500) {
-        if (await handleRedirect(null)) return;
-        setUserInfo(null);
-        return;
-      }
-
-      // Handle other errors
-      if (!response.ok) {
-        throw new Error("Failed to fetch user info");
-      }
-
-      // Handle successful response
+      const response = await fetch('/api/user-info');
+      if (!response.ok) throw new Error();
       const data = await response.json();
-      setUserInfo(data);
-      await handleRedirect(data);
-
-    } catch (err) {
-      console.error("Error fetching user info:", err);
-      setError(err instanceof Error ? err : new Error("Failed to fetch user info"));
-      if (err instanceof Error && !err.message.includes('404')) {
-        toast.error("Failed to load user information");
-      }
+      refreshUserInfo();
+    } catch (error) {
+      console.error('Failed to fetch user info:', error);
+      toast.error('Failed to load user info');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [refreshUserInfo]);
 
-  // Initial fetch
   useEffect(() => {
-    fetchUserInfo();
-  }, [fetchUserInfo]);
+    if (user?.id && !hasInitialized.current) {
+      hasInitialized.current = true;
+      fetchUserInfo();
+    }
+  }, [user?.id, fetchUserInfo]);
 
   const updateScore = useCallback(async (amount: number) => {
     try {
-      const response = await fetch("/api/user-info", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount }),
+      const response = await fetch('/api/user/score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to update score");
-      }
+      if (!response.ok) throw new Error();
 
-      const data = await response.json();
-      setUserInfo((prev) => (prev ? { ...prev, score: data.score } : null));
-    } catch (err) {
-      toast.error("Failed to update score");
-      throw err;
+      // Refresh userInfo to update all components
+      await refreshUserInfo();
+
+    } catch (error) {
+      console.error('Failed to update score:', error);
+      toast.error('Failed to update score');
     }
-  }, []);
+  }, [refreshUserInfo]);
 
   const updateNotificationPreference = useCallback(
     async (preference: boolean) => {
@@ -227,17 +207,13 @@ export function useUserInfo(): UseUserInfoReturn {
         }
 
         const data = await response.json();
-        setUserInfo((prev) =>
-          prev
-            ? { ...prev, notificationPreference: data.notificationPreference }
-            : null
-        );
+        refreshUserInfo();
       } catch (err) {
         toast.error("Failed to update notification preferences");
         throw err;
       }
     },
-    []
+    [refreshUserInfo]
   );
 
   const updateUserProfile = useCallback(
@@ -254,13 +230,13 @@ export function useUserInfo(): UseUserInfoReturn {
         }
 
         const updatedData = await response.json();
-        setUserInfo((prev) => (prev ? { ...prev, ...updatedData } : null));
+        refreshUserInfo();
       } catch (err) {
         toast.error("Failed to update profile");
         throw err;
       }
     },
-    []
+    [refreshUserInfo]
   );
 
   const incrementScore = useCallback(async () => {
@@ -276,12 +252,12 @@ export function useUserInfo(): UseUserInfoReturn {
       }
 
       const data = await response.json();
-      setUserInfo((prev) => (prev ? { ...prev, score: data.score } : null));
+      refreshUserInfo();
     } catch (err) {
       toast.error("Failed to increment score");
       throw err;
     }
-  }, []);
+  }, [refreshUserInfo]);
 
   const decrementScore = useCallback(async () => {
     try {
@@ -296,62 +272,46 @@ export function useUserInfo(): UseUserInfoReturn {
       }
 
       const data = await response.json();
-      setUserInfo((prev) => (prev ? { ...prev, score: data.score } : null));
+      refreshUserInfo();
     } catch (err) {
       toast.error("Failed to decrement score");
       throw err;
     }
-  }, []);
+  }, [refreshUserInfo]);
 
   const fetchReferrals = useCallback(async () => {
     try {
-      setIsLoadingReferrals(true);
       const response = await fetch("/api/referrals");
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch referrals");
-      }
-
+      if (!response.ok) throw new Error("Failed to fetch referrals");
       const data = await response.json();
-      setReferrals(data);
+      refreshUserInfo();
     } catch (err) {
       toast.error("Failed to load referrals");
       throw err;
-    } finally {
-      setIsLoadingReferrals(false);
     }
-  }, []);
+  }, [refreshUserInfo]);
 
-  const createReferral = useCallback(
-    async (data: {
-      friendEmail: string;
-    }) => {
-      try {
-        const response = await fetch("/api/referrals", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
+  const createReferral = useCallback(async (data: { friendEmail: string }) => {
+    try {
+      const response = await fetch("/api/referrals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
-        if (!response.ok) {
-          throw new Error("Failed to create referral");
-        }
-
-        const newReferral = await response.json();
-        setReferrals((prev) => [newReferral, ...prev]);
-        toast.success("Referral sent successfully");
-      } catch (err) {
-        toast.error("Failed to create referral");
-        throw err;
+      if (!response.ok) {
+        throw new Error("Failed to create referral");
       }
-    },
-    []
-  );
 
-  // Fetch referrals on mount
-  useEffect(() => {
-    fetchReferrals();
-  }, [fetchReferrals]);
+      const newReferral = await response.json();
+      refreshUserInfo();
+
+      toast.success("Referral sent successfully");
+    } catch (err) {
+      toast.error("Failed to create referral");
+      throw err;
+    }
+  }, [refreshUserInfo]);
 
   const checkHasReferrals = useCallback(async () => {
     try {
@@ -377,7 +337,6 @@ export function useUserInfo(): UseUserInfoReturn {
         },
         body: JSON.stringify({
           unlockGame: true,
-          // decrementScore: CLINIC_COST
         }),
       });
 
@@ -386,13 +345,14 @@ export function useUserInfo(): UseUserInfoReturn {
       }
 
       const data = await response.json();
-      setUserInfo(prev => prev ? { ...prev, unlocks: [...(prev.unlocks || []), 'game'] } : null);
+      refreshUserInfo();
+
       toast.success('Welcome to the Anki Clinic!');
     } catch (err) {
       toast.error('Failed to unlock the Anki Clinic');
       throw err;
     }
-  }, []);
+  }, [refreshUserInfo]);
 
   const createNewUser = useCallback(async (data: { firstName: string; bio?: string }) => {
     try {
@@ -407,32 +367,32 @@ export function useUserInfo(): UseUserInfoReturn {
       }
 
       const newUserInfo = await response.json();
-      setUserInfo(newUserInfo);
+      refreshUserInfo();
       return newUserInfo;
     } catch (err) {
       toast.error("Failed to create user profile");
       throw err;
     }
-  }, []);
+  }, [refreshUserInfo]);
 
   return {
     userInfo,
     isLoading,
-    error,
+    isSubscribed: userInfo?.subscriptionType === 'gold' || userInfo?.subscriptionType === 'premium',
     updateScore,
     updateNotificationPreference,
     updateUserProfile,
     incrementScore,
     decrementScore,
     refetch: fetchUserInfo,
-    referrals,
-    isLoadingReferrals,
+    referrals: userInfo?.referrals || [],
+    isLoadingReferrals: false,
     fetchReferrals,
     createReferral,
     checkHasReferrals,
     unlockGame,
     createNewUser,
-    isSubscribed,
+    error: null
   };
-}
+};
 

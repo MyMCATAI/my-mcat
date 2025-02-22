@@ -460,15 +460,21 @@ const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
 
   return (
     <div ref={innerRef} className="relative w-full h-full">
-      {/* Pixi.js stage container */}
-      <div className="absolute inset-0 z-20 flex justify-center items-center">
+      {/* Pixi.js stage container - Add pointer-events-none by default */}
+      <div className="absolute inset-0 z-20 flex justify-center items-center pointer-events-none">
         <Stage
           width={stageSize.width}
           height={stageSize.height}
-          options={{ backgroundAlpha: 0 }}
+          options={{ 
+            backgroundAlpha: 0,
+            // Enable interactions only for the stage content
+            eventMode: 'static'
+          }}
           style={{
             width: `${stageSize.width}px`,
             height: `${stageSize.height}px`,
+            // Re-enable pointer events only for the Stage
+            pointerEvents: 'auto'
           }}
         >
           <Container position={[offset.x * scale, offset.y * scale]} scale={scale} sortableChildren>

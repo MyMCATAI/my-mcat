@@ -1,4 +1,4 @@
-//app/(dashboard)/(routes)/doctorsoffice/FlashcardDeck.tsx
+//app/(dashboard)/(routes)/ankiclinic/FlashcardDeck.tsx
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -378,6 +378,14 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
     setAnsweredMCQ(false);
   }, [currentCardIndex, flashcards]);
 
+  // Add effect to notify parent of question changes
+  useEffect(() => {
+    if (onQuestionChange) {
+      const currentCard = flashcards[currentCardIndex];
+      onQuestionChange(currentCard || null);
+    }
+  }, [currentCardIndex, flashcards, onQuestionChange]);
+
 
 
 /* -------------------------------------- Event Handlers --------------------------------------- */
@@ -533,6 +541,12 @@ const getQuestionContent = () => {
       
       const randomizedFlashcards = shuffleFlashcards(transformedFlashcards);
       setFlashcards(randomizedFlashcards);
+      
+      // Notify parent of initial question
+      if (onQuestionChange && randomizedFlashcards.length > 0) {
+        onQuestionChange(randomizedFlashcards[0]);
+      }
+      
       setIsLoading(false);    
     } catch (error) {
       console.error('Error fetching flashcards:', error);

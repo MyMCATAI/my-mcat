@@ -5,7 +5,7 @@ The Doctor's Office game follows a hierarchical component structure:
 
 ### Component Hierarchy
 
-doctorsoffice/
+ankiclinic/
 ├── `AnkiGameCard.tsx`            # Entry Point (in onboarding)
 │
 └── `page.tsx`                    # Main Container
@@ -39,7 +39,7 @@ doctorsoffice/
 - Routes users to main game interface
 
 2. **Core Game Container**
-- `doctorsoffice/page.tsx`: Main game container
+- `ankiclinic/page.tsx`: Main game container
   - Manages game state and user progress
   - Coordinates between sub-components
   - Handles level system and scoring
