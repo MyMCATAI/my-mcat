@@ -707,21 +707,16 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                   group-hover:bg-[--theme-hover-color]`}>
                   <span>{userLevel || "PATIENT LEVEL"}</span>
                 </button>
-                <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
-                  {isMarketplaceOpen && (
-                    <ShoppingDialog
-                      ref={marketplaceDialogRef}
-                      imageGroups={imageGroups}
-                      visibleImages={visibleImages}
-                      toggleGroup={toggleGroup}
-                      userScore={userScore}
-                      isOpen={isMarketplaceOpen}
-                      onOpenChange={setIsMarketplaceOpen}
-                      buttonContent={
-                        <a
-                          href="#"
-                          className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
-                        >
+                <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out"> 
+                  <div className="flex flex-col">
+                    <a
+                      href="#"
+                      className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsMarketplaceOpen(!isMarketplaceOpen);
+                      }}
+                    >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-5 w-5 mr-2"
@@ -738,15 +733,29 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                           </svg>
                           Marketplace
                         </a>
-                      }
-                    />
+                  </div>
+
+                  <div className="flex flex-col">
+                  {isMarketplaceOpen && (
+                    <ShoppingDialog
+                      ref={marketplaceDialogRef}
+                      imageGroups={imageGroups}
+                      visibleImages={visibleImages}
+                      toggleGroup={toggleGroup}
+                      userScore={userScore}
+                      isOpen={isMarketplaceOpen}
+                      onOpenChange={setIsMarketplaceOpen}
+                                        />
                   )}
 
+                  </div>
+                  <div className="flex flex-col">
                   <button
                     onClick={(e) => {
                       e.preventDefault();
                       setIsFlashcardsTooltipOpen(!isFlashcardsTooltipOpen);
                     }}
+                    onMouseLeave={() => setIsFlashcardsTooltipOpen(false)}
                     className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
                   >
                     <svg
@@ -765,6 +774,15 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                     </svg>
                     Flashcards
                   </button>
+                  </div>
+
+                  <div className="flex flex-col">
+                    {isFlashcardsTooltipOpen && (
+                      <div className="absolute top-full left-0 mt-2 w-64 bg-[--theme-leaguecard-color] text-[--theme-text-color] text-sm rounded-lg p-3 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 border border-[--theme-border-color]">
+                        <p className="mb-2">Coming soon!</p>
+                      </div>
+                    )}
+                  </div>
                   <a
                     href="#"
                     onClick={(e) => {
