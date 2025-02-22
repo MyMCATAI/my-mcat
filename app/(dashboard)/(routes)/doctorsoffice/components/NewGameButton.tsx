@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { FC } from "react";
 import { toast } from "react-hot-toast";
+import FeedbackModal from "./FeedbackModal";
+import { PurchaseButton } from "@/components/purchase-button";
 
 interface NewGameButtonProps {
   userScore: number;
@@ -19,6 +21,9 @@ const NewGameButton: FC<NewGameButtonProps> = ({
   resetGameState
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+
   const createNewUserTest = async () => {
     try {
       const response = await fetch("/api/user-test", {
@@ -43,8 +48,14 @@ const NewGameButton: FC<NewGameButtonProps> = ({
 
   const handleNewGame = async () => {
     if (userScore < 1) {
-      toast.error("You need 1 coin to start a new game!");
-      return;
+      const feedbackSubmitted = localStorage.getItem('feedbackSubmitted');
+      if (feedbackSubmitted === 'false' || feedbackSubmitted === null) {
+        setIsFeedbackModalOpen(true);
+        return;
+      } else {
+        setIsPurchaseModalOpen(true);
+        return;
+      }
     }
 
     try {
@@ -115,6 +126,22 @@ const NewGameButton: FC<NewGameButtonProps> = ({
           className="inline-block"
         />
       </button>
+      {isPurchaseModalOpen && (
+        <PurchaseButton 
+        autoOpen={true}
+          userCoinCount={userScore}
+          text=""
+          className=""
+          tooltipText = ""
+          onClose={() => setIsPurchaseModalOpen(false)}
+        >
+                  </PurchaseButton>
+      )}
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+        setUserScore={setUserScore}
+      />
     </div>
   );
 };
