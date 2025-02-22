@@ -15,8 +15,11 @@ import { useUserActivity } from '@/hooks/useUserActivity';
 const PITCH_VIDEO_URL = "TlfF-APm2DA"; // YouTube video ID
 enum ProductType {
   MD_GOLD = 'md_gold',
-  MD_GOLD_ANNUAL = 'md_gold_annual'
+  MD_GOLD_ANNUAL = 'md_gold_annual',
+  MD_GOLD_BIANNUAL = 'md_gold_biannual'
 }
+
+type PricingPeriod = 'monthly' | 'biannual' | 'annual';
 
 export default function PitchPage() {
   const router = useRouter();
@@ -27,7 +30,7 @@ export default function PitchPage() {
   const { isGold } = useSubscriptionStatus();
   const { user } = useUser();
   const { startActivity } = useUserActivity();
-  const [isAnnual, setIsAnnual] = useState(true);
+  const [pricingPeriod, setPricingPeriod] = useState<PricingPeriod>('annual');
 
 
   // Add audio effect when modal opens
@@ -74,7 +77,9 @@ export default function PitchPage() {
       }
 
       const response = await axios.post("/api/stripe/checkout", {
-        priceType: isAnnual ? ProductType.MD_GOLD_ANNUAL : ProductType.MD_GOLD
+        priceType: pricingPeriod === 'monthly' ? ProductType.MD_GOLD :
+                   pricingPeriod === 'annual' ? ProductType.MD_GOLD_ANNUAL :
+                   ProductType.MD_GOLD_BIANNUAL
       });
       window.location.href = response.data.url;
     } catch (error) {
@@ -185,6 +190,30 @@ export default function PitchPage() {
   const prevSlide = () => {
     const teamLength = activeTeam === 'mcat' ? allTeam.length : 0;
     setCurrentIndex((prev) => (prev - 2 < 0 ? teamLength - 2 : prev - 2));
+  };
+
+  // Helper function to get monthly price equivalent
+  const getMonthlyPrice = (period: PricingPeriod) => {
+    switch (period) {
+      case 'monthly':
+        return 150;
+      case 'biannual':
+        return 83;
+      case 'annual':
+        return 75;
+    }
+  };
+
+  // Helper function to get total price
+  const getTotalPrice = (period: PricingPeriod) => {
+    switch (period) {
+      case 'monthly':
+        return 150;
+      case 'biannual':
+        return 499;
+      case 'annual':
+        return 899;
+    }
   };
 
   return (
@@ -380,20 +409,46 @@ export default function PitchPage() {
                     </h3>
                     <div className="space-y-2">
                       <p className="text-xl font-bold text-white/90">
-                        ${isAnnual ? '83' : '150'} / month
+                        ${getMonthlyPrice(pricingPeriod)} / month
                       </p>
-                      <div className="flex items-center justify-center gap-3 text-sm">
-                        <span className={`${isAnnual ? 'text-white/90' : 'text-white/60'}`}>Annual</span>
-                        <button 
-                          onClick={() => setIsAnnual(prev => !prev)}
-                          className="relative w-12 h-6 rounded-full bg-white/20 transition-colors duration-200"
-                        >
-                          <div 
-                            className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-blue-400 transition-transform duration-200 
-                            ${isAnnual ? 'translate-x-0' : 'translate-x-6'}`}
-                          />
-                        </button>
-                        <span className={`${!isAnnual ? 'text-white/90' : 'text-white/60'}`}>Monthly</span>
+                      {pricingPeriod !== 'monthly' && (
+                        <p className="text-sm text-white/70">
+                          ${getTotalPrice(pricingPeriod)} billed {pricingPeriod === 'annual' ? 'yearly' : 'every 6 months'}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-center gap-2 mt-4">
+                        <div className="bg-black/30 rounded-full p-1 flex items-center gap-0.5">
+                          <button 
+                            onClick={() => setPricingPeriod('monthly')}
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                              pricingPeriod === 'monthly' 
+                                ? 'bg-blue-500 text-white' 
+                                : 'text-white/60 hover:text-white/80'
+                            }`}
+                          >
+                            Monthly
+                          </button>
+                          <button 
+                            onClick={() => setPricingPeriod('biannual')}
+                            className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 ${
+                              pricingPeriod === 'biannual' 
+                                ? 'bg-blue-500 text-white' 
+                                : 'text-white/60 hover:text-white/80'
+                            }`}
+                          >
+                            6 Months
+                          </button>
+                          <button 
+                            onClick={() => setPricingPeriod('annual')}
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                              pricingPeriod === 'annual' 
+                                ? 'bg-blue-500 text-white' 
+                                : 'text-white/60 hover:text-white/80'
+                            }`}
+                          >
+                            Annual
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

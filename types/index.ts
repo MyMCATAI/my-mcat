@@ -239,10 +239,11 @@ export enum ProductType {
   COINS_10_DISCOUNT = "coins_10_discount",
   MD_PREMIUM = "md_premium",
   MD_GOLD = "md_gold",
-  MD_GOLD_ANNUAL = "md_gold_annual"
+  MD_GOLD_ANNUAL = "md_gold_annual",
+  MD_GOLD_BIANNUAL = "md_gold_biannual"
 }
 
-export type ProductName = "TenCoins" | "FiftyCoins" | "MDPremium" | "MDGold"; // these are set in the stripe product metadata in Stripe Dashboard
+export type ProductName = "TenCoins" | "FiftyCoins" | "MDPremium" | "MDGold" | "MDGoldAnnual" | "MDGoldBiannual"; // these are set in the stripe product metadata in Stripe Dashboard
 
 // Type guard to check if a string is a valid ProductType
 export function isValidProductType(type: string): type is ProductType {
