@@ -343,7 +343,7 @@ async function getOrderedTests(
     // Check if this test has a corresponding Part 2
     if (test.title?.includes('Part 1')) {
       const part2Test = await findPart2Test(test.title);
-      if (part2Test) {
+      if (part2Test && !testsWithRelevance.some(t => t.title === part2Test.title)) {
         // Add the Part 2 test to our list if it exists
         testsWithRelevance.push({
           ...part2Test,
@@ -351,12 +351,12 @@ async function getOrderedTests(
           taken: false
         } as TestWithRelevance);
       }
-    }
+    } 
     return test;
   }));
 
   // Now sort with the updated list
-  const finalSortedTests = testsWithRelevance.sort((a: TestWithRelevance, b: TestWithRelevance) => {
+  const finalSortedTests = sortedTests.sort((a: TestWithRelevance, b: TestWithRelevance) => {
     // First, check if either test is a "Part 2" of a recently completed test
     const isAPart2 = a.title?.includes('Part 2');
     const isBPart2 = b.title?.includes('Part 2');
@@ -399,7 +399,7 @@ async function getOrderedTests(
   // Apply pagination
   let paginatedTests = finalSortedTests.slice(skip, skip + pageSize);
   const totalPages = Math.ceil(finalSortedTests.length / pageSize);
-
+  
   const introTestCompleted = await hasCompletedIntroTest(userId);
 
   if (!introTestCompleted) {
@@ -539,7 +539,7 @@ export async function GET(req: Request) {
       });
     } else {
       const testsData = await getOrderedTests(userId, page, pageSize, CARSonly);
-
+      
       return new NextResponse(
         JSON.stringify({ ...testsData, testsCompletedToday }),
         {
