@@ -120,7 +120,8 @@ export const useNotifications = () => {
     // Initial fetch
     useEffect(() => {
         fetchNotifications();
-    }, [fetchNotifications]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Set up WebSocket or polling for real-time updates
     useEffect(() => {
