@@ -73,7 +73,7 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
       <div 
         className={`
           absolute right-0 top-full mt-1 w-48 rounded-md overflow-hidden bg-white shadow-lg 
-          border border-gray-200 text-gray-700 text-base whitespace-nowrap z-[9999]
+          border border-gray-200 text-gray-700 text-base whitespace-nowrap z-[1000]
           transition-all duration-200 origin-top
           ${isMenuOpen 
             ? 'transform scale-y-100 opacity-100' 

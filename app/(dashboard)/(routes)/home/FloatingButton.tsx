@@ -242,25 +242,12 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
 
   /* ------------------------------------ Animations & Effects ------------------------------------ */
   useEffect(() => {
-    console.log({
-      isHovered,
-      activeTab,
-      recentlyChangedTab,
-      showTutoringMessage
-    });
-  }, [isHovered, activeTab, recentlyChangedTab, showTutoringMessage]);
-
-  useEffect(() => {
     return () => {
       if (tabChangeTimeout.current) {
         clearTimeout(tabChangeTimeout.current);
       }
     };
   }, []);
-
-  useEffect(() => {
-    console.log('Subscription status:', isSubscribed);
-  }, [isSubscribed]);
 
   /* ---------------------------------------- Render Methods -------------------------------------- */
   return (
