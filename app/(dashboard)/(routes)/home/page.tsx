@@ -21,9 +21,9 @@ import { Button } from "@/components/ui/button";
 import { checkProStatus, shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
-import RedeemReferralModal from '@/components/modals/RedeemReferralModal';
 import { useAudio } from "@/contexts/AudioContext";
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import RedeemReferralModal from '@/components/social/friend-request/RedeemReferralModal';
 
 /* ----------------------------------------- Types ------------------------------------------ */
 interface ContentWrapperProps {
@@ -226,12 +226,12 @@ const HomePage = () => {
       return;
     }
 
-    if (newTab === "doctorsoffice") {
+    if (newTab === "ankiclinic") {
       if (currentStudyActivityId) {
         await endActivity(currentStudyActivityId);
         setCurrentStudyActivityId(null);
       }
-      router.push('/doctorsoffice');
+      router.push('/ankiclinic');
       return;
     }
 

@@ -349,7 +349,7 @@ model Notification {
 
   // Core notification data
   type        String    // "coin", "reply", etc.
-  status      String    @default("active") // "active", "canceled", etc.
+  status      String    @default("active") // "active", "canceled", "accepted", "rejected"
   metadata    Json      // For coin type: { 
                        //   action: "send" | "request" | "reject",
                        //   amount: number,

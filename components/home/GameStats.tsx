@@ -115,15 +115,15 @@ export function GameStats({ name }: GameStatsProps) {
 
   /* -------------------------------------- Handlers -------------------------------------- */
   const handleMouseEnter = useCallback(() => {
-    // Prefetch the doctorsoffice route when user hovers
-    router.prefetch('/doctorsoffice');
+    // Prefetch the ankiclinic route when user hovers
+    router.prefetch('/ankiclinic');
   }, [router]);
 
   const handleAnkiClinicClick = useCallback(() => {
     if (!isSubscribed) {
       router.push('/offer');
     } else {
-      router.push('/doctorsoffice');
+      router.push('/ankiclinic');
     }
   }, [isSubscribed, router]);
 

@@ -84,7 +84,7 @@ export const OptionsDialog = ({
       setUserScore(data.score);
 
       if (option.title === "ANKI GAME") {
-        router.push('/doctorsoffice');
+        router.push('/ankiclinic');
       } else if (option.title === "ADAPTIVE TUTORING") {
         handleTabChange("AdaptiveTutoringSuite");
       }

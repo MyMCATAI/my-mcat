@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { FC } from "react";
 import { toast } from "react-hot-toast";
+import { useUserInfo } from "@/hooks/useUserInfo";
 
 interface NewGameButtonProps {
   userScore: number;
-  setUserScore: (score: number) => void;
   onGameStart: (userTestId: string) => void;
   isGameInProgress: boolean;
   resetGameState: () => void;
@@ -13,12 +13,13 @@ interface NewGameButtonProps {
 
 const NewGameButton: FC<NewGameButtonProps> = ({ 
   userScore, 
-  setUserScore, 
   onGameStart,
   isGameInProgress,
   resetGameState
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const { decrementScore } = useUserInfo();
+
   const createNewUserTest = async () => {
     try {
       const response = await fetch("/api/user-test", {
@@ -49,21 +50,9 @@ const NewGameButton: FC<NewGameButtonProps> = ({
 
     try {
       setIsLoading(true);
-      const response = await fetch("/api/user-info", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          decrementScore: 1
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to deduct coin");
-      }
-
-      const { score: updatedScore } = await response.json();
-      setUserScore(updatedScore);
-
+      
+      await decrementScore();
+      
       resetGameState();
 
       const userTestId = await createNewUserTest();
@@ -77,6 +66,8 @@ const NewGameButton: FC<NewGameButtonProps> = ({
     } catch (error) {
       console.error("Error starting new game:", error);
       toast.error("Failed to start new game. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 

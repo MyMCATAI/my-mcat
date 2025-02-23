@@ -1,6 +1,6 @@
 'use client'
 
-import { Navbar } from "@/components/navbar";
+import { Navbar } from "@/components/navbar/navbar";
 import { useEffect, useState } from "react";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import ThemeInitializer from "@/components/home/ThemeInitializer";
@@ -10,6 +10,7 @@ import { useAuth } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useUserInfo } from "@/hooks/useUserInfo";
+import { UserStatsProvider } from '@/contexts/UserStatsContext';
 
 const DashboardLayoutContent = ({
   children,
@@ -85,7 +86,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => (
         strategy="lazyOnload"
       />
       <ThemeInitializer />
-      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+      <UserStatsProvider>
+        <DashboardLayoutContent>{children}</DashboardLayoutContent>
+      </UserStatsProvider>
     </MusicPlayerProvider>
   </ThemeProvider>
 );

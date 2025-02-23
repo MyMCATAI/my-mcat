@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { createPortal } from 'react-dom';
-import FadingMessage from '../ui/FadingMessage';
+import FadingMessage from '../../ui/FadingMessage';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import Image from 'next/image';
-import UserProfileModal from './UserProfileModal';
+import UserProfileModal from '../profile/UserProfileModal';
 
 interface FriendRequestModalProps {
   isOpen: boolean;

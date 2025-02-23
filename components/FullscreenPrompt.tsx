@@ -17,7 +17,7 @@ export const FullscreenPrompt = () => {
     const pathname = usePathname();
 
     // List of paths where the prompt should appear (instead of exclude list)
-    const allowedPaths = ['/home', '/doctorsoffice'];
+    const allowedPaths = ['/home', '/ankiclinic'];
     
     // Function to check if path is allowed
     const isAllowedPath = (path: string) => {

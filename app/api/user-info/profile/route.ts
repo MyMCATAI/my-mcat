@@ -47,6 +47,7 @@ export async function GET(req: Request) {
         }
 
         return NextResponse.json({
+            userId: targetUserId,
             firstName: userInfo.firstName,
             bio: userInfo.bio,
             coins: userInfo.score,
