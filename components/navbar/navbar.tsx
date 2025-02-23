@@ -46,7 +46,7 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
         <div className="flex flex-row w-full items-center gap-4">
           <SubscriptionManagementButton isGoldMember={isSubscribed} />
           <MailButton />
-          <div className="flex items-center w-full h-full relative z-[9999]">
+          <div className="flex items-center w-full h-full relative z-[10]">
             <ProfileButton />
           </div>
         </div>
