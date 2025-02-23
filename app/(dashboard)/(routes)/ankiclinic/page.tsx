@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback, Suspense, forwardRef }
 import ResourcesMenu from "./ResourcesMenu";
 import { useRouter } from "next/navigation";
 import { DoctorOfficeStats } from "@/types";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 import Image from "next/image";
 import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, 
   getClinicCostPerDay, getLevelNumber, calculateQualityOfCare } from "@/utils/calculateResourceTotals";
@@ -24,6 +24,7 @@ import type { UserResponseWithCategory } from "@/types";
 import { useAudio } from "@/contexts/AudioContext";
 import RedeemReferralModal from "@/components/social/friend-request/RedeemReferralModal";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
+import { getAccentColor, getWelcomeMessage, getSuccessMessage } from './utils';
 
 // Lazy load the heavy components
 const OfficeContainer = dynamic(() => import('./OfficeContainer'), {
@@ -222,7 +223,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   // Component mount: Initial data fetch and daily calculations setup
   useEffect(() => {
     fetchData();
-    if (!hasCalculatedRef.current) {
+    if (!hasCalculatedRef.current && userInfo) {
       const timer = setTimeout(() => {
         performDailyCalculations();
         hasCalculatedRef.current = true;
@@ -231,7 +232,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       return () => clearTimeout(timer);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [userInfo]);
 
   // Component mount: fetches user activities 
   useEffect(() => {
@@ -354,7 +355,9 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   };
 
   const performDailyCalculations = async () => {
-    if (isCalculating) return;
+    if (isCalculating) {
+      return;
+    }
     setIsCalculating(true);
 
     try {
@@ -365,11 +368,27 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         },
       });
 
-      if (!response.ok) throw new Error();
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       
       if (data.error || data.alreadyUpdatedToday) {
-        toast.error(data.error);
+        const { greeting, message } = getWelcomeMessage(userInfo?.firstName);
+        toast.custom(
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-amber-600 dark:text-amber-400">{greeting}</p>
+            </div>
+            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+              <p className="italic">{message}</p>
+              <p>{"You've already treated your patients for today. Total patients treated:"} <span className="font-medium text-amber-600 dark:text-amber-400">{data.totalPatientsTreated}</span></p>
+              <p className="text-emerald-600 dark:text-emerald-400">{"Come back tomorrow to treat more patients!"}</p>
+            </div>
+          </div>,
+          {
+            duration: 5000,
+            position: 'top-center',
+          }
+        );
         return;
       }
 
@@ -377,26 +396,51 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       setTotalPatients(data.totalPatientsTreated);
 
       if (data.newPatientsTreated > 0) {
-        toast.success(
-          <div>
-            <p>Daily clinic update:</p>
-            <ul>
-              <li>New patients treated: {data.newPatientsTreated}</li>
-              <li>Total patients treated: {data.totalPatientsTreated}</li>
-            </ul>
+        const { greeting, message } = getSuccessMessage(userInfo?.firstName);
+        toast.custom(
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-emerald-600 dark:text-emerald-400">{greeting}</p>
+            </div>
+            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+              <p className="italic">{message}</p>
+              <ul className="space-y-1 mt-2">
+                <li className="flex items-center gap-2">
+                  <span className="font-medium">New patients treated:</span> 
+                  <span className="text-emerald-600 dark:text-emerald-400">{data.newPatientsTreated}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="font-medium">Total patients:</span> 
+                  <span className="text-emerald-600 dark:text-emerald-400">{data.totalPatientsTreated}</span>
+                </li>
+              </ul>
+            </div>
           </div>,
-          { duration: 5000 }
+          {
+            duration: 5000,
+            position: 'top-center',
+          }
         );
       } else {
-        toast(
-          <div>
-            <p>No new patients treated today.</p>
+        const { greeting, message } = getWelcomeMessage(userInfo?.firstName);
+        toast.custom(
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{greeting}</p>
+            </div>
+            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+              <p className="italic">{message}</p>
+              <p>No new patients to treat today. Try completing more flashcards!</p>
+            </div>
           </div>,
-          { duration: 5000 }
+          {
+            duration: 5000,
+            position: 'top-center',
+          }
         );
       }
     } catch (error) {
-      console.error("Error performing daily calculations:", error);
+      console.error('🚨 Error in daily calculations:', error);
       toast.error(
         "Failed to perform daily calculations. Please try again later."
       );
@@ -562,6 +606,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
+      <Toaster position="top-center" />
       {showWelcomeDialogue && 
         <WelcomeDialog 
           isOpen={showWelcomeDialogue}
