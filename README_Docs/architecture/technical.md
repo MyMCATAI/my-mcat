@@ -121,7 +121,7 @@ const PremiumFeature = () => {
   </button>
   
   <button
-    onClick={() => router.push('/doctorsoffice')}
+    onClick={() => router.push('/ankiclinic')}
     className="text-sm opacity-80 hover:opacity-100 transition-opacity"
   >
     Continue with Basic Access →

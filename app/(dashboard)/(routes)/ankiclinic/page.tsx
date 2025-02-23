@@ -22,9 +22,8 @@ import NewGameButton from "./components/NewGameButton";
 import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 import type { UserResponseWithCategory } from "@/types";
 import { useAudio } from "@/contexts/AudioContext";
-import RedeemReferralModal from "@/components/modals/RedeemReferralModal";
+import RedeemReferralModal from "@/components/social/friend-request/RedeemReferralModal";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
-
 
 // Lazy load the heavy components
 const OfficeContainer = dynamic(() => import('./OfficeContainer'), {
@@ -64,15 +63,14 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     setWrongCards: (cards: any[]) => void, 
     setCorrectCount: (count: number) => void 
   } | null>(null);
-  const { isSubscribed, userInfo } =  useUserInfo()
+  const { isSubscribed, userInfo, incrementScore, decrementScore } = useUserInfo();
   const audio = useAudio();
   const { setIsAutoPlay } = useMusicPlayer();
   const { startActivity } = useUserActivity();
   const router = useRouter();
   /* ------------------------------------------- State -------------------------------------------- */
-  const [activeTab, setActiveTab] = useState("doctorsoffice");
+  const [activeTab, setActiveTab] = useState("ankiclinic");
   const [userLevel, setUserLevel] = useState("PATIENT LEVEL");
-  const [userScore, setUserScore] = useState(0);
   const [patientsPerDay, setPatientsPerDay] = useState(4);
   const [userRooms, setUserRooms] = useState<string[]>([]);
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
@@ -326,7 +324,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       const clinicData = await clinicResponse.json();
       setReportData(reportData);
       setUserRooms(clinicData.rooms);
-      setUserScore(clinicData.score);
 
       // Set streak days from the user report
       setStreakDays(reportData.streak || 0);
@@ -368,46 +365,24 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to perform daily calculations");
-      }
-
+      if (!response.ok) throw new Error();
       const data = await response.json();
-      const {
-        updatedScore,
-        newPatientsTreated,
-        totalPatientsTreated,
-        patientsPerDay,
-        error,
-        alreadyUpdatedToday,
-      } = data;
-
-      if (error) {
-        toast.error(error);
+      
+      if (data.error || data.alreadyUpdatedToday) {
+        toast.error(data.error);
         return;
       }
 
-      if (alreadyUpdatedToday) {
-        toast(
-          <div>
-            <p>{patientsPerDay} patients were already treated earlier today.</p>
-            <p>Total patients: {totalPatientsTreated}</p>
-          </div>,
-          { duration: 5000 }
-        );
-        return;
-      }
+      await incrementScore();
+      setTotalPatients(data.totalPatientsTreated);
 
-      setUserScore(updatedScore);
-      setTotalPatients(totalPatientsTreated);
-
-      if (newPatientsTreated > 0) {
+      if (data.newPatientsTreated > 0) {
         toast.success(
           <div>
             <p>Daily clinic update:</p>
             <ul>
-              <li>New patients treated: {newPatientsTreated}</li>
-              <li>Total patients treated: {totalPatientsTreated}</li>
+              <li>New patients treated: {data.newPatientsTreated}</li>
+              <li>Total patients treated: {data.totalPatientsTreated}</li>
             </ul>
           </div>,
           { duration: 5000 }
@@ -431,7 +406,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   };
 
   const handleTabChange = (tab: string) => {
-    if (tab !== "doctorsoffice") {
+    if (tab !== "ankiclinic") {
       router.push(`/home?tab=${tab}`);
     }
     setActiveTab(tab);
@@ -451,7 +426,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       return;
     } else {
       // Buying logic
-      if (userScore < group.cost) {
+      if (userInfo?.score && userInfo.score < group.cost) {
         toast.error(`You need ${group.cost} coins to buy ${groupName}.`);
         return;
       }
@@ -463,15 +438,11 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           body: JSON.stringify({ room: groupName, cost: group.cost }),
         });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to update clinic rooms");
-        }
-
-        const { rooms: updatedRooms, score: updatedScore } =
-          await response.json();
+        if (!response.ok) throw new Error();
+        const { rooms: updatedRooms } = await response.json();
+        
         setUserRooms(updatedRooms);
-        setUserScore(updatedScore);
+        await decrementScore();
         setVisibleImages((prev) => {
           const newSet = new Set(prev);
           group.items.forEach((item) => newSet.add(item.id));
@@ -603,16 +574,19 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         </div>
       }>
         <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
-          <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak]">
+          {/* Give ResourcesMenu a higher z-index */}
+          <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-30">
             <ResourcesMenu
               reportData={reportData}
               userRooms={userRooms}
-              totalCoins={userScore}
+              totalCoins={userInfo?.score || 0}
               totalPatients={totalPatients}
               patientsPerDay={patientsPerDay}
             />
           </div>
-          <div className="w-3/4 font-krungthep relative rounded-r-lg">
+          
+          {/* Keep OfficeContainer at a lower z-index */}
+          <div className="w-3/4 font-krungthep relative z-20 rounded-r-lg">
             <OfficeContainer
               innerRef={officeContainerRef}
               onNewGame={handleSetPopulateRooms}
@@ -628,20 +602,12 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
             />
             {/* Button on the top left corner */}
             <div className="absolute top-4 left-4 flex gap-2 z-50">
-              {userLevel === "PATIENT LEVEL" 
-              ? 
-              <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
-                <p className="font-medium">{'To play, check out the marketplace! Hover over "PATIENT LEVEL" to see the marketplace. →'}</p>
-              </div>
-              :
               <NewGameButton
-                userScore={userScore}
-                setUserScore={setUserScore}
+                userScore={userInfo?.score || 0}
                 onGameStart={handleGameStart}
                 isGameInProgress={isGameInProgress}
                 resetGameState={resetGameState}
               />
-              }
             </div>
             {/* Fellowship Level button with coins and patients */}
             <div className="absolute top-4 right-4 z-50 flex items-center">
@@ -677,7 +643,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                 <PurchaseButton 
                   className="flex items-center hover:opacity-90 transition-opacity"
                   tooltipText="Click to purchase more coins"
-                  userCoinCount={userScore}
+                  userCoinCount={userInfo?.score}
                 >
                   <div className="flex items-center">
                     <Image
@@ -687,7 +653,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                       height={32}
                       className="mr-2"
                     />
-                    <span className="text-[--theme-hover-color] font-bold">{userScore}</span>
+                    <span className="text-[--theme-hover-color] font-bold">{userInfo?.score}</span>
                   </div>
                 </PurchaseButton>
               </div>
@@ -742,7 +708,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                       imageGroups={imageGroups}
                       visibleImages={visibleImages}
                       toggleGroup={toggleGroup}
-                      userScore={userScore}
+                      userScore={userInfo?.score || 0}
                       isOpen={isMarketplaceOpen}
                       onOpenChange={setIsMarketplaceOpen}
                                         />
@@ -834,7 +800,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       
       <div className="absolute bottom-4 right-4 z-[100]">
         <FloatingButton
-          currentPage="doctorsoffice"
+          currentPage="ankiclinic"
           initialTab={activeTab}
           activities={activities}
           onTasksUpdate={fetchActivities}

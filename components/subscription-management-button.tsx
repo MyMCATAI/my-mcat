@@ -37,7 +37,7 @@ export function SubscriptionManagementButton({
             <button
               onClick={handleManageSubscription}
               disabled={isLoading}
-              className="relative group mr-5"
+              className="relative group"
             >
               <div className="absolute"></div>
               <div className="relative flex items-center justify-center w-12 h-12 bg-black rounded-full overflow-hidden">

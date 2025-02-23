@@ -3,8 +3,8 @@ import { Plus, Globe } from 'lucide-react';
 import { FaUserInjured } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import { useUserInfo } from '@/hooks/useUserInfo';
-import FriendRequestModal from '@/components/modals/FriendRequestModal';
-import UserProfileModal from '@/components/modals/UserProfileModal';
+import FriendRequestModal from '@/components/social/friend-request/FriendRequestModal';
+import UserProfileModal from '@/components/social/profile/UserProfileModal';
 
 interface LeaderboardEntry {
   id: string;
@@ -104,7 +104,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
     if (userInfo && userId && referrals && leaderboardType === 'friends') {
       fetchFriendsLeaderboard();
     }
-  }, [userInfo, userId, referrals, fetchFriendsLeaderboard, leaderboardType]);
+  }, [leaderboardType]);
 
   const handleAddFriend = useCallback(async () => {
     if (!userInfo || !userId) {
@@ -266,6 +266,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
         onClose={() => setShowProfileModal(false)}
         userId={selectedUserId}
         isEditable={false}
+        isSelfProfile={selectedUserId === userId}
       />
     </div>
   );

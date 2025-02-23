@@ -15,7 +15,7 @@ const TAB_CHANGE_TIMEOUT = 3000;
 
 const buttonPositions = [
   { top: 0, left: 0, tab: "Tests", icon: "/icons/exam.svg" },
-  { top: 0, left: 0, tab: "doctorsoffice", icon: "/icons/gamecontroller.svg" },
+  { top: 0, left: 0, tab: "ankiclinic", icon: "/icons/gamecontroller.svg" },
   { top: 0, left: 0, tab: "CARS", icon: "/icons/book.svg" },
   { top: 0, left: 0, tab: "AdaptiveTutoringSuite", icon: "/graduationcap.svg" },
 ] as const;
@@ -28,7 +28,7 @@ const inactivePositions = [
 
 const labelTexts = {
   "Tests": "Practice Tests",
-  "doctorsoffice": "The Anki Clinic",
+  "ankiclinic": "The Anki Clinic",
   "CARS": "Daily CARs Suite",
   "AdaptiveTutoringSuite": "Tutoring Suite",
 } as const;
@@ -147,14 +147,14 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
   const handleButtonClick = async (tab: string) => {
 
     // Check if current path is protected from auto-redirect
-    // Allow useres to stay on offer page, preents auto-redirect to /doctorsoffice when on offer page
+    // Allow useres to stay on offer page, preents auto-redirect to /ankiclinic when on offer page
     const currentPath = window.location.pathname;
     if (PROTECTED_ROUTES.some(route => currentPath.startsWith(route))) {
       return;
     }
 
     // Check subscription status first, before any other logic
-    if (!isSubscribed && tab !== 'doctorsoffice') {
+    if (!isSubscribed && tab !== 'ankiclinic') {
       router.push('/offer');
       return;
     }
@@ -168,7 +168,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
 
       const tabActions = {
         Tests: () => {
-          if (currentPage === 'doctorsoffice') {
+          if (currentPage === 'ankiclinic') {
             router.push('/home');
           }
           setActiveTab(tab);
@@ -193,9 +193,9 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
             setRecentlyChangedTab(false);
           }, TAB_CHANGE_TIMEOUT);
         },
-        doctorsoffice: () => {
+        ankiclinic: () => {
           if (currentPage === 'home') {
-            router.push('/doctorsoffice');
+            router.push('/ankiclinic');
           } else {
             router.push('/home');
           }
@@ -203,7 +203,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
           onTabChange(tab);
         },
         CARS: () => {
-          if (currentPage === 'doctorsoffice') {
+          if (currentPage === 'ankiclinic') {
             router.push('/home');
           }
           setActiveTab(tab);
@@ -217,7 +217,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
           }, TAB_CHANGE_TIMEOUT);
         },
         default: () => {
-          if (currentPage === 'doctorsoffice') {
+          if (currentPage === 'ankiclinic') {
             router.push('/home');
           }
           setActiveTab(tab);
@@ -272,7 +272,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
 
       {/* Task List */}
       <AnimatePresence>
-        {isHovered && currentPage === "doctorsoffice" && !recentlyChangedTab && (
+        {isHovered && currentPage === "ankiclinic" && !recentlyChangedTab && (
           <FloatingTaskList 
             activities={activities}
             onTasksUpdate={() => onTasksUpdate?.([])}
@@ -297,7 +297,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
               .filter((p) => p.tab !== activeTab)
               .findIndex((p) => p.tab === pos.tab);
 
-            const isDisabled = !isSubscribed && pos.tab !== 'doctorsoffice';
+            const isDisabled = !isSubscribed && pos.tab !== 'ankiclinic';
 
             const top = isActive
               ? 0
