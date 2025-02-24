@@ -1,6 +1,5 @@
 // File: lib/question.ts
 
-import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prismadb from "@/lib/prismadb";
 import { Question, KnowledgeProfile, UserResponse } from '@prisma/client'; // Import types from Prisma
