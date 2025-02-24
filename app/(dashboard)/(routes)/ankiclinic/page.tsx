@@ -25,6 +25,7 @@ import { useAudio } from "@/contexts/AudioContext";
 import RedeemReferralModal from "@/components/social/friend-request/RedeemReferralModal";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
 import { getAccentColor, getWelcomeMessage, getSuccessMessage } from './utils';
+import { useAnkiClinicStore } from "@/store/useAnkiClinicStore";
 
 // Lazy load the heavy components
 const OfficeContainer = dynamic(() => import('./OfficeContainer'), {
@@ -69,8 +70,9 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const { setIsAutoPlay } = useMusicPlayer();
   const { startActivity } = useUserActivity();
   const router = useRouter();
+  const { activeTab } = useAnkiClinicStore((state) => state.ui);
+  const { setActiveTab } = useAnkiClinicStore((state) => state.actions);
   /* ------------------------------------------- State -------------------------------------------- */
-  const [activeTab, setActiveTab] = useState("ankiclinic");
   const [userLevel, setUserLevel] = useState("PATIENT LEVEL");
   const [patientsPerDay, setPatientsPerDay] = useState(4);
   const [userRooms, setUserRooms] = useState<string[]>([]);

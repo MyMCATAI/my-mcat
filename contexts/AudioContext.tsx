@@ -79,6 +79,17 @@ const VOLUME_COEFFICIENTS = {
   [SOUND_CATEGORIES.AMBIENT]: 0.75  // Ambient at half volume
 } as const;
 
+/* --- Constants ----- */
+const DEBUG = process.env.NODE_ENV === 'development';
+
+const logError = (error: Error, context: string) => {
+  if (DEBUG) {
+    console.error(`🎵 [Audio] ${context}:`, error);
+  }
+  // Always show user-facing error
+  toast.error('Audio playback issue. Please refresh if this persists.');
+};
+
 export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSong, setCurrentSong] = useState<string | null>(null);
@@ -123,7 +134,7 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
 
       return ctx;
     } catch (error) {
-      console.error('Failed to initialize audio context:', error);
+      logError(error as Error, 'Audio context initialization failed');
       throw error;
     }
   }, [volumeState]);
@@ -157,58 +168,35 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
       
       return audioBuffer;
     } catch (error) {
-      handleAudioError(error as Error, 'Error loading audio');
+      logError(error as Error, `Failed to load audio: ${url}`);
       throw error;
     }
   }, [initializeAudioContext, handleAudioError]);
 
   const stopMusic = useCallback(() => {
-    console.log('🎵 [AudioContext] Stop music requested:', {
-      currentSong,
-      isPlaying,
-      musicSource: Array.from(MUSIC_SOURCE.entries()),
-      loopSources: Array.from(LOOP_SOURCES.entries())
-    });
-
-    // Stop all music sources
     MUSIC_SOURCE.forEach((source, url) => {
       try {
-        console.log('🎵 [AudioContext] Stopping music source:', { url });
-        // Remove onended handler before stopping to prevent auto-advance
         source.onended = null;
         source.stop();
         source.disconnect();
         MUSIC_SOURCE.delete(url);
       } catch (error) {
-        console.error('🎵 [AudioContext] Error stopping music source:', { url, error });
+        logError(error as Error, 'Error stopping music');
       }
     });
 
     setIsPlaying(false);
     setCurrentSong(null);
-  }, [currentSong, isPlaying]);
+  }, []);
 
   const playMusic = useCallback(async (url: string, autoplay = true, onEnded?: () => void) => {
-    console.log('🎵 [AudioContext] Play music requested:', {
-      url,
-      autoplay,
-      currentSong,
-      musicSourceCount: MUSIC_SOURCE.size,
-      loopSourcesCount: LOOP_SOURCES.size,
-      currentVolume: volumeState,
-      isPlaying
-    });
-
     if (!autoplay) {
-      console.log('🎵 [AudioContext] Autoplay is false, stopping music');
       stopMusic();
       return null;
     }
 
     try {
-      // Clean up existing music source first (but leave loops running)
       if (MUSIC_SOURCE.size > 0) {
-        console.log('🎵 [AudioContext] Cleaning up existing music source before playing new song');
         stopMusic();
       }
 
@@ -216,8 +204,6 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
       const ctx = await initializeAudioContext();
       if (!ctx) throw new Error('No audio context');
 
-      // Set state before creating new source
-      console.log('🎵 [AudioContext] Setting up new music playback:', { url });
       setIsPlaying(true);
       setCurrentSong(url);
 
@@ -239,23 +225,15 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       source.onended = () => {
-        console.log('🎵 [AudioContext] Music source ended:', { url });
         MUSIC_SOURCE.delete(url);
         setIsPlaying(false);
         setCurrentSong(null);
         onEnded?.();
       };
 
-      console.log('🎵 [AudioContext] Started music playback:', { 
-        url,
-        musicSource: Array.from(MUSIC_SOURCE.keys()),
-        loopSources: Array.from(LOOP_SOURCES.keys())
-      });
-      
       return source;
     } catch (error) {
-      console.error('🎵 [AudioContext] Error playing music:', error);
-      handleAudioError(error as Error, 'Error playing audio');
+      logError(error as Error, 'Error playing music');
       return null;
     }
   }, [loadAudioBuffer, initializeAudioContext, stopMusic, handleAudioError, volumeState]);
@@ -303,18 +281,12 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Simplify setVolume to only control master gain
   const setVolume = useCallback((newVolume: number) => {
-    if (!masterGainNode) {
-      console.warn('🔊 [Volume] Master gain node not available');
-      return;
-    }
+    if (!masterGainNode || !audioContextRef.current) return;
 
-    const ctx = audioContextRef.current;
-    if (ctx) {
-      const now = ctx.currentTime;
-      masterGainNode.gain.cancelScheduledValues(now);
-      masterGainNode.gain.linearRampToValueAtTime(newVolume, now + 0.1);
-      setVolumeState(newVolume);
-    }
+    const now = audioContextRef.current.currentTime;
+    masterGainNode.gain.cancelScheduledValues(now);
+    masterGainNode.gain.linearRampToValueAtTime(newVolume, now + 0.1);
+    setVolumeState(newVolume);
   }, []);
 
   const recoverAudioContext = useCallback(async () => {
@@ -332,11 +304,12 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const monitorPerformance = useCallback((ctx: AudioContext) => {
-    if (ctx.baseLatency > 0.025) { // More than 25ms latency
+    if (!DEBUG) return;
+    
+    if (ctx.baseLatency > 0.025) {
       console.warn('High audio latency detected:', ctx.baseLatency);
     }
     
-    // Monitor for buffer underruns
     if ((ctx as any).getOutputTimestamp) {
       const timestamp = (ctx as any).getOutputTimestamp();
       if (timestamp.contextTime > timestamp.performanceTime) {
@@ -353,35 +326,22 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
         audio.source.disconnect();
         audio.gainNode.disconnect();
         LOOP_SOURCES.delete(soundName);
-        console.log('🔁 [Ambient] Stopped loop:', soundName);
       } catch (error) {
-        console.error('[Ambient] Error stopping loop:', error);
+        console.error('Error stopping ambient sound:', error);
       }
     }
   }, []);
 
   const stopAllLoops = useCallback(() => {
-    console.log('🔁 [Ambient] Attempting to stop all loops:', {
-      activeLoops: Array.from(LOOP_SOURCES.keys()),
-      loopSourcesSize: LOOP_SOURCES.size
-    });
-    
     LOOP_SOURCES.forEach((audio, name) => {
       try {
-        console.log('🔁 [Ambient] Stopping loop:', name);
         audio.source.stop();
         audio.source.disconnect();
         audio.gainNode.disconnect();
         LOOP_SOURCES.delete(name);
       } catch (error) {
-        console.error('🔁 [Ambient] Error stopping loop:', name, error);
+        console.error('Error stopping ambient sound:', error);
       }
-    });
-
-    // Verify cleanup
-    console.log('🔁 [Ambient] After cleanup:', {
-      remainingLoops: Array.from(LOOP_SOURCES.keys()),
-      loopSourcesSize: LOOP_SOURCES.size
     });
   }, []);
 
@@ -429,9 +389,7 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    console.log('🔊 AudioProvider mounted');
     return () => {
-      console.log('🔊 AudioProvider unmounted, cleaning up all audio');
       stopAllLoops();
       if (audioContextRef.current) {
         audioContextRef.current.close();
@@ -443,7 +401,6 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   // Move the existing context check after all hook declarations
   const existingContext = useContext(AudioContext);
   if (existingContext) {
-    console.warn('🔊 Attempted to nest AudioProvider, skipping initialization');
     return <>{children}</>;
   }
 

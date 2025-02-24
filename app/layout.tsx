@@ -9,6 +9,7 @@ import { FullscreenPrompt } from '@/components/FullscreenPrompt'
 import { UserProfileProvider } from '@/contexts/UserProfileContext'
 import { AudioProvider } from '@/contexts/AudioContext'
 import { UserInfoProvider } from '@/contexts/UserInfoContext'
+import DebugPanel from "@/components/ui/DebugPanel"
 const robotoSlab = Roboto_Slab({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -78,6 +79,7 @@ export default function RootLayout({
                     {children}
                   </div>
                   <Analytics />
+                  <DebugPanel />
                 </div>
               </body>
             </html>
