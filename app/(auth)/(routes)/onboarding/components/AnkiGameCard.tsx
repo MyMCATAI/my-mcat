@@ -132,7 +132,7 @@ export function AnkiGameCard() {
 
           <div className="w-full flex flex-col items-center">
             <p className="text-2xl font-bold text-white mb-[50px]">
-              {"Freemium"}
+              {"Free"}
             </p>
 
             <div

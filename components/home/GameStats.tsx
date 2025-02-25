@@ -121,7 +121,7 @@ export function GameStats({ name }: GameStatsProps) {
 
   const handleAnkiClinicClick = useCallback(() => {
     if (!isSubscribed) {
-      router.push('/offer');
+      router.push('/mobile');
     } else {
       router.push('/ankiclinic');
     }
@@ -151,7 +151,7 @@ export function GameStats({ name }: GameStatsProps) {
             className="rounded"
           />
           <button
-            onClick={() => router.push('/offer')}
+            onClick={() => router.push('/mobile')}
             className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-amber-900 rounded-lg hover:shadow-lg transition-all duration-200"
           >
             Upgrade to Gold

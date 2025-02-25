@@ -146,7 +146,7 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
            Score your <span className="text-[#f2f64f]">best.</span>
         </h1>
         <p className="text-xl md:text-2xl text-white my-8">
-        Kalypso invites you join him, and thousands of other premeds, in making MCAT prep into a video game.
+        Kalypso invites you join him, and thousands of other premeds, in making MCAT prep active. 
         </p>
         <div className="flex justify-center">
           <Link href="/sign-up">
