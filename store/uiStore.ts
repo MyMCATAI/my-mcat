@@ -26,33 +26,6 @@ interface UIStore {
   setCurrentRoute: (route: string) => void
 }
 
-/* --- TODO: Navigation States to Add from Context API ------- */
-/*
-1. From UserProfileContext:
-  - lastVisitedRoute: string
-  - onboardingRoute: string
-  - tutorialProgress: {
-    currentStep: number
-    completedRoutes: string[]
-  }
-
-2. From UserInfoContext:
-  - authorizedRoutes: string[]
-  - restrictedRoutes: string[]
-  - redirectAfterAuth: string
-
-3. From AudioContext:
-  - audioEnabledRoutes: string[]
-  - routeSoundPreferences: Record<string, {
-    bgm: boolean
-    sfx: boolean
-  }>
-
-4. Navigation History:
-  - previousRoute: string
-  - navigationStack: string[]
-  - breadcrumbs: string[]
-*/
 
 export const useStore = create<UIStore>()(
   devtools(
