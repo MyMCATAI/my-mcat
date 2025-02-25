@@ -3,12 +3,6 @@ import { devtools } from 'zustand/middleware'
 import type { DoctorOfficeStats, UserResponseWithCategory } from "@/types"
 
 interface AnkiClinicState {
-  // Game UI State
-  ui: {
-    activeTab: string
-    isLoading: boolean
-  }
-  
   // Game Progress
   progress: {
     userLevel: string
@@ -35,7 +29,6 @@ interface AnkiClinicState {
 
   // Actions
   actions: {
-    setActiveTab: (tab: string) => void
     setUserLevel: (level: string) => void
     updateGameProgress: (data: Partial<AnkiClinicState['progress']>) => void
     resetGameState: () => void
@@ -46,12 +39,6 @@ interface AnkiClinicState {
 export const useAnkiClinicStore = create<AnkiClinicState>()(
   devtools(
     (set) => ({
-      // Initial state
-      ui: {
-        activeTab: "ankiclinic",
-        isLoading: false
-      },
-      
       progress: {
         userLevel: "PATIENT LEVEL",
         patientsPerDay: 4,
@@ -76,10 +63,6 @@ export const useAnkiClinicStore = create<AnkiClinicState>()(
 
       // Actions
       actions: {
-        setActiveTab: (tab) => set((state) => ({ 
-          ui: { ...state.ui, activeTab: tab } 
-        })),
-
         setUserLevel: (level) => set((state) => ({
           progress: { ...state.progress, userLevel: level }
         })),

@@ -10,6 +10,8 @@ import { UserProfileProvider } from '@/contexts/UserProfileContext'
 import { AudioProvider } from '@/contexts/AudioContext'
 import { UserInfoProvider } from '@/contexts/UserInfoContext'
 import DebugPanel from "@/components/ui/DebugPanel"
+import RouteHandler from '@/components/RouteHandler'
+
 const robotoSlab = Roboto_Slab({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -60,9 +62,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider
-    afterSignOutUrl={"/"}
-    >
+    <ClerkProvider afterSignOutUrl={"/"}>
       <AudioProvider>
         <UserInfoProvider>
           <UserProfileProvider>
@@ -76,16 +76,18 @@ export default function RootLayout({
                   <ThemeInitializer />
                   <FullscreenPrompt />
                   <div className="relative z-50">
-                    {children}
+                    <RouteHandler>
+                      {children}
+                    </RouteHandler>
                   </div>
                   <Analytics />
                   <DebugPanel />
                 </div>
               </body>
             </html>
-            </UserProfileProvider>
-          </UserInfoProvider>
-        </AudioProvider>
+          </UserProfileProvider>
+        </UserInfoProvider>
+      </AudioProvider>
     </ClerkProvider>
   )
 }
