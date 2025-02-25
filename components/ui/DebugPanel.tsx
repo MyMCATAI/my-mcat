@@ -1,23 +1,23 @@
 "use client";
 
-import { useStore as useUIStore } from '@/store/uiStore'
-import { useAnkiClinicStore } from '@/store/useAnkiClinicStore'
 import { useEffect, useState } from 'react'
 import { useSearchParams, usePathname, useRouter } from 'next/navigation'
+import { useUI } from '@/store/selectors'
 
 /* --- Constants ----- */
 const DEBUG_PARAM = 'debug'
 
 const DebugPanel = () => {
+  /* ---- State ----- */
   const searchParams = useSearchParams()
   const pathname = usePathname() || ''
   const router = useRouter()
   const [isDebug, setIsDebug] = useState(false)
   
-  // Use both stores
-  const uiStore = useUIStore()
-  const gameStore = useAnkiClinicStore()
+  // Use UI store
+  const uiState = useUI()
 
+  /* --- Effects --- */
   // Persist debug mode across navigation
   useEffect(() => {
     const debugValue = searchParams?.get(DEBUG_PARAM)
@@ -30,53 +30,30 @@ const DebugPanel = () => {
     }
   }, [searchParams, pathname, router])
 
+  useEffect(() => {
+    // Persist debug mode in localStorage
+    const debugMode = localStorage.getItem('debugMode')
+    if (debugMode === 'true') {
+      document.body.classList.add('debug-mode')
+    }
+  }, [])
+
   if (!isDebug) return null
 
   return (
     <div className="fixed top-0 right-0 z-50 p-4 bg-red-100 bg-opacity-90 max-h-screen overflow-auto shadow-lg border-l border-red-300">
       <div className="space-y-4">
-        {/* UI State section */}
+        {/* UI Store State */}
         <div>
-          <h3 className="font-bold mb-2 text-black">UI State</h3>
+          <h3 className="font-bold mb-2 text-black">UI Store State</h3>
           <pre className="bg-white bg-opacity-50 p-2 rounded text-black text-sm">
-            {JSON.stringify({
-              activeTab: uiStore.activeTab,
-              currentRoute: uiStore.currentRoute,
-              isLoading: uiStore.isLoading
-            }, null, 2)}
-          </pre>
-        </div>
-
-        {/* Window Size section */}
-        <div>
-          <h3 className="font-bold mb-2 text-black">Window Size</h3>
-          <pre className="bg-white bg-opacity-50 p-2 rounded text-black text-sm">
-            {JSON.stringify(uiStore.window, null, 2)}
-          </pre>
-        </div>
-
-        {/* Progress State */}
-        <div>
-          <h3 className="font-bold mb-2 text-black">Progress State</h3>
-          <pre className="bg-white bg-opacity-50 p-2 rounded text-black text-sm">
-            {JSON.stringify({
-              ...gameStore.progress,
-              activeRooms: Array.from(gameStore.progress.activeRooms || new Set())
-            }, null, 2)}
-          </pre>
-        </div>
-
-        {/* Quiz State */}
-        <div>
-          <h3 className="font-bold mb-2 text-black">Quiz State</h3>
-          <pre className="bg-white bg-opacity-50 p-2 rounded text-black text-sm">
-            {JSON.stringify(gameStore.quiz, null, 2)}
+            {JSON.stringify(uiState, null, 2)}
           </pre>
         </div>
 
         <div className="fixed bottom-4 right-4">
           <div className="text-black text-[10px] opacity-70 bg-white bg-opacity-50 px-2 py-1 rounded">
-            Debug Mode: ON | Route: {uiStore.currentRoute}
+            Debug Mode: ON | Route: {uiState.currentRoute}
           </div>
         </div>
       </div>
@@ -84,4 +61,4 @@ const DebugPanel = () => {
   )
 }
 
-export default DebugPanel 
+export default DebugPanel

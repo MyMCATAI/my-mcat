@@ -1,5 +1,31 @@
 # Global State Management Overview
 
+## Current Zustand Stores
+
+### UI Store (`uiStore`)
+```typescript
+{
+  // Device & Window Information
+  window: {
+    width: number
+    height: number
+    isMobile: boolean
+    isTablet: boolean
+    isDesktop: boolean
+  }
+  
+  // Route & Loading
+  currentRoute: string
+  isLoading: boolean
+  
+  // Theme Settings
+  theme: {
+    mode: 'light' | 'dark' | 'system'
+    systemTheme: string
+  }
+}
+```
+
 ## Current Context API State (To Be Migrated)
 
 ### [UserProfileContext](../contexts/UserProfileContext.tsx)
@@ -60,27 +86,8 @@
   - `setTheme: (theme: string) => void`
   - `systemTheme: string`
 
-## Zustand Stores
 
-### UI Store (`uiStore`)
-```typescript
-{
-  // Note: activeTab was originally managed locally in [home/page.tsx](../app/(dashboard)/(routes)/home/page.tsx)
-  // Currently in Zustand but should be moved back to local state as it's page-specific
-  activeTab: string
-  setActiveTab: (tab: string) => void
-}
-```
 
-### Removed/Migrated Stores
-- `ankiClinicStore` (Removed - Currently using Context API)
-
-### State That Should Be Local
-- `activeTab` in `uiStore` should be moved back to local state in respective pages:
-  - Originally in [home/page.tsx](../app/(dashboard)/(routes)/home/page.tsx)
-  - Currently used in multiple components but should be prop-drilled instead
-  - Each page should manage its own tabs independently
-  - No need for global state as tabs are page-specific
 
 ## Migration Plan
 
@@ -88,18 +95,21 @@
 1. Game State (AnkiClinic) - High Priority
    - Currently using local state + context
    - Need to recreate `useAnkiClinicStore`
+   - Will handle game progress, quiz state, and room management
 
 2. User Management - Medium Priority
    - Combine `UserProfileContext`, `UserInfoContext`, `UserStatsContext`
    - Create unified `userStore`
+   - Will handle user data, scores, stats, and preferences
 
 3. Media Management - Low Priority
    - Combine `AudioContext`, `MusicPlayerContext`
    - Create `mediaStore`
+   - Will handle sound effects, music, and volume controls
 
 4. Theme & UI - Low Priority
-   - Migrate `ThemeContext`
-   - Expand existing `uiStore`
+   - Already partially migrated (theme in uiStore)
+   - Expand existing `uiStore` with additional UI controls
 
 ### Keep in Context API
 - VocabContext (real-time features)

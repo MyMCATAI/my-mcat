@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react'
-import { useStore } from '@/store/uiStore'
+import { useUI } from '@/store/selectors'
 
 /* --- Constants ----- */
 const DEBOUNCE_DELAY = 250
@@ -23,7 +23,7 @@ function debounce(func: DebouncedFunction, wait: number) {
 }
 
 export const useWindowSize = () => {
-  const setWindowSize = useStore(state => state.setWindowSize)
+  const { setWindowSize } = useUI()
   
   const handleResize = useCallback(() => {
     const width = window.innerWidth

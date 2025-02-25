@@ -1,29 +1,38 @@
 'use client'
 
-import { Navbar } from "@/components/navbar/navbar";
 import { useEffect, useState } from "react";
-import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
-import ThemeInitializer from "@/components/home/ThemeInitializer";
-import Script from 'next/script';
-import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import Script from 'next/script';
+
+import { useUI } from "@/store/selectors";
 import { useUserInfo } from "@/hooks/useUserInfo";
+
+import Navbar from "@/components/navbar/navbar";
+import ThemeInitializer from "@/components/home/ThemeInitializer";
+import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
 import { UserStatsProvider } from '@/contexts/UserStatsContext';
 
-const DashboardLayoutContent = ({
-  children,
-}: {
-  children: React.ReactNode
-}) => {
-  const { theme } = useTheme();
+/* --- Types ---- */
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+interface DashboardLayoutContentProps {
+  children: React.ReactNode;
+}
+
+const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
+  /* ---- State ----- */
+  const { theme } = useUI();
   const [backgroundImage, setBackgroundImage] = useState('');
   const { isLoaded, isSignedIn } = useAuth();
   const { isLoading, isSubscribed } = useUserInfo();
   const router = useRouter();
   const pathname = usePathname();
 
+  /* --- Effects --- */
   useEffect(() => {
     if (isLoaded && isSignedIn && !isLoading) {
       console.log('🎫 Subscription Status:', 
@@ -78,19 +87,17 @@ const DashboardLayoutContent = ({
    );
 }
 
-const DashboardLayout = ({ children }: { children: React.ReactNode }) => (
-  <ThemeProvider>
-    <MusicPlayerProvider>
-      <Script
-        src="https://tally.so/widgets/embed.js"
-        strategy="lazyOnload"
-      />
-      <ThemeInitializer />
-      <UserStatsProvider>
-        <DashboardLayoutContent>{children}</DashboardLayoutContent>
-      </UserStatsProvider>
-    </MusicPlayerProvider>
-  </ThemeProvider>
+const DashboardLayout = ({ children }: LayoutProps) => (
+  <MusicPlayerProvider>
+    <Script
+      src="https://tally.so/widgets/embed.js"
+      strategy="lazyOnload"
+    />
+    <ThemeInitializer />
+    <UserStatsProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </UserStatsProvider>
+  </MusicPlayerProvider>
 );
 
 export default DashboardLayout;

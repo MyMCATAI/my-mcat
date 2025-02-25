@@ -2,19 +2,20 @@
 
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
-import { useStore } from '@/store/uiStore';
+import { useUI } from '@/store/selectors';
 
-const RouteHandler = ({ children }: { children: React.ReactNode }) => {
+/* --- Types ---- */
+interface RouteHandlerProps {
+  children: React.ReactNode;
+}
+
+const RouteHandler = ({ children }: RouteHandlerProps) => {
   const pathname = usePathname() || '';
-  const setActiveTab = useStore(state => state.setActiveTab);
-  const setCurrentRoute = useStore(state => state.setCurrentRoute);
+  const { setCurrentRoute } = useUI();
 
   useEffect(() => {
-    // Extract the main route segment
-    const route = pathname.split('/')[1] || 'home';
-    setActiveTab(route);
     setCurrentRoute(pathname);
-  }, [pathname, setActiveTab, setCurrentRoute]);
+  }, [pathname, setCurrentRoute]);
 
   return <>{children}</>;
 };

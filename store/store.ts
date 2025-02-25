@@ -5,45 +5,50 @@ import { devtools } from 'zustand/middleware'
 export const MOBILE_BREAKPOINT = 640  // sm
 export const TABLET_BREAKPOINT = 1024 // lg
 
-/* ----- Types ---- */
+/* --- Types ---- */
 interface WindowSize {
   width: number
   height: number
-  isMobile: boolean
-  isTablet: boolean
   isDesktop: boolean
 }
 
-interface UIStore {
+export type ThemeType = 'cyberSpace' | 'sakuraTrees' | 'sunsetCity' | 'mykonosBlue'
+
+/* --- Store Slices ---- */
+interface UISlice {
   window: WindowSize
-  activeTab: string
   currentRoute: string
-  isLoading: boolean
-  
-  // Actions
+  theme: ThemeType
   setWindowSize: (size: WindowSize) => void
-  setActiveTab: (tab: string) => void
   setCurrentRoute: (route: string) => void
+  setTheme: (theme: ThemeType) => void
 }
 
+/* --- Store Type ---- */
+type Store = UISlice
 
-export const useStore = create<UIStore>()(
+/* --- Create Store ---- */
+export const useStore = create<Store>()(
   devtools(
     (set) => ({
+      // UI State
       window: {
         width: typeof window !== 'undefined' ? window.innerWidth : 1920,
         height: typeof window !== 'undefined' ? window.innerHeight : 1080,
-        isMobile: false,
-        isTablet: false,
         isDesktop: true
       },
-      activeTab: 'home',
       currentRoute: '/',
-      isLoading: false,
+      theme: 'cyberSpace',
 
+      // UI Actions
       setWindowSize: (size) => set({ window: size }),
-      setActiveTab: (tab) => set({ activeTab: tab }),
-      setCurrentRoute: (route) => set({ currentRoute: route })
+      setCurrentRoute: (route) => set({ currentRoute: route }),
+      setTheme: (theme) => {
+        set({ theme })
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('theme', theme)
+        }
+      }
     }),
     { name: 'UI Store' }
   )
