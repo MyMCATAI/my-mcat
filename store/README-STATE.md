@@ -2,29 +2,44 @@
 
 ## Current Zustand Stores
 
-### UI Store (`uiStore`)
+### UI Store (`store.ts`)
 ```typescript
 {
   // Device & Window Information
   window: {
     width: number
     height: number
-    isMobile: boolean
-    isTablet: boolean
     isDesktop: boolean
   }
   
-  // Route & Loading
+  // Route Information
   currentRoute: string
-  isLoading: boolean
   
   // Theme Settings
-  theme: {
-    mode: 'light' | 'dark' | 'system'
-    systemTheme: string
-  }
+  theme: ThemeType // 'cyberSpace' | 'sakuraTrees' | 'sunsetCity' | 'mykonosBlue'
+  
+  // Actions
+  setWindowSize: (size: WindowSize) => void
+  setCurrentRoute: (route: string) => void
+  setTheme: (theme: ThemeType) => void
 }
 ```
+
+### Selectors (`selectors.ts`)
+```typescript
+// Combined selector
+useUI() => { theme, window, currentRoute, setTheme, setWindowSize, setCurrentRoute }
+
+// Individual selectors for performance
+useTheme() => theme
+useWindowSize() => window
+useCurrentRoute() => currentRoute
+```
+
+## Completed Migrations
+- ✅ Theme Management: Migrated from `ThemeContext` to Zustand UI Store
+- ✅ Window Size: Implemented in UI Store with dedicated tracker component
+- ✅ Route Tracking: Added to UI Store with RouteHandler component
 
 ## Current Context API State (To Be Migrated)
 
@@ -80,15 +95,6 @@
   - `isAutoPlay: boolean`
   - `setIsAutoPlay: (autoPlay: boolean) => void`
 
-### [ThemeContext](../contexts/ThemeContext.tsx)
-- Theme Settings:
-  - `theme: 'light' | 'dark' | 'system'`
-  - `setTheme: (theme: string) => void`
-  - `systemTheme: string`
-
-
-
-
 ## Migration Plan
 
 ### Priority for Migration to Zustand
@@ -106,10 +112,6 @@
    - Combine `AudioContext`, `MusicPlayerContext`
    - Create `mediaStore`
    - Will handle sound effects, music, and volume controls
-
-4. Theme & UI - Low Priority
-   - Already partially migrated (theme in uiStore)
-   - Expand existing `uiStore` with additional UI controls
 
 ### Keep in Context API
 - VocabContext (real-time features)
@@ -137,3 +139,20 @@
    - Write tests before migration
    - Update components gradually
    - Keep backward compatibility 
+
+## Maintenance Guidelines
+1. When adding new state:
+   - Add to appropriate store file
+   - Create selectors in selectors.ts
+   - Update this README
+   - Consider performance implications
+
+2. When creating new selectors:
+   - Add to selectors.ts
+   - Create both combined and individual selectors
+   - Document with JSDoc comments
+
+3. When migrating contexts:
+   - Update the "Completed Migrations" section
+   - Remove from "To Be Migrated" section
+   - Document any breaking changes 
