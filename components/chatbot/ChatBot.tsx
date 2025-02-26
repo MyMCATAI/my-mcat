@@ -46,6 +46,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
   const cmdPressedRef = useRef(false);
   const cmdPressedTime = useRef<number | null>(null);
   const cmdReleaseTimer = useRef<NodeJS.Timeout | null>(null);
+  const [lastToggleTime, setLastToggleTime] = useState<number>(0);
 
   useEffect(() => {
     if (chatbotRef) {
@@ -99,29 +100,34 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Meta' || event.key === 'Control') {
+      if ((event.key === 'Meta' || event.key === 'Control') && !event.repeat) {
+        // Only set command pressed if no other keys are already pressed
         if (!cmdPressedRef.current) {
           cmdPressedRef.current = true;
           cmdPressedTime.current = Date.now();
           setCmdPressed(true);
         }
-      } else {
-        cmdPressedRef.current = false;
+      } else if (cmdPressedRef.current) {
+        // If any other key is pressed while Command is down, mark it as a combo
+        // This prevents toggling audio when Command is used for shortcuts
         cmdPressedTime.current = null;
-        setCmdPressed(false);
-        if (cmdReleaseTimer.current) {
-          clearTimeout(cmdReleaseTimer.current);
-        }
       }
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
       if (event.key === 'Meta' || event.key === 'Control') {
+        // Only toggle if it was a standalone Command press (not part of a combo)
         if (cmdPressedRef.current && cmdPressedTime.current) {
           const pressDuration = Date.now() - cmdPressedTime.current;
           if (pressDuration < 500) { // Only toggle if pressed for less than 500ms
+            // Clear any existing timer to prevent multiple toggles
+            if (cmdReleaseTimer.current) {
+              clearTimeout(cmdReleaseTimer.current);
+            }
+            
             cmdReleaseTimer.current = setTimeout(() => {
               toggleAudio();
+              cmdReleaseTimer.current = null;
             }, 50); // Small delay to ensure no other keys were pressed
           }
         }
@@ -222,6 +228,17 @@ const ChatBot: React.FC<ChatBotProps> = ({
   };
 
   const toggleAudio = () => {
+    // Prevent rapid toggling by enforcing a minimum time between toggles
+    const now = Date.now();
+    const timeSinceLastToggle = now - lastToggleTime;
+    
+    // Only allow toggle if it's been at least 500ms since the last toggle
+    if (timeSinceLastToggle < 500) {
+      return;
+    }
+    
+    setLastToggleTime(now);
+    
     if (!audioEnabled) {
       audio.playSound('chatbot-open');
     }
