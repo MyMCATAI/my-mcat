@@ -67,7 +67,7 @@ const calculateScore = (summaries: AnswerSummary[]): number => {
 /* ---------------------------------------- Component ---------------------------------------- */
 const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContext }) => {
   /* ---------------------------------------- Hooks ------------------------------------------ */
-  const { userInfo, isLoading: isLoadingUserInfo, updateScore } = useUserInfo();
+  const { userInfo, isLoading: isLoadingUserInfo, updateScore, decrementScore } = useUserInfo();
   const audio = useAudio();
 
   /* ---------------------------------------- Refs ------------------------------------------ */
@@ -106,7 +106,7 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
   const handleStartQuiz = async () => {
     try {
       setIsStarting(true);
-      await updateScore(-1); // Spend 1 coin to start
+      await decrementScore(); // Spend 1 coin to start
       setShowIntroDialog(false);
       setHasStarted(true);
       await fetchQuestions();
