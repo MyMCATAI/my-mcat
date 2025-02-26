@@ -80,6 +80,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     sendMessage: (message: string) => void;
   }>({ sendMessage: () => {} });
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const [springs, api] = useSpring(() => ({
     from: { x: 0 }
@@ -102,6 +103,22 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
       }
     }
   });
+
+  // Check if the screen is mobile size
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkIfMobile();
+    
+    // Add event listener
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   const getRandomEncouragement = (currentStreak: number) => {
     const messages = [
@@ -280,7 +297,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
         open={isOpen} 
         onOpenChange={handleOpenChange}
       >
-        <DialogContent className="max-w-[80vw] h-[80vh] gradientbg border text-[--theme-text-color] border-[--theme-border-color] flex flex-col z-[100] focus:outline-none">
+        <DialogContent className="max-w-[90vw] h-[90vh] gradientbg border text-[--theme-text-color] border-[--theme-border-color] flex flex-col z-[100] focus:outline-none">
           <DialogHeader className="mb-2 flex-shrink-0 px-6">
             <DialogTitle className="w-full text-[--theme-hover-text] text-center items-center justify-center rounded-md bg-[--theme-hover-color] p-2 flex">
               <span className="flex-grow">
@@ -296,8 +313,8 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
           
           <div className="flex flex-grow min-h-0 relative flex-col">
             <div className="flex flex-grow min-h-0 px-6 space-x-4">
-              {/* Flashcard Deck */}
-              <div className="w-2/3 bg-[--theme-leaguecard-color] p-2 rounded-md flex flex-col">
+              {/* Flashcard Deck - Full width on mobile */}
+              <div className={`${isMobile ? 'w-full' : 'w-2/3'} bg-[--theme-leaguecard-color] p-2 rounded-md flex flex-col`}>
                 {/* Controls Section */}
                 <div className="flex justify-between items-center p-4 mb-4">
                   {/* Left side - Score and Encouragement */}
@@ -397,65 +414,67 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                 </div>
               </div>
 
-              {/* Right Side - Toggleable Chat/Kitty Litter */}
-              <div className="w-1/3 bg-[--theme-leaguecard-color] p-3 rounded-md flex flex-col min-h-0 h-full">
-                {showChat ? (
-                  <div className="flex flex-col h-full overflow-hidden">
-                    <div className="flex justify-between items-center mb-2 flex-shrink-0 px-2">
-                      <h3 className="text-lg font-semibold">Kalypso</h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleHideChat}
-                        className="text-[--theme-text-color] hover:text-[--theme-hover-color] whitespace-nowrap m-2"
-                      >
-                        Back to Kitty Litter
-                      </Button>
-                    </div>
-                    <div className="flex-1 min-h-0 h-full">
-                      <ChatBot
-                        width="100%"
-                        height="100%"
-                        backgroundColor="var(--theme-leaguecard-color)"
-                        mode={isAnswerRevealed ? "questionReview" : "hint"}
-                        chatbotContext={{
-                          contentTitle: "Kalypso",
-                          context: currentQuestionContext 
-                            ? `${currentQuestionContext.type === 'normal' 
-                                ? `Multiple Choice Question:\n${currentQuestionContext.question}\n\nOptions:\n${currentQuestionContext.otherOptions.join('\n')}`
-                                : `Flashcard Question:\n${currentQuestionContext.question}`
-                              }${isAnswerRevealed ? `\n\nCorrect Answer: ${currentQuestionContext.correctAnswer}${
-                                currentQuestionContext.explanation ? `\n\nExplanation: ${currentQuestionContext.explanation}` : ''
-                              }` : ''}`
-                            : ""
-                        }}
-                        chatbotRef={chatbotRef}
-                        onFocus={() => setIsChatFocused(true)}
-                        onBlur={() => setIsChatFocused(false)}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <h3 className="text-lg font-semibold mb-2 flex-shrink-0">Kitty Litter</h3>
-                    <ScrollArea className="flex-grow">
-                      <div className="space-y-4">
-                        {wrongCards.map((card, index) => (
-                          <animated.div 
-                            key={index} 
-                            style={index === 0 ? springs : undefined}
-                            className="p-4 border border-[--theme-border-color] rounded-md bg-[--theme-flashcard-color]"
-                          >
-                            <div className="text-sm text-[--theme-text-color] opacity-50 mb-2">{card.timestamp}</div>
-                            <div className="font-semibold mb-2 text-[--theme-text-color]">{card.question}</div>
-                            <div className="text-[--theme-hover-color] font-medium">{card.answer}</div>
-                          </animated.div>
-                        ))}
+              {/* Right Side - Kitty Litter (Hidden on mobile) */}
+              {!isMobile && (
+                <div className="w-1/3 bg-[--theme-leaguecard-color] p-3 rounded-md flex flex-col min-h-0 h-full">
+                  {showChat ? (
+                    <div className="flex flex-col h-full overflow-hidden">
+                      <div className="flex justify-between items-center mb-2 flex-shrink-0 px-2">
+                        <h3 className="text-lg font-semibold">Kalypso</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleHideChat}
+                          className="text-[--theme-text-color] hover:text-[--theme-hover-color] whitespace-nowrap m-2"
+                        >
+                          Back to Kitty Litter
+                        </Button>
                       </div>
-                    </ScrollArea>
-                  </>
-                )}
-              </div>
+                      <div className="flex-1 min-h-0 h-full">
+                        <ChatBot
+                          width="100%"
+                          height="100%"
+                          backgroundColor="var(--theme-leaguecard-color)"
+                          mode={isAnswerRevealed ? "questionReview" : "hint"}
+                          chatbotContext={{
+                            contentTitle: "Kalypso",
+                            context: currentQuestionContext 
+                              ? `${currentQuestionContext.type === 'normal' 
+                                  ? `Multiple Choice Question:\n${currentQuestionContext.question}\n\nOptions:\n${currentQuestionContext.otherOptions.join('\n')}`
+                                  : `Flashcard Question:\n${currentQuestionContext.question}`
+                                }${isAnswerRevealed ? `\n\nCorrect Answer: ${currentQuestionContext.correctAnswer}${
+                                  currentQuestionContext.explanation ? `\n\nExplanation: ${currentQuestionContext.explanation}` : ''
+                                }` : ''}`
+                              : ""
+                          }}
+                          chatbotRef={chatbotRef}
+                          onFocus={() => setIsChatFocused(true)}
+                          onBlur={() => setIsChatFocused(false)}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="text-lg font-semibold mb-2 flex-shrink-0">Kitty Litter</h3>
+                      <ScrollArea className="flex-grow">
+                        <div className="space-y-4">
+                          {wrongCards.map((card, index) => (
+                            <animated.div 
+                              key={index} 
+                              style={index === 0 ? springs : undefined}
+                              className="p-4 border border-[--theme-border-color] rounded-md bg-[--theme-flashcard-color]"
+                            >
+                              <div className="text-sm text-[--theme-text-color] opacity-50 mb-2">{card.timestamp}</div>
+                              <div className="font-semibold mb-2 text-[--theme-text-color]">{card.question}</div>
+                              <div className="text-[--theme-hover-color] font-medium">{card.answer}</div>
+                            </animated.div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </DialogContent>

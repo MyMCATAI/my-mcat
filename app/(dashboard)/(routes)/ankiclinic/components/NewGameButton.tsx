@@ -9,16 +9,37 @@ interface NewGameButtonProps {
   onGameStart: (userTestId: string) => void;
   isGameInProgress: boolean;
   resetGameState: () => void;
+  isMobileBottom?: boolean;
 }
 
 const NewGameButton: FC<NewGameButtonProps> = ({ 
   userScore, 
   onGameStart,
   isGameInProgress,
-  resetGameState
+  resetGameState,
+  isMobileBottom = false
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isVerySmallScreen, setIsVerySmallScreen] = useState(false);
   const { decrementScore } = useUserInfo();
+
+  // Check if the screen is mobile size
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsVerySmallScreen(window.innerWidth < 480);
+    };
+    
+    // Initial check
+    checkIfMobile();
+    
+    // Add event listener
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   const createNewUserTest = async () => {
     try {
@@ -78,22 +99,26 @@ const NewGameButton: FC<NewGameButtonProps> = ({
   }, [isGameInProgress]);
 
   return (
-    <div className="hover:-translate-y-0.5">
+    <div className={`hover:-translate-y-0.5 ${isMobile ? 'w-full' : ''}`}>
       <button
         onClick={handleNewGame}
         disabled={isGameInProgress || isLoading}
         className={`border-2 border-[--theme-border-color] 
-          px-6 py-3 rounded-lg transition-all duration-300 
+          ${isMobile ? 'px-4 py-3 text-base w-full' : 'px-6 py-3 text-lg'} 
+          rounded-lg transition-all duration-300 
           shadow-lg hover:shadow-xl transform
-          font-bold text-lg flex items-center gap-2
+          font-bold flex items-center justify-center gap-2
           opacity-90 hover:opacity-100
+          ${isMobile ? 'bg-green-500 text-white' : ''}
           ${isGameInProgress 
             ? 'cursor-not-allowed opacity-50 hover:transform-none hover:shadow-lg bg-transparent' 
             : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] text-[--theme-hover-text] animate-pulse [animation-duration:0.75s] bg-green-500/20'
           }`}
       >
         <span className={`text-[--theme-hover-text] border-r border-[--theme-border-color] ${!isGameInProgress && 'hover:border-white/30'} pr-2`}>
-          {isGameInProgress && 'Game in Progress' || isLoading && 'Loading Game...' || 'New Game'}
+          {isGameInProgress && (isVerySmallScreen ? 'Game' : isMobile ? 'In Progress' : 'Game in Progress') || 
+           isLoading && (isVerySmallScreen ? 'Load' : isMobile ? 'Loading...' : 'Loading Game...') || 
+           (isVerySmallScreen ? 'New Game' : isMobile ? 'New Game' : 'New Game')}
         </span>
         <span className="text-[--theme-hover-text]">
           {isGameInProgress || isLoading ? '' : '-1'}
@@ -101,8 +126,8 @@ const NewGameButton: FC<NewGameButtonProps> = ({
         <Image
           src="/game-components/PixelCupcake.png"
           alt="Coin"
-          width={24}
-          height={24}
+          width={isMobile ? 24 : 24}
+          height={isMobile ? 24 : 24}
           className="inline-block"
         />
       </button>

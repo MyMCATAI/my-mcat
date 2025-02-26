@@ -202,16 +202,45 @@ const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
 
   const [currentLevel, setCurrentLevel] = useState(1);
   const { userInfo } = useUserInfo();
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Add state for panning
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
+  const [startOffset, setStartOffset] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Define zoom levels for each test level
-  const zoomLevels: Record<number, { scale: number, offsetX: number, offsetY: number }> = {
-    0: { scale: 2.5, offsetX: -50, offsetY: -200 },
-    1: { scale: 1.5, offsetX: 150, offsetY: -50 },
-    2: { scale: 1.3, offsetX: 150, offsetY: 0 },
-    3: { scale: 1.3, offsetX: 150, offsetY: 0 }, // Changed to match level 2
-    4: { scale: 1.1, offsetX: 150, offsetY: 50 },
-    5: { scale: 1.0, offsetX: 50, offsetY: 50 },
-    6: { scale: 1.0, offsetX: 0, offsetY: 90 },
+  const zoomLevels: Record<number, { scale: number, offsetX: number, offsetY: number, mobileScale?: number, mobileOffsetX?: number, mobileOffsetY?: number }> = {
+    0: { 
+      scale: 2.5, offsetX: -50, offsetY: -200,
+      mobileScale: 3.5, mobileOffsetX: 0, mobileOffsetY: -100
+    },
+    1: { 
+      scale: 1.5, offsetX: 150, offsetY: -50,
+      mobileScale: 3.0, mobileOffsetX: 0, mobileOffsetY: -50
+    },
+    2: { 
+      scale: 1.3, offsetX: 150, offsetY: 0,
+      mobileScale: 2.8, mobileOffsetX: 0, mobileOffsetY: 0
+    },
+    3: { 
+      scale: 1.3, offsetX: 150, offsetY: 0,
+      mobileScale: 2.8, mobileOffsetX: 0, mobileOffsetY: 0
+    },
+    4: { 
+      scale: 1.1, offsetX: 150, offsetY: 50,
+      mobileScale: 2.6, mobileOffsetX: 0, mobileOffsetY: 50
+    },
+    5: { 
+      scale: 1.0, offsetX: 50, offsetY: 50,
+      mobileScale: 2.4, mobileOffsetX: 0, mobileOffsetY: 50
+    },
+    6: { 
+      scale: 1.0, offsetX: 0, offsetY: 90,
+      mobileScale: 2.2, mobileOffsetX: 0, mobileOffsetY: 100
+    },
   };
 
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -232,6 +261,66 @@ const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
     return (worldX + worldY) * (tileHeight / 2);
   }
 
+  // Check if the screen is mobile size
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkIfMobile();
+    
+    // Add event listener
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
+  // Handle panning events
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (isMobile) {
+      setIsDragging(true);
+      setStartPosition({ x: e.clientX, y: e.clientY });
+      setStartOffset({ x: position.x, y: position.y });
+    }
+  }, [isMobile, position]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (isDragging && isMobile) {
+      const dx = e.clientX - startPosition.x;
+      const dy = e.clientY - startPosition.y;
+      
+      setPosition({
+        x: startOffset.x + dx,
+        y: startOffset.y + dy
+      });
+    }
+  }, [isDragging, isMobile, startOffset, startPosition]);
+
+  const handlePointerUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Add event listeners for panning
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('pointerup', handlePointerUp);
+      container.addEventListener('pointerleave', handlePointerUp);
+      
+      return () => {
+        container.removeEventListener('pointerup', handlePointerUp);
+        container.removeEventListener('pointerleave', handlePointerUp);
+      };
+    }
+  }, [handlePointerUp]);
+
+  // Reset position when level changes
+  useEffect(() => {
+    setPosition({ x: 0, y: 0 });
+  }, [currentLevel]);
+
   // Modify the calculateScale function
   const calculateScale = useCallback(() => {
     const containerWidth = window.innerWidth;
@@ -246,8 +335,12 @@ const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
     const maxScale = 1.2;
     scale = Math.min(scale, maxScale);
 
-    // Apply the zoom level scale
-    scale *= zoomLevels[currentLevel].scale;
+    // Apply the zoom level scale based on device type
+    if (isMobile && zoomLevels[currentLevel].mobileScale) {
+      scale *= zoomLevels[currentLevel].mobileScale;
+    } else {
+      scale *= zoomLevels[currentLevel].scale;
+    }
 
     setStageSize({
       width: baseWidth * scale,
@@ -255,7 +348,7 @@ const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
     });
 
     return scale * 0.7;
-  }, [currentLevel]);
+  }, [currentLevel, isMobile]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -436,11 +529,19 @@ const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
     onNewGame(populateRooms);
   }, [onNewGame, populateRooms]); // Remove populateRooms from dependencies
 
-  // Update the offset based on the current test level
-  const offset = useMemo(() => ({
-    x: ((gridWidth + gridHeight) * (tileWidth / 3) + zoomLevels[currentLevel].offsetX),
-    y: ((gridHeight * tileHeight) / 4 + zoomLevels[currentLevel].offsetY)
-  }), [currentLevel]);
+  // Update the offset based on the current test level and device type
+  const offset = useMemo(() => {
+    if (isMobile && zoomLevels[currentLevel].mobileOffsetX !== undefined) {
+      return {
+        x: ((gridWidth + gridHeight) * (tileWidth / 3) + zoomLevels[currentLevel].mobileOffsetX) + position.x,
+        y: ((gridHeight * tileHeight) / 4 + zoomLevels[currentLevel].mobileOffsetY) + position.y
+      };
+    }
+    return {
+      x: ((gridWidth + gridHeight) * (tileWidth / 3) + zoomLevels[currentLevel].offsetX),
+      y: ((gridHeight * tileHeight) / 4 + zoomLevels[currentLevel].offsetY)
+    };
+  }, [currentLevel, isMobile, position]);
 
 
   useEffect(() => {
@@ -459,7 +560,20 @@ const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
   }, []);
 
   return (
-    <div ref={innerRef} className="relative w-full h-full">
+    <div 
+      ref={(el) => {
+        // Assign to both refs
+        if (innerRef && 'current' in innerRef) {
+          (innerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+        }
+        containerRef.current = el;
+      }} 
+      className="relative w-full h-full"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      style={{ touchAction: isMobile ? 'none' : 'auto' }}
+    >
+      
       {/* Pixi.js stage container - Add pointer-events-none by default */}
       <div className="absolute inset-0 z-20 flex justify-center items-center pointer-events-none">
         <Stage
@@ -504,7 +618,7 @@ const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
       
       {/* UI Elements */}
       <div className="absolute inset-0 z-30 pointer-events-none">
-        <div className="pointer-events-auto absolute bottom-2 left-2 text-xl font-bold text-[--theme-text-color]">
+        <div className={`pointer-events-auto absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black/50 px-3 py-1 rounded-lg text-center whitespace-nowrap text-xl font-bold text-[--theme-text-color]`}>
           {userInfo?.firstName && `${userInfo.firstName} Medical Center`}
         </div>
       </div>

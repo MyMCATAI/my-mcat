@@ -79,6 +79,10 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const [isAfterTestDialogOpen, setIsAfterTestDialogOpen] = useState(false);
   const [largeDialogQuit, setLargeDialogQuit] = useState(false);
   const [showWelcomeDialogue, setShowWelcomeDialogue] = useState(false);
+  // Mobile responsiveness
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isVerySmallScreen, setIsVerySmallScreen] = useState(false);
   //Flashcards
   const [isFlashcardsOpen, setIsFlashcardsOpen] = useState(false);
   const prevFlashcardsOpenRef = useRef(false); //this keeps track of previous state
@@ -307,6 +311,30 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       setShowWelcomeDialogue(true);
     }
   }, [isClinicUnlocked, userInfo]);
+
+  // Check if the screen is mobile size
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsVerySmallScreen(window.innerWidth < 480);
+    };
+    
+    // Initial check
+    checkIfMobile();
+    
+    // Add event listener
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
+  // Close sidebar when flashcards open on mobile
+  useEffect(() => {
+    if (isFlashcardsOpen && isMobile) {
+      setIsSidebarOpen(false);
+    }
+  }, [isFlashcardsOpen, isMobile]);
 
   /* ---------------------------------------- Event Handlers -------------------------------------- */
 
@@ -614,13 +642,25 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         />}
       <Suspense fallback={
         <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
-          <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse" />
-          <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />
+          <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse md:block hidden" />
+          <div className="w-full md:w-3/4 bg-gray-900/50 animate-pulse rounded-lg md:rounded-r-lg" />
         </div>
       }>
         <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
-          {/* Give ResourcesMenu a higher z-index */}
-          <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-30">
+          {/* Mobile sidebar toggle button */}
+          {isMobile && (
+            <button 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="absolute top-4 left-4 z-50 bg-[--theme-gradient-startstreak] p-2 rounded-lg shadow-lg"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
+          
+          {/* ResourcesMenu - hidden on mobile by default, shown when toggled */}
+          <div className={`${isMobile ? 'absolute inset-y-0 left-0 z-40 transition-transform duration-300 transform ' + (isSidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'w-1/4'} p-4 bg-[--theme-gradient-startstreak] relative z-30`}>
             <ResourcesMenu
               reportData={reportData}
               userRooms={userRooms}
@@ -628,10 +668,21 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
               totalPatients={totalPatients}
               patientsPerDay={patientsPerDay}
             />
+            {/* Close button for mobile sidebar */}
+            {isMobile && isSidebarOpen && (
+              <button 
+                onClick={() => setIsSidebarOpen(false)}
+                className="absolute top-2 right-2 text-white p-1 rounded-full"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
           
-          {/* Keep OfficeContainer at a lower z-index */}
-          <div className="w-3/4 font-krungthep relative z-20 rounded-r-lg">
+          {/* OfficeContainer - full width on mobile */}
+          <div className={`${isMobile ? 'w-full' : 'w-3/4'} font-krungthep relative z-20 rounded-lg md:rounded-r-lg`}>
             <OfficeContainer
               innerRef={officeContainerRef}
               onNewGame={handleSetPopulateRooms}
@@ -645,19 +696,20 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
               isFlashcardsOpen={isFlashcardsOpen}
               setIsFlashcardsOpen={setIsFlashcardsOpen}
             />
-            {/* Button on the top left corner */}
-            <div className="absolute top-4 left-4 flex gap-2 z-50">
+            {/* Game controls - repositioned for mobile */}
+            <div className={`absolute ${isMobile ? 'bottom-20 -left-24 w-[100%] mx-auto' : 'top-4 left-4'} flex gap-2 z-50`}>
               <NewGameButton
                 userScore={userInfo?.score || 0}
                 onGameStart={handleGameStart}
                 isGameInProgress={isGameInProgress}
                 resetGameState={resetGameState}
+                isMobileBottom={isMobile}
               />
             </div>
-            {/* Fellowship Level button with coins and patients */}
-            <div className="absolute top-4 right-4 z-50 flex items-center">
+            {/* Fellowship Level button with coins and patients - adjusted for mobile */}
+            <div className={`absolute ${isMobile ? 'top-4 right-4 flex-col items-end' : 'top-4 right-4 flex items-center'} z-50`}>
               {/* Patient count */}
-              <div className="group relative flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
+              <div className="group relative flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2 mb-2 md:mb-0">
                 <Image
                   src="/game-components/patient.png"
                   alt="Patient"
@@ -684,7 +736,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                 </div>
               </div>
               {/* Coins display */}
-              <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
+              <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2 mb-2 md:mb-0">
                 <PurchaseButton 
                   className="flex items-center hover:opacity-90 transition-opacity"
                   tooltipText="Click to purchase more coins"
@@ -702,8 +754,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                   </div>
                 </PurchaseButton>
               </div>
-              {/* Fellowship Level button with dropdown */}
-              <div className="relative group">
+              {/* Fellowship Level button with dropdown - visible on mobile */}
+              <div className={`relative group`}>
                 <button className={`flex items-center justify-center px-6 py-3 
                   ${(!userLevel || userLevel === "PATIENT LEVEL") 
                     ? "bg-green-500 animate-pulse" 
@@ -715,7 +767,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                   hover:bg-[--theme-hover-color] 
                   transition-colors text-3xl font-bold uppercase 
                   group-hover:text-[--theme-hover-text] 
-                  group-hover:bg-[--theme-hover-color]`}>
+                  group-hover:bg-[--theme-hover-color] ${isMobile ? 'text-xl px-3 py-2' : ''}`}>
                   <span>{userLevel || "PATIENT LEVEL"}</span>
                 </button>
                 <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out"> 
@@ -843,16 +895,19 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         isSubscribed={isSubscribed}
       />}
       
-      <div className="absolute bottom-4 right-4 z-[100]">
-        <FloatingButton
-          currentPage="ankiclinic"
-          initialTab={activeTab}
-          activities={activities}
-          onTasksUpdate={fetchActivities}
-          isSubscribed={isSubscribed}
-          onTabChange={handleTabChange}
-        />
-      </div>
+      {/* Floating button - hidden on mobile */}
+      {!isMobile && (
+        <div className="absolute bottom-4 right-4 z-[100]">
+          <FloatingButton
+            currentPage="ankiclinic"
+            initialTab={activeTab}
+            activities={activities}
+            onTasksUpdate={fetchActivities}
+            isSubscribed={isSubscribed}
+            onTabChange={handleTabChange}
+          />
+        </div>
+      )}
       
       <TutorialVidDialog
         isOpen={isTutorialOpen}
