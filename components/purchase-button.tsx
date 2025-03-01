@@ -54,7 +54,7 @@ export function PurchaseButton({
           window.location.href = response.data.url;
           return;
         }
-        window.location.href = '/offer';
+        window.location.href = '/mobile';
         return;
       }
 

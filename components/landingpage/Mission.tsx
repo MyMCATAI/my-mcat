@@ -160,26 +160,48 @@ const MethodologyAndTestimonials = () => {
           </h2>
           <div className="text-white text-2xl leading-relaxed mb-8">
             <p className="mb-4">
-              MyMCAT.ai isn&apos;t just another test prep company — we&apos;re a research company obsessed with scientifically increasing MCAT scores.
+              MyMCAT.ai increases scores using empathetic software.
             </p>
+            
             <p className="mb-4">
-              We started as a beta test at Rice University and Princeton, building a smarter way to study. Today, we&apos;ve scaled into a platform serving thousands, built on scientifically proven learning methods: <span className="text-green-400">gamification, the testing effect, spaced repetition, interleaving, metacognition, desirable difficulty, and active recall</span>.
+              We define empathy as the ability to understand, and our platform has empathy for its students. <span className="text-green-400 font-semibold">Like a good tutor, it manages your prep, keeps you accountable, and forces you to study actively.</span>
             </p>
+            
             <p className="mb-4">
-              But we don&apos;t just use research—we conduct it. Our team runs internal data science studies to refine our methods, testing what actually works to improve MCAT scores. Every feature we build is backed by real student performance data.
+              If you're a non-traditional student (30+), our study scheduler plans your essential resources — Anki, UWorld, AAMC, plus MyMCAT resources — around your life. If you're a low scorer, our community connects you to other students so you're not alone. If you can't focus, we've turned flashcards into a game you can play with friends — forcing you to engage with each card.
             </p>
+            
             <p className="mb-4">
-              Unlike other test prep companies, our self-paced classes actually adapt to your needs — and collect the best resources from the sources you trust, like Khan Academy and Chad&apos;s Prep.
+              Kalypso, our AI superkitty, adapts to you. He interrupts videos to test your understanding, helps analyze your AAMC mistakes, identifies weaknesses, guides you through CARS passages, and offers encouragement when needed.
             </p>
+            
             <p className="mb-4">
-              And our live classes aren&apos;t like Kaplan&apos;s lecture halls—they&apos;re built like real medical school classrooms, with class sizes so small that we turn away nearly half of all applicants to maintain quality.
+              MyMCAT.ai believes the world needs healing. We offer <span className="text-green-400 font-semibold">six months free to FAP students and $300 off for retakers and non-trads (30+)</span>. Our vision is to create the doctors that patients deserve. If you believe that understanding is key to healing others, join us — <span className="text-green-400 font-semibold">the world needs doctors like you</span>.
             </p>
-            <p className="mb-4">
-              Unlike corporate test prep companies, we&apos;re a Public Benefit Corporation (PBC)—meaning we prioritize student outcomes over profits. Because our goal is the same as medical schools:
-            </p>
-            <p className="text-green-400 text-3xl font-semibold text-center mt-8 mb-8">
-              Educate the doctors that our patients deserve.
-            </p>
+
+            <div className="flex flex-col items-center mt-12 mb-8">
+              <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                <a 
+                  href="https://discord.gg/DcHWnEu8Xb"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center bg-[#5865F2] text-white py-4 px-8 rounded-full text-xl font-semibold transition duration-300 hover:bg-[#4752C4] hover:-translate-y-1 shadow-lg"
+                >
+                  <FaDiscord className="mr-3 text-2xl" />
+                  <span className="text-white font-bold">Join our Studyverse to connect with other students</span>
+                </a>
+                
+                <button 
+                  onClick={openTallyPopup}
+                  className="inline-flex items-center bg-[#23b961] text-white py-4 px-8 rounded-full text-xl font-semibold transition duration-300 hover:bg-[#1a8d4a] hover:-translate-y-1 shadow-lg"
+                >
+                  <span className="text-white font-bold">Register to start studying for the MCAT for free</span>
+                </button>
+              </div>
+              <p className="text-white/50 text-sm mt-2 text-center max-w-2xl">
+                Our Discord community is run by non-MyMCAT.ai affiliated individuals.
+              </p>
+            </div>
           </div>
           
           <div className="grid grid-cols-2 gap-6 mt-16 px-8">
@@ -202,7 +224,7 @@ const MethodologyAndTestimonials = () => {
             </a>
 
             <a 
-              href="/offer"
+              href="/mobile"
               className="relative group overflow-hidden rounded-xl aspect-[4/3] transition-transform duration-300 hover:-translate-y-2"
             >
               <Image 
@@ -472,7 +494,7 @@ const MethodologyAndTestimonials = () => {
           </div>
           
           <p className="text-white text-2xl text-center max-w-2xl mx-auto mb-16">
-            We charge less than the value we bring. Although we hire the best from all over the world and pay them a fair wage, we&apos;re committed to our mission of educating better doctors.
+            We charge less than the value we bring. Although we hire the best from all over the world and pay them a fair wage, we&apos;re committed to our mission of educating better doctors. FAP students get six months free after emailing kalypso@mymcat.ai. 
           </p>
 
           {/* Pricing Tiers - Now horizontal */}
@@ -502,16 +524,16 @@ const MethodologyAndTestimonials = () => {
           {/* Learn More CTA */}
           <div className="mt-16 text-center">
             <p className="text-white/80 text-2xl mb-6">
-              Want to learn more about our approach and see what our students say?
+              Want to read our student stories and watch our short film?
             </p>
             <Link 
-              href="/offer"
+              href="/mobile"
               className="inline-flex items-center gap-2 px-8 py-4 text-lg font-bold text-white
                 bg-gradient-to-r from-green-500 to-blue-500 rounded-full
                 shadow-[0_0_30px_rgba(35,185,97,0.3)] hover:shadow-[0_0_50px_rgba(35,185,97,0.5)]
                 transform hover:scale-105 transition-all duration-300 group"
             >
-              <span>See Our Full Story</span>
+              <span>Go to testimonials</span>
               <svg 
                 className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" 
                 fill="none" 

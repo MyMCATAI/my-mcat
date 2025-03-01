@@ -191,7 +191,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
 
   const handleNavigateToTutoring = useCallback(() => {
     if (!isSubscribed) {
-      router.push('/offer');
+      router.push('/mobile');
       return;
     }
 
