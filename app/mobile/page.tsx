@@ -201,7 +201,7 @@ export default function PitchPage() {
   const getMonthlyPrice = (period: PricingPeriod) => {
     switch (period) {
       case 'monthly':
-        return 200;
+        return 150;
       case 'biannual':
         return 133;  // 800/6
       case 'annual':
