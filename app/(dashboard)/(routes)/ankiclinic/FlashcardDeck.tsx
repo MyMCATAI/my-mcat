@@ -13,6 +13,7 @@ import { roomToContentMap, roomToSubjectMap } from './constants';
 import { cleanQuestion, cleanAnswer } from './utils/testUtils';
 import { cn } from '@/lib/utils';
 import { useAudio } from '@/contexts/AudioContext';
+import FlashcardSummary from './components/FlashcardSummary';
 
 /* -------------------------------------------- Types --------------------------------------------- */
 export interface Flashcard {
@@ -28,6 +29,18 @@ export interface Flashcard {
   userResponses: Array<{ isCorrect: boolean; timeSpent: number }>;
   questionAnswerNotes?: string | string[];
   links?: string[]
+}
+
+interface CategoryPerformance {
+  total: number;
+  correct: number;
+  incorrect: number;
+  successRate: number;
+  categoryId: string;
+}
+
+interface CategoryStats {
+  [key: string]: CategoryPerformance;
 }
 
 interface FlashcardDeckProps {
@@ -98,6 +111,8 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
   const [shuffledOptions, setShuffledOptions] = useState<{ options: string[], correctIndex: number }>({ options: [], correctIndex: -1 });
   const [selectedOption, setSelectedOption] = useState<number>(-1);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [categoryStats, setCategoryStats] = useState<CategoryStats>({});
+  const [weakestCategory, setWeakestCategory] = useState<string | null>(null);
 
 /* -------------------------------------------- Refs --------------------------------------------- */
   const flashcardsRef = useRef<Flashcard[]>([]);
@@ -139,6 +154,31 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
     return cleanAnswer(currentCard.questionContent);
   }, [flashcards, currentCardIndex]);
 
+  const updateCategoryStats = useCallback((category: string, isCorrect: boolean, categoryId: string) => {
+    setCategoryStats(prevStats => {
+      const currentStats = prevStats[category] || { 
+        total: 0, 
+        correct: 0, 
+        incorrect: 0, 
+        successRate: 0, 
+        categoryId 
+      };
+      const newStats = {
+        ...currentStats,
+        total: currentStats.total + 1,
+        correct: currentStats.correct + (isCorrect ? 1 : 0),
+        incorrect: currentStats.incorrect + (isCorrect ? 0 : 1),
+        categoryId,
+      };
+      newStats.successRate = (newStats.correct / newStats.total) * 100;
+      
+      return {
+        ...prevStats,
+        [category]: newStats
+      };
+    });
+  }, []);
+
   const handleUserResponse = useCallback(async (action: 'correct' | 'incorrect' | 'weakness' | 'strength') => {
     const currentCard = flashcardsRef.current[currentCardIndexRef.current];
     const isCorrect = action === 'correct' || action === 'strength';
@@ -146,6 +186,10 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
     if (currentCardIndexRef.current >= flashcardsRef.current.length) {
       return;
     }
+
+    // Update category stats with categoryId
+    const category = currentCard.category.conceptCategory;
+    updateCategoryStats(category, isCorrect, currentCard.categoryId);
 
     const timeSpent = Math.floor((Date.now() - cardStartTime)/1000);
     setCardStartTime(Date.now());
@@ -191,7 +235,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
     } catch (error) {
       console.error('Error saving flashcard response:', error);
     }
-  }, [onCorrectAnswer, onWrongAnswer, cardStartTime, roomId, currentUserTestId, playSound, getAnswerContent]);
+  }, [onCorrectAnswer, onWrongAnswer, cardStartTime, roomId, currentUserTestId, playSound, getAnswerContent, updateCategoryStats]);
 
   const toggleReveal = useCallback(() => {
     if (isMCQ) return;
@@ -507,12 +551,14 @@ const getQuestionContent = () => {
       const pageSize = 10;
       const response = await fetch(`/api/question?${subjectParams}&${contentParams}&types=flashcard,normal&page=${pageNumber}&pageSize=${pageSize}`);
       const data = await response.json();
+
       setCardStartTime(Date.now());
 
       const MCQquestionCount = data.questions.filter((question: FlattenedQuestionResponse) => question.types === 'normal').length;
       setTotalMCQQuestions(MCQquestionCount);
 
-      const transformedFlashcards = data.questions.map((question: FlattenedQuestionResponse) => {
+      const transformedFlashcards = data.questions.map((question: any) => {
+        
         let options: string[] = [];
         if (question.types === 'normal' && question.questionOptions) {
           try {
@@ -530,8 +576,9 @@ const getQuestionContent = () => {
           questionType: question.types || 'normal',
           categoryId: question.categoryId,
           category: {
-            subjectCategory: question.category_subjectCategory,
-            conceptCategory: question.category_conceptCategory,
+            subjectCategory: question.category.subjectCategory || '',
+            conceptCategory: question.category.conceptCategory || '',
+            contentCategory: question.category.contentCategory|| '',
           },
           difficulty: question.difficulty || 1,
           tags: question.tags || [],
@@ -563,20 +610,10 @@ const getQuestionContent = () => {
           <div className="text-[--theme-text-color]">Curating flashcards for you...</div>
         </div>
       ) : isDeckCompleted ? (
-        <div className="flex flex-col items-center justify-center gap-4 text-center">
-          <div className="text-[--theme-text-color] text-xl font-semibold">
-            {"🎉 Great work! You've completed this flashcard deck."}
-          </div>
-
-          {/* add video Here */}
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2 focus:outline-none"
-          >
-            <Check size={18} />
-            Continue Learning
-          </button>
-        </div>
+        <FlashcardSummary
+          categoryStats={categoryStats}
+          onClose={onClose}
+        />
       ) : (
         <div className="w-full max-w-3xl px-4 min-h-full" {...bind()}>
           {flashcards.length - currentCardIndex > 0 && (
@@ -690,7 +727,7 @@ const getQuestionContent = () => {
                           </div>
                         )}
                         {/* Show links if available */}
-                        {flashcards[currentCardIndex]?.links && flashcards[currentCardIndex]?.links.length > 0 && (
+                        {flashcards[currentCardIndex]?.links && flashcards[currentCardIndex]?.links?.length || 0 > 0 && (
                           <div className="mt-4 w-full">
                             <div className="text-sm font-semibold mb-2 text-[--theme-text-color]">
                               Additional Resources:
