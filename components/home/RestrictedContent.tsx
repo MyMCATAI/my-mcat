@@ -62,7 +62,7 @@ export function RestrictedContent() {
 
             <div className="flex flex-col items-center gap-4">
               <button
-                onClick={() => router.push('/offer')}
+                onClick={() => router.push('/mobile')}
                 className="w-full max-w-md px-6 py-3 text-lg rounded-lg font-semibold
                   bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-amber-900
                   shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:shadow-[0_0_25px_rgba(245,158,11,0.5)]

@@ -25,7 +25,7 @@ export function PremiumSubscriptionCard({ context }: { context: 'onboarding' | '
     try {
       setIsLoading(true);
       if (context === 'onboarding') {
-        router.push('/offer');
+        router.push('/mobile');
       } else {
         window.open('https://tally.so/r/mBAgq7', '_blank');
       }

@@ -45,7 +45,7 @@ function canAccessPath(subscriptionType: string | undefined, currentPath: string
   }
 
   // Paths accessible to all users
-  const unrestrictedPaths = ['/onboarding', '/offer', '/ankiclinic', '/preferences'];
+  const unrestrictedPaths = ['/onboarding', '/mobile', '/ankiclinic', '/preferences'];
   if (unrestrictedPaths.some(path => currentPath.startsWith(path))) {
     return true;
   }
@@ -60,7 +60,7 @@ async function checkRedirectPath(userInfo: UserInfo | null, currentPath: string)
   if (currentPath === '/redirect') return null;
 
   // Don't redirect to onboarding if we're already there
-  if (currentPath.startsWith('/onboarding') || currentPath.startsWith('/offer')) return null;
+  if (currentPath.startsWith('/onboarding') || currentPath.startsWith('/mobile')) return null;
 
   // No user info -> onboarding
   if (!userInfo) return '/onboarding';

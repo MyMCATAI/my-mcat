@@ -37,7 +37,7 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'off
         return
       }
       if (context === 'onboarding') {
-        router.push('/offer');
+        router.push('/mobile');
       } else {
         const response = await axios.post("/api/stripe/checkout", {
           priceType: ProductType.MD_GOLD
