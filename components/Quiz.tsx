@@ -28,6 +28,7 @@ export interface QuizQuestion {
   questionContent: string;
   questionID: string;
   questionOptions: string[];
+  context?: string;
 }
 
 interface QuizProps {
@@ -62,6 +63,14 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 const calculateScore = (summaries: AnswerSummary[]): number => {
   const correctAnswers = summaries.filter((summary) => summary.isCorrect).length;
   return (correctAnswers / summaries.length) * 100;
+};
+
+// Helper to check if a string contains only an image tag
+const containsOnlyImageTag = (str: string | null): boolean => {
+  if (!str) return false;
+  const trimmed = str.trim();
+  return /^<img\s+[^>]*src="[^"]*"[^>]*>$/.test(trimmed) || 
+         /^\!\[[^\]]*\]\([^)]*\)$/.test(trimmed); // Markdown image format
 };
 
 /* ---------------------------------------- Component ---------------------------------------- */
@@ -194,7 +203,7 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
             questionID: question.id,
             questionOptions: options,
             questionAnswerNotes: question.questionAnswerNotes,
-            passage: question.context,
+            context: question.context,
             passageId: null,
           };
 
@@ -531,6 +540,20 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
     setIsFeedbackOpen(true);
   };
 
+  // Prepare the content for rendering by combining question content and context if needed
+  const prepareQuestionContent = (question: QuizQuestion): string => {
+    if (!question) return "";
+    
+    let content = question.questionContent;
+    
+    // If context exists and contains only an image tag, append it to the content
+    if (question.context && containsOnlyImageTag(question.context)) {
+      content = `${content}\n\n${question.context}`;
+    }
+    
+    return content;
+  };
+
   /* ---------------------------------------- Render ----------------------------------------- */
   if (isLoading || isLoadingUserInfo) {
     return (
@@ -664,7 +687,7 @@ Please act as a tutor and explain concepts in a straight-forward and beginner-fr
         <div className="mb-4 text-[--theme-text-color] drop-shadow-lg">
           {currentQuestion && (
             <ContentRenderer
-              content={currentQuestion.questionContent}
+              content={prepareQuestionContent(currentQuestion)}
               imageWidth={isFullScreen ? "50%" : "70%"}
               isFullScreen={isFullScreen}
             />
