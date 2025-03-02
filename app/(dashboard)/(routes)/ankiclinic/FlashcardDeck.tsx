@@ -150,8 +150,40 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
       const correctOption = currentCard.questionOptions[0];
       return correctOption;
     }
+    
     // For flashcard questions
-    return cleanAnswer(currentCard.questionContent);
+    let answer = cleanAnswer(currentCard.questionContent);
+    
+    // Check if questionAnswerNotes contains an img tag and extract only the img tags
+    if (currentCard.questionAnswerNotes) {
+      let notes = '';
+      
+      // Handle array or string format of questionAnswerNotes
+      if (Array.isArray(currentCard.questionAnswerNotes)) {
+        notes = currentCard.questionAnswerNotes[0] || '';
+      } else if (typeof currentCard.questionAnswerNotes === 'string') {
+        try {
+          const parsedNotes = JSON.parse(currentCard.questionAnswerNotes);
+          notes = Array.isArray(parsedNotes) ? parsedNotes[0] || '' : currentCard.questionAnswerNotes;
+        } catch {
+          notes = currentCard.questionAnswerNotes;
+        }
+      }
+      
+      // If notes contain an img tag, extract only the img tags and append them to the answer
+      if (notes.includes('<img')) {
+        // Extract all img tags using regex
+        const imgTagRegex = /<img[^>]+>/g;
+        const imgTags = notes.match(imgTagRegex);
+        
+        if (imgTags && imgTags.length > 0) {
+          // Join all found img tags and append to answer
+          answer = `${answer}\n\n${imgTags.join('\n')}`;
+        }
+      }
+    }
+    
+    return answer;
   }, [flashcards, currentCardIndex]);
 
   const updateCategoryStats = useCallback((category: string, isCorrect: boolean, categoryId: string) => {
@@ -630,7 +662,6 @@ const getQuestionContent = () => {
                       content={getQuestionContent()} 
                       onLinkClick={handleLinkClick} 
                     />
-                    
                     {/* MCQ Options */}
                     {isMCQ && flashcards[currentCardIndex]?.questionOptions?.length > 0 && (
                       <div className="w-full mt-4 space-y-2">
