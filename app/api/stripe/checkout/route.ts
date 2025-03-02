@@ -26,12 +26,14 @@ export async function POST(request: Request) {
     // Make body parsing optional with default values
     let priceType = "default";
     let friendEmail: string | undefined;
+    let isSpecialStatus = false;
 
     try {
       const body = await request.json();
       if (body) {
         priceType = body.priceType || "default";
         friendEmail = body.friendEmail || undefined;
+        isSpecialStatus = body.isSpecialStatus || false;
       }
     } catch (error) {
       // If JSON parsing fails, we'll just use the default values
@@ -167,11 +169,15 @@ export async function POST(request: Request) {
           mode = 'subscription';
           break;
         case ProductType.MD_GOLD_ANNUAL:
-          priceId = process.env.STRIPE_PRICE_GOLD_ANNUAL_ID!;
+          priceId = isSpecialStatus 
+            ? process.env.STRIPE_PRICE_GOLD_ANNUAL_DISCOUNT_ID! 
+            : process.env.STRIPE_PRICE_GOLD_ANNUAL_ID!;
           mode = 'subscription';
           break;
         case ProductType.MD_GOLD_BIANNUAL:
-          priceId = process.env.STRIPE_PRICE_GOLD_BIANNUAL_ID!;
+          priceId = isSpecialStatus 
+            ? process.env.STRIPE_PRICE_GOLD_BIANNUAL_DISCOUNT_ID! 
+            : process.env.STRIPE_PRICE_GOLD_BIANNUAL_ID!;
           mode = 'subscription';
           break;
         case ProductType.COINS_10:
@@ -195,8 +201,8 @@ export async function POST(request: Request) {
         productName: mode === 'subscription' ? (
           priceId === process.env.STRIPE_PRICE_PREMIUM_ID ? 'MDPremium' :
           priceId === process.env.STRIPE_PRICE_GOLD_ID ? 'MDGold' :
-          priceId === process.env.STRIPE_PRICE_GOLD_ANNUAL_ID ? 'MDGoldAnnual' :
-          priceId === process.env.STRIPE_PRICE_GOLD_BIANNUAL_ID ? 'MDGoldBiannual' : 'one_time_purchase'
+          priceId === process.env.STRIPE_PRICE_GOLD_ANNUAL_ID || priceId === process.env.STRIPE_PRICE_GOLD_ANNUAL_DISCOUNT_ID ? 'MDGoldAnnual' :
+          priceId === process.env.STRIPE_PRICE_GOLD_BIANNUAL_ID || priceId === process.env.STRIPE_PRICE_GOLD_BIANNUAL_DISCOUNT_ID ? 'MDGoldBiannual' : 'one_time_purchase'
         ) : 'one_time_purchase'
       },
       line_items: [
