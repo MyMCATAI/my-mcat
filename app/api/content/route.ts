@@ -60,7 +60,7 @@ export async function GET(req: Request) {
       const content = await prisma.content.findMany({
         where: { categoryId: category.id, 
           minutes_estimate: {
-            gte: minDuration
+            gt: minDuration
           }
         },
         skip,
