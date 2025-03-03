@@ -1,14 +1,14 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef, useState, useEffect } from "react";
+import VideoPlayerPopup from "./VideoPlayerPopup"; // Import the VideoPlayerPopup component
 
 interface VideoRecommendation {
   id: string;
   title: string;
   link: string;
   minutes_estimate: number;
-  thumbnail: string;
+  thumbnail?: string | null;
   category: {
     conceptCategory: string;
   };
@@ -22,6 +22,10 @@ const VideoRecommendations = ({ videos }: VideoRecommendationsProps) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftButton, setShowLeftButton] = useState(false);
   const [showRightButton, setShowRightButton] = useState(true);
+  
+  // State for the video popup
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [currentVideo, setCurrentVideo] = useState<VideoRecommendation | null>(null);
 
   const updateScrollButtons = () => {
     if (scrollContainerRef.current) {
@@ -55,8 +59,22 @@ const VideoRecommendations = ({ videos }: VideoRecommendationsProps) => {
     }
   };
 
+  // Handle video card click
+  const handleVideoClick = (video: VideoRecommendation, e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default link behavior
+    setCurrentVideo(video);
+    setIsPopupOpen(true);
+  };
+
+  // Handle popup close
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+  };
+
+  // Determine if we should show navigation controls
+  const shouldShowControls = videos.length > 1;
+
   return (
-    
     <div className="mt-4 relative">
       <div className="flex items-center gap-2 mb-4 ml-4">
         <h3 className="text-lg font-semibold text-[--theme-text-color]">Quick Video Reviews</h3>
@@ -71,15 +89,16 @@ const VideoRecommendations = ({ videos }: VideoRecommendationsProps) => {
         </div>
       ) : (
         <div className="relative">
-          <div className="flex gap-3 overflow-x-auto scrollbar-none ">
+          <div 
+            ref={scrollContainerRef} 
+            className="flex gap-3 overflow-x-auto scrollbar-none pb-4"
+          >
             {videos.map((video) => (
-              <a
+              <div
                 key={video.id}
-                href={video.link}
-                target="_blank"
-                rel="noopener noreferrer"
+                onClick={(e) => handleVideoClick(video, e)}
                 className="flex-shrink-0 w-72 p-4 bg-[--theme-doctorsoffice-accent] bg-opacity-5 
-                         rounded-lg hover:bg-opacity-10 transition-all duration-200
+                         rounded-lg hover:bg-opacity-10 transition-all duration-200 cursor-pointer
                          border border-[--theme-border-color] hover:border-[--theme-hover-color]"
               >
                 <div className="flex gap-4">
@@ -119,26 +138,45 @@ const VideoRecommendations = ({ videos }: VideoRecommendationsProps) => {
                     </div>
                   </div>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
           
-          {videos.length > 0 && (
+          {shouldShowControls && videos.length > 0 && (
             <>
-              <button
-                onClick={() => scrollTo('left')}
-                
-              >
-              </button>
-              <button
-                onClick={() => scrollTo('right')}
-                
-              >
-                
-              </button>
+              {showLeftButton && (
+                <Button
+                  onClick={() => scrollTo('left')}
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 bg-[--theme-mainbox-color] rounded-full shadow-md z-10"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+              )}
+              {showRightButton && (
+                <Button
+                  onClick={() => scrollTo('right')}
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 bg-[--theme-mainbox-color] rounded-full shadow-md z-10"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+              )}
             </>
           )}
         </div>
+      )}
+
+      {/* Video Player Popup */}
+      {currentVideo && (
+        <VideoPlayerPopup
+          videoId={currentVideo.link}
+          title={currentVideo.title}
+          isOpen={isPopupOpen}
+          onClose={handleClosePopup}
+        />
       )}
     </div>
   );

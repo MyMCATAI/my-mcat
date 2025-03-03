@@ -585,8 +585,9 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     </div>
   );
   
-const renderReviewSection = () => (
-    <ScrollArea className="h-[calc(90vh-6rem)] scrollbar-none">
+
+  const renderReviewSection = () => (
+    <ScrollArea className="h-[calc(95vh-6rem)] scrollbar-none">
       <div className="space-y-4 pr-4 pb-4">
         {wrongCards.map((card, index) => (
           <animated.div 
@@ -869,9 +870,9 @@ const renderReviewSection = () => (
   return (
     <>
       <Dialog open={open} onOpenChange={handleExit}>
-        <DialogContent className="bg-[--theme-mainbox-color] text-center p-4 max-w-[95vw] h-[75rem] w-[55rem] max-h-[95vh] overflow-x-hidden overflow-y-auto shadow-lg border border-transparent">
+        <DialogContent className="bg-[--theme-mainbox-color] text-center p-4 max-w-[95vw] w-[55rem] max-h-[90vh] overflow-hidden shadow-lg border border-transparent">
           {showReviewFeed ? (
-            <div className="flex-1 flex relative w-[45rem] ">
+            <div className="flex relative w-full h-full">
               {/* Back Button */}
               <button
                 onClick={() => setShowReviewFeed(false)}
@@ -895,26 +896,28 @@ const renderReviewSection = () => (
                 </svg>
               </button>
 
-              {/* Left Side - Review Section */}
-              <div className="w-1/3 flex-col min-w-[300px]">
-                {renderReviewSection()}
-              </div>
-
-              {/* Right Side - Chat Interface */}
-              <div className=" flex-col w-2/3 h-screen relative">
-                <div className="h-2/3 relative">
-                <div className="absolute inset-0 overflow-y-auto">
-                  <ChatBot 
-                    width="100%"
-                    height="100%"
-                    backgroundColor="var(--theme-mainbox-color)"
-                    chatbotContext={chatbotContext}
-                    chatbotRef={chatbotRef}
-                  />
-                  </div>
+              {/* Main Content Container */}
+              <div className="flex w-full h-full">
+                {/* Left Side - Review Section */}
+                <div className="w-1/3 min-w-[300px] h-full">
+                  {renderReviewSection()}
                 </div>
-                <div className="h-1/3 overflow-hidden"> 
-                  <VideoRecommendations videos={recommendedVideos} />
+
+                {/* Right Side - Chat Interface and Video Reviews */}
+                <div className="w-2/3 h-full flex flex-col relative">
+                  <div className="absolute top-0 bottom-0 left-0 right-0 bottom-[29%] overflow-hidden">
+                    <ChatBot 
+                      width="100%"
+                      height="100%"
+                      backgroundColor="var(--theme-mainbox-color)"
+                      chatbotContext={chatbotContext}
+                      chatbotRef={chatbotRef}
+                    />
+                  </div>
+                  
+                  <div className="absolute bottom-0 left-0 right-0 h-[26%] bg-[--theme-mainbox-color]">
+                    <VideoRecommendations videos={recommendedVideos} />
+                  </div>
                 </div>
               </div>
             </div>
