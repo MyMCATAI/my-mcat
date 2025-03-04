@@ -145,9 +145,10 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
 
   // Used to direct free user (isSubscribed = false) to /mobile
   const handleButtonClick = async (tab: string) => {
+    const startTime = performance.now();
+    console.log(`[Navigation] Starting navigation to ${tab} at ${startTime}ms`);
 
     // Check if current path is protected from auto-redirect
-    // Allow useres to stay on offer page, preents auto-redirect to /ankiclinic when on offer page
     const currentPath = window.location.pathname;
     if (PROTECTED_ROUTES.some(route => currentPath.startsWith(route))) {
       return;
@@ -159,17 +160,23 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
       return;
     }
 
+    // Get current query parameters to preserve them during navigation
+    const currentUrl = new URL(window.location.href);
+    const queryParams = currentUrl.search;
+
     // Move the try-catch block inside the subscription check
     try {
+      console.log(`[Navigation] Starting user-info API call at ${performance.now() - startTime}ms`);
       const response = await fetch("/api/user-info");
       if (!response.ok) throw new Error("Failed to fetch user info");
       const data = await response.json();
+      console.log(`[Navigation] Completed user-info API call at ${performance.now() - startTime}ms`);
       const unlocks = Array.isArray(data.unlocks) ? data.unlocks : [];
 
       const tabActions = {
         Tests: () => {
           if (currentPage === 'ankiclinic') {
-            router.push('/home');
+            router.push(`/home${queryParams}`);
           }
           setActiveTab(tab);
           onTabChange(tab);
@@ -182,7 +189,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
           }, TAB_CHANGE_TIMEOUT);
         },
         AdaptiveTutoringSuite: () => {
-          router.push('/home');
+          router.push(`/home${queryParams}`);
           setActiveTab(tab);
           onTabChange(tab);
           setRecentlyChangedTab(true);
@@ -194,6 +201,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
           }, TAB_CHANGE_TIMEOUT);
         },
         ankiclinic: () => {
+          console.log(`[Navigation] Starting router.push at ${performance.now() - startTime}ms`);
           if (currentPage === 'home') {
             router.push('/ankiclinic');
           } else {
@@ -204,7 +212,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
         },
         CARS: () => {
           if (currentPage === 'ankiclinic') {
-            router.push('/home');
+            router.push(`/home${queryParams}`);
           }
           setActiveTab(tab);
           onTabChange(tab);
@@ -218,7 +226,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
         },
         default: () => {
           if (currentPage === 'ankiclinic') {
-            router.push('/home');
+            router.push(`/home${queryParams}`);
           }
           setActiveTab(tab);
           onTabChange(tab);
@@ -234,6 +242,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
 
       const action = tabActions[tab as keyof typeof tabActions] || tabActions.default;
       action();
+      console.log(`[Navigation] Completed navigation action at ${performance.now() - startTime}ms`);
     } catch (error) {
       console.error("Error checking unlocks:", error);
       toast.error("Failed to check feature access");

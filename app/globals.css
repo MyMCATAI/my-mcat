@@ -1083,3 +1083,33 @@ html::-webkit-scrollbar {
     opacity: 0;
   }
 }
+
+/* Add smooth transition between pages */
+.page-transition-enter {
+  opacity: 0;
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transition: opacity 150ms ease-in;
+}
+
+.page-transition-exit {
+  opacity: 1;
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+
+/* Optimize rendering for debug mode */
+.debug-mode * {
+  transition: none !important;
+  animation-duration: 0ms !important;
+}
+
+/* Optimize rendering for debug mode - reduce animations */
+.debug-mode .animate-pulse {
+  animation: none !important;
+}

@@ -1,42 +1,8 @@
-import { OnboardingInfo } from "@/types";
 import { useState, useCallback, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
-import { useUser } from "@clerk/nextjs";
-import { useUserInfoContext } from "@/contexts/UserInfoContext";
-
-export interface UserInfo {
-  unlocks?: string[];
-  userId: string;
-  bio: string;
-  firstName: string;
-  apiCount: number;
-  score: number;
-  streak: number;
-  clinicRooms: string;
-  hasPaid: boolean;
-  subscriptionType: string;
-  diagnosticScores: {
-    total: string;
-    cp: string;
-    cars: string;
-    bb: string;
-    ps: string;
-  };
-  notificationPreference?: string;
-  onboardingInfo?: OnboardingInfo;
-  referrals?: any[];
-}
-
-interface Referral {
-  id: string;
-  userId: string;
-  referrerName: string;
-  referrerEmail: string;
-  friendEmail: string;
-  friendUserId: string;
-  createdAt: Date;
-  joinedAt: Date | null;
-}
+import { useUser as useClerkUser } from "@clerk/nextjs";
+import { useUser } from "@/store/selectors";
+import { UserInfo, Referral } from "@/types/user";
 
 interface UseUserInfoReturn {
   userInfo: UserInfo | null;
@@ -64,14 +30,16 @@ interface UseUserInfoReturn {
 }
 
 export const useUserInfo = (): UseUserInfoReturn => {
-  const { user } = useUser();
-  const { userInfo, refreshUserInfo } = useUserInfoContext();
+  const { user } = useClerkUser();
+  const { userInfo, refreshUserInfo } = useUser();
   const [isLoading, setIsLoading] = useState(true);
   const hasInitialized = useRef(false);
+  
+  const [referrals, setReferrals] = useState<Referral[]>([]);
 
   const fetchUserInfo = useCallback(async () => {
     try {
-      refreshUserInfo();
+      await refreshUserInfo();
     } catch (error) {
       console.error('Failed to fetch user info:', error);
       toast.error('Failed to load user info');
@@ -289,7 +257,7 @@ export const useUserInfo = (): UseUserInfoReturn => {
   }, [refreshUserInfo]);
 
   return {
-    userInfo,
+    userInfo: userInfo as UserInfo | null,
     isLoading,
     isSubscribed: userInfo?.subscriptionType === 'gold' || userInfo?.subscriptionType === 'premium',
     updateScore,
@@ -298,7 +266,7 @@ export const useUserInfo = (): UseUserInfoReturn => {
     incrementScore,
     decrementScore,
     refetch: fetchUserInfo,
-    referrals: userInfo?.referrals || [],
+    referrals,
     isLoadingReferrals: false,
     fetchReferrals,
     createReferral,

@@ -21,6 +21,7 @@ import { roomToSubjectMap } from './constants';
 import ChatBot from '@/components/chatbot/ChatBotFlashcard';
 import { cleanQuestion, cleanAnswer } from './utils/testUtils';
 import DownvoteFeedback from '@/components/DownvoteFeedback';
+import { useGame } from "@/store/selectors";
 // import Interruption from './Interruption';
 
 interface WrongCard {
@@ -66,8 +67,11 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   onMCQAnswer,
   setTotalMCQQuestions,
 }, ref) => {
+  // Get the store's actions
+  const { setCorrectCount: storeSetCorrectCount, setWrongCount: storeSetWrongCount, correctCount: storeCorrectCount } = useGame();
+  
   const [wrongCards, setWrongCards] = useState<WrongCard[]>([]);
-  const [correctCount, setCorrectCount] = useState(0);
+  const [localCorrectCount, setLocalCorrectCount] = useState(0);
   const [showPlusOne, setShowPlusOne] = useState(false);
   const [streak, setStreak] = useState(0);
   const [encouragement, setEncouragement] = useState('');
@@ -76,6 +80,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   // const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<Flashcard | null>(null);
   const [currentQuestionContext, setCurrentQuestionContext] = useState<QuestionContext | null>(null);
+  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
   const chatbotRef = useRef<{
     sendMessage: (message: string) => void;
   }>({ sendMessage: () => {} });
@@ -103,48 +108,30 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     }
   });
 
-  const getRandomEncouragement = (currentStreak: number) => {
-    const messages = [
-      'Amazing!',
-      'Well done!',
-      'Excellent!',
-      'Keep it up!',
-      'Fantastic!',
-      'Brilliant!'
-    ];
+  const [showChat, setShowChat] = useState(false);
 
-    let message = messages[Math.floor(Math.random() * messages.length)];
-    
-    if (currentStreak >= 3) {
-      message += ` ${currentStreak} in a row! 🔥`;
-    }
-    
-    return message;
-  };
-
-  const handleWrongCard = (question: string, answer: string) => {
-    const newWrongCard: WrongCard = {
+  const handleWrongAnswer = (question: string, correctAnswer: string) => {
+    const newWrongCard = {
       question,
-      answer,
-      timestamp: new Date().toLocaleTimeString()
+      answer: correctAnswer,
+      timestamp: new Date().toISOString(),
     };
     
-    api.start({
-      from: { x: -100 },
-      to: { x: 0 },
-      config: {
-        mass: 1,
-        tension: 180,
-        friction: 12
-      }
-    });
-    
     setWrongCards(prev => [newWrongCard, ...prev]);
+    // Update the store's wrong count
+    storeSetWrongCount(wrongCards.length + 1);
     setStreak(0);
   };
 
   const handleCorrectAnswer = () => {
-    setCorrectCount(prev => prev + 1);
+    // Update local state for UI
+    setLocalCorrectCount(prev => {
+      const newCount = prev + 1;
+      // Update store state
+      storeSetCorrectCount(newCount);
+      return newCount;
+    });
+    
     setShowPlusOne(true);
     
     const newStreak = streak + 1;
@@ -163,97 +150,96 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     onOpenChange(open);
   };
 
-  // const handleInterruption = () => {
-  //   setShowInterruption(true);
-  // };
-
-  // const handleKalypsoClick = () => {
-  //   if (audioRef.current) {
-  //     audioRef.current.pause();
-  //     audioRef.current = null;
-  //     setIsTypingComplete(false);
-  //     setShowInterruption(false);
-  //   }
-  // };
-
   const handleClose = useCallback(() => {
     onOpenChange(false);
     if (roomId === 'WaitingRoom0') {
       return;
     }
-    if (correctCount > 0) {
+    if (localCorrectCount > 0) {
+      // Create a new Set by filtering out the current roomId
       const newActiveRooms = new Set([...activeRooms].filter(room => room !== roomId));
+      
+      // Update the activeRooms in the store
+      setActiveRooms(newActiveRooms);
+      
+      // If all rooms are completed, call handleCompleteAllRoom
       if (newActiveRooms.size === 0) {
         handleCompleteAllRoom();
       }
-      setActiveRooms(newActiveRooms);
     }
-  }, [roomId, setActiveRooms, onOpenChange, correctCount]);
+  }, [roomId, setActiveRooms, onOpenChange, localCorrectCount, activeRooms, handleCompleteAllRoom]);
 
   const handleDownvote = () => {
     setIsFeedbackOpen(true);
   };
 
-  const [showChat, setShowChat] = useState(false);
+  const handleHint = () => {
+    if (currentQuestion) {
+      setShowChat(true);
+      setIsAnswerRevealed(true);
+      const cleanedQuestion = cleanQuestion(currentQuestion.questionContent);
+      
+      // Determine the correct answer based on question type
+      let correctAnswer = '';
+      if (currentQuestion.questionType === 'normal' && currentQuestion.questionOptions?.length > 0) {
+        correctAnswer = currentQuestion.questionOptions[0];
+      } else {
+        correctAnswer = cleanAnswer(currentQuestion.questionContent);
+      }
+      
+      const cleanedAnswer = cleanAnswer(correctAnswer);
+      
+      const message = `I need help understanding this question: "${cleanedQuestion}". The correct answer is "${cleanedAnswer}". Can you explain why this is the correct answer?`;
+      
+      setTimeout(() => {
+        chatbotRef.current?.sendMessage(message);
+      }, 500);
+    }
+  };
 
-  const handleHintRequest = () => {
-    setIsChatFocused(!showChat);
-    setShowChat(prev => !prev);
+  const handleShowChat = () => {
+    setShowChat(true);
   };
 
   const handleHideChat = () => {
-    setIsChatFocused(false);
     setShowChat(false);
+    setIsAnswerRevealed(false);
   };
 
-  const handleQuestionChange = useCallback((question: Flashcard | null) => {
-    if (!question) {
-      setCurrentQuestionContext(null);
-      return;
+  const getRandomEncouragement = (streak: number) => {
+    const encouragements = [
+      'Great job!',
+      'Keep it up!',
+      'You\'re on fire!',
+      'Excellent!',
+      'Fantastic!',
+      'Amazing!',
+      'Brilliant!',
+      'Superb!',
+      'Outstanding!',
+      'Impressive!'
+    ];
+    
+    const streakEncouragements = [
+      'Streak x2!',
+      'Streak x3!',
+      'Streak x4!',
+      'Streak x5!',
+      'Unstoppable!'
+    ];
+    
+    if (streak >= 3 && streak <= 7) {
+      return streakEncouragements[Math.min(streak - 3, streakEncouragements.length - 1)];
     }
+    
+    return encouragements[Math.floor(Math.random() * encouragements.length)];
+  };
 
-    setCurrentQuestion(question);
-
-    // Get the explanation from questionAnswerNotes
-    let explanation = '';
-    try {
-      const notes = question.questionAnswerNotes;
-      if (Array.isArray(notes)) {
-        explanation = notes[0] || '';
-      } else if (typeof notes === 'string') {
-        try {
-          const parsedNotes = JSON.parse(notes);
-          explanation = Array.isArray(parsedNotes) ? parsedNotes[0] : notes;
-        } catch {
-          explanation = notes;
-        }
-      }
-    } catch (e) {
-      explanation = '';
+  useEffect(() => {
+    if (showPlusOne) {
+      setTimeout(() => setShowPlusOne(false), 1000);
     }
-
-    if (question.questionType === 'normal') {
-      const options = question.questionOptions || [];
-      setCurrentQuestionContext({
-        question: cleanQuestion(question.questionContent),
-        correctAnswer: options[0] || '',
-        explanation,
-        otherOptions: options,
-        type: 'normal'
-      });
-    } else {
-      setCurrentQuestionContext({
-        question: cleanQuestion(question.questionContent),
-        correctAnswer: cleanAnswer(question.questionContent),
-        explanation,
-        otherOptions: [],
-        type: 'flashcard'
-      });
-    }
-  }, []);
-
-  const [isChatFocused, setIsChatFocused] = useState(false);
-  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
+  }, [showPlusOne]);
 
   // Reset if answer is revealed
   useEffect(() => {
@@ -261,17 +247,56 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   }, [isOpen]);
 
   useEffect(() => {
-    setIsAnswerRevealed(false);
-    handleHideChat();
+    if (currentQuestion) {
+      // Determine the correct answer based on question type
+      let correctAnswer = '';
+      if (currentQuestion.questionType === 'normal' && currentQuestion.questionOptions?.length > 0) {
+        correctAnswer = currentQuestion.questionOptions[0];
+      } else {
+        correctAnswer = cleanAnswer(currentQuestion.questionContent);
+      }
+
+      // Extract explanation from questionAnswerNotes
+      let explanation = '';
+      try {
+        const notes = currentQuestion.questionAnswerNotes;
+        if (Array.isArray(notes)) {
+          explanation = notes[0] || '';
+        } else if (typeof notes === 'string') {
+          try {
+            const parsedNotes = JSON.parse(notes);
+            explanation = Array.isArray(parsedNotes) ? parsedNotes[0] : notes;
+          } catch {
+            explanation = notes;
+          }
+        }
+      } catch (e) {
+        explanation = '';
+      }
+
+      setCurrentQuestionContext({
+        question: currentQuestion.questionContent,
+        correctAnswer: correctAnswer,
+        explanation: explanation,
+        otherOptions: currentQuestion.questionOptions && Array.isArray(currentQuestion.questionOptions) 
+          ? currentQuestion.questionOptions.filter(opt => opt !== correctAnswer)
+          : [],
+        type: currentQuestion.questionType
+      });
+    } else {
+      setCurrentQuestionContext(null);
+      handleHideChat();
+    }
   }, [currentQuestion]);
 
   useImperativeHandle(ref, () => ({
     open: () => onOpenChange(true),
     setWrongCards,
-    setCorrectCount
+    setCorrectCount: (count: number) => {
+      setLocalCorrectCount(count);
+      storeSetCorrectCount(count);
+    }
   }));
-
-
 
   return (
     <>
@@ -308,7 +333,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                         className="text-[--theme-hover-color] flex items-center justify-center"
                       >
                         <span className="text-5xl font-bold">
-                          {correctCount}
+                          {localCorrectCount}
                         </span>
                         <animated.span 
                           style={plusOneSpring}
@@ -337,14 +362,14 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={handleHintRequest}
+                              onClick={handleHint}
                               className="hover:bg-transparent text-[--theme-text-color] hover:text-[--theme-hover-color] transition-colors group"
                             >
                               <HelpCircle className="h-5 w-5 transition-transform duration-200 group-hover:rotate-12" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side="left">
-                            {isAnswerRevealed ? "Explain answer" : "Get a hint"}
+                            {showChat ? "Hide Chat" : "Get a hint"}
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -379,7 +404,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                     <FlashcardDeck 
                       handleCompleteAllRoom={handleCompleteAllRoom}
                       roomId={roomId} 
-                      onWrongAnswer={handleWrongCard}
+                      onWrongAnswer={handleWrongAnswer}
                       onCorrectAnswer={handleCorrectAnswer}
                       activeRooms={activeRooms}
                       setActiveRooms={setActiveRooms}
@@ -389,9 +414,9 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                       onClose={handleClose}
                       onMCQAnswer={onMCQAnswer}
                       setTotalMCQQuestions={setTotalMCQQuestions}
-                      onQuestionChange={handleQuestionChange}
+                      onQuestionChange={(question) => setCurrentQuestion(question)}
                       onAnswerReveal={(revealed: boolean) => setIsAnswerRevealed(revealed)}
-                      isChatFocused={isChatFocused}
+                      isChatFocused={showChat}
                     />
                   </div>
                 </div>
@@ -430,8 +455,8 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                             : ""
                         }}
                         chatbotRef={chatbotRef}
-                        onFocus={() => setIsChatFocused(true)}
-                        onBlur={() => setIsChatFocused(false)}
+                        onFocus={() => {}}
+                        onBlur={() => {}}
                       />
                     </div>
                   </div>
@@ -470,7 +495,6 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     </>
   );
 });
-
 
 FlashcardsDialog.displayName = 'FlashcardsDialog';
 

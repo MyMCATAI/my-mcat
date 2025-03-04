@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Test, UserTest } from "@/types";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useUI } from "@/store/selectors";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle } from "lucide-react";
 import {
@@ -41,7 +41,7 @@ const TestList: React.FC<TestListProps> = ({
   testsAvailableToday = Infinity,
   testsCompletedToday: initialTestsCompleted = 0,
 }) => {
-  const { theme } = useTheme();
+  const { theme } = useUI();
   const [userScore, setUserScore] = useState<number | null>(null);
   const noTestsAvailable = userScore === 0;
   const [searchQuery, setSearchQuery] = useState("");

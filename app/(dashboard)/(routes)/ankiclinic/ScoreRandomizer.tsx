@@ -300,6 +300,7 @@ const ScoreRandomizer: React.FC<ScoreRandomizerProps> = ({
     averageStarRating,
     clinicCostPerDay,
     purchasedRooms,
+    getCurrentTier
   ]);
 
   // Function to render stars with animation (update to handle 0 stars)

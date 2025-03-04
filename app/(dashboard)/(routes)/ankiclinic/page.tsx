@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, Suspense, forwardRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, Suspense, forwardRef, useMemo } from "react";
+import ReactDOM from 'react-dom';
 import ResourcesMenu from "./ResourcesMenu";
 import { useRouter } from "next/navigation";
 import { DoctorOfficeStats } from "@/types";
@@ -15,23 +16,20 @@ import dynamic from 'next/dynamic';
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import { useAudio } from "@/contexts/AudioContext";
 import type { UserResponse } from "@prisma/client";
 import type { FetchedActivity } from "@/types";
 import { GridImage } from './types';
 import NewGameButton from "./components/NewGameButton";
 import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 import type { UserResponseWithCategory } from "@/types";
-import { useAudio } from "@/contexts/AudioContext";
 import RedeemReferralModal from "@/components/social/friend-request/RedeemReferralModal";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
 import { getAccentColor, getWelcomeMessage, getSuccessMessage } from './utils';
+import { useGame } from "@/store/selectors";
+import OfficeContainer from './OfficeContainer';
 
-// Lazy load the heavy components
-const OfficeContainer = dynamic(() => import('./OfficeContainer'), {
-  loading: () => <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />,
-  ssr: false
-});
-
+// Only lazy load dialog components that aren't needed immediately
 const ShoppingDialog = dynamic(() => import('./ShoppingDialog'), {
   loading: () => null,
   ssr: false
@@ -52,11 +50,66 @@ const FloatingButton = dynamic(() => import('../home/FloatingButton'), {
   ssr: false
 });
 
+// Loading component for better UX during initial load
+const LoadingClinic = () => (
+  <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
+    <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse"></div>
+    <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg"></div>
+  </div>
+);
+
 interface DoctorsOfficePageProps {
   // Add any props if needed
 }
 
 const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
+  // Add mount counter ref
+  const mountCountRef = useRef(0);
+  const prevDepsRef = useRef<{
+    pathname?: string,
+    userInfoId?: boolean,
+    reportDataId?: boolean,
+    activeRoomsSize?: number,
+    isLoading?: boolean
+  }>({});
+  
+  // Add a ref to track if data fetch is in progress
+  const isFetchingRef = useRef(false);
+  // Add a ref to store the current abort controller
+  const abortControllerRef = useRef<AbortController | null>(null);
+  // Add a ref to track if component is already initialized
+  const isInitializedRef = useRef(false);
+  // Add a ref to track if state updates are in progress
+  const stateUpdateInProgressRef = useRef(false);
+  // Add a ref to track if component is mounted
+  const isMountedRef = useRef(false);
+
+  // Track mount count and log navigation - combined into one effect
+  useEffect(() => {
+    mountCountRef.current += 1;
+    isMountedRef.current = true;
+    const pathname = window.location.pathname;
+    
+    // Combine all mount-related logging
+    console.log(`[Navigation] AnkiClinic component mounted at ${new Date().toISOString()}`);
+    console.log(`[Debug] AnkiClinic mount #${mountCountRef.current} at path: ${pathname}`);
+    
+    // Check for React Strict Mode (which causes double renders)
+    if (mountCountRef.current === 2) {
+      console.log('[Debug] Detected possible React Strict Mode (double render)');
+    }
+    
+    return () => {
+      isMountedRef.current = false;
+      console.log(`[Debug] AnkiClinic unmount #${mountCountRef.current} at path: ${pathname}`);
+      
+      // Cleanup any in-progress operations
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
   /* ------------------------------------------- Hooks -------------------------------------------- */
   const officeContainerRef = useRef<HTMLDivElement>(null);
   const flashcardsDialogRef = useRef<{ 
@@ -69,37 +122,32 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const { setIsAutoPlay } = useMusicPlayer();
   const { startActivity } = useUserActivity();
   const router = useRouter();
+  
+  // Get the game state and actions from Zustand
+  const { 
+    userRooms, userLevel, patientsPerDay, totalPatients, streakDays,
+    isGameInProgress, currentUserTestId, isFlashcardsOpen, flashcardRoomId, 
+    activeRooms, completeAllRoom, correctCount, wrongCount, testScore,
+    isAfterTestDialogOpen, largeDialogQuit, isMarketplaceOpen, userResponses,
+    unlockRoom, startGame, endGame, setIsFlashcardsOpen, setUserRooms,
+    setFlashcardRoomId, setActiveRooms, setCompleteAllRoom, resetGameState,
+    setCorrectCount, setWrongCount, setTestScore, setIsAfterTestDialogOpen,
+    setLargeDialogQuit, setIsMarketplaceOpen, updateUserLevel, setUserResponses,
+    setStreakDays, setTotalPatients
+  } = useGame();
+  
   /* ------------------------------------------- State -------------------------------------------- */
   const [activeTab, setActiveTab] = useState("ankiclinic");
-  const [userLevel, setUserLevel] = useState("PATIENT LEVEL");
-  const [patientsPerDay, setPatientsPerDay] = useState(4);
-  const [userRooms, setUserRooms] = useState<string[]>([]);
-  const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
-  const [totalPatients, setTotalPatients] = useState(0);
-  const [isAfterTestDialogOpen, setIsAfterTestDialogOpen] = useState(false);
-  const [largeDialogQuit, setLargeDialogQuit] = useState(false);
   const [showWelcomeDialogue, setShowWelcomeDialogue] = useState(false);
   //Flashcards
-  const [isFlashcardsOpen, setIsFlashcardsOpen] = useState(false);
   const prevFlashcardsOpenRef = useRef(false); //this keeps track of previous state
   const [isFlashcardsTooltipOpen, setIsFlashcardsTooltipOpen] = useState(false);
-  const [flashcardRoomId, setFlashcardRoomId] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading state
   const [totalMCQQuestions, setTotalMCQQuestions] = useState(0);
   const [correctMCQQuestions, setCorrectMCQQuestions] = useState(0);
   const afterTestFeedRef = useRef<{ setWrongCards: (cards: any[]) => void } | null>(null);
   // Game functionality
-  const [activeRooms, setActiveRooms] = useState<Set<string>>(() => new Set());
-  const [completeAllRoom, setCompleteAllRoom] = useState(false);
-  const [currentUserTestId, setCurrentUserTestId] = useState<string | null>(null);
-  // User Responses
-  const [userResponses, setUserResponses] = useState<UserResponseWithCategory[]>([]);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [wrongCount, setWrongCount] = useState(0);
-  const [testScore, setTestScore] = useState(0);
-  const [isGameInProgress, setIsGameInProgress] = useState(false);
   // Marketplace Dialog
-  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const marketplaceDialogRef = useRef<{
     open: () => void
   }>(null);
@@ -107,8 +155,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const [clinicCostPerDay, setClinicCostPerDay] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
   const hasCalculatedRef = useRef(false);
-  // Add this new state for streak days
-  const [streakDays, setStreakDays] = useState(0);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [populateRoomsFn, setPopulateRoomsFn] = useState<(() => GridImage[]) | null>(null);
@@ -116,19 +162,28 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   // Add debug state to track audio lifecycle
   const [debugId] = useState(() => Math.random().toString(36).substr(2, 9));
   // Add a ref to track mounted state
-  const isMountedRef = useRef(false);
   const audioTransitionInProgressRef = useRef(false);
+  // Add a ref to track loading state updates
+  const loadingStateUpdatedRef = useRef(false);
+  // Add a ref to track debounced dependency checks
+  const debouncedDepsCheckRef = useRef<NodeJS.Timeout | null>(null);
+  const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
 
   /* --- Constants ----- */
   const AMBIENT_SOUND = '/audio/flashcard-loop-catfootsteps.mp3';
 
   /* ----------------------------------------- Computation ----------------------------------------- */
 
-  const isClinicUnlocked = userInfo?.unlocks && 
-  (typeof userInfo.unlocks === 'string' ? 
-    JSON.parse(userInfo.unlocks) : 
-    userInfo.unlocks
-  )?.includes('game');
+  // Memoize expensive computations
+  const isClinicUnlocked = useMemo(() => {
+    if (!userInfo?.unlocks) return false;
+    
+    const unlocks = typeof userInfo.unlocks === 'string' 
+      ? JSON.parse(userInfo.unlocks) 
+      : userInfo.unlocks;
+      
+    return unlocks?.includes('game');
+  }, [userInfo?.unlocks]);
 
   /* ----------------------------------------- Callbacks ------------------------------------------ */
 
@@ -152,13 +207,14 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         responses?.filter((response: UserResponse) => !response.isCorrect)
           ?.length || 0;
 
+      // Update the store instead of local state
       setCorrectCount(correct);
       setWrongCount(wrong);
     } catch (error) {
       console.error("Error fetching user responses:", error);
       toast.error("Failed to load test responses");
     }
-  }, []);
+  }, [setCorrectCount, setWrongCount, setUserResponses]);
 
   const updateVisibleImages = useCallback((newVisibleImages: Set<string>) => {
     setVisibleImages(newVisibleImages);
@@ -175,14 +231,89 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   }, []);
 
   /* ----------------------------------------- UseEffects ---------------------------------------- */
-  // Handles test completion, scoring, and updates database
+  
+  // Optimized dependency tracking effect with debounce
   useEffect(() => {
-    const finishTest = async () => {
-      if (!isLoading && completeAllRoom) {
-        // Finish all rooms
-        // Fetch user responses
-        if (currentUserTestId) {
-          fetchUserResponses(currentUserTestId);
+    if (!isMountedRef.current || stateUpdateInProgressRef.current) return;
+    
+    // Debounce the dependency check to prevent rapid updates
+    if (debouncedDepsCheckRef.current) {
+      clearTimeout(debouncedDepsCheckRef.current);
+    }
+    
+    debouncedDepsCheckRef.current = setTimeout(() => {
+      const pathname = window.location.pathname;
+      const currentDeps = {
+        pathname,
+        userInfoAvailable: !!userInfo,
+        reportDataAvailable: !!reportData,
+        activeRoomsSize: activeRooms.size,
+        isLoading
+      };
+      
+      // Check for changes in dependencies
+      const prevDeps = prevDepsRef.current;
+      const changes = [];
+      
+      if (prevDeps.pathname !== currentDeps.pathname) {
+        changes.push(`pathname: ${prevDeps.pathname} -> ${currentDeps.pathname}`);
+      }
+      
+      if (prevDeps.userInfoId !== currentDeps.userInfoAvailable) {
+        changes.push(`userInfo: ${prevDeps.userInfoId ? 'present' : 'absent'} -> ${currentDeps.userInfoAvailable ? 'present' : 'absent'}`);
+      }
+      
+      if (prevDeps.reportDataId !== currentDeps.reportDataAvailable) {
+        changes.push(`reportData: ${prevDeps.reportDataId ? 'present' : 'absent'} -> ${currentDeps.reportDataAvailable ? 'present' : 'absent'}`);
+      }
+      
+      if (prevDeps.activeRoomsSize !== currentDeps.activeRoomsSize) {
+        changes.push(`activeRooms size: ${prevDeps.activeRoomsSize} -> ${currentDeps.activeRoomsSize}`);
+      }
+      
+      if (prevDeps.isLoading !== currentDeps.isLoading) {
+        changes.push(`isLoading: ${prevDeps.isLoading} -> ${currentDeps.isLoading}`);
+      }
+      
+      if (changes.length > 0) {
+        console.log(`[Debug] Dependencies changed on mount #${mountCountRef.current}:`, changes.join(', '));
+      }
+      
+      // Update previous dependencies
+      prevDepsRef.current = {
+        pathname: currentDeps.pathname,
+        userInfoId: currentDeps.userInfoAvailable,
+        reportDataId: currentDeps.reportDataAvailable,
+        activeRoomsSize: currentDeps.activeRoomsSize,
+        isLoading: currentDeps.isLoading
+      };
+      
+      debouncedDepsCheckRef.current = null;
+    }, 100);
+    
+    return () => {
+      if (debouncedDepsCheckRef.current) {
+        clearTimeout(debouncedDepsCheckRef.current);
+        debouncedDepsCheckRef.current = null;
+      }
+    };
+  }, [userInfo, reportData, activeRooms, isLoading]);
+
+  // Handles test completion, scoring, and updates database - with optimization
+  useEffect(() => {
+    // Skip if not mounted or if state updates are in progress
+    if (!isMountedRef.current || stateUpdateInProgressRef.current) return;
+    
+    // Only run when all conditions are met
+    if (!isLoading && completeAllRoom && currentUserTestId) {
+      // Set flag to prevent concurrent state updates
+      stateUpdateInProgressRef.current = true;
+      
+      const finishTest = async () => {
+        try {
+          // Fetch user responses
+          await fetchUserResponses(currentUserTestId);
+          
           // Dummy scoring logic
           const correctQuestionWeight = 1;
           const incorrectQuestionWeight = -0.5;
@@ -190,74 +321,159 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
             correctCount * correctQuestionWeight +
             wrongCount * incorrectQuestionWeight;
           testScore = Math.max(testScore, 0);
-          setTestScore(testScore);
-          // Update the UserTest with score
-          fetch(`/api/user-test/${currentUserTestId}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              score: testScore,
-              finishedAt: new Date().toISOString(),
-            }),
-          }).catch(console.error);
+          
+          if (isMountedRef.current) {
+            setTestScore(testScore);
+          
+            // Update the UserTest with score
+            fetch(`/api/user-test/${currentUserTestId}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                score: testScore,
+                finishedAt: new Date().toISOString(),
+              }),
+            }).catch(console.error);
 
-          if (!isFlashcardsOpen && !largeDialogQuit) {
-            setIsAfterTestDialogOpen(true);
+            if (!isFlashcardsOpen && !largeDialogQuit) {
+              setIsAfterTestDialogOpen(true);
+            }
+          }
+        } finally {
+          // Reset flag after state updates
+          if (isMountedRef.current) {
+            setTimeout(() => {
+              stateUpdateInProgressRef.current = false;
+            }, 50);
           }
         }
-      }
+      };
+
+      finishTest();
     }
+  }, [currentUserTestId, completeAllRoom, isLoading, isFlashcardsOpen, largeDialogQuit, 
+      fetchUserResponses, correctCount, wrongCount, setTestScore, setIsAfterTestDialogOpen]);
 
-    finishTest();
-  }, [ currentUserTestId, activeRooms.size, isFlashcardsOpen, fetchUserResponses, correctCount,
-    wrongCount, testScore, isLoading, largeDialogQuit, completeAllRoom ]);
-
-  // Manages music autoplay when component mounts/unmounts
+  // Manages music autoplay when component mounts/unmounts - with optimization
   useEffect(() => {
+    // Set autoplay on mount
     setIsAutoPlay(true);
-    return () => setIsAutoPlay(false);
+    
+    // Cleanup on unmount
+    return () => {
+      setIsAutoPlay(false);
+    };
   }, [setIsAutoPlay]);
 
   // Component mount: Initial data fetch and daily calculations setup
   useEffect(() => {
-    fetchData();
-    if (!hasCalculatedRef.current && userInfo) {
-      const timer = setTimeout(() => {
-        performDailyCalculations();
-        hasCalculatedRef.current = true;
-      }, 3000);
-      // Clean up the timer if the component unmounts
-      return () => clearTimeout(timer);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userInfo]);
+    let mounted = true;
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; // 1 second
+    
+    const initializeData = async () => {
+      // Skip if already initialized and data is present
+      if (isInitializedRef.current && reportData) {
+        console.log('[AnkiClinic] Already initialized with data, skipping');
+        return;
+      }
+      
+      isInitializedRef.current = true;
+      console.log(`[Debug] Initiating initial data fetch on mount #${mountCountRef.current}`);
+      
+      const attemptFetch = async () => {
+        try {
+          await fetchData();
+          
+          // Only proceed with calculations if still mounted
+          if (mounted && !hasCalculatedRef.current && userInfo) {
+            performDailyCalculations();
+            hasCalculatedRef.current = true;
+          }
+        } catch (error) {
+          console.error('[AnkiClinic] Error during initialization:', error);
+          
+          // Retry logic
+          if (mounted && retryCount < MAX_RETRIES) {
+            retryCount++;
+            console.log(`[AnkiClinic] Retrying fetch attempt ${retryCount} of ${MAX_RETRIES}`);
+            setTimeout(attemptFetch, RETRY_DELAY);
+          } else if (mounted) {
+            toast.error("Failed to initialize clinic data. Please refresh the page.");
+          }
+        }
+      };
 
-  // Component mount: fetches user activities 
+      await attemptFetch();
+    };
+
+    // Small delay to let any Strict Mode double-mount settle
+    const initTimer = setTimeout(() => {
+      if (mounted) {
+        initializeData();
+      }
+    }, 100);
+    
+    return () => {
+      mounted = false;
+      clearTimeout(initTimer);
+      // Only abort requests if we're actually unmounting, not just in Strict Mode
+      if (mountCountRef.current > 2 && abortControllerRef.current) {
+        console.log(`[Debug] Final unmount - aborting requests on unmount #${mountCountRef.current}`);
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [userInfo, reportData]); // Add reportData as dependency to prevent unnecessary fetches
+
+  // Component mount: fetches user activities - run only once
   useEffect(() => {
-    fetchActivities();
+    const activityFetchTimeout = setTimeout(() => {
+      if (isMountedRef.current) {
+        fetchActivities();
+      }
+    }, 500); // Delay activity fetch to prioritize main content
+    
+    return () => clearTimeout(activityFetchTimeout);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Component mount: Initializes activity tracking
+  // Component mount: Initializes activity tracking - run only once
   useEffect(() => {
-    const initializeActivity = async () => {
-        await startActivity({
-          type: 'studying',
-          location: 'Game',
-          metadata: {
-            initialLoad: true,
-            timestamp: new Date().toISOString()
-          }
-        });
+    const activityTrackingTimeout = setTimeout(() => {
+      if (isMountedRef.current) {
+        const initializeActivity = async () => {
+          await startActivity({
+            type: 'studying',
+            location: 'Game',
+            metadata: {
+              initialLoad: true,
+              timestamp: new Date().toISOString()
+            }
+          });
+        }
+        initializeActivity();
       }
-    initializeActivity();
+    }, 1000); // Delay activity tracking to prioritize main content
+    
+    return () => clearTimeout(activityTrackingTimeout);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Modify the existing useEffect for ambient sound and flashcard door sounds
   useEffect(() => {
+    if (!isMountedRef.current) return;
+    
+    // Skip audio transitions during initial load
+    if (isLoading) return;
+    
     let isEffectActive = true; // Local flag to track if effect is still active
+
+    // Prevent multiple audio transitions
+    if (audioTransitionInProgressRef.current) return;
+    audioTransitionInProgressRef.current = true;
 
     const handleAudioTransition = async () => {
       try {
@@ -283,6 +499,10 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         if (isEffectActive) {
           console.error(`🎵 [${debugId}] Audio transition error:`, error);
         }
+      } finally {
+        if (isEffectActive) {
+          audioTransitionInProgressRef.current = false;
+        }
       }
     };
 
@@ -291,66 +511,173 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     return () => {
       isEffectActive = false;
     };
-  }, [isFlashcardsOpen, debugId]); // Only depend on flashcards state and debugId
+  }, [isFlashcardsOpen, audio, debugId, isLoading]); // Added isLoading dependency
 
-  // Opens flashcard dialog when a room is selected
+  // Opens flashcard dialog when a room is selected - optimize with additional check
   useEffect(() => {
-    if (flashcardRoomId !== "") {
+    // Skip during initial load or if already transitioning
+    if (isLoading || stateUpdateInProgressRef.current) return;
+    
+    if (flashcardRoomId !== "" && !isFlashcardsOpen) {
+      stateUpdateInProgressRef.current = true;
       setIsFlashcardsOpen(true);
+      // Reset the flag after a short delay
+      setTimeout(() => {
+        stateUpdateInProgressRef.current = false;
+      }, 50);
     }
-  }, [flashcardRoomId, debugId]);
+  }, [flashcardRoomId, isFlashcardsOpen, setIsFlashcardsOpen, isLoading]);
 
-  // Shows welcome/referral modals based on user state
+  // Shows welcome/referral modals based on user state - run only when userInfo changes
   useEffect(() => {
-    setShowReferralModal(shouldShowRedeemReferralModal());
-    if(userInfo && !isClinicUnlocked) {
-      setShowWelcomeDialogue(true);
+    // Skip during initial load or if already transitioning
+    if (!isMountedRef.current || stateUpdateInProgressRef.current) return;
+    
+    // Use a timeout to batch these state updates
+    const modalTimeout = setTimeout(() => {
+      if (isMountedRef.current) {
+        stateUpdateInProgressRef.current = true;
+        
+        // Batch state updates
+        const updates = () => {
+          setShowReferralModal(shouldShowRedeemReferralModal());
+          if(userInfo && !isClinicUnlocked) {
+            setShowWelcomeDialogue(true);
+          }
+        };
+        
+        updates();
+        
+        // Reset the flag after updates
+        setTimeout(() => {
+          stateUpdateInProgressRef.current = false;
+        }, 50);
+      }
+    }, 500);
+    
+    return () => clearTimeout(modalTimeout);
+  }, [userInfo, isClinicUnlocked]);
+
+  // Add a new effect to preserve debug mode - run only once
+  useEffect(() => {
+    // Check if we need to preserve debug mode
+    const searchParams = new URLSearchParams(window.location.search);
+    const isDebugMode = searchParams.get('debug') === 'true';
+    
+    if (isDebugMode) {
+      // Set a flag to indicate we're in debug mode
+      document.body.classList.add('debug-mode');
     }
-  }, [isClinicUnlocked, userInfo]);
+    
+    return () => {
+      if (isDebugMode) {
+        document.body.classList.remove('debug-mode');
+      }
+    };
+  }, []);
+
+  // Add logging effect for key state changes
+  useEffect(() => {
+    console.log('[AnkiClinic] State update:', {
+      isLoading,
+      hasReportData: !!reportData,
+      hasUserInfo: !!userInfo,
+      userRoomsLength: userRooms?.length,
+      isFetching: isFetchingRef.current,
+      mountCount: mountCountRef.current,
+      isInitialized: isInitializedRef.current
+    });
+  }, [isLoading, reportData, userInfo, userRooms]);
 
   /* ---------------------------------------- Event Handlers -------------------------------------- */
 
   const fetchData = async () => {
+    // If already fetching, don't start another fetch
+    if (isFetchingRef.current) {
+      console.log(`[AnkiClinic] Skipping redundant data fetch - fetch already in progress`);
+      return;
+    }
+    
+    // Skip if we already have data and are not in loading state
+    if (reportData && !isLoading) {
+      console.log('[AnkiClinic] Data already loaded and not in loading state, skipping fetch');
+      return;
+    }
+    
+    // Set fetching flag and loading state
+    isFetchingRef.current = true;
+    if (!isLoading) {
+      setIsLoading(true);
+    }
+    
+    // Create a new abort controller
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+    
     try {
       const [reportResponse, clinicResponse] = await Promise.all([
-        fetch("/api/user-report"),
-        fetch("/api/clinic"),
+        fetch("/api/user-report", { 
+          signal,
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        }),
+        fetch("/api/clinic", { 
+          signal,
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        }),
       ]);
 
-      if (!reportResponse.ok || !clinicResponse.ok)
-        throw new Error("Failed to fetch user report");
-      if (!clinicResponse.ok) throw new Error("Failed to fetch clinic data");
+      if (!isMountedRef.current || signal.aborted) return;
 
-      const reportData: DoctorOfficeStats = await reportResponse.json();
+      const reportDataResult = await reportResponse.json();
       const clinicData = await clinicResponse.json();
-      setReportData(reportData);
-      setUserRooms(clinicData.rooms);
-
-      // Set streak days from the user report
-      setStreakDays(reportData.streak || 0);
-
-      // Calculate and set player level, patients per day, and clinic cost
-      const playerLevel = calculatePlayerLevel(clinicData.rooms);
-      const levelNumber = getLevelNumber(playerLevel);
-      const patientsPerDay = getPatientsPerDay(levelNumber);
-      const clinicCostPerDay = getClinicCostPerDay(levelNumber);
-
-      setUserLevel(playerLevel);
-      setPatientsPerDay(patientsPerDay);
-      setClinicCostPerDay(clinicCostPerDay);
-      setTotalPatients(clinicData.totalPatientsTreated || 0);
-
-      const newVisibleImages = new Set<string>();
-      clinicData.rooms.forEach((roomName: string) => {
-        const group = imageGroups.find((g) => g.name === roomName);
-        if (group) {
-          group.items.forEach((item) => newVisibleImages.add(item.id));
+      
+      if (!isMountedRef.current || signal.aborted) return;
+      
+      // Batch all state updates
+      ReactDOM.unstable_batchedUpdates(() => {
+        // Only update if values have changed
+        if (JSON.stringify(reportData) !== JSON.stringify(reportDataResult)) {
+          setReportData(reportDataResult);
         }
+        
+        if (clinicData.rooms && Array.isArray(clinicData.rooms) && 
+            JSON.stringify(userRooms) !== JSON.stringify(clinicData.rooms)) {
+          setUserRooms(clinicData.rooms);
+        }
+        
+        if (streakDays !== (reportDataResult.streak || 0)) {
+          setStreakDays(reportDataResult.streak || 0);
+        }
+        
+        if (totalPatients !== (clinicData.totalPatientsTreated || 0)) {
+          setTotalPatients(clinicData.totalPatientsTreated || 0);
+        }
+        
+        setIsLoading(false);
       });
-      setVisibleImages(newVisibleImages);
-
     } catch (error) {
-      console.error("Error fetching data:", error);
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.log('[AnkiClinic] Request aborted');
+      } else {
+        console.error('[AnkiClinic] Error in fetchData:', error);
+        if (isMountedRef.current) {
+          toast.error("Failed to load clinic data. Please try refreshing the page.");
+        }
+      }
+    } finally {
+      if (isMountedRef.current) {
+        isFetchingRef.current = false;
+        setIsLoading(false);
+      }
     }
   };
 
@@ -393,6 +720,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       }
 
       await incrementScore();
+      // Update total patients in the store
       setTotalPatients(data.totalPatientsTreated);
 
       if (data.newPatientsTreated > 0) {
@@ -457,7 +785,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   };
 
   const handleCompleteAllRoom = () => {
-    setCompleteAllRoom(true);
+    handleSetCompleteAllRoom(true);
   };
 
   const toggleGroup = async (groupName: string) => {
@@ -485,7 +813,9 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         if (!response.ok) throw new Error();
         const { rooms: updatedRooms } = await response.json();
         
-        setUserRooms(updatedRooms);
+        // Update the store with the new room
+        unlockRoom(groupName);
+        
         await decrementScore();
         setVisibleImages((prev) => {
           const newSet = new Set(prev);
@@ -520,7 +850,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     }
   };
 
-  const resetGameState = async () => {
+  const resetLocalGameState = async () => {
+    resetGameState();
     // Start new studying activity
     await startActivity({
       type: 'studying',
@@ -529,14 +860,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         timestamp: new Date().toISOString()
       }
     });
-    setActiveRooms(new Set());
-    setCompleteAllRoom(false);
-    setIsAfterTestDialogOpen(false);
-    setLargeDialogQuit(false);
-    setUserResponses([]);
-    setCorrectCount(0);
-    setWrongCount(0);
-    setTestScore(0);
+    
+    // Reset local state that's not in the store
     setTotalMCQQuestions(0);
     setCorrectMCQQuestions(0);
 
@@ -557,8 +882,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         }
     });
 
-    setIsGameInProgress(true);
-    setCurrentUserTestId(userTestId);
+    // Update game state in the store
+    startGame(userTestId);
     
     if (typeof populateRoomsFn === 'function') {
       const selectedRooms = populateRoomsFn();
@@ -597,12 +922,62 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const handleAfterTestDialogClose = () => {
     setIsAfterTestDialogOpen(false);
     // Reset game state when dialog is closed
-    resetGameState();
-    setIsGameInProgress(false);
-    setCurrentUserTestId(null);
+    resetLocalGameState();
+    endGame();
   };
 
   /* ----------------------------------------- Render  ---------------------------------------- */
+
+  // Create wrapper functions to adapt between React's setState and Zustand's actions
+  const handleSetFlashcardRoomId = useCallback((roomId: string | ((prevState: string) => string)) => {
+    if (typeof roomId === 'function') {
+      // If it's a function, call it with the current value to get the new value
+      const newRoomId = roomId(flashcardRoomId);
+      setFlashcardRoomId(newRoomId);
+    } else {
+      // If it's a direct value, use it directly
+      setFlashcardRoomId(roomId);
+    }
+  }, [flashcardRoomId, setFlashcardRoomId]);
+
+  const handleSetActiveRooms = useCallback((rooms: Set<string> | ((prevState: Set<string>) => Set<string>)) => {
+    if (typeof rooms === 'function') {
+      // If it's a function, call it with the current value to get the new value
+      const newRooms = rooms(activeRooms);
+      // Create a new Set to ensure reactivity
+      setActiveRooms(new Set(newRooms));
+    } else {
+      // If it's a direct value, create a new Set from it
+      setActiveRooms(new Set(rooms));
+    }
+  }, [activeRooms, setActiveRooms]);
+
+  const handleSetIsFlashcardsOpen = useCallback((isOpen: boolean | ((prevState: boolean) => boolean)) => {
+    if (typeof isOpen === 'function') {
+      // If it's a function, call it with the current value to get the new value
+      const newIsOpen = isOpen(isFlashcardsOpen);
+      setIsFlashcardsOpen(newIsOpen);
+    } else {
+      // If it's a direct value, use it directly
+      setIsFlashcardsOpen(isOpen);
+    }
+  }, [isFlashcardsOpen, setIsFlashcardsOpen]);
+
+  const handleSetCompleteAllRoom = useCallback((complete: boolean | ((prevState: boolean) => boolean)) => {
+    if (typeof complete === 'function') {
+      // If it's a function, call it with the current value to get the new value
+      const newComplete = complete(completeAllRoom);
+      setCompleteAllRoom(newComplete);
+    } else {
+      // If it's a direct value, use it directly
+      setCompleteAllRoom(complete);
+    }
+  }, [completeAllRoom, setCompleteAllRoom]);
+
+  // Show loading state during initial load
+  if (isLoading && !isClinicUnlocked) {
+    return <LoadingClinic />;
+  }
 
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
@@ -619,7 +994,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         </div>
       }>
         <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
-          {/* Give ResourcesMenu a higher z-index */}
           <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-30">
             <ResourcesMenu
               reportData={reportData}
@@ -630,7 +1004,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
             />
           </div>
           
-          {/* Keep OfficeContainer at a lower z-index */}
           <div className="w-3/4 font-krungthep relative z-20 rounded-r-lg">
             <OfficeContainer
               innerRef={officeContainerRef}
@@ -638,25 +1011,22 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
               visibleImages={visibleImages}
               userRooms={userRooms}
               imageGroups={imageGroups}
-              setFlashcardRoomId={setFlashcardRoomId}
+              setFlashcardRoomId={handleSetFlashcardRoomId}
               updateVisibleImages={updateVisibleImages}
               activeRooms={activeRooms}
-              setActiveRooms={setActiveRooms}
+              setActiveRooms={handleSetActiveRooms}
               isFlashcardsOpen={isFlashcardsOpen}
-              setIsFlashcardsOpen={setIsFlashcardsOpen}
+              setIsFlashcardsOpen={handleSetIsFlashcardsOpen}
             />
-            {/* Button on the top left corner */}
             <div className="absolute top-4 left-4 flex gap-2 z-50">
               <NewGameButton
                 userScore={userInfo?.score || 0}
                 onGameStart={handleGameStart}
                 isGameInProgress={isGameInProgress}
-                resetGameState={resetGameState}
+                resetGameState={resetLocalGameState}
               />
             </div>
-            {/* Fellowship Level button with coins and patients */}
             <div className="absolute top-4 right-4 z-50 flex items-center">
-              {/* Patient count */}
               <div className="group relative flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
                 <Image
                   src="/game-components/patient.png"
@@ -668,7 +1038,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                 <div className="flex flex-col">
                   <span className="text-[--theme-hover-color] font-bold text-lg">{totalPatients}</span>
                 </div>
-                {/* Tooltip */}
                 <div className="absolute top-full left-0 mt-2 w-64 bg-[--theme-leaguecard-color] text-[--theme-text-color] text-sm rounded-lg p-3 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 border border-[--theme-border-color]">
                   <p className="mb-2">Total patients treated: {totalPatients}</p>
                   <p className="mb-2">You treat <span className="text-[--theme-hover-color]">{patientsPerDay} patients per day</span> at your current level.</p>
@@ -683,7 +1052,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                   </ul>
                 </div>
               </div>
-              {/* Coins display */}
               <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
                 <PurchaseButton 
                   className="flex items-center hover:opacity-90 transition-opacity"
@@ -702,7 +1070,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                   </div>
                 </PurchaseButton>
               </div>
-              {/* Fellowship Level button with dropdown */}
               <div className="relative group">
                 <button className={`flex items-center justify-center px-6 py-3 
                   ${(!userLevel || userLevel === "PATIENT LEVEL") 
@@ -756,7 +1123,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                       userScore={userInfo?.score || 0}
                       isOpen={isMarketplaceOpen}
                       onOpenChange={setIsMarketplaceOpen}
-                                        />
+                    />
                   )}
 
                   </div>
@@ -825,8 +1192,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         </div>
       </Suspense>
 
-      {/* {isMarketplaceOpen && <ShoppingDialog ... />} */}
-      
       {isAfterTestDialogOpen && <AfterTestFeed 
         open={isAfterTestDialogOpen}
         onOpenChange={(open) => {
@@ -868,10 +1233,10 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       {isFlashcardsOpen && <FlashcardsDialog
         ref={flashcardsDialogRef}
         isOpen={isFlashcardsOpen}
-        onOpenChange={setIsFlashcardsOpen}
+        onOpenChange={handleSetIsFlashcardsOpen}
         roomId={flashcardRoomId}
         activeRooms={activeRooms}
-        setActiveRooms={setActiveRooms}
+        setActiveRooms={handleSetActiveRooms}
         currentUserTestId={currentUserTestId}
         isLoading={isLoading}
         setIsLoading={setIsLoading}
@@ -884,4 +1249,9 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   );
 };
 
-export default DoctorsOfficePage;
+// Wrap the component with React.memo to prevent unnecessary re-renders
+export default React.memo(DoctorsOfficePage, (prevProps, nextProps) => {
+  // Return true if props are equal (meaning no re-render needed)
+  // Since we don't have any props that should trigger re-renders, we return true
+  return true;
+});

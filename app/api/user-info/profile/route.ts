@@ -32,13 +32,7 @@ export async function GET(req: Request) {
             select: {
                 firstName: true,
                 bio: true,
-                score: true,
-                profilePhoto: true,
-                patientRecord: {
-                    select: {
-                        patientsTreated: true
-                    }
-                }
+                score: true
             }
         });
 
@@ -46,13 +40,18 @@ export async function GET(req: Request) {
             return new NextResponse("User info not found", { status: 404 });
         }
 
+        const fullUserInfo = await prismadb.userInfo.findUnique({
+            where: {
+                userId: targetUserId
+            }
+        });
+
         return NextResponse.json({
             userId: targetUserId,
             firstName: userInfo.firstName,
             bio: userInfo.bio,
             coins: userInfo.score,
-            profilePhoto: userInfo.profilePhoto,
-            patientsCount: userInfo.patientRecord?.patientsTreated || 0
+            profilePhoto: "doctor.png"
         });
     } catch (error) {
         console.log('[USER_PROFILE_GET]', error);
@@ -68,26 +67,19 @@ export async function PATCH(req: Request) {
         }
 
         const body = await req.json();
-        const { bio, profilePhoto } = body;
+        const { bio } = body;
 
         const updatedInfo = await prismadb.userInfo.update({
             where: {
                 userId
             },
             data: {
-                ...(bio !== undefined && { bio }),
-                ...(profilePhoto !== undefined && { profilePhoto })
+                ...(bio !== undefined && { bio })
             },
             select: {
                 firstName: true,
                 bio: true,
-                score: true,
-                profilePhoto: true,
-                patientRecord: {
-                    select: {
-                        patientsTreated: true
-                    }
-                }
+                score: true
             }
         });
 
@@ -95,8 +87,7 @@ export async function PATCH(req: Request) {
             firstName: updatedInfo.firstName,
             bio: updatedInfo.bio,
             coins: updatedInfo.score,
-            profilePhoto: updatedInfo.profilePhoto,
-            patientsCount: updatedInfo.patientRecord?.patientsTreated || 0
+            profilePhoto: "doctor.png"
         });
     } catch (error) {
         console.log('[USER_PROFILE_PATCH]', error);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Category } from "@/types";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useUI } from "@/store/selectors";
 import { Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -33,9 +33,8 @@ const subjects = [
 const ATSSettingContent: React.FC<ATSSettingContentProps> = ({
   checkedCategories,
   setCheckedCategories,
-    
 }) => {
-  const { theme } = useTheme();
+  const { theme } = useUI();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
