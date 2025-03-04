@@ -139,24 +139,29 @@ const SoftwareSection = ({
                 </div>
 
                 {/* Results Link */}
-                <div className="mt-8 md:mt-12 flex items-center gap-6">
-                  <button 
-                    onClick={() => setShowTestimonials(true)}
-                    className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors group"
-                  >
-                    <span className="text-sm font-medium group-hover:underline">View student results</span>
-                    <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                  <button 
-                    className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors group"
-                  >
-                    <span className="text-sm font-medium group-hover:underline">View full software in action</span>
-                    <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
+                <div className="mt-8 md:mt-12 flex flex-col gap-6">
+                  <div className="flex items-center gap-6">
+                    <button 
+                      onClick={() => setShowTestimonials(true)}
+                      className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors group"
+                    >
+                      <span className="text-sm font-medium group-hover:underline">View student results</span>
+                      <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                    <button 
+                      className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors group"
+                    >
+                      <span className="text-sm font-medium group-hover:underline">View full software in action</span>
+                      <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                  <p className="text-white/90 text-sm italic font-bold">
+                    {"We're extending our discount to everyone as a token of appreciation, but soon it'll be retakers/nontrads only."}
+                  </p>
                 </div>
               </div>
             </div>

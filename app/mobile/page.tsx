@@ -76,7 +76,7 @@ export default function PitchPage() {
     class: false,
     tutors: false
   });
-  const [isSpecialStatus, setIsSpecialStatus] = useState(false);
+  const [isSpecialStatus, setIsSpecialStatus] = useState(true);
   const [isShortVideo, setIsShortVideo] = useState(true);
 
   // Add audio effect when modal opens
@@ -136,7 +136,7 @@ export default function PitchPage() {
       const priceType = pricingPeriod === 'monthly' ? ProductType.MD_GOLD :
                        pricingPeriod === 'annual' ? ProductType.MD_GOLD_ANNUAL :
                        ProductType.MD_GOLD_BIANNUAL;
-      
+
       const response = await axios.post("/api/stripe/checkout", {
         priceType: priceType,
         isSpecialStatus: isSpecialStatus
@@ -179,7 +179,7 @@ export default function PitchPage() {
       case 'mission':
         return <MissionStep onNext={() => setCurrentStep('options')} />;
       case 'options':
-        return (
+    return (
           <OptionsStep
             isGold={isGold}
             user={user}
