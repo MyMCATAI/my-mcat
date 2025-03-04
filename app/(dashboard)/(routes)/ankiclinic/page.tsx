@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, Suspense, forwardRef, useMemo } from "react";
 import ReactDOM from 'react-dom';
 import ResourcesMenu from "./ResourcesMenu";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { DoctorOfficeStats } from "@/types";
 import { toast, Toaster } from "react-hot-toast";
 import Image from "next/image";
@@ -63,6 +63,9 @@ interface DoctorsOfficePageProps {
 }
 
 const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
   // Add mount counter ref
   const mountCountRef = useRef(0);
   const prevDepsRef = useRef<{
@@ -83,12 +86,13 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const stateUpdateInProgressRef = useRef(false);
   // Add a ref to track if component is mounted
   const isMountedRef = useRef(false);
-
+  
   // Track mount count and log navigation - combined into one effect
   useEffect(() => {
+    if (typeof window === 'undefined') return; // Skip on server-side
+    
     mountCountRef.current += 1;
     isMountedRef.current = true;
-    const pathname = window.location.pathname;
     
     // Combine all mount-related logging
     console.log(`[Navigation] AnkiClinic component mounted at ${new Date().toISOString()}`);
@@ -108,7 +112,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         abortControllerRef.current.abort();
       }
     };
-  }, []);
+  }, [pathname]);
 
   /* ------------------------------------------- Hooks -------------------------------------------- */
   const officeContainerRef = useRef<HTMLDivElement>(null);
@@ -560,9 +564,10 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   // Add a new effect to preserve debug mode - run only once
   useEffect(() => {
+    if (typeof window === 'undefined') return; // Skip on server-side
+    
     // Check if we need to preserve debug mode
-    const searchParams = new URLSearchParams(window.location.search);
-    const isDebugMode = searchParams.get('debug') === 'true';
+    const isDebugMode = searchParams?.get('debug') === 'true';
     
     if (isDebugMode) {
       // Set a flag to indicate we're in debug mode
@@ -574,7 +579,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         document.body.classList.remove('debug-mode');
       }
     };
-  }, []);
+  }, [searchParams]);
 
   // Add logging effect for key state changes
   useEffect(() => {
