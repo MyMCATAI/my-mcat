@@ -155,18 +155,20 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const { 
     userRooms, userLevel, patientsPerDay, totalPatients, streakDays,
     isGameInProgress, currentUserTestId, isFlashcardsOpen, flashcardRoomId, 
-    activeRooms, completeAllRoom, correctCount, wrongCount, testScore,
-    isAfterTestDialogOpen, largeDialogQuit, isMarketplaceOpen, userResponses,
+    activeRooms, completeAllRoom, correctCount, wrongCount, testScore, userResponses,
     unlockRoom, startGame, endGame, setIsFlashcardsOpen, setUserRooms,
     setFlashcardRoomId, setActiveRooms, setCompleteAllRoom, resetGameState,
-    setCorrectCount, setWrongCount, setTestScore, setIsAfterTestDialogOpen,
-    setLargeDialogQuit, setIsMarketplaceOpen, updateUserLevel, setUserResponses,
-    setStreakDays, setTotalPatients
+    setCorrectCount, setWrongCount, setTestScore, setUserResponses,
+    setStreakDays, setTotalPatients, updateUserLevel
   } = useGame();
   
   /* ------------------------------------------- State -------------------------------------------- */
   const [activeTab, setActiveTab] = useState("ankiclinic");
   const [showWelcomeDialogue, setShowWelcomeDialogue] = useState(false);
+  // Local UI states that were moved from Zustand
+  const [isAfterTestDialogOpen, setIsAfterTestDialogOpen] = useState(false);
+  const [largeDialogQuit, setLargeDialogQuit] = useState(false);
+  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   //Flashcards
   const prevFlashcardsOpenRef = useRef(false); //this keeps track of previous state
   const [isFlashcardsTooltipOpen, setIsFlashcardsTooltipOpen] = useState(false);

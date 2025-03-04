@@ -137,17 +137,6 @@ interface GameSlice {
   userResponses: any[];      // Direct match with page.tsx
   wrongCount: number;        // Direct match with page.tsx
   
-  // UI state
-  isAfterTestDialogOpen: boolean; // Direct match with page.tsx
-  isMarketplaceOpen: boolean;     // Direct match with page.tsx (was isShoppingOpen)
-  largeDialogQuit: boolean;       // Direct match with page.tsx
-  
-  // Game data
-  reportData: DoctorOfficeStats | null; // Added from page.tsx
-  
-  // Game history
-  testHistory: TestResult[];
-  
   // Actions
   endGame: () => void;
   resetGameState: () => void;
@@ -155,17 +144,13 @@ interface GameSlice {
   setCompleteAllRoom: (complete: boolean) => void;
   setCorrectCount: (count: number) => void;
   setFlashcardRoomId: (roomId: string) => void;
-  setIsAfterTestDialogOpen: (isOpen: boolean) => void;
   setIsFlashcardsOpen: (isOpen: boolean) => void;
-  setIsMarketplaceOpen: (isOpen: boolean) => void;
-  setLargeDialogQuit: (quit: boolean) => void;
-  setReportData: (data: DoctorOfficeStats | null) => void; // Added setter for reportData
-  setStreakDays: (days: number) => void;
+  setUserResponses: (responses: any[]) => void;
   setTestScore: (score: number) => void;
   setTotalPatients: (count: number) => void;
-  setUserResponses: (responses: any[]) => void;
-  setUserRooms: (rooms: string[]) => void;
   setWrongCount: (count: number) => void;
+  setStreakDays: (days: number) => void;
+  setUserRooms: (rooms: string[]) => void;
   startGame: (userTestId: string) => void;
   unlockRoom: (roomId: string) => void;
   updateUserLevel: () => void;
@@ -566,17 +551,6 @@ export const useStore = create<Store>()(
       userResponses: [],
       wrongCount: 0,
       
-      // UI state
-      isAfterTestDialogOpen: false,
-      isMarketplaceOpen: false,
-      largeDialogQuit: false,
-      
-      // Game data
-      reportData: null,
-      
-      // Game history
-      testHistory: [],
-      
       // Game Actions
       endGame: () => {
         set({ 
@@ -595,8 +569,6 @@ export const useStore = create<Store>()(
           currentUserTestId: null,
           activeRooms: new Set<string>(["WaitingRoom0"]),
           completeAllRoom: false,
-          isAfterTestDialogOpen: false,
-          largeDialogQuit: false,
           userResponses: [],
           correctCount: 0,
           wrongCount: 0,
@@ -622,28 +594,12 @@ export const useStore = create<Store>()(
         set({ flashcardRoomId: roomId });
       },
       
-      setIsAfterTestDialogOpen: (isOpen) => {
-        set({ isAfterTestDialogOpen: isOpen });
-      },
-      
       setIsFlashcardsOpen: (isOpen) => {
         set({ isFlashcardsOpen: isOpen });
       },
       
-      setIsMarketplaceOpen: (isOpen) => {
-        set({ isMarketplaceOpen: isOpen });
-      },
-      
-      setLargeDialogQuit: (quit) => {
-        set({ largeDialogQuit: quit });
-      },
-      
-      setReportData: (data) => {
-        set({ reportData: data });
-      },
-      
-      setStreakDays: (days) => {
-        set({ streakDays: days });
+      setUserResponses: (responses) => {
+        set({ userResponses: responses });
       },
       
       setTestScore: (score) => {
@@ -654,17 +610,17 @@ export const useStore = create<Store>()(
         set({ totalPatients: count });
       },
       
-      setUserResponses: (responses) => {
-        set({ userResponses: responses });
+      setWrongCount: (count) => {
+        set({ wrongCount: count });
+      },
+      
+      setStreakDays: (days) => {
+        set({ streakDays: days });
       },
       
       setUserRooms: (rooms) => {
         set({ userRooms: rooms });
         get().updateUserLevel();
-      },
-      
-      setWrongCount: (count) => {
-        set({ wrongCount: count });
       },
       
       startGame: (userTestId) => {
@@ -708,11 +664,4 @@ export type Card = {
   category?: string;
   difficulty?: string;
   otherOptions?: string[];
-};
-
-export type TestResult = {
-  correct: number;
-  wrong: number;
-  cards: Card[];
-  timestamp: number;
 }; 

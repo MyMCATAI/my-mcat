@@ -128,29 +128,18 @@ export const useGame = () => {
   const wrongCount = useStore((state) => state.wrongCount)
   const testScore = useStore((state) => state.testScore)
   
-  // UI state
-  const isAfterTestDialogOpen = useStore((state) => state.isAfterTestDialogOpen)
-  const largeDialogQuit = useStore((state) => state.largeDialogQuit)
-  const isMarketplaceOpen = useStore((state) => state.isMarketplaceOpen)
-  
-  // Game history
-  const testHistory = useStore((state) => state.testHistory)
-  
   // Game actions
   const startGame = useStore((state) => state.startGame)
   const endGame = useStore((state) => state.endGame)
   const unlockRoom = useStore((state) => state.unlockRoom)
   const setFlashcardRoomId = useStore((state) => state.setFlashcardRoomId)
   const setIsFlashcardsOpen = useStore((state) => state.setIsFlashcardsOpen)
-  const setIsMarketplaceOpen = useStore((state) => state.setIsMarketplaceOpen)
   const setActiveRooms = useStore((state) => state.setActiveRooms)
   const setCompleteAllRoom = useStore((state) => state.setCompleteAllRoom)
   const setUserResponses = useStore((state) => state.setUserResponses)
   const setCorrectCount = useStore((state) => state.setCorrectCount)
   const setWrongCount = useStore((state) => state.setWrongCount)
   const setTestScore = useStore((state) => state.setTestScore)
-  const setIsAfterTestDialogOpen = useStore((state) => state.setIsAfterTestDialogOpen)
-  const setLargeDialogQuit = useStore((state) => state.setLargeDialogQuit)
   const resetGameState = useStore((state) => state.resetGameState)
   const setUserRooms = useStore((state) => state.setUserRooms)
   const updateUserLevel = useStore((state) => state.updateUserLevel)
@@ -179,29 +168,18 @@ export const useGame = () => {
     wrongCount,
     testScore,
     
-    // UI state
-    isAfterTestDialogOpen,
-    largeDialogQuit,
-    isMarketplaceOpen,
-    
-    // Game history
-    testHistory,
-    
     // Game actions
     startGame,
     endGame,
     unlockRoom,
     setFlashcardRoomId,
     setIsFlashcardsOpen,
-    setIsMarketplaceOpen,
     setActiveRooms,
     setCompleteAllRoom,
     setUserResponses,
     setCorrectCount,
     setWrongCount,
     setTestScore,
-    setIsAfterTestDialogOpen,
-    setLargeDialogQuit,
     resetGameState,
     setUserRooms,
     updateUserLevel,
@@ -221,42 +199,4 @@ export const useOnboardingStatus = () => ({
   hasCompletedOnboarding: useStore(state => state.hasCompletedOnboarding),
   lastVisitedRoute: useStore(state => state.lastVisitedRoute),
   onboardingRoute: useStore(state => state.onboardingRoute)
-})
-
-/* --- Individual Game Selectors ---- */
-// For components that only need specific game data
-export const useGameProgress = () => ({
-  userRooms: useStore(state => state.userRooms),
-  userLevel: useStore(state => state.userLevel),
-  patientsPerDay: useStore(state => state.patientsPerDay),
-  totalPatients: useStore(state => state.totalPatients),
-  streakDays: useStore(state => state.streakDays),
-  setUserRooms: useStore(state => state.setUserRooms),
-  updateUserLevel: useStore(state => state.updateUserLevel),
-  setStreakDays: useStore(state => state.setStreakDays),
-  setTotalPatients: useStore(state => state.setTotalPatients)
-})
-
-export const useGameSession = () => ({
-  isGameInProgress: useStore(state => state.isGameInProgress),
-  currentUserTestId: useStore(state => state.currentUserTestId),
-  isFlashcardsOpen: useStore(state => state.isFlashcardsOpen),
-  flashcardRoomId: useStore(state => state.flashcardRoomId),
-  activeRooms: useStore(state => state.activeRooms),
-  completeAllRoom: useStore(state => state.completeAllRoom)
-})
-
-export const useGameUI = () => ({
-  isAfterTestDialogOpen: useStore(state => state.isAfterTestDialogOpen),
-  largeDialogQuit: useStore(state => state.largeDialogQuit),
-  isMarketplaceOpen: useStore(state => state.isMarketplaceOpen)
-})
-
-export const useTestResults = () => ({
-  userResponses: useStore(state => state.userResponses),
-  correctCount: useStore(state => state.correctCount),
-  wrongCount: useStore(state => state.wrongCount),
-  testScore: useStore(state => state.testScore)
-})
-
-export const useTestHistory = () => useStore(state => state.testHistory) 
+}) 
