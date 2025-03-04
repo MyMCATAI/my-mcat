@@ -25,7 +25,7 @@ interface Activity {
 
 interface FloatingTaskListProps {
   activities?: Activity[];
-  onTasksUpdate?: () => void;
+  onTasksUpdate?: (tasks: Activity[]) => void;
   onHover: (hovering: boolean) => void;
 }
 
@@ -77,7 +77,7 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
       if (!response.ok) throw new Error("Failed to update task");
 
       // Call onTasksUpdate to refresh parent state
-      onTasksUpdate?.();
+      onTasksUpdate?.([activity]);
 
       // Check if all tasks are completed for this activity
       const allTasksCompleted = updatedTasks.every((task: Task) => task.completed);

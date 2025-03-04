@@ -96,6 +96,7 @@ interface UserSlice {
   // UserStats state
   coins: number;
   statsLoading: boolean;
+  error: string | null;
   
   // Actions
   updateProfile: (updates: any) => Promise<void>;
@@ -223,6 +224,7 @@ export const useStore = create<Store>()(
       isSubscribed: false,
       coins: 0,
       statsLoading: true,
+      error: null,
 
       // User Actions
       updateProfile: async (updates) => {
@@ -278,101 +280,93 @@ export const useStore = create<Store>()(
       
       refreshUserInfo: async () => {
         try {
-          set({ statsLoading: true });
-          
-          // Fetch user info from API
-          const response = await fetch('/api/user-info');
-          if (!response.ok) throw new Error('Failed to fetch user info');
-          
-          const data = await response.json();
-          
-          // Update all user-related state in the store
-          set({ 
-            userInfo: data,
-            coins: data.score || 0,
-            isSubscribed: data.subscriptionType === 'gold' || data.subscriptionType === 'premium',
-            statsLoading: false
-          });
-          
-          // Also fetch profile data if we have user info with email
-          if (data && data.email) {
-            set({ profileLoading: true });
-            try {
-              const profileResponse = await fetch(`/api/user-info/profile?email=${encodeURIComponent(data.email)}`);
-              if (profileResponse.ok) {
-                const profileData = await profileResponse.json();
-                
-                // Update profile and related state
-                set({ 
-                  profile: profileData,
-                  profileLoading: false,
-                  // Update other profile-related state if present in the response
-                  ...(profileData.completedSteps && { completedSteps: profileData.completedSteps }),
-                  ...(profileData.studyPreferences && { studyPreferences: profileData.studyPreferences }),
-                  ...(profileData.interfaceSettings && { interfaceSettings: profileData.interfaceSettings }),
-                  ...(profileData.tutorialProgress && { tutorialProgress: profileData.tutorialProgress }),
-                  ...(profileData.hasCompletedOnboarding !== undefined && { 
-                    hasCompletedOnboarding: profileData.hasCompletedOnboarding 
-                  }),
-                  ...(profileData.lastVisitedRoute && { lastVisitedRoute: profileData.lastVisitedRoute }),
-                  ...(profileData.onboardingRoute && { onboardingRoute: profileData.onboardingRoute }),
-                });
-                
-                // Update isProfileComplete based on completedSteps
-                const steps = profileData.completedSteps || [];
-                set({ isProfileComplete: steps.length >= 3 }); // Assuming 3 steps is complete
-              } else {
-                // If profile fetch fails, still set profileLoading to false
-                console.error('Profile response not OK:', profileResponse.status);
-                set({ profileLoading: false });
-              }
-            } catch (profileError) {
-              console.error('Failed to fetch profile:', profileError);
-              set({ profileLoading: false });
-            }
-          } else if (data && data.userId) {
-            // Try using userId if email is not available
-            set({ profileLoading: true });
-            try {
-              const profileResponse = await fetch(`/api/user-info/profile?userId=${data.userId}`);
-              if (profileResponse.ok) {
-                const profileData = await profileResponse.json();
-                
-                // Update profile and related state
-                set({ 
-                  profile: profileData,
-                  profileLoading: false,
-                  // Update other profile-related state if present in the response
-                  ...(profileData.completedSteps && { completedSteps: profileData.completedSteps }),
-                  ...(profileData.studyPreferences && { studyPreferences: profileData.studyPreferences }),
-                  ...(profileData.interfaceSettings && { interfaceSettings: profileData.interfaceSettings }),
-                  ...(profileData.tutorialProgress && { tutorialProgress: profileData.tutorialProgress }),
-                  ...(profileData.hasCompletedOnboarding !== undefined && { 
-                    hasCompletedOnboarding: profileData.hasCompletedOnboarding 
-                  }),
-                  ...(profileData.lastVisitedRoute && { lastVisitedRoute: profileData.lastVisitedRoute }),
-                  ...(profileData.onboardingRoute && { onboardingRoute: profileData.onboardingRoute }),
-                });
-                
-                // Update isProfileComplete based on completedSteps
-                const steps = profileData.completedSteps || [];
-                set({ isProfileComplete: steps.length >= 3 }); // Assuming 3 steps is complete
-              } else {
-                console.error('Profile response not OK with userId:', profileResponse.status);
-                set({ profileLoading: false });
-              }
-            } catch (profileError) {
-              console.error('Failed to fetch profile with userId:', profileError);
-              set({ profileLoading: false });
-            }
-          } else {
-            // No email or userId available
-            console.warn('No email or userId available to fetch profile');
-            set({ profileLoading: false });
+          // Only set loading if not already loading
+          const currentState = get();
+          if (!currentState.statsLoading && !currentState.profileLoading) {
+            set({ statsLoading: true, profileLoading: true, error: null });
           }
+
+          // Add loading timeout
+          const loadingTimeout = setTimeout(() => {
+            const state = get();
+            if (state.statsLoading || state.profileLoading) {
+              set({ 
+                statsLoading: false,
+                profileLoading: false,
+                error: 'Loading timeout - please try again'
+              });
+            }
+          }, 10000);
+
+          // Batch all fetch requests together
+          const [userInfoResponse, profileResponse] = await Promise.all([
+            fetch('/api/user-info'),
+            fetch('/api/user-info/profile')
+          ]);
+
+          clearTimeout(loadingTimeout);
+
+          if (!userInfoResponse.ok) throw new Error('Failed to fetch user info');
+          const userInfo = await userInfoResponse.json();
+
+          // Prepare single state update with only changed values
+          const updates: Partial<Store> = {
+            userInfo,
+            statsLoading: false,
+            profileLoading: false,
+            error: null
+          };
+
+          // Only update coins if changed
+          if (userInfo.score !== get().coins) {
+            updates.coins = userInfo.score || 0;
+          }
+
+          // Only update subscription if changed
+          const newSubStatus = userInfo.subscriptionType === 'gold' || userInfo.subscriptionType === 'premium';
+          if (newSubStatus !== get().isSubscribed) {
+            updates.isSubscribed = newSubStatus;
+          }
+
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            const currentProfile = get().profile;
+            
+            // Only update profile fields that have changed
+            if (JSON.stringify(currentProfile) !== JSON.stringify(profileData)) {
+              Object.assign(updates, {
+                profile: profileData,
+                completedSteps: profileData.completedSteps || [],
+                studyPreferences: profileData.studyPreferences || {
+                  dailyGoal: 30,
+                  reminderTime: '09:00'
+                },
+                interfaceSettings: profileData.interfaceSettings || {
+                  darkMode: false,
+                  fontSize: 'medium'
+                },
+                tutorialProgress: profileData.tutorialProgress || {
+                  currentStep: 0,
+                  completedRoutes: []
+                },
+                hasCompletedOnboarding: profileData.hasCompletedOnboarding || false,
+                lastVisitedRoute: profileData.lastVisitedRoute || '/',
+                onboardingRoute: profileData.onboardingRoute || '/onboarding',
+                isProfileComplete: (profileData.completedSteps || []).length >= 3
+              });
+            }
+          }
+
+          // Single state update
+          set(updates);
+
         } catch (error) {
-          console.error('Failed to refresh user info:', error);
-          set({ statsLoading: false, profileLoading: false });
+          console.error('Error in refreshUserInfo:', error);
+          set({ 
+            error: error instanceof Error ? error.message : 'Failed to refresh user info',
+            statsLoading: false,
+            profileLoading: false
+          });
         }
       },
       
