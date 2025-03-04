@@ -45,8 +45,8 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = memo(({ message = "Loading
 LoadingSpinner.displayName = 'LoadingSpinner';
 
 const ContentWrapper: React.FC<ContentWrapperProps> = memo(({ children }) => (
-  <div className="flex-1 px-4 lg:px-8 xl:px-12 overflow-visible">
-    <div className="flex flex-col lg:flex-row gap-6 overflow-visible">
+  <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
+    <div className="text-[--theme-text-color] flex gap-[1.5rem] overflow-visible">
       {children}
     </div>
   </div>
@@ -287,27 +287,51 @@ const HomePage: React.FC = () => {
 
   // Optimize tab change handler
   const handleTabChange = useCallback(async (newTab: string) => {
+    if (newTab === "SUMMARIZE_WEEK") {
+        updatePageState({ activeTab: "Schedule" });
+        const sidebarInsightsTab = document.querySelector('[data-tab="tab1"]');
+        if (sidebarInsightsTab instanceof HTMLElement) {
+            sidebarInsightsTab.click();
+        }
+        return;
+    }
+
+    if (newTab === "ankiclinic") {
+        try {
+            if (pageState.currentStudyActivityId) {
+                await endActivity(pageState.currentStudyActivityId);
+            }
+            await router.push('/ankiclinic');
+            return; // Important: return immediately after navigation
+        } catch (error) {
+            console.error('Navigation error:', error);
+            toast.error('Failed to navigate to Anki Clinic');
+        }
+        return; // Return in case of error too
+    }
+
+    // Handle tab with view parameter
     const [tab, params] = newTab.split('?');
     const searchParams = new URLSearchParams(params);
     const view = searchParams.get('view');
 
     // Batch state updates
     const updates: Partial<typeof pageState> = {
-      activeTab: tab,
-      currentPage: tab
+        activeTab: tab,
+        currentPage: tab
     };
 
     if (tab === "Schedule" && view) {
-      router.push(`/home?tab=Schedule&view=${view}`);
+        router.push(`/home?tab=Schedule&view=${view}`);
     }
 
     updatePageState(updates);
 
     // Handle activity changes
     if (tab !== "AdaptiveTutoringSuite") {
-      await handleActivityChange('studying', tab);
+        await handleActivityChange('studying', tab);
     }
-  }, [router, handleActivityChange, updatePageState]);
+  }, [router, handleActivityChange, updatePageState, pageState.currentStudyActivityId, endActivity]);
 
   const switchKalypsoState = (newState: "wait" | "talk" | "end" | "start") => {
     setPageState(prev => ({ ...prev, kalypsoState: newState }));
@@ -488,31 +512,21 @@ const HomePage: React.FC = () => {
     }
 
     return (
-      <div className="flex min-h-screen bg-[--theme-background]">
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col">
-          {/* Top Navigation Bar */}
-          <div className="h-16 bg-[--theme-navbar-bg] border-b border-[--theme-border] flex items-center px-6">
-            <h1 className="text-2xl font-semibold text-[--theme-text-color]">{pageTitle}</h1>
-          </div>
-
-          {/* Content Area with Sidebar and Main Content */}
-          <div className="flex-1 flex">
-            {/* Sidebar */}
-            <div className="w-80 border-r border-[--theme-border] bg-[--theme-sidebar-bg]">
-              <MemoizedSideBar 
-                activities={pageState.activities}
-                currentPage={pageState.currentPage}
-                chatbotContext={pageState.chatbotContext}
-                chatbotRef={chatbotRef}
-                handleSetTab={handleTabChange}
-                onActivitiesUpdate={fetchActivities}
-                isSubscribed={isSubscribed}
-              />
+      <ContentWrapper>
+        <div className="w-3/4 relative overflow-visible">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <h2
+                className="text-white text-2xl ml-3 font-thin leading-normal shadow-text cursor-pointer"
+                onClick={() => router.push("/home")}
+              >
+                {pageTitle}
+              </h2>
+              <ThemeSwitcher />
             </div>
-
-            {/* Main Content */}
-            <div className="flex-1 p-6">
+          </div>
+          <div className="relative overflow-visible">
+            <div className="p-3 gradientbg h-[calc(100vh-5rem)] rounded-lg">
               {pageState.activeTab === 'Schedule' && (
                 <MemoizedSchedule 
                   handleSetTab={handleTabChange}
@@ -522,26 +536,55 @@ const HomePage: React.FC = () => {
                 />
               )}
               {pageState.activeTab === 'AdaptiveTutoring' && (
-                <MemoizedAdaptiveTutoring 
-                  toggleChatBot={toggleChatBot}
-                  setChatbotContext={updateChatbotContext}
+                <div className="h-full overflow-hidden">
+                  <MemoizedAdaptiveTutoring 
+                    toggleChatBot={toggleChatBot}
+                    setChatbotContext={updateChatbotContext}
+                    chatbotRef={chatbotRef}
+                    onActivityChange={handleActivityChange}
+                  />
+                </div>
+              )}
+              {pageState.activeTab === 'CARS' && <TestingSuit />}
+              {pageState.activeTab === 'flashcards' && <FlashcardDeck />}
+              {pageState.activeTab === 'Tests' && (
+                <PracticeTests 
+                  handleSetTab={handleTabChange} 
                   chatbotRef={chatbotRef}
-                  onActivityChange={handleActivityChange}
+                  onActivitiesUpdate={fetchActivities}
                 />
               )}
             </div>
           </div>
         </div>
 
-        {/* Floating Button */}
+        {/* Floating Button - Positioned between main content and sidebar */}
         <FloatingButton
           onTabChange={handleTabChange}
-          currentPage="home"
-          initialTab={pageState.activeTab}
+          currentPage={pageState.currentPage}
+          initialTab="Tests"
+          className="z-50"
           activities={pageState.activities}
           onTasksUpdate={(tasks) => updatePageState({ activities: tasks })}
           isSubscribed={isSubscribed}
         />
+
+        <div className="w-1/4">
+          <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
+            &nbsp;
+          </h2>
+          <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
+            <MemoizedSideBar 
+              activities={pageState.activities}
+              currentPage={pageState.currentPage}
+              chatbotContext={pageState.chatbotContext}
+              chatbotRef={chatbotRef}
+              handleSetTab={handleTabChange}
+              onActivitiesUpdate={fetchActivities}
+              isSubscribed={isSubscribed}
+            />
+          </div>
+        </div>
 
         {/* Modals and Popups */}
         {pageState.showReferralModal && (
@@ -557,7 +600,7 @@ const HomePage: React.FC = () => {
             streak={pageState.userStreak}
           />
         )}
-      </div>
+      </ContentWrapper>
     );
   }, [
     isLoadingUserInfo,
@@ -572,12 +615,13 @@ const HomePage: React.FC = () => {
     isSubscribed,
     userInfo,
     toggleChatBot,
-    setPageState,
+    updatePageState,
     handleActivityChange,
     pageTitle,
     pageState.showReferralModal,
     pageState.showStreakPopup,
-    pageState.userStreak
+    pageState.userStreak,
+    router
   ]);
 
   return content;

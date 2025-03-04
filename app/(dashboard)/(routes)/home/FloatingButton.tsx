@@ -262,55 +262,93 @@ const FloatingButton = memo<FloatingButtonProps>(({
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="relative">
-            {buttonPositions.map((position, index) => {
-              const labelPosition = getLabelPosition(index);
-              const isActive = state.activeTab === position.tab;
-              const inactivePosition = !isActive && index < inactivePositions.length ? inactivePositions[index] : null;
+          {buttonPositions.map((pos, index) => {
+            const isActive = state.activeTab === pos.tab;
+            const activeIndex = buttonPositions.findIndex(
+              (p) => p.tab === state.activeTab
+            );
+            const inactiveIndex = buttonPositions
+              .filter((p) => p.tab !== state.activeTab)
+              .findIndex((p) => p.tab === pos.tab);
 
-              return (
-                <div
-                  key={position.tab}
+            const isDisabled = !isSubscribed && pos.tab !== 'ankiclinic';
+
+            const top = isActive
+              ? 0
+              : state.isHovered
+              ? inactivePositions[inactiveIndex]?.top
+              : inactivePositions[activeIndex]?.top;
+
+            const left = isActive
+              ? 0
+              : state.isHovered
+              ? inactivePositions[inactiveIndex]?.left
+              : inactivePositions[activeIndex]?.left;
+
+            const labelPosition = getLabelPosition(inactiveIndex);
+            const labelText = labelTexts[pos.tab] || pos.tab;
+
+            return (
+              <div key={index} className="relative">
+                <button
                   className={clsx(
-                    "absolute transition-all duration-300 ease-in-out",
-                    isActive ? "scale-100 opacity-100" : "scale-75 opacity-50"
+                    "w-16 h-16 bg-[var(--theme-navbutton-color)] border-2 border-white text-white rounded-full shadow-lg focus:outline-none transition-all transform hover:scale-110 absolute flex justify-center items-center",
+                    {
+                      "w-24 h-24": isActive,
+                      "opacity-100": state.isHovered || isActive,
+                      "opacity-0 pointer-events-none": !state.isHovered && !isActive,
+                    }
                   )}
                   style={{
-                    top: inactivePosition ? inactivePosition.top : position.top,
-                    left: inactivePosition ? inactivePosition.left : position.left,
-                    transform: isActive ? 'translate(0, 0)' : undefined
+                    top,
+                    left,
+                    transitionDelay: `${index * 50}ms`,
+                    color: 'var(--theme-navbutton-color)',
+                  }}
+                  onClick={() => handleButtonClick(pos.tab)}
+                >
+                  <Image 
+                    src={pos.icon} 
+                    alt={pos.tab} 
+                    width={isActive ? 44 : 32} 
+                    height={isActive ? 44 : 32} 
+                    className={isDisabled ? "opacity-50" : ""}
+                  />
+                  {isDisabled && state.isHovered && (
+                    <div className="absolute -top-2 -right-2">
+                      <svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+                <span
+                  className="absolute"
+                  style={{
+                    top: labelPosition.top,
+                    left: labelPosition.left,
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 60,
                   }}
                 >
-                  <button
-                    onClick={() => handleButtonClick(position.tab)}
-                    className={clsx(
-                      "relative p-3 rounded-full bg-white shadow-lg hover:shadow-xl transition-shadow",
-                      isActive && "ring-2 ring-blue-500"
-                    )}
-                  >
-                    <Image
-                      src={position.icon}
-                      alt={position.tab}
-                      width={24}
-                      height={24}
-                      className="w-6 h-6"
-                    />
-                    {state.isHovered && (
-                      <div
-                        className="absolute whitespace-nowrap bg-black text-white px-2 py-1 rounded text-sm"
-                        style={{
-                          ...labelPosition,
-                          transform: 'translate(-50%, -50%)'
-                        }}
-                      >
-                        <Typewriter text={labelTexts[position.tab as keyof typeof labelTexts]} delay={index * 100} />
-                      </div>
-                    )}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+                  {state.isHovered && !isActive && (
+                    <span
+                      className="bg-transparent text-white text-2xl px-2 py-1 rounded overflow-hidden"
+                      style={{
+                        display: 'inline-block',
+                        width: '150px',
+                        textAlign: 'left',
+                        whiteSpace: 'nowrap',
+                        overflow: 'visible',
+                      }}
+                    >
+                      <Typewriter text={labelText} delay={0} />
+                    </span>
+                  )}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </span>
     </>
