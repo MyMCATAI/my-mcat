@@ -41,13 +41,7 @@ interface QuestionContext {
 }
 
 interface FlashcardsDialogProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  roomId: string;
   buttonContent: React.ReactNode;
-  activeRooms: Set<string>; 
-  setActiveRooms: React.Dispatch<React.SetStateAction<Set<string>>>; 
-  currentUserTestId: string | null;
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   handleCompleteAllRoom: () => void;
@@ -56,19 +50,36 @@ interface FlashcardsDialogProps {
 }
 
 const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: any[]) => void, setCorrectCount: (count: number) => void }, FlashcardsDialogProps>(({
-  isOpen,
-  onOpenChange,
-  roomId,
   buttonContent,
-  activeRooms,  
-  setActiveRooms, 
-  currentUserTestId,
   isLoading,
   setIsLoading,
   handleCompleteAllRoom,
   onMCQAnswer,
   setTotalMCQQuestions,
 }, ref) => {
+  // Get state and actions from the store
+  const { 
+    isFlashcardsOpen, 
+    setIsFlashcardsOpen, 
+    flashcardRoomId, 
+    activeRooms, 
+    setActiveRooms,
+    currentUserTestId
+  } = useGame();
+  
+  console.log('🔍 [DEBUG] FlashcardsDialog rendering with props:', { 
+    isOpen: isFlashcardsOpen, 
+    roomId: flashcardRoomId, 
+    hasRef: !!ref,
+    activeRooms: Array.from(activeRooms),
+    isLoading
+  });
+
+  // Handle open/close with the store
+  const handleOpenChange = (open: boolean) => {
+    setIsFlashcardsOpen(open);
+  };
+
   // Get the store's actions
   const { setCorrectCount: storeSetCorrectCount, setWrongCount: storeSetWrongCount, correctCount: storeCorrectCount } = useGame();
   
@@ -152,38 +163,15 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     storeSetCorrectCount(localCorrectCount);
   }, [localCorrectCount, storeSetCorrectCount]);
 
-  const handleOpenChange = (open: boolean) => {
-    console.log(`[FlashcardsDialog] handleOpenChange called with open=${open}`);
-    setShowChat(false);
-    
-    // If we're closing the dialog, ensure isLoading is false to allow audio transition
-    if (!open && isLoading) {
-      console.log(`[FlashcardsDialog] Setting isLoading to false to ensure audio transition`);
-      setIsLoading(false);
-    }
-    
-    // Make sure we're updating both the local component state and the global state
-    console.log(`[FlashcardsDialog] Calling onOpenChange(${open})`);
-    onOpenChange(open);
-    
-    // If we're closing the dialog, also reset the flashcardRoomId in the parent component
-    if (!open) {
-      console.log(`[FlashcardsDialog] Dialog is closing`);
-      // We don't need to do anything else here - the parent component will handle
-      // the audio transition when isFlashcardsOpen changes
-    } else {
-      console.log(`[FlashcardsDialog] Dialog is opening for roomId=${roomId}`);
-    }
-  };
-
   const handleClose = useCallback(() => {
-    onOpenChange(false);
-    if (roomId === 'WaitingRoom0') {
+    console.log('🔍 [DEBUG] FlashcardsDialog.handleClose called');
+    setIsFlashcardsOpen(false);
+    if (flashcardRoomId === 'WaitingRoom0') {
       return;
     }
     if (localCorrectCount > 0) {
       // Create a new Set by filtering out the current roomId
-      const newActiveRooms = new Set([...activeRooms].filter(room => room !== roomId));
+      const newActiveRooms = new Set([...activeRooms].filter(room => room !== flashcardRoomId));
       
       // Update the activeRooms in the store
       setActiveRooms(newActiveRooms);
@@ -193,7 +181,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
         handleCompleteAllRoom();
       }
     }
-  }, [roomId, setActiveRooms, onOpenChange, localCorrectCount, activeRooms, handleCompleteAllRoom]);
+  }, [flashcardRoomId, setActiveRooms, setIsFlashcardsOpen, localCorrectCount, activeRooms, handleCompleteAllRoom]);
 
   const handleDownvote = () => {
     setIsFeedbackOpen(true);
@@ -269,8 +257,8 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
 
   // Reset if answer is revealed
   useEffect(() => {
-    if (isOpen) setIsAnswerRevealed(false);
-  }, [isOpen]);
+    if (isFlashcardsOpen) setIsAnswerRevealed(false);
+  }, [isFlashcardsOpen]);
 
   useEffect(() => {
     if (currentQuestion) {
@@ -308,10 +296,25 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     }
   }, [currentQuestion]);
 
+  // Add a useEffect to log when the dialog opens or closes
+  useEffect(() => {
+    console.log(`🔍 [DEBUG] FlashcardsDialog isOpen changed to: ${isFlashcardsOpen}`);
+    
+    if (isFlashcardsOpen) {
+      console.log('🔍 [DEBUG] FlashcardsDialog is now open');
+    } else {
+      console.log('🔍 [DEBUG] FlashcardsDialog is now closed');
+    }
+  }, [isFlashcardsOpen]);
+
   useImperativeHandle(ref, () => ({
-    open: () => onOpenChange(true),
+    open: () => {
+      console.log('🔍 [DEBUG] FlashcardsDialog.open called via ref');
+      setIsFlashcardsOpen(true);
+    },
     setWrongCards,
     setCorrectCount: (count: number) => {
+      console.log('🔍 [DEBUG] FlashcardsDialog.setCorrectCount called via ref with count:', count);
       setLocalCorrectCount(count);
       storeSetCorrectCount(count);
     }
@@ -321,23 +324,23 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     <>
       {buttonContent}
       <Dialog 
-        open={isOpen} 
+        open={isFlashcardsOpen} 
         onOpenChange={handleOpenChange}
       >
         <DialogContent className="max-w-[80vw] h-[80vh] gradientbg border text-[--theme-text-color] border-[--theme-border-color] flex flex-col z-[100] focus:outline-none">
           <DialogHeader className="mb-2 flex-shrink-0 px-6">
             <DialogTitle className="w-full text-[--theme-hover-text] text-center items-center justify-center rounded-md bg-[--theme-hover-color] p-2 flex">
               <span className="flex-grow">
-                {Array.isArray(roomToSubjectMap[roomId]) 
-                  ? roomToSubjectMap[roomId].length === 1
-                    ? roomToSubjectMap[roomId][0]
-                    : roomToSubjectMap[roomId].join(' & ')
-                  : roomToSubjectMap[roomId]
+                {Array.isArray(roomToSubjectMap[flashcardRoomId]) 
+                  ? roomToSubjectMap[flashcardRoomId].length === 1
+                    ? roomToSubjectMap[flashcardRoomId][0]
+                    : roomToSubjectMap[flashcardRoomId].join(' & ')
+                  : roomToSubjectMap[flashcardRoomId]
                 } flashcards
               </span>
             </DialogTitle>
             <DialogDescription className="sr-only">
-              Flashcard practice for {roomId ? roomToSubjectMap[roomId] || 'selected topic' : 'selected topic'}
+              Flashcard practice for {flashcardRoomId ? roomToSubjectMap[flashcardRoomId] || 'selected topic' : 'selected topic'}
             </DialogDescription>
           </DialogHeader>
           
@@ -425,7 +428,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                   <div className="h-full w-full flex items-center justify-center min-h-[60vh]">
                     <FlashcardDeck 
                       handleCompleteAllRoom={handleCompleteAllRoom}
-                      roomId={roomId} 
+                      roomId={flashcardRoomId} 
                       onWrongAnswer={handleWrongAnswer}
                       onCorrectAnswer={handleCorrectAnswer}
                       activeRooms={activeRooms}

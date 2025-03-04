@@ -5,29 +5,38 @@ import { roomToSubjectMap } from '../constants';
 import QuestionPromptSprite from './QuestionPromptSprite';
 import { screenX, screenY } from '../utils';
 import { getTexture } from '../utils/textureCache';
+import { useGame } from "@/store/selectors";
 
 interface RoomSpriteProps {
   img: GridImage;
-  setFlashcardRoomId: (id: string) => void;
-  activeRooms: Set<string>;
-  setActiveRooms: React.Dispatch<React.SetStateAction<Set<string>>>;
-  isFlashcardsOpen: boolean;
-  setIsFlashcardsOpen: (open: boolean) => void;
 }
 
-const RoomSprite = React.memo(({ 
-  img, 
-  setFlashcardRoomId, 
-  activeRooms, 
-  setActiveRooms, 
-  isFlashcardsOpen, 
-  setIsFlashcardsOpen 
-}: RoomSpriteProps) => {
+const RoomSprite = React.memo(({ img }: RoomSpriteProps) => {
+  // Get state and actions directly from the store
+  const { 
+    activeRooms, 
+    isFlashcardsOpen,
+    setFlashcardRoomId,
+    setIsFlashcardsOpen
+  } = useGame();
+
   const texture = useMemo(() => getTexture(img.src), [img.src]);
   const position = useMemo(() => ({
     x: screenX(img.x, img.y) - img.width / 4,
     y: screenY(img.x, img.y) - img.height / 2
   }), [img.x, img.y, img.width, img.height]);
+
+  const handleRoomClick = () => {
+    console.log('🔍 [DEBUG] Room clicked:', img.id);
+    console.log('🔍 [DEBUG] Current activeRooms:', Array.from(activeRooms));
+    console.log('🔍 [DEBUG] Current isFlashcardsOpen:', isFlashcardsOpen);
+    
+    setFlashcardRoomId(img.id);
+    console.log('🔍 [DEBUG] After setFlashcardRoomId');
+    
+    setIsFlashcardsOpen(true);
+    console.log('🔍 [DEBUG] After setIsFlashcardsOpen');
+  };
 
   return (
     <>
@@ -49,23 +58,18 @@ const RoomSprite = React.memo(({
           scaleConstant={4}  
           zIndex={img.zIndex+100}
           roomId={img.id}
-          onClick={() => {
-            setFlashcardRoomId(img.id);
-            setIsFlashcardsOpen(true);
-          }}
+          onClick={handleRoomClick}
         />
       )}
     </>
   );
 }, (prevProps, nextProps) => {
-  return (
-    prevProps.img.id === nextProps.img.id &&
-    prevProps.img.src === nextProps.img.src &&
-    prevProps.img.x === nextProps.img.x &&
-    prevProps.img.y === nextProps.img.y &&
-    prevProps.activeRooms.has(prevProps.img.id) === nextProps.activeRooms.has(nextProps.img.id) &&
-    prevProps.isFlashcardsOpen === nextProps.isFlashcardsOpen
-  );
+  return prevProps.img.id === nextProps.img.id &&
+         prevProps.img.src === nextProps.img.src &&
+         prevProps.img.x === nextProps.img.x &&
+         prevProps.img.y === nextProps.img.y;
+  // We no longer need to compare activeRooms or isFlashcardsOpen here
+  // since they come from the store and will trigger re-renders automatically
 });
 
 RoomSprite.displayName = 'RoomSprite';

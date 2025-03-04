@@ -8,8 +8,8 @@ import { AnimatePresence } from "framer-motion";
 import clsx from "clsx";
 import { toast } from "react-hot-toast";
 import FloatingTaskList from './FloatingTaskList';
-import { prefetch } from 'next/navigation';
 import preloadAnkiClinic from '../ankiclinic/preload';
+import { useUser } from "@/store/selectors";
 
 /* ------------------------------------------ Constants ----------------------------------------- */
 const HOVER_TIMEOUT = 300;
@@ -45,7 +45,6 @@ interface FloatingButtonProps {
   currentPage: string;
   initialTab: string;
   className?: string;
-  isSubscribed?: boolean;
 }
 
 interface ButtonPosition {
@@ -93,7 +92,6 @@ const FloatingButton = memo<FloatingButtonProps>(({
   className,
   activities = [],
   onTasksUpdate,
-  isSubscribed = false
 }) => {
   /* ------------------------------------------- State -------------------------------------------- */
   const [state, setState] = useState({
@@ -114,6 +112,9 @@ const FloatingButton = memo<FloatingButtonProps>(({
   const tabChangeTimeout = useRef<number | null>(null);
   const router = useRouter();
   
+  // Get isSubscribed from the store
+  const { isSubscribed } = useUser();
+  
   /* ----------------------------------------- Preloading ----------------------------------------- */
   // Preload the AnkiClinic page when component mounts
   useEffect(() => {
@@ -125,7 +126,7 @@ const FloatingButton = memo<FloatingButtonProps>(({
           console.log("[FloatingButton] Starting AnkiClinic preload sequence");
           
           // First, preload the route
-          prefetch('/ankiclinic');
+          router.prefetch('/ankiclinic');
           
           // Then, preload the components and assets
           preloadAnkiClinic().catch(error => {
@@ -149,7 +150,7 @@ const FloatingButton = memo<FloatingButtonProps>(({
       console.log("[FloatingButton] Preloading AnkiClinic on hover");
       
       // Preload the route
-      prefetch('/ankiclinic');
+      router.prefetch('/ankiclinic');
       
       // Preload core components only on hover for faster response
       import('../ankiclinic/preload').then(module => {
@@ -359,8 +360,6 @@ const FloatingButton = memo<FloatingButtonProps>(({
               .filter((p) => p.tab !== state.activeTab)
               .findIndex((p) => p.tab === pos.tab);
 
-            const isDisabled = !isSubscribed && pos.tab !== 'ankiclinic';
-
             const top = isActive
               ? 0
               : state.isHovered
@@ -401,15 +400,7 @@ const FloatingButton = memo<FloatingButtonProps>(({
                     alt={pos.tab} 
                     width={isActive ? 44 : 32} 
                     height={isActive ? 44 : 32} 
-                    className={isDisabled ? "opacity-50" : ""}
                   />
-                  {isDisabled && state.isHovered && (
-                    <div className="absolute -top-2 -right-2">
-                      <svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
                 </button>
                 <span
                   className="absolute"

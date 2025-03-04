@@ -17,7 +17,7 @@ remove it before pushing back up
 
 To create a detailed diff against `main` with context:
 ```
-git diff --full-index main > branch-diff-full.diff
+git diff --full-index main -- > branch-diff-full.diff
 ```
 
 To feed the diff back into Cursor:

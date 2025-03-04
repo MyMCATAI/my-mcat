@@ -15,10 +15,7 @@ import { useGame } from "@/store/selectors";
 /* --- Types ----- */
 interface ResourcesMenuProps {
   reportData: DoctorOfficeStats | null;
-  userRooms: string[];
   totalCoins: number;
-  totalPatients: number;
-  patientsPerDay: number;
 }
 
 interface DaysStreakProps {
@@ -65,15 +62,12 @@ DaysStreak.displayName = 'DaysStreak';
 /* --- Main Component ----- */
 const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   reportData,
-  userRooms,
   totalCoins,
-  totalPatients,
-  patientsPerDay,
 }) => {
   const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
   const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
   const { profile } = useUser();
-  const { streakDays } = useGame();
+  const { userRooms, totalPatients, patientsPerDay, streakDays } = useGame();
 
   if (!reportData) {
     return (
@@ -136,9 +130,6 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
 export default React.memo(ResourcesMenu, (prevProps, nextProps) => {
   return (
     prevProps.reportData === nextProps.reportData &&
-    prevProps.totalCoins === nextProps.totalCoins &&
-    prevProps.totalPatients === nextProps.totalPatients &&
-    prevProps.patientsPerDay === nextProps.patientsPerDay &&
-    prevProps.userRooms?.length === nextProps.userRooms?.length
+    prevProps.totalCoins === nextProps.totalCoins
   );
 });

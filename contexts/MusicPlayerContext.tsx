@@ -8,6 +8,7 @@ interface MusicPlayerContextType {
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
 
 export const MusicPlayerProvider = ({ children }: { children: React.ReactNode }) => {
+  console.log('🔍 [DEBUG] MusicPlayerProvider rendering');
   const [isAutoPlay, setIsAutoPlay] = useState(false);
 
   return (
@@ -18,8 +19,10 @@ export const MusicPlayerProvider = ({ children }: { children: React.ReactNode })
 };
 
 export const useMusicPlayer = () => {
+  console.log('🔍 [DEBUG] useMusicPlayer hook called');
   const context = useContext(MusicPlayerContext);
   if (context === undefined) {
+    console.error('🔍 [DEBUG] useMusicPlayer - context is undefined!');
     throw new Error('useMusicPlayer must be used within a MusicPlayerProvider');
   }
   return context;

@@ -8,6 +8,7 @@ import { levelConfigurations, roomToContentMap, roomToSubjectMap, spriteWaypoint
 import { GridImage } from './types';
 import { cleanupTextures, preloadTextures, getTexture } from './utils/textureCache';
 import { useUserInfo } from "@/hooks/useUserInfo";
+import { useGame } from "@/store/selectors";
 
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 
@@ -27,21 +28,10 @@ function screenY(worldX: number, worldY: number): number {
 }
 
 // Move RoomSprite outside as a separate memoized component
-const RoomSprite = React.memo(({ 
-  img, 
-  setFlashcardRoomId, 
-  activeRooms, 
-  setActiveRooms,
-  isFlashcardsOpen,
-  setIsFlashcardsOpen 
-}: { 
-  img: GridImage; 
-  setFlashcardRoomId: (id: string) => void;
-  activeRooms: Set<string>;
-  setActiveRooms: React.Dispatch<React.SetStateAction<Set<string>>>;
-  isFlashcardsOpen: boolean;
-  setIsFlashcardsOpen: (open: boolean) => void;
-}) => {
+const RoomSprite = React.memo(({ img }: { img: GridImage }) => {
+  // Get state and actions directly from the store
+  const { activeRooms, setFlashcardRoomId, setIsFlashcardsOpen } = useGame();
+  
   const texture = getTexture(img.src);
   const position = useMemo(() => ({
     x: screenX(img.x, img.y) - img.width / 4,
@@ -77,14 +67,12 @@ const RoomSprite = React.memo(({
     </>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison function for React.memo
+  // Simplified comparison since we're only comparing img properties
   return (
     prevProps.img.id === nextProps.img.id &&
     prevProps.img.src === nextProps.img.src &&
     prevProps.img.x === nextProps.img.x &&
-    prevProps.img.y === nextProps.img.y &&
-    prevProps.activeRooms.has(prevProps.img.id) === nextProps.activeRooms.has(nextProps.img.id) &&
-    prevProps.isFlashcardsOpen === nextProps.isFlashcardsOpen
+    prevProps.img.y === nextProps.img.y
   );
 });
 
@@ -166,14 +154,9 @@ interface Category {
 interface OfficeContainerProps {
   onNewGame: (fn: () => GridImage[]) => void;
   visibleImages: Set<string>;
-  userRooms: string[];
   imageGroups: ImageGroup[];
-  setFlashcardRoomId: React.Dispatch<React.SetStateAction<string>>;
+  setFlashcardRoomId: (roomId: string) => void;
   updateVisibleImages: (newVisibleImages: Set<string>) => void;
-  activeRooms: Set<string>;
-  setActiveRooms: React.Dispatch<React.SetStateAction<Set<string>>>;
-  isFlashcardsOpen: boolean;
-  setIsFlashcardsOpen: (open: boolean) => void;
 }
 
 // Define a type for sprite positions with an index signature
@@ -198,18 +181,16 @@ const pixiConfig = {
 };
 
 // Convert to forwardRef
-const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({ 
+const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
   onNewGame,
   visibleImages,
-  userRooms,
   imageGroups,
   setFlashcardRoomId,
   updateVisibleImages,
-  activeRooms,
-  setActiveRooms,
-  isFlashcardsOpen,
-  setIsFlashcardsOpen
 }, ref) => {
+  // Get state from the store
+  const { activeRooms, setActiveRooms, userRooms } = useGame();
+  
   // All useState hooks first
   const [currentLevel, setCurrentLevel] = useState(1);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -228,7 +209,7 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
   // Tutorial room effect
   useEffect(() => {
     if(currentLevel === 1) {
-      setActiveRooms(prevRooms => new Set([...prevRooms, 'WaitingRoom0']));
+      setActiveRooms(new Set(['WaitingRoom0']));
     }
   }, [currentLevel, setActiveRooms]);
 
@@ -473,11 +454,6 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
               <RoomSprite 
                 key={img.id} 
                 img={img}
-                setFlashcardRoomId={setFlashcardRoomId}
-                activeRooms={activeRooms}
-                setActiveRooms={setActiveRooms}
-                isFlashcardsOpen={isFlashcardsOpen}
-                setIsFlashcardsOpen={setIsFlashcardsOpen}
               />
             ))}
             {Object.values(spritePositions).map(sprite => (
@@ -505,16 +481,11 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
 OfficeContainer.displayName = 'OfficeContainer';
 
 // Properly handle both memo and forwardRef
-const MemoizedOfficeContainer = React.memo(OfficeContainer, (prevProps, nextProps) => {
-  // Deep compare the props we care about
-  return (
-    prevProps.visibleImages === nextProps.visibleImages &&
-    prevProps.userRooms === nextProps.userRooms &&
-    prevProps.activeRooms === nextProps.activeRooms &&
-    prevProps.isFlashcardsOpen === nextProps.isFlashcardsOpen &&
-    prevProps.imageGroups === nextProps.imageGroups // Add imageGroups comparison
-  );
-});
+const MemoizedOfficeContainer = React.memo(
+  React.forwardRef<HTMLDivElement, OfficeContainerProps>((props, ref) => (
+    <OfficeContainer {...props} ref={ref} />
+  ))
+);
 
 // Set display name for debugging
 MemoizedOfficeContainer.displayName = 'MemoizedOfficeContainer';

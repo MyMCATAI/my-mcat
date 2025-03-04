@@ -33,6 +33,7 @@ const ContextDebugger = () => {
 };
 
 const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
+  console.log('🔍 [DEBUG] DashboardLayoutContent rendering');
   /* ---- State ----- */
   const { theme } = useUI();
   const [backgroundImage, setBackgroundImage] = useState('');
@@ -96,7 +97,9 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
    );
 }
 
-const DashboardLayout = ({ children }: LayoutProps) => (
+const DashboardLayout = ({ children }: LayoutProps) => {
+  console.log('🔍 [DEBUG] DashboardLayout rendering');
+  return (
   <MusicPlayerProvider>
     <Script
       src="https://tally.so/widgets/embed.js"
@@ -107,6 +110,6 @@ const DashboardLayout = ({ children }: LayoutProps) => (
     <ContextDebugger />
     <DashboardLayoutContent>{children}</DashboardLayoutContent>
   </MusicPlayerProvider>
-);
+)};
 
 export default DashboardLayout;

@@ -69,8 +69,6 @@ const HomePage: React.FC = () => {
   const { setIsAutoPlay } = useMusicPlayer();
   const paymentStatus = searchParams?.get("payment");
   
-  // Debug mode check
-  const isDebugMode = searchParams?.get('debug') === 'true';
 
   /* ---------------------------------------- State ---------------------------------------- */
   // Combine related states into a single object to reduce re-renders

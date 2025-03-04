@@ -8,13 +8,15 @@ import { cleanQuestion, cleanAnswer } from './utils/testUtils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { animated, useSpring } from 'react-spring';
 import ChatBot from "@/components/chatbot/ChatBotFlashcard";
-import { useUser } from "@clerk/nextjs";
+import { useUser as useClerkUser } from "@clerk/nextjs";
 import { GraduationCap, Cat } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import type { UserResponseWithCategory } from "@/types";
 import VideoRecommendations from './components/VideoRecommendations';
 import { useAudio } from '@/contexts/AudioContext';
+import { useGame } from "@/store/selectors";
+import { useUser } from "@/store/selectors";
 
 /* ------------------------------------------ Types ------------------------------------------ */
 interface LargeDialogProps {
@@ -22,12 +24,8 @@ interface LargeDialogProps {
   onOpenChange: (open: boolean) => void;
   title?: string; 
   children?: ReactNode;
-  userResponses: UserResponseWithCategory[];
-  correctCount: number;
-  wrongCount: number;
   largeDialogQuit: boolean;
   setLargeDialogQuit: (quit: boolean) => void;
-  isSubscribed: boolean;
   conceptCategories?: string[];
 }
 
@@ -121,23 +119,20 @@ const COIN_REWARDS = {
 /* --------------------------------------- Component --------------------------------------- */
 /* ----------------------------------------------------------------------------------------- */
 
-const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, LargeDialogProps>(({ 
-  open, 
-  onOpenChange, 
-  title, 
-  children, 
-  userResponses, 
-  correctCount, 
-  wrongCount, 
-  largeDialogQuit, 
+const AfterTestFeed = forwardRef<any, LargeDialogProps>(({
+  open,
+  onOpenChange,
+  title,
+  children,
+  largeDialogQuit,
   setLargeDialogQuit,
-  isSubscribed,
   conceptCategories
 }, ref) => {
   /* ---------------------------------------- Hooks ---------------------------------------- */
   const audio = useAudio();
   const router = useRouter();
-  const { user } = useUser();
+  const { user } = useClerkUser();
+  const { isSubscribed } = useUser();
   const chatbotRef = useRef<{
     sendMessage: (message: string) => void;
   }>({ sendMessage: () => {} });
@@ -163,6 +158,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   const [recommendedVideos, setRecommendedVideos] = useState<VideoRecommendation[]>([]);
 
   /* ------------------------------------ Computed Values --------------------------------- */
+  const { userResponses, correctCount, wrongCount } = useGame();
   const score = correctCount/(correctCount+wrongCount) * 100;
 
   /* ------------------------------------ Animations ------------------------------------- */

@@ -71,12 +71,17 @@ const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({
   }, []);
 
   const handleClick = useCallback(() => {
+    console.log('----------------------- QuestionPromptSprite clicked for room:------------', roomId);
+    console.log('🔍 [DEBUG] QuestionPromptSprite onClick prop exists:', !!onClick);
+    
     // Add your click handler logic here
     if (onClick) {
+        console.log('🔍 [DEBUG] QuestionPromptSprite calling onClick prop');
         onClick(); // Call the onClick prop to extend functionality
+        console.log('🔍 [DEBUG] QuestionPromptSprite onClick prop called');
     }
 
-  }, [onClick]);
+  }, [onClick, roomId]);
 
   const glowFilter = new GlowFilter({
     distance: 2,

@@ -38,10 +38,21 @@ const ShoppingDialog = dynamic(() => import('./ShoppingDialog'), {
   ssr: false
 });
 
-const FlashcardsDialog = dynamic(() => import('./FlashcardsDialog'), {
-  ssr: false
+// Simple dynamic import for FlashcardsDialog which already uses forwardRef
+const FlashcardsDialog = dynamic(() => {
+  console.log('🔍 [DEBUG] Dynamically importing FlashcardsDialog');
+  return import('./FlashcardsDialog').then(mod => mod.default);
+}, {
+  ssr: false,
+  loading: () => {
+    console.log('🔍 [DEBUG] FlashcardsDialog loading component rendered');
+    return <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[--theme-primary-color]"></div>
+    </div>;
+  }
 });
 
+// Simple dynamic import for AfterTestFeed
 const AfterTestFeed = dynamic(() => import('./AfterTestFeed'), {
   ssr: false
 });
@@ -83,6 +94,7 @@ interface DoctorsOfficePageProps {
 }
 
 const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
+  console.log('🔍 [DEBUG] DoctorsOfficePage rendering');
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
@@ -101,7 +113,12 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   // Add this ref near the other refs at the top of the component
   const isClosingDialogRef = useRef(false);
   
-  // Track mount count and log navigation - combined into one effect
+  /* =================================
+  // Component Lifecycle Management
+  // - Tracks component mounting and unmounting
+  // - Sets initial loading state
+  // - Cleans up on unmount by setting isMountedRef to false
+  ================================*/
   useEffect(() => {
     mountCountRef.current += 1;
     isMountedRef.current = true;
@@ -113,28 +130,10 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         setIsLoading(false);
       }, 100);
       
-      const timestamp = new Date().toISOString();
-      console.log("====================================================================");
-      console.log(`======= ANKICLINIC PAGE MOUNTED AT ${timestamp} =======`);
-      console.log("====================================================================");
-      console.log('[DEBUG] AnkiClinic mounted, pathname:', pathname);
-      console.log('[DEBUG] Mount count:', mountCountRef.current);
-      
-      // Check for React Strict Mode (which causes double renders)
-      if (mountCountRef.current === 2) {
-        console.log('[DEBUG] Detected possible React Strict Mode (double render)');
-      }
+      return () => {
+        isMountedRef.current = false;
+      };
     }
-    
-    return () => {
-      console.log('[DEBUG] AnkiClinic unmounting');
-      isMountedRef.current = false;
-      
-      // Cleanup any in-progress operations
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
   }, [pathname]);
 
   /* ------------------------------------------- Hooks -------------------------------------------- */
@@ -267,7 +266,13 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   /* ----------------------------------------- UseEffects ---------------------------------------- */
   
-  // Initialize ambient sound as soon as possible
+  /* =================================
+  // Ambient Sound Initialization
+  // - Sets up background audio when component mounts
+  // - Only initializes if flashcards aren't open
+  // - Cleans up audio on unmount
+  // - Uses a short delay to ensure component is fully mounted
+  ================================*/
   useEffect(() => {
     if (!isMountedRef.current) return;
     
@@ -285,7 +290,12 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     };
   }, [initializeAmbientSound, isFlashcardsOpen, stopAllAudio]);
   
-  // Monitor flashcards state changes separately
+  /* =================================
+  // Flashcards State Monitor
+  // - Tracks changes to the flashcards dialog open/close state
+  // - Reinitializes ambient sound when flashcards are closed
+  // - Uses a ref to compare previous and current state
+  ================================*/
   useEffect(() => {
     if (!isMountedRef.current) return;
     
@@ -302,7 +312,12 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   // Auto-open flashcard dialog when roomId changes - with optimization
 
-  // Shows welcome/referral modals based on user state - run only when userInfo changes
+  /* =================================
+  // Welcome Dialog Controller
+  // - Shows welcome/referral modals based on user state
+  // - Only runs when userInfo changes and component is mounted
+  // - Uses hasCalculatedRef to prevent showing welcome dialog multiple times
+  ================================*/
   useEffect(() => {
     // Skip if not mounted or if state updates are in progress
     if (!isMountedRef.current || stateUpdateInProgressRef.current) return;
@@ -314,73 +329,36 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     }
   }, [userInfo, isLoading, setShowWelcomeDialogue]);
 
-  // Add a new effect to preserve debug mode - run only once
-  useEffect(() => {
-    if (typeof window === 'undefined') return; // Skip on server-side
-    
-    // Check if we need to preserve debug mode
-    const isDebugMode = searchParams?.get('debug') === 'true';
-    console.log('[DEBUG] Debug mode check:', {
-      isDebugMode,
-      searchParamsDebug: searchParams?.get('debug'),
-      hasDebugClass: document.body.classList.contains('debug-mode')
-    });
-    
-    if (isDebugMode) {
-      // Set a flag to indicate we're in debug mode
-      document.body.classList.add('debug-mode');
-      console.log('[DEBUG] Added debug-mode class to body');
-      
-      // In debug mode, immediately set loading to false to avoid loading bar
-      if (isLoading) {
-        setIsLoading(false);
-      }
-    } else if (searchParams?.get('debug') === 'false') {
-      // Explicitly set to false - remove debug mode
-      document.body.classList.remove('debug-mode');
-      console.log('[DEBUG] Removed debug-mode class from body');
-    }
-    
-    return () => {
-      // Only clean up if component unmounts, not on every render
-      if (document.body.classList.contains('debug-mode') && !isDebugMode) {
-        document.body.classList.remove('debug-mode');
-        console.log('[DEBUG] Cleanup: Removed debug-mode class from body');
-      }
-    };
-  }, [searchParams]);
-
-  // Component mount: Initial data fetch and daily calculations setup
+  /* =================================
+  // Data Initialization & Daily Calculations
+  // - Fetches initial clinic data on component mount
+  // - Sets up retry logic for failed data fetches (up to 3 retries)
+  // - Performs daily calculations once data is loaded
+  // - Uses refs to track initialization state and prevent duplicate operations
+  // - Cleans up pending requests on unmount
+  ================================*/
   useEffect(() => {
     let mounted = true;
     let retryCount = 0;
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 1000; // 1 second
     
-    console.log('[DEBUG] Starting data initialization');
-    
     const initializeData = async () => {
       // Skip if already initialized and data is present
       if (isInitializedRef.current && reportData) {
-        console.log('[DEBUG] Already initialized with data, skipping');
         return;
       }
       
       isInitializedRef.current = true;
-      console.log('[DEBUG] Setting initialized flag to true');
       
       const attemptFetch = async () => {
         try {
-          console.log('[DEBUG] Attempting to fetch data');
           await fetchData();
-          console.log('[DEBUG] Data fetch completed successfully');
           
           // Only proceed with calculations if still mounted
           if (mounted && !hasCalculatedRef.current && userInfo) {
-            console.log('[DEBUG] Starting daily calculations');
             performDailyCalculations();
             hasCalculatedRef.current = true;
-            console.log('[DEBUG] Daily calculations completed');
           }
         } catch (error) {
           console.error('[DEBUG] Error during initialization:', error);
@@ -388,10 +366,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           // Retry logic
           if (mounted && retryCount < MAX_RETRIES) {
             retryCount++;
-            console.log(`[DEBUG] Retrying fetch attempt ${retryCount} of ${MAX_RETRIES}`);
             setTimeout(attemptFetch, RETRY_DELAY);
           } else if (mounted) {
-            console.error('[DEBUG] Max retries reached, showing error toast');
             toast.error("Failed to initialize clinic data. Please refresh the page.");
           }
         }
@@ -401,43 +377,31 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     };
     
     // Small delay to let any Strict Mode double-mount settle
-    console.log('[DEBUG] Setting up initialization timer');
     const initTimer = setTimeout(() => {
       if (mounted) {
-        console.log('[DEBUG] Initialization timer fired, starting data init');
         initializeData();
       }
     }, 100);
     
     return () => {
-      console.log('[DEBUG] Cleanup for data initialization effect');
       mounted = false;
       clearTimeout(initTimer);
       // Only abort requests if we're actually unmounting, not just in Strict Mode
       if (mountCountRef.current > 2 && abortControllerRef.current) {
-        console.log('[DEBUG] Aborting pending requests');
         abortControllerRef.current.abort();
       }
     };
-  }, [userInfo, reportData]); // Add reportData as dependency to prevent unnecessary fetches
+  }, [userInfo, reportData]);
 
-  // Add a debug effect to track key state changes
-  useEffect(() => {
-    console.log('[DEBUG] Key state update:', {
-      isLoading,
-      hasReportData: !!reportData,
-      hasUserInfo: !!userInfo,
-      userRoomsLength: userRooms?.length || 0,
-      isInitialized: isInitializedRef.current,
-      pathname
-    });
-  }, [isLoading, reportData, userInfo, userRooms, pathname]);
-
-  // Initialize ambient sound on component mount
+  /* =================================
+  // Ambient Sound Controller
+  // - Initializes background audio with a slight delay
+  // - Only runs when component is fully mounted
+  // - Includes cleanup to prevent memory leaks
+  // - Manages audio regardless of loading state
+  ================================*/
   useEffect(() => {
     if (!isMountedRef.current) return;
-    
-    console.log('[DEBUG] Initializing ambient sound, isLoading:', isLoading);
     
     // Create a small delay to ensure audio context is ready
     const timeoutId = setTimeout(() => {
@@ -452,33 +416,16 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     };
   }, [initializeAmbientSound, stopAllAudio, isMountedRef]);
 
-  // Opens flashcard dialog when a room is selected - optimize with additional check
-  useEffect(() => {
-    // Skip during initial load or if already transitioning
-    if (isLoading || stateUpdateInProgressRef.current) return;
-    
-    // Skip if we're in the process of closing the dialog
-    if (isClosingDialogRef.current) {
-      // Skipping auto-open effect while dialog is closing
-      return;
-    }
-    
-    if (flashcardRoomId !== "" && !isFlashcardsOpen) {
-      // Auto-opening flashcard dialog
-      stateUpdateInProgressRef.current = true;
-      setIsFlashcardsOpen(true);
-      // Reset the flag after a short delay
-      setTimeout(() => {
-        stateUpdateInProgressRef.current = false;
-      }, 50);
-    }
-  }, [flashcardRoomId, isFlashcardsOpen, isLoading, setIsFlashcardsOpen]);
-
-  // Add an effect to ensure audio context is initialized on navigation
+  /* =================================
+  // Audio Context Recovery
+  // - Ensures audio context is properly initialized after navigation
+  // - Handles browser audio context suspension issues
+  // - Runs only in client-side environment
+  // - Attempts to resume audio context if suspended
+  ================================*/
   useEffect(() => {
     // This effect runs when the component mounts after navigation
     if (typeof window !== 'undefined' && audio) {
-      console.log('[DEBUG] Ensuring audio context is ready after navigation');
       // Force audio context to resume if suspended
       const resumeAudioContext = async () => {
         try {
@@ -833,43 +780,20 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   /* ----------------------------------------- Render  ---------------------------------------- */
 
-  // Create wrapper functions to adapt between React's setState and Zustand's actions
-  const handleSetFlashcardRoomId = useCallback((roomId: string | ((prevState: string) => string)) => {
-    if (typeof roomId === 'function') {
-      // If it's a function, call it with the current value to get the new value
-      const newRoomId = roomId(flashcardRoomId);
-      setFlashcardRoomId(newRoomId);
-    } else {
-      // If it's a direct value, use it directly
-      setFlashcardRoomId(roomId);
-    }
-  }, [flashcardRoomId, setFlashcardRoomId]);
-
-  const handleSetActiveRooms = useCallback((rooms: Set<string> | ((prevState: Set<string>) => Set<string>)) => {
-    if (typeof rooms === 'function') {
-      // If it's a function, call it with the current value to get the new value
-      const newRooms = rooms(activeRooms);
-      // Create a new Set to ensure reactivity
-      setActiveRooms(new Set(newRooms));
-    } else {
-      // If it's a direct value, create a new Set from it
-      setActiveRooms(new Set(rooms));
-    }
-  }, [activeRooms, setActiveRooms]);
-
   // Handle flashcard dialog open/close - optimized
   const handleSetIsFlashcardsOpen = useCallback((open: boolean) => {
     const now = Date.now();
+    console.log(`🔍 [DEBUG] handleSetIsFlashcardsOpen called with open=${open}`);
     
     // Prevent rapid toggling
     if (now - lastFlashcardToggleTimeRef.current < 500) {
-      // Ignoring rapid toggle of isFlashcardsOpen
+      console.log('🔍 [DEBUG] Ignoring rapid toggle of isFlashcardsOpen');
       return;
     }
     
     // If we're in the process of closing and something tries to open it, ignore
     if (isClosingDialogRef.current && open) {
-      // Ignoring attempt to open dialog while closing is in progress
+      console.log('🔍 [DEBUG] Ignoring attempt to open dialog while closing is in progress');
       return;
     }
     
@@ -877,20 +801,21 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     lastFlashcardToggleTimeRef.current = now;
     
     if (open) {
-      // OPENING FLASHCARD DIALOG
+      console.log('🔍 [DEBUG] OPENING FLASHCARD DIALOG');
+      console.log('🔍 [DEBUG] flashcardsDialogRef.current:', flashcardsDialogRef.current);
     } else {
-      // CLOSING FLASHCARD DIALOG
+      console.log('🔍 [DEBUG] CLOSING FLASHCARD DIALOG');
       // Set the closing flag
       isClosingDialogRef.current = true;
       
       // Ensure isLoading is false when closing the dialog to allow audio transition
       if (isLoading) {
-        // FIXING LOADING STATE FOR AUDIO
+        console.log('🔍 [DEBUG] FIXING LOADING STATE FOR AUDIO');
         setIsLoading(false);
       }
     }
     
-    // handleSetIsFlashcardsOpen called
+    console.log('🔍 [DEBUG] Calling setIsFlashcardsOpen with:', open);
     setIsFlashcardsOpen(open);
     
     // If we're closing the dialog, update active rooms after a delay to ensure smooth transition
@@ -918,18 +843,25 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         }, 300);
       }, 300);
     }
-  }, [flashcardRoomId, activeRooms, setActiveRooms, setFlashcardRoomId, setIsFlashcardsOpen, isLoading, setIsLoading]);
+  }, [activeRooms, flashcardRoomId, isLoading, setActiveRooms, setFlashcardRoomId, setIsFlashcardsOpen]);
 
+  /* =================================
+  // Flashcard Dialog Auto-Open Controller
+  // - Automatically opens flashcard dialog when a room is selected
+  // - Prevents opening during dialog closing process
+  // - Verifies component is mounted before attempting to open
+  // - Includes detailed debug logging for troubleshooting
+  ================================*/
   useEffect(() => {
     if (!isMountedRef.current || !flashcardRoomId || isClosingDialogRef.current) {
       return;
     }
+    
     // Auto-open flashcard dialog when roomId is set
     if (flashcardRoomId && !isFlashcardsOpen) {
       handleSetIsFlashcardsOpen(true);
     }
   }, [flashcardRoomId, isFlashcardsOpen, handleSetIsFlashcardsOpen]);
-
 
   const handleSetCompleteAllRoom = useCallback((complete: boolean | ((prevState: boolean) => boolean)) => {
     if (typeof complete === 'function') {
@@ -945,7 +877,14 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   // Check if audio transition is in progress using the hook
   const isAudioBusy = isAudioTransitionInProgress();
   
-  // Handles test completion, scoring, and updates database - with optimization
+  /* =================================
+  // Test Completion & Scoring Handler
+  // - Processes test completion when all rooms are completed
+  // - Calculates test score based on correct and wrong answers
+  // - Updates database with test results
+  // - Prevents concurrent state updates with a ref flag
+  // - Opens after-test dialog when appropriate
+  ================================*/
   useEffect(() => {
     // Skip if not mounted or if state updates are in progress
     if (!isMountedRef.current || stateUpdateInProgressRef.current) return;
@@ -1024,10 +963,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-30">
             <ResourcesMenu
               reportData={reportData}
-              userRooms={userRooms}
               totalCoins={userInfo?.score || 0}
-              totalPatients={totalPatients}
-              patientsPerDay={patientsPerDay}
             />
           </div>
           
@@ -1036,20 +972,14 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
               ref={officeContainerRef}
               onNewGame={handleSetPopulateRooms}
               visibleImages={visibleImages}
-              userRooms={userRooms}
               imageGroups={imageGroups}
-              setFlashcardRoomId={handleSetFlashcardRoomId}
+              setFlashcardRoomId={setFlashcardRoomId}
               updateVisibleImages={updateVisibleImages}
-              activeRooms={activeRooms}
-              setActiveRooms={handleSetActiveRooms}
-              isFlashcardsOpen={isFlashcardsOpen}
-              setIsFlashcardsOpen={handleSetIsFlashcardsOpen}
             />
             <div className="absolute top-4 left-4 flex gap-2 z-50">
               <NewGameButton
                 userScore={userInfo?.score || 0}
                 onGameStart={handleGameStart}
-                isGameInProgress={isGameInProgress}
                 resetGameState={resetLocalGameState}
               />
             </div>
@@ -1068,12 +998,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
             handleAfterTestDialogClose();
           }
         }}
-        userResponses={userResponses}
-        correctCount={correctCount}
-        wrongCount={wrongCount}
         largeDialogQuit={largeDialogQuit}
         setLargeDialogQuit={setLargeDialogQuit}
-        isSubscribed={isSubscribed}
       />}
       
       <div className="absolute bottom-4 right-4 z-[100]">
@@ -1082,7 +1008,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           initialTab={activeTab}
           activities={activities}
           onTasksUpdate={fetchActivities}
-          isSubscribed={isSubscribed}
           onTabChange={handleTabChange}
         />
       </div>
@@ -1098,14 +1023,9 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         onClose={() => setShowReferralModal(false)}
       />
 
+      {/* FlashcardsDialog with minimal props */}
       {isFlashcardsOpen && <FlashcardsDialog
         ref={flashcardsDialogRef}
-        isOpen={isFlashcardsOpen}
-        onOpenChange={handleSetIsFlashcardsOpen}
-        roomId={flashcardRoomId}
-        activeRooms={activeRooms}
-        setActiveRooms={handleSetActiveRooms}
-        currentUserTestId={currentUserTestId}
         isLoading={isLoading}
         setIsLoading={setIsLoading}
         handleCompleteAllRoom={handleCompleteAllRoom}

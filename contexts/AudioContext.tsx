@@ -91,6 +91,7 @@ const logError = (error: Error, context: string) => {
 };
 
 export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
+  console.log('🔍 [DEBUG] AudioProvider rendering');
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSong, setCurrentSong] = useState<string | null>(null);
   const [volumeState, setVolumeState] = useState(0.5);
@@ -401,9 +402,11 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   // Move the existing context check after all hook declarations
   const existingContext = useContext(AudioContext);
   if (existingContext) {
+    console.log('🔍 [DEBUG] AudioProvider - existingContext found, skipping render');
     return <>{children}</>;
   }
 
+  console.log('🔍 [DEBUG] AudioProvider - creating new context');
   return (
     <AudioContext.Provider value={{
       isPlaying,
@@ -424,8 +427,10 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useAudio = () => {
+  console.log('🔍 [DEBUG] useAudio hook called');
   const context = useContext(AudioContext);
   if (context === null) {
+    console.error('🔍 [DEBUG] useAudio - context is null!');
     throw new Error('useAudio must be used within an AudioProvider');
   }
   return context;
