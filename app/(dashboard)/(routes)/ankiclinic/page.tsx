@@ -2,14 +2,12 @@
 
 import React, { useState, useEffect, useRef, useCallback, Suspense, forwardRef, useMemo } from "react";
 import ReactDOM from 'react-dom';
-import ResourcesMenu from "./ResourcesMenu";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { DoctorOfficeStats } from "@/types";
 import { toast, Toaster } from "react-hot-toast";
 import Image from "next/image";
 import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, 
   getClinicCostPerDay, getLevelNumber, calculateQualityOfCare } from "@/utils/calculateResourceTotals";
-import WelcomeDialog from "./WelcomeDialog";
 import { imageGroups } from "./constants/imageGroups";
 import { PurchaseButton } from "@/components/purchase-button";
 import dynamic from 'next/dynamic';
@@ -20,33 +18,49 @@ import { useAudio } from "@/contexts/AudioContext";
 import type { UserResponse } from "@prisma/client";
 import type { FetchedActivity } from "@/types";
 import { GridImage } from './types';
-import NewGameButton from "./components/NewGameButton";
-import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 import type { UserResponseWithCategory } from "@/types";
-import RedeemReferralModal from "@/components/social/friend-request/RedeemReferralModal";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
 import { getAccentColor, getWelcomeMessage, getSuccessMessage } from './utils';
 import { useGame } from "@/store/selectors";
-import OfficeContainer from './OfficeContainer';
 
-// Only lazy load dialog components that aren't needed immediately
+// Dynamically import components that use window/document
+const ResourcesMenu = dynamic(() => import('./ResourcesMenu'), {
+  ssr: false
+});
+
+const WelcomeDialog = dynamic(() => import('./WelcomeDialog'), {
+  ssr: false
+});
+
+const OfficeContainer = dynamic(() => import('./OfficeContainer'), {
+  ssr: false
+});
+
 const ShoppingDialog = dynamic(() => import('./ShoppingDialog'), {
-  loading: () => null,
   ssr: false
 });
 
 const FlashcardsDialog = dynamic(() => import('./FlashcardsDialog'), {
-  loading: () => null,
   ssr: false
 });
 
 const AfterTestFeed = dynamic(() => import('./AfterTestFeed'), {
-  loading: () => null,
   ssr: false
 });
 
 const FloatingButton = dynamic(() => import('../home/FloatingButton'), {
-  loading: () => null,
+  ssr: false
+});
+
+const TutorialVidDialog = dynamic(() => import('@/components/ui/TutorialVidDialog'), {
+  ssr: false
+});
+
+const RedeemReferralModal = dynamic(() => import('@/components/social/friend-request/RedeemReferralModal'), {
+  ssr: false
+});
+
+const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
   ssr: false
 });
 

@@ -9,19 +9,30 @@ export function screenY(worldX: number, worldY: number): number {
 }
 
 export const getAccentColor = () => {
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
-    return '#001226'; // Default color for server-side rendering
+  // Return default color for server-side rendering
+  if (typeof window === 'undefined') {
+    return '#001226';
   }
   
-  const themeElement =
-    document.querySelector('.theme-sunsetCity') ||
-    document.querySelector('.theme-sakuraTrees') ||
-    document.querySelector('.theme-cyberSpace') ||
-    document.querySelector('.theme-mykonosBlue') ||
-    document.documentElement;
-  const computedStyle = getComputedStyle(themeElement!);
-  const accentColor = computedStyle.getPropertyValue('--theme-doctorsoffice-accent').trim();
-  return accentColor || '#001226';
+  try {
+    const themeElement =
+      document.querySelector('.theme-sunsetCity') ||
+      document.querySelector('.theme-sakuraTrees') ||
+      document.querySelector('.theme-cyberSpace') ||
+      document.querySelector('.theme-mykonosBlue') ||
+      document.documentElement;
+    
+    if (!themeElement) {
+      return '#001226';
+    }
+    
+    const computedStyle = getComputedStyle(themeElement);
+    const accentColor = computedStyle.getPropertyValue('--theme-doctorsoffice-accent').trim();
+    return accentColor || '#001226';
+  } catch (error) {
+    console.error('Error getting accent color:', error);
+    return '#001226';
+  }
 };
 
 type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
