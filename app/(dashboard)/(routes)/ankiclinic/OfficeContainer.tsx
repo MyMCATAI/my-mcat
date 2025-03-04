@@ -504,8 +504,8 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
 
 OfficeContainer.displayName = 'OfficeContainer';
 
-// Wrap with React.memo to prevent unnecessary re-renders
-export default React.memo(OfficeContainer, (prevProps, nextProps) => {
+// Properly handle both memo and forwardRef
+const MemoizedOfficeContainer = React.memo(OfficeContainer, (prevProps, nextProps) => {
   // Deep compare the props we care about
   return (
     prevProps.visibleImages === nextProps.visibleImages &&
@@ -515,3 +515,8 @@ export default React.memo(OfficeContainer, (prevProps, nextProps) => {
     prevProps.imageGroups === nextProps.imageGroups // Add imageGroups comparison
   );
 });
+
+// Set display name for debugging
+MemoizedOfficeContainer.displayName = 'MemoizedOfficeContainer';
+
+export default MemoizedOfficeContainer;

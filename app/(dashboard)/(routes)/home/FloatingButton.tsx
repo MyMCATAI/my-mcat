@@ -8,6 +8,8 @@ import { AnimatePresence } from "framer-motion";
 import clsx from "clsx";
 import { toast } from "react-hot-toast";
 import FloatingTaskList from './FloatingTaskList';
+import { prefetch } from 'next/navigation';
+import preloadAnkiClinic from '../ankiclinic/preload';
 
 /* ------------------------------------------ Constants ----------------------------------------- */
 const HOVER_TIMEOUT = 300;
@@ -100,11 +102,67 @@ const FloatingButton = memo<FloatingButtonProps>(({
     recentlyChangedTab: false,
     showTutoringMessage: false
   });
+  
+  // Add loading state for navigation
+  const [isNavigating, setIsNavigating] = useState(false);
+  
+  // Track if preloading has been initiated
+  const hasPreloadedRef = useRef(false);
 
   /* ------------------------------------------- Refs --------------------------------------------- */
   const hoverTimeout = useRef<number | null>(null);
   const tabChangeTimeout = useRef<number | null>(null);
   const router = useRouter();
+  
+  /* ----------------------------------------- Preloading ----------------------------------------- */
+  // Preload the AnkiClinic page when component mounts
+  useEffect(() => {
+    // Only preload if we're on the home page and haven't preloaded yet
+    if (currentPage === 'home' && !hasPreloadedRef.current) {
+      try {
+        // Use setTimeout to defer preloading until after initial render
+        const timer = setTimeout(() => {
+          console.log("[FloatingButton] Starting AnkiClinic preload sequence");
+          
+          // First, preload the route
+          prefetch('/ankiclinic');
+          
+          // Then, preload the components and assets
+          preloadAnkiClinic().catch(error => {
+            console.error("[FloatingButton] Error during preload:", error);
+          });
+          
+          // Mark as preloaded
+          hasPreloadedRef.current = true;
+        }, 1000);
+        
+        return () => clearTimeout(timer);
+      } catch (error) {
+        console.error("[FloatingButton] Error preloading AnkiClinic:", error);
+      }
+    }
+  }, [currentPage, router]);
+  
+  // Add preloading on hover for immediate response
+  const handleAnkiClinicHover = useCallback(() => {
+    if (currentPage === 'home' && !hasPreloadedRef.current) {
+      console.log("[FloatingButton] Preloading AnkiClinic on hover");
+      
+      // Preload the route
+      prefetch('/ankiclinic');
+      
+      // Preload core components only on hover for faster response
+      import('../ankiclinic/preload').then(module => {
+        module.preloadCoreComponents();
+        module.preloadAudioAssets();
+      }).catch(error => {
+        console.error("[FloatingButton] Error preloading on hover:", error);
+      });
+      
+      // Mark as preloaded
+      hasPreloadedRef.current = true;
+    }
+  }, [currentPage, router]);
 
   /* ----------------------------------------- Callbacks ------------------------------------------ */
   const updateState = useCallback((updates: Partial<typeof state>) => {
@@ -193,8 +251,27 @@ const FloatingButton = memo<FloatingButtonProps>(({
           }, TAB_CHANGE_TIMEOUT);
         },
         ankiclinic: () => {
+          const timestamp = new Date().toISOString();
+          console.log("--------------------------------------------------------------------");
+          console.log(`------- ANKI CLINIC CLICKED AT ${timestamp} -------`);
+          console.log("--------------------------------------------------------------------");
+          
           if (currentPage === 'home') {
+            // Show loading indicator
+            setIsNavigating(true);
+            
+            // If we haven't preloaded yet, do it now (though this should rarely happen)
+            if (!hasPreloadedRef.current) {
+              router.prefetch('/ankiclinic');
+            }
+            
+            // Navigate to AnkiClinic
             router.push('/ankiclinic');
+            
+            // Reset loading state after a timeout (in case navigation takes too long)
+            setTimeout(() => {
+              setIsNavigating(false);
+            }, 5000);
           } else {
             router.push('/home');
           }
@@ -221,6 +298,7 @@ const FloatingButton = memo<FloatingButtonProps>(({
     } catch (error) {
       console.error("Error checking unlocks:", error);
       toast.error("Failed to check feature access");
+      setIsNavigating(false); // Reset loading state on error
     }
   }, [currentPage, router, onTabChange, updateState, isSubscribed]);
 
@@ -239,6 +317,16 @@ const FloatingButton = memo<FloatingButtonProps>(({
   /* ---------------------------------------- Render -------------------------------------------- */
   return (
     <>
+      {/* Loading overlay */}
+      {isNavigating && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[--theme-primary-color] mb-4"></div>
+            <p className="text-lg font-medium">Loading AnkiClinic...</p>
+          </div>
+        </div>
+      )}
+
       {/* Overlay */}
       {state.isHovered && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40" />
@@ -306,6 +394,7 @@ const FloatingButton = memo<FloatingButtonProps>(({
                     color: 'var(--theme-navbutton-color)',
                   }}
                   onClick={() => handleButtonClick(pos.tab)}
+                  onMouseOver={() => pos.tab === 'ankiclinic' && handleAnkiClinicHover()}
                 >
                   <Image 
                     src={pos.icon} 

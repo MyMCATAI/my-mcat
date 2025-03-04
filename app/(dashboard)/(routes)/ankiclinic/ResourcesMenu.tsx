@@ -78,8 +78,7 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   if (!reportData) {
     return (
       <div className="h-full flex flex-col bg-[--theme-leaguecard-color] text-[--theme-text-color] items-center justify-center rounded-lg p-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[--theme-hover-color]"></div>
-        <p className="mt-4 text-lg">Loading clinic data...</p>
+        Loading...
       </div>
     );
   }

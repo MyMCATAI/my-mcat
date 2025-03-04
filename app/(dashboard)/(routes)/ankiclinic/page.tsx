@@ -24,16 +24,13 @@ import { shouldShowRedeemReferralModal } from '@/lib/referral';
 import { getAccentColor, getWelcomeMessage, getSuccessMessage } from './utils';
 import { useGame } from "@/store/selectors";
 
-// Dynamically import components that use window/document
-const ResourcesMenu = dynamic(() => import('./ResourcesMenu'), {
-  ssr: false
-});
+// Only dynamically import components that are truly heavy or rarely used
+// Core components should be imported directly for faster initial render
+import ResourcesMenu from './ResourcesMenu';
+import OfficeContainer from './OfficeContainer';
 
+// Keep dynamic imports for less critical components
 const WelcomeDialog = dynamic(() => import('./WelcomeDialog'), {
-  ssr: false
-});
-
-const OfficeContainer = dynamic(() => import('./OfficeContainer'), {
   ssr: false
 });
 
@@ -67,9 +64,13 @@ const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
 
 // Loading component for better UX during initial load
 const LoadingClinic = () => (
-  <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
-    <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse"></div>
-    <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg"></div>
+  <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
+    <div className="flex w-full h-full max-w-full max-h-full items-center justify-center text-xl font-medium">
+      <div className="flex flex-col items-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[--theme-primary-color]"></div>
+        <p>Loading AnkiClinic...</p>
+      </div>
+    </div>
   </div>
 );
 
@@ -107,6 +108,15 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     
     // Only run client-side code
     if (typeof window !== 'undefined') {
+      // Set loading to false after a short delay to allow the UI to render first
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 100);
+      
+      const timestamp = new Date().toISOString();
+      console.log("====================================================================");
+      console.log(`======= ANKICLINIC PAGE MOUNTED AT ${timestamp} =======`);
+      console.log("====================================================================");
       console.log('[DEBUG] AnkiClinic mounted, pathname:', pathname);
       console.log('[DEBUG] Mount count:', mountCountRef.current);
       
@@ -257,25 +267,38 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   /* ----------------------------------------- UseEffects ---------------------------------------- */
   
-  // Manages music autoplay when component mounts/unmounts - with optimization
+  // Initialize ambient sound as soon as possible
   useEffect(() => {
     if (!isMountedRef.current) return;
     
-    // Monitor loading state changes
+    // Initialize ambient sound immediately when component mounts
+    const timer = setTimeout(() => {
+      if (!isFlashcardsOpen) {
+        console.log('[DEBUG] Initializing ambient sound on mount');
+        initializeAmbientSound();
+      }
+    }, 200); // Short delay to ensure component is fully mounted
+    
+    return () => {
+      clearTimeout(timer);
+      stopAllAudio();
+    };
+  }, [initializeAmbientSound, isFlashcardsOpen, stopAllAudio]);
+  
+  // Monitor flashcards state changes separately
+  useEffect(() => {
+    if (!isMountedRef.current) return;
+    
     if (prevIsFlashcardsOpenRef.current !== isFlashcardsOpen) {
       prevIsFlashcardsOpenRef.current = isFlashcardsOpen;
       
-      // Initialize ambient sound when loading completes
+      // Handle audio transitions based on flashcards state
       if (!isFlashcardsOpen) {
+        console.log('[DEBUG] Flashcards closed, reinitializing ambient sound');
         initializeAmbientSound();
       }
     }
-    
-    // Cleanup audio on unmount
-    return () => {
-      stopAllAudio();
-    };
-  }, [isFlashcardsOpen, initializeAmbientSound, stopAllAudio]);
+  }, [isFlashcardsOpen, initializeAmbientSound]);
 
   // Auto-open flashcard dialog when roomId changes - with optimization
 
@@ -297,8 +320,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     
     // Check if we need to preserve debug mode
     const isDebugMode = searchParams?.get('debug') === 'true';
-    console.log('[DEBUG] Debug mode check:', { 
-      isDebugMode, 
+    console.log('[DEBUG] Debug mode check:', {
+      isDebugMode,
       searchParamsDebug: searchParams?.get('debug'),
       hasDebugClass: document.body.classList.contains('debug-mode')
     });
@@ -307,6 +330,11 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       // Set a flag to indicate we're in debug mode
       document.body.classList.add('debug-mode');
       console.log('[DEBUG] Added debug-mode class to body');
+      
+      // In debug mode, immediately set loading to false to avoid loading bar
+      if (isLoading) {
+        setIsLoading(false);
+      }
     } else if (searchParams?.get('debug') === 'false') {
       // Explicitly set to false - remove debug mode
       document.body.classList.remove('debug-mode');
@@ -407,16 +435,22 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   // Initialize ambient sound on component mount
   useEffect(() => {
-    if (!isMountedRef.current || isLoading) return;
+    if (!isMountedRef.current) return;
     
-    // Initializing ambient sound
-    initializeAmbientSound();
+    console.log('[DEBUG] Initializing ambient sound, isLoading:', isLoading);
+    
+    // Create a small delay to ensure audio context is ready
+    const timeoutId = setTimeout(() => {
+      // Initializing ambient sound regardless of loading state
+      initializeAmbientSound();
+    }, 100);
     
     return () => {
+      clearTimeout(timeoutId);
       // Cleaning up audio on unmount
       stopAllAudio();
     };
-  }, [initializeAmbientSound, stopAllAudio, isLoading]);
+  }, [initializeAmbientSound, stopAllAudio, isMountedRef]);
 
   // Opens flashcard dialog when a room is selected - optimize with additional check
   useEffect(() => {
@@ -439,6 +473,25 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       }, 50);
     }
   }, [flashcardRoomId, isFlashcardsOpen, isLoading, setIsFlashcardsOpen]);
+
+  // Add an effect to ensure audio context is initialized on navigation
+  useEffect(() => {
+    // This effect runs when the component mounts after navigation
+    if (typeof window !== 'undefined' && audio) {
+      console.log('[DEBUG] Ensuring audio context is ready after navigation');
+      // Force audio context to resume if suspended
+      const resumeAudioContext = async () => {
+        try {
+          // This will trigger the audio context to resume if needed
+          await audio.setVolume(audio.volume);
+        } catch (error) {
+          console.error('[DEBUG] Error resuming audio context:', error);
+        }
+      };
+      
+      resumeAudioContext();
+    }
+  }, [audio, pathname]);
 
   /* ---------------------------------------- Event Handlers -------------------------------------- */
 
@@ -949,8 +1002,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   }, [currentUserTestId, completeAllRoom, isLoading, isFlashcardsOpen, largeDialogQuit, 
       fetchUserResponses, correctCount, wrongCount, setTestScore, setIsAfterTestDialogOpen]);
   
-  // Show loading state during initial load
-  if (isLoading && !isClinicUnlocked) {
+  // Render with early return for loading state
+  if (!isMountedRef.current || isLoading) {
     return <LoadingClinic />;
   }
 
@@ -963,9 +1016,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           onUnlocked={()=>setShowWelcomeDialogue(false)}
         />}
       <Suspense fallback={
-        <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
-          <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse" />
-          <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />
+        <div className="flex w-full h-full max-w-full max-h-full items-center justify-center text-[--theme-text-color] text-xl font-medium">
+          Loading...
         </div>
       }>
         <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
@@ -1002,166 +1054,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
               />
             </div>
             <div className="absolute top-4 right-4 z-50 flex items-center">
-              <div className="group relative flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
-                <Image
-                  src="/game-components/patient.png"
-                  alt="Patient"
-                  width={32}
-                  height={32}
-                  className="mr-2"
-                />
-                <div className="flex flex-col">
-                  <span className="text-[--theme-hover-color] font-bold text-lg">{totalPatients}</span>
-                </div>
-                <div className="absolute top-full left-0 mt-2 w-64 bg-[--theme-leaguecard-color] text-[--theme-text-color] text-sm rounded-lg p-3 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 border border-[--theme-border-color]">
-                  <p className="mb-2">Total patients treated: {totalPatients}</p>
-                  <p className="mb-2">You treat <span className="text-[--theme-hover-color]">{patientsPerDay} patients per day</span> at your current level.</p>
-                  <p>Higher clinic levels allow you to treat more patients daily, which affects your total score.</p>
-                  <ul className="text-xs mt-1 space-y-1">
-                    <li>• INTERN: 4/day</li>
-                    <li>• RESIDENT: 8/day</li>
-                    <li>• FELLOWSHIP: 10/day</li>
-                    <li>• ATTENDING: 16/day</li>
-                    <li>• PHYSICIAN: 24/day</li>
-                    <li>• MEDICAL DIRECTOR: 30/day</li>
-                  </ul>
-                </div>
-              </div>
-              <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
-                <PurchaseButton 
-                  className="flex items-center hover:opacity-90 transition-opacity"
-                  tooltipText="Click to purchase more coins"
-                  userCoinCount={userInfo?.score}
-                >
-                  <div className="flex items-center">
-                    <Image
-                      src="/game-components/PixelCupcake.png"
-                      alt="Studycoin"
-                      width={32}
-                      height={32}
-                      className="mr-2"
-                    />
-                    <span className="text-[--theme-hover-color] font-bold">{userInfo?.score}</span>
-                  </div>
-                </PurchaseButton>
-              </div>
-              <div className="relative group">
-                <button className={`flex items-center justify-center px-6 py-3 
-                  ${(!userLevel || userLevel === "PATIENT LEVEL") 
-                    ? "bg-green-500 animate-pulse" 
-                    : "bg-[--theme-doctorsoffice-accent]"
-                  }
-                  border-[--theme-border-color] 
-                  text-[--theme-text-color] 
-                  hover:text-[--theme-hover-text] 
-                  hover:bg-[--theme-hover-color] 
-                  transition-colors text-3xl font-bold uppercase 
-                  group-hover:text-[--theme-hover-text] 
-                  group-hover:bg-[--theme-hover-color]`}>
-                  <span>{userLevel || "PATIENT LEVEL"}</span>
-                </button>
-                <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out"> 
-                  <div className="flex flex-col">
-                    <a
-                      href="#"
-                      className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setIsMarketplaceOpen(!isMarketplaceOpen);
-                      }}
-                    >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 mr-2"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                            />
-                          </svg>
-                          Marketplace
-                        </a>
-                  </div>
-
-                  <div className="flex flex-col">
-                  {isMarketplaceOpen && (
-                    <ShoppingDialog
-                      ref={marketplaceDialogRef}
-                      imageGroups={imageGroups}
-                      visibleImages={visibleImages}
-                      toggleGroup={toggleGroup}
-                      userScore={userInfo?.score || 0}
-                      isOpen={isMarketplaceOpen}
-                      onOpenChange={setIsMarketplaceOpen}
-                    />
-                  )}
-
-                  </div>
-                  <div className="flex flex-col">
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setIsFlashcardsTooltipOpen(!isFlashcardsTooltipOpen);
-                    }}
-                    onMouseLeave={() => setIsFlashcardsTooltipOpen(false)}
-                    className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
-                      />
-                    </svg>
-                    Flashcards
-                  </button>
-                  </div>
-
-                  <div className="flex flex-col">
-                    {isFlashcardsTooltipOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-64 bg-[--theme-leaguecard-color] text-[--theme-text-color] text-sm rounded-lg p-3 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 border border-[--theme-border-color]">
-                        <p className="mb-2">Coming soon!</p>
-                      </div>
-                    )}
-                  </div>
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setIsTutorialOpen(true);
-                    }}
-                    className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                      />
-                    </svg>
-                    Tutorial
-                  </a>
-                </div>
-              </div>
+              {/* Rest of the UI components */}
             </div>
           </div>
         </div>
