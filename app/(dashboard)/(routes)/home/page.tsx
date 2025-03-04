@@ -50,6 +50,8 @@ const ContentWrapper: React.FC<ContentWrapperProps> = ({ children }) => (
 );
 
 const HomePage = () => {
+  console.log('[HomePage] Component rendering');
+
   /* ---------------------------------------- Hooks ---------------------------------------- */
   const router = useRouter();
   const pathname = usePathname();
@@ -217,6 +219,7 @@ const HomePage = () => {
   }, [currentStudyActivityId, endActivity, startActivity]);
 
   const handleTabChange = useCallback(async (newTab: string) => {
+    console.log('[HomePage] Tab change requested', { newTab });
     if (newTab === "SUMMARIZE_WEEK") {
       setActiveTab("Schedule");
       const sidebarInsightsTab = document.querySelector('[data-tab="tab1"]');
@@ -282,13 +285,20 @@ const HomePage = () => {
 
   /* ---------------------------------------- Effects ---------------------------------------- */
   useEffect(() => {
+    console.log('[HomePage] initializePage effect running', {
+      isLoadingUserInfo,
+      userInfoStreak: userInfo?.streak
+    });
+    
     const initializePage = async () => {
-      if (isLoadingUserInfo) return; // Wait for user info to be loaded
+      if (isLoadingUserInfo) return;
       
       setIsLoading(true);
+      console.log('[HomePage] Starting page initialization');
       try {
         await fetchActivities();
         const proStatus = await checkProStatus();
+        console.log('[HomePage] Fetched initial data', { proStatus });
 
         // Check for streak increase
         if (userInfo?.streak && userInfo.streak > 1) {
@@ -321,6 +331,9 @@ const HomePage = () => {
   }, [isLoadingUserInfo, userInfo?.streak, fetchActivities]);
 
   useEffect(() => {
+    console.log('[HomePage] Activities changed, updating calendar context', {
+      activitiesCount: activities.length
+    });
     updateCalendarChatContext(activities);
   }, [activities]);
 
@@ -408,6 +421,7 @@ const HomePage = () => {
 
   /* -------------------------------------- Rendering ------------------------------------- */
   if (isLoading || isLoadingUserInfo) {
+    console.log('[HomePage] Rendering loading spinner', { isLoading, isLoadingUserInfo });
     return <LoadingSpinner />;
   }
 
@@ -432,7 +446,13 @@ const HomePage = () => {
   }
 
   const renderContent = () => {
+    console.log('[HomePage] Rendering content for tab:', activeTab);
+    
     if (isUpdatingProfile || isGeneratingActivities) {
+      console.log('[HomePage] Rendering loading state for:', {
+        isUpdatingProfile,
+        isGeneratingActivities
+      });
       return (
         <div className="flex justify-center items-center h-full">
           <div className="text-center">
@@ -494,6 +514,12 @@ const HomePage = () => {
         return null;
     }
   };
+
+  console.log('[HomePage] Rendering main layout', {
+    activeTab,
+    currentPage,
+    isSubscribed
+  });
 
   return (
     <ContentWrapper>

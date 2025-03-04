@@ -114,7 +114,11 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const [populateRoomsFn, setPopulateRoomsFn] = useState<(() => GridImage[]) | null>(null);
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
   // Add debug state to track audio lifecycle
-  const [debugId] = useState(() => Math.random().toString(36).substr(2, 9));
+  const [debugId] = useState(() => {
+    const id = Math.random().toString(36).substr(2, 9);
+    console.log(`🎮 [${id}] Game component initialized`);
+    return id;
+  });
   // Add a ref to track mounted state
   const isMountedRef = useRef(false);
   const audioTransitionInProgressRef = useRef(false);
@@ -216,19 +220,24 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   // Manages music autoplay when component mounts/unmounts
   useEffect(() => {
+    console.log(`🎮 [${debugId}] Component mounted`);
     setIsAutoPlay(true);
-    return () => setIsAutoPlay(false);
-  }, [setIsAutoPlay]);
+    return () => {
+      console.log(`🎮 [${debugId}] Component unmounting`);
+      setIsAutoPlay(false);
+    };
+  }, [setIsAutoPlay, debugId]);
 
   // Component mount: Initial data fetch and daily calculations setup
   useEffect(() => {
+    console.log(`🎮 [${debugId}] Fetching initial data`);
     fetchData();
     if (!hasCalculatedRef.current && userInfo) {
+      console.log(`🎮 [${debugId}] Setting up daily calculations`);
       const timer = setTimeout(() => {
         performDailyCalculations();
         hasCalculatedRef.current = true;
       }, 3000);
-      // Clean up the timer if the component unmounts
       return () => clearTimeout(timer);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -236,72 +245,79 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   // Component mount: fetches user activities 
   useEffect(() => {
+    console.log(`🎮 [${debugId}] Fetching activities`);
     fetchActivities();
   }, []);
 
   // Component mount: Initializes activity tracking
   useEffect(() => {
     const initializeActivity = async () => {
-        await startActivity({
-          type: 'studying',
-          location: 'Game',
-          metadata: {
-            initialLoad: true,
-            timestamp: new Date().toISOString()
-          }
-        });
-      }
+      console.log(`🎮 [${debugId}] Initializing activity tracking`);
+      await startActivity({
+        type: 'studying',
+        location: 'Game',
+        metadata: {
+          initialLoad: true,
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
     initializeActivity();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Modify the existing useEffect for ambient sound and flashcard door sounds
   useEffect(() => {
-    let isEffectActive = true; // Local flag to track if effect is still active
+    console.log(`🎵 [${debugId}] Audio state change - Flashcards open: ${isFlashcardsOpen}`);
+    let isEffectActive = true;
 
     const handleAudioTransition = async () => {
       try {
         if (!isEffectActive) return;
 
         if (isFlashcardsOpen) {
+          console.log(`🎵 [${debugId}] Stopping all loops and playing door open sound`);
           await audio.stopAllLoops();
           if (!isEffectActive) return;
           audio.playSound('flashcard-door-open');
         } else {
           if (prevFlashcardsOpenRef.current) {
+            console.log(`🎵 [${debugId}] Playing door closed sound and transitioning to ambient`);
             audio.playSound('flashcard-door-closed');
             await new Promise(resolve => setTimeout(resolve, 500));
             if (!isEffectActive) return;
             await audio.loopSound('flashcard-loop-catfootsteps');
           } else {
+            console.log(`🎵 [${debugId}] Starting ambient sound loop`);
             await audio.loopSound('flashcard-loop-catfootsteps');
           }
         }
         if (!isEffectActive) return;
         prevFlashcardsOpenRef.current = isFlashcardsOpen;
       } catch (error) {
-        if (isEffectActive) {
-          console.error(`🎵 [${debugId}] Audio transition error:`, error);
-        }
+        console.error(`🎵 [${debugId}] Audio transition error:`, error);
       }
     };
 
     handleAudioTransition();
 
     return () => {
+      console.log(`🎵 [${debugId}] Cleaning up audio effect`);
       isEffectActive = false;
     };
-  }, [isFlashcardsOpen, debugId]); // Only depend on flashcards state and debugId
+  }, [isFlashcardsOpen, debugId]);
 
   // Opens flashcard dialog when a room is selected
   useEffect(() => {
     if (flashcardRoomId !== "") {
+      console.log(`🎮 [${debugId}] Opening flashcards for room: ${flashcardRoomId}`);
       setIsFlashcardsOpen(true);
     }
   }, [flashcardRoomId, debugId]);
 
   // Shows welcome/referral modals based on user state
   useEffect(() => {
+    console.log(`🎮 [${debugId}] Checking modal states - Clinic unlocked: ${isClinicUnlocked}`);
     setShowReferralModal(shouldShowRedeemReferralModal());
     if(userInfo && !isClinicUnlocked) {
       setShowWelcomeDialogue(true);
@@ -312,6 +328,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   const fetchData = async () => {
     try {
+      console.log(`🎮 [${debugId}] Fetching game data`);
       const [reportResponse, clinicResponse] = await Promise.all([
         fetch("/api/user-report"),
         fetch("/api/clinic"),
@@ -546,15 +563,15 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   };
 
   const handleGameStart = async (userTestId: string) => {
-    audio.playSound('flashcard-startup');// Play startup sound
-    // Start new testing activity
+    console.log(`🎮 [${debugId}] Starting new game with test ID: ${userTestId}`);
+    audio.playSound('flashcard-startup');
     await startActivity({
-        type: 'testing',
-        location: 'Game',
-        metadata: {
-            userTestId,
-            timestamp: new Date().toISOString()
-        }
+      type: 'testing',
+      location: 'Game',
+      metadata: {
+        userTestId,
+        timestamp: new Date().toISOString()
+      }
     });
 
     setIsGameInProgress(true);
@@ -562,6 +579,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     
     if (typeof populateRoomsFn === 'function') {
       const selectedRooms = populateRoomsFn();
+      console.log(`🎮 [${debugId}] Populated rooms:`, selectedRooms);
       const roomNames = selectedRooms.map(room => {
         // Remove numbers from room names and add spaces before capitals
         return room.id
