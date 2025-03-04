@@ -4,17 +4,20 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef, useCallback, memo } from 'react';
 import { useUI } from '@/store/selectors';
 
-/* --- Types ---- */
+/* --- Constants ----- */
+const TRANSITION_DURATION = 50; // ms
+
+/* ----- Types ---- */
 interface RouteHandlerProps {
   children: React.ReactNode;
 }
 
-const RouteHandler: React.FC<RouteHandlerProps> = memo(({ children }) => {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const { setCurrentRoute } = useUI();
+const RouteHandler = memo(({ children }: RouteHandlerProps) => {
+  /* ---- State ----- */
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentChildren, setCurrentChildren] = useState(children);
+  
+  /* ---- Refs --- */
   const renderCountRef = useRef(0);
   const prevPathnameRef = useRef<string | null>(null);
   const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -22,29 +25,15 @@ const RouteHandler: React.FC<RouteHandlerProps> = memo(({ children }) => {
   const isTransitioningRef = useRef(false);
   const isMountedRef = useRef(false);
   
+  /* ---- Hooks ----- */
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { setCurrentRoute } = useUI();
+  
   // Check if we're in debug mode
   const isDebugMode = searchParams?.get('debug') === 'true';
 
-  // Track render count
-  useEffect(() => {
-    renderCountRef.current += 1;
-    isMountedRef.current = true;
-    if (isDebugMode) {
-      console.log(`[Debug] RouteHandler rendered #${renderCountRef.current} for path: ${pathname}`);
-    }
-    
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, [pathname, isDebugMode]);
-
-  // Update the current route in the UI store
-  useEffect(() => {
-    if (pathname) {
-      setCurrentRoute(pathname);
-    }
-  }, [pathname, setCurrentRoute]);
-
+  /* ----- Callbacks --- */
   // Memoized function to handle transitions
   const handleRouteTransition = useCallback(() => {
     // Skip if not mounted
@@ -61,24 +50,16 @@ const RouteHandler: React.FC<RouteHandlerProps> = memo(({ children }) => {
       transitionTimeoutRef.current = null;
     }
     
-    // Only log and transition if the pathname has actually changed
+    // Only transition if the pathname has actually changed
     if (prevPathnameRef.current !== pathname) {
-      if (isDebugMode) {
-        console.log(`[Navigation] Route transition detected to ${pathname} at ${new Date().toISOString()}`);
-      }
-      
       // Check if children have changed
       const childrenChanged = childrenRef.current !== children;
-      if (childrenChanged && isDebugMode) {
-        console.log(`[Debug] RouteHandler children changed on render #${renderCountRef.current}`);
+      if (childrenChanged) {
         childrenRef.current = children;
       }
       
       // Skip animation in debug mode for instant navigation
       if (isDebugMode) {
-        if (isDebugMode) {
-          console.log(`[Navigation] Debug mode detected - skipping animation`);
-        }
         setCurrentChildren(children);
       } else {
         // Start transition
@@ -91,18 +72,33 @@ const RouteHandler: React.FC<RouteHandlerProps> = memo(({ children }) => {
             setCurrentChildren(children);
             setIsTransitioning(false);
             isTransitioningRef.current = false;
-            if (isDebugMode) {
-              console.log(`[Navigation] Route transition completed at ${new Date().toISOString()}`);
-            }
           }
           transitionTimeoutRef.current = null;
-        }, 50); // Reduced from 100ms to 50ms for faster transitions
+        }, TRANSITION_DURATION);
       }
       
       // Update the previous pathname
       prevPathnameRef.current = pathname;
     }
   }, [children, isDebugMode, pathname]);
+
+  /* --- Animations & Effects --- */
+  // Track mount status
+  useEffect(() => {
+    renderCountRef.current += 1;
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [pathname]);
+
+  // Update the current route in the UI store
+  useEffect(() => {
+    if (pathname) {
+      setCurrentRoute(pathname);
+    }
+  }, [pathname, setCurrentRoute]);
 
   // Handle route transitions with animation
   useEffect(() => {
@@ -117,6 +113,7 @@ const RouteHandler: React.FC<RouteHandlerProps> = memo(({ children }) => {
     };
   }, [handleRouteTransition]);
 
+  /* ---- Render Methods ----- */
   // Apply transition classes based on state
   const transitionClass = isDebugMode 
     ? 'debug-mode' 

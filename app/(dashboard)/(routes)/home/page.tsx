@@ -69,10 +69,6 @@ const HomePage: React.FC = () => {
   const { setIsAutoPlay } = useMusicPlayer();
   const paymentStatus = searchParams?.get("payment");
 
-  console.log("[HOME_PAGE] Initial render - userInfo:", userInfo);
-  console.log("[HOME_PAGE] Initial render - isLoadingUserInfo:", isLoadingUserInfo);
-  console.log("[HOME_PAGE] Initial render - isSubscribed:", isSubscribed);
-
   /* ---------------------------------------- State ---------------------------------------- */
   // Combine related states into a single object to reduce re-renders
   const [pageState, setPageState] = useState({
@@ -214,7 +210,6 @@ const HomePage: React.FC = () => {
   }, []);
 
   const fetchActivities = useCallback(async () => {
-    console.log("[HOME_PAGE] Fetching activities...");
     try {
       const response = await fetch("/api/calendar-activity");
       if (!response.ok) {
@@ -222,12 +217,10 @@ const HomePage: React.FC = () => {
         throw new Error("Failed to fetch activities");
       }
       const activities = await response.json();
-      console.log("[HOME_PAGE] Fetched activities:", activities);
 
       const todaysActivities = activities.filter((activity: FetchedActivity) =>
         isToday(new Date(activity.scheduledDate))
       );
-      console.log("[HOME_PAGE] Today's activities:", todaysActivities);
 
       // get UWorld activities that need task generation
       const uworldActivities = todaysActivities.filter(
@@ -341,7 +334,7 @@ const HomePage: React.FC = () => {
   };
 
   const toggleChatBot = () => {
-    console.log("todo, set this up to widget");
+    // Implementation will be set up later
   };
 
   /* ---------------------------------------- Memoized Values ---------------------------------------- */
@@ -457,9 +450,7 @@ const HomePage: React.FC = () => {
 
   // Cleanup effect
   useEffect(() => {
-    console.log("[HOME_PAGE] Component mounted");
     return () => {
-      console.log("[HOME_PAGE] Component unmounting");
       // Cleanup any pending activities
       if (pageState.currentStudyActivityId) {
         endActivity(pageState.currentStudyActivityId);
@@ -472,12 +463,12 @@ const HomePage: React.FC = () => {
 
   // Monitor userInfo changes
   useEffect(() => {
-    console.log("[HOME_PAGE] userInfo changed:", userInfo);
+    // Monitor userInfo
   }, [userInfo]);
 
   // Monitor loading state changes
   useEffect(() => {
-    console.log("[HOME_PAGE] isLoading changed:", isLoadingUserInfo);
+    // Monitor loading state
   }, [isLoadingUserInfo]);
 
   // Add loading timeout effect
