@@ -9,6 +9,10 @@ export function screenY(worldX: number, worldY: number): number {
 }
 
 export const getAccentColor = () => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return '#001226'; // Default color for server-side rendering
+  }
+  
   const themeElement =
     document.querySelector('.theme-sunsetCity') ||
     document.querySelector('.theme-sakuraTrees') ||

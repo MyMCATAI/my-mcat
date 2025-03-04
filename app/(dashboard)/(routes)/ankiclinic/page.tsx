@@ -58,6 +58,10 @@ const LoadingClinic = () => (
   </div>
 );
 
+/* --- Constants ----- */
+const AMBIENT_SOUND = '/audio/flashcard-loop-catfootsteps.mp3';
+
+/* ----- Types ---- */
 interface DoctorsOfficePageProps {
   // Add any props if needed
 }
@@ -89,23 +93,26 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   
   // Track mount count and log navigation - combined into one effect
   useEffect(() => {
-    if (typeof window === 'undefined') return; // Skip on server-side
-    
     mountCountRef.current += 1;
     isMountedRef.current = true;
     
-    // Combine all mount-related logging
-    console.log(`[Navigation] AnkiClinic component mounted at ${new Date().toISOString()}`);
-    console.log(`[Debug] AnkiClinic mount #${mountCountRef.current} at path: ${pathname}`);
-    
-    // Check for React Strict Mode (which causes double renders)
-    if (mountCountRef.current === 2) {
-      console.log('[Debug] Detected possible React Strict Mode (double render)');
+    // Only run client-side code
+    if (typeof window !== 'undefined') {
+      // Combine all mount-related logging
+      console.log(`[Navigation] AnkiClinic component mounted at ${new Date().toISOString()}`);
+      console.log(`[Debug] AnkiClinic mount #${mountCountRef.current} at path: ${pathname}`);
+      
+      // Check for React Strict Mode (which causes double renders)
+      if (mountCountRef.current === 2) {
+        console.log('[Debug] Detected possible React Strict Mode (double render)');
+      }
     }
     
     return () => {
       isMountedRef.current = false;
-      console.log(`[Debug] AnkiClinic unmount #${mountCountRef.current} at path: ${pathname}`);
+      if (typeof window !== 'undefined') {
+        console.log(`[Debug] AnkiClinic unmount #${mountCountRef.current} at path: ${pathname}`);
+      }
       
       // Cleanup any in-progress operations
       if (abortControllerRef.current) {
@@ -172,9 +179,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   // Add a ref to track debounced dependency checks
   const debouncedDepsCheckRef = useRef<NodeJS.Timeout | null>(null);
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
-
-  /* --- Constants ----- */
-  const AMBIENT_SOUND = '/audio/flashcard-loop-catfootsteps.mp3';
 
   /* ----------------------------------------- Computation ----------------------------------------- */
 
