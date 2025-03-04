@@ -64,7 +64,7 @@ const OptionsStep = ({
       {/* Main Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-12">
         {/* FAP Toggle */}
-        <div className="flex items-center justify-center mb-8">
+        {/* <div className="flex items-center justify-center mb-8">
           <label className="flex items-center gap-3 cursor-pointer group">
             <div className="relative">
               <input
@@ -86,10 +86,10 @@ const OptionsStep = ({
             </div>
             <span className="text-white text-lg">{`I'm FAP/Retaker/Nontrad`}</span>
           </label>
-        </div>
+        </div> */}
 
         {/* Message about subsidized tuition */}
-        {isSpecialStatus && (
+        {/* {isSpecialStatus && (
           <div className="max-w-4xl mx-auto mb-8">
             <div className="p-4 rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 backdrop-blur-md animate-fadeIn">
               <p className="text-white/90 text-center leading-relaxed">
@@ -99,10 +99,30 @@ const OptionsStep = ({
               </p>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Pricing Cards */}
         <div className="space-y-8">
+
+          {/* Gold Course */}
+          <div className="relative">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+              <span className="inline-block bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold px-4 py-1 rounded-full">
+                Discounted Until March 8th
+              </span>
+            </div>
+            <SoftwareSection
+              isSpecialStatus={isSpecialStatus}
+              pricingPeriod={pricingPeriod}
+              setPricingPeriod={handlePricingPeriodChange}
+              handleUpgradeClick={handleUpgradeClick}
+              isLoading={isLoading}
+              isGold={isGold}
+              user={user}
+            />
+          </div>
+
+
           {/* Free Tier */}
           <div className="max-w-6xl mx-auto px-4">
             <div className="bg-black/20 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden hover:border-blue-400/20 transition-colors duration-300">
@@ -209,24 +229,6 @@ const OptionsStep = ({
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Gold Course */}
-          <div className="relative">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-              <span className="inline-block bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold px-4 py-1 rounded-full">
-                Discounted Until March 8th
-              </span>
-            </div>
-            <SoftwareSection
-              isSpecialStatus={isSpecialStatus}
-              pricingPeriod={pricingPeriod}
-              setPricingPeriod={handlePricingPeriodChange}
-              handleUpgradeClick={handleUpgradeClick}
-              isLoading={isLoading}
-              isGold={isGold}
-              user={user}
-            />
           </div>
 
           {/* Premium Class */}
