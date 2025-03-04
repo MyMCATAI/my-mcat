@@ -4,6 +4,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import FlashcardDeck, { Flashcard } from './FlashcardDeck';
@@ -127,8 +129,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     // Update local state for UI
     setLocalCorrectCount(prev => {
       const newCount = prev + 1;
-      // Update store state
-      storeSetCorrectCount(newCount);
+      // Don't update store state directly here - will do it in useEffect
       return newCount;
     });
     
@@ -145,9 +146,34 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     }
   };
 
+  // Update store state when localCorrectCount changes
+  useEffect(() => {
+    // Update store state
+    storeSetCorrectCount(localCorrectCount);
+  }, [localCorrectCount, storeSetCorrectCount]);
+
   const handleOpenChange = (open: boolean) => {
+    console.log(`[FlashcardsDialog] handleOpenChange called with open=${open}`);
     setShowChat(false);
+    
+    // If we're closing the dialog, ensure isLoading is false to allow audio transition
+    if (!open && isLoading) {
+      console.log(`[FlashcardsDialog] Setting isLoading to false to ensure audio transition`);
+      setIsLoading(false);
+    }
+    
+    // Make sure we're updating both the local component state and the global state
+    console.log(`[FlashcardsDialog] Calling onOpenChange(${open})`);
     onOpenChange(open);
+    
+    // If we're closing the dialog, also reset the flashcardRoomId in the parent component
+    if (!open) {
+      console.log(`[FlashcardsDialog] Dialog is closing`);
+      // We don't need to do anything else here - the parent component will handle
+      // the audio transition when isFlashcardsOpen changes
+    } else {
+      console.log(`[FlashcardsDialog] Dialog is opening for roomId=${roomId}`);
+    }
   };
 
   const handleClose = useCallback(() => {
@@ -258,20 +284,13 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
 
       // Extract explanation from questionAnswerNotes
       let explanation = '';
-      try {
-        const notes = currentQuestion.questionAnswerNotes;
-        if (Array.isArray(notes)) {
-          explanation = notes[0] || '';
-        } else if (typeof notes === 'string') {
-          try {
-            const parsedNotes = JSON.parse(notes);
-            explanation = Array.isArray(parsedNotes) ? parsedNotes[0] : notes;
-          } catch {
-            explanation = notes;
-          }
+      if (currentQuestion.questionAnswerNotes) {
+        // Handle both string and string[] types
+        if (Array.isArray(currentQuestion.questionAnswerNotes)) {
+          explanation = currentQuestion.questionAnswerNotes[0] || '';
+        } else {
+          explanation = currentQuestion.questionAnswerNotes;
         }
-      } catch (e) {
-        explanation = '';
       }
 
       setCurrentQuestionContext({
@@ -317,6 +336,9 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                 } flashcards
               </span>
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Flashcard practice for {roomId ? roomToSubjectMap[roomId] || 'selected topic' : 'selected topic'}
+            </DialogDescription>
           </DialogHeader>
           
           <div className="flex flex-grow min-h-0 relative flex-col">
@@ -446,7 +468,8 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                         chatbotContext={{
                           contentTitle: "Kalypso",
                           context: currentQuestionContext 
-                            ? `${currentQuestionContext.type === 'normal' 
+                            ? `${
+                                currentQuestionContext.type === 'normal' 
                                 ? `Multiple Choice Question:\n${currentQuestionContext.question}\n\nOptions:\n${currentQuestionContext.otherOptions.join('\n')}`
                                 : `Flashcard Question:\n${currentQuestionContext.question}`
                               }${isAnswerRevealed ? `\n\nCorrect Answer: ${currentQuestionContext.correctAnswer}${

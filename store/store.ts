@@ -620,9 +620,6 @@ export const useStore = create<Store>()(
       
       setFlashcardRoomId: (roomId) => {
         set({ flashcardRoomId: roomId });
-        if (roomId !== "") {
-          set({ isFlashcardsOpen: true });
-        }
       },
       
       setIsAfterTestDialogOpen: (isOpen) => {

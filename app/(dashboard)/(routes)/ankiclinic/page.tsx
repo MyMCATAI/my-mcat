@@ -105,6 +105,9 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   // Add a ref to track if component is mounted
   const isMountedRef = useRef(false);
   
+  // Add this ref near the other refs at the top of the component
+  const isClosingDialogRef = useRef(false);
+  
   // Track mount count and log navigation - combined into one effect
   useEffect(() => {
     mountCountRef.current += 1;
@@ -193,6 +196,10 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   // Add a ref to track debounced dependency checks
   const debouncedDepsCheckRef = useRef<NodeJS.Timeout | null>(null);
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
+  // Add a ref to track the last time isFlashcardsOpen was changed
+  const lastFlashcardToggleTimeRef = useRef(0);
+  // Add a ref to track the previous isFlashcardsOpen value
+  const prevIsFlashcardsOpenRef = useRef(isFlashcardsOpen);
 
   /* ----------------------------------------- Computation ----------------------------------------- */
 
@@ -484,63 +491,114 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Add a debug effect to track isLoading changes
+  useEffect(() => {
+    console.log(`[DoctorsOfficePage] isLoading changed to ${isLoading}`);
+  }, [isLoading]);
+
   // Modify the existing useEffect for ambient sound and flashcard door sounds
   useEffect(() => {
-    if (!isMountedRef.current) return;
+    // Skip if the value hasn't actually changed
+    if (prevIsFlashcardsOpenRef.current === isFlashcardsOpen) {
+      console.log(`[DoctorsOfficePage] isFlashcardsOpen didn't actually change (still ${isFlashcardsOpen}), skipping effect`);
+      return;
+    }
     
-    // Skip audio transitions during initial load
-    if (isLoading) return;
+    // Update the ref
+    prevIsFlashcardsOpenRef.current = isFlashcardsOpen;
+    
+    if (isFlashcardsOpen) {
+      console.log(`================= FLASHCARD DIALOG STATE CHANGED TO OPEN (isLoading=${isLoading}) =================`);
+    } else {
+      console.log(`================= FLASHCARD DIALOG STATE CHANGED TO CLOSED (isLoading=${isLoading}) =================`);
+    }
+    
+    console.log(`[DoctorsOfficePage] isFlashcardsOpen changed to ${isFlashcardsOpen}`);
+    
+    if (!isMountedRef.current) {
+      console.log(`[DoctorsOfficePage] Component not mounted yet, skipping audio transition`);
+      return;
+    }
     
     let isEffectActive = true; // Local flag to track if effect is still active
-
-    // Prevent multiple audio transitions
-    if (audioTransitionInProgressRef.current) return;
-    audioTransitionInProgressRef.current = true;
-
-    const handleAudioTransition = async () => {
-      try {
-        if (!isEffectActive) return;
-
-        if (isFlashcardsOpen) {
-          await audio.stopAllLoops();
+    
+    // Add a small delay to allow any loading state changes to settle
+    const timeoutId = setTimeout(() => {
+      // Skip audio transitions during initial load
+      if (isLoading) {
+        console.log(`[DoctorsOfficePage] Still loading after delay, skipping audio transition`);
+        return;
+      }
+      
+      // Prevent multiple audio transitions
+      if (audioTransitionInProgressRef.current) {
+        console.log(`[DoctorsOfficePage] Audio transition already in progress, skipping`);
+        return;
+      }
+      
+      console.log(`[DoctorsOfficePage] Setting audioTransitionInProgressRef to true`);
+      audioTransitionInProgressRef.current = true;
+  
+      const handleAudioTransition = async () => {
+        console.log(`[DoctorsOfficePage] handleAudioTransition called, isFlashcardsOpen=${isFlashcardsOpen}`);
+        try {
           if (!isEffectActive) return;
-          audio.playSound('flashcard-door-open');
-        } else {
-          if (prevFlashcardsOpenRef.current) {
-            audio.playSound('flashcard-door-closed');
-            await new Promise(resolve => setTimeout(resolve, 500));
+
+          if (isFlashcardsOpen) {
+            console.log("================= PLAYING DOOR OPEN SOUND =================");
+            console.log(`[DoctorsOfficePage] Playing flashcard-door-open sound`);
+            await audio.stopAllLoops();
             if (!isEffectActive) return;
-            await audio.loopSound('flashcard-loop-catfootsteps');
+            audio.playSound('flashcard-door-open');
           } else {
-            await audio.loopSound('flashcard-loop-catfootsteps');
+            console.log("================= PLAYING DOOR CLOSE SOUND =================");
+            console.log(`[DoctorsOfficePage] Playing flashcard-door-closed sound`);
+            if (prevFlashcardsOpenRef.current) {
+              audio.playSound('flashcard-door-closed');
+              await new Promise(resolve => setTimeout(resolve, 500));
+              if (!isEffectActive) return;
+              await audio.loopSound('flashcard-loop-catfootsteps');
+            } else {
+              await audio.loopSound('flashcard-loop-catfootsteps');
+            }
+          }
+          if (!isEffectActive) return;
+          prevFlashcardsOpenRef.current = isFlashcardsOpen;
+        } catch (error) {
+          if (isEffectActive) {
+            console.error('[DoctorsOfficePage] Audio transition error:', error);
+          }
+        } finally {
+          if (isEffectActive) {
+            console.log("================= AUDIO TRANSITION COMPLETED =================");
+            audioTransitionInProgressRef.current = false;
           }
         }
-        if (!isEffectActive) return;
-        prevFlashcardsOpenRef.current = isFlashcardsOpen;
-      } catch (error) {
-        if (isEffectActive) {
-          console.error(`🎵 [${debugId}] Audio transition error:`, error);
-        }
-      } finally {
-        if (isEffectActive) {
-          audioTransitionInProgressRef.current = false;
-        }
-      }
-    };
+        isEffectActive = false;
+      };
 
-    handleAudioTransition();
+      handleAudioTransition();
+    }, 50); // Small delay to allow loading state to settle
 
     return () => {
+      clearTimeout(timeoutId);
       isEffectActive = false;
     };
-  }, [isFlashcardsOpen, audio, debugId, isLoading]); // Added isLoading dependency
+  }, [isFlashcardsOpen, audio, isLoading]); // Added isLoading dependency
 
   // Opens flashcard dialog when a room is selected - optimize with additional check
   useEffect(() => {
     // Skip during initial load or if already transitioning
     if (isLoading || stateUpdateInProgressRef.current) return;
     
+    // Skip if we're in the process of closing the dialog
+    if (isClosingDialogRef.current) {
+      console.log(`[DoctorsOfficePage] Skipping auto-open effect while dialog is closing`);
+      return;
+    }
+    
     if (flashcardRoomId !== "" && !isFlashcardsOpen) {
+      console.log(`[DoctorsOfficePage] Auto-opening flashcard dialog for roomId=${flashcardRoomId}`);
       stateUpdateInProgressRef.current = true;
       setIsFlashcardsOpen(true);
       // Reset the flag after a short delay
@@ -548,7 +606,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         stateUpdateInProgressRef.current = false;
       }, 50);
     }
-  }, [flashcardRoomId, isFlashcardsOpen, setIsFlashcardsOpen, isLoading]);
+  }, [flashcardRoomId, isFlashcardsOpen, isLoading, setIsFlashcardsOpen]);
 
   // Shows welcome/referral modals based on user state - run only when userInfo changes
   useEffect(() => {
@@ -611,6 +669,16 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       isInitialized: isInitializedRef.current
     });
   }, [isLoading, reportData, userInfo, userRooms]);
+
+  // Add a debug effect to track flashcardRoomId changes
+  useEffect(() => {
+    console.log(`[DoctorsOfficePage] flashcardRoomId changed to "${flashcardRoomId}"`);
+  }, [flashcardRoomId]);
+  
+  // Add a debug effect to track activeRooms changes
+  useEffect(() => {
+    console.log(`[DoctorsOfficePage] activeRooms changed to:`, Array.from(activeRooms));
+  }, [activeRooms]);
 
   /* ---------------------------------------- Event Handlers -------------------------------------- */
 
@@ -975,16 +1043,67 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     }
   }, [activeRooms, setActiveRooms]);
 
-  const handleSetIsFlashcardsOpen = useCallback((isOpen: boolean | ((prevState: boolean) => boolean)) => {
-    if (typeof isOpen === 'function') {
-      // If it's a function, call it with the current value to get the new value
-      const newIsOpen = isOpen(isFlashcardsOpen);
-      setIsFlashcardsOpen(newIsOpen);
-    } else {
-      // If it's a direct value, use it directly
-      setIsFlashcardsOpen(isOpen);
+  const handleSetIsFlashcardsOpen = useCallback((open: boolean) => {
+    const now = Date.now();
+    
+    // Prevent rapid toggling
+    if (now - lastFlashcardToggleTimeRef.current < 500) {
+      console.log(`[DoctorsOfficePage] Ignoring rapid toggle of isFlashcardsOpen, last change was ${now - lastFlashcardToggleTimeRef.current}ms ago`);
+      return;
     }
-  }, [isFlashcardsOpen, setIsFlashcardsOpen]);
+    
+    // If we're in the process of closing and something tries to open it, ignore
+    if (isClosingDialogRef.current && open) {
+      console.log(`[DoctorsOfficePage] Ignoring attempt to open dialog while closing is in progress`);
+      return;
+    }
+    
+    // Update the last toggle time
+    lastFlashcardToggleTimeRef.current = now;
+    
+    if (open) {
+      console.log("================= OPENING FLASHCARD DIALOG =================");
+    } else {
+      console.log("================= CLOSING FLASHCARD DIALOG =================");
+      // Set the closing flag
+      isClosingDialogRef.current = true;
+      
+      // Ensure isLoading is false when closing the dialog to allow audio transition
+      if (isLoading) {
+        console.log("================= FIXING LOADING STATE FOR AUDIO =================");
+        setIsLoading(false);
+      }
+    }
+    
+    console.log(`[DoctorsOfficePage] handleSetIsFlashcardsOpen called with open=${open}, current flashcardRoomId=${flashcardRoomId}, isLoading=${isLoading}`);
+    setIsFlashcardsOpen(open);
+    
+    // If we're closing the dialog, update active rooms after a delay to ensure smooth transition
+    if (!open) {
+      console.log(`[DoctorsOfficePage] Dialog is closing, scheduling activeRooms update`);
+      setTimeout(() => {
+        // Only update active rooms if flashcardRoomId is not 'WaitingRoom0' and not empty
+        if (flashcardRoomId && flashcardRoomId !== 'WaitingRoom0') {
+          console.log(`[DoctorsOfficePage] Updating activeRooms to remove ${flashcardRoomId}`);
+          const newActiveRooms = new Set(activeRooms);
+          newActiveRooms.delete(flashcardRoomId);
+          setActiveRooms(newActiveRooms);
+        }
+        
+        // Reset flashcardRoomId after a delay to ensure smooth transition
+        setTimeout(() => {
+          console.log(`[DoctorsOfficePage] Resetting flashcardRoomId from ${flashcardRoomId} to empty`);
+          setFlashcardRoomId('');
+          
+          // Reset the closing flag after all operations are complete
+          setTimeout(() => {
+            isClosingDialogRef.current = false;
+            console.log(`[DoctorsOfficePage] Dialog closing process complete, reset closing flag`);
+          }, 100);
+        }, 300);
+      }, 300);
+    }
+  }, [flashcardRoomId, activeRooms, setActiveRooms, setFlashcardRoomId, setIsFlashcardsOpen, isLoading, setIsLoading]);
 
   const handleSetCompleteAllRoom = useCallback((complete: boolean | ((prevState: boolean) => boolean)) => {
     if (typeof complete === 'function') {
@@ -1029,7 +1148,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           
           <div className="w-3/4 font-krungthep relative z-20 rounded-r-lg">
             <OfficeContainer
-              innerRef={officeContainerRef}
+              ref={officeContainerRef}
               onNewGame={handleSetPopulateRooms}
               visibleImages={visibleImages}
               userRooms={userRooms}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo, memo } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo, memo, forwardRef } from 'react';
 import { Stage, Container, Graphics, Sprite } from '@pixi/react';
 import { Texture, Graphics as PIXIGraphics, utils as PIXIUtils, BaseTexture, Rectangle } from 'pixi.js';
 import type { EventMode } from '@pixi/events';
@@ -164,7 +164,6 @@ interface Category {
 }
 
 interface OfficeContainerProps {
-  innerRef?: React.RefObject<HTMLDivElement>;
   onNewGame: (fn: () => GridImage[]) => void;
   visibleImages: Set<string>;
   userRooms: string[];
@@ -198,8 +197,8 @@ const pixiConfig = {
   resolution: window.devicePixelRatio || 1,
 };
 
-const OfficeContainer: React.FC<OfficeContainerProps> = memo(({ 
-  innerRef,
+// Convert to forwardRef
+const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({ 
   onNewGame,
   visibleImages,
   userRooms,
@@ -210,7 +209,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = memo(({
   setActiveRooms,
   isFlashcardsOpen,
   setIsFlashcardsOpen
-}) => {
+}, ref) => {
   // All useState hooks first
   const [currentLevel, setCurrentLevel] = useState(1);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -452,7 +451,7 @@ const OfficeContainer: React.FC<OfficeContainerProps> = memo(({
   }), [currentLevel]);
 
   return (
-    <div ref={innerRef} className="relative w-full h-full">
+    <div ref={ref} className="relative w-full h-full">
       {/* Pixi.js stage container - Add pointer-events-none by default */}
       <div className="absolute inset-0 z-20 flex justify-center items-center pointer-events-none">
         <Stage
