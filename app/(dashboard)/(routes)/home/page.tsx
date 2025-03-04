@@ -68,6 +68,9 @@ const HomePage: React.FC = () => {
   const { playMusic, stopMusic, volume, setVolume, isPlaying } = useAudio();
   const { setIsAutoPlay } = useMusicPlayer();
   const paymentStatus = searchParams?.get("payment");
+  
+  // Debug mode check
+  const isDebugMode = searchParams?.get('debug') === 'true';
 
   /* ---------------------------------------- State ---------------------------------------- */
   // Combine related states into a single object to reduce re-renders
@@ -101,14 +104,15 @@ const HomePage: React.FC = () => {
   const chatbotRef = useRef<{ sendMessage: (message: string, context?: string) => void }>({
     sendMessage: () => {},
   });
+  const initializationRef = useRef(false);
 
   // Memoize state updates to prevent unnecessary re-renders
   const updatePageState = useCallback((updates: Partial<typeof pageState>) => {
     setPageState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  const updateLoadingState = useCallback((updates: Partial<typeof loadingState>) => {
-    setLoadingState(prev => ({ ...prev, ...updates }));
+  const updateLoadingState = useCallback((newState: Partial<typeof loadingState>) => {
+    setLoadingState(prev => ({ ...prev, ...newState }));
   }, []);
 
   /* ---- Memoized Values ---- */
@@ -355,6 +359,28 @@ const HomePage: React.FC = () => {
   );
 
   /* ---------------------------------------- Effects ---------------------------------------- */
+  // Track component lifecycle - simplified
+  useEffect(() => {
+    // Mark initialization to prevent double initialization
+    if (initializationRef.current) return;
+    initializationRef.current = true;
+    
+    // Add a safety timeout to ensure loading completes
+    const safetyTimeout = setTimeout(() => {
+      if (loadingState.isLoading) {
+        // Force loading to complete after timeout
+        updateLoadingState({ isLoading: false });
+      }
+    }, 3000); // 3 second safety timeout
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      clearTimeout(safetyTimeout);
+    };
+  }, [loadingState.isLoading, updateLoadingState]);
+
   // Combine initialization effects
   useEffect(() => {
     if (shouldInitialize) {

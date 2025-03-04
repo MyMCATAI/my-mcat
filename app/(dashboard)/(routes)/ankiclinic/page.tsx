@@ -107,13 +107,17 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     
     // Only run client-side code
     if (typeof window !== 'undefined') {
+      console.log('[DEBUG] AnkiClinic mounted, pathname:', pathname);
+      console.log('[DEBUG] Mount count:', mountCountRef.current);
+      
       // Check for React Strict Mode (which causes double renders)
       if (mountCountRef.current === 2) {
-        // React Strict Mode detected (double render)
+        console.log('[DEBUG] Detected possible React Strict Mode (double render)');
       }
     }
     
     return () => {
+      console.log('[DEBUG] AnkiClinic unmounting');
       isMountedRef.current = false;
       
       // Cleanup any in-progress operations
@@ -293,20 +297,30 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     
     // Check if we need to preserve debug mode
     const isDebugMode = searchParams?.get('debug') === 'true';
+    console.log('[DEBUG] Debug mode check:', { 
+      isDebugMode, 
+      searchParamsDebug: searchParams?.get('debug'),
+      hasDebugClass: document.body.classList.contains('debug-mode')
+    });
     
     if (isDebugMode) {
       // Set a flag to indicate we're in debug mode
       document.body.classList.add('debug-mode');
+      console.log('[DEBUG] Added debug-mode class to body');
+    } else if (searchParams?.get('debug') === 'false') {
+      // Explicitly set to false - remove debug mode
+      document.body.classList.remove('debug-mode');
+      console.log('[DEBUG] Removed debug-mode class from body');
     }
     
     return () => {
-      if (isDebugMode) {
+      // Only clean up if component unmounts, not on every render
+      if (document.body.classList.contains('debug-mode') && !isDebugMode) {
         document.body.classList.remove('debug-mode');
+        console.log('[DEBUG] Cleanup: Removed debug-mode class from body');
       }
     };
   }, [searchParams]);
-
-
 
   // Component mount: Initial data fetch and daily calculations setup
   useEffect(() => {
@@ -315,30 +329,41 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 1000; // 1 second
     
+    console.log('[DEBUG] Starting data initialization');
+    
     const initializeData = async () => {
       // Skip if already initialized and data is present
       if (isInitializedRef.current && reportData) {
-        // Already initialized with data, skipping
+        console.log('[DEBUG] Already initialized with data, skipping');
         return;
       }
       
       isInitializedRef.current = true;
+      console.log('[DEBUG] Setting initialized flag to true');
       
       const attemptFetch = async () => {
         try {
+          console.log('[DEBUG] Attempting to fetch data');
           await fetchData();
+          console.log('[DEBUG] Data fetch completed successfully');
           
           // Only proceed with calculations if still mounted
           if (mounted && !hasCalculatedRef.current && userInfo) {
+            console.log('[DEBUG] Starting daily calculations');
             performDailyCalculations();
             hasCalculatedRef.current = true;
+            console.log('[DEBUG] Daily calculations completed');
           }
         } catch (error) {
+          console.error('[DEBUG] Error during initialization:', error);
+          
           // Retry logic
           if (mounted && retryCount < MAX_RETRIES) {
             retryCount++;
+            console.log(`[DEBUG] Retrying fetch attempt ${retryCount} of ${MAX_RETRIES}`);
             setTimeout(attemptFetch, RETRY_DELAY);
           } else if (mounted) {
+            console.error('[DEBUG] Max retries reached, showing error toast');
             toast.error("Failed to initialize clinic data. Please refresh the page.");
           }
         }
@@ -348,26 +373,37 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     };
     
     // Small delay to let any Strict Mode double-mount settle
+    console.log('[DEBUG] Setting up initialization timer');
     const initTimer = setTimeout(() => {
       if (mounted) {
+        console.log('[DEBUG] Initialization timer fired, starting data init');
         initializeData();
       }
     }, 100);
     
     return () => {
+      console.log('[DEBUG] Cleanup for data initialization effect');
       mounted = false;
       clearTimeout(initTimer);
       // Only abort requests if we're actually unmounting, not just in Strict Mode
       if (mountCountRef.current > 2 && abortControllerRef.current) {
+        console.log('[DEBUG] Aborting pending requests');
         abortControllerRef.current.abort();
       }
     };
   }, [userInfo, reportData]); // Add reportData as dependency to prevent unnecessary fetches
 
-  // Add a debug effect to track isLoading changes
+  // Add a debug effect to track key state changes
   useEffect(() => {
-    // isLoading changed
-  }, [isLoading]);
+    console.log('[DEBUG] Key state update:', {
+      isLoading,
+      hasReportData: !!reportData,
+      hasUserInfo: !!userInfo,
+      userRoomsLength: userRooms?.length || 0,
+      isInitialized: isInitializedRef.current,
+      pathname
+    });
+  }, [isLoading, reportData, userInfo, userRooms, pathname]);
 
   // Initialize ambient sound on component mount
   useEffect(() => {

@@ -1,5 +1,58 @@
 # Global State Management Overview
 
+## Zustand Best Practices
+
+### Using Zustand Stores
+
+```typescript
+// Import selectors from the selectors.ts file
+import { useUI, useUser, useGame } from '@/store/selectors';
+
+// Component example
+const MyComponent = () => {
+  // Use the selector to access only what you need
+  const { theme, setTheme } = useUI();
+  const { userInfo, isSubscribed } = useUser();
+  
+  // Now you can use the state and actions
+  return (
+    <div>
+      <p>Current theme: {theme}</p>
+      <button onClick={() => setTheme('cyberSpace')}>
+        Switch Theme
+      </button>
+    </div>
+  );
+};
+```
+
+### Best Practices
+
+1. **Use Selectors**
+   - Always import from `selectors.ts`, not directly from store files
+   - Use the most specific selector for your needs to minimize re-renders
+   - Example: `useTheme()` instead of `useUI()` if you only need theme data
+
+2. **State Updates**
+   - Use the provided actions to update state
+   - Never modify state directly
+   - Batch related updates when possible
+
+3. **Performance Optimization**
+   - Subscribe only to what you need
+   - Use memoization for expensive computations
+   - Consider using `shallow` equality for complex objects
+
+4. **TypeScript Integration**
+   - Leverage TypeScript for type safety
+   - Use proper type inference with Zustand
+   - Define interfaces for all state slices
+
+5. **Debugging**
+   - Use the debug panel with `?debug=true` URL parameter
+   - Check state updates in React DevTools
+   - Add meaningful action names for easier debugging
+
 ## Current Zustand Stores
 
 ### UI Store (`store.ts`)
@@ -74,6 +127,30 @@
 }
 ```
 
+### Game Store (`store.ts`)
+```typescript
+{
+  // Game state
+  gameState: {
+    currentRoom: string;
+    visitedRooms: string[];
+    inventory: string[];
+    gameProgress: number;
+  };
+  
+  // Debug state
+  debugMode: boolean;
+  
+  // Actions
+  setCurrentRoom: (room: string) => void;
+  addVisitedRoom: (room: string) => void;
+  addToInventory: (item: string) => void;
+  removeFromInventory: (item: string) => void;
+  setGameProgress: (progress: number) => void;
+  setDebugMode: (enabled: boolean) => void;
+}
+```
+
 ### Selectors (`selectors.ts`)
 ```typescript
 // UI Selectors
@@ -94,6 +171,13 @@ useUser() => {
   setIsSubscribed, refreshUserInfo
 }
 
+// Game Selectors
+useGame() => {
+  // All game-related state and actions
+  gameState, debugMode, setCurrentRoom, addVisitedRoom, 
+  addToInventory, removeFromInventory, setGameProgress, setDebugMode
+}
+
 // Individual Profile Selectors
 useProfileComplete() => isProfileComplete
 useCompletedSteps() => completedSteps
@@ -111,6 +195,8 @@ useOnboardingStatus() => { hasCompletedOnboarding, lastVisitedRoute, onboardingR
 - ✅ UserInfo: Migrated from `UserInfoContext` to Zustand User Store
 - ✅ UserProfile: Migrated from `UserProfileContext` to Zustand User Store
 - ✅ Consolidated selectors: Combined user-related selectors into a single `useUser` selector
+- ✅ Debug Mode: Implemented in Game Store with URL parameter control
+- ✅ Route Transitions: Enhanced RouteHandler with smooth transitions and debug mode support
 
 ## Current Context API State (To Be Migrated)
 
@@ -138,12 +224,19 @@ useOnboardingStatus() => { hasCompletedOnboarding, lastVisitedRoute, onboardingR
   - `isAutoPlay: boolean`
   - `setIsAutoPlay: (autoPlay: boolean) => void`
 
+### [AnkiClinicContext](../contexts/AnkiClinicContext.tsx)
+- Game State:
+  - `gameState: GameState`
+  - `dispatch: (action: GameAction) => void`
+  - `resetGame: () => void`
+  - `loadGame: (savedState: GameState) => void`
+
 ## Migration Plan
 
 ### Priority for Migration to Zustand
-1. Game State (AnkiClinic) - High Priority
-   - Currently using local state + context
-   - Need to recreate `useAnkiClinicStore`
+1. Game State (AnkiClinic) - In Progress
+   - Partially migrated to Game Store
+   - Need to complete migration of game logic and state
    - Will handle game progress, quiz state, and room management
 
 2. Media Management - Low Priority
@@ -203,4 +296,6 @@ useOnboardingStatus() => { hasCompletedOnboarding, lastVisitedRoute, onboardingR
 - TypeScript types have been moved to a shared `types/user.ts` file to avoid circular dependencies
 - UserProfileContext has been migrated to Zustand with all profile-related state and actions
 - A compatibility layer has been added to UserProfileContext.tsx to maintain backward compatibility
-- Next steps: Migrate Game State (AnkiClinic) and implement Media Management store 
+- Debug mode has been implemented with URL parameter control
+- RouteHandler has been enhanced with smooth transitions and debug mode support
+- Next steps: Complete Game State (AnkiClinic) migration and implement Media Management store 

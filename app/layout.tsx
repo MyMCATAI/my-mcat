@@ -6,10 +6,10 @@ import MobileRedirect from '@/components/MobileRedirect'
 import { FullscreenPrompt } from '@/components/FullscreenPrompt'
 import { AudioProvider } from '@/contexts/AudioContext'
 import DebugPanel from "@/components/ui/DebugPanel"
-import RouteHandler from '@/components/RouteHandler'
 import StoreInitializer from '@/components/StoreInitializer'
 import LayoutWindowSizeTracker from './layoutWindowSizeTracker'
 import { metadata } from './metadata'
+import RouteTracker from '@/components/RouteTracker'
 
 import './globals.css'
 
@@ -36,10 +36,9 @@ export default function RootLayout({
               <ThemeInitializer />
               <FullscreenPrompt />
               <StoreInitializer />
+              <RouteTracker />
               <div className="relative z-50">
-                <RouteHandler>
-                  {children}
-                </RouteHandler>
+                {children}
               </div>
               <Analytics />
               <DebugPanel />
