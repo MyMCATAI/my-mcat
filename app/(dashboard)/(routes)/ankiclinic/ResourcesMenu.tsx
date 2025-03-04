@@ -75,19 +75,7 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
   const { profile } = useUser();
   const { streakDays } = useGame();
 
-  useEffect(() => {
-    console.log('[ResourcesMenu] Props update:', {
-      hasReportData: !!reportData,
-      userRoomsLength: userRooms?.length,
-      totalCoins,
-      totalPatients,
-      patientsPerDay,
-      streakDays
-    });
-  }, [reportData, userRooms, totalCoins, totalPatients, patientsPerDay, streakDays]);
-
   if (!reportData) {
-    console.log('[ResourcesMenu] Rendering loading state - reportData is null');
     return (
       <div className="h-full flex flex-col bg-[--theme-leaguecard-color] text-[--theme-text-color] items-center justify-center rounded-lg p-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[--theme-hover-color]"></div>
@@ -95,12 +83,6 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
       </div>
     );
   }
-
-  console.log('[ResourcesMenu] Rendering with data:', {
-    playerLevel: calculatePlayerLevel(userRooms),
-    userRoomsCount: userRooms?.length,
-    hasProfile: !!profile
-  });
 
   const playerLevel = calculatePlayerLevel(userRooms);
   const levelNumber = getLevelNumber(playerLevel);
