@@ -75,6 +75,13 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
+  // Add missing refs
+  const mountCountRef = useRef(0);
+  const isFetchingRef = useRef(false);
+  const isInitializedRef = useRef(false);
+  const stateUpdateInProgressRef = useRef(false);
+  const isMountedRef = useRef(false);
+  
   // Keep only essential refs, remove debugging refs
   const officeContainerRef = useRef<HTMLDivElement>(null);
   const flashcardsDialogRef = useRef<{ 
@@ -222,21 +229,62 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     }
   }, [userInfo, isLoading]);
 
-  // Simplified effect for debug mode preservation
+  // Track mount count and log navigation - combined into one effect
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    mountCountRef.current += 1;
+    isMountedRef.current = true;
     
-    const isDebugMode = searchParams?.get('debug') === 'true';
-    
-    if (isDebugMode) {
-      document.body.classList.add('debug-mode');
-    } else if (searchParams?.get('debug') === 'false') {
-      document.body.classList.remove('debug-mode');
+    // Only run client-side code
+    if (typeof window !== 'undefined') {
+      console.log('[DEBUG] AnkiClinic mounted, pathname:', pathname);
+      console.log('[DEBUG] Mount count:', mountCountRef.current);
+      
+      // Check for React Strict Mode (which causes double renders)
+      if (mountCountRef.current === 2) {
+        console.log('[DEBUG] Detected possible React Strict Mode (double render)');
+      }
     }
     
     return () => {
-      if (document.body.classList.contains('debug-mode') && !isDebugMode) {
+      if (typeof window !== 'undefined') {
+        console.log('[DEBUG] AnkiClinic unmounting');
+      }
+      isMountedRef.current = false;
+      
+      // Cleanup any in-progress operations
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [pathname]);
+
+  // Add a new effect to preserve debug mode - run only once
+  useEffect(() => {
+    if (typeof window === 'undefined') return; // Skip on server-side
+    
+    // Check if we need to preserve debug mode
+    const isDebugMode = searchParams?.get('debug') === 'true';
+    console.log('[DEBUG] Debug mode check:', { 
+      isDebugMode, 
+      searchParamsDebug: searchParams?.get('debug'),
+      hasDebugClass: document.body.classList.contains('debug-mode')
+    });
+    
+    if (isDebugMode) {
+      // Set a flag to indicate we're in debug mode
+      document.body.classList.add('debug-mode');
+      console.log('[DEBUG] Added debug-mode class to body');
+    } else if (searchParams?.get('debug') === 'false') {
+      // Explicitly set to false - remove debug mode
+      document.body.classList.remove('debug-mode');
+      console.log('[DEBUG] Removed debug-mode class from body');
+    }
+    
+    return () => {
+      // Only clean up if component unmounts, not on every render
+      if (typeof window !== 'undefined' && document.body.classList.contains('debug-mode') && !isDebugMode) {
         document.body.classList.remove('debug-mode');
+        console.log('[DEBUG] Cleanup: Removed debug-mode class from body');
       }
     };
   }, [searchParams]);
@@ -251,12 +299,25 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   }, [flashcardRoomId, isFlashcardsOpen, isLoading, setIsFlashcardsOpen]);
 
   const fetchData = async () => {
-    if (reportData && !isLoading) {
+    // If already fetching, don't start another fetch
+    if (isFetchingRef.current) {
+      // Skipping redundant data fetch - fetch already in progress
       return;
     }
     
-    setIsLoading(true);
+    // Skip if we already have data and are not in loading state
+    if (reportData && !isLoading) {
+      // Data already loaded and not in loading state, skipping fetch
+      return;
+    }
     
+    // Set fetching flag and loading state
+    isFetchingRef.current = true;
+    if (!isLoading) {
+      setIsLoading(true);
+    }
+    
+    // Create a new abort controller
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -270,55 +331,81 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
-          },
-          priority: 'high'
+          }
         }),
         fetch("/api/clinic", { 
           signal,
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
-          },
-          priority: 'high'
+          }
         }),
       ]);
 
-      if (signal.aborted) return;
+      if (!isMountedRef.current || signal.aborted) return;
 
-      const [reportData, clinicData] = await Promise.all([
-        reportResponse.json(),
-        clinicResponse.json()
-      ]);
-
-      if (signal.aborted) return;
+      const reportDataResult = await reportResponse.json();
+      const clinicData = await clinicResponse.json();
       
-      setReportData(reportData);
+      if (!isMountedRef.current || signal.aborted) return;
       
-      if (JSON.stringify(userRooms) !== JSON.stringify(clinicData.rooms)) {
-        setUserRooms(clinicData.rooms || []);
+      // Batch all state updates
+      if (typeof window !== 'undefined' && ReactDOM.unstable_batchedUpdates) {
+        ReactDOM.unstable_batchedUpdates(() => {
+          // Only update if values have changed
+          if (JSON.stringify(reportData) !== JSON.stringify(reportDataResult)) {
+            setReportData(reportDataResult);
+          }
+          
+          if (clinicData.rooms && Array.isArray(clinicData.rooms) && 
+              JSON.stringify(userRooms) !== JSON.stringify(clinicData.rooms)) {
+            setUserRooms(clinicData.rooms);
+          }
+          
+          if (streakDays !== (reportDataResult.streak || 0)) {
+            setStreakDays(reportDataResult.streak || 0);
+          }
+          
+          if (totalPatients !== (clinicData.totalPatientsTreated || 0)) {
+            setTotalPatients(clinicData.totalPatientsTreated || 0);
+          }
+          
+          setIsLoading(false);
+        });
+      } else {
+        // Fallback for server-side or if unstable_batchedUpdates is not available
+        if (JSON.stringify(reportData) !== JSON.stringify(reportDataResult)) {
+          setReportData(reportDataResult);
+        }
+        
+        if (clinicData.rooms && Array.isArray(clinicData.rooms) && 
+            JSON.stringify(userRooms) !== JSON.stringify(clinicData.rooms)) {
+          setUserRooms(clinicData.rooms);
+        }
+        
+        if (streakDays !== (reportDataResult.streak || 0)) {
+          setStreakDays(reportDataResult.streak || 0);
+        }
+        
+        if (totalPatients !== (clinicData.totalPatientsTreated || 0)) {
+          setTotalPatients(clinicData.totalPatientsTreated || 0);
+        }
+        
+        setIsLoading(false);
       }
-      
-      if (userLevel !== clinicData.level) {
-        updateUserLevel();
-      }
-      
-      if (streakDays !== clinicData.streakDays) {
-        setStreakDays(clinicData.streakDays || 0);
-      }
-      
-      if (totalPatients !== (clinicData.totalPatientsTreated || 0)) {
-        setTotalPatients(clinicData.totalPatientsTreated || 0);
-      }
-      
-      setIsLoading(false);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         // Request aborted
       } else {
-        toast.error("Failed to load clinic data. Please try refreshing the page.");
+        if (isMountedRef.current) {
+          toast.error("Failed to load clinic data. Please try refreshing the page.");
+        }
       }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        isFetchingRef.current = false;
+        setIsLoading(false);
+      }
     }
   };
 

@@ -125,20 +125,16 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
       timestamp: new Date().toISOString(),
     };
     
-    setWrongCards(prev => [newWrongCard, ...prev]);
+    setWrongCards((prev: WrongCard[]) => [newWrongCard, ...prev]);
     // Update the store's wrong count
     storeSetWrongCount(wrongCards.length + 1);
     setStreak(0);
   };
 
   const handleCorrectAnswer = () => {
-    // Update local state for UI
-    setLocalCorrectCount(prev => {
-      const newCount = prev + 1;
-      // Don't update store state directly here - will do it in useEffect
-      return newCount;
-    });
-    
+    setLocalCorrectCount((prev: number) => prev + 1);
+    // Update the store's correct count
+    storeSetCorrectCount(localCorrectCount + 1);
     setShowPlusOne(true);
     
     const newStreak = streak + 1;
@@ -151,12 +147,6 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
       }, 2000);
     }
   };
-
-  // Update store state when localCorrectCount changes
-  useEffect(() => {
-    // Update store state
-    storeSetCorrectCount(localCorrectCount);
-  }, [localCorrectCount, storeSetCorrectCount]);
 
   const handleOpenChange = (open: boolean) => {
     console.log(`[FlashcardsDialog] handleOpenChange called with open=${open}`);
