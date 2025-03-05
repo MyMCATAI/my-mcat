@@ -65,11 +65,17 @@ const HomePage: React.FC = () => {
   const searchParams = useSearchParams();
   const { userInfo, isLoading: isLoadingUserInfo, isSubscribed } = useUserInfo();
   const { startActivity, endActivity, updateActivityEndTime } = useUserActivity();
-  const { playMusic, stopMusic, volume, setVolume, isPlaying } = useAudio();
-  const { setIsAutoPlay } = useMusicPlayer();
+  
+  // Memoize audio hooks to prevent re-renders
+  const audio = useAudio();
+  const { playMusic, stopMusic, volume, setVolume, isPlaying } = audio;
+  
+  // Memoize music player hook
+  const musicPlayer = useMusicPlayer();
+  const { setIsAutoPlay } = musicPlayer;
+  
   const paymentStatus = searchParams?.get("payment");
   
-
   /* ---------------------------------------- State ---------------------------------------- */
   // Combine related states into a single object to reduce re-renders
   const [pageState, setPageState] = useState({
@@ -581,7 +587,6 @@ const HomePage: React.FC = () => {
           className="z-50"
           activities={pageState.activities}
           onTasksUpdate={(tasks) => updatePageState({ activities: tasks })}
-          isSubscribed={isSubscribed}
         />
 
         <div className="w-1/4">

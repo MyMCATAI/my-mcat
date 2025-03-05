@@ -22,8 +22,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  console.log('🔍 [DEBUG] RootLayout rendering');
-  
   return (
     <ClerkProvider afterSignOutUrl={"/"}>
       <AudioProvider>

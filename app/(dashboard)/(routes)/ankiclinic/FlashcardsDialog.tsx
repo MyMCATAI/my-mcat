@@ -67,37 +67,25 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     currentUserTestId
   } = useGame();
   
-  console.log('🔍 [DEBUG] FlashcardsDialog rendering with props:', { 
-    isOpen: isFlashcardsOpen, 
-    roomId: flashcardRoomId, 
-    hasRef: !!ref,
-    activeRooms: Array.from(activeRooms),
-    isLoading
-  });
-
-  // Handle open/close with the store
-  const handleOpenChange = (open: boolean) => {
-    setIsFlashcardsOpen(open);
-  };
-
-  // Get the store's actions
-  const { setCorrectCount: storeSetCorrectCount, setWrongCount: storeSetWrongCount, correctCount: storeCorrectCount } = useGame();
-  
+  // State for the component
   const [wrongCards, setWrongCards] = useState<WrongCard[]>([]);
   const [localCorrectCount, setLocalCorrectCount] = useState(0);
   const [showPlusOne, setShowPlusOne] = useState(false);
   const [streak, setStreak] = useState(0);
   const [encouragement, setEncouragement] = useState('');
-  // const [showInterruption, setShowInterruption] = useState(false);
-  // const [isTypingComplete, setIsTypingComplete] = useState(false);
-  // const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<Flashcard | null>(null);
   const [currentQuestionContext, setCurrentQuestionContext] = useState<QuestionContext | null>(null);
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
-  const chatbotRef = useRef<{
-    sendMessage: (message: string) => void;
-  }>({ sendMessage: () => {} });
+  const [showChat, setShowChat] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  
+  // Get the store's actions
+  const { setCorrectCount: storeSetCorrectCount, setWrongCount: storeSetWrongCount, correctCount: storeCorrectCount } = useGame();
+
+  // Handle open/close with the store
+  const handleOpenChange = (open: boolean) => {
+    setIsFlashcardsOpen(open);
+  };
 
   const [springs, api] = useSpring(() => ({
     from: { x: 0 }
@@ -120,8 +108,6 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
       }
     }
   });
-
-  const [showChat, setShowChat] = useState(false);
 
   const handleWrongAnswer = (question: string, correctAnswer: string) => {
     const newWrongCard = {
@@ -296,29 +282,20 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     }
   }, [currentQuestion]);
 
-  // Add a useEffect to log when the dialog opens or closes
-  useEffect(() => {
-    console.log(`🔍 [DEBUG] FlashcardsDialog isOpen changed to: ${isFlashcardsOpen}`);
-    
-    if (isFlashcardsOpen) {
-      console.log('🔍 [DEBUG] FlashcardsDialog is now open');
-    } else {
-      console.log('🔍 [DEBUG] FlashcardsDialog is now closed');
-    }
-  }, [isFlashcardsOpen]);
+  const chatbotRef = useRef<{
+    sendMessage: (message: string) => void;
+  }>({ sendMessage: () => {} });
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      console.log('🔍 [DEBUG] FlashcardsDialog.open called via ref');
       setIsFlashcardsOpen(true);
     },
     setWrongCards,
     setCorrectCount: (count: number) => {
-      console.log('🔍 [DEBUG] FlashcardsDialog.setCorrectCount called via ref with count:', count);
       setLocalCorrectCount(count);
       storeSetCorrectCount(count);
     }
-  }));
+  }), [setIsFlashcardsOpen, storeSetCorrectCount]);
 
   return (
     <>
@@ -432,7 +409,15 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                       onWrongAnswer={handleWrongAnswer}
                       onCorrectAnswer={handleCorrectAnswer}
                       activeRooms={activeRooms}
-                      setActiveRooms={setActiveRooms}
+                      setActiveRooms={(rooms) => {
+                        // Convert the function to match the expected type
+                        if (typeof rooms === 'function') {
+                          const newRooms = rooms(activeRooms);
+                          setActiveRooms(newRooms);
+                        } else {
+                          setActiveRooms(rooms);
+                        }
+                      }}
                       currentUserTestId={currentUserTestId}
                       isLoading={isLoading}
                       setIsLoading={setIsLoading}

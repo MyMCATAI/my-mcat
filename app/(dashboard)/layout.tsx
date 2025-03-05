@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo, useMemo } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
@@ -32,8 +32,8 @@ const ContextDebugger = () => {
   return null; // This component doesn't render anything
 };
 
-const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
-  console.log('🔍 [DEBUG] DashboardLayoutContent rendering');
+// Memoize the DashboardLayoutContent to prevent unnecessary re-renders
+const DashboardLayoutContent = memo(({ children }: DashboardLayoutContentProps) => {
   /* ---- State ----- */
   const { theme } = useUI();
   const [backgroundImage, setBackgroundImage] = useState('');
@@ -45,6 +45,7 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
   /* --- Effects --- */
   useEffect(() => {
     if (isLoaded && isSignedIn) {
+      // Remove or conditionally log based on debug mode
       console.log('🎫 Subscription Status:', 
         isSubscribed ? 'GOLD or PREMIUM' : 'FREE'
       );
@@ -95,21 +96,25 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
       </main>
     </div>
    );
-}
+});
+
+// Add display name for memo component
+DashboardLayoutContent.displayName = 'DashboardLayoutContent';
 
 const DashboardLayout = ({ children }: LayoutProps) => {
-  console.log('🔍 [DEBUG] DashboardLayout rendering');
   return (
-  <MusicPlayerProvider>
-    <Script
-      src="https://tally.so/widgets/embed.js"
-      strategy="lazyOnload"
-    />
-    <ThemeInitializer />
-    <StoreInitializer />
-    <ContextDebugger />
-    <DashboardLayoutContent>{children}</DashboardLayoutContent>
-  </MusicPlayerProvider>
-)};
+    <MusicPlayerProvider>
+      <Script
+        src="https://tally.so/widgets/embed.js"
+        strategy="lazyOnload"
+      />
+      <ThemeInitializer />
+      <StoreInitializer />
+      {/* Only include ContextDebugger when debug mode is enabled */}
+      {/* <ContextDebugger /> */}
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </MusicPlayerProvider>
+  );
+};
 
 export default DashboardLayout;

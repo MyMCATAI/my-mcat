@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Sprite } from '@pixi/react';
 import { GridImage } from '../types';
 import { roomToSubjectMap } from '../constants';
@@ -15,7 +15,6 @@ const RoomSprite = React.memo(({ img }: RoomSpriteProps) => {
   // Get state and actions directly from the store
   const { 
     activeRooms, 
-    isFlashcardsOpen,
     setFlashcardRoomId,
     setIsFlashcardsOpen
   } = useGame();
@@ -26,17 +25,24 @@ const RoomSprite = React.memo(({ img }: RoomSpriteProps) => {
     y: screenY(img.x, img.y) - img.height / 2
   }), [img.x, img.y, img.width, img.height]);
 
-  const handleRoomClick = () => {
-    console.log('🔍 [DEBUG] Room clicked:', img.id);
-    console.log('🔍 [DEBUG] Current activeRooms:', Array.from(activeRooms));
-    console.log('🔍 [DEBUG] Current isFlashcardsOpen:', isFlashcardsOpen);
+  // Use useCallback to memoize the click handler
+  const handleRoomClick = useCallback(() => {
+    // Get debug mode from URL if needed
+    const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    const isDebugMode = searchParams.get('debug') === 'true';
     
+    if (isDebugMode) {
+      console.log('🔍 [DEBUG] Room clicked:', img.id);
+    }
+    
+    // Set room ID first
     setFlashcardRoomId(img.id);
-    console.log('🔍 [DEBUG] After setFlashcardRoomId');
     
-    setIsFlashcardsOpen(true);
-    console.log('🔍 [DEBUG] After setIsFlashcardsOpen');
-  };
+    // Use setTimeout to ensure state updates are processed sequentially
+    setTimeout(() => {
+      setIsFlashcardsOpen(true);
+    }, 0);
+  }, [img.id, setFlashcardRoomId, setIsFlashcardsOpen]);
 
   return (
     <>
@@ -68,8 +74,6 @@ const RoomSprite = React.memo(({ img }: RoomSpriteProps) => {
          prevProps.img.src === nextProps.img.src &&
          prevProps.img.x === nextProps.img.x &&
          prevProps.img.y === nextProps.img.y;
-  // We no longer need to compare activeRooms or isFlashcardsOpen here
-  // since they come from the store and will trigger re-renders automatically
 });
 
 RoomSprite.displayName = 'RoomSprite';

@@ -23,6 +23,7 @@ import type { UserResponseWithCategory } from "@/types";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
 import { getAccentColor, getWelcomeMessage, getSuccessMessage } from './utils';
 import { useGame } from "@/store/selectors";
+import FlashcardsDialog from './FlashcardsDialog'; // Direct import instead of dynamic
 
 // Only dynamically import components that are truly heavy or rarely used
 // Core components should be imported directly for faster initial render
@@ -36,20 +37,6 @@ const WelcomeDialog = dynamic(() => import('./WelcomeDialog'), {
 
 const ShoppingDialog = dynamic(() => import('./ShoppingDialog'), {
   ssr: false
-});
-
-// Simple dynamic import for FlashcardsDialog which already uses forwardRef
-const FlashcardsDialog = dynamic(() => {
-  console.log('🔍 [DEBUG] Dynamically importing FlashcardsDialog');
-  return import('./FlashcardsDialog').then(mod => mod.default);
-}, {
-  ssr: false,
-  loading: () => {
-    console.log('🔍 [DEBUG] FlashcardsDialog loading component rendered');
-    return <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[--theme-primary-color]"></div>
-    </div>;
-  }
 });
 
 // Simple dynamic import for AfterTestFeed
@@ -94,9 +81,18 @@ interface DoctorsOfficePageProps {
 }
 
 const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
-  console.log('🔍 [DEBUG] DoctorsOfficePage rendering');
-  const pathname = usePathname();
+  // Add debug mode check
   const searchParams = useSearchParams();
+  const isDebugMode = searchParams?.get('debug') === 'true';
+  
+  // Only log in debug mode
+  const debugLog = (message: string, ...args: any[]) => {
+    if (isDebugMode) {
+      console.log(message, ...args);
+    }
+  };
+  
+  const pathname = usePathname();
   
   // Add mount counter ref
   const mountCountRef = useRef(0);
@@ -112,6 +108,11 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   
   // Add this ref near the other refs at the top of the component
   const isClosingDialogRef = useRef(false);
+  
+  // Move these refs to the top level of the component, outside of any useEffect
+  const hasInitializedRef = useRef(false);
+  const isInitializingRef = useRef(false);
+  let initTimeoutIdRef = useRef<NodeJS.Timeout | null>(null);
   
   /* =================================
   // Component Lifecycle Management
@@ -130,11 +131,14 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         setIsLoading(false);
       }, 100);
       
+      debugLog('[DEBUG] DoctorsOfficePage mounted');
+      
       return () => {
         isMountedRef.current = false;
+        debugLog('[DEBUG] DoctorsOfficePage unmounted');
       };
     }
-  }, [pathname]);
+  }, [pathname, debugLog]);
 
   /* ------------------------------------------- Hooks -------------------------------------------- */
   const officeContainerRef = useRef<HTMLDivElement>(null);
@@ -267,28 +271,89 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   /* ----------------------------------------- UseEffects ---------------------------------------- */
   
   /* =================================
-  // Ambient Sound Initialization
-  // - Sets up background audio when component mounts
-  // - Only initializes if flashcards aren't open
-  // - Cleans up audio on unmount
-  // - Uses a short delay to ensure component is fully mounted
+  // Ambient Sound Controller
+  // - Initializes ambient sound on mount
+  // - Handles ambient sound playback
+  // - Cleans up on unmount
   ================================*/
   useEffect(() => {
     if (!isMountedRef.current) return;
     
-    // Initialize ambient sound immediately when component mounts
-    const timer = setTimeout(() => {
-      if (!isFlashcardsOpen) {
-        console.log('[DEBUG] Initializing ambient sound on mount');
-        initializeAmbientSound();
+    debugLog('[DEBUG] Initializing ambient sound on mount');
+    
+    // Initialize ambient sound with debounce
+    const initializeAmbientSound = async () => {
+      // If already initialized or currently initializing, skip
+      if (hasInitializedRef.current || isInitializingRef.current) {
+        debugLog('[DEBUG] Skipping duplicate ambient sound initialization');
+        return;
       }
-    }, 200); // Short delay to ensure component is fully mounted
+      
+      // Mark as initializing to prevent duplicate calls
+      isInitializingRef.current = true;
+      
+      try {
+        debugLog('[DEBUG] Starting ambient sound loop');
+        
+        // Stop any existing loops first to prevent double audio
+        audio.stopAllLoops();
+        
+        // Small delay to ensure audio context is ready and to debounce multiple calls
+        await new Promise(resolve => {
+          // Clear any existing timeout
+          if (initTimeoutIdRef.current) {
+            clearTimeout(initTimeoutIdRef.current);
+          }
+          
+          // Set new timeout
+          initTimeoutIdRef.current = setTimeout(() => {
+            resolve(true);
+          }, 300); // Longer delay to ensure we don't get multiple initializations
+        });
+        
+        // Check if we're still mounted before proceeding
+        if (!isMountedRef.current) {
+          debugLog('[DEBUG] Component unmounted during initialization delay, aborting');
+          return;
+        }
+        
+        // Now we can safely initialize
+        hasInitializedRef.current = true;
+        audio.loopSound('flashcard-loop-catfootsteps');
+        debugLog('[DEBUG] Ambient sound loop started successfully');
+      } catch (error: any) {
+        console.error('Error initializing ambient sound:', error);
+        debugLog(`[DEBUG] Ambient sound error: ${error.message || 'Unknown error'}`);
+      } finally {
+        // Reset initializing flag
+        isInitializingRef.current = false;
+      }
+    };
+    
+    initializeAmbientSound();
     
     return () => {
-      clearTimeout(timer);
-      stopAllAudio();
+      debugLog('[DEBUG] Cleaning up ambient sound on unmount');
+      
+      // Clear any pending initialization
+      if (initTimeoutIdRef.current) {
+        clearTimeout(initTimeoutIdRef.current);
+      }
+      
+      // Ensure we stop the specific loop we started
+      try {
+        audio.stopAllLoops(); // Stop all loops to be safe
+        audio.stopLoopSound('flashcard-loop-catfootsteps');
+        debugLog('[DEBUG] Successfully stopped ambient sound loop');
+      } catch (error: any) {
+        debugLog(`[DEBUG] Error stopping ambient sound: ${error.message || 'Unknown error'}`);
+      }
+      
+      // Reset flags
+      hasInitializedRef.current = false;
+      isInitializingRef.current = false;
     };
-  }, [initializeAmbientSound, isFlashcardsOpen, stopAllAudio]);
+  }, [audio, debugLog]);
   
   /* =================================
   // Flashcards State Monitor
@@ -373,24 +438,24 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         }
       };
       
-      await attemptFetch();
+      // Small delay to let any Strict Mode double-mount settle
+      const initTimer = setTimeout(() => {
+        if (mounted) {
+          initializeData();
+        }
+      }, 100);
+      
+      return () => {
+        mounted = false;
+        clearTimeout(initTimer);
+        // Only abort requests if we're actually unmounting, not just in Strict Mode
+        if (mountCountRef.current > 2 && abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+      };
     };
     
-    // Small delay to let any Strict Mode double-mount settle
-    const initTimer = setTimeout(() => {
-      if (mounted) {
-        initializeData();
-      }
-    }, 100);
-    
-    return () => {
-      mounted = false;
-      clearTimeout(initTimer);
-      // Only abort requests if we're actually unmounting, not just in Strict Mode
-      if (mountCountRef.current > 2 && abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
+    initializeData();
   }, [userInfo, reportData]);
 
   /* =================================
@@ -782,40 +847,26 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   // Handle flashcard dialog open/close - optimized
   const handleSetIsFlashcardsOpen = useCallback((open: boolean) => {
+    // Throttle state changes to prevent rapid toggling
     const now = Date.now();
-    console.log(`🔍 [DEBUG] handleSetIsFlashcardsOpen called with open=${open}`);
-    
-    // Prevent rapid toggling
     if (now - lastFlashcardToggleTimeRef.current < 500) {
-      console.log('🔍 [DEBUG] Ignoring rapid toggle of isFlashcardsOpen');
-      return;
-    }
-    
-    // If we're in the process of closing and something tries to open it, ignore
-    if (isClosingDialogRef.current && open) {
-      console.log('🔍 [DEBUG] Ignoring attempt to open dialog while closing is in progress');
-      return;
+      return; // Skip if toggled too recently
     }
     
     // Update the last toggle time
     lastFlashcardToggleTimeRef.current = now;
     
-    if (open) {
-      console.log('🔍 [DEBUG] OPENING FLASHCARD DIALOG');
-      console.log('🔍 [DEBUG] flashcardsDialogRef.current:', flashcardsDialogRef.current);
-    } else {
-      console.log('🔍 [DEBUG] CLOSING FLASHCARD DIALOG');
+    if (!open) {
       // Set the closing flag
       isClosingDialogRef.current = true;
       
       // Ensure isLoading is false when closing the dialog to allow audio transition
       if (isLoading) {
-        console.log('🔍 [DEBUG] FIXING LOADING STATE FOR AUDIO');
         setIsLoading(false);
       }
     }
     
-    console.log('🔍 [DEBUG] Calling setIsFlashcardsOpen with:', open);
+    // Update the state
     setIsFlashcardsOpen(open);
     
     // If we're closing the dialog, update active rooms after a delay to ensure smooth transition
@@ -838,7 +889,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           // Reset the closing flag after all operations are complete
           setTimeout(() => {
             isClosingDialogRef.current = false;
-            // Dialog closing process complete, reset closing flag
           }, 100);
         }, 300);
       }, 300);
@@ -850,7 +900,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   // - Automatically opens flashcard dialog when a room is selected
   // - Prevents opening during dialog closing process
   // - Verifies component is mounted before attempting to open
-  // - Includes detailed debug logging for troubleshooting
+  // - Includes throttling to prevent rapid open/close cycles
   ================================*/
   useEffect(() => {
     if (!isMountedRef.current || !flashcardRoomId || isClosingDialogRef.current) {
@@ -859,9 +909,17 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     
     // Auto-open flashcard dialog when roomId is set
     if (flashcardRoomId && !isFlashcardsOpen) {
-      handleSetIsFlashcardsOpen(true);
+      // Use a throttled version of the handler to prevent rapid state changes
+      const now = Date.now();
+      if (now - lastFlashcardToggleTimeRef.current > 500) {
+        // Update the last toggle time
+        lastFlashcardToggleTimeRef.current = now;
+        
+        // Set the state directly without using the handler to avoid circular dependencies
+        setIsFlashcardsOpen(true);
+      }
     }
-  }, [flashcardRoomId, isFlashcardsOpen, handleSetIsFlashcardsOpen]);
+  }, [flashcardRoomId, isFlashcardsOpen, setIsFlashcardsOpen]);
 
   const handleSetCompleteAllRoom = useCallback((complete: boolean | ((prevState: boolean) => boolean)) => {
     if (typeof complete === 'function') {
@@ -1023,16 +1081,18 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         onClose={() => setShowReferralModal(false)}
       />
 
-      {/* FlashcardsDialog with minimal props */}
-      {isFlashcardsOpen && <FlashcardsDialog
-        ref={flashcardsDialogRef}
-        isLoading={isLoading}
-        setIsLoading={setIsLoading}
-        handleCompleteAllRoom={handleCompleteAllRoom}
-        onMCQAnswer={handleMCQAnswer}
-        setTotalMCQQuestions={setTotalMCQQuestions}
-        buttonContent={<div />}
-      />}
+      {/* Conditionally render FlashcardsDialog */}
+      {isMountedRef.current && (
+        <FlashcardsDialog
+          ref={flashcardsDialogRef}
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
+          handleCompleteAllRoom={handleCompleteAllRoom}
+          onMCQAnswer={handleMCQAnswer}
+          setTotalMCQQuestions={setTotalMCQQuestions}
+          buttonContent={<div />}
+        />
+      )}
     </div>
   );
 };

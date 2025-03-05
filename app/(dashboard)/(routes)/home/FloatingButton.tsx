@@ -210,6 +210,11 @@ const FloatingButton = memo<FloatingButtonProps>(({
   }, [updateState]);
 
   const handleButtonClick = useCallback(async (tab: string) => {
+    const timestamp = new Date().toISOString();
+    console.log("--------------------------------------------------------------------");
+    console.log(`------- ANKI CLINIC CLICKED AT ${timestamp} -------`);
+    console.log("--------------------------------------------------------------------");
+    
     const currentPath = window.location.pathname;
     if (PROTECTED_ROUTES.some(route => currentPath.startsWith(route))) {
       return;
@@ -252,11 +257,6 @@ const FloatingButton = memo<FloatingButtonProps>(({
           }, TAB_CHANGE_TIMEOUT);
         },
         ankiclinic: () => {
-          const timestamp = new Date().toISOString();
-          console.log("--------------------------------------------------------------------");
-          console.log(`------- ANKI CLINIC CLICKED AT ${timestamp} -------`);
-          console.log("--------------------------------------------------------------------");
-          
           if (currentPage === 'home') {
             // Show loading indicator
             setIsNavigating(true);

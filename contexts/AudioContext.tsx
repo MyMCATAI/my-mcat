@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useRef, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 
 
@@ -91,7 +91,6 @@ const logError = (error: Error, context: string) => {
 };
 
 export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
-  console.log('🔍 [DEBUG] AudioProvider rendering');
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSong, setCurrentSong] = useState<string | null>(null);
   const [volumeState, setVolumeState] = useState(0.5);
@@ -114,24 +113,59 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
 
   const initializeAudioContext = useCallback(async () => {
     try {
+      // If we already have a running context, return it
       if (audioContextRef.current?.state === 'running') {
+        if (DEBUG) {
+          console.log('🎵 [AudioContext] Reusing existing running audio context');
+        }
         return audioContextRef.current;
       }
 
+      // If we have a suspended context, try to resume it
       if (audioContextRef.current?.state === 'suspended') {
+        if (DEBUG) {
+          console.log('🎵 [AudioContext] Resuming suspended audio context');
+        }
         await audioContextRef.current.resume();
         return audioContextRef.current;
       }
+      
+      // If we have a closed context, we need to create a new one
+      if (audioContextRef.current?.state === 'closed') {
+        if (DEBUG) {
+          console.log('🎵 [AudioContext] Previous audio context was closed, creating new one');
+        }
+        // Clean up the old context reference
+        audioContextRef.current = null;
+        // Clear any existing master gain node
+        masterGainNode = null;
+      }
 
+      if (DEBUG) {
+        console.log('🎵 [AudioContext] Creating new audio context');
+      }
+      
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new AudioContextClass(AUDIO_CONTEXT_CONFIG);
-      await ctx.resume();
+      
+      try {
+        await ctx.resume();
+      } catch (resumeError) {
+        if (DEBUG) {
+          console.warn('🎵 [AudioContext] Could not resume newly created context:', resumeError);
+        }
+      }
+      
       audioContextRef.current = ctx;
 
       // Single master gain node
       masterGainNode = ctx.createGain();
       masterGainNode.connect(ctx.destination);
       masterGainNode.gain.value = volumeState;
+
+      if (DEBUG) {
+        console.log(`🎵 [AudioContext] New audio context created and initialized: ${ctx.state}`);
+      }
 
       return ctx;
     } catch (error) {
@@ -334,8 +368,15 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const stopAllLoops = useCallback(() => {
+    if (DEBUG) {
+      console.log(`🎵 [AudioContext] Stopping all loops. Active loops: ${LOOP_SOURCES.size}`);
+    }
+    
     LOOP_SOURCES.forEach((audio, name) => {
       try {
+        if (DEBUG) {
+          console.log(`🎵 [AudioContext] Stopping loop: ${name}`);
+        }
         audio.source.stop();
         audio.source.disconnect();
         audio.gainNode.disconnect();
@@ -344,6 +385,10 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
         console.error('Error stopping ambient sound:', error);
       }
     });
+    
+    if (DEBUG) {
+      console.log(`🎵 [AudioContext] All loops stopped. Remaining: ${LOOP_SOURCES.size}`);
+    }
   }, []);
 
   // Update loopSound to use coefficient
@@ -352,12 +397,24 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
     const fullPath = `/audio/${normalizedName}.wav`;
     
     if (LOOP_SOURCES.has(fullPath)) {
+      if (DEBUG) {
+        console.log(`🎵 [AudioContext] Loop already playing: ${fullPath}`);
+      }
       return;
+    }
+
+    if (DEBUG) {
+      console.log(`🎵 [AudioContext] Starting loop: ${fullPath}`);
+      console.log(`🎵 [AudioContext] Audio context state: ${audioContextRef.current?.state || 'not initialized'}`);
     }
 
     try {
       const ctx = await initializeAudioContext();
       if (!ctx) throw new Error('Audio context not initialized');
+
+      if (DEBUG) {
+        console.log(`🎵 [AudioContext] Audio context initialized: ${ctx.state}`);
+      }
 
       const audioBuffer = await loadAudioBuffer(fullPath);
       const source = ctx.createBufferSource();
@@ -378,6 +435,11 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
 
       LOOP_SOURCES.set(fullPath, { source, gainNode });
       source.start(0);
+      
+      if (DEBUG) {
+        console.log(`🎵 [AudioContext] Loop started successfully: ${fullPath}`);
+        console.log(`🎵 [AudioContext] Active loops: ${LOOP_SOURCES.size}`);
+      }
 
     } catch (error) {
       console.error('Failed to start loop:', error);
@@ -399,38 +461,48 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  // Move the existing context check after all hook declarations
+  // Move the existing context check to the top of the component
   const existingContext = useContext(AudioContext);
   if (existingContext) {
-    console.log('🔍 [DEBUG] AudioProvider - existingContext found, skipping render');
     return <>{children}</>;
   }
 
-  console.log('🔍 [DEBUG] AudioProvider - creating new context');
+  const contextValue = useMemo(() => ({
+    isPlaying,
+    currentSong,
+    volume: volumeState,
+    playMusic,
+    stopMusic,
+    setVolume,
+    playSound,
+    loopSound,
+    stopLoopSound,
+    stopAllLoops,
+    getActiveLoops
+  }), [
+    isPlaying, 
+    currentSong, 
+    volumeState, 
+    playMusic, 
+    stopMusic, 
+    setVolume, 
+    playSound, 
+    loopSound, 
+    stopLoopSound, 
+    stopAllLoops, 
+    getActiveLoops
+  ]);
+
   return (
-    <AudioContext.Provider value={{
-      isPlaying,
-      currentSong,
-      volume: volumeState,
-      playMusic,
-      stopMusic,
-      setVolume,
-      playSound,
-      loopSound,
-      stopLoopSound,
-      stopAllLoops,
-      getActiveLoops
-    }}>
+    <AudioContext.Provider value={contextValue}>
       {children}
     </AudioContext.Provider>
   );
 };
 
 export const useAudio = () => {
-  console.log('🔍 [DEBUG] useAudio hook called');
   const context = useContext(AudioContext);
   if (context === null) {
-    console.error('🔍 [DEBUG] useAudio - context is null!');
     throw new Error('useAudio must be used within an AudioProvider');
   }
   return context;

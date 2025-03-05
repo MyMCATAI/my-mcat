@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Sprite } from '@pixi/react';
 import { Texture } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import { GlowFilter } from '@pixi/filter-glow';
-
-
 
 interface QuestionPromptSpriteProps {
   src: string;
@@ -16,7 +14,7 @@ interface QuestionPromptSpriteProps {
   onClick: () => void;
 }
 
-const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({ 
+const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = memo(({ 
   src, 
   x, 
   y, 
@@ -28,12 +26,17 @@ const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({
   const [texture, setTexture] = useState<Texture | null>(null);
   const [scale, setScale] = useState(1);
   const [isHovered, setIsHovered] = useState(false);
+  
+  // Get debug mode from URL if needed
+  const isDebugMode = typeof window !== 'undefined' ? 
+    new URLSearchParams(window.location.search).get('debug') === 'true' : 
+    false;
 
   // Load texture
   useEffect(() => {
     const imgTexture = Texture.from(src);
     setTexture(imgTexture);
-  });
+  }, [src]);
 
   // Animation ticker
   useEffect(() => {
@@ -55,33 +58,40 @@ const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({
       ticker.stop();
       ticker.destroy();
     };
-  }, [isHovered]);
+  }, [isHovered, scaleConstant]);
 
   // Interaction handlers
   const handlePointerOver = useCallback(() => {
     setIsHovered(true);
     setScale((0.1 + scaleConstant * 1 * 0.03)); // Scale up on hover
     document.body.style.cursor = 'pointer';
-  }, []);
+  }, [scaleConstant]);
 
   const handlePointerOut = useCallback(() => {
     setIsHovered(false);
     setScale((0.1 + scaleConstant * 1 * 0.02));
     document.body.style.cursor = 'default';
-  }, []);
+  }, [scaleConstant]);
 
   const handleClick = useCallback(() => {
-    console.log('----------------------- QuestionPromptSprite clicked for room:------------', roomId);
-    console.log('🔍 [DEBUG] QuestionPromptSprite onClick prop exists:', !!onClick);
-    
-    // Add your click handler logic here
-    if (onClick) {
-        console.log('🔍 [DEBUG] QuestionPromptSprite calling onClick prop');
-        onClick(); // Call the onClick prop to extend functionality
-        console.log('🔍 [DEBUG] QuestionPromptSprite onClick prop called');
+    if (isDebugMode) {
+      console.log('----------------------- QuestionPromptSprite clicked for room:------------', roomId);
+      console.log('🔍 [DEBUG] QuestionPromptSprite onClick prop exists:', !!onClick);
     }
-
-  }, [onClick, roomId]);
+    
+    // Call the onClick prop to extend functionality
+    if (onClick) {
+      if (isDebugMode) {
+        console.log('🔍 [DEBUG] QuestionPromptSprite calling onClick prop');
+      }
+      
+      onClick();
+      
+      if (isDebugMode) {
+        console.log('🔍 [DEBUG] QuestionPromptSprite onClick prop called');
+      }
+    }
+  }, [onClick, roomId, isDebugMode]);
 
   const glowFilter = new GlowFilter({
     distance: 2,
@@ -110,6 +120,8 @@ const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({
       anchor={0.5} // Center the sprite for better scaling
     />
   );
-};
+});
+
+QuestionPromptSprite.displayName = 'QuestionPromptSprite';
 
 export default QuestionPromptSprite;

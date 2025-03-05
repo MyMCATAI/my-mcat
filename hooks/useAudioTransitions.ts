@@ -58,7 +58,7 @@ export const useAudioTransitions = ({
           if (!isEffectActive) return;
 
           if (isFlashcardsOpen) {
-            await audio.stopAllLoops();
+            audio.stopAllLoops();
             if (!isEffectActive) return;
             audio.playSound('flashcard-door-open');
           } else {
@@ -66,9 +66,9 @@ export const useAudioTransitions = ({
               audio.playSound('flashcard-door-closed');
               await new Promise(resolve => setTimeout(resolve, 500));
               if (!isEffectActive) return;
-              await audio.loopSound('flashcard-loop-catfootsteps');
+              audio.loopSound('flashcard-loop-catfootsteps');
             } else {
-              await audio.loopSound('flashcard-loop-catfootsteps');
+              audio.loopSound('flashcard-loop-catfootsteps');
             }
           }
           if (!isEffectActive) return;
@@ -94,13 +94,13 @@ export const useAudioTransitions = ({
   }, [isFlashcardsOpen, audio, isLoading, isMounted]);
 
   // Function to initialize ambient sound on component mount
-  const initializeAmbientSound = useCallback(() => {
+  const initializeAmbientSound = useCallback((soundName = 'flashcard-loop-catfootsteps') => {
     if (!audio || audioTransitionInProgressRef.current) return;
     
     const initAmbientSound = async () => {
       try {
         audioTransitionInProgressRef.current = true;
-        await audio.loopSound('flashcard-loop-catfootsteps');
+        audio.loopSound(soundName);
       } catch (error) {
         console.error('[AudioTransitions] Error initializing ambient sound:', error);
       } finally {
@@ -115,11 +115,11 @@ export const useAudioTransitions = ({
   }, [audio, isFlashcardsOpen]);
 
   // Function to stop all audio
-  const stopAllAudio = useCallback(async () => {
+  const stopAllAudio = useCallback(() => {
     if (!audio) return;
     
     try {
-      await audio.stopAllLoops();
+      audio.stopAllLoops();
     } catch (error) {
       console.error('[AudioTransitions] Error stopping audio:', error);
     }
