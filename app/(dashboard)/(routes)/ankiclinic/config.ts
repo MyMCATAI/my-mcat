@@ -11,4 +11,4 @@ export const generateStaticParams = () => {
 };
 
 // Set revalidation time (optional)
-export const revalidate = 0; // revalidate at every request 
+export const revalidate = 0; // revalidate at every request
