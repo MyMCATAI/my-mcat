@@ -72,6 +72,9 @@ interface DoctorsOfficePageProps {
 }
 
 const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
+  // Add a check for window at the component level
+  const isBrowser = typeof window !== 'undefined';
+  
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
@@ -229,26 +232,23 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     }
   }, [userInfo, isLoading]);
 
-  // Track mount count and log navigation - combined into one effect
+  // Use isBrowser check for any window/document access
   useEffect(() => {
+    if (!isBrowser) return;
+    
     mountCountRef.current += 1;
     isMountedRef.current = true;
     
-    // Only run client-side code
-    if (typeof window !== 'undefined') {
-      console.log('[DEBUG] AnkiClinic mounted, pathname:', pathname);
-      console.log('[DEBUG] Mount count:', mountCountRef.current);
-      
-      // Check for React Strict Mode (which causes double renders)
-      if (mountCountRef.current === 2) {
-        console.log('[DEBUG] Detected possible React Strict Mode (double render)');
-      }
+    console.log('[DEBUG] AnkiClinic mounted, pathname:', pathname);
+    console.log('[DEBUG] Mount count:', mountCountRef.current);
+    
+    // Check for React Strict Mode (which causes double renders)
+    if (mountCountRef.current === 2) {
+      console.log('[DEBUG] Detected possible React Strict Mode (double render)');
     }
     
     return () => {
-      if (typeof window !== 'undefined') {
-        console.log('[DEBUG] AnkiClinic unmounting');
-      }
+      console.log('[DEBUG] AnkiClinic unmounting');
       isMountedRef.current = false;
       
       // Cleanup any in-progress operations
@@ -256,11 +256,11 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         abortControllerRef.current.abort();
       }
     };
-  }, [pathname]);
+  }, [pathname, isBrowser]);
 
   // Add a new effect to preserve debug mode - run only once
   useEffect(() => {
-    if (typeof window === 'undefined') return; // Skip on server-side
+    if (!isBrowser) return; // Skip on server-side
     
     // Check if we need to preserve debug mode
     const isDebugMode = searchParams?.get('debug') === 'true';
@@ -282,12 +282,12 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     
     return () => {
       // Only clean up if component unmounts, not on every render
-      if (typeof window !== 'undefined' && document.body.classList.contains('debug-mode') && !isDebugMode) {
+      if (document.body.classList.contains('debug-mode') && !isDebugMode) {
         document.body.classList.remove('debug-mode');
         console.log('[DEBUG] Cleanup: Removed debug-mode class from body');
       }
     };
-  }, [searchParams]);
+  }, [searchParams, isBrowser]);
 
   // Simplified effect for flashcard dialog auto-open
   useEffect(() => {
@@ -350,7 +350,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       if (!isMountedRef.current || signal.aborted) return;
       
       // Batch all state updates
-      if (typeof window !== 'undefined' && ReactDOM.unstable_batchedUpdates) {
+      if (isBrowser && ReactDOM.unstable_batchedUpdates) {
         ReactDOM.unstable_batchedUpdates(() => {
           // Only update if values have changed
           if (JSON.stringify(reportData) !== JSON.stringify(reportDataResult)) {
