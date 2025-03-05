@@ -24,11 +24,22 @@ import { shouldShowRedeemReferralModal } from '@/lib/referral';
 import { getAccentColor, getWelcomeMessage, getSuccessMessage } from './utils';
 import { useGame } from "@/store/selectors";
 
-// Import components that should load immediately
-import ResourcesMenu from './ResourcesMenu';
-import WelcomeDialog from './WelcomeDialog';
-import OfficeContainer from './OfficeContainer';
-import FloatingButton from '../home/FloatingButton';
+// Dynamically import components with SSR disabled
+const ResourcesMenu = dynamic(() => import('./ResourcesMenu'), {
+  ssr: false
+});
+
+const WelcomeDialog = dynamic(() => import('./WelcomeDialog'), {
+  ssr: false
+});
+
+const OfficeContainer = dynamic(() => import('./OfficeContainer'), {
+  ssr: false
+});
+
+const FloatingButton = dynamic(() => import('../home/FloatingButton'), {
+  ssr: false
+});
 
 // Dynamically import components that can be lazy-loaded
 const ShoppingDialog = dynamic(() => import('./ShoppingDialog'), {

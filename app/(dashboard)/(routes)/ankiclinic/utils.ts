@@ -101,6 +101,11 @@ const successMessages: TimeMessages = {
 };
 
 export const getTimeOfDay = (): TimeOfDay => {
+  // For server-side rendering, return a default time of day
+  if (typeof window === 'undefined') {
+    return 'morning';
+  }
+  
   const hour = new Date().getHours();
   if (hour >= 5 && hour < 12) return 'morning';
   if (hour >= 12 && hour < 17) return 'afternoon';
