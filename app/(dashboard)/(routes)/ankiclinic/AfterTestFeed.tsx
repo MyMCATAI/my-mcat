@@ -16,6 +16,7 @@ import type { UserResponseWithCategory } from "@/types";
 import VideoRecommendations from './components/VideoRecommendations';
 import { useAudio } from '@/contexts/AudioContext';
 import { useGame } from '@/store/selectors';
+import { useUserInfo } from '@/hooks/useUserInfo';
 
 /* ------------------------------------------ Types ------------------------------------------ */
 interface LargeDialogProps {
@@ -123,12 +124,14 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   title, 
   children, 
   largeDialogQuit, 
-  setLargeDialogQuit,
+  setLargeDialogQuit
 }, ref) => {
   /* ---------------------------------------- Hooks ---------------------------------------- */
   const audio = useAudio();
   const router = useRouter();
   const { user } = useUser();
+  const { isSubscribed } = useUserInfo();
+  const { userResponses, correctCount, wrongCount } = useGame();
   const chatbotRef = useRef<{
     sendMessage: (message: string) => void;
   }>({ sendMessage: () => {} });
@@ -137,11 +140,6 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   const videoScrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftScroll, setShowLeftScroll] = useState(false);
   const [showRightScroll, setShowRightScroll] = useState(false);
-
-  // Get game state from Zustand store
-  const { userResponses, correctCount, wrongCount } = useGame();
-  // Get user state from Zustand store
-  const { isSubscribed } = useUser();
 
   /* --------------------------------------- State ---------------------------------------- */
   const [review, setReview] = useState<Review | null>(null);
@@ -157,6 +155,13 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     context: "",
   });
   const [recommendedVideos, setRecommendedVideos] = useState<VideoRecommendation[]>([]);
+
+  /* ------------------------------------ Expose Methods ---------------------------------- */
+  useImperativeHandle(ref, () => ({
+    setWrongCards: (cards: any[]) => {
+      setWrongCards(cards);
+    }
+  }));
 
   /* ------------------------------------ Computed Values --------------------------------- */
   const score = correctCount/(correctCount+wrongCount) * 100;

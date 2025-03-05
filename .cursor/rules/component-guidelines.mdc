@@ -1,6 +1,7 @@
 ---
 description: Guidelines for writing React Components
 globs: **/*.tsx
+alwaysApply: false
 ---
 
 This section outlines the location to create and place components, as well as coding best practices and styling for all `.tsx` components.
@@ -107,6 +108,7 @@ import { Input } from "@/components/ui/input";
 
 ### Section Headers
 All React components should use these headers in order (if they exist)
+Make exceptions in the order for dependencies (such as the useEffect array) that listed above the definition of the dependency. 
 ```typescript
 /* ------------------------------------------ Constants ----------------------------------------- */
 /* -------------------------------------------- Types ------------------------------------------- */
