@@ -15,6 +15,7 @@ import { toast } from 'react-hot-toast';
 import type { UserResponseWithCategory } from "@/types";
 import VideoRecommendations from './components/VideoRecommendations';
 import { useAudio } from '@/contexts/AudioContext';
+import { useGame } from '@/store/selectors';
 
 /* ------------------------------------------ Types ------------------------------------------ */
 interface LargeDialogProps {
@@ -22,13 +23,8 @@ interface LargeDialogProps {
   onOpenChange: (open: boolean) => void;
   title?: string; 
   children?: ReactNode;
-  userResponses: UserResponseWithCategory[];
-  correctCount: number;
-  wrongCount: number;
   largeDialogQuit: boolean;
   setLargeDialogQuit: (quit: boolean) => void;
-  isSubscribed: boolean;
-  conceptCategories?: string[];
 }
 
 interface FeedItem {
@@ -126,13 +122,8 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   onOpenChange, 
   title, 
   children, 
-  userResponses, 
-  correctCount, 
-  wrongCount, 
   largeDialogQuit, 
   setLargeDialogQuit,
-  isSubscribed,
-  conceptCategories
 }, ref) => {
   /* ---------------------------------------- Hooks ---------------------------------------- */
   const audio = useAudio();
@@ -146,6 +137,11 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   const videoScrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftScroll, setShowLeftScroll] = useState(false);
   const [showRightScroll, setShowRightScroll] = useState(false);
+
+  // Get game state from Zustand store
+  const { userResponses, correctCount, wrongCount } = useGame();
+  // Get user state from Zustand store
+  const { isSubscribed } = useUser();
 
   /* --------------------------------------- State ---------------------------------------- */
   const [review, setReview] = useState<Review | null>(null);

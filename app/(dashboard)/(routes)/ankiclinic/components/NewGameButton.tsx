@@ -3,22 +3,21 @@ import Image from "next/image";
 import { FC } from "react";
 import { toast } from "react-hot-toast";
 import { useUserInfo } from "@/hooks/useUserInfo";
+import { useUser, useGame } from "@/store/selectors";
 
 interface NewGameButtonProps {
-  userScore: number;
   onGameStart: (userTestId: string) => void;
-  isGameInProgress: boolean;
-  resetGameState: () => void;
 }
 
 const NewGameButton: FC<NewGameButtonProps> = ({ 
-  userScore, 
-  onGameStart,
-  isGameInProgress,
-  resetGameState
+  onGameStart
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { decrementScore } = useUserInfo();
+  // Get user state from Zustand store
+  const { coins: userScore } = useUser();
+  // Get game state from Zustand store
+  const { isGameInProgress, resetGameState } = useGame();
 
   const createNewUserTest = async () => {
     try {

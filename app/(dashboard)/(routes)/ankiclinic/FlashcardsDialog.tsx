@@ -23,7 +23,7 @@ import { roomToSubjectMap } from './constants';
 import ChatBot from '@/components/chatbot/ChatBotFlashcard';
 import { cleanQuestion, cleanAnswer } from './utils/testUtils';
 import DownvoteFeedback from '@/components/DownvoteFeedback';
-import { useGame } from "@/store/selectors";
+import { useGame } from '@/store/selectors';
 // import Interruption from './Interruption';
 
 interface WrongCard {
@@ -45,12 +45,8 @@ interface FlashcardsDialogProps {
   onOpenChange: (open: boolean) => void;
   roomId: string;
   buttonContent: React.ReactNode;
-  activeRooms: Set<string>; 
-  setActiveRooms: React.Dispatch<React.SetStateAction<Set<string>>>; 
-  currentUserTestId: string | null;
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  handleCompleteAllRoom: () => void;
   onMCQAnswer: (isCorrect: boolean) => void;
   setTotalMCQQuestions: React.Dispatch<React.SetStateAction<number>>;
 }
@@ -60,18 +56,23 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   onOpenChange,
   roomId,
   buttonContent,
-  activeRooms,  
-  setActiveRooms, 
-  currentUserTestId,
   isLoading,
   setIsLoading,
-  handleCompleteAllRoom,
   onMCQAnswer,
   setTotalMCQQuestions,
 }, ref) => {
-  // Get the store's actions
-  const { setCorrectCount: storeSetCorrectCount, setWrongCount: storeSetWrongCount, correctCount: storeCorrectCount } = useGame();
+  // Get state and actions from the Zustand store
+  const { 
+    setCorrectCount: storeSetCorrectCount, 
+    setWrongCount: storeSetWrongCount, 
+    correctCount: storeCorrectCount,
+    activeRooms,
+    setActiveRooms,
+    currentUserTestId,
+    setCompleteAllRoom
+  } = useGame();
   
+  // Local component state
   const [wrongCards, setWrongCards] = useState<WrongCard[]>([]);
   const [localCorrectCount, setLocalCorrectCount] = useState(0);
   const [showPlusOne, setShowPlusOne] = useState(false);
@@ -111,6 +112,11 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   });
 
   const [showChat, setShowChat] = useState(false);
+
+  // Handle complete all room directly with the store
+  const handleCompleteAllRoom = useCallback(() => {
+    setCompleteAllRoom(true);
+  }, [setCompleteAllRoom]);
 
   const handleWrongAnswer = (question: string, correctAnswer: string) => {
     const newWrongCard = {

@@ -140,7 +140,7 @@ interface GameSlice {
   // Actions
   endGame: () => void;
   resetGameState: () => void;
-  setActiveRooms: (rooms: Set<string>) => void;
+  setActiveRooms: (rooms: Set<string> | ((prevRooms: Set<string>) => Set<string>)) => void;
   setCompleteAllRoom: (complete: boolean) => void;
   setCorrectCount: (count: number) => void;
   setFlashcardRoomId: (roomId: string) => void;
@@ -577,9 +577,16 @@ export const useStore = create<Store>()(
         });
       },
       
-      setActiveRooms: (rooms) => {
-        // Ensure we're always creating a new Set object
-        set({ activeRooms: new Set(rooms) });
+      setActiveRooms: (rooms: Set<string> | ((prevRooms: Set<string>) => Set<string>)) => {
+        // Handle both direct values and updater functions
+        if (typeof rooms === 'function') {
+          set((state) => ({ 
+            activeRooms: new Set(rooms(state.activeRooms)) 
+          }));
+        } else {
+          // Ensure we're always creating a new Set object
+          set({ activeRooms: new Set(rooms) });
+        }
       },
       
       setCompleteAllRoom: (complete) => {

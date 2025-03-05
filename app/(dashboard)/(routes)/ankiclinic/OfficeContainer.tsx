@@ -8,6 +8,7 @@ import { levelConfigurations, roomToContentMap, roomToSubjectMap, spriteWaypoint
 import { GridImage } from './types';
 import { cleanupTextures, preloadTextures, getTexture } from './utils/textureCache';
 import { useUserInfo } from "@/hooks/useUserInfo";
+import { useGame } from "@/store/selectors";
 
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 
@@ -166,14 +167,8 @@ interface Category {
 interface OfficeContainerProps {
   onNewGame: (fn: () => GridImage[]) => void;
   visibleImages: Set<string>;
-  userRooms: string[];
   imageGroups: ImageGroup[];
-  setFlashcardRoomId: React.Dispatch<React.SetStateAction<string>>;
   updateVisibleImages: (newVisibleImages: Set<string>) => void;
-  activeRooms: Set<string>;
-  setActiveRooms: React.Dispatch<React.SetStateAction<Set<string>>>;
-  isFlashcardsOpen: boolean;
-  setIsFlashcardsOpen: (open: boolean) => void;
 }
 
 // Define a type for sprite positions with an index signature
@@ -201,15 +196,19 @@ const pixiConfig = {
 const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({ 
   onNewGame,
   visibleImages,
-  userRooms,
   imageGroups,
-  setFlashcardRoomId,
-  updateVisibleImages,
-  activeRooms,
-  setActiveRooms,
-  isFlashcardsOpen,
-  setIsFlashcardsOpen
+  updateVisibleImages
 }, ref) => {
+  // Get game state from Zustand store
+  const {
+    userRooms,
+    activeRooms,
+    setActiveRooms,
+    isFlashcardsOpen,
+    setIsFlashcardsOpen,
+    setFlashcardRoomId
+  } = useGame();
+
   // All useState hooks first
   const [currentLevel, setCurrentLevel] = useState(1);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -509,9 +508,6 @@ export default React.memo(OfficeContainer, (prevProps, nextProps) => {
   // Deep compare the props we care about
   return (
     prevProps.visibleImages === nextProps.visibleImages &&
-    prevProps.userRooms === nextProps.userRooms &&
-    prevProps.activeRooms === nextProps.activeRooms &&
-    prevProps.isFlashcardsOpen === nextProps.isFlashcardsOpen &&
-    prevProps.imageGroups === nextProps.imageGroups // Add imageGroups comparison
+    prevProps.imageGroups === nextProps.imageGroups
   );
 });

@@ -24,19 +24,13 @@ import { shouldShowRedeemReferralModal } from '@/lib/referral';
 import { getAccentColor, getWelcomeMessage, getSuccessMessage } from './utils';
 import { useGame } from "@/store/selectors";
 
-// Dynamically import components that use window/document
-const ResourcesMenu = dynamic(() => import('./ResourcesMenu'), {
-  ssr: false
-});
+// Import components that should load immediately
+import ResourcesMenu from './ResourcesMenu';
+import WelcomeDialog from './WelcomeDialog';
+import OfficeContainer from './OfficeContainer';
+import FloatingButton from '../home/FloatingButton';
 
-const WelcomeDialog = dynamic(() => import('./WelcomeDialog'), {
-  ssr: false
-});
-
-const OfficeContainer = dynamic(() => import('./OfficeContainer'), {
-  ssr: false
-});
-
+// Dynamically import components that can be lazy-loaded
 const ShoppingDialog = dynamic(() => import('./ShoppingDialog'), {
   ssr: false
 });
@@ -46,10 +40,6 @@ const FlashcardsDialog = dynamic(() => import('./FlashcardsDialog'), {
 });
 
 const AfterTestFeed = dynamic(() => import('./AfterTestFeed'), {
-  ssr: false
-});
-
-const FloatingButton = dynamic(() => import('../home/FloatingButton'), {
   ssr: false
 });
 
@@ -322,76 +312,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     };
   }, [searchParams]);
 
-  // Component mount: Initial data fetch and daily calculations setup
-  useEffect(() => {
-    let mounted = true;
-    let retryCount = 0;
-    const MAX_RETRIES = 3;
-    const RETRY_DELAY = 1000; // 1 second
-    
-    console.log('[DEBUG] Starting data initialization');
-    
-    const initializeData = async () => {
-      // Skip if already initialized and data is present
-      if (isInitializedRef.current && reportData) {
-        console.log('[DEBUG] Already initialized with data, skipping');
-        return;
-      }
-      
-      isInitializedRef.current = true;
-      console.log('[DEBUG] Setting initialized flag to true');
-      
-      const attemptFetch = async () => {
-        try {
-          console.log('[DEBUG] Attempting to fetch data');
-          await fetchData();
-          console.log('[DEBUG] Data fetch completed successfully');
-          
-          // Only proceed with calculations if still mounted
-          if (mounted && !hasCalculatedRef.current && userInfo) {
-            console.log('[DEBUG] Starting daily calculations');
-            performDailyCalculations();
-            hasCalculatedRef.current = true;
-            console.log('[DEBUG] Daily calculations completed');
-          }
-        } catch (error) {
-          console.error('[DEBUG] Error during initialization:', error);
-          
-          // Retry logic
-          if (mounted && retryCount < MAX_RETRIES) {
-            retryCount++;
-            console.log(`[DEBUG] Retrying fetch attempt ${retryCount} of ${MAX_RETRIES}`);
-            setTimeout(attemptFetch, RETRY_DELAY);
-          } else if (mounted) {
-            console.error('[DEBUG] Max retries reached, showing error toast');
-            toast.error("Failed to initialize clinic data. Please refresh the page.");
-          }
-        }
-      };
-      
-      await attemptFetch();
-    };
-    
-    // Small delay to let any Strict Mode double-mount settle
-    console.log('[DEBUG] Setting up initialization timer');
-    const initTimer = setTimeout(() => {
-      if (mounted) {
-        console.log('[DEBUG] Initialization timer fired, starting data init');
-        initializeData();
-      }
-    }, 100);
-    
-    return () => {
-      console.log('[DEBUG] Cleanup for data initialization effect');
-      mounted = false;
-      clearTimeout(initTimer);
-      // Only abort requests if we're actually unmounting, not just in Strict Mode
-      if (mountCountRef.current > 2 && abortControllerRef.current) {
-        console.log('[DEBUG] Aborting pending requests');
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [userInfo, reportData]); // Add reportData as dependency to prevent unnecessary fetches
+ 
 
   // Add a debug effect to track key state changes
   useEffect(() => {
@@ -440,7 +361,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     }
   }, [flashcardRoomId, isFlashcardsOpen, isLoading, setIsFlashcardsOpen]);
 
-  /* ---------------------------------------- Event Handlers -------------------------------------- */
 
   const fetchData = async () => {
     // If already fetching, don't start another fetch
@@ -469,44 +389,59 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     const signal = abortControllerRef.current.signal;
     
     try {
+      // Use Promise.all for parallel fetching with optimized options
       const [reportResponse, clinicResponse] = await Promise.all([
         fetch("/api/user-report", { 
           signal,
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
-          }
+          },
+          // Add priority hint for critical resources
+          priority: 'high'
         }),
         fetch("/api/clinic", { 
           signal,
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
-          }
+          },
+          // Add priority hint for critical resources
+          priority: 'high'
         }),
       ]);
 
       if (!isMountedRef.current || signal.aborted) return;
 
-      const reportDataResult = await reportResponse.json();
-      const clinicData = await clinicResponse.json();
-      
+      // Process responses in parallel
+      const [reportData, clinicData] = await Promise.all([
+        reportResponse.json(),
+        clinicResponse.json()
+      ]);
+
+      // Only update state if component is still mounted
       if (!isMountedRef.current || signal.aborted) return;
       
-      // Batch all state updates
-      ReactDOM.unstable_batchedUpdates(() => {
-        // Only update if values have changed
-        if (JSON.stringify(reportData) !== JSON.stringify(reportDataResult)) {
-          setReportData(reportDataResult);
+      // Batch state updates to reduce renders
+      Promise.resolve().then(() => {
+        if (!isMountedRef.current) return;
+        
+        setReportData(reportData);
+        
+        // Update user rooms if needed
+        if (JSON.stringify(userRooms) !== JSON.stringify(clinicData.rooms)) {
+          setUserRooms(clinicData.rooms || []);
         }
         
-        if (clinicData.rooms && Array.isArray(clinicData.rooms) && 
-            JSON.stringify(userRooms) !== JSON.stringify(clinicData.rooms)) {
-          setUserRooms(clinicData.rooms);
+        // Update user level if needed
+        if (userLevel !== clinicData.level) {
+          // Call updateUserLevel without arguments
+          updateUserLevel();
         }
         
-        if (streakDays !== (reportDataResult.streak || 0)) {
-          setStreakDays(reportDataResult.streak || 0);
+        // Update streak days if needed
+        if (streakDays !== clinicData.streakDays) {
+          setStreakDays(clinicData.streakDays || 0);
         }
         
         if (totalPatients !== (clinicData.totalPatientsTreated || 0)) {
@@ -530,6 +465,11 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       }
     }
   };
+
+   // Component mount: Initial data fetch and daily calculations setup
+  
+
+
 
   const performDailyCalculations = async () => {
     if (isCalculating) {
@@ -626,6 +566,72 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       setIsCalculating(false);
     }
   };
+
+  useEffect(() => {
+    let mounted = true;
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; // 1 second
+    
+    console.log('[DEBUG] Starting data initialization');
+    
+    const initializeData = async () => {
+      // Skip if already initialized and data is present
+      if (isInitializedRef.current && reportData) {
+        console.log('[DEBUG] Already initialized with data, skipping');
+        return;
+      }
+      
+      isInitializedRef.current = true;
+      console.log('[DEBUG] Setting initialized flag to true');
+      
+      const attemptFetch = async () => {
+        try {
+          console.log('[DEBUG] Attempting to fetch data');
+          await fetchData();
+          console.log('[DEBUG] Data fetch completed successfully');
+          
+          // Only proceed with calculations if still mounted
+          if (mounted && !hasCalculatedRef.current && userInfo) {
+            console.log('[DEBUG] Starting daily calculations');
+            performDailyCalculations();
+            hasCalculatedRef.current = true;
+            console.log('[DEBUG] Daily calculations completed');
+          }
+        } catch (error) {
+          console.error('[DEBUG] Error during initialization:', error);
+          
+          // Retry logic
+          if (mounted && retryCount < MAX_RETRIES) {
+            retryCount++;
+            console.log(`[DEBUG] Retrying fetch attempt ${retryCount} of ${MAX_RETRIES}`);
+            setTimeout(attemptFetch, RETRY_DELAY);
+          } else if (mounted) {
+            console.error('[DEBUG] Max retries reached, showing error toast');
+            toast.error("Failed to initialize clinic data. Please refresh the page.");
+          }
+        }
+      };
+      
+      await attemptFetch();
+    };
+    
+    // Start initialization immediately instead of using a delay
+    if (mounted) {
+      console.log('[DEBUG] Starting data initialization immediately');
+      initializeData();
+    }
+    
+    return () => {
+      console.log('[DEBUG] Cleanup for data initialization effect');
+      mounted = false;
+      // Only abort requests if we're actually unmounting, not just in Strict Mode
+      if (mountCountRef.current > 2 && abortControllerRef.current) {
+        console.log('[DEBUG] Aborting pending requests');
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [fetchData, performDailyCalculations, reportData, userInfo]);
 
   const handleTabChange = (tab: string) => {
     if (tab !== "ankiclinic") {
@@ -962,46 +968,38 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           isOpen={showWelcomeDialogue}
           onUnlocked={()=>setShowWelcomeDialogue(false)}
         />}
-      <Suspense fallback={
+    <Suspense fallback={
         <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
           <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse" />
           <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />
         </div>
       }>
         <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
+          {/* Give ResourcesMenu a higher z-index */}
           <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-30">
             <ResourcesMenu
               reportData={reportData}
-              userRooms={userRooms}
-              totalCoins={userInfo?.score || 0}
-              totalPatients={totalPatients}
-              patientsPerDay={patientsPerDay}
             />
           </div>
           
+          {/* Keep OfficeContainer at a lower z-index */}
           <div className="w-3/4 font-krungthep relative z-20 rounded-r-lg">
             <OfficeContainer
               ref={officeContainerRef}
               onNewGame={handleSetPopulateRooms}
               visibleImages={visibleImages}
-              userRooms={userRooms}
               imageGroups={imageGroups}
-              setFlashcardRoomId={handleSetFlashcardRoomId}
               updateVisibleImages={updateVisibleImages}
-              activeRooms={activeRooms}
-              setActiveRooms={handleSetActiveRooms}
-              isFlashcardsOpen={isFlashcardsOpen}
-              setIsFlashcardsOpen={handleSetIsFlashcardsOpen}
             />
+            {/* Button on the top left corner */}
             <div className="absolute top-4 left-4 flex gap-2 z-50">
               <NewGameButton
-                userScore={userInfo?.score || 0}
                 onGameStart={handleGameStart}
-                isGameInProgress={isGameInProgress}
-                resetGameState={resetLocalGameState}
               />
             </div>
+            {/* Fellowship Level button with coins and patients */}
             <div className="absolute top-4 right-4 z-50 flex items-center">
+              {/* Patient count */}
               <div className="group relative flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
                 <Image
                   src="/game-components/patient.png"
@@ -1013,6 +1011,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                 <div className="flex flex-col">
                   <span className="text-[--theme-hover-color] font-bold text-lg">{totalPatients}</span>
                 </div>
+                {/* Tooltip */}
                 <div className="absolute top-full left-0 mt-2 w-64 bg-[--theme-leaguecard-color] text-[--theme-text-color] text-sm rounded-lg p-3 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 border border-[--theme-border-color]">
                   <p className="mb-2">Total patients treated: {totalPatients}</p>
                   <p className="mb-2">You treat <span className="text-[--theme-hover-color]">{patientsPerDay} patients per day</span> at your current level.</p>
@@ -1027,6 +1026,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                   </ul>
                 </div>
               </div>
+              {/* Coins display */}
               <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
                 <PurchaseButton 
                   className="flex items-center hover:opacity-90 transition-opacity"
@@ -1045,6 +1045,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                   </div>
                 </PurchaseButton>
               </div>
+              {/* Fellowship Level button with dropdown */}
               <div className="relative group">
                 <button className={`flex items-center justify-center px-6 py-3 
                   ${(!userLevel || userLevel === "PATIENT LEVEL") 
@@ -1098,7 +1099,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                       userScore={userInfo?.score || 0}
                       isOpen={isMarketplaceOpen}
                       onOpenChange={setIsMarketplaceOpen}
-                    />
+                                        />
                   )}
 
                   </div>
@@ -1175,12 +1176,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
             handleAfterTestDialogClose();
           }
         }}
-        userResponses={userResponses}
-        correctCount={correctCount}
-        wrongCount={wrongCount}
         largeDialogQuit={largeDialogQuit}
         setLargeDialogQuit={setLargeDialogQuit}
-        isSubscribed={isSubscribed}
       />}
       
       <div className="absolute bottom-4 right-4 z-[100]">
@@ -1205,17 +1202,13 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         onClose={() => setShowReferralModal(false)}
       />
 
-      {isFlashcardsOpen && <FlashcardsDialog
+      {isFlashcardsOpen && <FlashcardsDialog 
         ref={flashcardsDialogRef}
         isOpen={isFlashcardsOpen}
         onOpenChange={handleSetIsFlashcardsOpen}
         roomId={flashcardRoomId}
-        activeRooms={activeRooms}
-        setActiveRooms={handleSetActiveRooms}
-        currentUserTestId={currentUserTestId}
         isLoading={isLoading}
         setIsLoading={setIsLoading}
-        handleCompleteAllRoom={handleCompleteAllRoom}
         onMCQAnswer={handleMCQAnswer}
         setTotalMCQQuestions={setTotalMCQQuestions}
         buttonContent={<div />}

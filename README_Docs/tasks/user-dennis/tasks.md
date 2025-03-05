@@ -1,4 +1,20 @@
 TODO: 
+[ x ] lazy load remove
+[] no prop drilling - okay take a note of page.tsx and all its children components, and note which global state values we store in the global zustand store and make sure we are not prop drilling any values into the child components. 
+ResourcesMenu Component:
+Already uses useGame() for streakDays
+Should also use useGame() for userRooms, totalPatients, patientsPerDay
+Should use useUser() for totalCoins (user's score)
+
+FlashcardsDialog Component:
+Already uses useGame() for some state
+Should use it for all game-related state instead of receiving props
+
+AfterTestFeed Component:
+Should use useGame() for userResponses, correctCount, wrongCount
+Should use useUser() for subscription status
+
+updates and syncs with database?
 
 
 ## Cursor Notes
