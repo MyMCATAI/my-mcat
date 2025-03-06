@@ -1,5 +1,5 @@
 import { useStore } from './store'
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 
 /* --- UI Selectors ---- */
 export const useUI = () => {
@@ -223,12 +223,22 @@ export const useAudio = () => {
   const initializeAudioContext = useStore((state) => state.initializeAudioContext)
   const handleFlashcardsTransition = useStore((state) => state.handleFlashcardsTransition)
   
-  // Initialize audio context on first use
+  // Initialize audio context on first use - but only once per component instance
+  const hasInitializedRef = useRef(false);
+  
   useEffect(() => {
+    if (hasInitializedRef.current) return;
+    
     console.debug('[useAudio] Initializing audio context on hook mount')
+    hasInitializedRef.current = true;
+    
     initializeAudioContext().catch(error => {
       console.error('[useAudio] Failed to initialize audio context:', error)
+      // Reset the flag to allow retry on next render
+      hasInitializedRef.current = false;
     })
+    
+    // No cleanup needed - we want to keep the audio context alive
   }, [initializeAudioContext])
 
   // Enhanced API with additional debug logging
@@ -250,14 +260,14 @@ export const useAudio = () => {
       stopMusic()
     }, [stopMusic]),
     
-    playSound: useCallback((soundName: string) => {
+    playSound: useCallback(async (soundName: string) => {
       console.debug(`[useAudio] Playing sound: ${soundName}`)
-      playSound(soundName)
+      return playSound(soundName)
     }, [playSound]),
     
-    loopSound: useCallback((soundName: string) => {
+    loopSound: useCallback(async (soundName: string) => {
       console.debug(`[useAudio] Looping sound: ${soundName}`)
-      loopSound(soundName)
+      return loopSound(soundName)
     }, [loopSound]),
     
     stopLoopSound: useCallback((soundName: string) => {
@@ -265,25 +275,29 @@ export const useAudio = () => {
       stopLoopSound(soundName)
     }, [stopLoopSound]),
     
-    stopAllLoops: useCallback(() => {
+    stopAllLoops: useCallback(async () => {
       console.debug('[useAudio] Stopping all loops')
-      stopAllLoops()
+      return stopAllLoops()
     }, [stopAllLoops]),
     
-    getActiveLoops: useCallback(() => {
-      const loop = getCurrentLoop()
-      console.debug(`[useAudio] Getting active loop: ${loop}`)
-      return loop ? [loop] : []
+    getCurrentLoop: useCallback(() => {
+      return getCurrentLoop()
     }, [getCurrentLoop]),
     
-    setVolume: useCallback((newVolume: number) => {
-      console.debug(`[useAudio] Setting volume: ${newVolume}`)
-      setMasterVolume(newVolume)
+    setVolume: useCallback((volume: number) => {
+      console.debug(`[useAudio] Setting volume: ${volume}`)
+      setMasterVolume(volume)
     }, [setMasterVolume]),
     
-    handleFlashcardsTransition: useCallback((isOpen: boolean) => {
-      console.debug(`[useAudio] Handling flashcards transition, isOpen: ${isOpen}`)
-      handleFlashcardsTransition(isOpen)
+    getActiveLoops: useCallback(() => {
+      // Access the store directly to get active loops
+      const store = useStore.getState();
+      return store._LOOP_SOURCES ? Array.from(store._LOOP_SOURCES.keys()) : [];
+    }, []),
+    
+    handleFlashcardsTransition: useCallback(async (isOpen: boolean) => {
+      console.debug(`[useAudio] Handling flashcards transition: ${isOpen ? 'open' : 'close'}`)
+      return handleFlashcardsTransition(isOpen)
     }, [handleFlashcardsTransition])
   }
 } 

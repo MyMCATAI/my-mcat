@@ -34,8 +34,27 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ isVisible = false }) => {
     
     if (debugValue === 'true') {
       setIsDebug(true)
+      setIsOpen(true) // Automatically open the panel when debug=true
       document.body.classList.add('debug-mode')
+      
+      // Store debug mode in localStorage for persistence
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('debugMode', JSON.stringify(true));
+        console.log('[DEBUG] Debug mode enabled via URL parameter');
+      }
     } else {
+      // Check localStorage as a fallback
+      if (typeof window !== 'undefined') {
+        const storedDebugMode = localStorage.getItem('debugMode');
+        if (storedDebugMode === 'true' || storedDebugMode === '"true"') {
+          setIsDebug(true);
+          setIsOpen(true);
+          document.body.classList.add('debug-mode');
+          console.log('[DEBUG] Debug mode enabled via localStorage');
+          return;
+        }
+      }
+      
       // Any other value (including null) - disable debug mode
       setIsDebug(false)
       document.body.classList.remove('debug-mode')
@@ -159,9 +178,10 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ isVisible = false }) => {
     }, 500);
   }, [audioState]);
 
-  // Don't render anything if not in debug mode
-  if (!isDebug) return null;
-
+  // Move these hooks above the conditional return
+  // Get store data for debugging
+  const store = useStore();
+  
   // Extract audio state for display
   const audioStateForDisplay = {
     isPlaying: audioState.isPlaying,
@@ -172,102 +192,164 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ isVisible = false }) => {
   
   // Count active audio sources
   const audioSourceCount = {
-    musicSources: useStore()._MUSIC_SOURCE?.size || 0,
-    loopSources: useStore()._LOOP_SOURCES?.size || 0,
-    bufferCache: useStore()._bufferCache?.size || 0,
+    musicSources: store._MUSIC_SOURCE?.size || 0,
+    loopSources: store._LOOP_SOURCES?.size || 0,
+    bufferCache: store._bufferCache?.size || 0,
   };
   
   // Get active loop names
-  const activeLoops = useStore()._LOOP_SOURCES ? 
-    Array.from(useStore()._LOOP_SOURCES.keys()) : 
+  const activeLoops = store._LOOP_SOURCES ? 
+    Array.from(store._LOOP_SOURCES.keys()) : 
     [];
+
+  // Don't render anything if not in debug mode
+  if (!isDebug) return null;
 
   // Debug panel UI
   return (
-    <div className={cn(
-      "fixed bottom-0 right-0 z-50 bg-black/80 text-white p-4 rounded-tl-lg w-96 max-h-[80vh] overflow-auto transition-all duration-300 transform",
-      isOpen ? "translate-y-0" : "translate-y-full"
-    )}>
+    <>
+      {/* Always visible toggle button when in debug mode */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded"
+        className="fixed top-4 right-4 z-[9999] bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-full shadow-lg flex items-center justify-center"
+        style={{ minWidth: '40px', minHeight: '40px' }}
       >
-        {isOpen ? "Close" : "Debug"}
+        {isOpen ? "×" : "Debug"}
       </button>
       
-      <h2 className="text-lg font-bold mb-2">Debug Panel</h2>
-      
-      {/* Add manual audio controls */}
-      <div className="mb-4 p-2 bg-gray-800 rounded">
-        <h3 className="text-sm font-bold mb-2">Audio Controls</h3>
-        <div className="flex flex-wrap gap-2">
+      <div className={cn(
+        "fixed bottom-0 right-0 z-[9999] bg-black/90 text-white p-4 rounded-tl-lg w-96 max-h-[80vh] overflow-auto transition-all duration-300 transform shadow-xl",
+        isOpen ? "translate-y-0" : "translate-y-full"
+      )}
+      style={{ pointerEvents: 'auto' }}>
+        <h2 className="text-lg font-bold mb-2 flex justify-between items-center">
+          <span>Debug Panel</span>
           <button 
-            onClick={handleInitializeAudio}
-            className="bg-blue-600 text-white px-2 py-1 text-xs rounded"
+            onClick={() => setIsOpen(false)}
+            className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs"
           >
-            Init Audio
+            Close
           </button>
-          <button 
-            onClick={handlePlayAmbientSound}
-            className="bg-green-600 text-white px-2 py-1 text-xs rounded"
-          >
-            Play Ambient
-          </button>
-          <button 
-            onClick={handleStopAllAudio}
-            className="bg-red-600 text-white px-2 py-1 text-xs rounded"
-          >
-            Stop All Audio
-          </button>
-          <button 
-            onClick={handleResetAudioState}
-            className="bg-yellow-600 text-white px-2 py-1 text-xs rounded"
-          >
-            Reset Audio
-          </button>
-        </div>
-      </div>
-      
-      {/* Audio State */}
-      <div className="mb-4 p-2 bg-gray-800 rounded">
-        <h3 className="text-sm font-bold mb-2">Audio State</h3>
-        <pre className="text-xs whitespace-pre-wrap">
-          {JSON.stringify(displayAudioState, null, 2)}
-        </pre>
-      </div>
-      
-      {/* Audio Events Log */}
-      <div className="mb-4 p-2 bg-gray-800 rounded">
-        <h3 className="text-sm font-bold mb-2">Audio Events</h3>
-        <div className="max-h-40 overflow-y-auto">
-          {audioEvents.map((event, index) => (
-            <div key={index} className="text-xs mb-1 font-mono">
-              {event}
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      {/* Game State */}
-      <div className="mb-4 p-2 bg-gray-800 rounded">
-        <h3 className="text-sm font-bold mb-2">Game State</h3>
-        <div className="text-xs">
-          <div>Flashcards Open: {gameState.isFlashcardsOpen ? 'Yes' : 'No'}</div>
-          <div>Room ID: {gameState.flashcardRoomId || 'None'}</div>
-          <div>Game In Progress: {gameState.isGameInProgress ? 'Yes' : 'No'}</div>
-        </div>
-      </div>
-      
-      {/* Raw Store State (if in debug mode) */}
-      {isDebug && rawStoreState && (
+        </h2>
+        
+        {/* Add manual audio controls */}
         <div className="mb-4 p-2 bg-gray-800 rounded">
-          <h3 className="text-sm font-bold mb-2">Raw Audio Store</h3>
+          <h3 className="text-sm font-bold mb-2">Audio Controls</h3>
+          <div className="flex flex-wrap gap-2">
+            <button 
+              onClick={handleInitializeAudio}
+              className="bg-blue-600 text-white px-2 py-1 text-xs rounded"
+            >
+              Init Audio
+            </button>
+            <button 
+              onClick={handlePlayAmbientSound}
+              className="bg-green-600 text-white px-2 py-1 text-xs rounded"
+            >
+              Play Ambient
+            </button>
+            <button 
+              onClick={handleStopAllAudio}
+              className="bg-red-600 text-white px-2 py-1 text-xs rounded"
+            >
+              Stop All Audio
+            </button>
+            <button 
+              onClick={handleResetAudioState}
+              className="bg-yellow-600 text-white px-2 py-1 text-xs rounded"
+            >
+              Reset Audio
+            </button>
+          </div>
+        </div>
+        
+        {/* Audio State */}
+        <div className="mb-4 p-2 bg-gray-800 rounded">
+          <h3 className="text-sm font-bold mb-2">Audio State</h3>
           <pre className="text-xs whitespace-pre-wrap">
-            {JSON.stringify(rawStoreState, null, 2)}
+            {JSON.stringify(displayAudioState, null, 2)}
           </pre>
         </div>
-      )}
-    </div>
+        
+        {/* Audio Events Log */}
+        <div className="mb-4 p-2 bg-gray-800 rounded">
+          <h3 className="text-sm font-bold mb-2">Audio Events</h3>
+          <div className="max-h-40 overflow-y-auto">
+            {audioEvents.map((event, index) => (
+              <div key={index} className="text-xs mb-1 font-mono">
+                {event}
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Route Information */}
+        <div className="mb-4 p-2 bg-gray-800 rounded">
+          <h3 className="text-sm font-bold mb-2">Route Information</h3>
+          <div className="text-xs mb-1">
+            <strong>Current Path:</strong> {pathname}
+          </div>
+          <div className="text-xs mb-1">
+            <strong>URL Parameters:</strong>
+          </div>
+          <div className="text-xs mb-2 font-mono">
+            {searchParams ? (
+              Array.from(searchParams.entries()).map(([key, value]) => (
+                <div key={key} className="pl-2">
+                  {key}: {value}
+                </div>
+              ))
+            ) : (
+              <div className="pl-2">No parameters</div>
+            )}
+          </div>
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('debug', 'true');
+                window.history.pushState({}, '', url.toString());
+                window.location.reload();
+              }}
+              className="bg-blue-600 text-white px-2 py-1 text-xs rounded"
+            >
+              Add debug=true
+            </button>
+            <button
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('debug');
+                window.history.pushState({}, '', url.toString());
+                window.location.reload();
+              }}
+              className="bg-yellow-600 text-white px-2 py-1 text-xs rounded"
+            >
+              Remove debug
+            </button>
+          </div>
+        </div>
+        
+        {/* Game State */}
+        <div className="mb-4 p-2 bg-gray-800 rounded">
+          <h3 className="text-sm font-bold mb-2">Game State</h3>
+          <div className="text-xs">
+            <div>Flashcards Open: {gameState.isFlashcardsOpen ? 'Yes' : 'No'}</div>
+            <div>Room ID: {gameState.flashcardRoomId || 'None'}</div>
+            <div>Game In Progress: {gameState.isGameInProgress ? 'Yes' : 'No'}</div>
+          </div>
+        </div>
+        
+        {/* Raw Store State (if in debug mode) */}
+        {isDebug && rawStoreState && (
+          <div className="mb-4 p-2 bg-gray-800 rounded">
+            <h3 className="text-sm font-bold mb-2">Raw Audio Store</h3>
+            <pre className="text-xs whitespace-pre-wrap">
+              {JSON.stringify(rawStoreState, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
+    </>
   )
 }
 

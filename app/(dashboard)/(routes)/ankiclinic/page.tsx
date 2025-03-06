@@ -93,6 +93,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const isInitializedRef = useRef(false);
   const stateUpdateInProgressRef = useRef(false);
   const isMountedRef = useRef(false);
+  const ambientSoundInitializedRef = useRef(false);
   
   // Keep only essential refs, remove debugging refs
   const officeContainerRef = useRef<HTMLDivElement>(null);
@@ -231,6 +232,9 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       console.log('[DEBUG] Detected possible React Strict Mode (double render)');
     }
     
+    // Create a stable reference to the audio object
+    const audioRef = audio;
+    
     return () => {
       console.log('[DEBUG] AnkiClinic unmounting');
       isMountedRef.current = false;
@@ -242,35 +246,15 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       
       // Ensure we stop all audio when component unmounts
       console.log('[DEBUG] Stopping all audio on unmount');
-      audio.stopAllLoops();
-    };
-  }, [pathname, isBrowser, audio]);
-
-  // Add a new effect to preserve debug mode - run only once
-  useEffect(() => {
-    if (!isBrowser) return;
-    
-    // Check if user is signed in
-    if (isSubscribed) {
-      console.log('[DEBUG] User is signed in, refreshing user info');
+      audioRef.stopAllLoops();
       
-      // Refresh user info if needed
-      if (userInfo) {
-        console.log('[DEBUG] Refreshing user info');
-        // Assuming you have a refreshUserInfo function
-        // refreshUserInfo();
+      // Reset the ambient sound initialization flag
+      if (ambientSoundInitializedRef.current) {
+        console.log('[DEBUG] Resetting ambient sound initialization flag');
+        ambientSoundInitializedRef.current = false;
       }
-    } else {
-      console.log('[DEBUG] User is not signed in');
-    }
-    
-    // Set debug mode from localStorage if available
-    const savedDebugMode = localStorage.getItem('debugMode');
-    if (savedDebugMode) {
-      // Assuming you have a setIsDebugMode function
-      // setIsDebugMode(savedDebugMode === 'true');
-    }
-  }, [isBrowser, isSubscribed, userInfo]);
+    };
+  }, [pathname, isBrowser]);
 
   // Add a new effect to initialize ambient sound
   useEffect(() => {
@@ -280,38 +264,101 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     console.log('[DEBUG] Ambient sound effect running', { 
       isLoading, 
       isFlashcardsOpen,
-      isMounted: isMountedRef.current 
+      isMounted: isMountedRef.current,
+      ambientInitialized: ambientSoundInitializedRef.current
     });
     
     // Only play ambient sound if:
     // 1. Component is mounted
     // 2. Not in loading state
     // 3. Flashcards are not open
-    if (isMountedRef.current && !isLoading && !isFlashcardsOpen) {
-      console.log('[DEBUG] Initializing ambient sound');
+    // 4. Ambient sound hasn't been initialized yet
+    if (isMountedRef.current && !isLoading && !isFlashcardsOpen && !ambientSoundInitializedRef.current) {
+      console.log('[DEBUG] Scheduling ambient sound initialization');
       
-      // Add a small delay to ensure audio context is ready
+      // Add a longer delay to ensure audio context is ready and component is stable
       const timeoutId = setTimeout(() => {
+        if (!isMountedRef.current) {
+          console.log('[DEBUG] Component unmounted before ambient sound could initialize');
+          return;
+        }
+        
         try {
+          // Mark as initialized to prevent multiple initializations
+          ambientSoundInitializedRef.current = true;
+          
           // Play the ambient sound loop
-          console.log('[DEBUG] Playing ambient sound loop');
-          audio.playLoop(AMBIENT_SOUND, 0.5);
+          console.log('[DEBUG] Playing ambient sound loop: ' + AMBIENT_SOUND);
+          audio.loopSound(AMBIENT_SOUND);
+          
+          console.log('[DEBUG] Ambient sound loop started successfully');
         } catch (error) {
           console.error('[ERROR] Failed to play ambient sound:', error);
+          // Reset the initialized flag so we can try again
+          ambientSoundInitializedRef.current = false;
+        }
+      }, 1500); // Longer delay to ensure stability
+      
+      return () => {
+        clearTimeout(timeoutId);
+      };
+    }
+    
+    // We don't need a cleanup function here if we're not initializing
+    // This prevents the audio from being stopped when other effects run
+  }, [isBrowser, isLoading, isFlashcardsOpen, audio]);
+
+  // Add a cleanup effect that only runs on unmount
+  useEffect(() => {
+    // This effect doesn't do anything on mount
+    
+    // But it provides a cleanup function for component unmount
+    return () => {
+      if (ambientSoundInitializedRef.current) {
+        console.log('[DEBUG] Final cleanup: Stopping all audio on unmount');
+        audio.stopAllLoops();
+        ambientSoundInitializedRef.current = false;
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // We intentionally use an empty dependency array to only run on mount/unmount
+  
+  // Add a separate effect to handle flashcard state changes
+  useEffect(() => {
+    if (!isBrowser || !isMountedRef.current) return;
+    
+    // If flashcards are open, stop the ambient sound
+    if (isFlashcardsOpen && ambientSoundInitializedRef.current) {
+      console.log('[DEBUG] Flashcards opened, stopping ambient sound');
+      audio.stopLoopSound(AMBIENT_SOUND);
+      // Don't reset the initialized flag, as we'll restart when flashcards close
+      return;
+    }
+    
+    // If flashcards were closed and ambient sound was initialized, restart it
+    if (!isFlashcardsOpen && ambientSoundInitializedRef.current && isMountedRef.current) {
+      console.log('[DEBUG] Flashcards closed, restarting ambient sound');
+      
+      // Use a ref to track the timeout ID to prevent multiple restarts
+      const timeoutIdRef = { current: null as NodeJS.Timeout | null };
+      
+      // Small delay before restarting
+      timeoutIdRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          console.log('[DEBUG] Restarting ambient sound after flashcards closed');
+          audio.loopSound(AMBIENT_SOUND);
         }
       }, 500);
       
       return () => {
-        clearTimeout(timeoutId);
-        
-        // Stop the ambient sound when the effect is cleaned up
-        if (isMountedRef.current) {
-          console.log('[DEBUG] Stopping ambient sound loop (effect cleanup)');
-          audio.stopLoop(AMBIENT_SOUND);
+        // Only clear the timeout, don't stop the sound here
+        if (timeoutIdRef.current) {
+          clearTimeout(timeoutIdRef.current);
+          timeoutIdRef.current = null;
         }
       };
     }
-  }, [isBrowser, isLoading, isFlashcardsOpen, audio]);
+  }, [isBrowser, isFlashcardsOpen, audio]);
 
   // Simplified effect for flashcard dialog auto-open
   useEffect(() => {
@@ -321,6 +368,24 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       setIsFlashcardsOpen(true);
     }
   }, [flashcardRoomId, isFlashcardsOpen, isLoading, setIsFlashcardsOpen]);
+
+  // Debug mode effect
+  useEffect(() => {
+    if (!isBrowser) return;
+    
+    console.log('[DEBUG] Debug mode effect running');
+    console.log('[DEBUG] isSubscribed:', isSubscribed);
+    console.log('[DEBUG] userInfo:', userInfo);
+    
+    // Check if user is signed in and refresh user info if needed
+    if (isSubscribed && !userInfo) {
+      console.log('[DEBUG] User is signed in but no user info, refreshing');
+      // We can't use refreshUserInfo here since it's not available
+      // Instead, we'll just log this information
+    }
+    
+    // The useDebugMode hook already handles localStorage persistence
+  }, [isBrowser, isSubscribed, userInfo]);
 
   const fetchData = async () => {
     // If already fetching, don't start another fetch
