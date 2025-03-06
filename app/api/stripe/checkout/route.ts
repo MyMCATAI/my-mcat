@@ -23,17 +23,67 @@ export async function POST(request: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const body = await request.json();
+    // Extract isTrial parameter
+    const isTrial = body.isTrial || false;
+    const priceType = body.priceType as ProductType;
+    const isSpecialStatus = body.isSpecialStatus || false;
+    
+    // If user is trying to start a trial, check eligibility first
+    if (isTrial) {
+      // Check if the user has had a subscription or trial before
+      const userInfo = await prismadb.userInfo.findUnique({
+        where: { userId }
+      });
+      
+      const userSubscription = await prismadb.userSubscription.findUnique({
+        where: { userId }
+      });
+      
+      // If user has had any subscription before, they're not eligible
+      if (userInfo?.subscriptionType && userInfo.subscriptionType !== "None") {
+        return new NextResponse(
+          JSON.stringify({ 
+            error: "You've already had a subscription and are not eligible for a trial" 
+          }), 
+          { status: 400 }
+        );
+      }
+      
+      // If they have a subscription record, check with Stripe
+      if (userSubscription?.stripeCustomerId) {
+        try {
+          // Look for trial history in Stripe
+          const subscriptions = await stripe.subscriptions.list({
+            customer: userSubscription.stripeCustomerId,
+            limit: 100,
+            status: 'all'
+          });
+          
+          // Check if any subscription has trial_start, indicating they've had a trial
+          const hadTrialBefore = subscriptions.data.some(sub => sub.trial_start !== null);
+          
+          if (hadTrialBefore) {
+            return new NextResponse(
+              JSON.stringify({ 
+                error: "You've already had a trial subscription" 
+              }), 
+              { status: 400 }
+            );
+          }
+        } catch (error) {
+          console.error("Error checking subscription history:", error);
+          // If we can't check, we'll allow them to continue
+        }
+      }
+    }
+
     // Make body parsing optional with default values
-    let priceType = "default";
     let friendEmail: string | undefined;
-    let isSpecialStatus = false;
 
     try {
-      const body = await request.json();
       if (body) {
-        priceType = body.priceType || "default";
         friendEmail = body.friendEmail || undefined;
-        isSpecialStatus = body.isSpecialStatus || false;
       }
     } catch (error) {
       // If JSON parsing fails, we'll just use the default values
@@ -188,6 +238,9 @@ export async function POST(request: Request) {
       priceId = process.env.STRIPE_PRICE_ID!; // Default to 10 coins if invalid type
     }
 
+    // Set trial period days for subscription products if requested
+    const trialPeriodDays = isTrial && mode === 'subscription' ? 7 : undefined;
+
     const stripeSession = await stripe.checkout.sessions.create({
       success_url: absoluteUrl("/home?payment=success"),
       cancel_url: absoluteUrl("/home?payment=cancelled"),
@@ -195,6 +248,9 @@ export async function POST(request: Request) {
       mode: mode,
       billing_address_collection: "auto",
       client_reference_id: userId,
+      subscription_data: trialPeriodDays ? {
+        trial_period_days: trialPeriodDays
+      } : undefined,
       metadata: {
         userId: userId,
         productType: productType,
@@ -203,7 +259,8 @@ export async function POST(request: Request) {
           priceId === process.env.STRIPE_PRICE_GOLD_ID ? 'MDGold' :
           priceId === process.env.STRIPE_PRICE_GOLD_ANNUAL_ID || priceId === process.env.STRIPE_PRICE_GOLD_ANNUAL_DISCOUNT_ID ? 'MDGoldAnnual' :
           priceId === process.env.STRIPE_PRICE_GOLD_BIANNUAL_ID || priceId === process.env.STRIPE_PRICE_GOLD_BIANNUAL_DISCOUNT_ID ? 'MDGoldBiannual' : 'one_time_purchase'
-        ) : 'one_time_purchase'
+        ) : 'one_time_purchase',
+        isTrial: isTrial ? 'true' : 'false'
       },
       line_items: [
         {
@@ -217,6 +274,7 @@ export async function POST(request: Request) {
       userId,
       mode,
       productType,
+      isTrial,
       metadata: stripeSession.metadata
     });
 
@@ -225,6 +283,7 @@ export async function POST(request: Request) {
       { headers: corsHeaders }
     );
   } catch (error) {
+    console.error("Checkout error:", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

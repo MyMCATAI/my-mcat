@@ -1,6 +1,10 @@
 import { CustomVideo } from "../CustomVideo";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+import { ProductType } from "@/types";
+import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 
 /* ----- Types ---- */
 interface SoftwareSectionProps {
@@ -24,6 +28,9 @@ const SoftwareSection = ({
 }: SoftwareSectionProps) => {
   /* ---- State ----- */
   const [showTestimonials, setShowTestimonials] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
+  const [isTrialEligible, setIsTrialEligible] = useState(true);
+  const { isTrialing, isCanceled } = useSubscriptionStatus();
 
   /* ---- Helper Methods ----- */
   const getMonthlyPrice = (period: 'monthly' | 'biannual' | 'annual') => {
@@ -48,9 +55,74 @@ const SoftwareSection = ({
     }
   };
 
+  /* ---- Animations & Effects --- */
+  useEffect(() => {
+    // Check trial eligibility when component mounts and user is available
+    if (user?.id) {
+      checkTrialEligibility();
+    }
+  }, [user?.id]);
+
   /* ---- Event Handlers ----- */
   const handlePeriodSelection = (period: 'monthly' | 'biannual' | 'annual') => {
     setPricingPeriod(period);
+  };
+
+  const checkTrialEligibility = async () => {
+    try {
+      const response = await axios.get('/api/subscription/check-trial-eligibility');
+      setIsTrialEligible(response.data.isEligible);
+      
+      if (!response.data.isEligible) {
+        console.log("User not eligible for trial:", response.data.reason);
+      }
+    } catch (error) {
+      console.error("Error checking trial eligibility:", error);
+      // Default to eligible if we can't check
+      setIsTrialEligible(true);
+    }
+  };
+
+  // Handle starting a free trial
+  const handleStartTrial = async () => {
+    try {
+      // Check eligibility first
+      const response = await axios.get('/api/subscription/check-trial-eligibility');
+      if (!response.data.isEligible) {
+        toast.error("You're not eligible for a free trial");
+        return;
+      }
+      
+      setLocalLoading(true);
+      
+      const userId = user?.id;
+      
+      if (!userId) {
+        // If not authenticated, redirect to sign-up with return URL
+        const returnUrl = encodeURIComponent(window.location.pathname);
+        window.location.href = `/sign-up?redirect_url=${returnUrl}`;
+        return;
+      }
+
+      // Map pricing period to the correct product type
+      const priceType = pricingPeriod === 'monthly' ? ProductType.MD_GOLD :
+                       pricingPeriod === 'annual' ? ProductType.MD_GOLD_ANNUAL :
+                       ProductType.MD_GOLD_BIANNUAL;
+
+      // Pass trial=true to the API
+      const checkoutResponse = await axios.post("/api/stripe/checkout", {
+        priceType: priceType,
+        isSpecialStatus: isSpecialStatus,
+        isTrial: true
+      });
+      
+      window.location.href = checkoutResponse.data.url;
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Failed to start trial");
+    } finally {
+      setLocalLoading(false);
+    }
   };
 
   /* ---- Render Methods ----- */
@@ -69,6 +141,9 @@ const SoftwareSection = ({
             <p className="text-white/60 text-sm mt-1">
               ${getMonthlyPrice(pricingPeriod)}/month for comprehensive MCAT prep
             </p>
+            <div className="mt-2 inline-flex items-center justify-center bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm font-medium">
+              Now with 7-day free trial! ✨
+            </div>
           </div>
 
           <div className="flex flex-col md:flex-row">
@@ -168,69 +243,94 @@ const SoftwareSection = ({
 
             {/* Right Column - Pricing */}
             <div className="w-full md:w-5/12 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 p-8 md:p-12 flex flex-col justify-between border-t md:border-t-0 md:border-l border-amber-400/20">
-              <div>
-                {/* Other Options Label */}
-                <div className="text-sm text-white/60 mb-2">Select Your Plan:</div>
-                
-                {/* Pricing Toggle */}
-                <div className="flex flex-col gap-2 mb-8">
-                  <button 
-                    onClick={() => handlePeriodSelection('biannual')}
-                    className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-left ${
-                      pricingPeriod === 'biannual' 
-                        ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg' 
-                        : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20'
-                    }`}
+              {isGold ? (
+                <div className="flex flex-col items-center">
+                  <div className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold p-3 rounded-lg mb-4 text-center">
+                    You are already a Gold member! 
+                  </div>
+                  <button
+                    onClick={handleUpgradeClick}
+                    className="w-full h-14 rounded-2xl font-bold text-lg text-black
+                      bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
+                      hover:from-amber-400 hover:via-yellow-500 hover:to-amber-600
+                      transform hover:scale-[1.02] hover:-translate-y-0.5
+                      transition-all duration-300
+                      shadow-[0_0_20px_rgba(251,191,36,0.3)]
+                      hover:shadow-[0_0_30px_rgba(251,191,36,0.5)]"
                   >
-                    Bi-Annual Plan - ${getTotalPrice('biannual')}
-                  </button>
-                  <button 
-                    onClick={() => handlePeriodSelection('annual')}
-                    className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-left ${
-                      pricingPeriod === 'annual' 
-                        ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg' 
-                        : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20'
-                    }`}
-                  >
-                    Annual Plan - ${getTotalPrice('annual')}
-                  </button>
-                  <button 
-                    onClick={() => handlePeriodSelection('monthly')}
-                    className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-left ${
-                      pricingPeriod === 'monthly' 
-                        ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg' 
-                        : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20'
-                    }`}
-                  >
-                    Monthly Plan - ${getTotalPrice('monthly')}
+                    Manage Subscription
                   </button>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Other Options Label */}
+                  <div className="text-sm text-white/60 mb-2">Select Your Plan:</div>
+                  
+                  {/* Pricing Toggle */}
+                  <div className="flex flex-col gap-2 mb-6">
+                    <button 
+                      onClick={() => handlePeriodSelection('biannual')}
+                      className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-left ${
+                        pricingPeriod === 'biannual' 
+                          ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg' 
+                          : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20'
+                      }`}
+                    >
+                      Bi-Annual Plan - ${getTotalPrice('biannual')}
+                    </button>
+                    <button 
+                      onClick={() => handlePeriodSelection('annual')}
+                      className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-left ${
+                        pricingPeriod === 'annual' 
+                          ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg' 
+                          : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20'
+                      }`}
+                    >
+                      Annual Plan - ${getTotalPrice('annual')}
+                    </button>
+                    <button 
+                      onClick={() => handlePeriodSelection('monthly')}
+                      className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-left ${
+                        pricingPeriod === 'monthly' 
+                          ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg' 
+                          : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20'
+                      }`}
+                    >
+                      Monthly Plan - ${getTotalPrice('monthly')}
+                    </button>
+                  </div>
 
-              <div>
-                <button
-                  onClick={handleUpgradeClick}
-                  disabled={isLoading}
-                  className="w-full h-14 rounded-2xl font-bold text-lg text-black
-                    bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500
-                    hover:from-amber-400 hover:via-yellow-500 hover:to-amber-600
-                    transform hover:scale-[1.02] hover:-translate-y-0.5
-                    transition-all duration-300
-                    shadow-[0_0_20px_rgba(251,191,36,0.3)]
-                    hover:shadow-[0_0_30px_rgba(251,191,36,0.5)]
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    relative overflow-hidden
-                    before:absolute before:inset-0
-                    before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent
-                    before:translate-x-[-200%] hover:before:translate-x-[200%]
-                    before:transition-transform before:duration-700
-                    "
-                >
-                  {isLoading ? "Loading..." : 
-                   isGold ? "Manage Subscription" : 
-                   user ? `Join our Gold Course` : "Sign-up to join our Gold Course"}
-                </button>
-              </div>
+                  {/* Upgrade button */}
+                  <button
+                    onClick={handleUpgradeClick}
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-black py-3 rounded-lg font-semibold transition-colors"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Processing...' : 'Upgrade to Gold'}
+                  </button>
+
+                  {/* Trial button - Only show if eligible */}
+                  {isTrialEligible && !isGold && !isTrialing && !isCanceled && (
+                    <div className="space-y-2 mt-4">
+                      <button
+                        onClick={handleStartTrial}
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition-colors"
+                        disabled={localLoading}
+                      >
+                        {localLoading ? 'Processing...' : 'Start 7-Day Free Trial'}
+                      </button>
+                      <p className="text-center text-slate-400 text-xs">No credit card required</p>
+                    </div>
+                  )}
+                  
+                  {/* Message when not eligible */}
+                  {!isTrialEligible && !isGold && !isTrialing && (
+                    <p className="text-center text-slate-400 text-xs mt-3">
+                      You&apos;ve already used your free trial opportunity
+                    </p>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -248,14 +348,13 @@ const SoftwareSection = ({
               controls
               autoPlay
               className="w-full h-full rounded-lg"
+              onClick={(e) => e.stopPropagation()}
             />
             <button 
+              className="absolute -top-10 right-0 text-white hover:text-amber-300 transition-colors"
               onClick={() => setShowTestimonials(false)}
-              className="absolute top-2 right-2 text-white/90 hover:text-white bg-black/50 rounded-full p-2"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              Close
             </button>
           </div>
         </div>

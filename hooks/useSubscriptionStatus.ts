@@ -8,6 +8,7 @@ interface SubscriptionStatus {
     currentPeriodEnd?: Date;
     cancelAtPeriodEnd?: boolean;
     subscriptionType: string;
+    trialEnd?: Date;
   } | null;
 }
 
@@ -55,9 +56,28 @@ export function useSubscriptionStatus() {
     };
   }, [userInfo?.userId]); // Only depend on userId to prevent unnecessary rechecks
 
-  const isPremium = userInfo?.subscriptionType === 'premium' && stripeData.status?.status === 'active';
-  const isGold = userInfo?.subscriptionType === 'gold' && stripeData.status?.status === 'active';
+  // Check if user is in trial based on subscriptionType containing "_Trial"
+  const hasTrialSuffix = userInfo?.subscriptionType?.includes('_Trial') || false;
+  
+  // Determine trial status from Stripe or from subscriptionType
+  const isTrialing = stripeData.status?.status === 'trialing' || hasTrialSuffix;
+  
+  // Check premium status - true if subscriptionType is "Premium" or "Premium_Trial"
+  const isPremium = userInfo?.subscriptionType?.startsWith('Premium') && 
+    (stripeData.status?.status === 'active' || isTrialing);
+  
+  // Check gold status - true if subscriptionType is "Gold" or "Gold_Trial"
+  const isGold = userInfo?.subscriptionType?.startsWith('Gold') && 
+    (stripeData.status?.status === 'active' || isTrialing);
+  
   const isCanceled = stripeData.status?.subscription?.cancelAtPeriodEnd ?? false;
+
+  // Calculate trial end date
+  const trialEnd = stripeData.status?.subscription?.trialEnd;
+  // Calculate days remaining in trial if in trial period
+  const trialDaysRemaining = trialEnd ? 
+    Math.max(0, Math.ceil((trialEnd.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 
+    null;
 
   return {
     isLoading: userInfoLoading || stripeData.isLoading,
@@ -65,8 +85,15 @@ export function useSubscriptionStatus() {
     isPremium,
     isGold,
     isCanceled,
+    isTrialing,
+    trialEnd,
+    trialDaysRemaining,
     currentPeriodEnd: stripeData.status?.subscription?.currentPeriodEnd,
     isActive: isPremium || isGold,
-    stripeStatus: stripeData.status?.status || 'none'
+    stripeStatus: stripeData.status?.status || 'none',
+    // Map subscription type to a status
+    subscriptionStatus: isTrialing ? 'trial' : 
+                        (isPremium || isGold) ? 'active' : 
+                        isCanceled ? 'cancelled' : 'none'
   };
 } 

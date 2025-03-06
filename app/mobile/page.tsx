@@ -181,7 +181,7 @@ export default function PitchPage() {
       case 'options':
     return (
           <OptionsStep
-            isGold={isGold}
+            isGold={isGold || false}
             user={user}
             handleUpgradeClick={handleUpgradeClick}
             handleApplyClick={handleApplyClick}
