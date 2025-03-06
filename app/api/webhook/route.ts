@@ -114,10 +114,10 @@ export async function POST(req: Request) {
       // Determine the subscription type
       let subscriptionType = 'None';
       if (isActive) {
-        if (product.name?.includes('Gold')) {
+        if (product.name?.toLowerCase().includes('gold')) {
           // Add _Trial suffix if the subscription is in trial period
           subscriptionType = isTrial ? 'Gold_Trial' : 'Gold';
-        } else if (product.name?.includes('Premium')) {
+        } else if (product.name?.toLowerCase().includes('premium')) {
           subscriptionType = isTrial ? 'Premium_Trial' : 'Premium';
         }
       }
