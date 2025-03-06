@@ -67,8 +67,7 @@ export function useSubscriptionStatus() {
     (stripeData.status?.status === 'active' || isTrialing);
   
   // Check gold status - true if subscriptionType is "Gold" or "Gold_Trial"
-  const isGold = userInfo?.subscriptionType?.startsWith('Gold') && 
-    (stripeData.status?.status === 'active' || isTrialing);
+  const isGold = userInfo?.subscriptionType?.toLowerCase().startsWith('gold') || (stripeData.status?.status === 'active' || isTrialing) || false
   
   const isCanceled = stripeData.status?.subscription?.cancelAtPeriodEnd ?? false;
 
