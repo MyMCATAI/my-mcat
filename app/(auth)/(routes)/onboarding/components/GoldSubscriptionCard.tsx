@@ -36,14 +36,7 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'off
         window.location.href = response.data.url;
         return
       }
-      if (context === 'onboarding') {
         router.push('/mobile');
-      } else {
-        const response = await axios.post("/api/stripe/checkout", {
-          priceType: ProductType.MD_GOLD
-        });
-        window.location.href = response.data.url;
-      }
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to load page. Please try again.");

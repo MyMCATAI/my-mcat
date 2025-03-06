@@ -89,6 +89,7 @@ export async function POST(req: Request) {
     const customerId = subscriptionEvent.customer as string;
     const subscription = subscriptionEvent;
     const isActive = subscription.status === 'active' || subscription.status === 'trialing';
+    const isTrial = subscription.status === 'trialing';
     
     try {
       // Get product details to determine subscription type
@@ -102,7 +103,7 @@ export async function POST(req: Request) {
         subscription: subscription.id,
       });
 
-      console.log("sessions.data[0]?.metadata",sessions.data[0]?.metadata)
+      console.log("sessions.data[0]?.metadata", sessions.data[0]?.metadata)
       const userId = sessions.data[0]?.metadata?.userId;
       
       if (!userId) {
@@ -110,38 +111,48 @@ export async function POST(req: Request) {
         return;
       }
 
-      console.log('Processing subscription:', {
+      // Determine the subscription type
+      let subscriptionType = 'None';
+      if (isActive) {
+        if (product.name?.includes('Gold')) {
+          // Add _Trial suffix if the subscription is in trial period
+          subscriptionType = isTrial ? 'Gold_Trial' : 'Gold';
+        } else if (product.name?.includes('Premium')) {
+          subscriptionType = isTrial ? 'Premium_Trial' : 'Premium';
+        }
+      }
+
+      console.log('Processing subscription event:', {
         userId,
         customerId,
         subscriptionId: subscription.id,
-        productName: product.metadata.productName,
-        isActive
+        productName: product.name,
+        isTrial,
+        subscriptionType,
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString()
       });
 
-      // Update or create subscription record
-      await upsertUserSubscription({
-        userId,
-        stripeCustomerId: customerId,
-        stripeSubscriptionId: subscription.id,
-        stripePriceId: subscription.items.data[0].price.id,
-        stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      });
-
-      // Update user access in UserInfo
+      // Update the user info
       await prismadb.userInfo.update({
         where: { userId },
         data: {
-          hasPaid: isActive,
-          subscriptionType: isActive ? (
-            product.metadata.productName === 'MDPremium' ? "premium" : "gold"
-          ) : "cancelled",
+          subscriptionType: subscriptionType,
+          hasPaid: isActive
         }
       });
 
-      console.log('Successfully updated subscription for user:', userId);
+      // Also update or create subscription record
+      if (subscription.status !== 'canceled') {
+        await upsertUserSubscription({
+          userId: userId,
+          stripeSubscriptionId: subscription.id,
+          stripeCustomerId: customerId,
+          stripePriceId: subscription.items.data[0].price.id,
+          stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        });
+      }
     } catch (error) {
       console.error('Error processing subscription event:', error);
-      throw error;
     }
   }
 
@@ -160,13 +171,15 @@ export async function POST(req: Request) {
       const userId = session.metadata?.userId;
       const productType = session.metadata?.productType;
       const productName = session.metadata?.productName;
+      const isTrial = session.metadata?.isTrial === 'true';
             
       console.log("Checkout session completed:", {
         userId,
         productType,
         productName,
         customer: session.customer,
-        subscription: session.subscription
+        subscription: session.subscription,
+        isTrial
       });
 
       if (userId && productType && isValidProductType(productType)) {
