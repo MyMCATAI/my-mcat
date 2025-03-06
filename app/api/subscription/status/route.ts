@@ -28,6 +28,9 @@ export async function GET() {
       });
     }
 
+    // Check if it's a trial based on subscriptionType
+    const isUserInTrialFromDB = userInfo.subscriptionType?.includes('_Trial') || false;
+
     // If we have a subscription ID, get the current status from Stripe
     if (userSubscription.stripeSubscriptionId) {
       try {
@@ -35,19 +38,41 @@ export async function GET() {
           userSubscription.stripeSubscriptionId
         );
 
+        // Include trial information if in trial period
+        const isTrialPeriod = stripeSubscription.status === 'trialing';
+        const trialEnd = isTrialPeriod && stripeSubscription.trial_end 
+          ? new Date(stripeSubscription.trial_end * 1000) 
+          : undefined;
+
+        console.log('Retrieved subscription status for user:', {
+          userId,
+          subscriptionId: stripeSubscription.id,
+          status: stripeSubscription.status,
+          isTrialPeriod,
+          isUserInTrialFromDB,
+          userSubscriptionType: userInfo.subscriptionType,
+          trialEnd: trialEnd?.toISOString(),
+          currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000).toISOString()
+        });
+
         return NextResponse.json({
           status: stripeSubscription.status,
           subscription: {
             currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
             cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
-            subscriptionType: userInfo.subscriptionType
+            subscriptionType: userInfo.subscriptionType,
+            trialEnd: trialEnd
           }
         });
       } catch (stripeError) {
-        // If there's an error with Stripe, just return the userInfo subscription status
+        // If there's an error with Stripe, just return the userInfo subscription type
         console.error("Stripe subscription fetch error:", stripeError);
+        // Determine status from subscriptionType
+        const status = isUserInTrialFromDB ? 'trialing' : 
+                       userInfo.subscriptionType !== 'None' ? 'active' : 'none';
+                       
         return NextResponse.json({
-          status: "active",
+          status: status,
           subscription: {
             subscriptionType: userInfo.subscriptionType
           }
@@ -56,8 +81,12 @@ export async function GET() {
     }
 
     // If no Stripe subscription but user has subscription type
+    // Determine status from subscriptionType
+    const status = isUserInTrialFromDB ? 'trialing' : 
+                   userInfo.subscriptionType !== 'None' ? 'active' : 'none';
+                  
     return NextResponse.json({
-      status: "active",
+      status: status,
       subscription: {
         subscriptionType: userInfo.subscriptionType
       }
