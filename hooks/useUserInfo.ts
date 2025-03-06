@@ -291,7 +291,11 @@ export const useUserInfo = (): UseUserInfoReturn => {
   return {
     userInfo,
     isLoading,
-    isSubscribed: userInfo?.subscriptionType === 'gold' || userInfo?.subscriptionType === 'premium',
+    isSubscribed: 
+      userInfo?.subscriptionType?.startsWith('Gold') || 
+      userInfo?.subscriptionType === 'gold' || 
+      userInfo?.subscriptionType === 'premium' ||
+      userInfo?.subscriptionType?.includes('_Trial') || false,
     updateScore,
     updateNotificationPreference,
     updateUserProfile,
