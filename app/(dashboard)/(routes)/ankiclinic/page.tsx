@@ -13,9 +13,7 @@ import { PurchaseButton } from "@/components/purchase-button";
 import dynamic from 'next/dynamic';
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
-import { useAudio } from "@/contexts/AudioContext";
-import { useAudioTransitions } from "@/hooks/useAudioTransitions";
+import { useAudio } from "@/store/selectors";
 import type { UserResponse } from "@prisma/client";
 import type { FetchedActivity } from "@/types";
 import { GridImage } from './types';
@@ -117,7 +115,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   /* ------------------------------------------- Hooks -------------------------------------------- */
   const { isSubscribed, userInfo, incrementScore, decrementScore } = useUserInfo();
   const audio = useAudio();
-  const { setIsAutoPlay } = useMusicPlayer();
   const { startActivity } = useUserActivity();
   const router = useRouter();
   
@@ -150,17 +147,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const [populateRoomsFn, setPopulateRoomsFn] = useState<(() => GridImage[]) | null>(null);
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
-
-  // Add useAudioTransitions hook after state declarations
-  const { 
-    initializeAmbientSound, 
-    stopAllAudio,
-    isAudioTransitionInProgress 
-  } = useAudioTransitions({
-    isFlashcardsOpen,
-    isLoading,
-    isMounted: true // Simplified from isMountedRef.current
-  });
 
   /* ----------------------------------------- Computation ----------------------------------------- */
 
@@ -222,19 +208,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   /* ----------------------------------------- UseEffects ---------------------------------------- */
   
-  // Simplified effect for audio management
-  useEffect(() => {
-    // Initialize ambient sound when not in flashcards mode
-    if (!isFlashcardsOpen && !isLoading) {
-      initializeAmbientSound();
-    }
-    
-    // Cleanup audio on unmount
-    return () => {
-      stopAllAudio();
-    };
-  }, [isFlashcardsOpen, isLoading, initializeAmbientSound, stopAllAudio]);
-
   // Simplified effect for welcome dialog
   useEffect(() => {
     if (userInfo && !isLoading && !hasCalculatedRef.current) {
@@ -266,39 +239,79 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+      
+      // Ensure we stop all audio when component unmounts
+      console.log('[DEBUG] Stopping all audio on unmount');
+      audio.stopAllLoops();
     };
-  }, [pathname, isBrowser]);
+  }, [pathname, isBrowser, audio]);
 
   // Add a new effect to preserve debug mode - run only once
   useEffect(() => {
-    if (!isBrowser) return; // Skip on server-side
+    if (!isBrowser) return;
     
-    // Check if we need to preserve debug mode
-    const isDebugMode = searchParams?.get('debug') === 'true';
-    console.log('[DEBUG] Debug mode check:', { 
-      isDebugMode, 
-      searchParamsDebug: searchParams?.get('debug'),
-      hasDebugClass: document.body.classList.contains('debug-mode')
-    });
-    
-    if (isDebugMode) {
-      // Set a flag to indicate we're in debug mode
-      document.body.classList.add('debug-mode');
-      console.log('[DEBUG] Added debug-mode class to body');
-    } else if (searchParams?.get('debug') === 'false') {
-      // Explicitly set to false - remove debug mode
-      document.body.classList.remove('debug-mode');
-      console.log('[DEBUG] Removed debug-mode class from body');
+    // Check if user is signed in
+    if (isSubscribed) {
+      console.log('[DEBUG] User is signed in, refreshing user info');
+      
+      // Refresh user info if needed
+      if (userInfo) {
+        console.log('[DEBUG] Refreshing user info');
+        // Assuming you have a refreshUserInfo function
+        // refreshUserInfo();
+      }
+    } else {
+      console.log('[DEBUG] User is not signed in');
     }
     
-    return () => {
-      // Only clean up if component unmounts, not on every render
-      if (document.body.classList.contains('debug-mode') && !isDebugMode) {
-        document.body.classList.remove('debug-mode');
-        console.log('[DEBUG] Cleanup: Removed debug-mode class from body');
-      }
-    };
-  }, [searchParams, isBrowser]);
+    // Set debug mode from localStorage if available
+    const savedDebugMode = localStorage.getItem('debugMode');
+    if (savedDebugMode) {
+      // Assuming you have a setIsDebugMode function
+      // setIsDebugMode(savedDebugMode === 'true');
+    }
+  }, [isBrowser, isSubscribed, userInfo]);
+
+  // Add a new effect to initialize ambient sound
+  useEffect(() => {
+    if (!isBrowser) return;
+    
+    // Log the current state
+    console.log('[DEBUG] Ambient sound effect running', { 
+      isLoading, 
+      isFlashcardsOpen,
+      isMounted: isMountedRef.current 
+    });
+    
+    // Only play ambient sound if:
+    // 1. Component is mounted
+    // 2. Not in loading state
+    // 3. Flashcards are not open
+    if (isMountedRef.current && !isLoading && !isFlashcardsOpen) {
+      console.log('[DEBUG] Initializing ambient sound');
+      
+      // Add a small delay to ensure audio context is ready
+      const timeoutId = setTimeout(() => {
+        try {
+          // Play the ambient sound loop
+          console.log('[DEBUG] Playing ambient sound loop');
+          audio.playLoop(AMBIENT_SOUND, 0.5);
+        } catch (error) {
+          console.error('[ERROR] Failed to play ambient sound:', error);
+        }
+      }, 500);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        
+        // Stop the ambient sound when the effect is cleaned up
+        if (isMountedRef.current) {
+          console.log('[DEBUG] Stopping ambient sound loop (effect cleanup)');
+          audio.stopLoop(AMBIENT_SOUND);
+        }
+      };
+    }
+  }, [isBrowser, isLoading, isFlashcardsOpen, audio]);
 
   // Simplified effect for flashcard dialog auto-open
   useEffect(() => {

@@ -3,6 +3,7 @@ import { devtools } from 'zustand/middleware'
 import { UserInfo } from '@/types/user'
 import { calculatePlayerLevel, getLevelNumber, getPatientsPerDay } from './gameStoreUtils'
 import type { DoctorOfficeStats } from '@/types'
+import { toast } from 'react-hot-toast'
 
 /* --- Constants ----- */
 export const MOBILE_BREAKPOINT = 640  // sm
@@ -17,7 +18,22 @@ interface WindowSize {
 
 export type ThemeType = 'cyberSpace' | 'sakuraTrees' | 'sunsetCity' | 'mykonosBlue'
 
-/* --- User Types ---- */
+// Add a flag to track global initialization
+let isStoreInitialized = false;
+
+//******************************************* UI Slice ****************************************************//
+interface UISlice {
+  window: WindowSize
+  currentRoute: string
+  theme: ThemeType
+  setWindowSize: (size: WindowSize) => void
+  setCurrentRoute: (route: string) => void
+  setTheme: (theme: ThemeType) => void
+}
+
+//***************************************** User Slice ********************************************************//
+//************************* UserProfile, UserInfo, UserStats, User  *******************************************//
+
 interface UserProfile {
   profile: {
     userId?: string;
@@ -54,16 +70,6 @@ interface UserInfoState {
 interface UserStats {
   coins: number;
   isLoading: boolean;
-}
-
-/* --- Store Slices ---- */
-interface UISlice {
-  window: WindowSize
-  currentRoute: string
-  theme: ThemeType
-  setWindowSize: (size: WindowSize) => void
-  setCurrentRoute: (route: string) => void
-  setTheme: (theme: ThemeType) => void
 }
 
 /* --- User Slice ---- */
@@ -114,7 +120,58 @@ interface UserSlice {
   setOnboardingRoute: (route: string) => void;
 }
 
-/* --- Game Slice ---- */
+//******************************************* Audio Slice ****************************************************//
+interface AudioSlice {
+  // Audio state
+  isPlayingSong: boolean;
+  currentSong: string | null;
+  currentLoop: string | null;
+  masterVolume: number;
+  
+  // Audio context references (not serializable - handled internally)
+  _audioContext: AudioContext | null;
+  _masterGainNode: GainNode | null;
+  _bufferCache: Map<string, AudioBuffer>;
+  
+  // Internal constants and maps
+  _MUSIC_SOURCE: Map<string, AudioBufferSourceNode>;
+  _LOOP_SOURCES: Map<string, { source: AudioBufferSourceNode; gainNode: GainNode }>;
+  _BUFFER_CACHE_LIMIT: number;
+  _VOLUME_COEFFICIENTS: {
+    music: number;
+    sfx: number;
+    ambient: number;
+    [key: string]: number;
+  };
+  _SOUND_MAPPINGS: {
+    [key: string]: string;
+  };
+  
+  // Internal methods
+  _handleAudioError: (error: Error, context: string) => void;
+  
+  // Basic audio actions
+  playMusic: (src: string, startPlayback?: boolean, onEnded?: () => void) => Promise<AudioBufferSourceNode | null>;
+  stopMusic: () => void;
+  playSound: (soundName: string) => Promise<void>;
+  loopSound: (soundName: string) => Promise<void>;
+  stopLoopSound: (soundName: string) => void;
+  stopAllLoops: () => Promise<void>;
+  getCurrentLoop: () => string | null;
+  setMasterVolume: (newVolume: number) => void;
+  
+  // Audio context management
+  initializeAudioContext: () => Promise<AudioContext | null>;
+  loadAudioBuffer: (url: string) => Promise<AudioBuffer>;
+  
+  // Transition actions (replacing useAudioTransitions)
+  handleFlashcardsTransition: (isOpen: boolean) => Promise<void>;
+  
+  // Global store initialization
+  initializeStore: () => Promise<void>;
+}
+
+//******************************************* Game Slice ****************************************************//
 interface GameSlice {
   // Game progress (matching local state names)
   patientsPerDay: number; // Direct match with page.tsx
@@ -156,13 +213,19 @@ interface GameSlice {
   updateUserLevel: () => void;
 }
 
-/* --- Store Type ---- */
-type Store = UISlice & UserSlice & GameSlice;
+type Store = UISlice & UserSlice & GameSlice & AudioSlice;
+
+//====================================================================================================//
+//================================= Store Initialization =============================================//
+//====================================================================================================//
 
 export const useStore = create<Store>()(
   devtools(
     (set, get) => ({
-      //************************************** UI State *********************************************//
+      //***********************************************************************************************//
+      //************************************** UI State ***********************************************//
+      //***********************************************************************************************//
+
 
       window: {
         width: typeof window !== 'undefined' ? window.innerWidth : 1920,
@@ -182,9 +245,9 @@ export const useStore = create<Store>()(
         }
       },
 
+      //***********************************************************************************************//
       //************************************** USER State *********************************************//
-
-
+      //***********************************************************************************************//
       // User State
       profile: null,
       profileLoading: true,
@@ -224,6 +287,7 @@ export const useStore = create<Store>()(
           }
           
           // Determine query parameter
+          
           const queryParam = userInfo.email 
             ? `email=${encodeURIComponent(userInfo.email)}` 
             : `userId=${userInfo.userId}`;
@@ -528,8 +592,9 @@ export const useStore = create<Store>()(
         get().updateProfile({ onboardingRoute: route });
       },
       
-      //************************************** Game State *********************************************//
-      
+      //***********************************************************************************************//
+      //************************************** GAME State *********************************************//
+      //***********************************************************************************************//
       // Game progress
       patientsPerDay: 4,
       streakDays: 0,
@@ -657,11 +722,577 @@ export const useStore = create<Store>()(
           patientsPerDay
         });
       },
+
+      //************************************************************************************************//
+      //************************************** AUDIO State *******************************************//
+      //***********************************************************************************************//
+      
+      // Audio state
+      isPlayingSong: false,
+      currentSong: null,
+      currentLoop: null,
+      masterVolume: 0.5,
+      
+      // Non-serializable audio references (prefixed with _ to indicate internal use)
+      _audioContext: null,
+      _masterGainNode: null,
+      _bufferCache: new Map<string, AudioBuffer>(),
+      
+      // Constants
+      _MUSIC_SOURCE: new Map<string, AudioBufferSourceNode>(),
+      _LOOP_SOURCES: new Map<string, { source: AudioBufferSourceNode; gainNode: GainNode }>(),
+      _BUFFER_CACHE_LIMIT: 20, // MB
+      _VOLUME_COEFFICIENTS: {
+        music: 1.0,  // Music at full volume
+        sfx: 0.5,    // SFX at half volume
+        ambient: 0.75  // Ambient at 75% volume
+      },
+      _SOUND_MAPPINGS: {
+        'flashcard-door-open': 'sfx',
+        'flashcard-door-closed': 'sfx',
+        'flashcard-loop-catfootsteps': 'ambient',
+        'elevenlabs-response': 'sfx',
+        // ... other sound mappings
+      },
+      
+      // Error handling
+      _handleAudioError: (error: Error, context: string) => {
+        console.error(`🎵 [AudioContext] ${context}:`, error);
+        
+        // Check for specific error types
+        if (error instanceof DOMException && error.name === 'NotAllowedError') {
+          toast.error('Please interact with the page first to enable audio.');
+        } else if (error.name === 'EncodingError') {
+          toast.error('This audio format is not supported by your browser.');
+        } else {
+          toast.error('Failed to play audio. Please try again.');
+        }
+      },
+      
+      // Audio context initialization
+      initializeAudioContext: async () => {
+        const state = get();
+        console.debug('[DEBUG][AudioStore] Initializing audio context');
+        
+        try {
+          // Check if we already have a running context
+          if (state._audioContext?.state === 'running') {
+            console.debug('[DEBUG][AudioStore] Audio context already running');
+            return state._audioContext;
+          }
+
+          // Try to resume suspended context
+          if (state._audioContext?.state === 'suspended') {
+            console.debug('[DEBUG][AudioStore] Resuming suspended audio context');
+            await state._audioContext.resume();
+            return state._audioContext;
+          }
+
+          // Create new context if needed
+          if (typeof window !== 'undefined') {
+            console.debug('[DEBUG][AudioStore] Creating new audio context');
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            const ctx = new AudioContextClass({
+              latencyHint: 'interactive',
+              sampleRate: 44100
+            });
+            
+            await ctx.resume();
+            
+            // Create master gain node
+            const masterGain = ctx.createGain();
+            masterGain.connect(ctx.destination);
+            masterGain.gain.value = state.masterVolume;
+            
+            // Update state with new context and gain node
+            set({ 
+              _audioContext: ctx,
+              _masterGainNode: masterGain
+            });
+            
+            console.debug('[DEBUG][AudioStore] Audio context created successfully');
+            
+            // Monitor performance in development
+            if (process.env.NODE_ENV === 'development') {
+              if (ctx.baseLatency > 0.025) {
+                console.warn('[DEBUG][AudioStore] High audio latency detected:', ctx.baseLatency);
+              }
+              
+              if ((ctx as any).getOutputTimestamp) {
+                const timestamp = (ctx as any).getOutputTimestamp();
+                if (timestamp.contextTime > timestamp.performanceTime) {
+                  console.warn('[DEBUG][AudioStore] Audio buffer underrun detected');
+                }
+              }
+            }
+            
+            return ctx;
+          }
+          
+          return null;
+        } catch (error) {
+          state._handleAudioError(error as Error, 'Audio context initialization failed');
+          return null;
+        }
+      },
+      
+      // Global store initialization - call this once at app startup
+      initializeStore: async () => {
+        // Prevent multiple initializations
+        if (isStoreInitialized) {
+          console.debug('[DEBUG][Store] Store already initialized, skipping');
+          return;
+        }
+        
+        console.debug('[DEBUG][Store] Initializing global store');
+        
+        try {
+          // Initialize audio context
+          const state = get();
+          await state.initializeAudioContext();
+          
+          // Set initialization flag
+          isStoreInitialized = true;
+          console.debug('[DEBUG][Store] Store initialization complete');
+        } catch (error) {
+          console.error('[DEBUG][Store] Store initialization failed:', error);
+        }
+      },
+      
+      // Load and cache audio buffer
+      loadAudioBuffer: async (url: string) => {
+        const state = get();
+        console.debug(`[DEBUG][AudioStore] Loading audio buffer: ${url}`);
+        
+        // Check if buffer is already cached
+        if (state._bufferCache.has(url)) {
+          console.debug(`[DEBUG][AudioStore] Using cached buffer for: ${url}`);
+          return state._bufferCache.get(url)!;
+        }
+        
+        // Check cache size before adding new buffer
+        let totalSize = 0;
+        for (const buffer of state._bufferCache.values()) {
+          totalSize += buffer.length * buffer.numberOfChannels * 4; // 4 bytes per sample
+        }
+        
+        if (totalSize > state._BUFFER_CACHE_LIMIT * 1024 * 1024) {
+          // Clear oldest entries if cache is too large
+          console.debug('[DEBUG][AudioStore] Cache limit reached, clearing oldest entry');
+          const oldestKey = state._bufferCache.keys().next().value;
+          if (oldestKey) {
+            state._bufferCache.delete(oldestKey);
+          }
+        }
+        
+        const ctx = await state.initializeAudioContext();
+        if (!ctx) throw new Error('Failed to initialize audio context');
+
+        try {
+          console.debug(`[DEBUG][AudioStore] Fetching audio file: ${url}`);
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const arrayBuffer = await response.arrayBuffer();
+          console.debug(`[DEBUG][AudioStore] Decoding audio data: ${url}`);
+          const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+          
+          // Cache the decoded buffer
+          state._bufferCache.set(url, audioBuffer);
+          console.debug(`[DEBUG][AudioStore] Audio buffer cached: ${url}`);
+          
+          return audioBuffer;
+        } catch (error) {
+          state._handleAudioError(error as Error, `Failed to load audio: ${url}`);
+          throw error;
+        }
+      },
+      
+      // Basic audio actions
+      playMusic: async (src, startPlayback = true, onEnded) => {
+        const state = get();
+        console.debug(`[DEBUG][AudioStore] Play music called: ${src}, startPlayback: ${startPlayback}`);
+        
+        if (!startPlayback) {
+          state.stopMusic();
+          return null;
+        }
+
+        try {
+          if (state._MUSIC_SOURCE.size > 0) {
+            console.debug('[DEBUG][AudioStore] Stopping existing music before playing new track');
+            state.stopMusic();
+          }
+
+          const audioBuffer = await state.loadAudioBuffer(src);
+          const ctx = await state.initializeAudioContext();
+          if (!ctx) throw new Error('No audio context');
+
+          set({ 
+            isPlayingSong: true,
+            currentSong: src
+          });
+
+          const source = ctx.createBufferSource();
+          source.buffer = audioBuffer;
+
+          // Add gain node with music coefficient
+          const gainNode = ctx.createGain();
+          gainNode.gain.value = state.masterVolume * state._VOLUME_COEFFICIENTS.music;
+          
+          // Connect nodes
+          source.connect(gainNode);
+          gainNode.connect(state._masterGainNode!);
+
+          state._MUSIC_SOURCE.set(src, source);
+          
+          if (startPlayback) {
+            console.debug('[DEBUG][AudioStore] Starting music playback');
+            source.start(0);
+          }
+
+          source.onended = () => {
+            console.debug('[DEBUG][AudioStore] Music playback ended');
+            state._MUSIC_SOURCE.delete(src);
+            set({
+              isPlayingSong: false,
+              currentSong: null
+            });
+            onEnded?.();
+          };
+
+          return source;
+        } catch (error) {
+          state._handleAudioError(error as Error, 'Error playing music');
+          return null;
+        }
+      },
+      
+      stopMusic: () => {
+        const state = get();
+        console.debug('[DEBUG][AudioStore] Stopping all music');
+        
+        state._MUSIC_SOURCE.forEach((source, url) => {
+          try {
+            source.onended = null;
+            source.stop();
+            source.disconnect();
+            state._MUSIC_SOURCE.delete(url);
+            console.debug(`[DEBUG][AudioStore] Stopped music: ${url}`);
+          } catch (error) {
+            state._handleAudioError(error as Error, 'Error stopping music');
+          }
+        });
+
+        set({
+          isPlayingSong: false,
+          currentSong: null
+        });
+      },
+      
+      playSound: async (soundName) => {
+        const state = get();
+        console.debug(`[DEBUG][AudioStore] Playing sound: ${soundName}`);
+        
+        try {
+          const ctx = await state.initializeAudioContext();
+          if (!ctx) return;
+          
+          const buffer = await state.loadAudioBuffer(`/audio/${soundName}.mp3`);
+          
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          
+          // Get appropriate coefficient
+          const category = state._SOUND_MAPPINGS[soundName] || 'sfx';
+          const coefficient = state._VOLUME_COEFFICIENTS[category];
+          
+          // Create gain node with coefficient
+          const localGain = ctx.createGain();
+          localGain.gain.value = state.masterVolume * coefficient;
+          
+          // Connect nodes
+          source.connect(localGain);
+          localGain.connect(state._masterGainNode!);
+          
+          // Fade in
+          localGain.gain.setValueAtTime(0, ctx.currentTime);
+          localGain.gain.linearRampToValueAtTime(coefficient * state.masterVolume, ctx.currentTime + 0.02);
+          
+          source.start();
+          console.debug(`[DEBUG][AudioStore] Sound started: ${soundName}`);
+          
+          // Fade out
+          const duration = buffer.duration;
+          localGain.gain.setValueAtTime(coefficient * state.masterVolume, ctx.currentTime + duration - 0.05);
+          localGain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
+          
+          source.onended = () => {
+            console.debug(`[DEBUG][AudioStore] Sound ended: ${soundName}`);
+            source.disconnect();
+            localGain.disconnect();
+          };
+        } catch (error) {
+          state._handleAudioError(error as Error, 'Failed to play sound');
+        }
+      },
+      
+      loopSound: async (soundName) => {
+        const state = get();
+        const normalizedName = soundName.replace('/audio/', '').replace(/\.(mp3|wav)$/, '');
+        const fullPath = `/audio/${normalizedName}.wav`;
+        
+        console.debug(`[DEBUG][AudioStore] Looping sound: ${normalizedName}, fullPath: ${fullPath}, current loops: ${Array.from(state._LOOP_SOURCES.keys()).join(', ')}`);
+        
+        // Only one loop can be active at a time
+        if (state._LOOP_SOURCES.has(fullPath)) {
+          console.debug(`[DEBUG][AudioStore] Loop already active: ${fullPath}`);
+          return;
+        }
+
+        // Check if any other loops are active and stop them
+        if (state._LOOP_SOURCES.size > 0) {
+          console.debug(`[DEBUG][AudioStore] Found ${state._LOOP_SOURCES.size} active loops, stopping them before starting new loop`);
+          await state.stopAllLoops();
+          
+          // Add a small delay to ensure audio context has time to clean up
+          console.debug('[DEBUG][AudioStore] Adding small delay after stopping loops');
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        try {
+          const ctx = await state.initializeAudioContext();
+          if (!ctx) throw new Error('Audio context not initialized');
+
+          console.debug(`[DEBUG][AudioStore] Audio context state: ${ctx.state}`);
+          
+          // Double-check that we haven't already started this loop during async operations
+          if (state._LOOP_SOURCES.has(fullPath)) {
+            console.debug(`[DEBUG][AudioStore] Loop was started by another call during async operation, skipping: ${fullPath}`);
+            return;
+          }
+          
+          const audioBuffer = await state.loadAudioBuffer(fullPath);
+          console.debug(`[DEBUG][AudioStore] Successfully loaded audio buffer for ${fullPath}, duration: ${audioBuffer.duration}s`);
+          
+          // Check again after buffer loading
+          if (state._LOOP_SOURCES.has(fullPath)) {
+            console.debug(`[DEBUG][AudioStore] Loop was started by another call after buffer loading, skipping: ${fullPath}`);
+            return;
+          }
+          
+          const source = ctx.createBufferSource();
+          source.buffer = audioBuffer;
+          source.loop = true;
+
+          // Apply the appropriate volume coefficient
+          const category = state._SOUND_MAPPINGS[normalizedName] || 'ambient';
+          const coefficient = state._VOLUME_COEFFICIENTS[category];
+
+          // Create local gain with fixed coefficient
+          const gainNode = ctx.createGain();
+          gainNode.gain.value = state.masterVolume * coefficient;
+          console.debug(`[DEBUG][AudioStore] Setting gain for loop: ${state.masterVolume} * ${coefficient} = ${state.masterVolume * coefficient}`);
+
+          // Connect directly to master
+          source.connect(gainNode);
+          gainNode.connect(state._masterGainNode!);
+
+          // Set up error handling for the source
+          source.onended = () => {
+            console.debug(`[DEBUG][AudioStore] Loop ended unexpectedly: ${fullPath}`);
+            if (state._LOOP_SOURCES.has(fullPath)) {
+              state._LOOP_SOURCES.delete(fullPath);
+              if (state.currentLoop === fullPath) {
+                set({ currentLoop: null });
+              }
+            }
+          };
+
+          state._LOOP_SOURCES.set(fullPath, { source, gainNode });
+          source.start(0);
+          console.debug(`[DEBUG][AudioStore] Loop started: ${fullPath}`);
+          
+          // Update state with current loop
+          set({ currentLoop: fullPath });
+
+        } catch (error) {
+          console.error(`[DEBUG][AudioStore] Error in loopSound for ${fullPath}:`, error);
+          state._handleAudioError(error as Error, 'Failed to start audio loop');
+        }
+      },
+      
+      stopLoopSound: (soundName) => {
+        const state = get();
+        const normalizedName = soundName.replace('/audio/', '').replace(/\.(mp3|wav)$/, '');
+        const fullPath = `/audio/${normalizedName}.wav`;
+        
+        console.debug(`[DEBUG][AudioStore] Stopping loop: ${normalizedName}, fullPath: ${fullPath}`);
+        
+        const audio = state._LOOP_SOURCES.get(fullPath);
+        if (audio) {
+          try {
+            console.debug(`[DEBUG][AudioStore] Found active loop to stop: ${fullPath}`);
+            audio.source.onended = null; // Remove the onended handler
+            audio.source.stop();
+            audio.source.disconnect();
+            audio.gainNode.disconnect();
+            state._LOOP_SOURCES.delete(fullPath);
+            console.debug(`[DEBUG][AudioStore] Loop stopped: ${fullPath}`);
+            
+            // Clear current loop if it matches
+            if (state.currentLoop === fullPath) {
+              console.debug(`[DEBUG][AudioStore] Clearing current loop state: ${fullPath}`);
+              set({ currentLoop: null });
+            }
+          } catch (error) {
+            console.error(`[DEBUG][AudioStore] Error stopping loop ${fullPath}:`, error);
+            state._handleAudioError(error as Error, 'Error stopping ambient sound');
+            
+            // Clean up the reference even if there was an error
+            state._LOOP_SOURCES.delete(fullPath);
+            if (state.currentLoop === fullPath) {
+              set({ currentLoop: null });
+            }
+          }
+        } else {
+          console.debug(`[DEBUG][AudioStore] No active loop found: ${fullPath}, active loops: ${Array.from(state._LOOP_SOURCES.keys()).join(', ')}`);
+        }
+      },
+      
+      stopAllLoops: async () => {
+        const state = get();
+        console.debug(`[DEBUG][AudioStore] Stopping all loops, active loops: ${state._LOOP_SOURCES.size}`);
+        
+        // If no active loops, just clear the state and return
+        if (state._LOOP_SOURCES.size === 0) {
+          console.debug('[DEBUG][AudioStore] No active loops to stop, just clearing state');
+          set({ currentLoop: null });
+          return;
+        }
+        
+        // Create a copy of the keys to avoid modification during iteration
+        const loopKeys = Array.from(state._LOOP_SOURCES.keys());
+        
+        // Use Promise.all to handle all stop operations in parallel
+        try {
+          await Promise.all(loopKeys.map(async (name) => {
+            try {
+              const audio = state._LOOP_SOURCES.get(name);
+              if (!audio) return;
+              
+              console.debug(`[DEBUG][AudioStore] Stopping loop: ${name}`);
+              audio.source.onended = null; // Remove the onended handler
+              audio.source.stop();
+              audio.source.disconnect();
+              audio.gainNode.disconnect();
+              state._LOOP_SOURCES.delete(name);
+              console.debug(`[DEBUG][AudioStore] Loop stopped: ${name}`);
+            } catch (error) {
+              console.error(`[DEBUG][AudioStore] Error stopping loop ${name}:`, error);
+              state._handleAudioError(error as Error, 'Error stopping ambient sound');
+              
+              // Clean up the reference even if there was an error
+              state._LOOP_SOURCES.delete(name);
+            }
+          }));
+        } catch (error) {
+          console.error('[DEBUG][AudioStore] Error in stopAllLoops:', error);
+        } finally {
+          // Always clear the map and current loop state to prevent getting stuck
+          state._LOOP_SOURCES.clear();
+          console.debug('[DEBUG][AudioStore] Clearing current loop state');
+          set({ currentLoop: null });
+        }
+      },
+      
+      getCurrentLoop: () => {
+        const loop = get().currentLoop;
+        console.debug(`[DEBUG][AudioStore] Getting current loop: ${loop}`);
+        return loop;
+      },
+      
+      setMasterVolume: (newVolume) => {
+        const state = get();
+        console.debug(`[DEBUG][AudioStore] Setting master volume: ${newVolume}`);
+        
+        if (!state._masterGainNode || !state._audioContext) {
+          // Just update the state if audio context isn't initialized
+          console.debug('[DEBUG][AudioStore] No audio context, just updating volume state');
+          set({ masterVolume: newVolume });
+          return;
+        }
+
+        const now = state._audioContext.currentTime;
+        state._masterGainNode.gain.cancelScheduledValues(now);
+        state._masterGainNode.gain.linearRampToValueAtTime(newVolume, now + 0.1);
+        console.debug(`[DEBUG][AudioStore] Volume transition scheduled: ${state.masterVolume} -> ${newVolume}`);
+        
+        // Update state
+        set({ masterVolume: newVolume });
+      },
+      
+      // Transition actions (replacing useAudioTransitions)
+      handleFlashcardsTransition: async (isOpen) => {
+        const state = get();
+        console.debug(`[DEBUG][AudioStore] Handling flashcards transition, isOpen=${isOpen}`);
+        
+        try {
+          if (isOpen) {
+            // Stop ambient sound when flashcards open
+            console.debug('[DEBUG][AudioStore] Flashcards opened, stopping ambient sound');
+            await state.stopAllLoops();
+            
+            // Small delay to ensure audio context has time to clean up
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Play flashcards music
+            console.debug('[DEBUG][AudioStore] Starting flashcards music');
+            await state.loopSound('flashcard-loop-catfootsteps');
+          } else {
+            // Stop flashcards music when closed
+            console.debug('[DEBUG][AudioStore] Flashcards closed, stopping flashcards music');
+            await state.stopAllLoops();
+            
+            // Small delay to ensure audio context has time to clean up
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Play ambient sound
+            console.debug('[DEBUG][AudioStore] Starting ambient sound');
+            await state.loopSound('flashcard-loop-catfootsteps');
+          }
+        } catch (error) {
+          console.error('[DEBUG][AudioStore] Error in handleFlashcardsTransition:', error);
+          state._handleAudioError(error as Error, 'Error handling flashcards transition');
+          
+          // Ensure we clean up any pending audio
+          await state.stopAllLoops();
+        }
+      }
     }),
-    { name: 'MYMCAT Store' }
+    {
+      // Exclude non-serializable fields from devtools
+      serialize: {
+        options: {
+          map: new Map([
+            ['_audioContext', '__excluded__'],
+            ['_masterGainNode', '__excluded__'],
+            ['_bufferCache', '__excluded__'],
+            ['_MUSIC_SOURCE', '__excluded__'],
+            ['_LOOP_SOURCES', '__excluded__']
+          ])
+        }
+      }
+    }
   )
 ) 
 
+// Export a function to initialize the store at the app level
+export const initializeGlobalStore = async () => {
+  if (typeof window !== 'undefined' && !isStoreInitialized) {
+    console.debug('[DEBUG][Store] Initializing global store from exported function');
+    await useStore.getState().initializeStore();
+  }
+};
 
 export type Card = {
   id: string;

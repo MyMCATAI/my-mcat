@@ -1,4 +1,5 @@
 import { useStore } from './store'
+import { useEffect, useCallback } from 'react'
 
 /* --- UI Selectors ---- */
 export const useUI = () => {
@@ -199,4 +200,90 @@ export const useOnboardingStatus = () => ({
   hasCompletedOnboarding: useStore(state => state.hasCompletedOnboarding),
   lastVisitedRoute: useStore(state => state.lastVisitedRoute),
   onboardingRoute: useStore(state => state.onboardingRoute)
-}) 
+})
+
+/* --- Audio Selector ---- */
+// Consolidated audio selector that provides all audio-related state and actions
+export const useAudio = () => {
+  // Audio state
+  const isPlayingSong = useStore((state) => state.isPlayingSong)
+  const currentSong = useStore((state) => state.currentSong)
+  const currentLoop = useStore((state) => state.currentLoop)
+  const masterVolume = useStore((state) => state.masterVolume)
+  
+  // Audio actions
+  const playMusic = useStore((state) => state.playMusic)
+  const stopMusic = useStore((state) => state.stopMusic)
+  const playSound = useStore((state) => state.playSound)
+  const loopSound = useStore((state) => state.loopSound)
+  const stopLoopSound = useStore((state) => state.stopLoopSound)
+  const stopAllLoops = useStore((state) => state.stopAllLoops)
+  const getCurrentLoop = useStore((state) => state.getCurrentLoop)
+  const setMasterVolume = useStore((state) => state.setMasterVolume)
+  const initializeAudioContext = useStore((state) => state.initializeAudioContext)
+  const handleFlashcardsTransition = useStore((state) => state.handleFlashcardsTransition)
+  
+  // Initialize audio context on first use
+  useEffect(() => {
+    console.debug('[useAudio] Initializing audio context on hook mount')
+    initializeAudioContext().catch(error => {
+      console.error('[useAudio] Failed to initialize audio context:', error)
+    })
+  }, [initializeAudioContext])
+
+  // Enhanced API with additional debug logging
+  return {
+    // Audio state
+    isPlaying: isPlayingSong,
+    currentSong,
+    currentLoop,
+    volume: masterVolume,
+    
+    // Audio actions with debug logging
+    playMusic: useCallback(async (src: string, startPlayback = true, onEnded?: () => void) => {
+      console.debug(`[useAudio] Playing music: ${src}, startPlayback: ${startPlayback}`)
+      return playMusic(src, startPlayback, onEnded)
+    }, [playMusic]),
+    
+    stopMusic: useCallback(() => {
+      console.debug('[useAudio] Stopping music')
+      stopMusic()
+    }, [stopMusic]),
+    
+    playSound: useCallback((soundName: string) => {
+      console.debug(`[useAudio] Playing sound: ${soundName}`)
+      playSound(soundName)
+    }, [playSound]),
+    
+    loopSound: useCallback((soundName: string) => {
+      console.debug(`[useAudio] Looping sound: ${soundName}`)
+      loopSound(soundName)
+    }, [loopSound]),
+    
+    stopLoopSound: useCallback((soundName: string) => {
+      console.debug(`[useAudio] Stopping loop: ${soundName}`)
+      stopLoopSound(soundName)
+    }, [stopLoopSound]),
+    
+    stopAllLoops: useCallback(() => {
+      console.debug('[useAudio] Stopping all loops')
+      stopAllLoops()
+    }, [stopAllLoops]),
+    
+    getActiveLoops: useCallback(() => {
+      const loop = getCurrentLoop()
+      console.debug(`[useAudio] Getting active loop: ${loop}`)
+      return loop ? [loop] : []
+    }, [getCurrentLoop]),
+    
+    setVolume: useCallback((newVolume: number) => {
+      console.debug(`[useAudio] Setting volume: ${newVolume}`)
+      setMasterVolume(newVolume)
+    }, [setMasterVolume]),
+    
+    handleFlashcardsTransition: useCallback((isOpen: boolean) => {
+      console.debug(`[useAudio] Handling flashcards transition, isOpen: ${isOpen}`)
+      handleFlashcardsTransition(isOpen)
+    }, [handleFlashcardsTransition])
+  }
+} 
