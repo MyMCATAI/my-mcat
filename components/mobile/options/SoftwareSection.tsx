@@ -245,7 +245,7 @@ const SoftwareSection = ({
             <div className="w-full md:w-5/12 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 p-8 md:p-12 flex flex-col justify-between border-t md:border-t-0 md:border-l border-amber-400/20">
               {isGold ? (
                 <div className="flex flex-col items-center">
-                  <div className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold p-3 rounded-lg mb-4 text-center">
+                  <div className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold p-3 rounded-lg mb-36 text-center">
                     You are already a Gold member! 
                   </div>
                   <button
