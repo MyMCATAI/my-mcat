@@ -327,6 +327,10 @@ const HomePage: React.FC = () => {
     // Handle activity changes
     if (tab !== "AdaptiveTutoringSuite") {
         await handleActivityChange('studying', tab);
+    } else {
+        // For AdaptiveTutoringSuite, track with a different activity type
+        // This ensures we still have consistent state tracking
+        await handleActivityChange('tutoring', 'AdaptiveTutoringSuite');
     }
   }, [router, handleActivityChange, updatePageState, pageState.currentStudyActivityId, endActivity]);
 

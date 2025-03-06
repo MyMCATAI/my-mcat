@@ -211,11 +211,10 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   
   // Simplified effect for welcome dialog
   useEffect(() => {
-    if (userInfo && !isLoading && !hasCalculatedRef.current) {
-      hasCalculatedRef.current = true;
+    if (userInfo && !isClinicUnlocked) {
       setShowWelcomeDialogue(true);
     }
-  }, [userInfo, isLoading]);
+  }, [userInfo, isClinicUnlocked]);
 
   // Use isBrowser check for any window/document access
   useEffect(() => {
