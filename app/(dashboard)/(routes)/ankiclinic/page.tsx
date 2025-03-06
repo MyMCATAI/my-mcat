@@ -500,9 +500,14 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   // Simplified effect for data initialization
   useEffect(() => {
-    fetchData();
+    // Add a small delay to ensure client-side hydration is complete
+    const timer = setTimeout(() => {
+      console.log('[DEBUG] does not appear');
+      fetchData();
+    }, 10);
     
     return () => {
+      clearTimeout(timer);
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -948,8 +953,142 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                   </ul>
                 </div>
               </div>
-              {/* Rest of the component remains the same */}
-              {/* ... */}
+              {/* Coins display */}
+              <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
+                <PurchaseButton 
+                  className="flex items-center hover:opacity-90 transition-opacity"
+                  tooltipText="Click to purchase more coins"
+                  userCoinCount={userInfo?.score}
+                >
+                  <div className="flex items-center">
+                    <Image
+                      src="/game-components/PixelCupcake.png"
+                      alt="Studycoin"
+                      width={32}
+                      height={32}
+                      className="mr-2"
+                    />
+                    <span className="text-[--theme-hover-color] font-bold">{userInfo?.score}</span>
+                  </div>
+                </PurchaseButton>
+              </div>
+              {/* Fellowship Level button with dropdown */}
+              <div className="relative group">
+                <button className={`flex items-center justify-center px-6 py-3 
+                  ${(!userLevel || userLevel === "PATIENT LEVEL") 
+                    ? "bg-green-500 animate-pulse" 
+                    : "bg-[--theme-doctorsoffice-accent]"
+                  }
+                  border-[--theme-border-color] 
+                  text-[--theme-text-color] 
+                  hover:text-[--theme-hover-text] 
+                  hover:bg-[--theme-hover-color] 
+                  transition-colors text-3xl font-bold uppercase 
+                  group-hover:text-[--theme-hover-text] 
+                  group-hover:bg-[--theme-hover-color]`}>
+                  <span>{userLevel || "PATIENT LEVEL"}</span>
+                </button>
+                <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out"> 
+                  <div className="flex flex-col">
+                    <a
+                      href="#"
+                      className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsMarketplaceOpen(!isMarketplaceOpen);
+                      }}
+                    >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 mr-2"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                            />
+                          </svg>
+                          Marketplace
+                        </a>
+                  </div>
+
+                  <div className="flex flex-col">
+                  {isMarketplaceOpen && (
+                    <ShoppingDialog
+                      ref={marketplaceDialogRef}
+                      imageGroups={imageGroups}
+                      visibleImages={visibleImages}
+                      toggleGroup={toggleGroup}
+                      userScore={userInfo?.score || 0}
+                      isOpen={isMarketplaceOpen}
+                      onOpenChange={setIsMarketplaceOpen}
+                    />
+                  )}
+                  </div>
+                  <div className="flex flex-col">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsFlashcardsTooltipOpen(!isFlashcardsTooltipOpen);
+                    }}
+                    onMouseLeave={() => setIsFlashcardsTooltipOpen(false)}
+                    className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
+                      />
+                    </svg>
+                    Flashcards
+                  </button>
+                  </div>
+
+                  <div className="flex flex-col">
+                    {isFlashcardsTooltipOpen && (
+                      <div className="absolute top-full left-0 mt-2 w-64 bg-[--theme-leaguecard-color] text-[--theme-text-color] text-sm rounded-lg p-3 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 border border-[--theme-border-color]">
+                        <p className="mb-2">Coming soon!</p>
+                      </div>
+                    )}
+                  </div>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsTutorialOpen(true);
+                    }}
+                    className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                    Tutorial
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
