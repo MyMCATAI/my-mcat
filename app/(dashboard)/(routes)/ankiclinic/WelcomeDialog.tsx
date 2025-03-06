@@ -28,7 +28,7 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({
 
   return (
     <Dialog open={isOpen} >
-      <DialogContent className="z-[100]">
+      <DialogContent className="z-[100] bg-[--theme-leaguecard-color]">
         <DialogHeader>
           <DialogTitle className="text-[--theme-text-color] text-center">{"Welcome to The Anki Clinic!"}</DialogTitle>
         </DialogHeader>
