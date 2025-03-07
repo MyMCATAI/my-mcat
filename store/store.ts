@@ -55,7 +55,7 @@ interface UserProfile {
       completedRoutes?: string[];
     };
     completedSteps?: string[];
-    hasCompletedOnboarding?: boolean;
+    onboardingComplete?: boolean;
     lastVisitedRoute?: string;
     onboardingRoute?: string;
   } | null;
@@ -91,7 +91,7 @@ interface UserSlice {
     currentStep: number;
     completedRoutes: string[];
   };
-  hasCompletedOnboarding: boolean;
+  onboardingComplete: boolean;
   lastVisitedRoute: string;
   onboardingRoute: string;
   
@@ -115,7 +115,7 @@ interface UserSlice {
   updateStudyPreferences: (preferences: Partial<UserSlice['studyPreferences']>) => void;
   updateInterfaceSettings: (settings: Partial<UserSlice['interfaceSettings']>) => void;
   updateTutorialProgress: (progress: Partial<UserSlice['tutorialProgress']>) => void;
-  setHasCompletedOnboarding: (completed: boolean) => void;
+  setOnboardingComplete: (completed: boolean) => void;
   setLastVisitedRoute: (route: string) => void;
   setOnboardingRoute: (route: string) => void;
 }
@@ -265,7 +265,7 @@ export const useStore = create<Store>()(
         currentStep: 0,
         completedRoutes: [],
       },
-      hasCompletedOnboarding: false,
+      onboardingComplete: false,
       lastVisitedRoute: '/',
       onboardingRoute: '/onboarding',
       userInfo: null,
@@ -312,8 +312,8 @@ export const useStore = create<Store>()(
             ...(updatedProfile.studyPreferences && { studyPreferences: updatedProfile.studyPreferences }),
             ...(updatedProfile.interfaceSettings && { interfaceSettings: updatedProfile.interfaceSettings }),
             ...(updatedProfile.tutorialProgress && { tutorialProgress: updatedProfile.tutorialProgress }),
-            ...(updatedProfile.hasCompletedOnboarding !== undefined && { 
-              hasCompletedOnboarding: updatedProfile.hasCompletedOnboarding 
+            ...(updatedProfile.onboardingComplete !== undefined && { 
+              onboardingComplete: updatedProfile.onboardingComplete 
             }),
             ...(updatedProfile.lastVisitedRoute && { lastVisitedRoute: updatedProfile.lastVisitedRoute }),
             ...(updatedProfile.onboardingRoute && { onboardingRoute: updatedProfile.onboardingRoute }),
@@ -372,29 +372,42 @@ export const useStore = create<Store>()(
           }
 
           // Only update subscription if changed
-          const newSubStatus = userInfo.subscriptionType === 'gold' || userInfo.subscriptionType === 'premium';
+          // Match main branch behavior by including trial subscriptions
+          const newSubStatus = 
+            userInfo.subscriptionType === 'gold' || 
+            userInfo.subscriptionType === 'premium' ||
+            userInfo.subscriptionType?.startsWith('Gold') ||
+            userInfo.subscriptionType?.includes('_Trial') || 
+            false;
+            
           if (newSubStatus !== get().isSubscribed) {
             updates.isSubscribed = newSubStatus;
           }
 
           // IMPORTANT: Check onboarding status from userInfo.onboardingInfo
           if (userInfo.onboardingInfo && typeof userInfo.onboardingInfo === 'object') {
-            // Set hasCompletedOnboarding based on onboardingInfo.onboardingComplete
-            const onboardingComplete = userInfo.onboardingInfo.onboardingComplete === true;
-            
             // Check if targetScore exists (main branch logic)
-            const hasTargetScore = userInfo.onboardingInfo.targetScore !== undefined && 
-                                  userInfo.onboardingInfo.targetScore !== null && 
-                                  userInfo.onboardingInfo.targetScore > 0;
+            const targetScore = userInfo.onboardingInfo.targetScore;
+            const isOnboardingComplete = targetScore !== undefined && 
+                                  targetScore !== null && 
+                                  targetScore > 0;
             
-            // Force immediate update of hasCompletedOnboarding if it has changed
-            // This is critical to prevent race conditions with the RouteTracker component
-            if (onboardingComplete !== get().hasCompletedOnboarding) {
+            // Set onboardingComplete based on targetScore criteria to match main branch
+            if (isOnboardingComplete !== get().onboardingComplete) {
               // Apply this update immediately and separately from the batch update
-              set({ hasCompletedOnboarding: onboardingComplete });
+              set({ onboardingComplete: isOnboardingComplete });
               
               // Remove from batch updates to avoid overwriting
-              delete updates.hasCompletedOnboarding;
+              delete updates.onboardingComplete;
+              
+              // Sync with database if there's a mismatch
+              const dbOnboardingComplete = userInfo.onboardingInfo.onboardingComplete === true;
+              if (dbOnboardingComplete !== isOnboardingComplete) {
+                // Queue an update to sync the database value
+                setTimeout(() => {
+                  get().updateProfile({ onboardingComplete: isOnboardingComplete });
+                }, 0);
+              }
             }
           }
 
@@ -419,7 +432,6 @@ export const useStore = create<Store>()(
                   currentStep: 0,
                   completedRoutes: []
                 },
-                hasCompletedOnboarding: profileData.hasCompletedOnboarding || false,
                 lastVisitedRoute: profileData.lastVisitedRoute || '/',
                 onboardingRoute: profileData.onboardingRoute || '/onboarding',
                 isProfileComplete: (profileData.completedSteps || []).length >= 3
@@ -559,8 +571,8 @@ export const useStore = create<Store>()(
         get().updateProfile({ tutorialProgress: updatedProgress });
       },
       
-      setHasCompletedOnboarding: (completed) => {
-        set({ hasCompletedOnboarding: completed });
+      setOnboardingComplete: (completed) => {
+        set({ onboardingComplete: completed });
         
         // Also update the profile object for consistency
         const profile = get().profile;
@@ -568,13 +580,13 @@ export const useStore = create<Store>()(
           set({ 
             profile: { 
               ...profile, 
-              hasCompletedOnboarding: completed 
+              onboardingComplete: completed 
             } 
           });
         }
         
         // Persist to backend if possible
-        get().updateProfile({ hasCompletedOnboarding: completed });
+        get().updateProfile({ onboardingComplete: completed });
       },
       
       setLastVisitedRoute: (route) => {

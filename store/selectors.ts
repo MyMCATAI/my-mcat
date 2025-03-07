@@ -37,7 +37,7 @@ export const useUser = () => {
   const studyPreferences = useStore((state) => state.studyPreferences)
   const interfaceSettings = useStore((state) => state.interfaceSettings)
   const tutorialProgress = useStore((state) => state.tutorialProgress)
-  const hasCompletedOnboarding = useStore((state) => state.hasCompletedOnboarding)
+  const onboardingComplete = useStore((state) => state.onboardingComplete)
   const lastVisitedRoute = useStore((state) => state.lastVisitedRoute)
   const onboardingRoute = useStore((state) => state.onboardingRoute)
   
@@ -47,7 +47,7 @@ export const useUser = () => {
   const updateStudyPreferences = useStore((state) => state.updateStudyPreferences)
   const updateInterfaceSettings = useStore((state) => state.updateInterfaceSettings)
   const updateTutorialProgress = useStore((state) => state.updateTutorialProgress)
-  const setHasCompletedOnboarding = useStore((state) => state.setHasCompletedOnboarding)
+  const setOnboardingComplete = useStore((state) => state.setOnboardingComplete)
   const setLastVisitedRoute = useStore((state) => state.setLastVisitedRoute)
   const setOnboardingRoute = useStore((state) => state.setOnboardingRoute)
   
@@ -75,7 +75,7 @@ export const useUser = () => {
     studyPreferences,
     interfaceSettings,
     tutorialProgress,
-    hasCompletedOnboarding,
+    onboardingComplete,
     lastVisitedRoute,
     onboardingRoute,
     
@@ -85,7 +85,7 @@ export const useUser = () => {
     updateStudyPreferences,
     updateInterfaceSettings,
     updateTutorialProgress,
-    setHasCompletedOnboarding,
+    setOnboardingComplete,
     setLastVisitedRoute,
     setOnboardingRoute,
     
@@ -197,7 +197,7 @@ export const useStudyPreferences = () => useStore(state => state.studyPreference
 export const useInterfaceSettings = () => useStore(state => state.interfaceSettings)
 export const useTutorialProgress = () => useStore(state => state.tutorialProgress)
 export const useOnboardingStatus = () => ({
-  hasCompletedOnboarding: useStore(state => state.hasCompletedOnboarding),
+  onboardingComplete: useStore(state => state.onboardingComplete),
   lastVisitedRoute: useStore(state => state.lastVisitedRoute),
   onboardingRoute: useStore(state => state.onboardingRoute)
 })
