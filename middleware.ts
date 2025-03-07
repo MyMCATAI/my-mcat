@@ -26,7 +26,7 @@ const publicRoutes = [
   "/tutors/(.*)",
   "/scores/(.*)",
   "/blog(.*)",
-  "/mobile",
+  "/pricing",
   "/MD_Premium_Pro.png",
   "/MDPremium.png",
   
