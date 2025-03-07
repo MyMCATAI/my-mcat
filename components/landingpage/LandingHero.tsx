@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 // Import assets using @/ alias
 import cat from "@/public/hero.gif";
@@ -15,6 +15,7 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 /* ----------------------------------------- Constants ------------------------------------------ */
 const VIDEO_URL = "https://my-mcat.s3.us-east-2.amazonaws.com/public/brush3.mp4";
+const DEMO_VIDEO_URL = "https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/MyMCAT+Software+and+Mission-VEED.mp4";
 const BROWSER_REGEX = {
   safari: /^((?!chrome|android).)*safari/i,
   firefox: /firefox/i
@@ -52,6 +53,7 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
     isSafari: false,
     isFirefox: false
   });
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   /* -------------------------------- Animations & Effects -------------------------------------- */
   // Prevent auto-scroll on page load
@@ -137,7 +139,53 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
     }
   };
 
+  const handleDemoClick = () => {
+    setIsVideoModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsVideoModalOpen(false);
+  };
+
   /* --------------------------------------- Render Methods ------------------------------------ */
+  const renderVideoModal = () => (
+    <AnimatePresence>
+      {isVideoModalOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={handleCloseModal}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="relative w-full max-w-4xl aspect-video bg-black rounded-lg overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <video
+              className="w-full h-full"
+              controls
+              autoPlay
+              src={DEMO_VIDEO_URL}
+            />
+            <button
+              onClick={handleCloseModal}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 p-2"
+              aria-label="Close modal"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
   const renderHeroContent = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-10 max-w-6xl w-full">
       {/* Left side - Text content */}
@@ -146,14 +194,28 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
            Score your <span className="text-[#f2f64f]">best.</span>
         </h1>
         <p className="text-xl md:text-2xl text-white my-8">
-        Kalypso invites you join him, and thousands of other premeds, in making MCAT prep active. 
+        Kalypso invites you join him, and thousands of other premeds, in bringing MCAT prep to life.
         </p>
         <div className="flex justify-center">
-          <Link href="/sign-up">
-            <button className="bg-[#ffffff] text-[#0e2247] py-4 text-xl md:text-2xl px-10 rounded-[20px]">
-              Register
-            </button>
-          </Link>
+          <motion.button
+            onClick={handleDemoClick}
+            className="bg-[#ffffff] text-[#0e2247] py-4 text-xl md:text-2xl px-10 rounded-[20px]"
+            whileHover={{ scale: 1.05 }}
+            animate={shouldReduceMotion ? {} : {
+              boxShadow: [
+                "0 0 0 0 rgba(255, 255, 255, 0.4)",
+                "0 0 0 15px rgba(255, 255, 255, 0)",
+              ],
+            }}
+            transition={{
+              boxShadow: {
+                duration: 1.5,
+                repeat: Infinity,
+              }
+            }}
+          >
+            Watch Demo
+          </motion.button>
         </div>
       </div>
       {/* Right side - Laptop and Cat */}
@@ -214,6 +276,7 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
 
   return (
     <>
+      {renderVideoModal()}
       <section 
         className="relative h-screen overflow-hidden bg-[#171234]" 
         id="home"

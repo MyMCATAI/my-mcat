@@ -33,7 +33,7 @@ const labelTexts = {
   "AdaptiveTutoringSuite": "Tutoring Suite",
 } as const;
 
-const PROTECTED_ROUTES = ['/mobile', '/onboarding'];
+const PROTECTED_ROUTES = ['/pricing', '/onboarding'];
 
 /* -------------------------------------------- Types ------------------------------------------- */
 interface FloatingButtonProps {
@@ -150,14 +150,18 @@ const FloatingButton = memo<FloatingButtonProps>(({
     }
   }, [updateState]);
 
-  const handleButtonClick = useCallback(async (tab: string) => {
+  // Used to direct free user (isSubscribed = false) to /pricing
+  const handleButtonClick = async (tab: string) => {
+
+    // Check if current path is protected from auto-redirect
+    // Allow useres to stay on offer page, preents auto-redirect to /ankiclinic when on offer page
     const currentPath = window.location.pathname;
     if (PROTECTED_ROUTES.some(route => currentPath.startsWith(route))) {
       return;
     }
 
     if (!isSubscribed && tab !== 'ankiclinic') {
-      router.push('/mobile');
+      router.push('/pricing');
       return;
     }
 
