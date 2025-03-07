@@ -191,15 +191,6 @@ export default function OnboardingPage() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8 w-full"
           >
-            <div className="text-center space-y-4">
-              <h2 className="text-3xl font-light text-white">
-                {`Great work${onboardingInfo?.firstName ? `, ${onboardingInfo.firstName}` : ''}! Let's choose your study path`}
-              </h2>
-              <p className="text-lg text-blue-200/80">
-                Select the option that best fits your MCAT preparation needs
-              </p>
-            </div>
-
             <UnlockOptions />
           </motion.div>
         )}
