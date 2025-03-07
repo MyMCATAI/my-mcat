@@ -1,9 +1,12 @@
-import { useTheme } from '@/contexts/ThemeContext';
+'use client'
+
+import { useUI } from '@/store/selectors';
+import type { ThemeType } from '@/store/store';
 
 const ThemeSwitcher = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useUI();
 
-  const handleThemeChange = (newTheme: 'cyberSpace' | 'sakuraTrees' | 'sunsetCity' | 'mykonosBlue') => {
+  const handleThemeChange = (newTheme: ThemeType) => {
     setTheme(newTheme);
   };
 

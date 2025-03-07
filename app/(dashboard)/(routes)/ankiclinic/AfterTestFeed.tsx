@@ -15,6 +15,8 @@ import { toast } from 'react-hot-toast';
 import type { UserResponseWithCategory } from "@/types";
 import VideoRecommendations from './components/VideoRecommendations';
 import { useAudio } from '@/contexts/AudioContext';
+import { useGame } from '@/store/selectors';
+import { useUserInfo } from '@/hooks/useUserInfo';
 
 /* ------------------------------------------ Types ------------------------------------------ */
 interface LargeDialogProps {
@@ -22,13 +24,8 @@ interface LargeDialogProps {
   onOpenChange: (open: boolean) => void;
   title?: string; 
   children?: ReactNode;
-  userResponses: UserResponseWithCategory[];
-  correctCount: number;
-  wrongCount: number;
   largeDialogQuit: boolean;
   setLargeDialogQuit: (quit: boolean) => void;
-  isSubscribed: boolean;
-  conceptCategories?: string[];
 }
 
 interface FeedItem {
@@ -126,18 +123,15 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   onOpenChange, 
   title, 
   children, 
-  userResponses, 
-  correctCount, 
-  wrongCount, 
   largeDialogQuit, 
-  setLargeDialogQuit,
-  isSubscribed,
-  conceptCategories
+  setLargeDialogQuit
 }, ref) => {
   /* ---------------------------------------- Hooks ---------------------------------------- */
   const audio = useAudio();
   const router = useRouter();
   const { user } = useUser();
+  const { isSubscribed } = useUserInfo();
+  const { userResponses, correctCount, wrongCount } = useGame();
   const chatbotRef = useRef<{
     sendMessage: (message: string) => void;
   }>({ sendMessage: () => {} });
@@ -161,6 +155,13 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     context: "",
   });
   const [recommendedVideos, setRecommendedVideos] = useState<VideoRecommendation[]>([]);
+
+  /* ------------------------------------ Expose Methods ---------------------------------- */
+  useImperativeHandle(ref, () => ({
+    setWrongCards: (cards: any[]) => {
+      setWrongCards(cards);
+    }
+  }));
 
   /* ------------------------------------ Computed Values --------------------------------- */
   const score = correctCount/(correctCount+wrongCount) * 100;

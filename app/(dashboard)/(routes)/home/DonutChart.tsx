@@ -13,7 +13,7 @@ import {
   LineController
 } from "chart.js";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { useTheme } from "@/contexts/ThemeContext";
+import { useUI } from "@/store/selectors";
 import { useClerk } from '@clerk/nextjs';
 import { motion } from "framer-motion";
 import { Chart } from 'react-chartjs-2';
@@ -53,7 +53,7 @@ interface MCATProgressData {
 }
 
 const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
-  const { theme } = useTheme();
+  const { theme } = useUI();
   const { user } = useClerk();
   const [hoveredButton, setHoveredButton] = React.useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = React.useState<string | null>(null);

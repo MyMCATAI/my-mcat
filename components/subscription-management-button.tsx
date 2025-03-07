@@ -45,6 +45,7 @@ export function SubscriptionManagementButton({
                   src="/gleamingcoin.gif"
                   alt="Gold Subscription"
                   fill
+                  sizes="48px"
                   className="transform group-hover:scale-110 transition duration-200 scale-[1.9]"
                   style={{ objectFit: 'cover' }}
                 />

@@ -1,7 +1,11 @@
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 // api/category/route.ts
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
+
 
 export async function GET(req: Request) {
   try {
