@@ -2,7 +2,7 @@ import Image from "next/image";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { ProductType } from "@/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { useRouter } from "next/navigation";
 
@@ -23,8 +23,58 @@ const goldFeatures = {
 
 export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'offer' }) {
   const [isLoading, setIsLoading] = useState(false);
-  const { isGold } = useSubscriptionStatus();
+  const [localLoading, setLocalLoading] = useState(false);
+  const [isTrialEligible, setIsTrialEligible] = useState(true);
+  const { isGold, isTrialing, isCanceled } = useSubscriptionStatus();
   const router = useRouter();
+
+  useEffect(() => {
+    if (context === 'onboarding') {
+      checkTrialEligibility();
+    }
+  }, [context]);
+
+  const checkTrialEligibility = async () => {
+    try {
+      const response = await axios.get('/api/subscription/check-trial-eligibility');
+      setIsTrialEligible(response.data.isEligible);
+      
+      if (!response.data.isEligible) {
+        console.log("User not eligible for trial:", response.data.reason);
+      }
+    } catch (error) {
+      console.error("Error checking trial eligibility:", error);
+      // Default to eligible if we can't check
+      setIsTrialEligible(true);
+    }
+  };
+
+  const handleStartTrial = async () => {
+    try {
+      setLocalLoading(true);
+      // Check eligibility first
+      const response = await axios.get('/api/subscription/check-trial-eligibility');
+      if (!response.data.isEligible) {
+        toast.error("You're not eligible for a free trial at this time");
+        setIsTrialEligible(false);
+        return;
+      }
+      
+      // Start the trial
+      const trialResponse = await axios.post('/api/subscription/start-trial');
+      if (trialResponse.data.success) {
+        toast.success("Your 7-day free trial has started!");
+        router.push('/examcalendar');
+      } else {
+        toast.error("Failed to start trial. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error starting trial:", error);
+      toast.error("An error occurred. Please try again later.");
+    } finally {
+      setLocalLoading(false);
+    }
+  };
 
   const handleAction = async () => {
     try {
@@ -36,7 +86,17 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'off
         window.location.href = response.data.url;
         return
       }
+      
+      if (context === 'onboarding') {
+        // Show the pricing page with more options
         router.push('/pricing');
+      } else {
+        // Direct checkout for gold
+        const response = await axios.post("/api/stripe/checkout", {
+          productType: "gold"
+        });
+        window.location.href = response.data.url;
+      }
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to load page. Please try again.");
@@ -47,7 +107,6 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'off
 
   return (
     <div 
-      onClick={handleAction}
       className={`relative h-full group transform transition-all duration-200 hover:scale-[1.02] cursor-pointer
         ${isGold ? 'before:absolute before:inset-0 before:bg-gradient-to-br before:from-amber-400/10 before:via-yellow-400/5 before:to-amber-400/10 before:rounded-lg border-2 border-amber-300' : ''}`}
     >
@@ -136,13 +195,41 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'off
           </div>
 
           <div className="w-full flex flex-col items-center">
-            <p className={`text-2xl font-bold mb-[50px] mt-[50px]
+            <p className={`text-2xl font-bold mb-4 mt-4
               ${isGold ? 'text-[--theme-text-color]' : 'text-white'}`}
             >
               {goldFeatures.price}
             </p>
 
+            {/* Trial button - Only show if eligible */}
+            {isTrialEligible && !isGold && !isTrialing && !isCanceled && context === 'onboarding' && (
+              <div className="space-y-2 mb-4 w-full">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleStartTrial();
+                  }}
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition-colors"
+                  disabled={localLoading}
+                >
+                  {localLoading ? 'Processing...' : 'Start 7-Day Free Trial'}
+                </button>
+                <p className="text-center text-slate-400 text-xs">No credit card required</p>
+              </div>
+            )}
+
+            {/* Message when not eligible */}
+            {!isTrialEligible && !isGold && !isTrialing && context === 'onboarding' && (
+              <p className="text-center text-slate-400 text-xs mb-4">
+                You&apos;ve already used your free trial opportunity
+              </p>
+            )}
+
             <div
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAction();
+              }}
               className={`w-full h-10 px-4 rounded-full font-medium shadow-lg 
                 transition-all duration-300 flex items-center justify-center
                 disabled:opacity-50 bg-gradient-to-r from-green-400 to-blue-500 text-white hover:from-green-500 hover:to-blue-600
