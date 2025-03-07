@@ -41,17 +41,21 @@ const SoftwareSection = ({
         return isSpecialStatus ? 83 : 133;  // 500/6 or 800/6
       case 'annual':
         return isSpecialStatus ? 67 : 100;  // 800/12 or 1200/12
+      default:
+        return 0;
     }
   };
 
-  const getTotalPrice = (period: 'monthly' | 'biannual' | 'annual') => {
+  const getTotalPrice = (period: 'monthly' | 'biannual' | 'annual', showDiscount = false) => {
     switch (period) {
       case 'monthly':
-        return 150;
+        return 450;
       case 'biannual':
-        return isSpecialStatus ? 500 : 800;
+        return showDiscount && isSpecialStatus ? 500 : 800;
       case 'annual':
-        return isSpecialStatus ? 800 : 1200;
+        return showDiscount && isSpecialStatus ? 800 : 1200;
+      default:
+        return 0;
     }
   };
 
@@ -134,21 +138,23 @@ const SoftwareSection = ({
           {/* Pricing Banner - Dynamic based on selected period */}
           <div className="bg-gradient-to-r from-amber-500/20 via-amber-400/20 to-amber-500/20 p-6 text-center border-b border-amber-400/20">
             <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">
-              {pricingPeriod === 'monthly' ? 'Monthly Access: $150' : 
-               pricingPeriod === 'biannual' ? `6-Month Access: $${getTotalPrice('biannual')} ${isSpecialStatus ? '(44% off!)' : ''}` : 
-               `Annual Access: $${getTotalPrice('annual')} ${isSpecialStatus ? '(56% off!)' : ''}`}
+              {pricingPeriod === 'biannual' ? 
+                `6-Month Access: $${getTotalPrice('biannual', true)} ${isSpecialStatus ? '(44% off!)' : ''}` : 
+                `Annual Access: $${getTotalPrice('annual', true)} ${isSpecialStatus ? '(56% off!)' : ''}`}
             </div>
             <p className="text-white/60 text-sm mt-1">
               ${getMonthlyPrice(pricingPeriod)}/month for comprehensive MCAT prep
             </p>
+            {/* Commenting out free trial banner
             <div className="mt-2 inline-flex items-center justify-center bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm font-medium">
               Now with 7-day free trial! ✨
             </div>
+            */}
           </div>
 
           <div className="flex flex-col md:flex-row">
             {/* Left Column - Benefits */}
-            <div className="w-full md:w-7/12 p-8 md:p-12 flex flex-col justify-between">
+            <div className="w-full md:w-7/12 p-8 md:p-12 flex flex-col">
               <div>
                 <div className="flex items-center gap-4 mb-8">
                   <div className="w-16 h-16 transform hover:scale-110 transition-transform duration-300">
@@ -225,24 +231,24 @@ const SoftwareSection = ({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </button>
-                    <button 
+                    <a 
+                      href="https://discord.gg/DcHWnEu8Xb"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors group"
                     >
-                      <span className="text-sm font-medium group-hover:underline">View full software in action</span>
+                      <span className="text-sm font-medium group-hover:underline">Read MyMCAT reviews</span>
                       <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
-                    </button>
+                    </a>
                   </div>
-                  <p className="text-white/90 text-sm italic font-bold">
-                    {"We're extending our discount to everyone as a token of appreciation, but soon it'll be retakers/nontrads only."}
-                  </p>
                 </div>
               </div>
             </div>
 
             {/* Right Column - Pricing */}
-            <div className="w-full md:w-5/12 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 p-8 md:p-12 flex flex-col justify-between border-t md:border-t-0 md:border-l border-amber-400/20">
+            <div className="w-full md:w-5/12 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 p-8 md:p-12 flex flex-col border-t md:border-t-0 md:border-l border-amber-400/20">
               {isGold ? (
                 <div className="flex flex-col items-center">
                   <div className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold p-3 rounded-lg mb-36 text-center">
@@ -267,7 +273,7 @@ const SoftwareSection = ({
                   <div className="text-sm text-white/60 mb-2">Select Your Plan:</div>
                   
                   {/* Pricing Toggle */}
-                  <div className="flex flex-col gap-2 mb-6">
+                  <div className="flex flex-col gap-2">
                     <button 
                       onClick={() => handlePeriodSelection('biannual')}
                       className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-left ${
@@ -276,7 +282,15 @@ const SoftwareSection = ({
                           : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20'
                       }`}
                     >
-                      Bi-Annual Plan - ${getTotalPrice('biannual')}
+                      <div className="flex items-center justify-between">
+                        <span>Bi-Annual Plan</span>
+                        <div className="flex items-center gap-2">
+                          {isSpecialStatus && (
+                            <span className="line-through opacity-60">$800</span>
+                          )}
+                          <span>${isSpecialStatus ? '500' : '800'}</span>
+                        </div>
+                      </div>
                     </button>
                     <button 
                       onClick={() => handlePeriodSelection('annual')}
@@ -286,49 +300,31 @@ const SoftwareSection = ({
                           : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20'
                       }`}
                     >
-                      Annual Plan - ${getTotalPrice('annual')}
+                      <div className="flex items-center justify-between">
+                        <span>Annual Plan</span>
+                        <div className="flex items-center gap-2">
+                          {isSpecialStatus && (
+                            <span className="line-through opacity-60">$1,200</span>
+                          )}
+                          <span>${isSpecialStatus ? '800' : '1,200'}</span>
+                        </div>
+                      </div>
                     </button>
-                    <button 
-                      onClick={() => handlePeriodSelection('monthly')}
-                      className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-left ${
-                        pricingPeriod === 'monthly' 
-                          ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg' 
-                          : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20'
-                      }`}
+                    <div 
+                      className="px-4 py-3 rounded-lg text-sm font-medium text-left bg-black/10 text-white/40 border border-amber-400/10 cursor-not-allowed"
                     >
-                      Monthly Plan - ${getTotalPrice('monthly')}
-                    </button>
+                      3-Month Plan (Coming Soon)
+                    </div>
                   </div>
 
                   {/* Upgrade button */}
                   <button
                     onClick={handleUpgradeClick}
-                    className="w-full bg-amber-500 hover:bg-amber-600 text-black py-3 rounded-lg font-semibold transition-colors"
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-black py-3 rounded-lg font-semibold transition-colors mt-4"
                     disabled={isLoading}
                   >
                     {isLoading ? 'Processing...' : 'Upgrade to Gold'}
                   </button>
-
-                  {/* Trial button - Only show if eligible */}
-                  {isTrialEligible && !isGold && !isTrialing && !isCanceled && (
-                    <div className="space-y-2 mt-4">
-                      <button
-                        onClick={handleStartTrial}
-                        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition-colors"
-                        disabled={localLoading}
-                      >
-                        {localLoading ? 'Processing...' : 'Start 7-Day Free Trial'}
-                      </button>
-                      <p className="text-center text-slate-400 text-xs">No credit card required</p>
-                    </div>
-                  )}
-                  
-                  {/* Message when not eligible */}
-                  {!isTrialEligible && !isGold && !isTrialing && (
-                    <p className="text-center text-slate-400 text-xs mt-3">
-                      You&apos;ve already used your free trial opportunity
-                    </p>
-                  )}
                 </>
               )}
             </div>

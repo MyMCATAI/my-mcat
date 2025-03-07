@@ -74,8 +74,8 @@ export async function POST(req: Request) {
         apiCount: 0,
         score: 30,
         clinicRooms: "",
-        hasPaid: false,
-        subscriptionType: "",
+        hasPaid: true,
+        subscriptionType: "gold",
         diagnosticScores: {
           total: "",
           cp: "",
