@@ -1,36 +1,54 @@
 'use client'
 
-import { Navbar } from "@/components/navbar/navbar";
 import { useEffect, useState } from "react";
-import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
-import ThemeInitializer from "@/components/home/ThemeInitializer";
-import Script from 'next/script';
-import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
-import { useUserInfo } from "@/hooks/useUserInfo";
-import { UserStatsProvider } from '@/contexts/UserStatsContext';
+import Script from 'next/script';
 
-const DashboardLayoutContent = ({
-  children,
-}: {
-  children: React.ReactNode
-}) => {
-  const { theme } = useTheme();
+import { useUI, useUser } from "@/store/selectors";
+import { useUserInfo } from "@/hooks/useUserInfo";
+
+import Navbar from "@/components/navbar/navbar";
+import ThemeInitializer from "@/components/home/ThemeInitializer";
+import StoreInitializer from '@/components/StoreInitializer';
+import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
+
+/* --- Types ---- */
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+interface DashboardLayoutContentProps {
+  children: React.ReactNode;
+}
+
+// Debug component that has access to all contexts
+const ContextDebugger = () => {
+  const searchParams = useSearchParams();
+  const isDebugMode = searchParams?.get('debug') === 'true';
+  const zustandUserState = useUser();
+    
+  return null; // This component doesn't render anything
+};
+
+const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
+  /* ---- State ----- */
+  const { theme } = useUI();
   const [backgroundImage, setBackgroundImage] = useState('');
   const { isLoaded, isSignedIn } = useAuth();
-  const { isLoading, isSubscribed } = useUserInfo();
+  const { isSubscribed } = useUser();
   const router = useRouter();
   const pathname = usePathname();
 
+  /* --- Effects --- */
   useEffect(() => {
-    if (isLoaded && isSignedIn && !isLoading) {
+    if (isLoaded && isSignedIn) {
       console.log('🎫 Subscription Status:', 
         isSubscribed ? 'GOLD or PREMIUM' : 'FREE'
       );
     }
-  }, [isLoaded, isSignedIn, isLoading, isSubscribed]);
+  }, [isLoaded, isSignedIn, isSubscribed]);
 
   useEffect(() => {
     const updateBackgroundImage = () => {
@@ -55,7 +73,7 @@ const DashboardLayoutContent = ({
     return () => window.removeEventListener('resize', updateBackgroundImage);
   }, [theme]);
 
-  if (!isLoaded || isLoading) {
+  if (!isLoaded) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
@@ -78,19 +96,17 @@ const DashboardLayoutContent = ({
    );
 }
 
-const DashboardLayout = ({ children }: { children: React.ReactNode }) => (
-  <ThemeProvider>
-    <MusicPlayerProvider>
-      <Script
-        src="https://tally.so/widgets/embed.js"
-        strategy="lazyOnload"
-      />
-      <ThemeInitializer />
-      <UserStatsProvider>
-        <DashboardLayoutContent>{children}</DashboardLayoutContent>
-      </UserStatsProvider>
-    </MusicPlayerProvider>
-  </ThemeProvider>
+const DashboardLayout = ({ children }: LayoutProps) => (
+  <MusicPlayerProvider>
+    <Script
+      src="https://tally.so/widgets/embed.js"
+      strategy="lazyOnload"
+    />
+    <ThemeInitializer />
+    <StoreInitializer />
+    <ContextDebugger />
+    <DashboardLayoutContent>{children}</DashboardLayoutContent>
+  </MusicPlayerProvider>
 );
 
 export default DashboardLayout;

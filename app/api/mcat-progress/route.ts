@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
@@ -34,10 +36,14 @@ export async function GET() {
       select: { onboardingInfo: true }
     });
     
-    // Parse the JSON string and provide type safety
-    const onboardingInfo = userInfo?.onboardingInfo ? JSON.parse(userInfo.onboardingInfo as string) as OnboardingInfo : {};
+    // Handle onboardingInfo properly whether it's a string or object
+    let onboardingInfo: OnboardingInfo;
+    if (typeof userInfo?.onboardingInfo === 'string') {
+      onboardingInfo = JSON.parse(userInfo.onboardingInfo);
+    } else {
+      onboardingInfo = userInfo?.onboardingInfo as OnboardingInfo || {};
+    }
     const targetScore = onboardingInfo.targetScore || 520;
-
     // Get all exams with their scores
     const exams = await prisma.fullLengthExam.findMany({
       where: { userId },
@@ -116,10 +122,12 @@ export async function GET() {
         : null
     };
 
-    return NextResponse.json({
+    const response = {
       chartData,
       sectionAverages
-    } as MCATProgressResponse);
+    } as MCATProgressResponse;
+
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error("[MCAT_PROGRESS_GET]", error);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
-import { useUserInfoContext } from '@/contexts/UserInfoContext';
+import { useUser } from '@/store/selectors';
 
 export type NotificationType = 'coin' | 'reply';
 export type NotificationStatus = 'active' | 'canceled' | 'accepted' | 'rejected';
@@ -25,7 +25,7 @@ export const useNotifications = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [unreadCount, setUnreadCount] = useState(0);
-    const { refreshUserInfo } = useUserInfoContext();
+    const { refreshUserInfo } = useUser();
 
     const fetchNotifications = useCallback(async () => {
         try {

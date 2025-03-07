@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useClerk, useUser } from '@clerk/nextjs';
+import { useClerk, useUser as useClerkUser } from '@clerk/nextjs';
 import { FaUser, FaUserCog, FaSignOutAlt } from 'react-icons/fa';
 import UserProfileModal from '../social/profile/UserProfileModal';
-import { useProfileContext } from '@/contexts/UserProfileContext';
+import { useUser } from '@/store/selectors';
 import Image from 'next/image';
 
 export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
@@ -10,8 +10,8 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
   const { openUserProfile, signOut } = useClerk();
-  const { user } = useUser();
-  const { profile, isLoading } = useProfileContext();
+  const { user } = useClerkUser();
+  const { profile, profileLoading } = useUser();
 
   // Handle clicks outside menu
   useEffect(() => {
@@ -43,7 +43,7 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
         </div>
         
         {/* Profile Image with Loading State */}
-        {isLoading ? (
+        {profileLoading ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-[--theme-hover-color] border-t-transparent" />
           </div>
@@ -57,9 +57,6 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
             className="w-full h-full object-cover transition-opacity duration-300"
             quality={100}
             style={{ opacity: 0 }}
-            onLoadingComplete={(img) => {
-              img.style.opacity = "1";
-            }}
             onLoad={(e) => {
               (e.target as HTMLImageElement).style.opacity = "1";
             }}

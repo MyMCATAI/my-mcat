@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAudio } from '@/contexts/AudioContext';
+import Image from 'next/image';
 
 interface InterruptionProps {
   isVisible: boolean;
@@ -87,10 +88,13 @@ const Interruption = ({
                 onClick={handleClick}
                 className="w-full h-full relative overflow-hidden transition duration-200 ease-in-out transform hover:-translate-y-2 focus:outline-none"
               >
-                <img
+                <Image
                   src={imageUrl}
                   alt="Interruption Character"
+                  width={128}
+                  height={128}
                   className="w-full h-full object-cover transform scale-[2] translate-y-[45%]"
+                  priority
                 />
               </button>
             </div>

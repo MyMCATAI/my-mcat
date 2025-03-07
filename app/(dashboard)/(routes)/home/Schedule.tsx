@@ -32,7 +32,7 @@ import { OptionsDialog } from "@/components/home/OptionsDialog";
 import { useClerk } from "@clerk/clerk-react";
 import { SubscriptionButton } from "@/components/subscription-button";
 import Tutorial from "./Tutorial";
-import { UserInfo } from "@/hooks/useUserInfo";
+import { UserInfo } from "@/types/user";
 
 type Section = "AdaptiveTutoringSuite" | "MCATGameAnkiClinic" | "DailyCARsSuite" | "Tests";
 

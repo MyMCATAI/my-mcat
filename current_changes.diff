@@ -1,0 +1,3013 @@
+diff --git a/README_Docs/tasks/user-dennis/tasks.md b/README_Docs/tasks/user-dennis/tasks.md
+index 1765995..368a5b9 100644
+--- a/README_Docs/tasks/user-dennis/tasks.md
++++ b/README_Docs/tasks/user-dennis/tasks.md
+@@ -2,8 +2,692 @@ TODO:
+ [ x ] lazy load remove
+ [x] no prop drilling - okay take a note of page.tsx and all its children components, and note which global state values we store in the global zustand store and make sure we are not prop drilling any values into the child components. 
+ 
++# AudioContext and MusicPlayerContext Migration Plan
+ 
++## Overview
++This plan outlines the steps to migrate the AudioContext and MusicPlayerContext from React Context API to Zustand state management. This migration will consolidate audio and music player functionality into a single `AudioSlice` within the main Zustand store, following the existing pattern used for UI, Game, and User stores.
+ 
++## Current State Analysis
++1. **AudioContext** provides:
++   - Audio playback functionality (play, stop, loop)
++   - Volume control
++   - Sound effects management
++   - Music playback
++   - Audio buffer caching
++   - Error handling with user-friendly messages
++   - Performance monitoring (in development mode)
++
++2. **MusicPlayerContext** provides:
++   - ~~Auto-play settings~~ (Unused in current implementation)
++   - Music player UI state
++
++3. **Dependencies**:
++   - `useAudioTransitions` hook depends on AudioContext (will be removed)
++   - Multiple components use both contexts
++
++## Migration Steps
++
++### 1. Extend the Main Store Structure
++- [ ] Add an audio slice to the existing store in `store.ts`:
++  ```typescript
++  // Define the AudioSlice interface
++  interface AudioSlice {
++    // Audio state
++    isPlayingSong: boolean;
++    currentSong: string | null;
++    currentLoop: string | null;
++    masterVolume: number;
++    
++    // Audio context references (not serializable - handled internally)
++    _audioContext: AudioContext | null;
++    _masterGainNode: GainNode | null;
++    _bufferCache: Map<string, AudioBuffer>;
++    
++    // Basic audio actions
++    playMusic: (src: string, startPlayback?: boolean, onEnded?: () => void) => void;
++    stopMusic: () => void;
++    playSound: (soundName: string) => void;
++    loopSound: (soundName: string) => Promise<void>;
++    stopLoopSound: (soundName: string) => void;
++    stopAllLoops: () => Promise<void>;
++    getCurrentLoop: () => string | null;
++    setMasterVolume: (newVolume: number) => void;
++    
++    // Audio context management
++    initializeAudioContext: () => Promise<AudioContext | null>;
++    loadAudioBuffer: (url: string) => Promise<AudioBuffer>;
++    
++    // Transition actions (replacing useAudioTransitions)
++    handleFlashcardsTransition: (isOpen: boolean) => Promise<void>;
++  }
++  
++  // Update the Store type
++  type Store = UISlice & UserSlice & GameSlice & AudioSlice;
++  ```
++
++### 2. Implement Audio Slice in the Store
++- [ ] Add the audio state and actions to the main store:
++  ```typescript
++  // In store.ts
++  export const useStore = create<Store>()(
++    devtools(
++      (set, get) => ({
++        // Audio, UI, User, Game slices
++
++        //************************************************************************************************//
++        //************************************** Audio State *********************************************//
++        //************************************************************************************************//
++        
++        // Audio state
++        isPlayingSong: false,
++        currentSong: null,
++        currentLoop: null,
++        masterVolume: 0.5,
++        
++        // Non-serializable audio references (prefixed with _ to indicate internal use)
++        _audioContext: null,
++        _masterGainNode: null,
++        _bufferCache: new Map<string, AudioBuffer>(),
++        
++        // Constants
++        _MUSIC_SOURCE: new Map<string, AudioBufferSourceNode>(),
++        _LOOP_SOURCES: new Map<string, { source: AudioBufferSourceNode; gainNode: GainNode }>(),
++        _BUFFER_CACHE_LIMIT: 20, // MB
++        _VOLUME_COEFFICIENTS: {
++          music: 1.0,  // Music at full volume
++          sfx: 0.5,    // SFX at half volume
++          ambient: 0.75  // Ambient at 75% volume
++        },
++        _SOUND_MAPPINGS: {
++          'flashcard-door-open': 'sfx',
++          'flashcard-door-closed': 'sfx',
++          'flashcard-loop-catfootsteps': 'ambient',
++          'elevenlabs-response': 'sfx',
++          // ... other sound mappings
++        },
++        
++        // Error handling
++        _handleAudioError: (error: Error, context: string) => {
++          console.error(`🎵 [AudioContext] ${context}:`, error);
++          
++          // Check for specific error types
++          if (error instanceof DOMException && error.name === 'NotAllowedError') {
++            toast.error('Please interact with the page first to enable audio.');
++          } else if (error.name === 'EncodingError') {
++            toast.error('This audio format is not supported by your browser.');
++          } else {
++            toast.error('Failed to play audio. Please try again.');
++          }
++        },
++        
++        // Audio context initialization
++        initializeAudioContext: async () => {
++          const state = get();
++          
++          try {
++            // Check if we already have a running context
++            if (state._audioContext?.state === 'running') {
++              return state._audioContext;
++            }
++
++            // Try to resume suspended context
++            if (state._audioContext?.state === 'suspended') {
++              await state._audioContext.resume();
++              return state._audioContext;
++            }
++
++            // Create new context if needed
++            if (typeof window !== 'undefined') {
++              const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
++              const ctx = new AudioContextClass({
++                latencyHint: 'interactive',
++                sampleRate: 44100
++              });
++              
++              await ctx.resume();
++              
++              // Create master gain node
++              const masterGain = ctx.createGain();
++              masterGain.connect(ctx.destination);
++              masterGain.gain.value = state.masterVolume;
++              
++              // Update state with new context and gain node
++              set({ 
++                _audioContext: ctx,
++                _masterGainNode: masterGain
++              });
++              
++              // Monitor performance in development
++              if (process.env.NODE_ENV === 'development') {
++                if (ctx.baseLatency > 0.025) {
++                  console.warn('High audio latency detected:', ctx.baseLatency);
++                }
++                
++                if ((ctx as any).getOutputTimestamp) {
++                  const timestamp = (ctx as any).getOutputTimestamp();
++                  if (timestamp.contextTime > timestamp.performanceTime) {
++                    console.warn('Audio buffer underrun detected');
++                  }
++                }
++              }
++              
++              return ctx;
++            }
++            
++            return null;
++          } catch (error) {
++            state._handleAudioError(error as Error, 'Audio context initialization failed');
++            return null;
++          }
++        },
++        
++        // Load and cache audio buffer
++        loadAudioBuffer: async (url: string) => {
++          const state = get();
++          
++          // Check if buffer is already cached
++          if (state._bufferCache.has(url)) {
++            return state._bufferCache.get(url)!;
++          }
++          
++          // Check cache size before adding new buffer
++          let totalSize = 0;
++          for (const buffer of state._bufferCache.values()) {
++            totalSize += buffer.length * buffer.numberOfChannels * 4; // 4 bytes per sample
++          }
++          
++          if (totalSize > state._BUFFER_CACHE_LIMIT * 1024 * 1024) {
++            // Clear oldest entries if cache is too large
++            const oldestKey = state._bufferCache.keys().next().value;
++            if (oldestKey) {
++              state._bufferCache.delete(oldestKey);
++            }
++          }
++          
++          const ctx = await state.initializeAudioContext();
++          if (!ctx) throw new Error('Failed to initialize audio context');
++
++          try {
++            const response = await fetch(url);
++            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
++            const arrayBuffer = await response.arrayBuffer();
++            const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
++            
++            // Cache the decoded buffer
++            state._bufferCache.set(url, audioBuffer);
++            
++            return audioBuffer;
++          } catch (error) {
++            state._handleAudioError(error as Error, `Failed to load audio: ${url}`);
++            throw error;
++          }
++        },
++        
++        // Basic audio actions
++        playMusic: async (src, startPlayback = true, onEnded) => {
++          const state = get();
++          
++          if (!startPlayback) {
++            state.stopMusic();
++            return null;
++          }
++
++          try {
++            if (state._MUSIC_SOURCE.size > 0) {
++              state.stopMusic();
++            }
++
++            const audioBuffer = await state.loadAudioBuffer(src);
++            const ctx = await state.initializeAudioContext();
++            if (!ctx) throw new Error('No audio context');
++
++            set({ 
++              isPlayingSong: true,
++              currentSong: src
++            });
++
++            const source = ctx.createBufferSource();
++            source.buffer = audioBuffer;
++
++            // Add gain node with music coefficient
++            const gainNode = ctx.createGain();
++            gainNode.gain.value = state.masterVolume * state._VOLUME_COEFFICIENTS.music;
++            
++            // Connect nodes
++            source.connect(gainNode);
++            gainNode.connect(state._masterGainNode!);
++
++            state._MUSIC_SOURCE.set(src, source);
++            
++            if (startPlayback) {
++              source.start(0);
++            }
++
++            source.onended = () => {
++              state._MUSIC_SOURCE.delete(src);
++              set({
++                isPlayingSong: false,
++                currentSong: null
++              });
++              onEnded?.();
++            };
++
++            return source;
++          } catch (error) {
++            state._handleAudioError(error as Error, 'Error playing music');
++            return null;
++          }
++        },
++        
++        stopMusic: () => {
++          const state = get();
++          
++          state._MUSIC_SOURCE.forEach((source, url) => {
++            try {
++              source.onended = null;
++              source.stop();
++              source.disconnect();
++              state._MUSIC_SOURCE.delete(url);
++            } catch (error) {
++              state._handleAudioError(error as Error, 'Error stopping music');
++            }
++          });
++
++          set({
++            isPlayingSong: false,
++            currentSong: null
++          });
++        },
++        
++        playSound: async (soundName) => {
++          const state = get();
++          
++          try {
++            const ctx = await state.initializeAudioContext();
++            if (!ctx) return;
++            
++            const buffer = await state.loadAudioBuffer(`/audio/${soundName}.mp3`);
++            
++            const source = ctx.createBufferSource();
++            source.buffer = buffer;
++            
++            // Get appropriate coefficient
++            const category = state._SOUND_MAPPINGS[soundName] || 'sfx';
++            const coefficient = state._VOLUME_COEFFICIENTS[category];
++            
++            // Create gain node with coefficient
++            const localGain = ctx.createGain();
++            localGain.gain.value = state.masterVolume * coefficient;
++            
++            // Connect nodes
++            source.connect(localGain);
++            localGain.connect(state._masterGainNode!);
++            
++            // Fade in
++            localGain.gain.setValueAtTime(0, ctx.currentTime);
++            localGain.gain.linearRampToValueAtTime(coefficient * state.masterVolume, ctx.currentTime + 0.02);
++            
++            source.start();
++            
++            // Fade out
++            const duration = buffer.duration;
++            localGain.gain.setValueAtTime(coefficient * state.masterVolume, ctx.currentTime + duration - 0.05);
++            localGain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
++            
++            source.onended = () => {
++              source.disconnect();
++              localGain.disconnect();
++            };
++          } catch (error) {
++            state._handleAudioError(error as Error, 'Failed to play sound');
++          }
++        },
++        
++        loopSound: async (soundName) => {
++          const state = get();
++          const normalizedName = soundName.replace('/audio/', '').replace(/\.(mp3|wav)$/, '');
++          const fullPath = `/audio/${normalizedName}.wav`;
++          
++          // Only one loop can be active at a time
++          if (state._LOOP_SOURCES.has(fullPath)) {
++            return;
++          }
++
++          try {
++            const ctx = await state.initializeAudioContext();
++            if (!ctx) throw new Error('Audio context not initialized');
++
++            const audioBuffer = await state.loadAudioBuffer(fullPath);
++            const source = ctx.createBufferSource();
++            source.buffer = audioBuffer;
++            source.loop = true;
++
++            // Apply the appropriate volume coefficient
++            const category = state._SOUND_MAPPINGS[normalizedName] || 'ambient';
++            const coefficient = state._VOLUME_COEFFICIENTS[category];
++
++            // Create local gain with fixed coefficient
++            const gainNode = ctx.createGain();
++            gainNode.gain.value = state.masterVolume * coefficient;
++
++            // Connect directly to master
++            source.connect(gainNode);
++            gainNode.connect(state._masterGainNode!);
++
++            state._LOOP_SOURCES.set(fullPath, { source, gainNode });
++            source.start(0);
++            
++            // Update state with current loop
++            set({ currentLoop: fullPath });
++
++          } catch (error) {
++            state._handleAudioError(error as Error, 'Failed to start audio loop');
++          }
++        },
++        
++        stopLoopSound: (soundName) => {
++          const state = get();
++          const normalizedName = soundName.replace('/audio/', '').replace(/\.(mp3|wav)$/, '');
++          const fullPath = `/audio/${normalizedName}.wav`;
++          
++          const audio = state._LOOP_SOURCES.get(fullPath);
++          if (audio) {
++            try {
++              audio.source.stop();
++              audio.source.disconnect();
++              audio.gainNode.disconnect();
++              state._LOOP_SOURCES.delete(fullPath);
++              
++              // Clear current loop if it matches
++              if (state.currentLoop === fullPath) {
++                set({ currentLoop: null });
++              }
++            } catch (error) {
++              state._handleAudioError(error as Error, 'Error stopping ambient sound');
++            }
++          }
++        },
++        
++        stopAllLoops: async () => {
++          const state = get();
++          
++          state._LOOP_SOURCES.forEach((audio, name) => {
++            try {
++              audio.source.stop();
++              audio.source.disconnect();
++              audio.gainNode.disconnect();
++              state._LOOP_SOURCES.delete(name);
++            } catch (error) {
++              state._handleAudioError(error as Error, 'Error stopping ambient sound');
++            }
++          });
++          
++          // Clear current loop
++          set({ currentLoop: null });
++        },
++        
++        getCurrentLoop: () => {
++          return get().currentLoop;
++        },
++        
++        setMasterVolume: (newVolume) => {
++          const state = get();
++          
++          if (!state._masterGainNode || !state._audioContext) {
++            // Just update the state if audio context isn't initialized
++            set({ masterVolume: newVolume });
++            return;
++          }
++
++          const now = state._audioContext.currentTime;
++          state._masterGainNode.gain.cancelScheduledValues(now);
++          state._masterGainNode.gain.linearRampToValueAtTime(newVolume, now + 0.1);
++          
++          // Update state
++          set({ masterVolume: newVolume });
++        },
++        
++        // Transition actions (replacing useAudioTransitions)
++        handleFlashcardsTransition: async (isOpen) => {
++          // Internal transition tracking - no need for global state
++          const state = get();
++          
++          try {
++            if (isOpen) {
++              // Transition to flashcards open
++              await state.stopAllLoops();
++              state.playSound('flashcard-door-open');
++            } else {
++              // Transition to flashcards closed
++              state.playSound('flashcard-door-closed');
++              await new Promise(resolve => setTimeout(resolve, 500));
++              await state.loopSound('flashcard-loop-catfootsteps');
++            }
++          } catch (error) {
++            state._handleAudioError(error as Error, '[AudioTransition] Error');
++          }
++        }
++      }),
++      {
++        // Exclude non-serializable fields from devtools
++        serialize: {
++          options: {
++            map: new Map([
++              ['_audioContext', '__excluded__'],
++              ['_masterGainNode', '__excluded__'],
++              ['_bufferCache', '__excluded__'],
++              ['_MUSIC_SOURCE', '__excluded__'],
++              ['_LOOP_SOURCES', '__excluded__']
++            ])
++          }
++        }
++      }
++    )
++  )
++  ```
++- [ ] Port all audio context functionality
++- [ ] Add music player state and actions
++- [ ] Ensure browser environment checks for SSR compatibility
++- [ ] Add proper TypeScript types
++
++### 3. Create Selectors in selectors.ts
++- [ ] Add audio selectors to `store/selectors.ts`:
++  ```typescript
++  // Consolidated audio selector
++  export const useAudio = () => {
++    const isPlayingSong = useStore((state) => state.isPlayingSong);
++    const currentSong = useStore((state) => state.currentSong);
++    const currentLoop = useStore((state) => state.currentLoop);
++    const masterVolume = useStore((state) => state.masterVolume);
++    
++    // Basic actions
++    const playMusic = useStore((state) => state.playMusic);
++    const stopMusic = useStore((state) => state.stopMusic);
++    const playSound = useStore((state) => state.playSound);
++    const loopSound = useStore((state) => state.loopSound);
++    const stopLoopSound = useStore((state) => state.stopLoopSound);
++    const stopAllLoops = useStore((state) => state.stopAllLoops);
++    const getCurrentLoop = useStore((state) => state.getCurrentLoop);
++    const setMasterVolume = useStore((state) => state.setMasterVolume);
++    
++    // Transition actions
++    const handleFlashcardsTransition = useStore((state) => state.handleFlashcardsTransition);
++    
++    return {
++      // State
++      isPlayingSong,
++      currentSong,
++      currentLoop,
++      masterVolume,
++      
++      // Basic actions
++      playMusic,
++      stopMusic,
++      playSound,
++      loopSound,
++      stopLoopSound,
++      stopAllLoops,
++      getCurrentLoop,
++      setMasterVolume,
++      
++      // Transition actions
++      handleFlashcardsTransition
++    };
++  }
++  
++  // Individual selectors for specific needs
++  export const useAudioPlayer = () => ({
++    isPlayingSong: useStore(state => state.isPlayingSong),
++    currentSong: useStore(state => state.currentSong),
++    masterVolume: useStore(state => state.masterVolume),
++    playMusic: useStore(state => state.playMusic),
++    stopMusic: useStore(state => state.stopMusic),
++    setMasterVolume: useStore(state => state.setMasterVolume)
++  });
++  ```
++
++### 4. Create Compatibility Layer
++- [ ] Create compatibility wrappers for existing contexts:
++  - [ ] Update `contexts/AudioContext.tsx` to use Zustand store internally
++  - [ ] Update `contexts/MusicPlayerContext.tsx` to use Zustand store internally (or remove if unused)
++  - [ ] Ensure backward compatibility for existing components
++
++### 5. Update Component Dependencies
++- [ ] Identify all components using AudioContext or MusicPlayerContext
++- [ ] Update imports to use new selectors
++- [ ] Test each component with the new store
++
++### 6. Update Hooks and Remove Redundant Code
++- [ ] Remove `useAudioTransitions.ts` hook entirely
++- [ ] Update components that use this hook to use the store directly:
++  ```typescript
++  // In ankiclinic/page.tsx
++  
++  // Before:
++  const { 
++    initializeAmbientSound, 
++    stopAllAudio,
++    isAudioTransitionInProgress 
++  } = useAudioTransitions({
++    isFlashcardsOpen,
++    isLoading,
++    isMounted: true
++  });
++  
++  // After:
++  const { 
++    loopSound, 
++    stopAllLoops, 
++    handleFlashcardsTransition
++  } = useAudio();
++  
++  // Effect to handle flashcards transitions
++  useEffect(() => {
++    if (!isLoading) {
++      handleFlashcardsTransition(isFlashcardsOpen);
++    }
++  }, [isFlashcardsOpen, isLoading, handleFlashcardsTransition]);
++  
++  // Initialize ambient sound on mount
++  useEffect(() => {
++    if (!isLoading && !isFlashcardsOpen) {
++      loopSound('flashcard-loop-catfootsteps');
++    }
++    
++    return () => {
++      stopAllLoops();
++    };
++  }, [isLoading, isFlashcardsOpen, loopSound, stopAllLoops]);
++  ```
++
++### 7. Handle Browser-Specific APIs
++- [ ] Ensure all browser-specific code has proper checks:
++  ```typescript
++  // Example of browser check
++  if (typeof window !== 'undefined') {
++    // Browser-specific code
++  }
++  ```
++- [ ] Use dynamic imports with `ssr: false` for components with audio dependencies
++- [ ] Add initialization logic for browser environment
++- [ ] Handle WebAudio API browser compatibility issues
++
++### 8. Add Cleanup Logic
++- [ ] Implement a store cleanup function:
++  ```typescript
++  // In store.ts
++  useEffect(() => {
++    // Initialize audio context when store is first used in browser
++    const state = get();
++    state.initializeAudioContext();
++    
++    // Cleanup function
++    return () => {
++      const state = get();
++      state.stopAllLoops();
++      state.stopMusic();
++      
++      // Close audio context
++      if (state._audioContext) {
++        state._audioContext.close();
++      }
++      
++      // Clear references
++      set({
++        _audioContext: null,
++        _masterGainNode: null,
++        _MUSIC_SOURCE: new Map(),
++        _LOOP_SOURCES: new Map()
++      });
++    };
++  }, []);
++  ```
++- [ ] Add this to a store initialization function
++
++### 9. Testing Plan
++- [ ] Test audio playback functionality
++- [ ] Test music player controls
++- [ ] Test volume controls
++- [ ] Test sound effects
++- [ ] Test looping sounds
++- [ ] Verify SSR compatibility
++- [ ] Test error handling
++- [ ] Test performance monitoring
++- [ ] Test browser compatibility
++
++### 10. Documentation Updates
++- [ ] Update README-STATE.md with new store information
++- [ ] Mark AudioContext and MusicPlayerContext as migrated
++- [ ] Document any breaking changes or API differences
++- [ ] Document the audio buffer caching system
++- [ ] Document error handling approach
++- [ ] Document volume coefficient system
++
++### 11. Cleanup
++- [ ] Remove deprecated context providers from app layout
++- [ ] Remove unused code and imports
++- [ ] Update any remaining references to old contexts
++
++## Implementation Considerations
++1. **Browser Environment**: Ensure all Web Audio API usage is wrapped in browser environment checks
++2. **Performance**: Use selective subscriptions to prevent unnecessary re-renders
++3. **SSR Compatibility**: Handle server-side rendering properly
++4. **Error Handling**: Maintain robust error handling for audio operations
++5. **Memory Management**: Ensure proper cleanup of audio resources
++6. **Store Organization**: Keep the store organized by grouping related state and actions
++7. **Non-Serializable State**: Use prefixed properties (e.g., `_audioContext`) for non-serializable state and exclude them from devtools serialization
++8. **Volume Management**: Maintain the volume coefficient system for different sound categories
++
++## Potential Challenges
++1. Managing audio buffer caching in Zustand
++2. Handling audio context initialization timing
++3. Ensuring proper cleanup of audio resources
++4. Maintaining backward compatibility during transition
++5. Managing external audio resources and references that can't be stored directly in Zustand
++6. Handling browser compatibility issues with Web Audio API
++7. Ensuring proper error handling across all audio operations
++
++-----
+ ## Cursor Notes
+ 
+ #### Prompts
+diff --git a/app/(dashboard)/(routes)/ankiclinic/page.tsx b/app/(dashboard)/(routes)/ankiclinic/page.tsx
+index d5018a8..2743769 100644
+--- a/app/(dashboard)/(routes)/ankiclinic/page.tsx
++++ b/app/(dashboard)/(routes)/ankiclinic/page.tsx
+@@ -13,9 +13,7 @@ import { PurchaseButton } from "@/components/purchase-button";
+ import dynamic from 'next/dynamic';
+ import { useUserInfo } from "@/hooks/useUserInfo";
+ import { useUserActivity } from '@/hooks/useUserActivity';
+-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+-import { useAudio } from "@/contexts/AudioContext";
+-import { useAudioTransitions } from "@/hooks/useAudioTransitions";
++import { useAudio } from "@/store/selectors";
+ import type { UserResponse } from "@prisma/client";
+ import type { FetchedActivity } from "@/types";
+ import { GridImage } from './types';
+@@ -95,6 +93,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
+   const isInitializedRef = useRef(false);
+   const stateUpdateInProgressRef = useRef(false);
+   const isMountedRef = useRef(false);
++  const ambientSoundInitializedRef = useRef(false);
+   
+   // Keep only essential refs, remove debugging refs
+   const officeContainerRef = useRef<HTMLDivElement>(null);
+@@ -117,7 +116,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
+   /* ------------------------------------------- Hooks -------------------------------------------- */
+   const { isSubscribed, userInfo, incrementScore, decrementScore } = useUserInfo();
+   const audio = useAudio();
+-  const { setIsAutoPlay } = useMusicPlayer();
+   const { startActivity } = useUserActivity();
+   const router = useRouter();
+   
+@@ -151,17 +149,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
+   const [activities, setActivities] = useState<FetchedActivity[]>([]);
+   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
+ 
+-  // Add useAudioTransitions hook after state declarations
+-  const { 
+-    initializeAmbientSound, 
+-    stopAllAudio,
+-    isAudioTransitionInProgress 
+-  } = useAudioTransitions({
+-    isFlashcardsOpen,
+-    isLoading,
+-    isMounted: true // Simplified from isMountedRef.current
+-  });
+-
+   /* ----------------------------------------- Computation ----------------------------------------- */
+ 
+   // Memoize expensive computations
+@@ -222,19 +209,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
+ 
+   /* ----------------------------------------- UseEffects ---------------------------------------- */
+   
+-  // Simplified effect for audio management
+-  useEffect(() => {
+-    // Initialize ambient sound when not in flashcards mode
+-    if (!isFlashcardsOpen && !isLoading) {
+-      initializeAmbientSound();
+-    }
+-    
+-    // Cleanup audio on unmount
+-    return () => {
+-      stopAllAudio();
+-    };
+-  }, [isFlashcardsOpen, isLoading, initializeAmbientSound, stopAllAudio]);
+-
+   // Simplified effect for welcome dialog
+   useEffect(() => {
+     if (userInfo && !isLoading && !hasCalculatedRef.current) {
+@@ -258,6 +232,9 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
+       console.log('[DEBUG] Detected possible React Strict Mode (double render)');
+     }
+     
++    // Create a stable reference to the audio object
++    const audioRef = audio;
++    
+     return () => {
+       console.log('[DEBUG] AnkiClinic unmounting');
+       isMountedRef.current = false;
+@@ -266,39 +243,122 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
+       if (abortControllerRef.current) {
+         abortControllerRef.current.abort();
+       }
++      
++      // Ensure we stop all audio when component unmounts
++      console.log('[DEBUG] Stopping all audio on unmount');
++      audioRef.stopAllLoops();
++      
++      // Reset the ambient sound initialization flag
++      if (ambientSoundInitializedRef.current) {
++        console.log('[DEBUG] Resetting ambient sound initialization flag');
++        ambientSoundInitializedRef.current = false;
++      }
+     };
+   }, [pathname, isBrowser]);
+ 
+-  // Add a new effect to preserve debug mode - run only once
++  // Add a new effect to initialize ambient sound
+   useEffect(() => {
+-    if (!isBrowser) return; // Skip on server-side
++    if (!isBrowser) return;
+     
+-    // Check if we need to preserve debug mode
+-    const isDebugMode = searchParams?.get('debug') === 'true';
+-    console.log('[DEBUG] Debug mode check:', { 
+-      isDebugMode, 
+-      searchParamsDebug: searchParams?.get('debug'),
+-      hasDebugClass: document.body.classList.contains('debug-mode')
++    // Log the current state
++    console.log('[DEBUG] Ambient sound effect running', { 
++      isLoading, 
++      isFlashcardsOpen,
++      isMounted: isMountedRef.current,
++      ambientInitialized: ambientSoundInitializedRef.current
+     });
+     
+-    if (isDebugMode) {
+-      // Set a flag to indicate we're in debug mode
+-      document.body.classList.add('debug-mode');
+-      console.log('[DEBUG] Added debug-mode class to body');
+-    } else if (searchParams?.get('debug') === 'false') {
+-      // Explicitly set to false - remove debug mode
+-      document.body.classList.remove('debug-mode');
+-      console.log('[DEBUG] Removed debug-mode class from body');
++    // Only play ambient sound if:
++    // 1. Component is mounted
++    // 2. Not in loading state
++    // 3. Flashcards are not open
++    // 4. Ambient sound hasn't been initialized yet
++    if (isMountedRef.current && !isLoading && !isFlashcardsOpen && !ambientSoundInitializedRef.current) {
++      console.log('[DEBUG] Scheduling ambient sound initialization');
++      
++      // Add a longer delay to ensure audio context is ready and component is stable
++      const timeoutId = setTimeout(() => {
++        if (!isMountedRef.current) {
++          console.log('[DEBUG] Component unmounted before ambient sound could initialize');
++          return;
++        }
++        
++        try {
++          // Mark as initialized to prevent multiple initializations
++          ambientSoundInitializedRef.current = true;
++          
++          // Play the ambient sound loop
++          console.log('[DEBUG] Playing ambient sound loop: ' + AMBIENT_SOUND);
++          audio.loopSound(AMBIENT_SOUND);
++          
++          console.log('[DEBUG] Ambient sound loop started successfully');
++        } catch (error) {
++          console.error('[ERROR] Failed to play ambient sound:', error);
++          // Reset the initialized flag so we can try again
++          ambientSoundInitializedRef.current = false;
++        }
++      }, 1500); // Longer delay to ensure stability
++      
++      return () => {
++        clearTimeout(timeoutId);
++      };
+     }
+     
++    // We don't need a cleanup function here if we're not initializing
++    // This prevents the audio from being stopped when other effects run
++  }, [isBrowser, isLoading, isFlashcardsOpen, audio]);
++
++  // Add a cleanup effect that only runs on unmount
++  useEffect(() => {
++    // This effect doesn't do anything on mount
++    
++    // But it provides a cleanup function for component unmount
+     return () => {
+-      // Only clean up if component unmounts, not on every render
+-      if (document.body.classList.contains('debug-mode') && !isDebugMode) {
+-        document.body.classList.remove('debug-mode');
+-        console.log('[DEBUG] Cleanup: Removed debug-mode class from body');
++      if (ambientSoundInitializedRef.current) {
++        console.log('[DEBUG] Final cleanup: Stopping all audio on unmount');
++        audio.stopAllLoops();
++        ambientSoundInitializedRef.current = false;
+       }
+     };
+-  }, [searchParams, isBrowser]);
++  }, []); // eslint-disable-line react-hooks/exhaustive-deps
++  // We intentionally use an empty dependency array to only run on mount/unmount
++  
++  // Add a separate effect to handle flashcard state changes
++  useEffect(() => {
++    if (!isBrowser || !isMountedRef.current) return;
++    
++    // If flashcards are open, stop the ambient sound
++    if (isFlashcardsOpen && ambientSoundInitializedRef.current) {
++      console.log('[DEBUG] Flashcards opened, stopping ambient sound');
++      audio.stopLoopSound(AMBIENT_SOUND);
++      // Don't reset the initialized flag, as we'll restart when flashcards close
++      return;
++    }
++    
++    // If flashcards were closed and ambient sound was initialized, restart it
++    if (!isFlashcardsOpen && ambientSoundInitializedRef.current && isMountedRef.current) {
++      console.log('[DEBUG] Flashcards closed, restarting ambient sound');
++      
++      // Use a ref to track the timeout ID to prevent multiple restarts
++      const timeoutIdRef = { current: null as NodeJS.Timeout | null };
++      
++      // Small delay before restarting
++      timeoutIdRef.current = setTimeout(() => {
++        if (isMountedRef.current) {
++          console.log('[DEBUG] Restarting ambient sound after flashcards closed');
++          audio.loopSound(AMBIENT_SOUND);
++        }
++      }, 500);
++      
++      return () => {
++        // Only clear the timeout, don't stop the sound here
++        if (timeoutIdRef.current) {
++          clearTimeout(timeoutIdRef.current);
++          timeoutIdRef.current = null;
++        }
++      };
++    }
++  }, [isBrowser, isFlashcardsOpen, audio]);
+ 
+   // Simplified effect for flashcard dialog auto-open
+   useEffect(() => {
+@@ -309,6 +369,24 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
+     }
+   }, [flashcardRoomId, isFlashcardsOpen, isLoading, setIsFlashcardsOpen]);
+ 
++  // Debug mode effect
++  useEffect(() => {
++    if (!isBrowser) return;
++    
++    console.log('[DEBUG] Debug mode effect running');
++    console.log('[DEBUG] isSubscribed:', isSubscribed);
++    console.log('[DEBUG] userInfo:', userInfo);
++    
++    // Check if user is signed in and refresh user info if needed
++    if (isSubscribed && !userInfo) {
++      console.log('[DEBUG] User is signed in but no user info, refreshing');
++      // We can't use refreshUserInfo here since it's not available
++      // Instead, we'll just log this information
++    }
++    
++    // The useDebugMode hook already handles localStorage persistence
++  }, [isBrowser, isSubscribed, userInfo]);
++
+   const fetchData = async () => {
+     // If already fetching, don't start another fetch
+     if (isFetchingRef.current) {
+diff --git a/components/StoreInitializer.tsx b/components/StoreInitializer.tsx
+index 05923cf..cf4f993 100644
+--- a/components/StoreInitializer.tsx
++++ b/components/StoreInitializer.tsx
+@@ -2,15 +2,36 @@
+ 
+ import { useEffect } from 'react';
+ import { useUser } from '@clerk/nextjs';
+-import { useUser as useZustandUser } from '@/store/selectors';
++import { useStore } from '@/store/store';
+ 
++/**
++ * StoreInitializer component
++ * 
++ * This component initializes the global store when the app starts.
++ * It handles:
++ * 1. Audio initialization
++ * 2. User data synchronization
++ * 
++ * It doesn't render anything visible, just handles initialization.
++ */
+ const StoreInitializer = () => {
+   const { isLoaded, isSignedIn } = useUser();
+-  const { refreshUserInfo } = useZustandUser();
++  const refreshUserInfo = useStore(state => state.refreshUserInfo);
++  const initializeStore = useStore(state => state.initializeStore);
+   
+-  // Initialize Zustand store with user data when the user is signed in
++  // Initialize the global store when the app starts
++  useEffect(() => {
++    console.log('[StoreInitializer] Initializing global store');
++    
++    initializeStore().catch(error => {
++      console.error('[StoreInitializer] Error initializing global store:', error);
++    });
++  }, [initializeStore]);
++  
++  // Refresh user information when the user is signed in
+   useEffect(() => {
+     if (isLoaded && isSignedIn) {
++      console.log('[StoreInitializer] User is signed in, refreshing user info');
+       refreshUserInfo();
+     }
+   }, [isLoaded, isSignedIn, refreshUserInfo]);
+diff --git a/components/navbar/musicplayer.tsx b/components/navbar/musicplayer.tsx
+index 3c3a454..9134da4 100644
+--- a/components/navbar/musicplayer.tsx
++++ b/components/navbar/musicplayer.tsx
+@@ -1,7 +1,7 @@
+ //components/musicplayer.tsx
+ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+ import { FaPlay, FaPause, FaForward, FaVolumeUp } from "react-icons/fa";
+-import { useAudio } from "@/contexts/AudioContext";
++import { useAudio } from "@/store/selectors";
+ import { toast } from "react-hot-toast";
+ 
+ interface Song {
+diff --git a/components/ui/DebugPanel.tsx b/components/ui/DebugPanel.tsx
+index 630258f..f3db20d 100644
+--- a/components/ui/DebugPanel.tsx
++++ b/components/ui/DebugPanel.tsx
+@@ -1,14 +1,22 @@
+ "use client";
+ 
+-import { useState, useEffect } from 'react';
++import React, { useState, useEffect, useCallback } from 'react';
+ import { usePathname, useSearchParams } from 'next/navigation';
+-import { useUI, useUser, useGame } from '@/store/selectors'
++import { useUI, useUser, useGame, useAudio } from '@/store/selectors'
++import { useStore } from '@/store/store';
++import { cn } from '@/lib/utils';
+ 
+ /* --- Constants ----- */
+ const DEBUG_PARAM = 'debug'
+ 
+-const DebugPanel = () => {
+-  /* ---- State ----- */
++interface DebugPanelProps {
++  isVisible?: boolean;
++}
++
++const DebugPanel: React.FC<DebugPanelProps> = ({ isVisible = false }) => {
++  const [isOpen, setIsOpen] = useState(isVisible);
++  const [audioEvents, setAudioEvents] = useState<string[]>([]);
++  
+   const searchParams = useSearchParams()
+   const pathname = usePathname() || ''
+   const [isDebug, setIsDebug] = useState(false)
+@@ -17,6 +25,7 @@ const DebugPanel = () => {
+   const uiState = useUI()
+   const userState = useUser()
+   const gameState = useGame()
++  const audioState = useAudio()
+ 
+   /* --- Effects --- */
+   // Simple debug mode logic - only use URL parameter
+@@ -25,36 +34,322 @@ const DebugPanel = () => {
+     
+     if (debugValue === 'true') {
+       setIsDebug(true)
++      setIsOpen(true) // Automatically open the panel when debug=true
+       document.body.classList.add('debug-mode')
++      
++      // Store debug mode in localStorage for persistence
++      if (typeof window !== 'undefined') {
++        localStorage.setItem('debugMode', JSON.stringify(true));
++        console.log('[DEBUG] Debug mode enabled via URL parameter');
++      }
+     } else {
++      // Check localStorage as a fallback
++      if (typeof window !== 'undefined') {
++        const storedDebugMode = localStorage.getItem('debugMode');
++        if (storedDebugMode === 'true' || storedDebugMode === '"true"') {
++          setIsDebug(true);
++          setIsOpen(true);
++          document.body.classList.add('debug-mode');
++          console.log('[DEBUG] Debug mode enabled via localStorage');
++          return;
++        }
++      }
++      
+       // Any other value (including null) - disable debug mode
+       setIsDebug(false)
+       document.body.classList.remove('debug-mode')
+     }
+   }, [searchParams, pathname])
+ 
++  // Create a safe version of audio state for display (without functions)
++  const displayAudioState = {
++    isPlaying: audioState.isPlaying,
++    currentSong: audioState.currentSong,
++    currentLoop: audioState.currentLoop,
++    volume: audioState.volume,
++    // Add additional audio state properties for debugging
++    activeLoops: audioState.getActiveLoops?.() || []
++  };
++
++  // Get the raw store state for debugging
++  const [rawStoreState, setRawStoreState] = useState<any>(null);
++  
++  useEffect(() => {
++    // Import the store dynamically to avoid SSR issues
++    import('@/store/store').then(module => {
++      const { useStore } = module;
++      // Get the raw state without selectors
++      const state = useStore.getState();
++      // Filter out only audio-related properties
++      const audioKeys = Object.keys(state).filter(key => 
++        key === 'isPlayingSong' || 
++        key === 'currentSong' || 
++        key === 'currentLoop' || 
++        key === 'masterVolume' ||
++        key === 'handleFlashcardsTransition' ||
++        key === 'stopAllLoops' ||
++        key === 'loopSound' ||
++        key === 'stopLoopSound' ||
++        key === 'playSound' ||
++        key === 'playMusic' ||
++        key === 'stopMusic' ||
++        key === 'setMasterVolume'
++      );
++      
++      const audioRawState = audioKeys.reduce((acc, key) => {
++        // Only include serializable properties
++        if (typeof state[key as keyof typeof state] !== 'function' && 
++            !(state[key as keyof typeof state] instanceof Map) && 
++            !(state[key as keyof typeof state] instanceof AudioContext) &&
++            !(state[key as keyof typeof state] instanceof GainNode) &&
++            !key.startsWith('_')) {
++          acc[key] = state[key as keyof typeof state];
++        } else if (typeof state[key as keyof typeof state] === 'function') {
++          // Include function names for reference
++          acc[key] = '[Function]';
++        }
++        return acc;
++      }, {} as Record<string, any>);
++      
++      setRawStoreState(audioRawState);
++    });
++  }, [isDebug]);
++
++  // Add audio event logging
++  const logAudioEvent = (event: string) => {
++    const timestamp = new Date().toISOString().split('T')[1].split('.')[0]; // HH:MM:SS format
++    setAudioEvents(prev => {
++      const newEvents = [`${timestamp} - ${event}`, ...prev];
++      // Keep only the last 20 events
++      return newEvents.slice(0, 20);
++    });
++  };
++  
++  // Monitor audio state changes
++  useEffect(() => {
++    logAudioEvent(`Audio loop changed: ${audioState.currentLoop || 'none'}`);
++  }, [audioState.currentLoop]);
++  
++  useEffect(() => {
++    logAudioEvent(`Music state changed: ${audioState.isPlaying ? 'playing' : 'stopped'} - ${audioState.currentSong || 'none'}`);
++  }, [audioState.isPlaying, audioState.currentSong]);
++  
++  useEffect(() => {
++    logAudioEvent(`Volume changed: ${audioState.volume.toFixed(2)}`);
++  }, [audioState.volume]);
++
++  // Add manual audio controls for debugging
++  const handleInitializeAudio = useCallback(() => {
++    logAudioEvent('Manual audio initialization requested');
++    // Access the raw store to get the initializeAudioContext function
++    import('@/store/store').then(module => {
++      const store = module.useStore.getState();
++      store.initializeAudioContext().then(() => {
++        logAudioEvent('Audio context initialized');
++      }).catch(error => {
++        logAudioEvent(`Audio initialization error: ${error.message}`);
++      });
++    });
++  }, []);
++  
++  const handlePlayAmbientSound = useCallback(() => {
++    logAudioEvent('Manual ambient sound requested');
++    audioState.loopSound('flashcard-loop-catfootsteps');
++  }, [audioState]);
++  
++  const handleStopAllAudio = useCallback(() => {
++    logAudioEvent('Manual stop all audio requested');
++    audioState.stopAllLoops();
++  }, [audioState]);
++  
++  const handleResetAudioState = useCallback(() => {
++    logAudioEvent('Manual audio state reset requested');
++    // First stop all audio
++    audioState.stopAllLoops();
++    
++    // Then reinitialize after a short delay
++    setTimeout(() => {
++      import('@/store/store').then(module => {
++        const store = module.useStore.getState();
++        store.initializeAudioContext().then(() => {
++          logAudioEvent('Audio context reinitialized');
++        });
++      });
++    }, 500);
++  }, [audioState]);
++
++  // Move these hooks above the conditional return
++  // Get store data for debugging
++  const store = useStore();
++  
++  // Extract audio state for display
++  const audioStateForDisplay = {
++    isPlaying: audioState.isPlaying,
++    currentSong: audioState.currentSong,
++    currentLoop: audioState.currentLoop,
++    volume: audioState.volume,
++  };
++  
++  // Count active audio sources
++  const audioSourceCount = {
++    musicSources: store._MUSIC_SOURCE?.size || 0,
++    loopSources: store._LOOP_SOURCES?.size || 0,
++    bufferCache: store._bufferCache?.size || 0,
++  };
++  
++  // Get active loop names
++  const activeLoops = store._LOOP_SOURCES ? 
++    Array.from(store._LOOP_SOURCES.keys()) : 
++    [];
++
+   // Don't render anything if not in debug mode
+   if (!isDebug) return null;
+ 
+   // Debug panel UI
+   return (
+-    <div className="fixed bottom-4 right-4 z-[9999] bg-black/80 text-white p-4 rounded-lg max-w-[400px] max-h-[80vh] overflow-auto text-xs">
+-      <h3 className="text-lg font-bold mb-2">Debug Panel</h3>
+-      <div className="grid grid-cols-1 gap-2">
+-        <div>
+-          <h4 className="font-bold">UI State</h4>
+-          <pre>{JSON.stringify(uiState, null, 2)}</pre>
++    <>
++      {/* Always visible toggle button when in debug mode */}
++      <button 
++        onClick={() => setIsOpen(!isOpen)}
++        className="fixed top-4 right-4 z-[9999] bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-full shadow-lg flex items-center justify-center"
++        style={{ minWidth: '40px', minHeight: '40px' }}
++      >
++        {isOpen ? "×" : "Debug"}
++      </button>
++      
++      <div className={cn(
++        "fixed bottom-0 right-0 z-[9999] bg-black/90 text-white p-4 rounded-tl-lg w-96 max-h-[80vh] overflow-auto transition-all duration-300 transform shadow-xl",
++        isOpen ? "translate-y-0" : "translate-y-full"
++      )}
++      style={{ pointerEvents: 'auto' }}>
++        <h2 className="text-lg font-bold mb-2 flex justify-between items-center">
++          <span>Debug Panel</span>
++          <button 
++            onClick={() => setIsOpen(false)}
++            className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs"
++          >
++            Close
++          </button>
++        </h2>
++        
++        {/* Add manual audio controls */}
++        <div className="mb-4 p-2 bg-gray-800 rounded">
++          <h3 className="text-sm font-bold mb-2">Audio Controls</h3>
++          <div className="flex flex-wrap gap-2">
++            <button 
++              onClick={handleInitializeAudio}
++              className="bg-blue-600 text-white px-2 py-1 text-xs rounded"
++            >
++              Init Audio
++            </button>
++            <button 
++              onClick={handlePlayAmbientSound}
++              className="bg-green-600 text-white px-2 py-1 text-xs rounded"
++            >
++              Play Ambient
++            </button>
++            <button 
++              onClick={handleStopAllAudio}
++              className="bg-red-600 text-white px-2 py-1 text-xs rounded"
++            >
++              Stop All Audio
++            </button>
++            <button 
++              onClick={handleResetAudioState}
++              className="bg-yellow-600 text-white px-2 py-1 text-xs rounded"
++            >
++              Reset Audio
++            </button>
++          </div>
++        </div>
++        
++        {/* Audio State */}
++        <div className="mb-4 p-2 bg-gray-800 rounded">
++          <h3 className="text-sm font-bold mb-2">Audio State</h3>
++          <pre className="text-xs whitespace-pre-wrap">
++            {JSON.stringify(displayAudioState, null, 2)}
++          </pre>
++        </div>
++        
++        {/* Audio Events Log */}
++        <div className="mb-4 p-2 bg-gray-800 rounded">
++          <h3 className="text-sm font-bold mb-2">Audio Events</h3>
++          <div className="max-h-40 overflow-y-auto">
++            {audioEvents.map((event, index) => (
++              <div key={index} className="text-xs mb-1 font-mono">
++                {event}
++              </div>
++            ))}
++          </div>
+         </div>
+-        <div>
+-          <h4 className="font-bold">User State</h4>
+-          <pre>{JSON.stringify(userState, null, 2)}</pre>
++        
++        {/* Route Information */}
++        <div className="mb-4 p-2 bg-gray-800 rounded">
++          <h3 className="text-sm font-bold mb-2">Route Information</h3>
++          <div className="text-xs mb-1">
++            <strong>Current Path:</strong> {pathname}
++          </div>
++          <div className="text-xs mb-1">
++            <strong>URL Parameters:</strong>
++          </div>
++          <div className="text-xs mb-2 font-mono">
++            {searchParams ? (
++              Array.from(searchParams.entries()).map(([key, value]) => (
++                <div key={key} className="pl-2">
++                  {key}: {value}
++                </div>
++              ))
++            ) : (
++              <div className="pl-2">No parameters</div>
++            )}
++          </div>
++          <div className="flex gap-2 mt-2">
++            <button
++              onClick={() => {
++                const url = new URL(window.location.href);
++                url.searchParams.set('debug', 'true');
++                window.history.pushState({}, '', url.toString());
++                window.location.reload();
++              }}
++              className="bg-blue-600 text-white px-2 py-1 text-xs rounded"
++            >
++              Add debug=true
++            </button>
++            <button
++              onClick={() => {
++                const url = new URL(window.location.href);
++                url.searchParams.delete('debug');
++                window.history.pushState({}, '', url.toString());
++                window.location.reload();
++              }}
++              className="bg-yellow-600 text-white px-2 py-1 text-xs rounded"
++            >
++              Remove debug
++            </button>
++          </div>
+         </div>
+-        <div>
+-          <h4 className="font-bold">Game State</h4>
+-          <pre>{JSON.stringify(gameState, null, 2)}</pre>
++        
++        {/* Game State */}
++        <div className="mb-4 p-2 bg-gray-800 rounded">
++          <h3 className="text-sm font-bold mb-2">Game State</h3>
++          <div className="text-xs">
++            <div>Flashcards Open: {gameState.isFlashcardsOpen ? 'Yes' : 'No'}</div>
++            <div>Room ID: {gameState.flashcardRoomId || 'None'}</div>
++            <div>Game In Progress: {gameState.isGameInProgress ? 'Yes' : 'No'}</div>
++          </div>
+         </div>
++        
++        {/* Raw Store State (if in debug mode) */}
++        {isDebug && rawStoreState && (
++          <div className="mb-4 p-2 bg-gray-800 rounded">
++            <h3 className="text-sm font-bold mb-2">Raw Audio Store</h3>
++            <pre className="text-xs whitespace-pre-wrap">
++              {JSON.stringify(rawStoreState, null, 2)}
++            </pre>
++          </div>
++        )}
+       </div>
+-    </div>
++    </>
+   )
+ }
+ 
+diff --git a/contexts/AudioContext.tsx b/contexts/AudioContext.tsx
+index 01bfa9b..fa8366d 100644
+--- a/contexts/AudioContext.tsx
++++ b/contexts/AudioContext.tsx
+@@ -2,6 +2,7 @@
+ 
+ import React, { createContext, useContext, useRef, useState, useCallback, useEffect } from 'react';
+ import { toast } from 'react-hot-toast';
++import { useAudio as useZustandAudio } from '@/store/selectors';
+ 
+ 
+ /* -------------------------------------------- Types ------------------------------------------- */
+@@ -90,343 +91,54 @@ const logError = (error: Error, context: string) => {
+   toast.error('Audio playback issue. Please refresh if this persists.');
+ };
+ 
++/* ------------------------------------------ Provider ----------------------------------------- */
++/**
++ * @deprecated Use useAudio from store/selectors instead
++ * This provider is maintained for backward compatibility only
++ */
+ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
+-  const [isPlaying, setIsPlaying] = useState(false);
+-  const [currentSong, setCurrentSong] = useState<string | null>(null);
+-  const [volumeState, setVolumeState] = useState(0.5);
+-  const audioRef = useRef<HTMLAudioElement | null>(null);
+-  const audioContextRef = useRef<AudioContext | null>(null);
+-  const categoryGainsRef = useRef<CategoryGains | null>(null);
+-
+-  const handleAudioError = useCallback((error: Error, context: string) => {
+-    console.error(`🎵 [AudioContext] ${context}:`, error);
+-    
+-    // Check for specific error types
+-    if (error instanceof DOMException && error.name === 'NotAllowedError') {
+-      toast.error('Please interact with the page first to enable audio.');
+-    } else if (error.name === 'EncodingError') {
+-      toast.error('This audio format is not supported by your browser.');
+-    } else {
+-      toast.error('Failed to play audio. Please try again.');
+-    }
+-  }, []);
+-
+-  const initializeAudioContext = useCallback(async () => {
+-    try {
+-      if (audioContextRef.current?.state === 'running') {
+-        return audioContextRef.current;
+-      }
+-
+-      if (audioContextRef.current?.state === 'suspended') {
+-        await audioContextRef.current.resume();
+-        return audioContextRef.current;
+-      }
+-
+-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+-      const ctx = new AudioContextClass(AUDIO_CONTEXT_CONFIG);
+-      await ctx.resume();
+-      audioContextRef.current = ctx;
+-
+-      // Single master gain node
+-      masterGainNode = ctx.createGain();
+-      masterGainNode.connect(ctx.destination);
+-      masterGainNode.gain.value = volumeState;
+-
+-      return ctx;
+-    } catch (error) {
+-      logError(error as Error, 'Audio context initialization failed');
+-      throw error;
+-    }
+-  }, [volumeState]);
+-
+-  const loadAudioBuffer = useCallback(async (url: string): Promise<AudioBuffer> => {
+-    // Check cache size before adding new buffer
+-    let totalSize = 0;
+-    for (const buffer of AUDIO_BUFFER_CACHE.values()) {
+-      totalSize += buffer.length * buffer.numberOfChannels * 4; // 4 bytes per sample
+-    }
+-    
+-    if (totalSize > BUFFER_CACHE_LIMIT * 1024 * 1024) {
+-      // Clear oldest entries if cache is too large
+-      const oldestKey = AUDIO_BUFFER_CACHE.keys().next().value;
+-      if (oldestKey) {
+-        AUDIO_BUFFER_CACHE.delete(oldestKey);
+-      }
+-    }
+-    
+-    const ctx = await initializeAudioContext();
+-    if (!ctx) throw new Error('Failed to initialize audio context');
+-
+-    try {
+-      const response = await fetch(url);
+-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+-      const arrayBuffer = await response.arrayBuffer();
+-      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+-      
+-      // Cache the decoded buffer
+-      AUDIO_BUFFER_CACHE.set(url, audioBuffer);
+-      
+-      return audioBuffer;
+-    } catch (error) {
+-      logError(error as Error, `Failed to load audio: ${url}`);
+-      throw error;
+-    }
+-  }, [initializeAudioContext, handleAudioError]);
+-
+-  const stopMusic = useCallback(() => {
+-    MUSIC_SOURCE.forEach((source, url) => {
+-      try {
+-        source.onended = null;
+-        source.stop();
+-        source.disconnect();
+-        MUSIC_SOURCE.delete(url);
+-      } catch (error) {
+-        logError(error as Error, 'Error stopping music');
+-      }
+-    });
+-
+-    setIsPlaying(false);
+-    setCurrentSong(null);
+-  }, []);
+-
+-  const playMusic = useCallback(async (url: string, autoplay = true, onEnded?: () => void) => {
+-    if (!autoplay) {
+-      stopMusic();
+-      return null;
+-    }
+-
+-    try {
+-      if (MUSIC_SOURCE.size > 0) {
+-        stopMusic();
+-      }
+-
+-      const audioBuffer = await loadAudioBuffer(url);
+-      const ctx = await initializeAudioContext();
+-      if (!ctx) throw new Error('No audio context');
+-
+-      setIsPlaying(true);
+-      setCurrentSong(url);
+-
+-      const source = ctx.createBufferSource();
+-      source.buffer = audioBuffer;
+-
+-      // Add gain node with music coefficient
+-      const gainNode = ctx.createGain();
+-      gainNode.gain.value = volumeState * VOLUME_COEFFICIENTS[SOUND_CATEGORIES.MUSIC];
+-      
+-      // Connect nodes
+-      source.connect(gainNode);
+-      gainNode.connect(masterGainNode!);
+-
+-      MUSIC_SOURCE.set(url, source);
+-      
+-      if (autoplay) {
+-        source.start(0);
+-      }
+-
+-      source.onended = () => {
+-        MUSIC_SOURCE.delete(url);
+-        setIsPlaying(false);
+-        setCurrentSong(null);
+-        onEnded?.();
+-      };
+-
+-      return source;
+-    } catch (error) {
+-      logError(error as Error, 'Error playing music');
+-      return null;
+-    }
+-  }, [loadAudioBuffer, initializeAudioContext, stopMusic, handleAudioError, volumeState]);
+-
+-  // All audio sources connect to master gain node
+-  const playSound = useCallback(async (soundName: string) => {
+-    try {
+-      const ctx = await initializeAudioContext();
+-      const buffer = await loadAudioBuffer(`/audio/${soundName}.mp3`);
+-      
+-      const source = ctx.createBufferSource();
+-      source.buffer = buffer;
+-      
+-      // Get appropriate coefficient
+-      const category = SOUND_MAPPINGS[soundName] || SOUND_CATEGORIES.SFX;
+-      const coefficient = VOLUME_COEFFICIENTS[category];
+-      
+-      // Create gain node with coefficient
+-      const localGain = ctx.createGain();
+-      localGain.gain.value = volumeState * coefficient;
+-      
+-      // Connect nodes
+-      source.connect(localGain);
+-      localGain.connect(masterGainNode!);
+-      
+-      // Fade in
+-      localGain.gain.setValueAtTime(0, ctx.currentTime);
+-      localGain.gain.linearRampToValueAtTime(coefficient * volumeState, ctx.currentTime + 0.02);
+-      
+-      source.start();
+-      
+-      // Fade out
+-      const duration = buffer.duration;
+-      localGain.gain.setValueAtTime(coefficient * volumeState, ctx.currentTime + duration - 0.05);
+-      localGain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
+-      
+-      source.onended = () => {
+-        source.disconnect();
+-        localGain.disconnect();
+-      };
+-    } catch (error) {
+-      console.error('Failed to play sound:', error);
+-    }
+-  }, [initializeAudioContext, loadAudioBuffer, volumeState]);
+-
+-  // Simplify setVolume to only control master gain
+-  const setVolume = useCallback((newVolume: number) => {
+-    if (!masterGainNode || !audioContextRef.current) return;
+-
+-    const now = audioContextRef.current.currentTime;
+-    masterGainNode.gain.cancelScheduledValues(now);
+-    masterGainNode.gain.linearRampToValueAtTime(newVolume, now + 0.1);
+-    setVolumeState(newVolume);
+-  }, []);
+-
+-  const recoverAudioContext = useCallback(async () => {
+-    if (audioContextRef.current?.state === 'suspended') {
+-      try {
+-        await audioContextRef.current.resume();
+-        return true;
+-      } catch (error) {
+-        // If resume fails, create new context
+-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+-        return audioContextRef.current.state === 'running';
+-      }
+-    }
+-    return false;
+-  }, []);
+-
+-  const monitorPerformance = useCallback((ctx: AudioContext) => {
+-    if (!DEBUG) return;
+-    
+-    if (ctx.baseLatency > 0.025) {
+-      console.warn('High audio latency detected:', ctx.baseLatency);
+-    }
+-    
+-    if ((ctx as any).getOutputTimestamp) {
+-      const timestamp = (ctx as any).getOutputTimestamp();
+-      if (timestamp.contextTime > timestamp.performanceTime) {
+-        console.warn('Audio buffer underrun detected');
+-      }
+-    }
+-  }, []);
++  console.debug('[AudioContext] Using compatibility layer - consider migrating to useAudio from store/selectors');
++  
++  // Use the Zustand store implementation
++  const audio = useZustandAudio();
++  
++  // Create a compatibility layer that matches the old API
++  const compatibilityLayer: AudioContextType = {
++    isPlaying: audio.isPlaying,
++    currentSong: audio.currentSong,
++    volume: audio.volume,
++    playMusic: audio.playMusic,
++    stopMusic: audio.stopMusic,
++    setVolume: audio.setVolume,
++    playSound: audio.playSound,
++    loopSound: audio.loopSound,
++    stopLoopSound: audio.stopLoopSound,
++    stopAllLoops: audio.stopAllLoops,
++    getActiveLoops: audio.getActiveLoops,
++  };
+   
+-  const stopLoopSound = useCallback((soundName: string) => {
+-    const audio = LOOP_SOURCES.get(soundName);
+-    if (audio) {
+-      try {
+-        audio.source.stop();
+-        audio.source.disconnect();
+-        audio.gainNode.disconnect();
+-        LOOP_SOURCES.delete(soundName);
+-      } catch (error) {
+-        console.error('Error stopping ambient sound:', error);
+-      }
+-    }
+-  }, []);
+-
+-  const stopAllLoops = useCallback(() => {
+-    LOOP_SOURCES.forEach((audio, name) => {
+-      try {
+-        audio.source.stop();
+-        audio.source.disconnect();
+-        audio.gainNode.disconnect();
+-        LOOP_SOURCES.delete(name);
+-      } catch (error) {
+-        console.error('Error stopping ambient sound:', error);
+-      }
+-    });
+-  }, []);
+-
+-  // Update loopSound to use coefficient
+-  const loopSound = useCallback(async (soundName: string) => {
+-    const normalizedName = soundName.replace('/audio/', '').replace(/\.(mp3|wav)$/, '');
+-    const fullPath = `/audio/${normalizedName}.wav`;
+-    
+-    if (LOOP_SOURCES.has(fullPath)) {
+-      return;
+-    }
+-
+-    try {
+-      const ctx = await initializeAudioContext();
+-      if (!ctx) throw new Error('Audio context not initialized');
+-
+-      const audioBuffer = await loadAudioBuffer(fullPath);
+-      const source = ctx.createBufferSource();
+-      source.buffer = audioBuffer;
+-      source.loop = true;
+-
+-      // Apply the appropriate volume coefficient
+-      const category = SOUND_MAPPINGS[normalizedName] || SOUND_CATEGORIES.AMBIENT;
+-      const coefficient = VOLUME_COEFFICIENTS[category];
+-
+-      // Create local gain with fixed coefficient
+-      const gainNode = ctx.createGain();
+-      gainNode.gain.value = volumeState * coefficient;
+-
+-      // Connect directly to master
+-      source.connect(gainNode);
+-      gainNode.connect(masterGainNode!);
+-
+-      LOOP_SOURCES.set(fullPath, { source, gainNode });
+-      source.start(0);
+-
+-    } catch (error) {
+-      console.error('Failed to start loop:', error);
+-      handleAudioError(error as Error, 'Failed to start audio loop');
+-    }
+-  }, [initializeAudioContext, volumeState, handleAudioError, loadAudioBuffer]);
+-
+-  const getActiveLoops = useCallback(() => {
+-    return Array.from(LOOP_SOURCES.keys());
+-  }, []);
+-
+-  useEffect(() => {
+-    return () => {
+-      stopAllLoops();
+-      if (audioContextRef.current) {
+-        audioContextRef.current.close();
+-      }
+-      masterGainNode = null;
+-    };
+-  }, []);
+-
+-  // Move the existing context check after all hook declarations
+-  const existingContext = useContext(AudioContext);
+-  if (existingContext) {
+-    return <>{children}</>;
+-  }
+-
+   return (
+-    <AudioContext.Provider value={{
+-      isPlaying,
+-      currentSong,
+-      volume: volumeState,
+-      playMusic,
+-      stopMusic,
+-      setVolume,
+-      playSound,
+-      loopSound,
+-      stopLoopSound,
+-      stopAllLoops,
+-      getActiveLoops
+-    }}>
++    <AudioContext.Provider value={compatibilityLayer}>
+       {children}
+     </AudioContext.Provider>
+   );
+ };
+ 
+-export const useAudio = () => {
++/**
++ * @deprecated Use useAudio from store/selectors instead
++ * This hook is maintained for backward compatibility only
++ */
++export const useAudio = (): AudioContextType => {
++  // Try to use the context first for backward compatibility
+   const context = useContext(AudioContext);
+-  if (context === null) {
+-    throw new Error('useAudio must be used within an AudioProvider');
++  
++  if (context) {
++    return context;
+   }
+-  return context;
+-};
+\ No newline at end of file
++  
++  // If no context is available (e.g., outside provider), use the store directly
++  console.debug('[AudioContext] No context provider found, using store directly');
++  return useZustandAudio();
++};
++
++export default AudioContext;
+\ No newline at end of file
+diff --git a/contexts/MusicPlayerContext.tsx b/contexts/MusicPlayerContext.tsx
+index eedcf76..275ecd7 100644
+--- a/contexts/MusicPlayerContext.tsx
++++ b/contexts/MusicPlayerContext.tsx
+@@ -1,3 +1,5 @@
++"use client";
++
+ import { createContext, useContext, useState } from 'react';
+ 
+ interface MusicPlayerContextType {
+@@ -7,7 +9,13 @@ interface MusicPlayerContextType {
+ 
+ const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
+ 
++/**
++ * @deprecated This provider is maintained for backward compatibility only
++ * The autoplay functionality should be migrated to the Zustand store
++ */
+ export const MusicPlayerProvider = ({ children }: { children: React.ReactNode }) => {
++  console.debug('[MusicPlayerContext] Using compatibility layer - consider migrating to Zustand store');
++  
+   const [isAutoPlay, setIsAutoPlay] = useState(false);
+ 
+   return (
+@@ -17,10 +25,19 @@ export const MusicPlayerProvider = ({ children }: { children: React.ReactNode })
+   );
+ };
+ 
+-export const useMusicPlayer = () => {
++/**
++ * @deprecated This hook is maintained for backward compatibility only
++ * The autoplay functionality should be migrated to the Zustand store
++ */
++export const useMusicPlayer = (): MusicPlayerContextType => {
+   const context = useContext(MusicPlayerContext);
+   if (context === undefined) {
+-    throw new Error('useMusicPlayer must be used within a MusicPlayerProvider');
++    console.warn('useMusicPlayer used outside provider, returning default values');
++    // Return a default implementation that does nothing
++    return {
++      isAutoPlay: false,
++      setIsAutoPlay: () => console.debug('[MusicPlayerContext] setIsAutoPlay called outside provider')
++    };
+   }
+   return context;
+ }; 
+\ No newline at end of file
+diff --git a/hooks/useAudioTransitions.ts b/hooks/useAudioTransitions.ts
+deleted file mode 100644
+index 17121f7..0000000
+--- a/hooks/useAudioTransitions.ts
++++ /dev/null
+@@ -1,135 +0,0 @@
+-import { useRef, useEffect, useCallback } from 'react';
+-import { useAudio } from "@/contexts/AudioContext";
+-
+-interface UseAudioTransitionsProps {
+-  isFlashcardsOpen: boolean;
+-  isLoading: boolean;
+-  isMounted?: boolean;
+-}
+-
+-/**
+- * Custom hook to manage audio transitions between different states
+- * Handles playing door sounds and looping ambient sounds
+- */
+-export const useAudioTransitions = ({ 
+-  isFlashcardsOpen, 
+-  isLoading,
+-  isMounted = true
+-}: UseAudioTransitionsProps) => {
+-  const audio = useAudio();
+-  
+-  // Refs to track state
+-  const audioTransitionInProgressRef = useRef<boolean>(false);
+-  const prevIsFlashcardsOpenRef = useRef<boolean | null>(null);
+-  const prevFlashcardsOpenRef = useRef<boolean>(false);
+-  
+-  // Effect to handle audio transitions when flashcard dialog opens/closes
+-  useEffect(() => {
+-    // Skip if the value hasn't actually changed
+-    if (prevIsFlashcardsOpenRef.current === isFlashcardsOpen) {
+-      return;
+-    }
+-    
+-    // Update the ref
+-    prevIsFlashcardsOpenRef.current = isFlashcardsOpen;
+-    
+-    if (!isMounted) {
+-      return;
+-    }
+-    
+-    let isEffectActive = true; // Local flag to track if effect is still active
+-    
+-    // Add a small delay to allow any loading state changes to settle
+-    const timeoutId = setTimeout(() => {
+-      // Skip audio transitions during initial load
+-      if (isLoading) {
+-        return;
+-      }
+-      
+-      // Prevent multiple audio transitions
+-      if (audioTransitionInProgressRef.current) {
+-        return;
+-      }
+-      
+-      audioTransitionInProgressRef.current = true;
+-  
+-      const handleAudioTransition = async () => {
+-        try {
+-          if (!isEffectActive) return;
+-
+-          if (isFlashcardsOpen) {
+-            await audio.stopAllLoops();
+-            if (!isEffectActive) return;
+-            audio.playSound('flashcard-door-open');
+-          } else {
+-            if (prevFlashcardsOpenRef.current) {
+-              audio.playSound('flashcard-door-closed');
+-              await new Promise(resolve => setTimeout(resolve, 500));
+-              if (!isEffectActive) return;
+-              await audio.loopSound('flashcard-loop-catfootsteps');
+-            } else {
+-              await audio.loopSound('flashcard-loop-catfootsteps');
+-            }
+-          }
+-          if (!isEffectActive) return;
+-          prevFlashcardsOpenRef.current = isFlashcardsOpen;
+-        } catch (error) {
+-          if (isEffectActive) {
+-            console.error('[AudioTransitions] Audio transition error:', error);
+-          }
+-        } finally {
+-          if (isEffectActive) {
+-            audioTransitionInProgressRef.current = false;
+-          }
+-        }
+-      };
+-
+-      handleAudioTransition();
+-    }, 50); // Small delay to allow loading state to settle
+-
+-    return () => {
+-      clearTimeout(timeoutId);
+-      isEffectActive = false;
+-    };
+-  }, [isFlashcardsOpen, audio, isLoading, isMounted]);
+-
+-  // Function to initialize ambient sound on component mount
+-  const initializeAmbientSound = useCallback(() => {
+-    if (!audio || audioTransitionInProgressRef.current) return;
+-    
+-    const initAmbientSound = async () => {
+-      try {
+-        audioTransitionInProgressRef.current = true;
+-        await audio.loopSound('flashcard-loop-catfootsteps');
+-      } catch (error) {
+-        console.error('[AudioTransitions] Error initializing ambient sound:', error);
+-      } finally {
+-        audioTransitionInProgressRef.current = false;
+-      }
+-    };
+-    
+-    // Only start ambient sound if flashcards are not open
+-    if (!isFlashcardsOpen) {
+-      initAmbientSound();
+-    }
+-  }, [audio, isFlashcardsOpen]);
+-
+-  // Function to stop all audio
+-  const stopAllAudio = useCallback(async () => {
+-    if (!audio) return;
+-    
+-    try {
+-      await audio.stopAllLoops();
+-    } catch (error) {
+-      console.error('[AudioTransitions] Error stopping audio:', error);
+-    }
+-  }, [audio]);
+-
+-  return {
+-    initializeAmbientSound,
+-    stopAllAudio,
+-    isAudioTransitionInProgress: () => audioTransitionInProgressRef.current
+-  };
+-};
+-
+-export default useAudioTransitions; 
+\ No newline at end of file
+diff --git a/store/README-STATE.md b/store/README-STATE.md
+index 452b852..296ff13 100644
+--- a/store/README-STATE.md
++++ b/store/README-STATE.md
+@@ -53,6 +53,11 @@ const MyComponent = () => {
+    - Check state updates in React DevTools
+    - Add meaningful action names for easier debugging
+ 
++6. **Server-Side Rendering Compatibility**
++   - Use dynamic imports with `ssr: false` for components that use browser APIs
++   - Add proper checks for browser environment (`typeof window !== 'undefined'`)
++   - Use `export const dynamic = 'force-dynamic'` for API routes that need dynamic rendering
++
+ ## Current Zustand Stores
+ 
+ ### UI Store (`store.ts`)
+@@ -130,23 +135,45 @@ const MyComponent = () => {
+ ### Game Store (`store.ts`)
+ ```typescript
+ {
+-  // Game state
+-  gameState: {
+-    currentRoom: string;
+-    visitedRooms: string[];
+-    inventory: string[];
+-    gameProgress: number;
+-  };
++  // Game state for AnkiClinic
++  userRooms: any[];
++  userLevel: number;
++  patientsPerDay: number;
++  totalPatients: number;
++  streakDays: number;
++  isGameInProgress: boolean;
++  currentUserTestId: string;
++  isFlashcardsOpen: boolean;
++  flashcardRoomId: string;
++  activeRooms: Set<string>;
++  completeAllRoom: boolean;
++  correctCount: number;
++  wrongCount: number;
++  testScore: number;
++  userResponses: any[];
++  
++  // Game actions
++  unlockRoom: (roomId: string) => void;
++  startGame: (userTestId: string) => void;
++  endGame: () => void;
++  setIsFlashcardsOpen: (isOpen: boolean) => void;
++  setUserRooms: (rooms: any[]) => void;
++  setFlashcardRoomId: (roomId: string) => void;
++  setActiveRooms: (rooms: Set<string>) => void;
++  setCompleteAllRoom: (complete: boolean) => void;
++  resetGameState: () => void;
++  setCorrectCount: (count: number) => void;
++  setWrongCount: (count: number) => void;
++  setTestScore: (score: number) => void;
++  setUserResponses: (responses: any[]) => void;
++  setStreakDays: (days: number) => void;
++  setTotalPatients: (count: number) => void;
++  updateUserLevel: (level: number) => void;
+   
+   // Debug state
+   debugMode: boolean;
+   
+-  // Actions
+-  setCurrentRoom: (room: string) => void;
+-  addVisitedRoom: (room: string) => void;
+-  addToInventory: (item: string) => void;
+-  removeFromInventory: (item: string) => void;
+-  setGameProgress: (progress: number) => void;
++  // Debug actions
+   setDebugMode: (enabled: boolean) => void;
+ }
+ ```
+@@ -174,8 +201,14 @@ useUser() => {
+ // Game Selectors
+ useGame() => {
+   // All game-related state and actions
+-  gameState, debugMode, setCurrentRoom, addVisitedRoom, 
+-  addToInventory, removeFromInventory, setGameProgress, setDebugMode
++  userRooms, userLevel, patientsPerDay, totalPatients, streakDays,
++  isGameInProgress, currentUserTestId, isFlashcardsOpen, flashcardRoomId, 
++  activeRooms, completeAllRoom, correctCount, wrongCount, testScore, userResponses,
++  unlockRoom, startGame, endGame, setIsFlashcardsOpen, setUserRooms,
++  setFlashcardRoomId, setActiveRooms, setCompleteAllRoom, resetGameState,
++  setCorrectCount, setWrongCount, setTestScore, setUserResponses,
++  setStreakDays, setTotalPatients, updateUserLevel,
++  debugMode, setDebugMode
+ }
+ 
+ // Individual Profile Selectors
+@@ -197,6 +230,8 @@ useOnboardingStatus() => { hasCompletedOnboarding, lastVisitedRoute, onboardingR
+ - ✅ Consolidated selectors: Combined user-related selectors into a single `useUser` selector
+ - ✅ Debug Mode: Implemented in Game Store with URL parameter control
+ - ✅ Route Transitions: Enhanced RouteHandler with smooth transitions and debug mode support
++- ✅ Game State (AnkiClinic): Migrated core game state to Zustand Game Store
++- ✅ Server-Side Rendering Fixes: Updated components to handle SSR properly
+ 
+ ## Current Context API State (To Be Migrated)
+ 
+@@ -224,31 +259,33 @@ useOnboardingStatus() => { hasCompletedOnboarding, lastVisitedRoute, onboardingR
+   - `isAutoPlay: boolean`
+   - `setIsAutoPlay: (autoPlay: boolean) => void`
+ 
+-### [AnkiClinicContext](../contexts/AnkiClinicContext.tsx)
+-- Game State:
+-  - `gameState: GameState`
+-  - `dispatch: (action: GameAction) => void`
+-  - `resetGame: () => void`
+-  - `loadGame: (savedState: GameState) => void`
+-
+ ## Migration Plan
+ 
+ ### Priority for Migration to Zustand
+-1. Game State (AnkiClinic) - In Progress
+-   - Partially migrated to Game Store
+-   - Need to complete migration of game logic and state
+-   - Will handle game progress, quiz state, and room management
+-
+-2. Media Management - Low Priority
++1. Media Management - Next Priority
+    - Combine `AudioContext`, `MusicPlayerContext`
+    - Create `mediaStore`
+    - Will handle sound effects, music, and volume controls
+ 
++2. Vocabulary Management - Low Priority
++   - Migrate `VocabContext` to Zustand
++   - Create `vocabStore`
++   - Will handle vocabulary list and related functionality
++
+ ### Keep in Context API
+-- VocabContext (real-time features)
+ - Form-related contexts
+ - DOM-interaction heavy features
+ 
++## Server-Side Rendering Improvements
++- ✅ Fixed ankiclinic page build errors by:
++  - Using dynamic imports with `ssr: false` for browser-dependent components
++  - Adding proper browser environment checks
++  - Making API routes dynamic with `export const dynamic = 'force-dynamic'`
++- ✅ Added proper handling of browser-specific APIs:
++  - Added checks for `typeof window !== 'undefined'` in utils
++  - Ensured ReactDOM.unstable_batchedUpdates is only used in browser environment
++  - Fixed document access with proper browser environment checks
++
+ ## Best Practices for Migration
+ 1. State Splitting:
+    - Keep related state together
+@@ -271,6 +308,11 @@ useOnboardingStatus() => { hasCompletedOnboarding, lastVisitedRoute, onboardingR
+    - Update components gradually
+    - Keep backward compatibility 
+ 
++5. Server-Side Rendering:
++   - Always check for browser environment before using browser APIs
++   - Use dynamic imports with `ssr: false` for components with browser dependencies
++   - Make API routes dynamic when they use headers or other server-side features
++
+ ## Maintenance Guidelines
+ 1. When adding new state:
+    - Add to appropriate store file
+@@ -288,6 +330,11 @@ useOnboardingStatus() => { hasCompletedOnboarding, lastVisitedRoute, onboardingR
+    - Remove from "To Be Migrated" section
+    - Document any breaking changes 
+ 
++4. When handling browser APIs:
++   - Always check for browser environment with `typeof window !== 'undefined'`
++   - Use dynamic imports with `ssr: false` for components with browser dependencies
++   - Consider using Next.js's built-in features for handling SSR/CSR differences
++
+ ## Migration Progress Notes
+ - UserStats and UserInfo contexts have been successfully migrated to Zustand
+ - The Zustand store now handles user data fetching and updates
+@@ -298,4 +345,6 @@ useOnboardingStatus() => { hasCompletedOnboarding, lastVisitedRoute, onboardingR
+ - A compatibility layer has been added to UserProfileContext.tsx to maintain backward compatibility
+ - Debug mode has been implemented with URL parameter control
+ - RouteHandler has been enhanced with smooth transitions and debug mode support
+-- Next steps: Complete Game State (AnkiClinic) migration and implement Media Management store 
+\ No newline at end of file
++- Game State (AnkiClinic) has been migrated to Zustand with all core game functionality
++- Server-side rendering issues have been fixed in the ankiclinic page and API routes
++- Next steps: Complete Media Management store migration and implement Vocabulary Management store 
+\ No newline at end of file
+diff --git a/store/selectors.ts b/store/selectors.ts
+index e4249f6..ce2e3a1 100644
+--- a/store/selectors.ts
++++ b/store/selectors.ts
+@@ -1,4 +1,5 @@
+ import { useStore } from './store'
++import { useEffect, useCallback, useRef } from 'react'
+ 
+ /* --- UI Selectors ---- */
+ export const useUI = () => {
+@@ -199,4 +200,104 @@ export const useOnboardingStatus = () => ({
+   hasCompletedOnboarding: useStore(state => state.hasCompletedOnboarding),
+   lastVisitedRoute: useStore(state => state.lastVisitedRoute),
+   onboardingRoute: useStore(state => state.onboardingRoute)
+-}) 
+\ No newline at end of file
++})
++
++/* --- Audio Selector ---- */
++// Consolidated audio selector that provides all audio-related state and actions
++export const useAudio = () => {
++  // Audio state
++  const isPlayingSong = useStore((state) => state.isPlayingSong)
++  const currentSong = useStore((state) => state.currentSong)
++  const currentLoop = useStore((state) => state.currentLoop)
++  const masterVolume = useStore((state) => state.masterVolume)
++  
++  // Audio actions
++  const playMusic = useStore((state) => state.playMusic)
++  const stopMusic = useStore((state) => state.stopMusic)
++  const playSound = useStore((state) => state.playSound)
++  const loopSound = useStore((state) => state.loopSound)
++  const stopLoopSound = useStore((state) => state.stopLoopSound)
++  const stopAllLoops = useStore((state) => state.stopAllLoops)
++  const getCurrentLoop = useStore((state) => state.getCurrentLoop)
++  const setMasterVolume = useStore((state) => state.setMasterVolume)
++  const initializeAudioContext = useStore((state) => state.initializeAudioContext)
++  const handleFlashcardsTransition = useStore((state) => state.handleFlashcardsTransition)
++  
++  // Initialize audio context on first use - but only once per component instance
++  const hasInitializedRef = useRef(false);
++  
++  useEffect(() => {
++    if (hasInitializedRef.current) return;
++    
++    console.debug('[useAudio] Initializing audio context on hook mount')
++    hasInitializedRef.current = true;
++    
++    initializeAudioContext().catch(error => {
++      console.error('[useAudio] Failed to initialize audio context:', error)
++      // Reset the flag to allow retry on next render
++      hasInitializedRef.current = false;
++    })
++    
++    // No cleanup needed - we want to keep the audio context alive
++  }, [initializeAudioContext])
++
++  // Enhanced API with additional debug logging
++  return {
++    // Audio state
++    isPlaying: isPlayingSong,
++    currentSong,
++    currentLoop,
++    volume: masterVolume,
++    
++    // Audio actions with debug logging
++    playMusic: useCallback(async (src: string, startPlayback = true, onEnded?: () => void) => {
++      console.debug(`[useAudio] Playing music: ${src}, startPlayback: ${startPlayback}`)
++      return playMusic(src, startPlayback, onEnded)
++    }, [playMusic]),
++    
++    stopMusic: useCallback(() => {
++      console.debug('[useAudio] Stopping music')
++      stopMusic()
++    }, [stopMusic]),
++    
++    playSound: useCallback(async (soundName: string) => {
++      console.debug(`[useAudio] Playing sound: ${soundName}`)
++      return playSound(soundName)
++    }, [playSound]),
++    
++    loopSound: useCallback(async (soundName: string) => {
++      console.debug(`[useAudio] Looping sound: ${soundName}`)
++      return loopSound(soundName)
++    }, [loopSound]),
++    
++    stopLoopSound: useCallback((soundName: string) => {
++      console.debug(`[useAudio] Stopping loop: ${soundName}`)
++      stopLoopSound(soundName)
++    }, [stopLoopSound]),
++    
++    stopAllLoops: useCallback(async () => {
++      console.debug('[useAudio] Stopping all loops')
++      return stopAllLoops()
++    }, [stopAllLoops]),
++    
++    getCurrentLoop: useCallback(() => {
++      return getCurrentLoop()
++    }, [getCurrentLoop]),
++    
++    setVolume: useCallback((volume: number) => {
++      console.debug(`[useAudio] Setting volume: ${volume}`)
++      setMasterVolume(volume)
++    }, [setMasterVolume]),
++    
++    getActiveLoops: useCallback(() => {
++      // Access the store directly to get active loops
++      const store = useStore.getState();
++      return store._LOOP_SOURCES ? Array.from(store._LOOP_SOURCES.keys()) : [];
++    }, []),
++    
++    handleFlashcardsTransition: useCallback(async (isOpen: boolean) => {
++      console.debug(`[useAudio] Handling flashcards transition: ${isOpen ? 'open' : 'close'}`)
++      return handleFlashcardsTransition(isOpen)
++    }, [handleFlashcardsTransition])
++  }
++} 
+\ No newline at end of file
+diff --git a/store/store.ts b/store/store.ts
+index 8ca3ea8..d8574d9 100644
+--- a/store/store.ts
++++ b/store/store.ts
+@@ -3,6 +3,7 @@ import { devtools } from 'zustand/middleware'
+ import { UserInfo } from '@/types/user'
+ import { calculatePlayerLevel, getLevelNumber, getPatientsPerDay } from './gameStoreUtils'
+ import type { DoctorOfficeStats } from '@/types'
++import { toast } from 'react-hot-toast'
+ 
+ /* --- Constants ----- */
+ export const MOBILE_BREAKPOINT = 640  // sm
+@@ -17,7 +18,22 @@ interface WindowSize {
+ 
+ export type ThemeType = 'cyberSpace' | 'sakuraTrees' | 'sunsetCity' | 'mykonosBlue'
+ 
+-/* --- User Types ---- */
++// Add a flag to track global initialization
++let isStoreInitialized = false;
++
++//******************************************* UI Slice ****************************************************//
++interface UISlice {
++  window: WindowSize
++  currentRoute: string
++  theme: ThemeType
++  setWindowSize: (size: WindowSize) => void
++  setCurrentRoute: (route: string) => void
++  setTheme: (theme: ThemeType) => void
++}
++
++//***************************************** User Slice ********************************************************//
++//************************* UserProfile, UserInfo, UserStats, User  *******************************************//
++
+ interface UserProfile {
+   profile: {
+     userId?: string;
+@@ -56,16 +72,6 @@ interface UserStats {
+   isLoading: boolean;
+ }
+ 
+-/* --- Store Slices ---- */
+-interface UISlice {
+-  window: WindowSize
+-  currentRoute: string
+-  theme: ThemeType
+-  setWindowSize: (size: WindowSize) => void
+-  setCurrentRoute: (route: string) => void
+-  setTheme: (theme: ThemeType) => void
+-}
+-
+ /* --- User Slice ---- */
+ interface UserSlice {
+   // UserProfile state
+@@ -114,7 +120,58 @@ interface UserSlice {
+   setOnboardingRoute: (route: string) => void;
+ }
+ 
+-/* --- Game Slice ---- */
++//******************************************* Audio Slice ****************************************************//
++interface AudioSlice {
++  // Audio state
++  isPlayingSong: boolean;
++  currentSong: string | null;
++  currentLoop: string | null;
++  masterVolume: number;
++  
++  // Audio context references (not serializable - handled internally)
++  _audioContext: AudioContext | null;
++  _masterGainNode: GainNode | null;
++  _bufferCache: Map<string, AudioBuffer>;
++  
++  // Internal constants and maps
++  _MUSIC_SOURCE: Map<string, AudioBufferSourceNode>;
++  _LOOP_SOURCES: Map<string, { source: AudioBufferSourceNode; gainNode: GainNode }>;
++  _BUFFER_CACHE_LIMIT: number;
++  _VOLUME_COEFFICIENTS: {
++    music: number;
++    sfx: number;
++    ambient: number;
++    [key: string]: number;
++  };
++  _SOUND_MAPPINGS: {
++    [key: string]: string;
++  };
++  
++  // Internal methods
++  _handleAudioError: (error: Error, context: string) => void;
++  
++  // Basic audio actions
++  playMusic: (src: string, startPlayback?: boolean, onEnded?: () => void) => Promise<AudioBufferSourceNode | null>;
++  stopMusic: () => void;
++  playSound: (soundName: string) => Promise<void>;
++  loopSound: (soundName: string) => Promise<void>;
++  stopLoopSound: (soundName: string) => void;
++  stopAllLoops: () => Promise<void>;
++  getCurrentLoop: () => string | null;
++  setMasterVolume: (newVolume: number) => void;
++  
++  // Audio context management
++  initializeAudioContext: () => Promise<AudioContext | null>;
++  loadAudioBuffer: (url: string) => Promise<AudioBuffer>;
++  
++  // Transition actions (replacing useAudioTransitions)
++  handleFlashcardsTransition: (isOpen: boolean) => Promise<void>;
++  
++  // Global store initialization
++  initializeStore: () => Promise<void>;
++}
++
++//******************************************* Game Slice ****************************************************//
+ interface GameSlice {
+   // Game progress (matching local state names)
+   patientsPerDay: number; // Direct match with page.tsx
+@@ -156,13 +213,19 @@ interface GameSlice {
+   updateUserLevel: () => void;
+ }
+ 
+-/* --- Store Type ---- */
+-type Store = UISlice & UserSlice & GameSlice;
++type Store = UISlice & UserSlice & GameSlice & AudioSlice;
++
++//====================================================================================================//
++//================================= Store Initialization =============================================//
++//====================================================================================================//
+ 
+ export const useStore = create<Store>()(
+   devtools(
+     (set, get) => ({
+-      //************************************** UI State *********************************************//
++      //***********************************************************************************************//
++      //************************************** UI State ***********************************************//
++      //***********************************************************************************************//
++
+ 
+       window: {
+         width: typeof window !== 'undefined' ? window.innerWidth : 1920,
+@@ -182,9 +245,9 @@ export const useStore = create<Store>()(
+         }
+       },
+ 
++      //***********************************************************************************************//
+       //************************************** USER State *********************************************//
+-
+-
++      //***********************************************************************************************//
+       // User State
+       profile: null,
+       profileLoading: true,
+@@ -224,6 +287,7 @@ export const useStore = create<Store>()(
+           }
+           
+           // Determine query parameter
++          
+           const queryParam = userInfo.email 
+             ? `email=${encodeURIComponent(userInfo.email)}` 
+             : `userId=${userInfo.userId}`;
+@@ -528,8 +592,9 @@ export const useStore = create<Store>()(
+         get().updateProfile({ onboardingRoute: route });
+       },
+       
+-      //************************************** Game State *********************************************//
+-      
++      //***********************************************************************************************//
++      //************************************** GAME State *********************************************//
++      //***********************************************************************************************//
+       // Game progress
+       patientsPerDay: 4,
+       streakDays: 0,
+@@ -657,11 +722,577 @@ export const useStore = create<Store>()(
+           patientsPerDay
+         });
+       },
++
++      //************************************************************************************************//
++      //************************************** AUDIO State *******************************************//
++      //***********************************************************************************************//
++      
++      // Audio state
++      isPlayingSong: false,
++      currentSong: null,
++      currentLoop: null,
++      masterVolume: 0.5,
++      
++      // Non-serializable audio references (prefixed with _ to indicate internal use)
++      _audioContext: null,
++      _masterGainNode: null,
++      _bufferCache: new Map<string, AudioBuffer>(),
++      
++      // Constants
++      _MUSIC_SOURCE: new Map<string, AudioBufferSourceNode>(),
++      _LOOP_SOURCES: new Map<string, { source: AudioBufferSourceNode; gainNode: GainNode }>(),
++      _BUFFER_CACHE_LIMIT: 20, // MB
++      _VOLUME_COEFFICIENTS: {
++        music: 1.0,  // Music at full volume
++        sfx: 0.5,    // SFX at half volume
++        ambient: 0.75  // Ambient at 75% volume
++      },
++      _SOUND_MAPPINGS: {
++        'flashcard-door-open': 'sfx',
++        'flashcard-door-closed': 'sfx',
++        'flashcard-loop-catfootsteps': 'ambient',
++        'elevenlabs-response': 'sfx',
++        // ... other sound mappings
++      },
++      
++      // Error handling
++      _handleAudioError: (error: Error, context: string) => {
++        console.error(`🎵 [AudioContext] ${context}:`, error);
++        
++        // Check for specific error types
++        if (error instanceof DOMException && error.name === 'NotAllowedError') {
++          toast.error('Please interact with the page first to enable audio.');
++        } else if (error.name === 'EncodingError') {
++          toast.error('This audio format is not supported by your browser.');
++        } else {
++          toast.error('Failed to play audio. Please try again.');
++        }
++      },
++      
++      // Audio context initialization
++      initializeAudioContext: async () => {
++        const state = get();
++        console.debug('[DEBUG][AudioStore] Initializing audio context');
++        
++        try {
++          // Check if we already have a running context
++          if (state._audioContext?.state === 'running') {
++            console.debug('[DEBUG][AudioStore] Audio context already running');
++            return state._audioContext;
++          }
++
++          // Try to resume suspended context
++          if (state._audioContext?.state === 'suspended') {
++            console.debug('[DEBUG][AudioStore] Resuming suspended audio context');
++            await state._audioContext.resume();
++            return state._audioContext;
++          }
++
++          // Create new context if needed
++          if (typeof window !== 'undefined') {
++            console.debug('[DEBUG][AudioStore] Creating new audio context');
++            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
++            const ctx = new AudioContextClass({
++              latencyHint: 'interactive',
++              sampleRate: 44100
++            });
++            
++            await ctx.resume();
++            
++            // Create master gain node
++            const masterGain = ctx.createGain();
++            masterGain.connect(ctx.destination);
++            masterGain.gain.value = state.masterVolume;
++            
++            // Update state with new context and gain node
++            set({ 
++              _audioContext: ctx,
++              _masterGainNode: masterGain
++            });
++            
++            console.debug('[DEBUG][AudioStore] Audio context created successfully');
++            
++            // Monitor performance in development
++            if (process.env.NODE_ENV === 'development') {
++              if (ctx.baseLatency > 0.025) {
++                console.warn('[DEBUG][AudioStore] High audio latency detected:', ctx.baseLatency);
++              }
++              
++              if ((ctx as any).getOutputTimestamp) {
++                const timestamp = (ctx as any).getOutputTimestamp();
++                if (timestamp.contextTime > timestamp.performanceTime) {
++                  console.warn('[DEBUG][AudioStore] Audio buffer underrun detected');
++                }
++              }
++            }
++            
++            return ctx;
++          }
++          
++          return null;
++        } catch (error) {
++          state._handleAudioError(error as Error, 'Audio context initialization failed');
++          return null;
++        }
++      },
++      
++      // Global store initialization - call this once at app startup
++      initializeStore: async () => {
++        // Prevent multiple initializations
++        if (isStoreInitialized) {
++          console.debug('[DEBUG][Store] Store already initialized, skipping');
++          return;
++        }
++        
++        console.debug('[DEBUG][Store] Initializing global store');
++        
++        try {
++          // Initialize audio context
++          const state = get();
++          await state.initializeAudioContext();
++          
++          // Set initialization flag
++          isStoreInitialized = true;
++          console.debug('[DEBUG][Store] Store initialization complete');
++        } catch (error) {
++          console.error('[DEBUG][Store] Store initialization failed:', error);
++        }
++      },
++      
++      // Load and cache audio buffer
++      loadAudioBuffer: async (url: string) => {
++        const state = get();
++        console.debug(`[DEBUG][AudioStore] Loading audio buffer: ${url}`);
++        
++        // Check if buffer is already cached
++        if (state._bufferCache.has(url)) {
++          console.debug(`[DEBUG][AudioStore] Using cached buffer for: ${url}`);
++          return state._bufferCache.get(url)!;
++        }
++        
++        // Check cache size before adding new buffer
++        let totalSize = 0;
++        for (const buffer of state._bufferCache.values()) {
++          totalSize += buffer.length * buffer.numberOfChannels * 4; // 4 bytes per sample
++        }
++        
++        if (totalSize > state._BUFFER_CACHE_LIMIT * 1024 * 1024) {
++          // Clear oldest entries if cache is too large
++          console.debug('[DEBUG][AudioStore] Cache limit reached, clearing oldest entry');
++          const oldestKey = state._bufferCache.keys().next().value;
++          if (oldestKey) {
++            state._bufferCache.delete(oldestKey);
++          }
++        }
++        
++        const ctx = await state.initializeAudioContext();
++        if (!ctx) throw new Error('Failed to initialize audio context');
++
++        try {
++          console.debug(`[DEBUG][AudioStore] Fetching audio file: ${url}`);
++          const response = await fetch(url);
++          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
++          const arrayBuffer = await response.arrayBuffer();
++          console.debug(`[DEBUG][AudioStore] Decoding audio data: ${url}`);
++          const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
++          
++          // Cache the decoded buffer
++          state._bufferCache.set(url, audioBuffer);
++          console.debug(`[DEBUG][AudioStore] Audio buffer cached: ${url}`);
++          
++          return audioBuffer;
++        } catch (error) {
++          state._handleAudioError(error as Error, `Failed to load audio: ${url}`);
++          throw error;
++        }
++      },
++      
++      // Basic audio actions
++      playMusic: async (src, startPlayback = true, onEnded) => {
++        const state = get();
++        console.debug(`[DEBUG][AudioStore] Play music called: ${src}, startPlayback: ${startPlayback}`);
++        
++        if (!startPlayback) {
++          state.stopMusic();
++          return null;
++        }
++
++        try {
++          if (state._MUSIC_SOURCE.size > 0) {
++            console.debug('[DEBUG][AudioStore] Stopping existing music before playing new track');
++            state.stopMusic();
++          }
++
++          const audioBuffer = await state.loadAudioBuffer(src);
++          const ctx = await state.initializeAudioContext();
++          if (!ctx) throw new Error('No audio context');
++
++          set({ 
++            isPlayingSong: true,
++            currentSong: src
++          });
++
++          const source = ctx.createBufferSource();
++          source.buffer = audioBuffer;
++
++          // Add gain node with music coefficient
++          const gainNode = ctx.createGain();
++          gainNode.gain.value = state.masterVolume * state._VOLUME_COEFFICIENTS.music;
++          
++          // Connect nodes
++          source.connect(gainNode);
++          gainNode.connect(state._masterGainNode!);
++
++          state._MUSIC_SOURCE.set(src, source);
++          
++          if (startPlayback) {
++            console.debug('[DEBUG][AudioStore] Starting music playback');
++            source.start(0);
++          }
++
++          source.onended = () => {
++            console.debug('[DEBUG][AudioStore] Music playback ended');
++            state._MUSIC_SOURCE.delete(src);
++            set({
++              isPlayingSong: false,
++              currentSong: null
++            });
++            onEnded?.();
++          };
++
++          return source;
++        } catch (error) {
++          state._handleAudioError(error as Error, 'Error playing music');
++          return null;
++        }
++      },
++      
++      stopMusic: () => {
++        const state = get();
++        console.debug('[DEBUG][AudioStore] Stopping all music');
++        
++        state._MUSIC_SOURCE.forEach((source, url) => {
++          try {
++            source.onended = null;
++            source.stop();
++            source.disconnect();
++            state._MUSIC_SOURCE.delete(url);
++            console.debug(`[DEBUG][AudioStore] Stopped music: ${url}`);
++          } catch (error) {
++            state._handleAudioError(error as Error, 'Error stopping music');
++          }
++        });
++
++        set({
++          isPlayingSong: false,
++          currentSong: null
++        });
++      },
++      
++      playSound: async (soundName) => {
++        const state = get();
++        console.debug(`[DEBUG][AudioStore] Playing sound: ${soundName}`);
++        
++        try {
++          const ctx = await state.initializeAudioContext();
++          if (!ctx) return;
++          
++          const buffer = await state.loadAudioBuffer(`/audio/${soundName}.mp3`);
++          
++          const source = ctx.createBufferSource();
++          source.buffer = buffer;
++          
++          // Get appropriate coefficient
++          const category = state._SOUND_MAPPINGS[soundName] || 'sfx';
++          const coefficient = state._VOLUME_COEFFICIENTS[category];
++          
++          // Create gain node with coefficient
++          const localGain = ctx.createGain();
++          localGain.gain.value = state.masterVolume * coefficient;
++          
++          // Connect nodes
++          source.connect(localGain);
++          localGain.connect(state._masterGainNode!);
++          
++          // Fade in
++          localGain.gain.setValueAtTime(0, ctx.currentTime);
++          localGain.gain.linearRampToValueAtTime(coefficient * state.masterVolume, ctx.currentTime + 0.02);
++          
++          source.start();
++          console.debug(`[DEBUG][AudioStore] Sound started: ${soundName}`);
++          
++          // Fade out
++          const duration = buffer.duration;
++          localGain.gain.setValueAtTime(coefficient * state.masterVolume, ctx.currentTime + duration - 0.05);
++          localGain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
++          
++          source.onended = () => {
++            console.debug(`[DEBUG][AudioStore] Sound ended: ${soundName}`);
++            source.disconnect();
++            localGain.disconnect();
++          };
++        } catch (error) {
++          state._handleAudioError(error as Error, 'Failed to play sound');
++        }
++      },
++      
++      loopSound: async (soundName) => {
++        const state = get();
++        const normalizedName = soundName.replace('/audio/', '').replace(/\.(mp3|wav)$/, '');
++        const fullPath = `/audio/${normalizedName}.wav`;
++        
++        console.debug(`[DEBUG][AudioStore] Looping sound: ${normalizedName}, fullPath: ${fullPath}, current loops: ${Array.from(state._LOOP_SOURCES.keys()).join(', ')}`);
++        
++        // Only one loop can be active at a time
++        if (state._LOOP_SOURCES.has(fullPath)) {
++          console.debug(`[DEBUG][AudioStore] Loop already active: ${fullPath}`);
++          return;
++        }
++
++        // Check if any other loops are active and stop them
++        if (state._LOOP_SOURCES.size > 0) {
++          console.debug(`[DEBUG][AudioStore] Found ${state._LOOP_SOURCES.size} active loops, stopping them before starting new loop`);
++          await state.stopAllLoops();
++          
++          // Add a small delay to ensure audio context has time to clean up
++          console.debug('[DEBUG][AudioStore] Adding small delay after stopping loops');
++          await new Promise(resolve => setTimeout(resolve, 100));
++        }
++
++        try {
++          const ctx = await state.initializeAudioContext();
++          if (!ctx) throw new Error('Audio context not initialized');
++
++          console.debug(`[DEBUG][AudioStore] Audio context state: ${ctx.state}`);
++          
++          // Double-check that we haven't already started this loop during async operations
++          if (state._LOOP_SOURCES.has(fullPath)) {
++            console.debug(`[DEBUG][AudioStore] Loop was started by another call during async operation, skipping: ${fullPath}`);
++            return;
++          }
++          
++          const audioBuffer = await state.loadAudioBuffer(fullPath);
++          console.debug(`[DEBUG][AudioStore] Successfully loaded audio buffer for ${fullPath}, duration: ${audioBuffer.duration}s`);
++          
++          // Check again after buffer loading
++          if (state._LOOP_SOURCES.has(fullPath)) {
++            console.debug(`[DEBUG][AudioStore] Loop was started by another call after buffer loading, skipping: ${fullPath}`);
++            return;
++          }
++          
++          const source = ctx.createBufferSource();
++          source.buffer = audioBuffer;
++          source.loop = true;
++
++          // Apply the appropriate volume coefficient
++          const category = state._SOUND_MAPPINGS[normalizedName] || 'ambient';
++          const coefficient = state._VOLUME_COEFFICIENTS[category];
++
++          // Create local gain with fixed coefficient
++          const gainNode = ctx.createGain();
++          gainNode.gain.value = state.masterVolume * coefficient;
++          console.debug(`[DEBUG][AudioStore] Setting gain for loop: ${state.masterVolume} * ${coefficient} = ${state.masterVolume * coefficient}`);
++
++          // Connect directly to master
++          source.connect(gainNode);
++          gainNode.connect(state._masterGainNode!);
++
++          // Set up error handling for the source
++          source.onended = () => {
++            console.debug(`[DEBUG][AudioStore] Loop ended unexpectedly: ${fullPath}`);
++            if (state._LOOP_SOURCES.has(fullPath)) {
++              state._LOOP_SOURCES.delete(fullPath);
++              if (state.currentLoop === fullPath) {
++                set({ currentLoop: null });
++              }
++            }
++          };
++
++          state._LOOP_SOURCES.set(fullPath, { source, gainNode });
++          source.start(0);
++          console.debug(`[DEBUG][AudioStore] Loop started: ${fullPath}`);
++          
++          // Update state with current loop
++          set({ currentLoop: fullPath });
++
++        } catch (error) {
++          console.error(`[DEBUG][AudioStore] Error in loopSound for ${fullPath}:`, error);
++          state._handleAudioError(error as Error, 'Failed to start audio loop');
++        }
++      },
++      
++      stopLoopSound: (soundName) => {
++        const state = get();
++        const normalizedName = soundName.replace('/audio/', '').replace(/\.(mp3|wav)$/, '');
++        const fullPath = `/audio/${normalizedName}.wav`;
++        
++        console.debug(`[DEBUG][AudioStore] Stopping loop: ${normalizedName}, fullPath: ${fullPath}`);
++        
++        const audio = state._LOOP_SOURCES.get(fullPath);
++        if (audio) {
++          try {
++            console.debug(`[DEBUG][AudioStore] Found active loop to stop: ${fullPath}`);
++            audio.source.onended = null; // Remove the onended handler
++            audio.source.stop();
++            audio.source.disconnect();
++            audio.gainNode.disconnect();
++            state._LOOP_SOURCES.delete(fullPath);
++            console.debug(`[DEBUG][AudioStore] Loop stopped: ${fullPath}`);
++            
++            // Clear current loop if it matches
++            if (state.currentLoop === fullPath) {
++              console.debug(`[DEBUG][AudioStore] Clearing current loop state: ${fullPath}`);
++              set({ currentLoop: null });
++            }
++          } catch (error) {
++            console.error(`[DEBUG][AudioStore] Error stopping loop ${fullPath}:`, error);
++            state._handleAudioError(error as Error, 'Error stopping ambient sound');
++            
++            // Clean up the reference even if there was an error
++            state._LOOP_SOURCES.delete(fullPath);
++            if (state.currentLoop === fullPath) {
++              set({ currentLoop: null });
++            }
++          }
++        } else {
++          console.debug(`[DEBUG][AudioStore] No active loop found: ${fullPath}, active loops: ${Array.from(state._LOOP_SOURCES.keys()).join(', ')}`);
++        }
++      },
++      
++      stopAllLoops: async () => {
++        const state = get();
++        console.debug(`[DEBUG][AudioStore] Stopping all loops, active loops: ${state._LOOP_SOURCES.size}`);
++        
++        // If no active loops, just clear the state and return
++        if (state._LOOP_SOURCES.size === 0) {
++          console.debug('[DEBUG][AudioStore] No active loops to stop, just clearing state');
++          set({ currentLoop: null });
++          return;
++        }
++        
++        // Create a copy of the keys to avoid modification during iteration
++        const loopKeys = Array.from(state._LOOP_SOURCES.keys());
++        
++        // Use Promise.all to handle all stop operations in parallel
++        try {
++          await Promise.all(loopKeys.map(async (name) => {
++            try {
++              const audio = state._LOOP_SOURCES.get(name);
++              if (!audio) return;
++              
++              console.debug(`[DEBUG][AudioStore] Stopping loop: ${name}`);
++              audio.source.onended = null; // Remove the onended handler
++              audio.source.stop();
++              audio.source.disconnect();
++              audio.gainNode.disconnect();
++              state._LOOP_SOURCES.delete(name);
++              console.debug(`[DEBUG][AudioStore] Loop stopped: ${name}`);
++            } catch (error) {
++              console.error(`[DEBUG][AudioStore] Error stopping loop ${name}:`, error);
++              state._handleAudioError(error as Error, 'Error stopping ambient sound');
++              
++              // Clean up the reference even if there was an error
++              state._LOOP_SOURCES.delete(name);
++            }
++          }));
++        } catch (error) {
++          console.error('[DEBUG][AudioStore] Error in stopAllLoops:', error);
++        } finally {
++          // Always clear the map and current loop state to prevent getting stuck
++          state._LOOP_SOURCES.clear();
++          console.debug('[DEBUG][AudioStore] Clearing current loop state');
++          set({ currentLoop: null });
++        }
++      },
++      
++      getCurrentLoop: () => {
++        const loop = get().currentLoop;
++        console.debug(`[DEBUG][AudioStore] Getting current loop: ${loop}`);
++        return loop;
++      },
++      
++      setMasterVolume: (newVolume) => {
++        const state = get();
++        console.debug(`[DEBUG][AudioStore] Setting master volume: ${newVolume}`);
++        
++        if (!state._masterGainNode || !state._audioContext) {
++          // Just update the state if audio context isn't initialized
++          console.debug('[DEBUG][AudioStore] No audio context, just updating volume state');
++          set({ masterVolume: newVolume });
++          return;
++        }
++
++        const now = state._audioContext.currentTime;
++        state._masterGainNode.gain.cancelScheduledValues(now);
++        state._masterGainNode.gain.linearRampToValueAtTime(newVolume, now + 0.1);
++        console.debug(`[DEBUG][AudioStore] Volume transition scheduled: ${state.masterVolume} -> ${newVolume}`);
++        
++        // Update state
++        set({ masterVolume: newVolume });
++      },
++      
++      // Transition actions (replacing useAudioTransitions)
++      handleFlashcardsTransition: async (isOpen) => {
++        const state = get();
++        console.debug(`[DEBUG][AudioStore] Handling flashcards transition, isOpen=${isOpen}`);
++        
++        try {
++          if (isOpen) {
++            // Stop ambient sound when flashcards open
++            console.debug('[DEBUG][AudioStore] Flashcards opened, stopping ambient sound');
++            await state.stopAllLoops();
++            
++            // Small delay to ensure audio context has time to clean up
++            await new Promise(resolve => setTimeout(resolve, 100));
++            
++            // Play flashcards music
++            console.debug('[DEBUG][AudioStore] Starting flashcards music');
++            await state.loopSound('flashcard-loop-catfootsteps');
++          } else {
++            // Stop flashcards music when closed
++            console.debug('[DEBUG][AudioStore] Flashcards closed, stopping flashcards music');
++            await state.stopAllLoops();
++            
++            // Small delay to ensure audio context has time to clean up
++            await new Promise(resolve => setTimeout(resolve, 100));
++            
++            // Play ambient sound
++            console.debug('[DEBUG][AudioStore] Starting ambient sound');
++            await state.loopSound('flashcard-loop-catfootsteps');
++          }
++        } catch (error) {
++          console.error('[DEBUG][AudioStore] Error in handleFlashcardsTransition:', error);
++          state._handleAudioError(error as Error, 'Error handling flashcards transition');
++          
++          // Ensure we clean up any pending audio
++          await state.stopAllLoops();
++        }
++      }
+     }),
+-    { name: 'MYMCAT Store' }
++    {
++      // Exclude non-serializable fields from devtools
++      serialize: {
++        options: {
++          map: new Map([
++            ['_audioContext', '__excluded__'],
++            ['_masterGainNode', '__excluded__'],
++            ['_bufferCache', '__excluded__'],
++            ['_MUSIC_SOURCE', '__excluded__'],
++            ['_LOOP_SOURCES', '__excluded__']
++          ])
++        }
++      }
++    }
+   )
+ ) 
+ 
++// Export a function to initialize the store at the app level
++export const initializeGlobalStore = async () => {
++  if (typeof window !== 'undefined' && !isStoreInitialized) {
++    console.debug('[DEBUG][Store] Initializing global store from exported function');
++    await useStore.getState().initializeStore();
++  }
++};
+ 
+ export type Card = {
+   id: string;
