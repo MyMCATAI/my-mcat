@@ -16,7 +16,7 @@ const RouteTracker = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { setCurrentRoute } = useUI();
-  const { userInfo, isSubscribed, hasCompletedOnboarding, profileLoading, statsLoading } = useUser();
+  const { userInfo, isSubscribed, onboardingComplete, profileLoading, statsLoading } = useUser();
   const { isSignedIn } = useClerkUser();
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
@@ -46,49 +46,71 @@ const RouteTracker = () => {
       // Check for debug mode in query parameters
       const isDebugMode = searchParams?.get('debug') === 'true';
       
-      // Skip redirection for exempt paths
       if (
         pathname === '/redirect' ||
         pathname.startsWith('/onboarding') ||
-        pathname.startsWith('/mobile') ||
-        pathname.startsWith('/api') ||
-        pathname.startsWith('/auth') ||
-        pathname.startsWith('/sign-in') ||
-        pathname.startsWith('/sign-up') ||
-        pathname.startsWith('/preferences') ||
-        // Skip redirection for the landing page if it's the root path
-        pathname === '/' ||
-        // Skip redirection if debug mode is enabled
-        isDebugMode
+        pathname.startsWith('/pricing')
       ) {
         return;
       }
 
       // 1. Redirect to onboarding if user has not completed onboarding
-      if (!hasCompletedOnboarding) {
+      if (!onboardingComplete) {
         router.push('/onboarding');
+        
+        // Fallback for critical redirects
+        const fallbackTimeout = setTimeout(() => {
+          window.location.href = '/onboarding';
+        }, 2000); // 2 second timeout
+        
+        // Clear timeout if component unmounts
+        return () => clearTimeout(fallbackTimeout);
+        
         return;
       }
 
       // 2. Redirect non-gold users to ankiclinic
       if (!isSubscribed && !pathname.startsWith('/ankiclinic')) {
         router.push('/ankiclinic');
+        
+        // Fallback for critical redirects
+        const fallbackTimeout = setTimeout(() => {
+          window.location.href = '/ankiclinic';
+        }, 2000); // 2 second timeout
+        
+        // Clear timeout if component unmounts
+        return () => clearTimeout(fallbackTimeout);
+        
         return;
       }
 
       // 3. Check if gold user needs study plan (skip for exempt paths)
-      if (
-        isSubscribed && 
-        !pathname.startsWith('/examcalendar') &&
-        !pathname.startsWith('/ankiclinic')
-      ) {
+      // Match main branch exempt paths
+      const studyPlanExemptPaths = ['/examcalendar', '/api', '/auth', '/onboarding', '/redirect'];
+      const shouldCheckStudyPlan = !studyPlanExemptPaths.some(path => pathname.startsWith(path));
+      
+      if (isSubscribed && shouldCheckStudyPlan) {
         try {
           const response = await fetch('/api/study-plan');
+          
+          // Add response validation like main branch
+          if (!response.ok) {
+            throw new Error('Failed to fetch study plan');
+          }
+          
           const data = await response.json();
           
           // Redirect to examcalendar if no study plan
           if (!data.studyPlan) {
             router.push('/examcalendar');
+            
+            // Add fallback for critical redirects
+            const fallbackTimeout = setTimeout(() => {
+              window.location.href = '/examcalendar';
+            }, 2000); // 2 second timeout
+            
+            // Clear timeout if component unmounts
+            return () => clearTimeout(fallbackTimeout);
           }
         } catch (error) {
           console.error('Error checking study plan:', error);
@@ -98,10 +120,10 @@ const RouteTracker = () => {
 
     checkRedirectPath();
     
-    // hasCompletedOnboarding is critical in this dependency array
+    // onboardingComplete is critical in this dependency array
     // When it changes (via store updates), this effect re-runs and ensures
     // the user is redirected correctly based on their current onboarding status
-  }, [pathname, router, userInfo, isSubscribed, hasCompletedOnboarding, initialLoadComplete, isSignedIn, searchParams]);
+  }, [pathname, router, userInfo, isSubscribed, onboardingComplete, initialLoadComplete, isSignedIn, searchParams]);
 
   return null;
 };
