@@ -145,11 +145,9 @@ const SoftwareSection = ({
             <p className="text-white/60 text-sm mt-1">
               ${getMonthlyPrice(pricingPeriod)}/month for comprehensive MCAT prep
             </p>
-            {/* Commenting out free trial banner
             <div className="mt-2 inline-flex items-center justify-center bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm font-medium">
               Now with 7-day free trial! ✨
             </div>
-            */}
           </div>
 
           <div className="flex flex-col md:flex-row">
@@ -317,13 +315,26 @@ const SoftwareSection = ({
                     </div>
                   </div>
 
+                  {/* Trial button - Only show if eligible */}
+                  {isTrialEligible &&(
+                    <div className="space-y-2 mt-4">
+                      <button
+                        onClick={handleStartTrial}
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition-colors"
+                        disabled={localLoading}
+                      >
+                        {localLoading ? 'Processing...' : 'Start 7-Day Free Trial'}
+                      </button>
+                    </div>
+                  )}
+
                   {/* Upgrade button */}
                   <button
                     onClick={handleUpgradeClick}
                     className="w-full bg-amber-500 hover:bg-amber-600 text-black py-3 rounded-lg font-semibold transition-colors mt-4"
                     disabled={isLoading}
                   >
-                    {isLoading ? 'Processing...' : 'Upgrade to Gold'}
+                    {isLoading ? 'Processing...' : 'Get Gold Now'}
                   </button>
                 </>
               )}

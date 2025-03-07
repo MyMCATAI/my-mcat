@@ -128,9 +128,6 @@ export default function PricingPage() {
 
         <div className="relative px-6 mx-auto max-w-7xl z-10">
           {/* Added Header */}
-          <h1 className="text-4xl md:text-5xl font-bold text-center text-white mb-8">
-            Free Trial Options + 30 Day Money Back
-          </h1>
           
           <OptionsStep
             isGold={isGold}

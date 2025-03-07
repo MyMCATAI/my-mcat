@@ -188,7 +188,7 @@ const MethodologyAndTestimonials = () => {
                     <span className="text-white">Study With Us For Free</span>
                   </h2>
                   <p className="text-white/90 text-2xl max-w-3xl">
-                    As part of our mission to support future doctors, we're offering <span className="text-green-400 font-semibold">six months completely free</span> to all FAP students because those are the doctors medicine needs.
+                    As part of our mission to support future doctors, we&apos;re offering <span className="text-green-400 font-semibold">six months completely free</span> to all FAP students because those are the doctors medicine needs.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 mt-4">
                     <a 
