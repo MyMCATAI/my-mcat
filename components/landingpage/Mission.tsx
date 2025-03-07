@@ -168,7 +168,7 @@ const MethodologyAndTestimonials = () => {
             </p>
             
             <p className="mb-4">
-              {"If you're a non-traditional student (30+), our study scheduler plans your essential resources — Anki, UWorld, AAMC, plus MyMCAT resources — around your life. If you're a low scorer, our community connects you to other students so you're not alone. If you can't focus, we've turned flashcards into a game you can play with friends — forcing you to engage with each card."}
+              {"Our study scheduler plans your essential resources — Anki, UWorld, AAMC, plus MyMCAT resources — around your life. Our community connects you to other students so you're not alone. If you can't focus, we've turned flashcards into a game you can play with friends — forcing you to engage with each card."}
             </p>
             
             <p className="mb-4">
@@ -176,7 +176,7 @@ const MethodologyAndTestimonials = () => {
             </p>
             
             <p className="mb-4">
-              MyMCAT.ai believes the world needs healing. We offer <span className="text-green-400 font-semibold">six months free to FAP students and $300 off for retakers and non-trads (30+)</span>. Our vision is to create the doctors that patients deserve. If you believe that understanding is key to healing others, join us — <span className="text-green-400 font-semibold">the world needs doctors like you</span>.
+              MyMCAT.ai believes the world needs healing. We offer <span className="text-green-400 font-semibold">six months free to FAP students</span>. Our vision is to create the doctors that patients deserve. If you believe that understanding is key to healing others, join us — <span className="text-green-400 font-semibold">the world needs doctors like you</span>.
             </p>
 
             <div className="flex flex-col items-center mt-12 mb-8">
