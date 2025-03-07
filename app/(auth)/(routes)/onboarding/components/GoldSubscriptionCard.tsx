@@ -36,7 +36,7 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'off
         window.location.href = response.data.url;
         return
       }
-        router.push('/mobile');
+        router.push('/pricing');
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to load page. Please try again.");

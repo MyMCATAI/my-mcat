@@ -8,7 +8,7 @@ import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { useUser } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
 import { useUserActivity } from '@/hooks/useUserActivity';
-import OptionsStep from "@/components/mobile/options/OptionsStep";
+import OptionsStep from "@/components/pricing/options/OptionsStep";
 import { ProductType } from "@/types";
 
 // Constants
@@ -127,6 +127,11 @@ export default function PricingPage() {
         </div>
 
         <div className="relative px-6 mx-auto max-w-7xl z-10">
+          {/* Added Header */}
+          <h1 className="text-4xl md:text-5xl font-bold text-center text-white mb-8">
+            Free Trial Options + 30 Day Money Back
+          </h1>
+          
           <OptionsStep
             isGold={isGold}
             user={user}
