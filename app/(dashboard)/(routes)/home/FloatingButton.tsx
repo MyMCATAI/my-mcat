@@ -33,7 +33,7 @@ const labelTexts = {
   "AdaptiveTutoringSuite": "Tutoring Suite",
 } as const;
 
-const PROTECTED_ROUTES = ['/mobile', '/onboarding'];
+const PROTECTED_ROUTES = ['/pricing', '/onboarding'];
 
 /* -------------------------------------------- Types ------------------------------------------- */
 interface FloatingButtonProps {
@@ -143,7 +143,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
     }
   };
 
-  // Used to direct free user (isSubscribed = false) to /mobile
+  // Used to direct free user (isSubscribed = false) to /pricing
   const handleButtonClick = async (tab: string) => {
 
     // Check if current path is protected from auto-redirect
@@ -155,7 +155,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
 
     // Check subscription status first, before any other logic
     if (!isSubscribed && tab !== 'ankiclinic') {
-      router.push('/mobile');
+      router.push('/pricing');
       return;
     }
 
