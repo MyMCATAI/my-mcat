@@ -168,7 +168,7 @@ const MethodologyAndTestimonials = () => {
             </p>
             
             <p className="mb-4">
-              {"If you're a non-traditional student (30+), our study scheduler plans your essential resources — Anki, UWorld, AAMC, plus MyMCAT resources — around your life. If you're a low scorer, our community connects you to other students so you're not alone. If you can't focus, we've turned flashcards into a game you can play with friends — forcing you to engage with each card."}
+              {"Our study scheduler plans your essential resources — Anki, UWorld, AAMC, plus MyMCAT resources — around your life. Our community connects you to other students so you're not alone. If you can't focus, we've turned flashcards into a game you can play with friends — forcing you to engage with each card."}
             </p>
             
             <p className="mb-4">
@@ -176,31 +176,42 @@ const MethodologyAndTestimonials = () => {
             </p>
             
             <p className="mb-4">
-              MyMCAT.ai believes the world needs healing. We offer <span className="text-green-400 font-semibold">six months free to FAP students and $300 off for retakers and non-trads (30+)</span>. Our vision is to create the doctors that patients deserve. If you believe that understanding is key to healing others, join us — <span className="text-green-400 font-semibold">the world needs doctors like you</span>.
+              MyMCAT.ai believes the world needs healing. We offer <span className="text-green-400 font-semibold">six months free to FAP students</span>. Our vision is to create the doctors that patients deserve. If you believe that understanding is key to healing others, join us — <span className="text-green-400 font-semibold">the world needs doctors like you</span>.
             </p>
 
-            <div className="flex flex-col items-center mt-12 mb-8">
-              <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                <a 
-                  href="https://discord.gg/DcHWnEu8Xb"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center bg-[#5865F2] text-white py-4 px-8 rounded-full text-xl font-semibold transition duration-300 hover:bg-[#4752C4] hover:-translate-y-1 shadow-lg"
-                >
-                  <FaDiscord className="mr-3 text-2xl" />
-                  <span className="text-white font-bold">Join our Studyverse to connect with other students</span>
-                </a>
-                
-                <button 
-                  onClick={openTallyPopup}
-                  className="inline-flex items-center bg-[#23b961] text-white py-4 px-8 rounded-full text-xl font-semibold transition duration-300 hover:bg-[#1a8d4a] hover:-translate-y-1 shadow-lg"
-                >
-                  <span className="text-white font-bold">Register to start studying for the MCAT for free</span>
-                </button>
+            {/* FAP Student Banner - Large and Prominent */}
+            <div className="max-w-6xl mx-auto my-16">
+              <div className="bg-gradient-to-r from-green-600/30 to-blue-600/30 rounded-2xl p-12 border-2 border-green-500/40 shadow-[0_0_50px_rgba(35,185,97,0.3)]">
+                <div className="flex flex-col items-center text-center gap-8">
+                  <h2 className="text-5xl font-bold text-green-400 font-krungthep leading-tight">
+                    Are You a FAP Student?<br/>
+                    <span className="text-white">Study With Us For Free</span>
+                  </h2>
+                  <p className="text-white/90 text-2xl max-w-3xl">
+                    As part of our mission to support future doctors, we&apos;re offering <span className="text-green-400 font-semibold">six months completely free</span> to all FAP students because those are the doctors medicine needs.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                    <a 
+                      href="https://discord.gg/DcHWnEu8Xb"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-3 px-8 py-4 bg-green-500 text-white rounded-full text-xl font-semibold hover:bg-green-600 transition-all duration-300 hover:-translate-y-1 shadow-lg group"
+                    >
+                      <FaDiscord className="text-2xl group-hover:scale-110 transition-transform" />
+                      Message Us on Discord
+                    </a>
+                    <Link
+                      href="/sign-up"
+                      className="flex items-center justify-center gap-3 px-8 py-4 bg-blue-600/30 text-white rounded-full text-xl font-semibold hover:bg-blue-600/40 transition-all duration-300 hover:-translate-y-1 border border-blue-400/30 shadow-lg"
+                    >
+                      Register Now
+                    </Link>
+                  </div>
+                </div>
               </div>
-              <p className="text-white/50 text-sm mt-2 text-center max-w-2xl">
-                Our Discord community is run by non-MyMCAT.ai affiliated individuals.
-              </p>
+            </div>
+
+            <div className="flex flex-col items-center mt-12 mb-8">
             </div>
           </div>
           
@@ -224,7 +235,7 @@ const MethodologyAndTestimonials = () => {
             </a>
 
             <a 
-              href="/mobile"
+              href="/pricing"
               className="relative group overflow-hidden rounded-xl aspect-[4/3] transition-transform duration-300 hover:-translate-y-2"
             >
               <Image 
@@ -494,7 +505,7 @@ const MethodologyAndTestimonials = () => {
           </div>
           
           <p className="text-white text-2xl text-center max-w-2xl mx-auto mb-16">
-            We charge less than the value we bring. Although we hire the best from all over the world and pay them a fair wage, we&apos;re committed to our mission of educating better doctors. FAP students get six months free after emailing kalypso@mymcat.ai. 
+            We charge less than the value we bring. Although we hire the best from all over the world and pay them a fair wage, we&apos;re committed to our mission of educating better doctors. FAP students get six months free - just message Prynce on Discord to get started.
           </p>
 
           {/* Pricing Tiers - Now horizontal */}
@@ -509,7 +520,7 @@ const MethodologyAndTestimonials = () => {
             {/* Premium Access */}
             <div className="text-center p-8 rounded-lg bg-[#0a1c36] hover:bg-[#0d2242] transition-all duration-300">
               <h3 className="text-white text-2xl mb-4">Self-Paced MCAT Course</h3>
-              <p className="text-green-400 text-5xl font-bold mb-4">$150/mo</p>
+              <p className="text-green-400 text-5xl font-bold mb-4">$83/mo</p>
               <p className="text-white/50 text-xl">Our course adapts to you.</p>
             </div>
             
@@ -524,16 +535,16 @@ const MethodologyAndTestimonials = () => {
           {/* Learn More CTA */}
           <div className="mt-16 text-center">
             <p className="text-white/80 text-2xl mb-6">
-              Want to read our student stories and watch our short film?
+              Did someone say start for free?
             </p>
             <Link 
-              href="/mobile"
+              href="/pricing"
               className="inline-flex items-center gap-2 px-8 py-4 text-lg font-bold text-white
                 bg-gradient-to-r from-green-500 to-blue-500 rounded-full
                 shadow-[0_0_30px_rgba(35,185,97,0.3)] hover:shadow-[0_0_50px_rgba(35,185,97,0.5)]
                 transform hover:scale-105 transition-all duration-300 group"
             >
-              <span>Go to testimonials</span>
+              <span>Absolutely!</span>
               <svg 
                 className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" 
                 fill="none" 

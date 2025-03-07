@@ -4,85 +4,28 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import Image from 'next/image';
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { useUser } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
 import { useUserActivity } from '@/hooks/useUserActivity';
-import 'plyr/dist/plyr.css';
-import dynamic from 'next/dynamic';
-import VideoStep from "@/components/mobile/VideoStep";
-import MissionStep from "@/components/mobile/MissionStep";
-import OptionsStep from "@/components/mobile/options/OptionsStep";
+import OptionsStep from "@/components/pricing/options/OptionsStep";
 import { ProductType } from "@/types";
-
-// Dynamically import Plyr with no SSR
-const Plyr = dynamic(() => import('plyr-react'), { 
-  ssr: false,
-  loading: () => <div className="w-full aspect-video bg-black/50 animate-pulse rounded-lg"></div>
-});
 
 // Constants
 type PricingPeriod = 'monthly' | 'biannual' | 'annual';
-type Step = 'video' | 'mission' | 'options';
 
-const PITCH_VIDEO_URL = "thbssEpeK9Y"; // YouTube video ID
-
-interface CustomVideoProps {
-  src: string;
-  poster?: string;
-  options?: Plyr.Options;
-}
-
-const CustomVideo = ({ src, poster, options = {} }: CustomVideoProps) => {
-  const defaultOptions: Plyr.Options = {
-    controls: [
-      'play-large',
-      'play',
-      'progress',
-      'current-time',
-      'mute',
-      'volume',
-      'fullscreen'
-    ],
-    ratio: '16:9',
-    fullscreen: { enabled: true, fallback: true, iosNative: true },
-    ...options
-  };
-
-  const source: { type: 'video'; sources: { src: string; type: string; }[]; poster?: string } = {
-    type: 'video',
-    sources: [{ src, type: 'video/mp4' }],
-    poster
-  };
-
-  return (
-    <div className="w-full aspect-video relative">
-      <Plyr source={source} options={defaultOptions} />
-    </div>
-  );
-};
-
-export default function PitchPage() {
+export default function PricingPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState<Step>('video');
   const { isGold } = useSubscriptionStatus();
   const { user } = useUser();
   const { startActivity } = useUserActivity();
   const [pricingPeriod, setPricingPeriod] = useState<PricingPeriod>('biannual');
-  const [selectedOptions, setSelectedOptions] = useState({
-    software: true,
-    class: false,
-    tutors: false
-  });
   const [isSpecialStatus, setIsSpecialStatus] = useState(true);
-  const [isShortVideo, setIsShortVideo] = useState(true);
 
-  // Add audio effect when modal opens
+  // Track page view
   useEffect(() => {
     if (user?.id) {
-      // Track modal open activity
       startActivity({
         type: "offer_page_view",
         location: "Offer",
@@ -164,38 +107,6 @@ export default function PitchPage() {
       window.open('https://tally.so/r/mBAgq7', '_blank')
   };
 
-  const scores = [
-    { score: "525", name: "Cynthia", image: "/scores/525.png" },
-    { score: "523", name: "Barbara", image: "/scores/523.png" },
-    { score: "519", name: "Trinity", image: "/scores/519.png" },
-    { score: "516", name: "Kevin", image: "/scores/516.png" },
-    { score: "520", name: "Sahaj", image: "/scores/520.png" },
-  ];
-
-  const renderStep = () => {
-    switch (currentStep) {
-      case 'video':
-        return <VideoStep onNext={() => setCurrentStep('mission')} />;
-      case 'mission':
-        return <MissionStep onNext={() => setCurrentStep('options')} />;
-      case 'options':
-    return (
-          <OptionsStep
-            isGold={isGold}
-            user={user}
-            handleUpgradeClick={handleUpgradeClick}
-            handleApplyClick={handleApplyClick}
-            pricingPeriod={pricingPeriod}
-            setPricingPeriod={handlePricingPeriodChange}
-            isSpecialStatus={isSpecialStatus}
-            setIsSpecialStatus={handleSpecialStatusChange}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[url('/ShiningStars.png')] bg-cover bg-center bg-no-repeat">
       <div className="relative pt-20 pb-32 overflow-hidden">  
@@ -216,7 +127,18 @@ export default function PitchPage() {
         </div>
 
         <div className="relative px-6 mx-auto max-w-7xl z-10">
-          {renderStep()}
+          {/* Added Header */}
+          
+          <OptionsStep
+            isGold={isGold}
+            user={user}
+            handleUpgradeClick={handleUpgradeClick}
+            handleApplyClick={handleApplyClick}
+            pricingPeriod={pricingPeriod}
+            setPricingPeriod={handlePricingPeriodChange}
+            isSpecialStatus={isSpecialStatus}
+            setIsSpecialStatus={handleSpecialStatusChange}
+          />
         </div>
       </div>
     </div>
