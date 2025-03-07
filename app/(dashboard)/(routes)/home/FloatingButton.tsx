@@ -94,12 +94,10 @@ const FloatingButton = memo<FloatingButtonProps>(({
   isSubscribed = false
 }) => {
   /* ------------------------------------------- State -------------------------------------------- */
-  const [state, setState] = useState({
-    isHovered: false,
-    activeTab: initialTab,
-    recentlyChangedTab: false,
-    showTutoringMessage: false
-  });
+  const [isHovered, setIsHovered] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
+  const [recentlyChangedTab, setRecentlyChangedTab] = useState(false);
+  const [showTutoringMessage, setShowTutoringMessage] = useState(false);
 
   /* ------------------------------------------- Refs --------------------------------------------- */
   const hoverTimeout = useRef<number | null>(null);
@@ -107,10 +105,6 @@ const FloatingButton = memo<FloatingButtonProps>(({
   const router = useRouter();
 
   /* ----------------------------------------- Callbacks ------------------------------------------ */
-  const updateState = useCallback((updates: Partial<typeof state>) => {
-    setState(prev => ({ ...prev, ...updates }));
-  }, []);
-
   const getLabelPosition = useCallback((index: number) => {
     switch (index) {
       case 0: return { top: '-5.5rem', left: '10rem' };
@@ -125,30 +119,30 @@ const FloatingButton = memo<FloatingButtonProps>(({
     if (hoverTimeout.current) {
       clearTimeout(hoverTimeout.current);
     }
-    updateState({ isHovered: true });
-  }, [updateState]);
+    setIsHovered(true);
+  }, []);
 
   const handleMouseLeave = useCallback(() => {
     if (hoverTimeout.current) {
       clearTimeout(hoverTimeout.current);
     }
     hoverTimeout.current = window.setTimeout(() => {
-      updateState({ isHovered: false });
+      setIsHovered(false);
     }, HOVER_TIMEOUT);
-  }, [updateState]);
+  }, []);
 
   const handleTaskListHover = useCallback((hovering: boolean) => {
     if (hoverTimeout.current) {
       clearTimeout(hoverTimeout.current);
     }
     if (hovering) {
-      updateState({ isHovered: true });
+      setIsHovered(true);
     } else {
       hoverTimeout.current = window.setTimeout(() => {
-        updateState({ isHovered: false });
+        setIsHovered(false);
       }, 500);
     }
-  }, [updateState]);
+  }, []);
 
   // Used to direct free user (isSubscribed = false) to /pricing
   const handleButtonClick = async (tab: string) => {
@@ -176,24 +170,26 @@ const FloatingButton = memo<FloatingButtonProps>(({
           if (currentPage === 'ankiclinic') {
             router.push('/home');
           }
-          updateState({ activeTab: tab, recentlyChangedTab: true });
+          setActiveTab(tab);
+          setRecentlyChangedTab(true);
           onTabChange(tab);
           if (tabChangeTimeout.current) {
             clearTimeout(tabChangeTimeout.current);
           }
           tabChangeTimeout.current = window.setTimeout(() => {
-            updateState({ recentlyChangedTab: false });
+            setRecentlyChangedTab(false);
           }, TAB_CHANGE_TIMEOUT);
         },
         AdaptiveTutoringSuite: () => {
           router.push('/home');
-          updateState({ activeTab: tab, recentlyChangedTab: true });
+          setActiveTab(tab);
+          setRecentlyChangedTab(true);
           onTabChange(tab);
           if (tabChangeTimeout.current) {
             clearTimeout(tabChangeTimeout.current);
           }
           tabChangeTimeout.current = window.setTimeout(() => {
-            updateState({ recentlyChangedTab: false });
+            setRecentlyChangedTab(false);
           }, TAB_CHANGE_TIMEOUT);
         },
         ankiclinic: () => {
@@ -202,31 +198,46 @@ const FloatingButton = memo<FloatingButtonProps>(({
           } else {
             router.push('/home');
           }
-          updateState({ activeTab: tab });
+          setActiveTab(tab);
           onTabChange(tab);
         },
         CARS: () => {
           if (currentPage === 'ankiclinic') {
             router.push('/home');
           }
-          updateState({ activeTab: tab, recentlyChangedTab: true });
+          setActiveTab(tab);
+          setRecentlyChangedTab(true);
           onTabChange(tab);
           if (tabChangeTimeout.current) {
             clearTimeout(tabChangeTimeout.current);
           }
           tabChangeTimeout.current = window.setTimeout(() => {
-            updateState({ recentlyChangedTab: false });
+            setRecentlyChangedTab(false);
+          }, TAB_CHANGE_TIMEOUT);
+        },
+        default: () => {
+          if (currentPage === 'ankiclinic') {
+            router.push('/home');
+          }
+          setActiveTab(tab);
+          setRecentlyChangedTab(true);
+          onTabChange(tab);
+          if (tabChangeTimeout.current) {
+            clearTimeout(tabChangeTimeout.current);
+          }
+          tabChangeTimeout.current = window.setTimeout(() => {
+            setRecentlyChangedTab(false);
           }, TAB_CHANGE_TIMEOUT);
         }
       };
 
-      const action = tabActions[tab as keyof typeof tabActions] || tabActions.Tests;
+      const action = tabActions[tab as keyof typeof tabActions] || tabActions.default;
       action();
     } catch (error) {
       console.error("Error checking unlocks:", error);
       toast.error("Failed to check feature access");
     }
-  }, [currentPage, router, onTabChange, updateState, isSubscribed]);
+  };
 
   /* ---------------------------------------- Effects -------------------------------------------- */
   useEffect(() => {
@@ -244,13 +255,13 @@ const FloatingButton = memo<FloatingButtonProps>(({
   return (
     <>
       {/* Overlay */}
-      {state.isHovered && (
+      {isHovered && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40" />
       )}
 
       {/* Task List */}
       <AnimatePresence>
-        {state.isHovered && currentPage === "ankiclinic" && !state.recentlyChangedTab && (
+        {isHovered && currentPage === "ankiclinic" && !recentlyChangedTab && (
           <FloatingTaskList 
             activities={activities}
             onTasksUpdate={() => onTasksUpdate?.([])}
@@ -267,25 +278,25 @@ const FloatingButton = memo<FloatingButtonProps>(({
           onMouseLeave={handleMouseLeave}
         >
           {buttonPositions.map((pos, index) => {
-            const isActive = state.activeTab === pos.tab;
+            const isActive = activeTab === pos.tab;
             const activeIndex = buttonPositions.findIndex(
-              (p) => p.tab === state.activeTab
+              (p) => p.tab === activeTab
             );
             const inactiveIndex = buttonPositions
-              .filter((p) => p.tab !== state.activeTab)
+              .filter((p) => p.tab !== activeTab)
               .findIndex((p) => p.tab === pos.tab);
 
             const isDisabled = !isSubscribed && pos.tab !== 'ankiclinic';
 
             const top = isActive
               ? 0
-              : state.isHovered
+              : isHovered
               ? inactivePositions[inactiveIndex]?.top
               : inactivePositions[activeIndex]?.top;
 
             const left = isActive
               ? 0
-              : state.isHovered
+              : isHovered
               ? inactivePositions[inactiveIndex]?.left
               : inactivePositions[activeIndex]?.left;
 
@@ -299,8 +310,8 @@ const FloatingButton = memo<FloatingButtonProps>(({
                     "w-16 h-16 bg-[var(--theme-navbutton-color)] border-2 border-white text-white rounded-full shadow-lg focus:outline-none transition-all transform hover:scale-110 absolute flex justify-center items-center",
                     {
                       "w-24 h-24": isActive,
-                      "opacity-100": state.isHovered || isActive,
-                      "opacity-0 pointer-events-none": !state.isHovered && !isActive,
+                      "opacity-100": isHovered || isActive,
+                      "opacity-0 pointer-events-none": !isHovered && !isActive,
                     }
                   )}
                   style={{
@@ -318,7 +329,7 @@ const FloatingButton = memo<FloatingButtonProps>(({
                     height={isActive ? 44 : 32} 
                     className={isDisabled ? "opacity-50" : ""}
                   />
-                  {isDisabled && state.isHovered && (
+                  {isDisabled && isHovered && (
                     <div className="absolute -top-2 -right-2">
                       <svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
@@ -335,7 +346,7 @@ const FloatingButton = memo<FloatingButtonProps>(({
                     zIndex: 60,
                   }}
                 >
-                  {state.isHovered && !isActive && (
+                  {isHovered && !isActive && (
                     <span
                       className="bg-transparent text-white text-2xl px-2 py-1 rounded overflow-hidden"
                       style={{
