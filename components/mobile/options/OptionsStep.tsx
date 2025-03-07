@@ -108,7 +108,7 @@ const OptionsStep = ({
           <div className="relative">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
               <span className="inline-block bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-sm font-bold px-4 py-1 rounded-full">
-                Discounted Until March 8th
+                Discounted Until Midnight
               </span>
             </div>
             <SoftwareSection

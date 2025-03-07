@@ -26,6 +26,7 @@ const ClassSection = ({ isSpecialStatus, handleApplyClick }: ClassSectionProps) 
   /* ---- State ----- */
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [showTestimonials, setShowTestimonials] = useState(false);
+  const [showInstructorVideo, setShowInstructorVideo] = useState(false);
 
   /* ---- Render Methods ----- */
   return (
@@ -122,6 +123,7 @@ const ClassSection = ({ isSpecialStatus, handleApplyClick }: ClassSectionProps) 
                     </svg>
                   </button>
                   <button 
+                    onClick={() => setShowInstructorVideo(true)}
                     className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
                   >
                     <span className="text-sm font-medium">Meet your Instructors</span>
@@ -195,6 +197,30 @@ const ClassSection = ({ isSpecialStatus, handleApplyClick }: ClassSectionProps) 
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add Laura's Video Modal */}
+      {showInstructorVideo && (
+        <div 
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowInstructorVideo(false)}
+        >
+          <div className="relative max-w-4xl w-full aspect-video">
+            <video 
+              src="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/laura.mov"
+              controls
+              autoPlay
+              className="w-full h-full rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button 
+              className="absolute -top-10 right-0 text-white hover:text-purple-300 transition-colors"
+              onClick={() => setShowInstructorVideo(false)}
+            >
+              Close
             </button>
           </div>
         </div>
