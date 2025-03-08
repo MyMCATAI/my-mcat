@@ -9,6 +9,7 @@ import { GridImage } from './types';
 import { cleanupTextures, preloadTextures, getTexture } from './utils/textureCache';
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useGame } from "@/store/selectors";
+import { useAudio } from "@/store/selectors";
 
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 
@@ -17,6 +18,7 @@ const tileWidth = 128;
 const tileHeight = 64;
 const gridWidth = 10;
 const gridHeight = 10;
+
 
 // Helper functions for isometric calculations
 function screenX(worldX: number, worldY: number): number {
@@ -48,7 +50,10 @@ const RoomSprite = React.memo(({
     x: screenX(img.x, img.y) - img.width / 4,
     y: screenY(img.x, img.y) - img.height / 2
   }), [img.x, img.y, img.width, img.height]);
-
+  
+  // Get audio from the store
+  const audio = useAudio();
+  
   return (
     <>
       <Sprite
@@ -71,7 +76,13 @@ const RoomSprite = React.memo(({
           roomId={img.id}
           onClick={() => {
             setFlashcardRoomId(img.id);
-            setIsFlashcardsOpen(true);
+            // Play the door open sound before opening the flashcard dialog
+            audio.playSound('flashcard-door-open');
+            
+            // Keep the small delay to ensure the sound plays before the dialog opens
+            setTimeout(() => {
+              setIsFlashcardsOpen(true);
+            }, 100);
           }}
         />
       )}

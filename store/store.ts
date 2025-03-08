@@ -1024,48 +1024,52 @@ export const useStore = create<Store>()(
       
       playSound: async (soundName) => {
         const state = get();
-        console.debug(`[DEBUG][AudioStore] Playing sound: ${soundName}`);
+        console.log(`[DEBUG][AudioStore] Playing sound: ${soundName}`);
         
         try {
           const ctx = await state.initializeAudioContext();
-          if (!ctx) return;
+          if (!ctx) {
+            console.error(`[DEBUG][AudioStore] Audio context initialization failed`);
+            return;
+          }
           
-          const buffer = await state.loadAudioBuffer(`/audio/${soundName}.mp3`);
-          
-          const source = ctx.createBufferSource();
-          source.buffer = buffer;
-          
-          // Get appropriate coefficient
-          const category = state._SOUND_MAPPINGS[soundName] || 'sfx';
-          const coefficient = state._VOLUME_COEFFICIENTS[category];
-          
-          // Create gain node with coefficient
-          const localGain = ctx.createGain();
-          localGain.gain.value = state.masterVolume * coefficient;
-          
-          // Connect nodes
-          source.connect(localGain);
-          localGain.connect(state._masterGainNode!);
-          
-          // Fade in
-          localGain.gain.setValueAtTime(0, ctx.currentTime);
-          localGain.gain.linearRampToValueAtTime(coefficient * state.masterVolume, ctx.currentTime + 0.02);
-          
-          source.start();
-          console.debug(`[DEBUG][AudioStore] Sound started: ${soundName}`);
-          
-          // Fade out
-          const duration = buffer.duration;
-          localGain.gain.setValueAtTime(coefficient * state.masterVolume, ctx.currentTime + duration - 0.05);
-          localGain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
-          
-          source.onended = () => {
-            console.debug(`[DEBUG][AudioStore] Sound ended: ${soundName}`);
-            source.disconnect();
-            localGain.disconnect();
-          };
+          try {
+            const buffer = await state.loadAudioBuffer(`/audio/${soundName}.mp3`);
+            console.log(`[DEBUG][AudioStore] Audio buffer loaded successfully for ${soundName}`);
+            
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            
+            // Get appropriate coefficient
+            const category = state._SOUND_MAPPINGS[soundName] || 'sfx';
+            const coefficient = state._VOLUME_COEFFICIENTS[category];
+            
+            // Create gain node with coefficient
+            const localGain = ctx.createGain();
+            localGain.gain.value = state.masterVolume * coefficient;
+            
+            // Connect nodes
+            source.connect(localGain);
+            localGain.connect(state._masterGainNode!);
+            
+            // Fade in
+            localGain.gain.setValueAtTime(0, ctx.currentTime);
+            localGain.gain.linearRampToValueAtTime(coefficient * state.masterVolume, ctx.currentTime + 0.02);
+            
+            source.start();
+            console.log(`[DEBUG][AudioStore] Sound started: ${soundName}`);
+            
+            // Fade out
+            const duration = buffer.duration;
+            localGain.gain.setValueAtTime(coefficient * state.masterVolume, ctx.currentTime + duration - 0.05);
+            localGain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
+          } catch (bufferError) {
+            console.error(`[DEBUG][AudioStore] Error loading audio buffer for ${soundName}:`, bufferError);
+            console.log(`[DEBUG][AudioStore] Attempted to load from path: /audio/${soundName}.mp3`);
+          }
         } catch (error) {
-          state._handleAudioError(error as Error, 'Failed to play sound');
+          console.error(`[DEBUG][AudioStore] Error in playSound for ${soundName}:`, error);
+          state._handleAudioError(error as Error, `playSound(${soundName})`);
         }
       },
       
