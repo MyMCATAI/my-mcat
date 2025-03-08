@@ -114,7 +114,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   // mountCountRef, isFetchingRef, isInitializedRef, stateUpdateInProgressRef, isMountedRef, etc.
 
   /* ------------------------------------------- Hooks -------------------------------------------- */
-  const { isSubscribed, userInfo, incrementScore, decrementScore } = useUserInfo();
+  const { isSubscribed, userInfo, incrementScore, decrementScore, refreshUserInfo } = useUserInfo();
   const audio = useAudio();
   const { startActivity } = useUserActivity();
   const router = useRouter();
@@ -259,26 +259,15 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   useEffect(() => {
     if (!isBrowser) return;
     
-    // Log the current state
-    console.log('[DEBUG] Ambient sound effect running', { 
-      isLoading, 
-      isFlashcardsOpen,
-      isMounted: isMountedRef.current,
-      ambientInitialized: ambientSoundInitializedRef.current
-    });
-    
     // Only play ambient sound if:
     // 1. Component is mounted
     // 2. Not in loading state
     // 3. Flashcards are not open
     // 4. Ambient sound hasn't been initialized yet
     if (isMountedRef.current && !isLoading && !isFlashcardsOpen && !ambientSoundInitializedRef.current) {
-      console.log('[DEBUG] Scheduling ambient sound initialization');
-      
       // Add a longer delay to ensure audio context is ready and component is stable
       const timeoutId = setTimeout(() => {
         if (!isMountedRef.current) {
-          console.log('[DEBUG] Component unmounted before ambient sound could initialize');
           return;
         }
         
@@ -287,10 +276,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           ambientSoundInitializedRef.current = true;
           
           // Play the ambient sound loop
-          console.log('[DEBUG] Playing ambient sound loop: ' + AMBIENT_SOUND);
           audio.loopSound(AMBIENT_SOUND);
-          
-          console.log('[DEBUG] Ambient sound loop started successfully');
         } catch (error) {
           console.error('[ERROR] Failed to play ambient sound:', error);
           // Reset the initialized flag so we can try again
@@ -302,9 +288,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         clearTimeout(timeoutId);
       };
     }
-    
-    // We don't need a cleanup function here if we're not initializing
-    // This prevents the audio from being stopped when other effects run
   }, [isBrowser, isLoading, isFlashcardsOpen, audio]);
 
   // Add a cleanup effect that only runs on unmount
@@ -328,23 +311,26 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     
     // If flashcards are open, stop the ambient sound
     if (isFlashcardsOpen && ambientSoundInitializedRef.current) {
-      console.log('[DEBUG] Flashcards opened, stopping ambient sound');
-      audio.stopLoopSound(AMBIENT_SOUND);
+      // Keep the small delay before stopping the ambient sound
+      // This ensures the door open sound has time to play
+      setTimeout(() => {
+        if (isMountedRef.current && isFlashcardsOpen) {
+          audio.stopLoopSound(AMBIENT_SOUND);
+        }
+      }, 300);
+      
       // Don't reset the initialized flag, as we'll restart when flashcards close
       return;
     }
     
     // If flashcards were closed and ambient sound was initialized, restart it
     if (!isFlashcardsOpen && ambientSoundInitializedRef.current && isMountedRef.current) {
-      console.log('[DEBUG] Flashcards closed, restarting ambient sound');
-      
       // Use a ref to track the timeout ID to prevent multiple restarts
       const timeoutIdRef = { current: null as NodeJS.Timeout | null };
       
       // Small delay before restarting
       timeoutIdRef.current = setTimeout(() => {
         if (isMountedRef.current) {
-          console.log('[DEBUG] Restarting ambient sound after flashcards closed');
           audio.loopSound(AMBIENT_SOUND);
         }
       }, 500);
@@ -361,7 +347,9 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   // Simplified effect for flashcard dialog auto-open
   useEffect(() => {
-    if (isLoading || isClosingDialogRef.current) return;
+    if (isLoading || isClosingDialogRef.current) {
+      return;
+    }
     
     if (flashcardRoomId !== "" && !isFlashcardsOpen) {
       setIsFlashcardsOpen(true);
@@ -372,19 +360,11 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   useEffect(() => {
     if (!isBrowser) return;
     
-    console.log('[DEBUG] Debug mode effect running');
-    console.log('[DEBUG] isSubscribed:', isSubscribed);
-    console.log('[DEBUG] userInfo:', userInfo);
-    
     // Check if user is signed in and refresh user info if needed
     if (isSubscribed && !userInfo) {
-      console.log('[DEBUG] User is signed in but no user info, refreshing');
-      // We can't use refreshUserInfo here since it's not available
-      // Instead, we'll just log this information
+      refreshUserInfo();
     }
-    
-    // The useDebugMode hook already handles localStorage persistence
-  }, [isBrowser, isSubscribed, userInfo]);
+  }, [isBrowser, isSubscribed, userInfo, refreshUserInfo]);
 
   const fetchData = async () => {
     // If already fetching, don't start another fetch
@@ -800,9 +780,23 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       return;
     }
     
-    if (!open) {
+    if (open) {
+      // OPENING FLASHCARD DIALOG
+      // Note: We're keeping this here for cases where the dialog is opened programmatically,
+      // but in most cases, the sound will be played by the RoomSprite component when a question is clicked
+      if (!isFlashcardsOpen) {
+        // Only play the sound if it wasn't triggered by a room click
+        // This prevents duplicate sounds from playing
+        if (flashcardRoomId === "") {
+          audio.playSound('flashcard-door-open');
+        }
+      }
+    } else {
       // CLOSING FLASHCARD DIALOG
       isClosingDialogRef.current = true;
+      
+      // Play door close sound when dialog is closed
+      audio.playSound('flashcard-door-closed');
       
       if (isLoading) {
         setIsLoading(false);
@@ -813,11 +807,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     
     if (!open) {
       setTimeout(() => {
-        if (flashcardRoomId && flashcardRoomId !== 'WaitingRoom0') {
-          const newActiveRooms = new Set(activeRooms);
-          newActiveRooms.delete(flashcardRoomId);
-          setActiveRooms(newActiveRooms);
-        }
+        // Remove this room removal logic and let FlashcardsDialog.handleClose handle it
         
         setTimeout(() => {
           setFlashcardRoomId('');
@@ -828,7 +818,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         }, 300);
       }, 300);
     }
-  }, [flashcardRoomId, activeRooms, setActiveRooms, setFlashcardRoomId, setIsFlashcardsOpen, isLoading]);
+  }, [flashcardRoomId, setFlashcardRoomId, setIsFlashcardsOpen, isLoading, audio, isFlashcardsOpen]);
 
   const handleSetCompleteAllRoom = useCallback((complete: boolean | ((prevState: boolean) => boolean)) => {
     if (typeof complete === 'function') {
