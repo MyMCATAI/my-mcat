@@ -3,9 +3,9 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.mymcat.ai'),
-  title: 'mymcat - you\'re better with us',
-  description: 'interactive learning platform with AI-powered study tools, practice tests, and personalized feedback.',
-  keywords: 'MCAT prep, medical school admission, interactive learning, study tools, MCAT practice tests, MyMCAT, AI MCAT Prep, MCAT study platform',
+  title: 'MyMCAT - High-Tech AI Platform for Active and Adaptive MCAT Prep',
+  description: 'Our AI-powered platform actively adapts to your learning patterns, using high-tech analytics to transform passive studying into dynamic, personalized MCAT preparation that evolves with you.',
+  keywords: 'AI MCAT prep, adaptive learning technology, high-tech medical education, active learning platform, personalized MCAT AI, real-time adaptation, medical school admission, learning analytics, CARS mastery, Fee Assistance Program',
   robots: {
     index: true,
     follow: true,
@@ -18,21 +18,21 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'mymcat - you\'re better with us',
-    description: 'Prepare for the MCAT with our innovative, gamified learning platform. Boost your scores and make studying enjoyable.',
+    title: 'MyMCAT - AI-Powered Active Learning That Adapts in Real-Time',
+    description: 'Beyond passive videos: Our high-tech AI platform actively analyzes your performance, adapts your study plan, and transforms how you prepare for medicine—building both knowledge and narrative competence.',
     images: [
       {
         url: '/knowledge.png',
         width: 1200,
         height: 630,
-        alt: 'My MCAT Platform Preview',
+        alt: 'MyMCAT AI-Powered Adaptive Learning Platform',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'mymcat - you\'re better with us',
-    description: 'Transform your MCAT study experience with My MCAT. Engaging, effective, and tailored for success.',
+    title: 'MyMCAT - High-Tech, Active & Adaptive: The AI Revolution in MCAT Prep',
+    description: 'Our AI actively tracks your performance, adapts your resources in real-time, and integrates trusted tools like Anki and UWorld—creating a high-tech learning experience that evolves with you.',
     images: ['/knowledge.png'],
   },
   verification: {
