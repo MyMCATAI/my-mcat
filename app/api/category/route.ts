@@ -4,6 +4,9 @@ import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
 import { Category } from "@/types";
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
   try {
     const { userId } = auth();

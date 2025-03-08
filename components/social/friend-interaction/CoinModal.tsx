@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X } from 'lucide-react';
-import { useUserStats } from '@/contexts/UserStatsContext';
+import { useUser } from '@/store/selectors';
 
 interface CoinModalProps {
   isOpen: boolean;
@@ -14,7 +14,7 @@ interface CoinModalProps {
 }
 
 const CoinModal = ({ isOpen, onClose, type, friendId, friendName, friendCoins }: CoinModalProps) => {
-  const { coins, updateCoinsDisplay } = useUserStats();
+  const { coins, updateCoinsDisplay } = useUser();
   const [amount, setAmount] = useState('');
   const [isClosing, setIsClosing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);

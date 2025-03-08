@@ -1,134 +1,166 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, Suspense, forwardRef } from "react";
-import ResourcesMenu from "./ResourcesMenu";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef, useCallback, Suspense, forwardRef, useMemo } from "react";
+import ReactDOM from 'react-dom';
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { DoctorOfficeStats } from "@/types";
 import { toast, Toaster } from "react-hot-toast";
 import Image from "next/image";
 import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, 
   getClinicCostPerDay, getLevelNumber, calculateQualityOfCare } from "@/utils/calculateResourceTotals";
-import WelcomeDialog from "./WelcomeDialog";
 import { imageGroups } from "./constants/imageGroups";
 import { PurchaseButton } from "@/components/purchase-button";
 import dynamic from 'next/dynamic';
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import { useAudio } from "@/store/selectors";
 import type { UserResponse } from "@prisma/client";
 import type { FetchedActivity } from "@/types";
 import { GridImage } from './types';
-import NewGameButton from "./components/NewGameButton";
-import TutorialVidDialog from '@/components/ui/TutorialVidDialog';
 import type { UserResponseWithCategory } from "@/types";
-import { useAudio } from "@/contexts/AudioContext";
-import RedeemReferralModal from "@/components/social/friend-request/RedeemReferralModal";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
 import { getAccentColor, getWelcomeMessage, getSuccessMessage } from './utils';
+import { useGame } from "@/store/selectors";
 
-// Lazy load the heavy components
+// Dynamically import components with SSR disabled
+const ResourcesMenu = dynamic(() => import('./ResourcesMenu'), {
+  ssr: false
+});
+
+const WelcomeDialog = dynamic(() => import('./WelcomeDialog'), {
+  ssr: false
+});
+
 const OfficeContainer = dynamic(() => import('./OfficeContainer'), {
-  loading: () => <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />,
-  ssr: false
-});
-
-const ShoppingDialog = dynamic(() => import('./ShoppingDialog'), {
-  loading: () => null,
-  ssr: false
-});
-
-const FlashcardsDialog = dynamic(() => import('./FlashcardsDialog'), {
-  loading: () => null,
-  ssr: false
-});
-
-const AfterTestFeed = dynamic(() => import('./AfterTestFeed'), {
-  loading: () => null,
   ssr: false
 });
 
 const FloatingButton = dynamic(() => import('../home/FloatingButton'), {
-  loading: () => null,
   ssr: false
 });
 
+// Dynamically import components that can be lazy-loaded
+const ShoppingDialog = dynamic(() => import('./ShoppingDialog'), {
+  ssr: false
+});
+
+const FlashcardsDialog = dynamic(() => import('./FlashcardsDialog'), {
+  ssr: false
+});
+
+const AfterTestFeed = dynamic(() => import('./AfterTestFeed'), {
+  ssr: false
+});
+
+const TutorialVidDialog = dynamic(() => import('@/components/ui/TutorialVidDialog'), {
+  ssr: false
+});
+
+const RedeemReferralModal = dynamic(() => import('@/components/social/friend-request/RedeemReferralModal'), {
+  ssr: false
+});
+
+const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
+  ssr: false
+});
+
+// Loading component for better UX during initial load
+const LoadingClinic = () => (
+  <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
+    <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse"></div>
+    <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg"></div>
+  </div>
+);
+
+/* --- Constants ----- */
+const AMBIENT_SOUND = '/audio/flashcard-loop-catfootsteps.mp3';
+
+/* ----- Types ---- */
 interface DoctorsOfficePageProps {
   // Add any props if needed
 }
 
 const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
-  /* ------------------------------------------- Hooks -------------------------------------------- */
+  // Add a check for window at the component level
+  const isBrowser = typeof window !== 'undefined';
+  
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
+  // Add missing refs
+  const mountCountRef = useRef(0);
+  const isFetchingRef = useRef(false);
+  const isInitializedRef = useRef(false);
+  const stateUpdateInProgressRef = useRef(false);
+  const isMountedRef = useRef(false);
+  const ambientSoundInitializedRef = useRef(false);
+  
+  // Keep only essential refs, remove debugging refs
   const officeContainerRef = useRef<HTMLDivElement>(null);
   const flashcardsDialogRef = useRef<{ 
     open: () => void, 
     setWrongCards: (cards: any[]) => void, 
     setCorrectCount: (count: number) => void 
   } | null>(null);
-  const { isSubscribed, userInfo, incrementScore, decrementScore } = useUserInfo();
-  const audio = useAudio();
-  const { setIsAutoPlay } = useMusicPlayer();
-  const { startActivity } = useUserActivity();
-  const router = useRouter();
-  /* ------------------------------------------- State -------------------------------------------- */
-  const [activeTab, setActiveTab] = useState("ankiclinic");
-  const [userLevel, setUserLevel] = useState("PATIENT LEVEL");
-  const [patientsPerDay, setPatientsPerDay] = useState(4);
-  const [userRooms, setUserRooms] = useState<string[]>([]);
-  const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
-  const [totalPatients, setTotalPatients] = useState(0);
-  const [isAfterTestDialogOpen, setIsAfterTestDialogOpen] = useState(false);
-  const [largeDialogQuit, setLargeDialogQuit] = useState(false);
-  const [showWelcomeDialogue, setShowWelcomeDialogue] = useState(false);
-  //Flashcards
-  const [isFlashcardsOpen, setIsFlashcardsOpen] = useState(false);
-  const prevFlashcardsOpenRef = useRef(false); //this keeps track of previous state
-  const [isFlashcardsTooltipOpen, setIsFlashcardsTooltipOpen] = useState(false);
-  const [flashcardRoomId, setFlashcardRoomId] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [totalMCQQuestions, setTotalMCQQuestions] = useState(0);
-  const [correctMCQQuestions, setCorrectMCQQuestions] = useState(0);
-  const afterTestFeedRef = useRef<{ setWrongCards: (cards: any[]) => void } | null>(null);
-  // Game functionality
-  const [activeRooms, setActiveRooms] = useState<Set<string>>(() => new Set());
-  const [completeAllRoom, setCompleteAllRoom] = useState(false);
-  const [currentUserTestId, setCurrentUserTestId] = useState<string | null>(null);
-  // User Responses
-  const [userResponses, setUserResponses] = useState<UserResponseWithCategory[]>([]);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [wrongCount, setWrongCount] = useState(0);
-  const [testScore, setTestScore] = useState(0);
-  const [isGameInProgress, setIsGameInProgress] = useState(false);
-  // Marketplace Dialog
-  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const marketplaceDialogRef = useRef<{
     open: () => void
   }>(null);
+  const afterTestFeedRef = useRef<{ setWrongCards: (cards: any[]) => void } | null>(null);
+  const isClosingDialogRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const hasCalculatedRef = useRef(false);
+  
+  // Remove debug-related refs
+  // mountCountRef, isFetchingRef, isInitializedRef, stateUpdateInProgressRef, isMountedRef, etc.
+
+  /* ------------------------------------------- Hooks -------------------------------------------- */
+  const { isSubscribed, userInfo, incrementScore, decrementScore, refetch } = useUserInfo();
+  const audio = useAudio();
+  const { startActivity } = useUserActivity();
+  const router = useRouter();
+  
+  // Get the game state and actions from Zustand
+  const { 
+    userRooms, userLevel, patientsPerDay, totalPatients, streakDays,
+    isGameInProgress, currentUserTestId, isFlashcardsOpen, flashcardRoomId, 
+    activeRooms, completeAllRoom, correctCount, wrongCount, testScore, userResponses,
+    unlockRoom, startGame, endGame, setIsFlashcardsOpen, setUserRooms,
+    setFlashcardRoomId, setActiveRooms, setCompleteAllRoom, resetGameState,
+    setCorrectCount, setWrongCount, setTestScore, setUserResponses,
+    setStreakDays, setTotalPatients, updateUserLevel
+  } = useGame();
+  
+  /* ------------------------------------------- State -------------------------------------------- */
+  const [activeTab, setActiveTab] = useState("ankiclinic");
+  const [showWelcomeDialogue, setShowWelcomeDialogue] = useState(false);
+  const [isAfterTestDialogOpen, setIsAfterTestDialogOpen] = useState(false);
+  const [largeDialogQuit, setLargeDialogQuit] = useState(false);
+  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
+  const [isFlashcardsTooltipOpen, setIsFlashcardsTooltipOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalMCQQuestions, setTotalMCQQuestions] = useState(0);
+  const [correctMCQQuestions, setCorrectMCQQuestions] = useState(0);
   const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
   const [clinicCostPerDay, setClinicCostPerDay] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
-  const hasCalculatedRef = useRef(false);
-  // Add this new state for streak days
-  const [streakDays, setStreakDays] = useState(0);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [populateRoomsFn, setPopulateRoomsFn] = useState<(() => GridImage[]) | null>(null);
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
-  // Add debug state to track audio lifecycle
-  const [debugId] = useState(() => Math.random().toString(36).substr(2, 9));
-  // Add a ref to track mounted state
-  const isMountedRef = useRef(false);
-  const audioTransitionInProgressRef = useRef(false);
-
-  /* --- Constants ----- */
-  const AMBIENT_SOUND = '/audio/flashcard-loop-catfootsteps.mp3';
+  const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
 
   /* ----------------------------------------- Computation ----------------------------------------- */
 
-  const isClinicUnlocked = userInfo?.unlocks && 
-  (typeof userInfo.unlocks === 'string' ? 
-    JSON.parse(userInfo.unlocks) : 
-    userInfo.unlocks
-  )?.includes('game');
+  // Memoize expensive computations
+  const isClinicUnlocked = useMemo(() => {
+    if (!userInfo?.unlocks) return false;
+    
+    const unlocks = typeof userInfo.unlocks === 'string' 
+      ? JSON.parse(userInfo.unlocks) 
+      : userInfo.unlocks;
+      
+    return unlocks?.includes('game');
+  }, [userInfo?.unlocks]);
 
   /* ----------------------------------------- Callbacks ------------------------------------------ */
 
@@ -152,13 +184,14 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         responses?.filter((response: UserResponse) => !response.isCorrect)
           ?.length || 0;
 
+      // Update the store instead of local state
       setCorrectCount(correct);
       setWrongCount(wrong);
     } catch (error) {
       console.error("Error fetching user responses:", error);
       toast.error("Failed to load test responses");
     }
-  }, []);
+  }, [setCorrectCount, setWrongCount, setUserResponses]);
 
   const updateVisibleImages = useCallback((newVisibleImages: Set<string>) => {
     setVisibleImages(newVisibleImages);
@@ -175,184 +208,290 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   }, []);
 
   /* ----------------------------------------- UseEffects ---------------------------------------- */
-  // Handles test completion, scoring, and updates database
+  
+  // Simplified effect for welcome dialog
   useEffect(() => {
-    const finishTest = async () => {
-      if (!isLoading && completeAllRoom) {
-        // Finish all rooms
-        // Fetch user responses
-        if (currentUserTestId) {
-          fetchUserResponses(currentUserTestId);
-          // Dummy scoring logic
-          const correctQuestionWeight = 1;
-          const incorrectQuestionWeight = -0.5;
-          let testScore =
-            correctCount * correctQuestionWeight +
-            wrongCount * incorrectQuestionWeight;
-          testScore = Math.max(testScore, 0);
-          setTestScore(testScore);
-          // Update the UserTest with score
-          fetch(`/api/user-test/${currentUserTestId}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              score: testScore,
-              finishedAt: new Date().toISOString(),
-            }),
-          }).catch(console.error);
-
-          if (!isFlashcardsOpen && !largeDialogQuit) {
-            setIsAfterTestDialogOpen(true);
-          }
-        }
-      }
-    }
-
-    finishTest();
-  }, [ currentUserTestId, activeRooms.size, isFlashcardsOpen, fetchUserResponses, correctCount,
-    wrongCount, testScore, isLoading, largeDialogQuit, completeAllRoom ]);
-
-  // Manages music autoplay when component mounts/unmounts
-  useEffect(() => {
-    setIsAutoPlay(true);
-    return () => setIsAutoPlay(false);
-  }, [setIsAutoPlay]);
-
-  // Component mount: Initial data fetch and daily calculations setup
-  useEffect(() => {
-    fetchData();
-    if (!hasCalculatedRef.current && userInfo) {
-      const timer = setTimeout(() => {
-        performDailyCalculations();
-        hasCalculatedRef.current = true;
-      }, 3000);
-      // Clean up the timer if the component unmounts
-      return () => clearTimeout(timer);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userInfo]);
-
-  // Component mount: fetches user activities 
-  useEffect(() => {
-    fetchActivities();
-  }, []);
-
-  // Component mount: Initializes activity tracking
-  useEffect(() => {
-    const initializeActivity = async () => {
-        await startActivity({
-          type: 'studying',
-          location: 'Game',
-          metadata: {
-            initialLoad: true,
-            timestamp: new Date().toISOString()
-          }
-        });
-      }
-    initializeActivity();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Modify the existing useEffect for ambient sound and flashcard door sounds
-  useEffect(() => {
-    let isEffectActive = true; // Local flag to track if effect is still active
-
-    const handleAudioTransition = async () => {
-      try {
-        if (!isEffectActive) return;
-
-        if (isFlashcardsOpen) {
-          await audio.stopAllLoops();
-          if (!isEffectActive) return;
-          audio.playSound('flashcard-door-open');
-        } else {
-          if (prevFlashcardsOpenRef.current) {
-            audio.playSound('flashcard-door-closed');
-            await new Promise(resolve => setTimeout(resolve, 500));
-            if (!isEffectActive) return;
-            await audio.loopSound('flashcard-loop-catfootsteps');
-          } else {
-            await audio.loopSound('flashcard-loop-catfootsteps');
-          }
-        }
-        if (!isEffectActive) return;
-        prevFlashcardsOpenRef.current = isFlashcardsOpen;
-      } catch (error) {
-        if (isEffectActive) {
-          console.error(`🎵 [${debugId}] Audio transition error:`, error);
-        }
-      }
-    };
-
-    handleAudioTransition();
-
-    return () => {
-      isEffectActive = false;
-    };
-  }, [isFlashcardsOpen, debugId]); // Only depend on flashcards state and debugId
-
-  // Opens flashcard dialog when a room is selected
-  useEffect(() => {
-    if (flashcardRoomId !== "") {
-      setIsFlashcardsOpen(true);
-    }
-  }, [flashcardRoomId, debugId]);
-
-  // Shows welcome/referral modals based on user state
-  useEffect(() => {
-    setShowReferralModal(shouldShowRedeemReferralModal());
-    if(userInfo && !isClinicUnlocked) {
+    if (userInfo && !isClinicUnlocked) {
       setShowWelcomeDialogue(true);
     }
-  }, [isClinicUnlocked, userInfo]);
+  }, [userInfo, isClinicUnlocked]);
 
-  /* ---------------------------------------- Event Handlers -------------------------------------- */
+  // Use isBrowser check for any window/document access
+  useEffect(() => {
+    if (!isBrowser) return;
+    
+    mountCountRef.current += 1;
+    isMountedRef.current = true;
+    
+    console.log('[DEBUG] AnkiClinic mounted, pathname:', pathname);
+    console.log('[DEBUG] Mount count:', mountCountRef.current);
+    
+    // Check for React Strict Mode (which causes double renders)
+    if (mountCountRef.current === 2) {
+      console.log('[DEBUG] Detected possible React Strict Mode (double render)');
+    }
+    
+    // Create a stable reference to the audio object
+    const audioRef = audio;
+    
+    return () => {
+      console.log('[DEBUG] AnkiClinic unmounting');
+      isMountedRef.current = false;
+      
+      // Cleanup any in-progress operations
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      // Ensure we stop all audio when component unmounts
+      console.log('[DEBUG] Stopping all audio on unmount');
+      audioRef.stopAllLoops();
+      
+      // Reset the ambient sound initialization flag
+      if (ambientSoundInitializedRef.current) {
+        console.log('[DEBUG] Resetting ambient sound initialization flag');
+        ambientSoundInitializedRef.current = false;
+      }
+    };
+  }, [pathname, isBrowser]);
+
+  // Add a new effect to initialize ambient sound
+  useEffect(() => {
+    if (!isBrowser) return;
+    
+    // Only play ambient sound if:
+    // 1. Component is mounted
+    // 2. Not in loading state
+    // 3. Flashcards are not open
+    // 4. Ambient sound hasn't been initialized yet
+    if (isMountedRef.current && !isLoading && !isFlashcardsOpen && !ambientSoundInitializedRef.current) {
+      // Add a longer delay to ensure audio context is ready and component is stable
+      const timeoutId = setTimeout(() => {
+        if (!isMountedRef.current) {
+          return;
+        }
+        
+        try {
+          // Mark as initialized to prevent multiple initializations
+          ambientSoundInitializedRef.current = true;
+          
+          // Play the ambient sound loop
+          audio.loopSound(AMBIENT_SOUND);
+        } catch (error) {
+          console.error('[ERROR] Failed to play ambient sound:', error);
+          // Reset the initialized flag so we can try again
+          ambientSoundInitializedRef.current = false;
+        }
+      }, 1500); // Longer delay to ensure stability
+      
+      return () => {
+        clearTimeout(timeoutId);
+      };
+    }
+  }, [isBrowser, isLoading, isFlashcardsOpen, audio]);
+
+  // Add a cleanup effect that only runs on unmount
+  useEffect(() => {
+    // This effect doesn't do anything on mount
+    
+    // But it provides a cleanup function for component unmount
+    return () => {
+      if (ambientSoundInitializedRef.current) {
+        console.log('[DEBUG] Final cleanup: Stopping all audio on unmount');
+        audio.stopAllLoops();
+        ambientSoundInitializedRef.current = false;
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // We intentionally use an empty dependency array to only run on mount/unmount
+  
+  // Add a separate effect to handle flashcard state changes
+  useEffect(() => {
+    if (!isBrowser || !isMountedRef.current) return;
+    
+    // If flashcards are open, stop the ambient sound
+    if (isFlashcardsOpen && ambientSoundInitializedRef.current) {
+      // Keep the small delay before stopping the ambient sound
+      // This ensures the door open sound has time to play
+      setTimeout(() => {
+        if (isMountedRef.current && isFlashcardsOpen) {
+          audio.stopLoopSound(AMBIENT_SOUND);
+        }
+      }, 300);
+      
+      // Don't reset the initialized flag, as we'll restart when flashcards close
+      return;
+    }
+    
+    // If flashcards were closed and ambient sound was initialized, restart it
+    if (!isFlashcardsOpen && ambientSoundInitializedRef.current && isMountedRef.current) {
+      // Use a ref to track the timeout ID to prevent multiple restarts
+      const timeoutIdRef = { current: null as NodeJS.Timeout | null };
+      
+      // Small delay before restarting
+      timeoutIdRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          audio.loopSound(AMBIENT_SOUND);
+        }
+      }, 500);
+      
+      return () => {
+        // Only clear the timeout, don't stop the sound here
+        if (timeoutIdRef.current) {
+          clearTimeout(timeoutIdRef.current);
+          timeoutIdRef.current = null;
+        }
+      };
+    }
+  }, [isBrowser, isFlashcardsOpen, audio]);
+
+  // Simplified effect for flashcard dialog auto-open
+  useEffect(() => {
+    if (isLoading || isClosingDialogRef.current) {
+      return;
+    }
+    
+    if (flashcardRoomId !== "" && !isFlashcardsOpen) {
+      setIsFlashcardsOpen(true);
+    }
+  }, [flashcardRoomId, isFlashcardsOpen, isLoading, setIsFlashcardsOpen]);
+
+  // Debug mode effect
+  useEffect(() => {
+    if (!isBrowser) return;
+    
+    // Check if user is signed in and refresh user info if needed
+    if (isSubscribed && !userInfo) {
+      refetch();
+    }
+  }, [isBrowser, isSubscribed, userInfo, refetch]);
 
   const fetchData = async () => {
+    // If already fetching, don't start another fetch
+    if (isFetchingRef.current) {
+      // Skipping redundant data fetch - fetch already in progress
+      return;
+    }
+    
+    // Skip if we already have data and are not in loading state
+    if (reportData && !isLoading) {
+      // Data already loaded and not in loading state, skipping fetch
+      return;
+    }
+    
+    // Set fetching flag and loading state
+    isFetchingRef.current = true;
+    if (!isLoading) {
+      setIsLoading(true);
+    }
+    
+    // Create a new abort controller
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+    
     try {
       const [reportResponse, clinicResponse] = await Promise.all([
-        fetch("/api/user-report"),
-        fetch("/api/clinic"),
+        fetch("/api/user-report", { 
+          signal,
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        }),
+        fetch("/api/clinic", { 
+          signal,
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        }),
       ]);
 
-      if (!reportResponse.ok || !clinicResponse.ok)
-        throw new Error("Failed to fetch user report");
-      if (!clinicResponse.ok) throw new Error("Failed to fetch clinic data");
+      if (!isMountedRef.current || signal.aborted) return;
 
-      const reportData: DoctorOfficeStats = await reportResponse.json();
+      const reportDataResult = await reportResponse.json();
       const clinicData = await clinicResponse.json();
-      setReportData(reportData);
-      setUserRooms(clinicData.rooms);
-
-      // Set streak days from the user report
-      setStreakDays(reportData.streak || 0);
-
-      // Calculate and set player level, patients per day, and clinic cost
-      const playerLevel = calculatePlayerLevel(clinicData.rooms);
-      const levelNumber = getLevelNumber(playerLevel);
-      const patientsPerDay = getPatientsPerDay(levelNumber);
-      const clinicCostPerDay = getClinicCostPerDay(levelNumber);
-
-      setUserLevel(playerLevel);
-      setPatientsPerDay(patientsPerDay);
-      setClinicCostPerDay(clinicCostPerDay);
-      setTotalPatients(clinicData.totalPatientsTreated || 0);
-
-      const newVisibleImages = new Set<string>();
-      clinicData.rooms.forEach((roomName: string) => {
-        const group = imageGroups.find((g) => g.name === roomName);
-        if (group) {
-          group.items.forEach((item) => newVisibleImages.add(item.id));
+      
+      if (!isMountedRef.current || signal.aborted) return;
+      
+      // Batch all state updates
+      if (isBrowser && ReactDOM.unstable_batchedUpdates) {
+        ReactDOM.unstable_batchedUpdates(() => {
+          // Only update if values have changed
+          if (JSON.stringify(reportData) !== JSON.stringify(reportDataResult)) {
+            setReportData(reportDataResult);
+          }
+          
+          if (clinicData.rooms && Array.isArray(clinicData.rooms) && 
+              JSON.stringify(userRooms) !== JSON.stringify(clinicData.rooms)) {
+            setUserRooms(clinicData.rooms);
+          }
+          
+          if (streakDays !== (reportDataResult.streak || 0)) {
+            setStreakDays(reportDataResult.streak || 0);
+          }
+          
+          if (totalPatients !== (clinicData.totalPatientsTreated || 0)) {
+            setTotalPatients(clinicData.totalPatientsTreated || 0);
+          }
+          
+          setIsLoading(false);
+        });
+      } else {
+        // Fallback for server-side or if unstable_batchedUpdates is not available
+        if (JSON.stringify(reportData) !== JSON.stringify(reportDataResult)) {
+          setReportData(reportDataResult);
         }
-      });
-      setVisibleImages(newVisibleImages);
-
+        
+        if (clinicData.rooms && Array.isArray(clinicData.rooms) && 
+            JSON.stringify(userRooms) !== JSON.stringify(clinicData.rooms)) {
+          setUserRooms(clinicData.rooms);
+        }
+        
+        if (streakDays !== (reportDataResult.streak || 0)) {
+          setStreakDays(reportDataResult.streak || 0);
+        }
+        
+        if (totalPatients !== (clinicData.totalPatientsTreated || 0)) {
+          setTotalPatients(clinicData.totalPatientsTreated || 0);
+        }
+        
+        setIsLoading(false);
+      }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        // Request aborted
+      } else {
+        if (isMountedRef.current) {
+          toast.error("Failed to load clinic data. Please try refreshing the page.");
+        }
+      }
+    } finally {
+      if (isMountedRef.current) {
+        isFetchingRef.current = false;
+        setIsLoading(false);
+      }
     }
   };
+
+  // Simplified effect for data initialization
+  useEffect(() => {
+    // Add a small delay to ensure client-side hydration is complete
+    const timer = setTimeout(() => {
+      console.log('[DEBUG] does not appear');
+      fetchData();
+    }, 10);
+    
+    return () => {
+      clearTimeout(timer);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const performDailyCalculations = async () => {
     if (isCalculating) {
@@ -393,6 +532,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       }
 
       await incrementScore();
+      // Update total patients in the store
       setTotalPatients(data.totalPatientsTreated);
 
       if (data.newPatientsTreated > 0) {
@@ -449,6 +589,14 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     }
   };
 
+  // Effect to run daily calculations after data is loaded
+  useEffect(() => {
+    if (!isLoading && userInfo && !hasCalculatedRef.current) {
+      performDailyCalculations();
+      hasCalculatedRef.current = true;
+    }
+  }, [isLoading, userInfo]);
+
   const handleTabChange = (tab: string) => {
     if (tab !== "ankiclinic") {
       router.push(`/home?tab=${tab}`);
@@ -457,7 +605,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   };
 
   const handleCompleteAllRoom = () => {
-    setCompleteAllRoom(true);
+    handleSetCompleteAllRoom(true);
   };
 
   const toggleGroup = async (groupName: string) => {
@@ -485,7 +633,9 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         if (!response.ok) throw new Error();
         const { rooms: updatedRooms } = await response.json();
         
-        setUserRooms(updatedRooms);
+        // Update the store with the new room
+        unlockRoom(groupName);
+        
         await decrementScore();
         setVisibleImages((prev) => {
           const newSet = new Set(prev);
@@ -520,7 +670,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     }
   };
 
-  const resetGameState = async () => {
+  const resetLocalGameState = async () => {
+    resetGameState();
     // Start new studying activity
     await startActivity({
       type: 'studying',
@@ -529,14 +680,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         timestamp: new Date().toISOString()
       }
     });
-    setActiveRooms(new Set());
-    setCompleteAllRoom(false);
-    setIsAfterTestDialogOpen(false);
-    setLargeDialogQuit(false);
-    setUserResponses([]);
-    setCorrectCount(0);
-    setWrongCount(0);
-    setTestScore(0);
+    
+    // Reset local state that's not in the store
     setTotalMCQQuestions(0);
     setCorrectMCQQuestions(0);
 
@@ -546,19 +691,21 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   };
 
   const handleGameStart = async (userTestId: string) => {
-    audio.playSound('flashcard-startup');// Play startup sound
+    // Play startup sound
+    audio.playSound('flashcard-startup');
+    
     // Start new testing activity
     await startActivity({
-        type: 'testing',
-        location: 'Game',
-        metadata: {
-            userTestId,
-            timestamp: new Date().toISOString()
-        }
+      type: 'testing',
+      location: 'Game',
+      metadata: {
+        userTestId,
+        timestamp: new Date().toISOString()
+      }
     });
 
-    setIsGameInProgress(true);
-    setCurrentUserTestId(userTestId);
+    // Update game state in the store
+    startGame(userTestId);
     
     if (typeof populateRoomsFn === 'function') {
       const selectedRooms = populateRoomsFn();
@@ -597,13 +744,138 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const handleAfterTestDialogClose = () => {
     setIsAfterTestDialogOpen(false);
     // Reset game state when dialog is closed
-    resetGameState();
-    setIsGameInProgress(false);
-    setCurrentUserTestId(null);
+    resetLocalGameState();
+    endGame();
   };
 
   /* ----------------------------------------- Render  ---------------------------------------- */
 
+  // Create wrapper functions to adapt between React's setState and Zustand's actions
+  const handleSetFlashcardRoomId = useCallback((roomId: string | ((prevState: string) => string)) => {
+    if (typeof roomId === 'function') {
+      // If it's a function, call it with the current value to get the new value
+      const newRoomId = roomId(flashcardRoomId);
+      setFlashcardRoomId(newRoomId);
+    } else {
+      // If it's a direct value, use it directly
+      setFlashcardRoomId(roomId);
+    }
+  }, [flashcardRoomId, setFlashcardRoomId]);
+
+  const handleSetActiveRooms = useCallback((rooms: Set<string> | ((prevState: Set<string>) => Set<string>)) => {
+    if (typeof rooms === 'function') {
+      // If it's a function, call it with the current value to get the new value
+      const newRooms = rooms(activeRooms);
+      // Create a new Set to ensure reactivity
+      setActiveRooms(new Set(newRooms));
+    } else {
+      // If it's a direct value, create a new Set from it
+      setActiveRooms(new Set(rooms));
+    }
+  }, [activeRooms, setActiveRooms]);
+
+  // Handle flashcard dialog open/close - simplified
+  const handleSetIsFlashcardsOpen = useCallback((open: boolean) => {
+    if (isClosingDialogRef.current && open) {
+      return;
+    }
+    
+    if (open) {
+      // OPENING FLASHCARD DIALOG
+      // Note: We're keeping this here for cases where the dialog is opened programmatically,
+      // but in most cases, the sound will be played by the RoomSprite component when a question is clicked
+      if (!isFlashcardsOpen) {
+        // Only play the sound if it wasn't triggered by a room click
+        // This prevents duplicate sounds from playing
+        if (flashcardRoomId === "") {
+          audio.playSound('flashcard-door-open');
+        }
+      }
+    } else {
+      // CLOSING FLASHCARD DIALOG
+      isClosingDialogRef.current = true;
+      
+      // Play door close sound when dialog is closed
+      audio.playSound('flashcard-door-closed');
+      
+      if (isLoading) {
+        setIsLoading(false);
+      }
+    }
+    
+    setIsFlashcardsOpen(open);
+    
+    if (!open) {
+      setTimeout(() => {
+        // Remove this room removal logic and let FlashcardsDialog.handleClose handle it
+        
+        setTimeout(() => {
+          setFlashcardRoomId('');
+          
+          setTimeout(() => {
+            isClosingDialogRef.current = false;
+          }, 100);
+        }, 300);
+      }, 300);
+    }
+  }, [flashcardRoomId, setFlashcardRoomId, setIsFlashcardsOpen, isLoading, audio, isFlashcardsOpen]);
+
+  const handleSetCompleteAllRoom = useCallback((complete: boolean | ((prevState: boolean) => boolean)) => {
+    if (typeof complete === 'function') {
+      const newComplete = complete(completeAllRoom);
+      setCompleteAllRoom(newComplete);
+    } else {
+      setCompleteAllRoom(complete);
+    }
+  }, [completeAllRoom, setCompleteAllRoom]);
+
+  // Simplified effect for test completion
+  useEffect(() => {
+    if (!isLoading && completeAllRoom && currentUserTestId) {
+      const finishTest = async () => {
+        try {
+          await fetchUserResponses(currentUserTestId);
+          
+          const correctQuestionWeight = 1;
+          const incorrectQuestionWeight = -0.5;
+          let testScore =
+            correctCount * correctQuestionWeight +
+            wrongCount * incorrectQuestionWeight;
+          testScore = Math.max(testScore, 0);
+          
+          setTestScore(testScore);
+        
+          // Update the UserTest with score
+          fetch(`/api/user-test/${currentUserTestId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              score: testScore,
+              finishedAt: new Date().toISOString(),
+            }),
+          }).catch(console.error);
+
+          if (!isFlashcardsOpen && !largeDialogQuit) {
+            setIsAfterTestDialogOpen(true);
+          }
+        } catch (error) {
+          console.error("Error finishing test:", error);
+        }
+      };
+
+      finishTest();
+    }
+  }, [currentUserTestId, completeAllRoom, isLoading, isFlashcardsOpen, largeDialogQuit, 
+      fetchUserResponses, correctCount, wrongCount, setTestScore]);
+  
+  // Show loading state during initial load
+  if (isLoading && !isClinicUnlocked) {
+    return <LoadingClinic />;
+  }
+
+  // Rest of the component remains the same
   return (
     <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
       <Toaster position="top-center" />
@@ -612,7 +884,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           isOpen={showWelcomeDialogue}
           onUnlocked={()=>setShowWelcomeDialogue(false)}
         />}
-      <Suspense fallback={
+    <Suspense fallback={
         <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
           <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse" />
           <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />
@@ -623,35 +895,22 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-30">
             <ResourcesMenu
               reportData={reportData}
-              userRooms={userRooms}
-              totalCoins={userInfo?.score || 0}
-              totalPatients={totalPatients}
-              patientsPerDay={patientsPerDay}
             />
           </div>
           
           {/* Keep OfficeContainer at a lower z-index */}
           <div className="w-3/4 font-krungthep relative z-20 rounded-r-lg">
             <OfficeContainer
-              innerRef={officeContainerRef}
+              ref={officeContainerRef}
               onNewGame={handleSetPopulateRooms}
               visibleImages={visibleImages}
-              userRooms={userRooms}
               imageGroups={imageGroups}
-              setFlashcardRoomId={setFlashcardRoomId}
               updateVisibleImages={updateVisibleImages}
-              activeRooms={activeRooms}
-              setActiveRooms={setActiveRooms}
-              isFlashcardsOpen={isFlashcardsOpen}
-              setIsFlashcardsOpen={setIsFlashcardsOpen}
             />
             {/* Button on the top left corner */}
             <div className="absolute top-4 left-4 flex gap-2 z-50">
               <NewGameButton
-                userScore={userInfo?.score || 0}
                 onGameStart={handleGameStart}
-                isGameInProgress={isGameInProgress}
-                resetGameState={resetGameState}
               />
             </div>
             {/* Fellowship Level button with coins and patients */}
@@ -756,9 +1015,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                       userScore={userInfo?.score || 0}
                       isOpen={isMarketplaceOpen}
                       onOpenChange={setIsMarketplaceOpen}
-                                        />
+                    />
                   )}
-
                   </div>
                   <div className="flex flex-col">
                   <button
@@ -825,9 +1083,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         </div>
       </Suspense>
 
-      {/* {isMarketplaceOpen && <ShoppingDialog ... />} */}
-      
       {isAfterTestDialogOpen && <AfterTestFeed 
+        ref={afterTestFeedRef}
         open={isAfterTestDialogOpen}
         onOpenChange={(open) => {
           setIsAfterTestDialogOpen(open);
@@ -835,12 +1092,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
             handleAfterTestDialogClose();
           }
         }}
-        userResponses={userResponses}
-        correctCount={correctCount}
-        wrongCount={wrongCount}
         largeDialogQuit={largeDialogQuit}
         setLargeDialogQuit={setLargeDialogQuit}
-        isSubscribed={isSubscribed}
       />}
       
       <div className="absolute bottom-4 right-4 z-[100]">
@@ -865,17 +1118,14 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         onClose={() => setShowReferralModal(false)}
       />
 
-      {isFlashcardsOpen && <FlashcardsDialog
+
+      {isFlashcardsOpen && <FlashcardsDialog 
         ref={flashcardsDialogRef}
         isOpen={isFlashcardsOpen}
-        onOpenChange={setIsFlashcardsOpen}
+        onOpenChange={handleSetIsFlashcardsOpen}
         roomId={flashcardRoomId}
-        activeRooms={activeRooms}
-        setActiveRooms={setActiveRooms}
-        currentUserTestId={currentUserTestId}
         isLoading={isLoading}
         setIsLoading={setIsLoading}
-        handleCompleteAllRoom={handleCompleteAllRoom}
         onMCQAnswer={handleMCQAnswer}
         setTotalMCQQuestions={setTotalMCQQuestions}
         buttonContent={<div />}
@@ -884,4 +1134,9 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   );
 };
 
-export default DoctorsOfficePage;
+// Wrap the component with React.memo to prevent unnecessary re-renders
+export default React.memo(DoctorsOfficePage, (prevProps, nextProps) => {
+  // Return true if props are equal (meaning no re-render needed)
+  // Since we don't have any props that should trigger re-renders, we return true
+  return true;
+});

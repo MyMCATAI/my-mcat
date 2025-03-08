@@ -1,4 +1,5 @@
 // File: app/api/question/route.ts
+export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";

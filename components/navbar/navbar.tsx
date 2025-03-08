@@ -4,24 +4,33 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FaLinkedin, FaInstagram } from 'react-icons/fa';
-import MusicPlayer from "@/components/navbar/musicplayer";
-import { useTheme } from '@/contexts/ThemeContext';
+
+import { useUI } from '@/store/selectors';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { useUserInfo } from "@/hooks/useUserInfo";
+
 import { SubscriptionManagementButton } from "@/components/subscription-management-button";
 import { ProfileButton } from '@/components/navbar/ProfileButton';
 import { MailButton } from '@/components/navbar/MailButton';
+import MusicPlayer from "@/components/navbar/musicplayer";
 
-// Define the Song type
+/* --- Types ---- */
 type Song = {
   title: string;
   url: string;
 };
 
-export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
-  const pathname = usePathname();
+interface NavbarProps {
+  subscription?: string;
+}
+
+const Navbar = ({ subscription = "free" }: NavbarProps) => {
+  /* ---- Refs --- */
   const ballerSectionRef = useRef(null);
-  const { theme } = useTheme();
+
+  /* ---- State ----- */
+  const pathname = usePathname();
+  const { theme } = useUI();
   const { isAutoPlay } = useMusicPlayer();
   const { isSubscribed } = useUserInfo();
 
@@ -88,3 +97,5 @@ export const Navbar = ({ subscription = "free" }: { subscription: string }) => {
     </nav>
   );
 };
+
+export default Navbar;
