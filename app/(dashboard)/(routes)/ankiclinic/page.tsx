@@ -114,7 +114,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   // mountCountRef, isFetchingRef, isInitializedRef, stateUpdateInProgressRef, isMountedRef, etc.
 
   /* ------------------------------------------- Hooks -------------------------------------------- */
-  const { isSubscribed, userInfo, incrementScore, decrementScore, refreshUserInfo } = useUserInfo();
+  const { isSubscribed, userInfo, incrementScore, decrementScore, refetch } = useUserInfo();
   const audio = useAudio();
   const { startActivity } = useUserActivity();
   const router = useRouter();
@@ -362,9 +362,9 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     
     // Check if user is signed in and refresh user info if needed
     if (isSubscribed && !userInfo) {
-      refreshUserInfo();
+      refetch();
     }
-  }, [isBrowser, isSubscribed, userInfo, refreshUserInfo]);
+  }, [isBrowser, isSubscribed, userInfo, refetch]);
 
   const fetchData = async () => {
     // If already fetching, don't start another fetch
