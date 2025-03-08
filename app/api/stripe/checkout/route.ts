@@ -239,7 +239,7 @@ export async function POST(request: Request) {
     }
 
     // Set trial period days for subscription products if requested
-    const trialPeriodDays = isTrial && mode === 'subscription' ? 7 : undefined;
+    const trialPeriodDays = isTrial && mode === 'subscription' ? 14 : undefined;
 
     const stripeSession = await stripe.checkout.sessions.create({
       success_url: absoluteUrl("/home?payment=success"),
