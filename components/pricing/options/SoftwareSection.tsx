@@ -36,7 +36,7 @@ const SoftwareSection = ({
   const getMonthlyPrice = (period: 'monthly' | 'biannual' | 'annual') => {
     switch (period) {
       case 'monthly':
-        return 150;
+        return 150;  // Always $150 per month
       case 'biannual':
         return isSpecialStatus ? 83 : 133;  // 500/6 or 800/6
       case 'annual':
@@ -49,7 +49,7 @@ const SoftwareSection = ({
   const getTotalPrice = (period: 'monthly' | 'biannual' | 'annual', showDiscount = false) => {
     switch (period) {
       case 'monthly':
-        return 450;
+        return 150;  // Always $150 total
       case 'biannual':
         return showDiscount && isSpecialStatus ? 500 : 800;
       case 'annual':
@@ -138,7 +138,9 @@ const SoftwareSection = ({
           {/* Pricing Banner - Dynamic based on selected period */}
           <div className="bg-gradient-to-r from-amber-500/20 via-amber-400/20 to-amber-500/20 p-6 text-center border-b border-amber-400/20">
             <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">
-              {pricingPeriod === 'biannual' ? 
+              {pricingPeriod === 'monthly' ? 
+                `Monthly Access: $${getTotalPrice('monthly', true)}` :
+                pricingPeriod === 'biannual' ? 
                 `6-Month Access: $${getTotalPrice('biannual', true)} ${isSpecialStatus ? '(44% off!)' : ''}` : 
                 `Annual Access: $${getTotalPrice('annual', true)} ${isSpecialStatus ? '(56% off!)' : ''}`}
             </div>
@@ -146,7 +148,7 @@ const SoftwareSection = ({
               ${getMonthlyPrice(pricingPeriod)}/month for comprehensive MCAT prep
             </p>
             <div className="mt-2 inline-flex items-center justify-center bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm font-medium">
-              Now with 7-day free trial! ✨
+              New 14-day free trial! ✨
             </div>
           </div>
 
@@ -273,12 +275,41 @@ const SoftwareSection = ({
                   {/* Pricing Toggle */}
                   <div className="flex flex-col gap-2">
                     <button 
+                      onClick={() => handlePeriodSelection('monthly')}
+                      className={`px-4 py-3 rounded-lg text-sm font-medium text-left
+                        transition-all duration-300
+                        relative overflow-hidden
+                        ${
+                        pricingPeriod === 'monthly' 
+                          ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg transform scale-[1.02] shadow-[0_0_10px_rgba(251,191,36,0.3)]' 
+                          : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20 hover:border-amber-400/40 hover:bg-black/30 hover:shadow-[0_0_10px_rgba(251,191,36,0.1)]'
+                        }
+                        before:absolute before:content-[''] before:top-0 before:left-0 before:w-full before:h-full 
+                        before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent
+                        before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700
+                      `}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>Monthly Plan</span>
+                        <div className="flex items-center gap-2">
+                          <span>$150</span>
+                        </div>
+                      </div>
+                    </button>
+                    <button 
                       onClick={() => handlePeriodSelection('biannual')}
-                      className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-left ${
+                      className={`px-4 py-3 rounded-lg text-sm font-medium text-left
+                        transition-all duration-300
+                        relative overflow-hidden
+                        ${
                         pricingPeriod === 'biannual' 
-                          ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg' 
-                          : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20'
-                      }`}
+                          ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg transform scale-[1.02] shadow-[0_0_10px_rgba(251,191,36,0.3)]' 
+                          : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20 hover:border-amber-400/40 hover:bg-black/30 hover:shadow-[0_0_10px_rgba(251,191,36,0.1)]'
+                        }
+                        before:absolute before:content-[''] before:top-0 before:left-0 before:w-full before:h-full 
+                        before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent
+                        before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700
+                      `}
                     >
                       <div className="flex items-center justify-between">
                         <span>Bi-Annual Plan</span>
@@ -292,11 +323,18 @@ const SoftwareSection = ({
                     </button>
                     <button 
                       onClick={() => handlePeriodSelection('annual')}
-                      className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-left ${
+                      className={`px-4 py-3 rounded-lg text-sm font-medium text-left
+                        transition-all duration-300
+                        relative overflow-hidden
+                        ${
                         pricingPeriod === 'annual' 
-                          ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg' 
-                          : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20'
-                      }`}
+                          ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-lg transform scale-[1.02] shadow-[0_0_10px_rgba(251,191,36,0.3)]' 
+                          : 'bg-black/20 text-white/80 hover:text-white border border-amber-400/20 hover:border-amber-400/40 hover:bg-black/30 hover:shadow-[0_0_10px_rgba(251,191,36,0.1)]'
+                        }
+                        before:absolute before:content-[''] before:top-0 before:left-0 before:w-full before:h-full 
+                        before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent
+                        before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700
+                      `}
                     >
                       <div className="flex items-center justify-between">
                         <span>Annual Plan</span>
@@ -308,34 +346,46 @@ const SoftwareSection = ({
                         </div>
                       </div>
                     </button>
-                    <div 
-                      className="px-4 py-3 rounded-lg text-sm font-medium text-left bg-black/10 text-white/40 border border-amber-400/10 cursor-not-allowed"
-                    >
-                      3-Month Plan (Coming Soon)
-                    </div>
                   </div>
 
-                  {/* Trial button - Only show if eligible */}
+                  {/* Upgrade button - Shows first */}
+                  <button
+                    onClick={handleUpgradeClick}
+                    className="w-full relative overflow-hidden bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-500 text-black py-3 rounded-lg font-semibold 
+                      transition-all duration-300
+                      hover:from-amber-300 hover:via-yellow-400 hover:to-amber-400
+                      hover:shadow-[0_0_30px_rgba(251,191,36,0.6)]
+                      hover:scale-[1.02] hover:-translate-y-0.5
+                      active:scale-[0.98] active:shadow-[0_0_20px_rgba(251,191,36,0.5)]
+                      before:absolute before:content-[''] before:top-0 before:left-0 before:w-full before:h-full 
+                      before:bg-gradient-to-r before:from-transparent before:via-yellow-100/20 before:to-transparent
+                      before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700
+                      mt-4"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Processing...' : `Get Gold ${pricingPeriod === 'monthly' ? 'Monthly' : pricingPeriod === 'biannual' ? 'Bi-Annual' : 'Annual'}`}
+                  </button>
+
+                  {/* Trial button - Only show if eligible, now appears below Gold button */}
                   {isTrialEligible &&(
-                    <div className="space-y-2 mt-4">
+                    <div className="space-y-2 mt-24">
                       <button
                         onClick={handleStartTrial}
-                        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition-colors"
+                        className="w-full relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-lg font-semibold 
+                          transition-all duration-300
+                          hover:from-blue-400 hover:to-blue-700
+                          hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]
+                          hover:scale-[1.02] hover:-translate-y-0.5
+                          active:scale-[0.98] active:shadow-[0_0_15px_rgba(59,130,246,0.4)]
+                          before:absolute before:content-[''] before:top-0 before:left-0 before:w-full before:h-full 
+                          before:bg-gradient-to-r before:from-transparent before:via-blue-200/10 before:to-transparent
+                          before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700"
                         disabled={localLoading}
                       >
-                        {localLoading ? 'Processing...' : 'Start 7-Day Free Trial'}
+                        {localLoading ? 'Processing...' : 'Start 14-Day Free Trial'}
                       </button>
                     </div>
                   )}
-
-                  {/* Upgrade button */}
-                  <button
-                    onClick={handleUpgradeClick}
-                    className="w-full bg-amber-500 hover:bg-amber-600 text-black py-3 rounded-lg font-semibold transition-colors mt-4"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Processing...' : 'Get Gold Now'}
-                  </button>
                 </>
               )}
             </div>
