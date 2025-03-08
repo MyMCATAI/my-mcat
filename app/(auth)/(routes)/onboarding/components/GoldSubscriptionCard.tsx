@@ -63,7 +63,7 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'off
       // Start the trial
       const trialResponse = await axios.post('/api/subscription/start-trial');
       if (trialResponse.data.success) {
-        toast.success("Your 7-day free trial has started!");
+        toast.success("Your 14-day free trial has started!");
         router.push('/examcalendar');
       } else {
         toast.error("Failed to start trial. Please try again.");
@@ -149,7 +149,9 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'off
             <p className={`text-sm text-center
               ${isGold ? 'text-[--theme-text-color]' : 'text-white'}`}
             >
-              {goldFeatures.description}
+              {isGold 
+                ? "You have full access to all Gold features and benefits" 
+                : goldFeatures.description}
             </p>
 
             <div className="w-full space-y-3">
@@ -195,11 +197,21 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'off
           </div>
 
           <div className="w-full flex flex-col items-center">
-            <p className={`text-2xl font-bold mb-4 mt-4
-              ${isGold ? 'text-[--theme-text-color]' : 'text-white'}`}
-            >
-              {goldFeatures.price}
-            </p>
+            {/* Only show price if not Gold */}
+            {!isGold && (
+              <p className="text-2xl font-bold mb-4 mt-4 text-white">
+                {goldFeatures.price}
+              </p>
+            )}
+            
+            {/* Active subscription message */}
+            {isGold && (
+              <div className="w-full bg-gradient-to-r from-amber-500/30 to-yellow-500/30 p-3 rounded-lg mb-4 mt-4">
+                <p className="text-center text-amber-200 font-medium">
+                  Your Gold subscription is active!
+                </p>
+              </div>
+            )}
 
             {/* Trial button - Only show if eligible */}
             {isTrialEligible && !isGold && !isTrialing && !isCanceled && context === 'onboarding' && (
@@ -209,10 +221,18 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'off
                     e.stopPropagation();
                     handleStartTrial();
                   }}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition-colors"
+                  className="w-full relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-lg font-semibold 
+                    transition-all duration-300
+                    hover:from-blue-400 hover:to-blue-700
+                    hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]
+                    hover:scale-[1.02] hover:-translate-y-0.5
+                    active:scale-[0.98] active:shadow-[0_0_15px_rgba(59,130,246,0.4)]
+                    before:absolute before:content-[''] before:top-0 before:left-0 before:w-full before:h-full 
+                    before:bg-gradient-to-r before:from-transparent before:via-blue-200/10 before:to-transparent
+                    before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700"
                   disabled={localLoading}
                 >
-                  {localLoading ? 'Processing...' : 'Start 7-Day Free Trial'}
+                  {localLoading ? 'Processing...' : 'Start 14-Day Free Trial'}
                 </button>
                 <p className="text-center text-slate-400 text-xs">No credit card required</p>
               </div>
@@ -232,12 +252,20 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'off
               }}
               className={`w-full h-10 px-4 rounded-full font-medium shadow-lg 
                 transition-all duration-300 flex items-center justify-center
-                disabled:opacity-50 bg-gradient-to-r from-green-400 to-blue-500 text-white hover:from-green-500 hover:to-blue-600
+                ${isGold 
+                  ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-black hover:from-amber-500 hover:to-yellow-600' 
+                  : 'bg-gradient-to-r from-green-400 to-blue-500 text-white hover:from-green-500 hover:to-blue-600'}
                 transform hover:scale-105`}
               role="button"
               aria-disabled={isLoading}
             >
-              {isLoading ? "Loading..." : context === 'offer' ? "Upgrade to Gold" : "Learn More"}
+              {isLoading 
+                ? "Loading..." 
+                : isGold 
+                  ? "Manage Subscription"
+                  : context === 'offer' 
+                    ? "Upgrade to Gold" 
+                    : "Learn More"}
             </div>
           </div>
         </div>
