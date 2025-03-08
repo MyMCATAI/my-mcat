@@ -1,5 +1,5 @@
 import React from "react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useUI } from "@/store/selectors";
 
 interface FilterButtonProps {
   subjects: string[];
@@ -12,7 +12,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({
   onFilterChange,
   selectedValue,
 }) => {
-  const { theme } = useTheme();
+  const { theme } = useUI();
 
   const handleSubjectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const subject = event.target.value;

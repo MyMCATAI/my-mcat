@@ -10,7 +10,7 @@ import {
   Line,
   ResponsiveContainer,
 } from "recharts";
-import { useTheme } from '@/contexts/ThemeContext';
+import { useUI } from '@/store/selectors';
 
 interface CategoryStats {
   categoryId: string;
@@ -79,7 +79,7 @@ const Statistics = ({
   onReturn,
   subject,
 }: StatisticsProps) => {
-  const { theme } = useTheme();
+  const { theme } = useUI();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<StatsData | null>(null);
 

@@ -1,7 +1,7 @@
 //components/musicplayer.tsx
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { FaPlay, FaPause, FaForward, FaVolumeUp } from "react-icons/fa";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudio } from "@/store/selectors";
 import { toast } from "react-hot-toast";
 
 interface Song {

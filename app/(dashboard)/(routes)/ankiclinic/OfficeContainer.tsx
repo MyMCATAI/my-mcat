@@ -1,12 +1,15 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo, memo, forwardRef } from 'react';
 import { Stage, Container, Graphics, Sprite } from '@pixi/react';
 import { Texture, Graphics as PIXIGraphics, utils as PIXIUtils, BaseTexture, Rectangle } from 'pixi.js';
+import type { EventMode } from '@pixi/events';
 import { ImageGroup } from './ShoppingDialog';
 import QuestionPromptSprite from './components/QuestionPromptSprite';
 import { levelConfigurations, roomToContentMap, roomToSubjectMap, spriteWaypoints } from './constants';
 import { GridImage } from './types';
-import { cleanupTextures } from './utils/textureCache';
+import { cleanupTextures, preloadTextures, getTexture } from './utils/textureCache';
 import { useUserInfo } from "@/hooks/useUserInfo";
+import { useGame } from "@/store/selectors";
+import { useAudio } from "@/store/selectors";
 
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 
@@ -15,6 +18,7 @@ const tileWidth = 128;
 const tileHeight = 64;
 const gridWidth = 10;
 const gridHeight = 10;
+
 
 // Helper functions for isometric calculations
 function screenX(worldX: number, worldY: number): number {
@@ -30,6 +34,8 @@ const RoomSprite = React.memo(({
   img, 
   setFlashcardRoomId, 
   activeRooms, 
+  setActiveRooms,
+  isFlashcardsOpen,
   setIsFlashcardsOpen 
 }: { 
   img: GridImage; 
@@ -39,12 +45,15 @@ const RoomSprite = React.memo(({
   isFlashcardsOpen: boolean;
   setIsFlashcardsOpen: (open: boolean) => void;
 }) => {
-  const texture = useMemo(() => Texture.from(img.src), [img.src]);
+  const texture = getTexture(img.src);
   const position = useMemo(() => ({
     x: screenX(img.x, img.y) - img.width / 4,
     y: screenY(img.x, img.y) - img.height / 2
   }), [img.x, img.y, img.width, img.height]);
-
+  
+  // Get audio from the store
+  const audio = useAudio();
+  
   return (
     <>
       <Sprite
@@ -67,7 +76,13 @@ const RoomSprite = React.memo(({
           roomId={img.id}
           onClick={() => {
             setFlashcardRoomId(img.id);
-            setIsFlashcardsOpen(true);
+            // Play the door open sound before opening the flashcard dialog
+            audio.playSound('flashcard-door-open');
+            
+            // Keep the small delay to ensure the sound plays before the dialog opens
+            setTimeout(() => {
+              setIsFlashcardsOpen(true);
+            }, 100);
           }}
         />
       )}
@@ -161,17 +176,10 @@ interface Category {
 }
 
 interface OfficeContainerProps {
-  innerRef?: React.RefObject<HTMLDivElement>;
   onNewGame: (fn: () => GridImage[]) => void;
   visibleImages: Set<string>;
-  userRooms: string[];
   imageGroups: ImageGroup[];
-  setFlashcardRoomId: React.Dispatch<React.SetStateAction<string>>;
   updateVisibleImages: (newVisibleImages: Set<string>) => void;
-  activeRooms: Set<string>;
-  setActiveRooms: React.Dispatch<React.SetStateAction<Set<string>>>;
-  isFlashcardsOpen: boolean;
-  setIsFlashcardsOpen: (open: boolean) => void;
 }
 
 // Define a type for sprite positions with an index signature
@@ -187,21 +195,52 @@ type SpritePositions = {
   [key: string]: SpritePosition;
 };
 
-const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
+// Update PixiJS configuration to use modern APIs
+const pixiConfig = {
+  eventMode: 'dynamic' as EventMode, // Type assertion to EventMode
+  backgroundAlpha: 0,
+  antialias: true,
+  resolution: window.devicePixelRatio || 1,
+};
+
+// Convert to forwardRef
+const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({ 
+  onNewGame,
+  visibleImages,
+  imageGroups,
+  updateVisibleImages
+}, ref) => {
+  // Get game state from Zustand store
   const {
-    onNewGame,
-    visibleImages,
     userRooms,
-    setFlashcardRoomId,
-    updateVisibleImages,
     activeRooms,
     setActiveRooms,
     isFlashcardsOpen,
     setIsFlashcardsOpen,
-  } = props;
+    setFlashcardRoomId
+  } = useGame();
 
+  // All useState hooks first
   const [currentLevel, setCurrentLevel] = useState(1);
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [scale, setScale] = useState(1);
+  const [currentWaypoints, setCurrentWaypoints] = useState(spriteWaypoints[1]);
+  const [spritePositions, setSpritePositions] = useState<SpritePositions>({
+    sprite1: { id: 'sprite1', x: 9, y: 9, direction: 'S', character: 1 },
+  });
+
+  // Then all useRef hooks
+  const sprite1WaypointIndexRef = useRef(0);
+  
+  // Then custom hooks
   const { userInfo } = useUserInfo();
+
+  // Tutorial room effect
+  useEffect(() => {
+    if(currentLevel === 1) {
+      setActiveRooms(prevRooms => new Set([...prevRooms, 'WaitingRoom0']));
+    }
+  }, [currentLevel, setActiveRooms]);
 
   // Define zoom levels for each test level
   const zoomLevels: Record<number, { scale: number, offsetX: number, offsetY: number }> = {
@@ -213,24 +252,6 @@ const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
     5: { scale: 1.0, offsetX: 50, offsetY: 50 },
     6: { scale: 1.0, offsetX: 0, offsetY: 90 },
   };
-
-  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
-  const [scale, setScale] = useState(1);
-
-  const [spritePositions, setSpritePositions] = useState<SpritePositions>({
-    sprite1: { id: 'sprite1', x: 9, y: 9, direction: 'S', character: 1 },
-  });
-
-  const sprite1WaypointIndexRef = useRef(0);
-
-  // Function to calculate positions
-  function screenX(worldX: number, worldY: number): number {
-    return (worldX - worldY) * (tileWidth / 2);
-  }
-
-  function screenY(worldX: number, worldY: number): number {
-    return (worldX + worldY) * (tileHeight / 2);
-  }
 
   // Modify the calculateScale function
   const calculateScale = useCallback(() => {
@@ -267,9 +288,6 @@ const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
 
     return () => window.removeEventListener('resize', handleResize);
   }, [calculateScale]);
-
-
-  const [currentWaypoints, setCurrentWaypoints] = useState(spriteWaypoints[1]);
 
   // Modify the moveSprite function to use currentWaypoints
   const moveSprite = useCallback((
@@ -442,24 +460,8 @@ const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
     y: ((gridHeight * tileHeight) / 4 + zoomLevels[currentLevel].offsetY)
   }), [currentLevel]);
 
-
-  useEffect(() => {
-    // show tutorial room by default if user is patient level
-    if(currentLevel === 1) {
-      setActiveRooms(prevRooms => new Set([...prevRooms, 'WaitingRoom0']));
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Add cleanup effect
-  useEffect(() => {
-    return () => {
-      cleanupTextures();
-    };
-  }, []);
-
   return (
-    <div ref={innerRef} className="relative w-full h-full">
+    <div ref={ref} className="relative w-full h-full">
       {/* Pixi.js stage container - Add pointer-events-none by default */}
       <div className="absolute inset-0 z-20 flex justify-center items-center pointer-events-none">
         <Stage
@@ -467,13 +469,11 @@ const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
           height={stageSize.height}
           options={{ 
             backgroundAlpha: 0,
-            // Enable interactions only for the stage content
             eventMode: 'static'
           }}
           style={{
             width: `${stageSize.width}px`,
             height: `${stageSize.height}px`,
-            // Re-enable pointer events only for the Stage
             pointerEvents: 'auto'
           }}
         >
@@ -510,6 +510,15 @@ const OfficeContainer = ({ innerRef, ...props }: OfficeContainerProps) => {
       </div>
     </div>
   );
-};
+});
 
-export default OfficeContainer;
+OfficeContainer.displayName = 'OfficeContainer';
+
+// Wrap with React.memo to prevent unnecessary re-renders
+export default React.memo(OfficeContainer, (prevProps, nextProps) => {
+  // Deep compare the props we care about
+  return (
+    prevProps.visibleImages === nextProps.visibleImages &&
+    prevProps.imageGroups === nextProps.imageGroups
+  );
+});

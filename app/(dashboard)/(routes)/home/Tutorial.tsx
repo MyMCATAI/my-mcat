@@ -61,7 +61,7 @@ const Tutorial: React.FC<TutorialProps> = ({ runTutorial, setRunTutorial }) => {
 
   return (
     <>
-      <audio ref={audioRef} src="/notification.mp3" />
+      <audio ref={audioRef} src="/audio/notification.mp3" />
       <Joyride
         callback={handleJoyrideCallback}
         continuous

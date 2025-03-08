@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { UserInfo } from "@/hooks/useUserInfo";
 
 interface RedeemReferralModalProps {
   isOpen: boolean;
@@ -35,6 +34,7 @@ const RedeemReferralModal: React.FC<RedeemReferralModalProps> = ({
               alt="Coin"
               width={100}
               height={53}
+              sizes="100px"
               className="object-cover translate-y-[-22.5%] mx-auto"
             />
           </div>

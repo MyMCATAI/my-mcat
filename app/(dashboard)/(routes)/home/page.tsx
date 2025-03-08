@@ -1,7 +1,7 @@
 // app/(dashboard)/(routes)/home/page.tsx
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
@@ -30,26 +30,35 @@ interface ContentWrapperProps {
   children: React.ReactNode;
 }
 
-interface LoadingSpinnerProps {}
+interface LoadingSpinnerProps {
+  message?: string;
+}
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = () => (
-  <div className="fixed inset-0 flex justify-center items-center bg-black/50 z-50">
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = memo(({ message = "Loading..." }) => (
+  <div className="fixed inset-0 flex justify-center items-center bg-black/50 z-[9999]">
     <div className="text-center">
       <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4" />
-      <p className="text-sky-300 text-xl">Loading...</p>
+      <p className="text-sky-300 text-xl">{message}</p>
     </div>
   </div>
-);
+));
+LoadingSpinner.displayName = 'LoadingSpinner';
 
-const ContentWrapper: React.FC<ContentWrapperProps> = ({ children }) => (
+const ContentWrapper: React.FC<ContentWrapperProps> = memo(({ children }) => (
   <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
     <div className="text-[--theme-text-color] flex gap-[1.5rem] overflow-visible">
       {children}
     </div>
   </div>
-);
+));
+ContentWrapper.displayName = 'ContentWrapper';
 
-const HomePage = () => {
+// Memoize components that don't need frequent updates
+const MemoizedSchedule = memo(Schedule);
+const MemoizedSideBar = memo(SideBar);
+const MemoizedAdaptiveTutoring = memo(AdaptiveTutoring);
+
+const HomePage: React.FC = () => {
   /* ---------------------------------------- Hooks ---------------------------------------- */
   const router = useRouter();
   const pathname = usePathname();
@@ -58,24 +67,36 @@ const HomePage = () => {
   const { startActivity, endActivity, updateActivityEndTime } = useUserActivity();
   const { playMusic, stopMusic, volume, setVolume, isPlaying } = useAudio();
   const { setIsAutoPlay } = useMusicPlayer();
+  const paymentStatus = searchParams?.get("payment");
+  
+  // Debug mode check
+  const isDebugMode = searchParams?.get('debug') === 'true';
 
   /* ---------------------------------------- State ---------------------------------------- */
-  const [activeTab, setActiveTab] = useState(searchParams?.get("tab") || "Schedule");
-  const [activities, setActivities] = useState<FetchedActivity[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-  const [isGeneratingActivities, setIsGeneratingActivities] = useState(false);
-  const [currentStudyActivityId, setCurrentStudyActivityId] = useState<string | null>(null);
-  const [chatbotContext, setChatbotContext] = useState<{contentTitle: string; context: string;} | null>(null);
-  const [kalypsoState, setKalypsoState] = useState<"wait" | "talk" | "end" | "start">("wait");
-  const [isPro, setIsPro] = useState(false);
-  const [showScorePopup, setShowScorePopup] = useState(false);
-  const [testScore, setTestScore] = useState(0);
-  const [showStreakPopup, setShowStreakPopup] = useState(false);
-  const [userStreak, setUserStreak] = useState(0);
-  const paymentStatus = searchParams?.get("payment");
-  const [currentPage, setCurrentPage] = useState("Schedule");
-  const [showReferralModal, setShowReferralModal] = useState(false);
+  // Combine related states into a single object to reduce re-renders
+  const [pageState, setPageState] = useState({
+    activeTab: searchParams?.get("tab") || "Schedule",
+    currentPage: "Schedule",
+    activities: [] as FetchedActivity[],
+    isInitialized: false,
+    currentStudyActivityId: null as string | null,
+    chatbotContext: null as {contentTitle: string; context: string;} | null,
+    kalypsoState: "wait" as "wait" | "talk" | "end" | "start",
+    isPro: false,
+    showScorePopup: false,
+    testScore: 0,
+    showStreakPopup: false,
+    userStreak: 0,
+    showReferralModal: false
+  });
+
+  // Combine loading states into a single object
+  const [loadingState, setLoadingState] = useState({
+    isLoading: true,
+    isUpdatingProfile: false,
+    isGeneratingActivities: false,
+    isLoadingTimeout: false
+  });
 
   /* ----------------------------------------- Refs ---------------------------------------- */
   const kalypsoRef = useRef<HTMLImageElement>(null);
@@ -83,6 +104,52 @@ const HomePage = () => {
   const chatbotRef = useRef<{ sendMessage: (message: string, context?: string) => void }>({
     sendMessage: () => {},
   });
+  const initializationRef = useRef(false);
+
+  // Memoize state updates to prevent unnecessary re-renders
+  const updatePageState = useCallback((updates: Partial<typeof pageState>) => {
+    setPageState(prev => ({ ...prev, ...updates }));
+  }, []);
+
+  const updateLoadingState = useCallback((newState: Partial<typeof loadingState>) => {
+    setLoadingState(prev => ({ ...prev, ...newState }));
+  }, []);
+
+  /* ---- Memoized Values ---- */
+  const shouldInitialize = useMemo(() => {
+    return !pageState.isInitialized && userInfo && !isLoadingUserInfo;
+  }, [pageState.isInitialized, userInfo, isLoadingUserInfo]);
+
+  /* ---- Callbacks & Event Handlers ---- */
+  const initializePage = useCallback(async () => {
+    if (!shouldInitialize) return;
+    
+    try {
+      const [activities, proStatus] = await Promise.all([
+        fetch("/api/calendar-activity").then(res => res.json()),
+        checkProStatus()
+      ]);
+
+      // Batch all state updates
+      updatePageState({
+        activities,
+        isPro: proStatus,
+        isInitialized: true
+      });
+
+      updateLoadingState({
+        isLoading: false
+      });
+
+    } catch (error) {
+      console.error('[HOME_PAGE] Error during initialization:', error);
+      toast.error("Failed to initialize page. Please refresh.");
+      
+      updateLoadingState({
+        isLoading: false
+      });
+    }
+  }, [shouldInitialize, updatePageState, updateLoadingState]);
 
   const updateCalendarChatContext = useCallback((currentActivities: FetchedActivity[]) => {
     const today = new Date();
@@ -143,16 +210,14 @@ const HomePage = () => {
         .join("\n\n")}
     `.trim();
 
-    setChatbotContext({
-      contentTitle: "Personal Calendar",
-      context: context,
-    });
+    setPageState(prev => ({ ...prev, chatbotContext: { contentTitle: "Personal Calendar", context: context } }));
   }, []);
 
   const fetchActivities = useCallback(async () => {
     try {
       const response = await fetch("/api/calendar-activity");
       if (!response.ok) {
+        console.error("[HOME_PAGE] Failed to fetch activities - status:", response.status);
         throw new Error("Failed to fetch activities");
       }
       const activities = await response.json();
@@ -191,18 +256,18 @@ const HomePage = () => {
       }
 
       // Force a new reference to trigger re-render
-      setActivities([...updatedActivities]);
+      setPageState(prev => ({ ...prev, activities: [...updatedActivities] }));
       updateCalendarChatContext(updatedActivities);
     } catch (error) {
-      console.error("Error fetching activities:", error);
+      console.error("[HOME_PAGE] Error in fetchActivities:", error);
       toast.error("Failed to fetch activities. Please try again.");
     }
   }, [updateCalendarChatContext]);
 
+  // Memoize activity handlers
   const handleActivityChange = useCallback(async (newType: string, newLocation: string, metadata = {}) => {
-    if (currentStudyActivityId) {
-      await endActivity(currentStudyActivityId);
-      setCurrentStudyActivityId(null);
+    if (pageState.currentStudyActivityId) {
+      await endActivity(pageState.currentStudyActivityId);
     }
 
     const activity = await startActivity({
@@ -213,26 +278,33 @@ const HomePage = () => {
         timestamp: new Date().toISOString()
       }
     });
-    setCurrentStudyActivityId(activity.id);
-  }, [currentStudyActivityId, endActivity, startActivity]);
 
+    updatePageState({ currentStudyActivityId: activity.id });
+  }, [pageState.currentStudyActivityId, endActivity, startActivity, updatePageState]);
+
+  // Optimize tab change handler
   const handleTabChange = useCallback(async (newTab: string) => {
     if (newTab === "SUMMARIZE_WEEK") {
-      setActiveTab("Schedule");
-      const sidebarInsightsTab = document.querySelector('[data-tab="tab1"]');
-      if (sidebarInsightsTab instanceof HTMLElement) {
-        sidebarInsightsTab.click();
-      }
-      return;
+        updatePageState({ activeTab: "Schedule" });
+        const sidebarInsightsTab = document.querySelector('[data-tab="tab1"]');
+        if (sidebarInsightsTab instanceof HTMLElement) {
+            sidebarInsightsTab.click();
+        }
+        return;
     }
 
     if (newTab === "ankiclinic") {
-      if (currentStudyActivityId) {
-        await endActivity(currentStudyActivityId);
-        setCurrentStudyActivityId(null);
-      }
-      router.push('/ankiclinic');
-      return;
+        try {
+            if (pageState.currentStudyActivityId) {
+                await endActivity(pageState.currentStudyActivityId);
+            }
+            await router.push('/ankiclinic');
+            return; // Important: return immediately after navigation
+        } catch (error) {
+            console.error('Navigation error:', error);
+            toast.error('Failed to navigate to Anki Clinic');
+        }
+        return; // Return in case of error too
     }
 
     // Handle tab with view parameter
@@ -240,89 +312,89 @@ const HomePage = () => {
     const searchParams = new URLSearchParams(params);
     const view = searchParams.get('view');
 
-    setActiveTab(tab);
-    setCurrentPage(tab);
+    // Batch state updates
+    const updates: Partial<typeof pageState> = {
+        activeTab: tab,
+        currentPage: tab
+    };
 
-    // Only start a new activity if we're not in AdaptiveTutoringSuite
-    if (tab !== "AdaptiveTutoringSuite") {
-      await handleActivityChange('studying', tab);
-    }
-
-    if (tab === "Schedule") {
-      updateCalendarChatContext(activities);
-      // If view=tutors, find and click the tutors tab in the sidebar
-      if (view === 'tutors') {
-        // Small delay to ensure the sidebar is rendered
-        setTimeout(() => {
-          const tutorsTab = document.querySelector('[data-tab="tab3"]');
-          if (tutorsTab instanceof HTMLElement) {
-            tutorsTab.click();
-          }
-        }, 100);
-      }
-      // Update URL with view parameter if present
-      if (view) {
+    if (tab === "Schedule" && view) {
         router.push(`/home?tab=Schedule&view=${view}`);
-      }
     }
-  }, [router, currentStudyActivityId, endActivity, updateCalendarChatContext, activities, handleActivityChange]);
+
+    updatePageState(updates);
+
+    // Handle activity changes
+    if (tab !== "AdaptiveTutoringSuite") {
+        await handleActivityChange('studying', tab);
+    } else {
+        // For AdaptiveTutoringSuite, track with a different activity type
+        // This ensures we still have consistent state tracking
+        await handleActivityChange('tutoring', 'AdaptiveTutoringSuite');
+    }
+  }, [router, handleActivityChange, updatePageState, pageState.currentStudyActivityId, endActivity]);
 
   const switchKalypsoState = (newState: "wait" | "talk" | "end" | "start") => {
-    setKalypsoState(newState);
+    setPageState(prev => ({ ...prev, kalypsoState: newState }));
     if (kalypsoRef.current) {
       kalypsoRef.current.src = `/kalypso${newState}.gif`;
     }
   };
 
   const toggleChatBot = () => {
-    console.log("todo, set this up to widget");
+    // Implementation will be set up later
   };
 
-  /* ---------------------------------------- Callbacks ---------------------------------------- */
+  /* ---------------------------------------- Memoized Values ---------------------------------------- */
+  const pageTitle = useMemo(() => {
+    switch (pageState.activeTab) {
+      case "Schedule": return "Statistics";
+      case "Tests": return "Testing Suite";
+      case "AdaptiveTutoringSuite": return "Adaptive Tutoring Suite";
+      case "flashcards": return "Flashcards";
+      case "CARS": return "Daily CARs Practice";
+      default: return "Home";
+    }
+  }, [pageState.activeTab]);
+
+  const isPageLoading = useMemo(() => 
+    loadingState.isUpdatingProfile || loadingState.isGeneratingActivities || loadingState.isLoadingTimeout,
+    [loadingState.isUpdatingProfile, loadingState.isGeneratingActivities, loadingState.isLoadingTimeout]
+  );
 
   /* ---------------------------------------- Effects ---------------------------------------- */
+  // Track component lifecycle - simplified
   useEffect(() => {
-    const initializePage = async () => {
-      if (isLoadingUserInfo) return; // Wait for user info to be loaded
-      
-      setIsLoading(true);
-      try {
-        await fetchActivities();
-        const proStatus = await checkProStatus();
-
-        // Check for streak increase
-        if (userInfo?.streak && userInfo.streak > 1) {
-          const lastSeenStreak = parseInt(localStorage.getItem('lastSeenStreak') || '0');
-          const currentStreak = userInfo.streak;
-          
-          if (currentStreak > lastSeenStreak) {
-            localStorage.setItem('lastSeenStreak', currentStreak.toString());
-          }
-        }
-
-        // Only update knowledge profiles if needed
-        if (typeof window !== "undefined" && shouldUpdateKnowledgeProfiles()) {
-          const response = await fetch("/api/knowledge-profile/update", {
-            method: "POST",
-          });
-
-          if (response.ok) {
-            updateKnowledgeProfileTimestamp();
-          }
-        }
-      } catch (error) {
-        console.error("Error initializing page:", error);
-      } finally {
-        setIsLoading(false);
+    // Mark initialization to prevent double initialization
+    if (initializationRef.current) return;
+    initializationRef.current = true;
+    
+    // Add a safety timeout to ensure loading completes
+    const safetyTimeout = setTimeout(() => {
+      if (loadingState.isLoading) {
+        // Force loading to complete after timeout
+        updateLoadingState({ isLoading: false });
       }
+    }, 3000); // 3 second safety timeout
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      clearTimeout(safetyTimeout);
     };
+  }, [loadingState.isLoading, updateLoadingState]);
 
-    initializePage();
-  }, [isLoadingUserInfo, userInfo?.streak, fetchActivities]);
+  // Combine initialization effects
+  useEffect(() => {
+    if (shouldInitialize) {
+      initializePage();
+    }
+  }, [shouldInitialize, initializePage]);
 
   useEffect(() => {
-    updateCalendarChatContext(activities);
-  }, [activities]);
+    updateCalendarChatContext(pageState.activities);
+  }, [pageState.activities]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -342,7 +414,7 @@ const HomePage = () => {
     }, 100); // Small delay to ensure content is rendered
 
     return () => clearTimeout(timer);
-  }, [activities, activeTab]); // Re-run when content changes
+  }, [pageState.activities, pageState.activeTab]); // Re-run when content changes
 
   useEffect(() => {
     switchKalypsoState("wait"); // Start with waiting animation
@@ -368,10 +440,10 @@ const HomePage = () => {
   // Activity tracking effects
   useEffect(() => {
     const initializeActivity = async () => {
-      if (pathname && pathname.startsWith('/home') && !currentStudyActivityId && !isLoading) {
+      if (pathname && pathname.startsWith('/home') && !pageState.currentStudyActivityId && !isLoadingUserInfo) {
         const activity = await startActivity({
           type: 'studying',
-          location: activeTab,
+          location: pageState.activeTab,
           metadata: {
             initialLoad: true,
             timestamp: new Date().toISOString()
@@ -379,26 +451,26 @@ const HomePage = () => {
         });
 
         if (activity) {
-          setCurrentStudyActivityId(activity.id);
+          setPageState(prev => ({ ...prev, currentStudyActivityId: activity.id }));
         }
       }
     };
 
     initializeActivity();
-  }, [isLoading, pathname, activeTab, startActivity, currentStudyActivityId]);
+  }, [isLoadingUserInfo, pathname, pageState.activeTab, startActivity, pageState.currentStudyActivityId]);
 
   useEffect(() => {
-    if (!currentStudyActivityId) return;
+    if (!pageState.currentStudyActivityId) return;
 
     const intervalId = setInterval(() => {
-      updateActivityEndTime(currentStudyActivityId);
+      updateActivityEndTime(pageState.currentStudyActivityId);
     }, 300000);
 
     return () => clearInterval(intervalId);
-  }, [currentStudyActivityId, updateActivityEndTime]);
+  }, [pageState.currentStudyActivityId, updateActivityEndTime]);
 
   useEffect(() => {
-    setShowReferralModal(shouldShowRedeemReferralModal());
+    setPageState(prev => ({ ...prev, showReferralModal: shouldShowRedeemReferralModal() }));
   }, []);
 
   useEffect(() => {
@@ -406,201 +478,174 @@ const HomePage = () => {
     return () => setIsAutoPlay(false);
   }, [setIsAutoPlay]);
 
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      // Cleanup any pending activities
+      if (pageState.currentStudyActivityId) {
+        endActivity(pageState.currentStudyActivityId);
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Monitor userInfo changes
+  useEffect(() => {
+    // Monitor userInfo
+  }, [userInfo]);
+
+  // Monitor loading state changes
+  useEffect(() => {
+    // Monitor loading state
+  }, [isLoadingUserInfo]);
+
+  // Add loading timeout effect
+  useEffect(() => {
+    if (isLoadingUserInfo) {
+      const timeout = setTimeout(() => {
+        updateLoadingState({
+          isLoadingTimeout: true,
+          isLoading: false
+        });
+        toast.error("Loading is taking longer than expected. Please refresh the page.");
+      }, 15000); // 15 second timeout
+
+      return () => clearTimeout(timeout);
+    }
+    return undefined;
+  }, [isLoadingUserInfo]);
+
+  // Memoize chatbot context update
+  const updateChatbotContext = useCallback((context: {contentTitle: string; context: string;}) => {
+    updatePageState({ chatbotContext: context });
+  }, [updatePageState]);
+
   /* -------------------------------------- Rendering ------------------------------------- */
-  if (isLoading || isLoadingUserInfo) {
-    return <LoadingSpinner />;
-  }
-
-  // Combined loading state
-  const isPageLoading = isLoading || isLoadingUserInfo || isUpdatingProfile || isGeneratingActivities;
-
-  if (isPageLoading) {
-    return (
-      <div className="fixed inset-0 flex justify-center items-center bg-black/50 z-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4" />
-          <p className="text-sky-300 text-xl">
-            {isUpdatingProfile 
-              ? "Updating knowledge profile..."
-              : isGeneratingActivities
-                ? "Generating new study plan..."
-                : "Loading..."}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const renderContent = () => {
-    if (isUpdatingProfile || isGeneratingActivities) {
-      return (
-        <div className="flex justify-center items-center h-full">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4"></div>
-            <p className="text-sky-300 text-xl">
-              {isUpdatingProfile
-                ? "Updating knowledge profile..."
-                : "Generating new study plan..."}
-            </p>
-          </div>
-        </div>
-      );
+  const content = useMemo(() => {
+    if (isLoadingUserInfo) {
+      return <LoadingSpinner message="Loading user info..." />;
     }
 
-    switch (activeTab) {
-      case "Schedule":
-        return (
-          <Schedule
-            handleSetTab={(tab) => {
-              if (tab === "SUMMARIZE_WEEK") {
-                setActiveTab("Schedule");
-                const sidebarInsightsTab = document.querySelector('[data-tab="tab1"]');
-                if (sidebarInsightsTab instanceof HTMLElement) {
-                  sidebarInsightsTab.click();
-                }
-                return;
-              }
-              handleTabChange(tab);
-            }}
-            isActive={activeTab === "Schedule"}
-            chatbotRef={chatbotRef}
-            userInfo={userInfo}
-          />
-        );
-      case "AdaptiveTutoringSuite":
-        return (
-          <div className="h-full overflow-hidden">
-            <AdaptiveTutoring
-              toggleChatBot={toggleChatBot}
-              setChatbotContext={setChatbotContext}
+    if (isPageLoading) {
+      return <LoadingSpinner message="Initializing page..." />;
+    }
+
+    return (
+      <ContentWrapper>
+        <div className="w-3/4 relative overflow-visible">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <h2
+                className="text-white text-2xl ml-3 font-thin leading-normal shadow-text cursor-pointer"
+                onClick={() => router.push("/home")}
+              >
+                {pageTitle}
+              </h2>
+              <ThemeSwitcher />
+            </div>
+          </div>
+          <div className="relative overflow-visible">
+            <div className="p-3 gradientbg h-[calc(100vh-5rem)] rounded-lg">
+              {pageState.activeTab === 'Schedule' && (
+                <MemoizedSchedule 
+                  handleSetTab={handleTabChange}
+                  isActive={pageState.activeTab === 'Schedule'}
+                  chatbotRef={chatbotRef}
+                  userInfo={userInfo}
+                />
+              )}
+              {pageState.activeTab === 'AdaptiveTutoringSuite' && (
+                <div className="h-full overflow-hidden">
+                  <MemoizedAdaptiveTutoring 
+                    toggleChatBot={toggleChatBot}
+                    setChatbotContext={updateChatbotContext}
+                    chatbotRef={chatbotRef}
+                    onActivityChange={handleActivityChange}
+                  />
+                </div>
+              )}
+              {pageState.activeTab === 'CARS' && <TestingSuit />}
+              {pageState.activeTab === 'flashcards' && <FlashcardDeck />}
+              {pageState.activeTab === 'Tests' && (
+                <PracticeTests 
+                  handleSetTab={handleTabChange} 
+                  chatbotRef={chatbotRef}
+                  onActivitiesUpdate={fetchActivities}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Button - Positioned between main content and sidebar */}
+        <FloatingButton
+          onTabChange={handleTabChange}
+          currentPage={pageState.currentPage}
+          initialTab="Tests"
+          className="z-50"
+          activities={pageState.activities}
+          onTasksUpdate={(tasks) => updatePageState({ activities: tasks })}
+          isSubscribed={isSubscribed}
+        />
+
+        <div className="w-1/4">
+          <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
+            &nbsp;
+          </h2>
+          <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
+            <MemoizedSideBar 
+              activities={pageState.activities}
+              currentPage={pageState.currentPage}
+              chatbotContext={pageState.chatbotContext}
               chatbotRef={chatbotRef}
-              onActivityChange={handleActivityChange}
+              handleSetTab={handleTabChange}
+              onActivitiesUpdate={fetchActivities}
+              isSubscribed={isSubscribed}
             />
           </div>
-        );
-      case "CARS":
-        return <TestingSuit />;
-      case "flashcards":
-        return <FlashcardDeck />;
-      case "Tests":
-        return (
-          <PracticeTests 
-            handleSetTab={handleTabChange} 
-            chatbotRef={chatbotRef}
-            onActivitiesUpdate={fetchActivities}
+        </div>
+
+        {/* Modals and Popups */}
+        {pageState.showReferralModal && (
+          <RedeemReferralModal 
+            isOpen={pageState.showReferralModal} 
+            onClose={() => updatePageState({ showReferralModal: false })}
           />
-        );
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <ContentWrapper>
-      <div className="w-3/4 relative overflow-visible">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <h2
-              className="text-white text-2xl ml-3 font-thin leading-normal shadow-text cursor-pointer"
-              onClick={() => router.push("/home")}
-            >
-              {activeTab === "Schedule"
-                ? "Statistics"
-                : activeTab === "Tests"
-                  ? "Testing Suite"
-                  : activeTab === "AdaptiveTutoringSuite"
-                    ? "Adaptive Tutoring Suite"
-                    : activeTab === "flashcards"
-                      ? "Flashcards"
-                      : activeTab === "CARS"
-                        ? "Daily CARs Practice"
-                        : "Home"}
-            </h2>
-            <ThemeSwitcher />
-          </div>
-        </div>
-        <div className="relative overflow-visible">
-          <div className="p-3 gradientbg h-[calc(100vh-5rem)] rounded-lg">
-            {renderContent()}
-          </div>
-        </div>
-      </div>
-
-      <FloatingButton
-        onTabChange={handleTabChange}
-        currentPage={currentPage}
-        initialTab="Tests"
-        className="z-50"
-        activities={activities}
-        onTasksUpdate={fetchActivities}
-        isSubscribed={isSubscribed}
-      />
-
-      <div className="w-1/4">
-        <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
-          &nbsp;
-        </h2>
-
-        <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
-          <SideBar
-            handleSetTab={handleTabChange}
-            activities={activities}
-            currentPage={currentPage}
-            chatbotContext={chatbotContext}
-            chatbotRef={chatbotRef}
-            onActivitiesUpdate={fetchActivities}
-            isSubscribed={isSubscribed}
+        )}
+        {pageState.showStreakPopup && (
+          <StreakPopup 
+            isOpen={pageState.showStreakPopup}
+            onClose={() => updatePageState({ showStreakPopup: false })}
+            streak={pageState.userStreak}
           />
-        </div>
-      </div>
-      
-      {/* Score Popup */}
-      <Dialog open={showScorePopup} onOpenChange={setShowScorePopup}>
-        <DialogContent className="bg-[#001226] text-white border border-sky-500 rounded-lg">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold text-sky-300">
-              Test Completed!
-            </DialogTitle>
-            <DialogDescription className="text-gray-300">
-              Great job on completing the diagnostic test.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-xl">
-              Your Score:{" "}
-              <span className="font-bold text-sky-300">
-                {testScore.toFixed(2)}%
-              </span>
-            </p>
-          </div>
-          <div className="flex justify-end">
-            <Button
-              onClick={() => setShowScorePopup(false)}
-              className="bg-sky-500 hover:bg-sky-600 text-white"
-              disabled={isUpdatingProfile || isGeneratingActivities}
-            >
-              {isUpdatingProfile || isGeneratingActivities
-                ? "Processing..."
-                : "Close"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        )}
+      </ContentWrapper>
+    );
+  }, [
+    isLoadingUserInfo,
+    isPageLoading,
+    pageState.activeTab,
+    pageState.activities,
+    pageState.currentPage,
+    pageState.chatbotContext,
+    chatbotRef,
+    handleTabChange,
+    fetchActivities,
+    isSubscribed,
+    userInfo,
+    toggleChatBot,
+    updatePageState,
+    handleActivityChange,
+    pageTitle,
+    pageState.showReferralModal,
+    pageState.showStreakPopup,
+    pageState.userStreak,
+    router
+  ]);
 
-      <StreakPopup
-        streak={userStreak}
-        isOpen={showStreakPopup}
-        onClose={() => {
-          console.log("Closing streak popup");
-          setShowStreakPopup(false);
-        }}
-      />
-      <RedeemReferralModal 
-        isOpen={showReferralModal}
-        onClose={() => setShowReferralModal(false)}
-      />
-    </ContentWrapper>
-  );
+  return content;
 };
 
-export default HomePage;
+export default memo(HomePage);

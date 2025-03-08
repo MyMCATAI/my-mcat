@@ -1,7 +1,7 @@
 //app/(dashboard)/(routes)/home/FloatingButton.tsx
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback, memo } from "react";
 import { useRouter } from 'next/navigation';
 import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
@@ -59,7 +59,7 @@ interface TypewriterProps {
 }
 
 /* ---------------------------------------- Components ------------------------------------------ */
-const Typewriter: React.FC<TypewriterProps> = ({ text, delay = 0 }) => {
+const Typewriter = memo<TypewriterProps>(({ text, delay = 0 }) => {
   const [displayedText, setDisplayedText] = useState('');
 
   useEffect(() => {
@@ -81,9 +81,10 @@ const Typewriter: React.FC<TypewriterProps> = ({ text, delay = 0 }) => {
   }, [text, delay]);
 
   return <span>{displayedText}</span>;
-};
+});
+Typewriter.displayName = 'Typewriter';
 
-const FloatingButton: React.FC<FloatingButtonProps> = ({ 
+const FloatingButton = memo<FloatingButtonProps>(({ 
   onTabChange, 
   currentPage, 
   initialTab, 
@@ -104,33 +105,33 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
   const router = useRouter();
 
   /* ----------------------------------------- Callbacks ------------------------------------------ */
-  const getLabelPosition = (index: number) => {
+  const getLabelPosition = useCallback((index: number) => {
     switch (index) {
       case 0: return { top: '-5.5rem', left: '10rem' };
       case 1: return { top: '-1.2rem', left: '15.5rem' };
       case 2: return { top: '4rem', left: '16.5rem' };
       default: return { top: '2rem', left: '12.5rem' };
     }
-  };
+  }, []);
 
   /* ---------------------------------------- Event Handlers -------------------------------------- */
-  const handleMouseEnter = () => {
+  const handleMouseEnter = useCallback(() => {
     if (hoverTimeout.current) {
       clearTimeout(hoverTimeout.current);
     }
     setIsHovered(true);
-  };
+  }, []);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     if (hoverTimeout.current) {
       clearTimeout(hoverTimeout.current);
     }
     hoverTimeout.current = window.setTimeout(() => {
       setIsHovered(false);
     }, HOVER_TIMEOUT);
-  };
+  }, []);
 
-  const handleTaskListHover = (hovering: boolean) => {
+  const handleTaskListHover = useCallback((hovering: boolean) => {
     if (hoverTimeout.current) {
       clearTimeout(hoverTimeout.current);
     }
@@ -141,7 +142,7 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
         setIsHovered(false);
       }, 500);
     }
-  };
+  }, []);
 
   // Used to direct free user (isSubscribed = false) to /pricing
   const handleButtonClick = async (tab: string) => {
@@ -153,13 +154,11 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
       return;
     }
 
-    // Check subscription status first, before any other logic
     if (!isSubscribed && tab !== 'ankiclinic') {
       router.push('/pricing');
       return;
     }
 
-    // Move the try-catch block inside the subscription check
     try {
       const response = await fetch("/api/user-info");
       if (!response.ok) throw new Error("Failed to fetch user info");
@@ -172,8 +171,8 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
             router.push('/home');
           }
           setActiveTab(tab);
-          onTabChange(tab);
           setRecentlyChangedTab(true);
+          onTabChange(tab);
           if (tabChangeTimeout.current) {
             clearTimeout(tabChangeTimeout.current);
           }
@@ -184,8 +183,8 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
         AdaptiveTutoringSuite: () => {
           router.push('/home');
           setActiveTab(tab);
-          onTabChange(tab);
           setRecentlyChangedTab(true);
+          onTabChange(tab);
           if (tabChangeTimeout.current) {
             clearTimeout(tabChangeTimeout.current);
           }
@@ -207,8 +206,8 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
             router.push('/home');
           }
           setActiveTab(tab);
-          onTabChange(tab);
           setRecentlyChangedTab(true);
+          onTabChange(tab);
           if (tabChangeTimeout.current) {
             clearTimeout(tabChangeTimeout.current);
           }
@@ -221,8 +220,8 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
             router.push('/home');
           }
           setActiveTab(tab);
-          onTabChange(tab);
           setRecentlyChangedTab(true);
+          onTabChange(tab);
           if (tabChangeTimeout.current) {
             clearTimeout(tabChangeTimeout.current);
           }
@@ -240,16 +239,19 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
     }
   };
 
-  /* ------------------------------------ Animations & Effects ------------------------------------ */
+  /* ---------------------------------------- Effects -------------------------------------------- */
   useEffect(() => {
     return () => {
       if (tabChangeTimeout.current) {
         clearTimeout(tabChangeTimeout.current);
       }
+      if (hoverTimeout.current) {
+        clearTimeout(hoverTimeout.current);
+      }
     };
   }, []);
 
-  /* ---------------------------------------- Render Methods -------------------------------------- */
+  /* ---------------------------------------- Render -------------------------------------------- */
   return (
     <>
       {/* Overlay */}
@@ -366,6 +368,8 @@ const FloatingButton: React.FC<FloatingButtonProps> = ({
       </span>
     </>
   );
-};
+});
+
+FloatingButton.displayName = 'FloatingButton';
 
 export default FloatingButton;

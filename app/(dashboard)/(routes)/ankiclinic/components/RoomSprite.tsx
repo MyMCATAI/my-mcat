@@ -5,6 +5,7 @@ import { roomToSubjectMap } from '../constants';
 import QuestionPromptSprite from './QuestionPromptSprite';
 import { screenX, screenY } from '../utils';
 import { getTexture } from '../utils/textureCache';
+import { useAudio } from '@/store/selectors';
 
 interface RoomSpriteProps {
   img: GridImage;
@@ -28,6 +29,9 @@ const RoomSprite = React.memo(({
     x: screenX(img.x, img.y) - img.width / 4,
     y: screenY(img.x, img.y) - img.height / 2
   }), [img.x, img.y, img.width, img.height]);
+  
+  // Get audio from the store
+  const audio = useAudio();
 
   return (
     <>
@@ -50,8 +54,18 @@ const RoomSprite = React.memo(({
           zIndex={img.zIndex+100}
           roomId={img.id}
           onClick={() => {
+            console.log('[DEBUG] Question sprite clicked, roomId:', img.id);
+            console.log('[DEBUG] About to play door open sound');
             setFlashcardRoomId(img.id);
-            setIsFlashcardsOpen(true);
+            // Play the door open sound before opening the flashcard dialog
+            audio.playSound('flashcard-door-open');
+            console.log('[DEBUG] After audio.playSound call with flashcard-door-open');
+            
+            // Add a small delay to ensure the sound plays before the dialog opens
+            // This prevents the ambient sound effect from stopping the door sound
+            setTimeout(() => {
+              setIsFlashcardsOpen(true);
+            }, 100);
           }}
         />
       )}

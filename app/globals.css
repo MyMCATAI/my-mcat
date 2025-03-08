@@ -1083,3 +1083,9 @@ html::-webkit-scrollbar {
     opacity: 0;
   }
 }
+
+/* Optimize rendering for debug mode - simple version */
+.debug-mode * {
+  transition: none !important;
+  animation-duration: 0ms !important;
+}

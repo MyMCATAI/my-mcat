@@ -4,7 +4,7 @@ import { FaPencilAlt } from 'react-icons/fa';
 import Image from 'next/image';
 import { SparkleEffect } from '@/components/effects/SparkleEffect';
 import PhotoSelectionModal from './PhotoSelectionModal';
-import { useProfileContext } from '@/contexts/UserProfileContext';
+import { useUser } from '@/store/selectors';
 import { CUSTOM_PARTICLES } from '@/config/particleEffects';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import FriendMenu from '@/components/social/friend-interaction/FriendMenu';
@@ -155,7 +155,7 @@ const ProfilePhoto = React.memo(({
 ProfilePhoto.displayName = 'ProfilePhoto';
 
 const UserProfileModal = ({ isOpen, onClose, userEmail, userId, isEditable = false, onFriendRequest, showFriendButton = false, isSelfProfile = false }: UserProfileModalProps) => {
-  const { profile: selfProfile, isLoading: selfProfileLoading, updateProfile } = useProfileContext();
+  const { profile: selfProfile, profileLoading: selfProfileLoading, updateProfile } = useUser();
   // Only use useUserProfile for other users' profiles
   const profileParams = React.useMemo(() => {
     if (!isOpen || isSelfProfile) return null;
