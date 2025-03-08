@@ -75,7 +75,6 @@ const NewGameButton: FC<NewGameButtonProps> = ({
       setIsLoading(false);
     }
   }, [isGameInProgress]);
-
   return (
     <div className="hover:-translate-y-0.5">
       <button
@@ -85,10 +84,10 @@ const NewGameButton: FC<NewGameButtonProps> = ({
           px-6 py-3 rounded-lg transition-all duration-300 
           shadow-lg hover:shadow-xl transform
           font-bold text-lg flex items-center gap-2
-          opacity-90 hover:opacity-100
+          opacity-100
           ${isGameInProgress 
             ? 'cursor-not-allowed opacity-50 hover:transform-none hover:shadow-lg bg-transparent' 
-            : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] text-[--theme-hover-text] animate-pulse [animation-duration:0.75s] bg-green-500/20'
+            : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] text-[--theme-hover-text] animate-pulse [animation-duration:0.75s] bg-green-500'
           }`}
       >
         <span className={`text-[--theme-hover-text] border-r border-[--theme-border-color] ${!isGameInProgress && 'hover:border-white/30'} pr-2`}>

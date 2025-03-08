@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo, memo, forwardRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo, memo, forwardRef, useImperativeHandle } from 'react';
 import { Stage, Container, Graphics, Sprite } from '@pixi/react';
 import { Texture, Graphics as PIXIGraphics, utils as PIXIUtils, BaseTexture, Rectangle } from 'pixi.js';
 import type { EventMode } from '@pixi/events';
@@ -10,6 +10,7 @@ import { cleanupTextures, preloadTextures, getTexture } from './utils/textureCac
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useGame } from "@/store/selectors";
 import { useAudio } from "@/store/selectors";
+import { useWindowSize } from '@/store/selectors';
 
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 
@@ -229,11 +230,51 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
     sprite1: { id: 'sprite1', x: 9, y: 9, direction: 'S', character: 1 },
   });
 
+  // User control for zoom and pan - use a default value first
+  const [userZoom, setUserZoom] = useState(1.0); // Will be updated based on device
+  const [userPan, setUserPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isZooming, setIsZooming] = useState(false);
+
   // Then all useRef hooks
   const sprite1WaypointIndexRef = useRef(0);
+  const containerRef = useRef<any>(null);
+  const lastTouchDistance = useRef<number | null>(null);
   
   // Then custom hooks
   const { userInfo } = useUserInfo();
+  const windowSize = useWindowSize();
+  const isMobile = !windowSize.isDesktop;
+  
+  // Set initial zoom based on device type and orientation - runs once on mount
+  useEffect(() => {
+    if (isMobile) {
+      const isPortrait = windowSize.height > windowSize.width;
+      if (isPortrait) {
+        setUserZoom(1.3); // Higher initial zoom for mobile portrait
+      } else {
+        setUserZoom(1.1); // Slightly lower for landscape
+      }
+    }
+  }, [isMobile, windowSize]);
+
+  // Update zoom when orientation changes
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      if (isMobile) {
+        const isPortrait = window.innerHeight > window.innerWidth;
+        if (isPortrait) {
+          setUserZoom(prev => Math.max(prev, 1.3)); // Ensure minimum zoom in portrait
+        } else {
+          setUserZoom(prev => Math.min(prev, 1.5)); // Cap zoom in landscape
+        }
+      }
+    };
+
+    window.addEventListener('orientationchange', handleOrientationChange);
+    return () => window.removeEventListener('orientationchange', handleOrientationChange);
+  }, [isMobile]);
 
   // Tutorial room effect
   useEffect(() => {
@@ -244,39 +285,83 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
 
   // Define zoom levels for each test level
   const zoomLevels: Record<number, { scale: number, offsetX: number, offsetY: number }> = {
-    0: { scale: 2.5, offsetX: -50, offsetY: -200 },
-    1: { scale: 1.5, offsetX: 150, offsetY: -50 },
-    2: { scale: 1.3, offsetX: 150, offsetY: 0 },
-    3: { scale: 1.3, offsetX: 150, offsetY: 0 }, // Changed to match level 2
-    4: { scale: 1.1, offsetX: 150, offsetY: 50 },
-    5: { scale: 1.0, offsetX: 50, offsetY: 50 },
-    6: { scale: 1.0, offsetX: 0, offsetY: 90 },
+    0: { scale: 3.2, offsetX: -50, offsetY: -450 },
+    1: { scale: 2.3, offsetX: 150, offsetY: -300 },
+    2: { scale: 1.9, offsetX: 150, offsetY: -250 },
+    3: { scale: 1.8, offsetX: 150, offsetY: -250 },
+    4: { scale: 1.6, offsetX: 150, offsetY: -200 },
+    5: { scale: 1.3, offsetX: 50, offsetY: -200 },
+    6: { scale: 1.2, offsetX: 0, offsetY: -160 },
   };
+
+  // Level-specific horizontal adjustment for better centering
+  const levelHorizontalAdjustment = useMemo(() => {
+    // As level increases, we need to adjust the horizontal position differently
+    const baseAdjustment = isMobile ? -950 : -800; // Base adjustment from above
+    
+    // Additional adjustments based on level - higher levels need more adjustment
+    // to keep hospital centered as it grows
+    const levelFactor = currentLevel * (isMobile ? -15 : -20);
+    
+    return baseAdjustment + levelFactor;
+  }, [currentLevel, isMobile]);
+
+  // Level-specific vertical adjustment for better centering
+  const levelVerticalAdjustment = useMemo(() => {
+    // Larger base adjustment to move content higher up
+    const baseAdjustment = isMobile ? 200 : 200;
+    
+    // Additional adjustments based on level
+    const levelFactor = currentLevel * (isMobile ? 10 : 12);
+    
+    return baseAdjustment + levelFactor;
+  }, [currentLevel, isMobile]);
 
   // Modify the calculateScale function
   const calculateScale = useCallback(() => {
-    const containerWidth = window.innerWidth;
-    const containerHeight = window.innerHeight;
+    const containerWidth = windowSize.width;
+    // Use full height but account for UI elements
+    const containerHeight = isMobile 
+      ? windowSize.height * 0.8  // More space for mobile UI
+      : windowSize.height * 0.9; // Slight reduction for desktop UI
+    
+    // Base dimensions of the isometric grid
     const baseWidth = (gridWidth + gridHeight) * (tileWidth / 2);
     const baseHeight = (gridWidth + gridHeight) * (tileHeight / 2);
 
+    // Calculate scale to fit container
     const scaleX = containerWidth / baseWidth;
     const scaleY = containerHeight / baseHeight;
 
+    // Use the smaller scale to ensure content fits
     let scale = Math.min(scaleX, scaleY);
-    const maxScale = 1.2;
-    scale = Math.min(scale, maxScale);
+    
+    // Scale limits based on device
+    const minScale = isMobile ? 0.4 : 0.5;
+    const maxScale = isMobile ? 0.7 : 1.0;
+    scale = Math.min(Math.max(scale, minScale), maxScale);
 
-    // Apply the zoom level scale
+    // Progressive scale reduction based on level - higher levels need more zoomed out view
+    // Starts at 1.0 for level 0 and reduces by 7% per level, with a minimum of 0.5
+    const levelScaleFactor = Math.max(0.5, 1.0 - (currentLevel * 0.07));
+    
+    // Apply level-specific scaling
+    scale *= levelScaleFactor;
+    
+    // Apply zoom level adjustment from predefined values
     scale *= zoomLevels[currentLevel].scale;
+    
+    // Apply user zoom factor
+    scale *= userZoom;
 
+    // Set the stage size to the full container
     setStageSize({
-      width: baseWidth * scale,
-      height: baseHeight * scale,
+      width: containerWidth,
+      height: containerHeight,
     });
 
-    return scale * 0.7;
-  }, [currentLevel]);
+    return scale;
+  }, [currentLevel, windowSize, isMobile, userZoom]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -454,58 +539,313 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
     onNewGame(populateRooms);
   }, [onNewGame, populateRooms]); // Remove populateRooms from dependencies
 
-  // Update the offset based on the current test level
-  const offset = useMemo(() => ({
-    x: ((gridWidth + gridHeight) * (tileWidth / 3) + zoomLevels[currentLevel].offsetX),
-    y: ((gridHeight * tileHeight) / 4 + zoomLevels[currentLevel].offsetY)
-  }), [currentLevel]);
+  // Update the offset based on the current test level and user pan
+  const offset = useMemo(() => {
+    // Base offset calculation
+    let baseOffsetX, baseOffsetY;
+    
+    // Different offset adjustments for mobile
+    if (isMobile) {
+      baseOffsetX = ((gridWidth + gridHeight) * (tileWidth / 3) + zoomLevels[currentLevel].offsetX) * 1.1;
+      baseOffsetY = ((gridHeight * tileHeight) / 4 + zoomLevels[currentLevel].offsetY) * 1.0; // Reduced multiplier
+      // Apply horizontal adjustment for centering the content
+      baseOffsetX += levelHorizontalAdjustment;
+      // Reduce Y offset to move content up
+      baseOffsetY -= 40;
+    } else {
+      // Desktop offset
+      baseOffsetX = ((gridWidth + gridHeight) * (tileWidth / 3) + zoomLevels[currentLevel].offsetX);
+      baseOffsetY = ((gridHeight * tileHeight) / 4 + zoomLevels[currentLevel].offsetY);
+      // Apply horizontal adjustment for centering the content
+      baseOffsetX += levelHorizontalAdjustment;
+      // Reduce Y offset to move content up
+      baseOffsetY -= 30;
+    }
+    
+    // Apply user pan offset - adjust pan sensitivity based on zoom level
+    // When zoomed in more, pan should move the view more to give a natural feeling
+    const panMultiplier = 1 / userZoom;
+    return {
+      x: baseOffsetX + (userPan.x * panMultiplier),
+      y: baseOffsetY + (userPan.y * panMultiplier)
+    };
+  }, [currentLevel, isMobile, userPan, userZoom, levelHorizontalAdjustment]);
+
+  // Update the Container position to use these adjustments
+  const containerPosition = useMemo(() => {
+    return {
+      x: (windowSize.width / 2) + (offset.x * scale),
+      y: (windowSize.height / 2) + (offset.y * scale) - levelVerticalAdjustment
+    };
+  }, [windowSize, offset, scale, levelVerticalAdjustment]);
+
+  // Add handlers for mouse and touch interactions
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging) return;
+    
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    
+    // Pan sensitivity - adjust as needed
+    const sensitivity = 1.0;
+    
+    setUserPan(prev => ({
+      x: prev.x + dx * sensitivity,
+      y: prev.y + dy * sensitivity
+    }));
+    
+    setDragStart({ x: e.clientX, y: e.clientY });
+  }, [isDragging, dragStart]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Handle mouse wheel for zooming
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    
+    // Zoom speed - adjust as needed
+    const zoomSpeed = 0.1;
+    
+    // Calculate new zoom - negative delta means zoom in
+    const zoomDelta = -Math.sign(e.deltaY) * zoomSpeed;
+    
+    // Limit zoom range
+    const minZoom = 0.5;
+    const maxZoom = 3.0;
+    
+    setUserZoom(prev => {
+      const newZoom = Math.max(minZoom, Math.min(maxZoom, prev + zoomDelta));
+      return newZoom;
+    });
+  }, []);
+
+  // Touch handlers for mobile
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Check if the target is an interactive Pixi.js element (like our room sprites)
+    const target = e.target as HTMLElement;
+    const isPixiInteractive = target.closest('canvas') && 
+      !target.closest('.drag-container'); // Assuming we'll add this class to the container div
+    
+    if (isPixiInteractive) {
+      // Let Pixi.js handle the event for interactive elements
+      return;
+    }
+    
+    if (e.touches.length === 1) {
+      // Single touch - for panning
+      setIsDragging(true);
+      setDragStart({ 
+        x: e.touches[0].clientX, 
+        y: e.touches[0].clientY 
+      });
+    } else if (e.touches.length === 2) {
+      // Double touch - for pinch zoom
+      setIsZooming(true);
+      
+      // Calculate initial distance between two touch points
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      lastTouchDistance.current = distance;
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 1 && isDragging) {
+      // Handle panning
+      const dx = e.touches[0].clientX - dragStart.x;
+      const dy = e.touches[0].clientY - dragStart.y;
+      
+      // Pan sensitivity - adjust as needed
+      const sensitivity = 1.0;
+      
+      setUserPan(prev => ({
+        x: prev.x + dx * sensitivity,
+        y: prev.y + dy * sensitivity
+      }));
+      
+      setDragStart({ 
+        x: e.touches[0].clientX, 
+        y: e.touches[0].clientY 
+      });
+    } else if (e.touches.length === 2 && isZooming && lastTouchDistance.current) {
+      // Handle pinch zoom
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      
+      // Calculate new distance
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      // Calculate zoom delta based on distance change
+      const zoomDelta = (distance - lastTouchDistance.current) * 0.01;
+      
+      // Limit zoom range
+      const minZoom = 0.5;
+      const maxZoom = 3.0;
+      
+      setUserZoom(prev => {
+        const newZoom = Math.max(minZoom, Math.min(maxZoom, prev + zoomDelta));
+        return newZoom;
+      });
+      
+      lastTouchDistance.current = distance;
+    }
+  }, [isDragging, isZooming, dragStart]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length < 1) {
+      setIsDragging(false);
+    }
+    
+    if (e.touches.length < 2) {
+      setIsZooming(false);
+      lastTouchDistance.current = null;
+    }
+  }, []);
 
   return (
     <div ref={ref} className="relative w-full h-full">
-      {/* Pixi.js stage container - Add pointer-events-none by default */}
-      <div className="absolute inset-0 z-20 flex justify-center items-center pointer-events-none">
-        <Stage
-          width={stageSize.width}
-          height={stageSize.height}
-          options={{ 
-            backgroundAlpha: 0,
-            eventMode: 'static'
-          }}
-          style={{
-            width: `${stageSize.width}px`,
-            height: `${stageSize.height}px`,
-            pointerEvents: 'auto'
+      {/* Pixi.js stage container - We need to make it have pointer events for pan/zoom */}
+      <div 
+        className={`absolute inset-0 z-20 flex justify-center items-center ${isMobile ? 'items-start pt-4' : ''}`}
+      >
+        <div
+          className="w-full h-full flex items-center justify-center drag-container"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onWheel={handleWheel}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ 
+            cursor: isDragging ? 'grabbing' : 'grab',
+            touchAction: 'none' // Prevent browser handling of touch events
           }}
         >
-          <Container position={[offset.x * scale, offset.y * scale]} scale={scale} sortableChildren>
-            <IsometricGrid />
-            {currentLevelConfig.rooms.map((img) => (
-              <RoomSprite 
-                key={img.id} 
-                img={img}
-                setFlashcardRoomId={setFlashcardRoomId}
-                activeRooms={activeRooms}
-                setActiveRooms={setActiveRooms}
-                isFlashcardsOpen={isFlashcardsOpen}
-                setIsFlashcardsOpen={setIsFlashcardsOpen}
-              />
-            ))}
-            {Object.values(spritePositions).map(sprite => (
-              <AnimatedSpriteWalking
-                key={sprite.id}
-                position={{ x: sprite.x, y: sprite.y }}
-                direction={sprite.direction}
-                scale={1} 
-              />
-            ))}
-          </Container>
-        </Stage>
+          <Stage
+            width={stageSize.width}
+            height={stageSize.height}
+            options={{ 
+              backgroundAlpha: 0,
+              eventMode: 'static',
+              eventFeatures: {
+                move: true,
+                globalMove: true,
+                click: true,
+                wheel: false // We handle wheel events at the container level
+              }
+            }}
+            style={{
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'auto',
+              objectFit: 'contain',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Container 
+              ref={containerRef}
+              position={containerPosition} 
+              scale={scale} 
+              sortableChildren
+            >
+              <IsometricGrid />
+              {currentLevelConfig.rooms.map((img) => (
+                <RoomSprite 
+                  key={img.id} 
+                  img={img}
+                  setFlashcardRoomId={setFlashcardRoomId}
+                  activeRooms={activeRooms}
+                  setActiveRooms={setActiveRooms}
+                  isFlashcardsOpen={isFlashcardsOpen}
+                  setIsFlashcardsOpen={setIsFlashcardsOpen}
+                />
+              ))}
+              {Object.values(spritePositions).map(sprite => (
+                <AnimatedSpriteWalking
+                  key={sprite.id}
+                  position={{ x: sprite.x, y: sprite.y }}
+                  direction={sprite.direction}
+                  scale={1} 
+                />
+              ))}
+            </Container>
+          </Stage>
+        </div>
       </div>
       
       {/* UI Elements */}
       <div className="absolute inset-0 z-30 pointer-events-none">
-        <div className="pointer-events-auto absolute bottom-2 left-2 text-xl font-bold text-[--theme-text-color]">
+        <div className={`pointer-events-auto absolute ${isMobile ? 'bottom-20' : 'bottom-6'} left-0 w-full text-center text-xl font-bold text-[--theme-text-color]`}>
           {userInfo?.firstName && `${userInfo.firstName} Medical Center`}
+        </div>
+        
+        {/* Zoom controls - moved to bottom right */}
+        <div className={`pointer-events-auto absolute ${isMobile ? 'bottom-28' : 'bottom-4'} ${isMobile ? 'right-4' : 'right-4'} flex ${isMobile ? 'flex-row' : 'flex-col'} gap-2`}>
+          <button 
+            onClick={() => {
+              const minZoom = 0.5;
+              const maxZoom = 3.0;
+              const zoomDelta = 0.2;
+              setUserZoom(prev => Math.min(maxZoom, prev + zoomDelta));
+            }}
+            className={`${isMobile ? 'bg-[--theme-gradient-startstreak] bg-opacity-50' : 'bg-[--theme-gradient-startstreak]'} rounded-full ${isMobile ? 'p-3' : 'p-2'} shadow-lg flex items-center justify-center text-white`}
+            aria-label="Zoom in"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width={isMobile ? "28" : "24"} height={isMobile ? "28" : "24"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+          </button>
+          <button 
+            onClick={() => {
+              const minZoom = 0.5;
+              const maxZoom = 3.0;
+              const zoomDelta = 0.2;
+              setUserZoom(prev => Math.max(minZoom, prev - zoomDelta));
+            }}
+            className={`${isMobile ? 'bg-[--theme-gradient-startstreak] bg-opacity-50' : 'bg-[--theme-gradient-startstreak]'} rounded-full ${isMobile ? 'p-3' : 'p-2'} shadow-lg flex items-center justify-center text-white`}
+            aria-label="Zoom out"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width={isMobile ? "28" : "24"} height={isMobile ? "28" : "24"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+          </button>
+          <button 
+            onClick={() => {
+              setUserZoom(1.0);
+              setUserPan({ x: 0, y: 0 });
+            }}
+            className={`${isMobile ? 'bg-[--theme-gradient-startstreak] bg-opacity-50' : 'bg-[--theme-gradient-startstreak]'} rounded-full ${isMobile ? 'p-3' : 'p-2'} shadow-lg flex items-center justify-center text-white`}
+            aria-label="Reset view"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width={isMobile ? "28" : "24"} height={isMobile ? "28" : "24"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+          </button>
         </div>
       </div>
     </div>

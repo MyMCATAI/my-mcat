@@ -24,6 +24,7 @@ import ChatBot from '@/components/chatbot/ChatBotFlashcard';
 import { cleanQuestion, cleanAnswer } from './utils/testUtils';
 import DownvoteFeedback from '@/components/DownvoteFeedback';
 import { useGame } from '@/store/selectors';
+import { useWindowSize } from '@/store/selectors';
 // import Interruption from './Interruption';
 
 interface WrongCard {
@@ -113,6 +114,11 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
 
   const [showChat, setShowChat] = useState(false);
 
+  // For mobile responsiveness
+  const windowSize = useWindowSize();
+  const isMobile = !windowSize.isDesktop;
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
   // Handle complete all room directly with the store
   const handleCompleteAllRoom = useCallback(() => {
     setCompleteAllRoom(true);
@@ -149,27 +155,14 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   };
 
   const handleOpenChange = (open: boolean) => {
-    console.log(`[FlashcardsDialog] handleOpenChange called with open=${open}`);
     setShowChat(false);
     
-    // If we're closing the dialog, ensure isLoading is false to allow audio transition
     if (!open && isLoading) {
-      console.log(`[FlashcardsDialog] Setting isLoading to false to ensure audio transition`);
       setIsLoading(false);
     }
     
-    // Make sure we're updating both the local component state and the global state
-    console.log(`[FlashcardsDialog] Calling onOpenChange(${open})`);
     onOpenChange(open);
     
-    // If we're closing the dialog, also reset the flashcardRoomId in the parent component
-    if (!open) {
-      console.log(`[FlashcardsDialog] Dialog is closing`);
-      // We don't need to do anything else here - the parent component will handle
-      // the audio transition when isFlashcardsOpen changes
-    } else {
-      console.log(`[FlashcardsDialog] Dialog is opening for roomId=${roomId}`);
-    }
   };
 
   const handleClose = useCallback(() => {
@@ -313,16 +306,28 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     }
   }));
 
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      handleClose();
+    }
+  };
+
   return (
     <>
       {buttonContent}
       <Dialog 
         open={isOpen} 
         onOpenChange={handleOpenChange}
+        modal
       >
-        <DialogContent className="max-w-[80vw] h-[80vh] gradientbg border text-[--theme-text-color] border-[--theme-border-color] flex flex-col z-[100] focus:outline-none">
-          <DialogHeader className="mb-2 flex-shrink-0 px-6">
-            <DialogTitle className="w-full text-[--theme-hover-text] text-center items-center justify-center rounded-md bg-[--theme-hover-color] p-2 flex">
+        <DialogContent 
+          className={`${
+            isMobile ? 'max-w-[98vw] h-[85vh] p-3 overflow-hidden' : 'max-w-[80vw] h-[80vh]'
+          } gradientbg border text-[--theme-text-color] border-[--theme-border-color] flex flex-col z-[100] focus:outline-none rounded-xl`}
+          onKeyDown={handleKeyDown}
+        >
+          <DialogHeader className={`mb-2 flex-shrink-0 ${isMobile ? 'px-2' : 'px-6'}`}>
+            <DialogTitle className="w-full text-[--theme-hover-text] text-center items-center justify-center rounded-lg bg-[--theme-hover-color] p-2 flex">
               <span className="flex-grow">
                 {Array.isArray(roomToSubjectMap[roomId]) 
                   ? roomToSubjectMap[roomId].length === 1
@@ -338,11 +343,11 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
           </DialogHeader>
           
           <div className="flex flex-grow min-h-0 relative flex-col">
-            <div className="flex flex-grow min-h-0 px-6 space-x-4">
+            <div className={`flex flex-grow min-h-0 ${isMobile ? 'px-2 flex-col' : 'px-6 flex-row'} space-x-4`}>
               {/* Flashcard Deck */}
-              <div className="w-2/3 bg-[--theme-leaguecard-color] p-2 rounded-md flex flex-col">
+              <div className={`${isMobile ? 'w-full' : 'w-2/3'} bg-[--theme-leaguecard-color] p-2 rounded-lg flex flex-col`}>
                 {/* Controls Section */}
-                <div className="flex justify-between items-center p-4 mb-4">
+                <div className={`flex justify-between items-center ${isMobile ? 'p-2 mb-2' : 'p-4 mb-4'}`}>
                   {/* Left side - Score and Encouragement */}
                   <div className="flex items-center space-x-4">
                     <div className="relative">
@@ -373,7 +378,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                   {/* Right side - Control Buttons */}
                   <div className="flex items-center space-x-2 ml-auto">
                     {/* Hint Button */}
-                    {currentQuestionContext && (
+                    {currentQuestionContext && !isMobile && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -392,7 +397,6 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                         </Tooltip>
                       </TooltipProvider>
                     )}
-
                     {/* Downvote Button */}
                     {currentQuestionContext && (
                       <TooltipProvider>
@@ -417,8 +421,8 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                 </div>
 
                 {/* Flashcard content */}
-                <div className="flex-grow overflow-y-auto">
-                  <div className="h-full w-full flex items-center justify-center min-h-[60vh]">
+                <div className={`flex-grow overflow-y-auto ${isMobile ? 'max-h-[62vh]' : 'min-h-[60vh]'}`}>
+                  <div className="h-full w-full flex items-center justify-center overflow-hidden">
                     <FlashcardDeck 
                       handleCompleteAllRoom={handleCompleteAllRoom}
                       roomId={roomId} 
@@ -440,11 +444,71 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                 </div>
               </div>
 
-              {/* Right Side - Toggleable Chat/Kitty Litter */}
-              <div className="w-1/3 bg-[--theme-leaguecard-color] p-3 rounded-md flex flex-col min-h-0 h-full">
+              {/* Mobile toggle button for Kitty Litter drawer */}
+              {isMobile && (
+                <button
+                  className="absolute bottom-4 right-4 z-40 bg-[--theme-gradient-startstreak] rounded-full p-3 shadow-lg flex items-center justify-center hover:bg-[--theme-hover-color] transition-colors text-[--theme-hover-text]"
+                  style={{
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                  }}
+                  onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+                  aria-label="Toggle Kitty Litter"
+                >
+                  <div className="relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 0 1 9-9" />
+                    </svg>
+                    {wrongCards.length > 0 && (
+                      <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {wrongCards.length}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              )}
+
+              {/* Right Side - Either fixed on desktop or drawer on mobile */}
+              <div 
+                className={`${
+                  isMobile 
+                    ? `fixed inset-x-0 bottom-0 top-auto z-50 transition-all duration-300 transform ${
+                        isDrawerOpen 
+                          ? 'translate-y-0 opacity-100' 
+                          : 'translate-y-full opacity-0 pointer-events-none'
+                      } rounded-t-2xl shadow-xl max-h-[80vh] overflow-hidden`
+                    : 'w-1/3'
+                } bg-[--theme-leaguecard-color] p-3 rounded-lg flex flex-col min-h-0 h-full border border-[--theme-border-color]`}
+                style={{
+                  // Ensure consistent theme styling
+                  backgroundColor: 'var(--theme-leaguecard-color)',
+                  boxShadow: isDrawerOpen ? '0 -4px 20px rgba(0,0,0,0.2)' : 'none'
+                }}
+              >
+                {/* Mobile drawer backdrop and close button */}
+                {isMobile && isDrawerOpen && (
+                  <>
+
+                    {/* Drag handle indicator */}
+                    <div className="flex justify-center items-center mb-2">
+                      <div className="w-12 h-1 bg-[--theme-border-color] rounded-full"></div>
+                    </div>
+                    
+                    <button
+                      className="absolute bottom-3 right-3 bg-[--theme-gradient-startstreak] hover:bg-[--theme-hover-color] rounded-full p-2 z-50 transition-colors text-[--theme-hover-text]"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </>
+                )}
+
+                {/* Original chat/kitty litter content */}
                 {showChat ? (
                   <div className="flex flex-col h-full overflow-hidden">
-                    <div className="flex justify-between items-center mb-2 flex-shrink-0 px-2">
+                    <div className="flex justify-between items-center mb-2 flex-shrink-0 px-6">
                       <h3 className="text-lg font-semibold">Kalypso</h3>
                       <Button
                         variant="ghost"
@@ -481,20 +545,36 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                   </div>
                 ) : (
                   <>
-                    <h3 className="text-lg font-semibold mb-2 flex-shrink-0">Kitty Litter</h3>
-                    <ScrollArea className="flex-grow">
+                    <div className={`flex justify-between items-center ${isMobile ? 'mb-2 mt-1 px-1' : 'mb-2'}`}>
+                      <h3 className="text-lg font-semibold text-[--theme-text-color]">Kitty Litter</h3>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleShowChat}
+                        className="text-[--theme-hover-text] hover:text-[--theme-hover-text] bg-[--theme-gradient-startstreak] hover:bg-[--theme-hover-color] border-[--theme-border-color] transition-colors rounded-lg"
+                      >
+                        Ask Kalypso
+                      </Button>
+                    </div>
+                    <ScrollArea className={`flex-grow ${isMobile ? 'max-h-[60vh]' : ''} pr-2`}>
                       <div className="space-y-4">
-                        {wrongCards.map((card, index) => (
-                          <animated.div 
-                            key={index} 
-                            style={index === 0 ? springs : undefined}
-                            className="p-4 border border-[--theme-border-color] rounded-md bg-[--theme-flashcard-color]"
-                          >
-                            <div className="text-sm text-[--theme-text-color] opacity-50 mb-2">{card.timestamp}</div>
-                            <div className="font-semibold mb-2 text-[--theme-text-color]">{card.question}</div>
-                            <div className="text-[--theme-hover-color] font-medium">{card.answer}</div>
-                          </animated.div>
-                        ))}
+                        {wrongCards.length > 0 ? (
+                          wrongCards.map((card, index) => (
+                            <animated.div 
+                              key={index} 
+                              style={index === 0 ? springs : undefined}
+                              className="p-4 border border-[--theme-border-color] rounded-lg bg-[--theme-flashcard-color] shadow-sm"
+                            >
+                              <div className="text-sm text-[--theme-text-color] opacity-50 mb-2">{card.timestamp}</div>
+                              <div className="font-semibold mb-2 text-[--theme-text-color]">{card.question}</div>
+                              <div className="text-[--theme-hover-color] font-medium">{card.answer}</div>
+                            </animated.div>
+                          ))
+                        ) : (
+                          <div className="text-center p-6 text-[--theme-text-color]/60 italic rounded-lg border border-dashed border-[--theme-border-color]">
+                            Questions you get wrong will appear here
+                          </div>
+                        )}
                       </div>
                     </ScrollArea>
                   </>

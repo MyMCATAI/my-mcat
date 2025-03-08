@@ -2,7 +2,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Check } from 'lucide-react';
+import { Check, ChevronRight } from 'lucide-react';
 import { useSpring, animated } from '@react-spring/web'
 import { useDrag } from '@use-gesture/react';
 import ContentRenderer from '@/components/ContentRenderer';
@@ -12,8 +12,9 @@ import { tutorialQuestions } from './constants/tutorialQuestions';
 import { roomToContentMap, roomToSubjectMap } from './constants';
 import { cleanQuestion, cleanAnswer } from './utils/testUtils';
 import { cn } from '@/lib/utils';
-import { useAudio } from '@/contexts/AudioContext';
+import { useAudio } from '@/store/selectors';
 import FlashcardSummary from './components/FlashcardSummary';
+import { useWindowSize } from '@/store/selectors';
 
 /* -------------------------------------------- Types --------------------------------------------- */
 export interface Flashcard {
@@ -103,12 +104,12 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [cardStartTime, setCardStartTime] = useState<number>(Date.now());
-  const [isRevealed, setIsRevealed] = useState(false);
+  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
   const [clickTimeout, setClickTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isDeckCompleted, setIsDeckCompleted] = useState(false);
   const [hasSeenAnswer, setHasSeenAnswer] = useState(false);
   const [answeredMCQ, setAnsweredMCQ] = useState(false);
-  const [shuffledOptions, setShuffledOptions] = useState<{ options: string[], correctIndex: number }>({ options: [], correctIndex: -1 });
+  const [shuffledOptions, setShuffledOptions] = useState<OptionsArray>([]);
   const [selectedOption, setSelectedOption] = useState<number>(-1);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [categoryStats, setCategoryStats] = useState<CategoryStats>({});
@@ -240,11 +241,11 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
   const toggleReveal = useCallback(() => {
     if (isMCQ) return;
     playSound('flashcard-spacebar-reveal');
-    const newRevealState = !isRevealed;
-    setIsRevealed(newRevealState);
+    const newRevealState = !isAnswerRevealed;
+    setIsAnswerRevealed(newRevealState);
     onAnswerReveal?.(newRevealState);
     setHasSeenAnswer(true);
-  }, [isMCQ, isRevealed, onAnswerReveal, playSound]);
+  }, [isMCQ, isAnswerRevealed, onAnswerReveal, playSound]);
 
 
 /* ------------------------------------ Animations Functions ------------------------------------ */
@@ -275,7 +276,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
       config: { duration: 200 },
       onRest: () => {
         setCurrentCardIndex(prevIndex => prevIndex + 1);
-        setIsRevealed(false);
+        setIsAnswerRevealed(false);
         setSelectedOption(-1);
         api.start({ 
           opacity: 1,
@@ -302,12 +303,29 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
     handleUserResponse,
     api,
     setCurrentCardIndex,
-    setIsRevealed,
+    setIsAnswerRevealed,
     setSelectedOption,
     setIsTransitioning
   ]);
 
-  
+  // Add button handlers for mobile
+  const handleCorrectButtonClick = useCallback(() => {
+    if (!isAnswerRevealed) return;
+    playSound('flashcard-spacebar-reveal');
+    handleSwipe('right');
+  }, [handleSwipe, isAnswerRevealed, playSound]);
+
+  const handleIncorrectButtonClick = useCallback(() => {
+    if (!isAnswerRevealed) return;
+    playSound('flashcard-spacebar-reveal');
+    handleSwipe('left');
+  }, [handleSwipe, isAnswerRevealed, playSound]);
+
+  const handleRevealButtonClick = useCallback(() => {
+    if (isAnswerRevealed) return;
+    toggleReveal();
+  }, [isAnswerRevealed, toggleReveal]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isTransitioning || isChatFocused) return;
@@ -416,7 +434,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
         flashcards[currentCardIndex]?.questionOptions?.length > 0) {
       setShuffledOptions(getShuffledOptions(flashcards[currentCardIndex].questionOptions));
     }
-    setIsRevealed(false);
+    setIsAnswerRevealed(false);
     setHasSeenAnswer(false);
     setSelectedOption(-1);
     setAnsweredMCQ(false);
@@ -491,13 +509,15 @@ const getQuestionContent = () => {
     });
   });
 
-  const getShuffledOptions = (options: string[]) => {
+  const getShuffledOptions = (options: string[]): OptionsArray => {
     const shuffledOptions = shuffleArray([...options]);
     const correctAnswer = options[0];
-    return {
-      options: shuffledOptions,
-      correctIndex: shuffledOptions.indexOf(correctAnswer)
-    };
+    const correctIndex = shuffledOptions.indexOf(correctAnswer);
+    
+    // Add correctIndex property to the array
+    shuffledOptions.correctIndex = correctIndex;
+    
+    return shuffledOptions;
   };
 
   const handleOptionClick = useCallback((index: number, e: React.MouseEvent) => {
@@ -506,7 +526,7 @@ const getQuestionContent = () => {
     
     e.stopPropagation();
     setSelectedOption(index);
-    setIsRevealed(true);
+    setIsAnswerRevealed(true);
     setHasSeenAnswer(true);
     setAnsweredMCQ(true);
     onAnswerReveal?.(true);
@@ -602,6 +622,10 @@ const getQuestionContent = () => {
   };
 
 /* ----------------------------------------- Render -------------------------------------------- */
+  // Use useWindowSize hook to detect mobile
+  const windowSize = useWindowSize();
+  const isMobile = !windowSize.isDesktop;
+
   return (
     <div className="flex flex-col items-center justify-center w-full h-full relative focus-visible:outline-none">
       {isLoading && flashcards.length === 0 ? (
@@ -615,7 +639,7 @@ const getQuestionContent = () => {
           onClose={onClose}
         />
       ) : (
-        <div className="w-full max-w-3xl px-4 min-h-full" {...bind()}>
+        <div className="w-full max-w-3xl px-4 min-h-full overflow-y-auto" {...bind()}>
           {flashcards.length - currentCardIndex > 0 && (
             <animated.div
               className={cn("w-full", isMCQ && "cursor-pointer")}
@@ -634,7 +658,7 @@ const getQuestionContent = () => {
                     {/* MCQ Options */}
                     {isMCQ && flashcards[currentCardIndex]?.questionOptions?.length > 0 && (
                       <div className="w-full mt-4 space-y-2">
-                        {shuffledOptions.options.map((option: string, index: number) => (
+                        {shuffledOptions.map((option: string, index: number) => (
                           <button 
                             key={index}
                             onClick={(e) => handleOptionClick(index, e)}
@@ -642,9 +666,9 @@ const getQuestionContent = () => {
                             className={`w-full p-3 rounded-lg border transition-colors focus:outline-none
                               ${answeredMCQ ? 'cursor-default' : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]'} 
                               ${
-                                isRevealed && index === shuffledOptions.correctIndex
+                                isAnswerRevealed && index === shuffledOptions.correctIndex
                                   ? 'border-green-500 bg-green-500 text-white'
-                                  : isRevealed && index === selectedOption && index !== shuffledOptions.correctIndex
+                                  : isAnswerRevealed && index === selectedOption && index !== shuffledOptions.correctIndex
                                   ? 'border-red-500 bg-red-500 text-white'
                                   : 'border-[--theme-border-color]'
                               }
@@ -655,13 +679,19 @@ const getQuestionContent = () => {
                               <ContentRenderer 
                                 content={option}
                                 className={`${
-                                  isRevealed && (
+                                  isAnswerRevealed && (
                                     index === shuffledOptions.correctIndex || 
                                     (index === selectedOption && index !== shuffledOptions.correctIndex)
                                   ) ? 'text-white' : ''
                                 }`}
                               />
                             </div>
+                            {/* Check mark for correct answer when revealed */}
+                            {isAnswerRevealed && index === shuffledOptions.correctIndex && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <Check className="h-5 w-5 text-white" />
+                              </div>
+                            )}
                           </button>
                         ))}
                       </div>
@@ -670,9 +700,9 @@ const getQuestionContent = () => {
                 </div>
 
                 {/* Answer Section */}
-                <div className={`w-full transition-opacity duration-300 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
+                <div className={`w-full transition-opacity duration-300 ${isAnswerRevealed ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="w-full overflow-y-auto flex flex-col justify-center items-center">
-                    {isRevealed && (
+                    {isAnswerRevealed && (
                       <>
                         {/* Only show "Answer:" header for non-MCQ questions */}
                         {flashcards[currentCardIndex]?.questionType !== 'normal' && (
@@ -715,13 +745,27 @@ const getQuestionContent = () => {
                                 }
                               })()}
                             </p>
-                            {/* Show controls after answering MCQ */}
+                            {/* Additional keyboard navigation hint */}
                             {answeredMCQ && (
                               <div className="text-center my-7 text-sm text-gray-400">
-                                <div className="flex items-center justify-center gap-2">
-                                  <span className="px-2 py-1 bg-gray-100 border border-gray-200 rounded text-gray-600 font-normal">any key</span>
-                                  <span>to continue</span>
-                                </div>
+                                {isMobile ? (
+                                  /* Mobile: Show Next button */
+                                  <button 
+                                    onClick={() => {
+                                      if (selectedOption === shuffledOptions.correctIndex) {
+                                        handleSwipe('right');
+                                      } else {
+                                        handleSwipe('left');
+                                      }
+                                    }}
+                                    className="px-4 py-2 bg-[--theme-gradient-startstreak] hover:bg-[--theme-hover-color] text-[--theme-hover-text] rounded-md shadow-sm flex items-center justify-center gap-2 mx-auto"
+                                  >
+                                    Next <ChevronRight className="w-4 h-4" />
+                                  </button>
+                                ) : (
+                                  /* Desktop: Show keyboard hint */
+                                  <span>Press any key to continue</span>
+                                )}
                               </div>
                             )}
                           </div>
@@ -754,23 +798,65 @@ const getQuestionContent = () => {
 
                 {/* Flashcard controls */}
                 {flashcards[currentCardIndex]?.questionType === 'flashcard' && (
-                  <div className="w-full text-center mt-7 text-sm text-gray-400">
-                    {!isRevealed ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <kbd className="px-2 py-1 bg-gray-100 rounded text-gray-600">Space</kbd>
-                        <span>to reveal answer</span>
-                      </div>
+                  <div className="w-full text-center mt-7 text-sm">
+                    {!isAnswerRevealed ? (
+                      <>
+                        {/* Desktop keyboard instructions */}
+                        <div className="hidden md:flex items-center justify-center gap-2 text-gray-400">
+                          <kbd className="px-2 py-1 bg-gray-100 rounded text-gray-600">Space</kbd>
+                          <span>to reveal answer</span>
+                        </div>
+                        
+                        {/* Mobile reveal button */}
+                        <div className="flex md:hidden items-center justify-center">
+                          <button
+                            onClick={handleRevealButtonClick}
+                            className="px-6 py-3 bg-blue-500 text-white rounded-lg font-medium shadow-sm hover:bg-blue-600 transition-colors"
+                          >
+                            Reveal Answer
+                          </button>
+                        </div>
+                      </>
                     ) : (
-                      <div className="flex items-center justify-center gap-5">
-                        <div className="flex items-center gap-2">
-                          <kbd className="px-2 py-1 bg-gray-100 rounded text-gray-600">←</kbd>
-                          <span>to mark flashcard as missed</span>
+                      <>
+                        {/* Desktop keyboard instructions */}
+                        <div className="hidden md:flex items-center justify-center gap-5 text-gray-400">
+                          <div className="flex items-center gap-2">
+                            <kbd className="px-2 py-1 bg-gray-100 rounded text-gray-600">←</kbd>
+                            <span>to mark flashcard as missed</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <kbd className="px-2 py-1 bg-gray-100 rounded text-gray-600">→</kbd>
+                            <span>to mark flashcard as correct</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <kbd className="px-2 py-1 bg-gray-100 rounded text-gray-600">→</kbd>
-                          <span>to mark flashcard as correct</span>
+                        
+                        {/* Mobile swipe indicators */}
+                        <div className="md:hidden flex flex-col items-center">
+                          <div className="text-xs text-gray-400 mb-2">Swipe or use buttons below</div>
+                          <div className="flex items-center justify-between gap-3 w-full px-4">
+                            <button
+                              onClick={handleIncorrectButtonClick}
+                              className="flex items-center justify-center gap-2 px-4 py-3 bg-red-100 text-red-600 rounded-lg font-medium w-1/2 hover:bg-red-200 transition-colors"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                              </svg>
+                              <span>Missed</span>
+                            </button>
+                            <button
+                              onClick={handleCorrectButtonClick}
+                              className="flex items-center justify-center gap-2 px-4 py-3 bg-green-100 text-green-600 rounded-lg font-medium w-1/2 hover:bg-green-200 transition-colors"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                              <span>Correct</span>
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      </>
                     )}
                   </div>
                 )}

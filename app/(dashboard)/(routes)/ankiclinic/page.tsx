@@ -21,6 +21,8 @@ import type { UserResponseWithCategory } from "@/types";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
 import { getAccentColor, getWelcomeMessage, getSuccessMessage } from './utils';
 import { useGame } from "@/store/selectors";
+import { useWindowSize } from "@/store/selectors";
+import ClinicHeader from "./components/ClinicHeader";
 
 // Dynamically import components with SSR disabled
 const ResourcesMenu = dynamic(() => import('./ResourcesMenu'), {
@@ -49,10 +51,6 @@ const FlashcardsDialog = dynamic(() => import('./FlashcardsDialog'), {
 });
 
 const AfterTestFeed = dynamic(() => import('./AfterTestFeed'), {
-  ssr: false
-});
-
-const TutorialVidDialog = dynamic(() => import('@/components/ui/TutorialVidDialog'), {
   ssr: false
 });
 
@@ -102,9 +100,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     setWrongCards: (cards: any[]) => void, 
     setCorrectCount: (count: number) => void 
   } | null>(null);
-  const marketplaceDialogRef = useRef<{
-    open: () => void
-  }>(null);
   const afterTestFeedRef = useRef<{ setWrongCards: (cards: any[]) => void } | null>(null);
   const isClosingDialogRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -118,6 +113,10 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const audio = useAudio();
   const { startActivity } = useUserActivity();
   const router = useRouter();
+  const windowSize = useWindowSize();
+  
+  // Detect if we're on mobile
+  const isMobile = !windowSize.isDesktop;
   
   // Get the game state and actions from Zustand
   const { 
@@ -135,19 +134,17 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const [showWelcomeDialogue, setShowWelcomeDialogue] = useState(false);
   const [isAfterTestDialogOpen, setIsAfterTestDialogOpen] = useState(false);
   const [largeDialogQuit, setLargeDialogQuit] = useState(false);
-  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
-  const [isFlashcardsTooltipOpen, setIsFlashcardsTooltipOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [totalMCQQuestions, setTotalMCQQuestions] = useState(0);
   const [correctMCQQuestions, setCorrectMCQQuestions] = useState(0);
   const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
   const [clinicCostPerDay, setClinicCostPerDay] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [populateRoomsFn, setPopulateRoomsFn] = useState<(() => GridImage[]) | null>(null);
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   /* ----------------------------------------- Computation ----------------------------------------- */
 
@@ -644,7 +641,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         });
         // Refetch user data after successful purchase
         await fetchData();
-        setIsMarketplaceOpen(false);
 
         toast.success(`Added ${groupName} to your clinic!`);
       } catch (error) {
@@ -875,10 +871,26 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     return <LoadingClinic />;
   }
 
+  // Add a toggle button component for the sidebar
+  const SidebarToggleButton = ({ onClick }: { onClick: () => void }) => (
+    <button 
+      onClick={onClick}
+      className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center"
+      aria-label="Toggle resources menu"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+        <path d="M2 17l10 5 10-5" />
+        <path d="M2 12l10 5 10-5" />
+      </svg>
+    </button>
+  );
+
   // Rest of the component remains the same
   return (
-    <div className="fixed inset-x-0 bottom-0 top-[4rem] flex bg-transparent text-[--theme-text-color] p-4">
+    <div className={`absolute inset-0 flex bg-transparent text-[--theme-text-color] ${isMobile ? 'p-0' : 'p-4'}`}>
       <Toaster position="top-center" />
+      
       {showWelcomeDialogue && 
         <WelcomeDialog 
           isOpen={showWelcomeDialogue}
@@ -890,196 +902,128 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />
         </div>
       }>
-        <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
-          {/* Give ResourcesMenu a higher z-index */}
-          <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-30">
-            <ResourcesMenu
-              reportData={reportData}
-            />
-          </div>
-          
-          {/* Keep OfficeContainer at a lower z-index */}
-          <div className="w-3/4 font-krungthep relative z-20 rounded-r-lg">
-            <OfficeContainer
-              ref={officeContainerRef}
-              onNewGame={handleSetPopulateRooms}
-              visibleImages={visibleImages}
-              imageGroups={imageGroups}
-              updateVisibleImages={updateVisibleImages}
-            />
-            {/* Button on the top left corner */}
-            <div className="absolute top-4 left-4 flex gap-2 z-50">
-              <NewGameButton
-                onGameStart={handleGameStart}
-              />
-            </div>
-            {/* Fellowship Level button with coins and patients */}
-            <div className="absolute top-4 right-4 z-50 flex items-center">
-              {/* Patient count */}
-              <div className="group relative flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
-                <Image
-                  src="/game-components/patient.png"
-                  alt="Patient"
-                  width={32}
-                  height={32}
-                  className="mr-2"
+        <div className={`flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] ${isMobile ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
+          {/* Mobile layout: completely separate components for sidebar and main content */}
+          {isMobile ? (
+            <>
+              {/* Main content container - full width on mobile */}
+              <div className="w-full h-full relative">
+                <OfficeContainer
+                  ref={officeContainerRef}
+                  onNewGame={handleSetPopulateRooms}
+                  visibleImages={visibleImages}
+                  imageGroups={imageGroups}
+                  updateVisibleImages={updateVisibleImages}
                 />
-                <div className="flex flex-col">
-                  <span className="text-[--theme-hover-color] font-bold text-lg">{totalPatients}</span>
-                </div>
-                {/* Tooltip */}
-                <div className="absolute top-full left-0 mt-2 w-64 bg-[--theme-leaguecard-color] text-[--theme-text-color] text-sm rounded-lg p-3 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 border border-[--theme-border-color]">
-                  <p className="mb-2">Total patients treated: {totalPatients}</p>
-                  <p className="mb-2">You treat <span className="text-[--theme-hover-color]">{patientsPerDay} patients per day</span> at your current level.</p>
-                  <p>Higher clinic levels allow you to treat more patients daily, which affects your total score.</p>
-                  <ul className="text-xs mt-1 space-y-1">
-                    <li>• INTERN: 4/day</li>
-                    <li>• RESIDENT: 8/day</li>
-                    <li>• FELLOWSHIP: 10/day</li>
-                    <li>• ATTENDING: 16/day</li>
-                    <li>• PHYSICIAN: 24/day</li>
-                    <li>• MEDICAL DIRECTOR: 30/day</li>
-                  </ul>
-                </div>
               </div>
-              {/* Coins display */}
-              <div className="flex items-center bg-opacity-75 bg-gray-800 rounded-lg p-2 mr-2">
-                <PurchaseButton 
-                  className="flex items-center hover:opacity-90 transition-opacity"
-                  tooltipText="Click to purchase more coins"
-                  userCoinCount={userInfo?.score}
+              
+              {/* Mobile sidebar - completely separate from main content flow */}
+              <div 
+                className={`fixed inset-0 z-50 transition-all duration-300 ${
+                  isSidebarOpen 
+                    ? 'opacity-100 pointer-events-auto' 
+                    : 'opacity-0 pointer-events-none'
+                }`}
+              >
+                <div className="bg-black/70 fixed inset-0" onClick={() => setIsSidebarOpen(false)}></div>
+                <div className={`fixed inset-x-0 bottom-0 top-auto z-50 bg-[--theme-gradient-startstreak] rounded-t-2xl p-4 max-h-[80vh] overflow-auto transition-transform duration-300 transform ${
+                  isSidebarOpen ? 'translate-y-0' : 'translate-y-full'
+                }`}
+                style={{ 
+                  boxShadow: '0 -4px 20px rgba(0,0,0,0.25)',
+                }}
                 >
-                  <div className="flex items-center">
-                    <Image
-                      src="/game-components/PixelCupcake.png"
-                      alt="Studycoin"
-                      width={32}
-                      height={32}
-                      className="mr-2"
-                    />
-                    <span className="text-[--theme-hover-color] font-bold">{userInfo?.score}</span>
-                  </div>
-                </PurchaseButton>
-              </div>
-              {/* Fellowship Level button with dropdown */}
-              <div className="relative group">
-                <button className={`flex items-center justify-center px-6 py-3 
-                  ${(!userLevel || userLevel === "PATIENT LEVEL") 
-                    ? "bg-green-500 animate-pulse" 
-                    : "bg-[--theme-doctorsoffice-accent]"
-                  }
-                  border-[--theme-border-color] 
-                  text-[--theme-text-color] 
-                  hover:text-[--theme-hover-text] 
-                  hover:bg-[--theme-hover-color] 
-                  transition-colors text-3xl font-bold uppercase 
-                  group-hover:text-[--theme-hover-text] 
-                  group-hover:bg-[--theme-hover-color]`}>
-                  <span>{userLevel || "PATIENT LEVEL"}</span>
-                </button>
-                <div className="absolute right-0 w-full shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out"> 
-                  <div className="flex flex-col">
-                    <a
-                      href="#"
-                      className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setIsMarketplaceOpen(!isMarketplaceOpen);
-                      }}
-                    >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 mr-2"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                            />
-                          </svg>
-                          Marketplace
-                        </a>
-                  </div>
-
-                  <div className="flex flex-col">
-                  {isMarketplaceOpen && (
-                    <ShoppingDialog
-                      ref={marketplaceDialogRef}
-                      imageGroups={imageGroups}
-                      visibleImages={visibleImages}
-                      toggleGroup={toggleGroup}
-                      userScore={userInfo?.score || 0}
-                      isOpen={isMarketplaceOpen}
-                      onOpenChange={setIsMarketplaceOpen}
-                    />
-                  )}
-                  </div>
-                  <div className="flex flex-col">
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setIsFlashcardsTooltipOpen(!isFlashcardsTooltipOpen);
-                    }}
-                    onMouseLeave={() => setIsFlashcardsTooltipOpen(false)}
-                    className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
+                  {/* Pill handle for UI feedback */}
+                  <div className="w-12 h-1.5 bg-gray-300/30 rounded-full mx-auto mb-6"></div>
+                  
+                  <button 
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="absolute top-4 right-4 z-50 bg-black/20 hover:bg-black/30 rounded-full p-2 transition-colors"
+                    aria-label="Close sidebar"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
-                      />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
-                    Flashcards
                   </button>
-                  </div>
-
-                  <div className="flex flex-col">
-                    {isFlashcardsTooltipOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-64 bg-[--theme-leaguecard-color] text-[--theme-text-color] text-sm rounded-lg p-3 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50 border border-[--theme-border-color]">
-                        <p className="mb-2">Coming soon!</p>
-                      </div>
-                    )}
-                  </div>
-                  <a
-                    href="#"
+                  
+                  <ResourcesMenu
+                    reportData={reportData}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Desktop layout: side-by-side components */}
+              <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] relative z-50">
+                <ResourcesMenu
+                  reportData={reportData}
+                />
+              </div>
+              
+              <div className="w-3/4 font-krungthep relative z-20 rounded-r-lg">
+                <OfficeContainer
+                  ref={officeContainerRef}
+                  onNewGame={handleSetPopulateRooms}
+                  visibleImages={visibleImages}
+                  imageGroups={imageGroups}
+                  updateVisibleImages={updateVisibleImages}
+                />
+              </div>
+            </>
+          )}
+          
+          {/* Reposition buttons based on device type */}
+          {isMobile && (
+            <>
+              {/* Mobile buttons wrapper - fixed at bottom */}
+              <div className="fixed bottom-0 left-0 right-0 flex justify-between items-center p-4 z-50 bg-black/30 backdrop-blur-sm">
+                {/* Left side - Tutorial button */}
+                <div>
+                  <a 
+                    href="/ankiclinic-tutorial" 
+                    className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center"
                     onClick={(e) => {
                       e.preventDefault();
-                      setIsTutorialOpen(true);
+                      // This functionality is now handled in the ClinicHeader component
+                      const headerButton = document.querySelector('.clinic-header-tutorial-trigger');
+                      if (headerButton) {
+                        (headerButton as HTMLElement).click();
+                      }
                     }}
-                    className="w-full px-6 py-3 text-sm text-gray-700 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors duration-150"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                      />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
-                    Tutorial
                   </a>
                 </div>
+                
+                {/* Center - New Game button */}
+                <div>
+                  <NewGameButton
+                    onGameStart={handleGameStart}
+                  />
+                </div>
+                
+                {/* Right side - Sidebar toggle */}
+                <div>
+                  <SidebarToggleButton onClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+                </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
+          
+          {/* Fellowship Level button with coins and patients - always at top */}
+          <ClinicHeader
+            totalPatients={totalPatients}
+            patientsPerDay={patientsPerDay}
+            userInfo={userInfo}
+            userLevel={userLevel}
+            imageGroups={imageGroups}
+            visibleImages={visibleImages}
+            toggleGroup={toggleGroup}
+          />
         </div>
       </Suspense>
 
@@ -1096,28 +1040,24 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         setLargeDialogQuit={setLargeDialogQuit}
       />}
       
-      <div className="absolute bottom-4 right-4 z-[100]">
-        <FloatingButton
-          currentPage="ankiclinic"
-          initialTab={activeTab}
-          activities={activities}
-          onTasksUpdate={fetchActivities}
-          isSubscribed={isSubscribed}
-          onTabChange={handleTabChange}
-        />
-      </div>
+      {/* Hide floating button on mobile */}
+      {!isMobile && (
+        <div className="absolute bottom-4 right-4 z-[100]">
+          <FloatingButton
+            currentPage="ankiclinic"
+            initialTab={activeTab}
+            activities={activities}
+            onTasksUpdate={fetchActivities}
+            isSubscribed={isSubscribed}
+            onTabChange={handleTabChange}
+          />
+        </div>
+      )}
       
-      <TutorialVidDialog
-        isOpen={isTutorialOpen}
-        onClose={() => setIsTutorialOpen(false)}
-        videoUrl="https://my-mcat.s3.us-east-2.amazonaws.com/tutorial/TutorialAnkiClinic.mp4"
-      />
-
       <RedeemReferralModal 
         isOpen={showReferralModal}
         onClose={() => setShowReferralModal(false)}
       />
-
 
       {isFlashcardsOpen && <FlashcardsDialog 
         ref={flashcardsDialogRef}
@@ -1130,6 +1070,38 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         setTotalMCQQuestions={setTotalMCQQuestions}
         buttonContent={<div />}
       />}
+
+      {/* Desktop only - Tutorial button */}
+      {!isMobile && (
+        <div className="absolute bottom-4 left-[calc(25%+16px)] z-50">
+          <a 
+            href="/ankiclinic-tutorial" 
+            className="text-sm text-white font-bold flex items-center p-2 bg-[--theme-gradient-startstreak] rounded-lg"
+            onClick={(e) => {
+              e.preventDefault();
+              // This functionality is now handled in the ClinicHeader component
+              const headerButton = document.querySelector('.clinic-header-tutorial-trigger');
+              if (headerButton) {
+                (headerButton as HTMLElement).click();
+              }
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            Tutorial
+          </a>
+        </div>
+      )}
+
+      {/* Desktop only - New Game button */}
+      {!isMobile && (
+        <div className="absolute top-6 left-4 ml-[calc(25%+16px)] flex gap-2 z-50">
+          <NewGameButton
+            onGameStart={handleGameStart}
+          />
+        </div>
+      )}
     </div>
   );
 };
