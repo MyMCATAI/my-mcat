@@ -556,7 +556,7 @@ const HomePage: React.FC = () => {
                   userInfo={userInfo}
                 />
               )}
-              {pageState.activeTab === 'AdaptiveTutoring' && (
+              {pageState.activeTab === 'AdaptiveTutoringSuite' && (
                 <div className="h-full overflow-hidden">
                   <MemoizedAdaptiveTutoring 
                     toggleChatBot={toggleChatBot}
