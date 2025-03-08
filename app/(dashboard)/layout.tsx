@@ -85,11 +85,11 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
 
   return ( 
     <div 
-      className="flex flex-col min-h-screen bg-cover bg-center bg-no-repeat" 
+      className="flex flex-col min-h-screen h-[100dvh] bg-cover bg-center bg-no-repeat overflow-hidden" 
       style={{ backgroundImage }}
     >
       <Navbar subscription={subscription}/>
-      <main className="w-full pb-10">
+      <main className="w-full flex-grow relative overflow-hidden">
         {children}
       </main>
     </div>

@@ -2,12 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import Typewriter from "typewriter-effect";
 import Image from 'next/image';
+import Link from 'next/link';
 
 const RedirectPage = () => {
   const [showGif, setShowGif] = useState(false);
   const [showIntroText, setShowIntroText] = useState(true);
   const [showSignInMessage, setShowSignInMessage] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [showButton, setShowButton] = useState(false);
 
   useEffect(() => {
     const gifTimer = setTimeout(() => setShowGif(true), 2400);
@@ -19,11 +21,15 @@ const RedirectPage = () => {
     const showVideoTimer = setTimeout(() => {
       setShowVideo(true);
     }, 9000);
+    const showButtonTimer = setTimeout(() => {
+      setShowButton(true);
+    }, 11000);
 
     return () => {
       clearTimeout(gifTimer);
       clearTimeout(hideGifTimer);
       clearTimeout(showVideoTimer);
+      clearTimeout(showButtonTimer);
     };
   }, []);
 
@@ -67,7 +73,7 @@ const RedirectPage = () => {
                 <Typewriter
                   onInit={(typewriter) => {
                     typewriter
-                      .typeString('But please use a computer to access myMCAT.ai (so I can sit on your keyboard!)')
+                      .typeString('Great news! You can now access myMCAT.ai on mobile devices too!')
                       .start();
                   }}
                   options={{
@@ -82,7 +88,7 @@ const RedirectPage = () => {
           {showVideo && (
             <div className="w-full max-w-2xl animate-fadeIn">
               <p className="text-white text-center mb-4 text-lg">
-                Here&apos;s what you&apos;re missing out on:
+                Check out what we have for you:
               </p>
               <div className="relative rounded-lg overflow-hidden shadow-2xl">
                 <video
@@ -97,8 +103,18 @@ const RedirectPage = () => {
                 </video>
               </div>
               <p className="text-zinc-400 text-center mt-4 text-sm italic">
-                P.S. Our dev team is working on mobile support (they&apos;ll ship it as soon as they find out where I put their phones) 🐱✨
+                P.S. Our mobile support is now live! Kalypso has finally returned our phones 🐱✨
               </p>
+            </div>
+          )}
+          
+          {showButton && (
+            <div className="animate-fadeIn mt-4">
+              <Link href="/ankiclinic">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg">
+                  Continue to your personal AnkiClinic
+                </button>
+              </Link>
             </div>
           )}
         </div>
