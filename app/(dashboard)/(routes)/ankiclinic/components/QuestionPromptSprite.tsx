@@ -72,10 +72,18 @@ const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({
 
   const handleClick = useCallback(() => {
     // Add your click handler logic here
+    console.log('QuestionPromptSprite clicked or tapped');
     if (onClick) {
         onClick(); // Call the onClick prop to extend functionality
     }
+  }, [onClick]);
 
+  // Add a specific mobile tap handler with a small touch area tolerance
+  const handleTap = useCallback(() => {
+    console.log('QuestionPromptSprite tapped on mobile');
+    if (onClick) {
+        onClick();
+    }
   }, [onClick]);
 
   const glowFilter = new GlowFilter({
@@ -95,14 +103,14 @@ const QuestionPromptSprite: React.FC<QuestionPromptSpriteProps> = ({
       y={y}
       zIndex={zIndex}
       scale={scale}
-      interactive={true}
-      pointerover={handlePointerOver}
-      pointerout={handlePointerOut}
-      click={handleClick}
+      eventMode='static'
+      onpointerover={handlePointerOver}
+      onpointerout={handlePointerOut}
+      onpointerdown={handleClick}
+      ontap={handleTap}
       cursor="pointer"
-      // Apply the glow filter here
       filters={[glowFilter]}
-      anchor={0.5} // Center the sprite for better scaling
+      anchor={0.5}
     />
   );
 };
