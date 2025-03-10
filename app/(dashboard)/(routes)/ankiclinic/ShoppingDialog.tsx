@@ -12,6 +12,7 @@ import { toast } from 'react-hot-toast';
 import { useUser } from "@clerk/nextjs";
 import { Mail } from 'lucide-react';
 import ThemeSwitcher from '@/components/home/ThemeSwitcher';
+import { useWindowSize } from "@/store/selectors";
 
 interface ImageItem {
   id: string;
@@ -45,6 +46,8 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
   onOpenChange
 }, ref) => {
   const { user } = useUser();
+  const windowSize = useWindowSize();
+  const isMobile = !windowSize.isDesktop;
 
   const [hoveredLevel, setHoveredLevel] = useState<number | null>(null);
   const [showMessageForm, setShowMessageForm] = useState(false);
@@ -125,9 +128,9 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
       <DialogTrigger asChild>
         {buttonContent}
       </DialogTrigger>
-      <DialogContent className="max-w-[80vw] h-[80vh] bg-[--theme-doctorsoffice-accent] border text-[--theme-text-color] border-[--theme-border-color] flex flex-col">
-        <DialogHeader className="mb-2">
-          <DialogTitle className="text-[--theme-hover-text] text-center items-center justify-center rounded-md bg-[--theme-hover-color] p-2 flex">
+      <DialogContent className={`${isMobile ? 'max-w-[98vw] h-[90vh] p-3' : 'max-w-[80vw] h-[80vh]'} bg-[--theme-doctorsoffice-accent] border text-[--theme-text-color] border-[--theme-border-color] flex flex-col rounded-xl`}>
+        <DialogHeader className={`mb-2 ${isMobile ? 'px-1' : ''}`}>
+          <DialogTitle className="text-[--theme-hover-text] text-center items-center justify-center rounded-lg bg-[--theme-hover-color] p-2 flex">
             <div className="flex items-center mr-4">
               <Image
                 src="/game-components/PixelCupcake.png"
@@ -141,11 +144,13 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
             <span className="flex-grow">Marketplace</span>
           </DialogTitle>
         </DialogHeader>
-        <div className="flex-grow flex">
-          <div className="w-2/3 pr-2">
-            <ScrollArea className="h-[calc(80vh-120px)] overflow-visible">
+        
+        <div className={`flex-grow ${isMobile ? 'flex flex-col gap-2' : 'flex'}`}>
+          {/* Card section */}
+          <div className={`${isMobile ? 'w-full pb-1' : 'w-2/3 pr-2'}`}>
+            <ScrollArea className={`${isMobile ? 'h-[40vh]' : 'h-[calc(80vh-120px)]'} overflow-visible`}>
               <div className="pr-4 pb-4 themed-scrollbar">
-                <div className="grid grid-cols-2 gap-2 p-1">
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-2'} p-1`}>
                   {levelInfo.map(({ level, title, image, cost }, index) => {
                     const group = imageGroups.find(g => g.cost === cost);
                     const isPurchased = group ? group.items.every((item) => visibleImages.has(item.id)) : false;
@@ -160,11 +165,11 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
                         onClick={() => isAvailable && handleLevelClick(level)}
                         onMouseEnter={() => setHoveredLevel(level)}
                         onMouseLeave={() => setHoveredLevel(null)}
-                        className={`relative cursor-pointer transition-all duration-200 aspect-[4/3] group w-full ${!isAvailable && 'opacity-50 cursor-not-allowed'}`}
+                        className={`relative cursor-pointer transition-all duration-200 ${isMobile ? 'aspect-[5/2]' : 'aspect-[4/3]'} group w-full ${!isAvailable && 'opacity-50 cursor-not-allowed'}`}
                       >
                         <div className={`absolute inset-0 transition-all duration-200 
                           ${isPurchased ? 'opacity-100' : 'opacity-100'}
-                          border border-[--theme-border-color] rounded-md overflow-hidden
+                          border border-[--theme-border-color] rounded-lg overflow-hidden
                           ${hoveredLevel === level ? 'bg-[--theme-hover-color]' : 'bg-[--theme-leaguecard-color]'}`}>
                           <div className="absolute top-0 left-0 right-0 bg-black bg-opacity-50 p-1 text-white flex justify-between items-center z-10">
                             <div>
@@ -186,7 +191,7 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
                             <div className="absolute inset-0 flex items-center justify-center p-4">
                               <ul className="list-disc text-[--theme-hover-text]">
                                 {group.benefits.map((benefit, index) => (
-                                  <li key={index} className="text-sm">{benefit}</li>
+                                  <li key={index} className={`${isMobile ? 'text-xs' : 'text-sm'}`}>{benefit}</li>
                                 ))}
                               </ul>
                             </div>
@@ -211,14 +216,16 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
               </div>
             </ScrollArea>
           </div>
-          <div className="w-1/3 flex flex-col">
-            <div className="flex-grow bg-[--theme-leaguecard-color] p-2 rounded-md mb-2 flex flex-col">
+          
+          {/* Additional items section */}
+          <div className={`${isMobile ? 'w-full flex-grow' : 'w-1/3'} flex flex-col`}>
+            <div className="flex-grow bg-[--theme-leaguecard-color] p-3 rounded-lg mb-2 flex flex-col">
               <h3 className="text-lg font-semibold mb-2">Additional Items</h3>
               <div className="flex-grow flex flex-col items-center justify-center text-center gap-4">
                 <div className="flex flex-col items-center gap-4 w-full">
                   <p>Change your theme:</p>
                   <ThemeSwitcher />
-                  <div className="border-t border-[--theme-border-color] w-full my-4" />
+                  <div className="border-t border-[--theme-border-color] w-full my-3" />
                   <p>Do you want more features? Send us a message! :D</p>
                   {!showMessageForm ? (
                     <button 
@@ -233,21 +240,21 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
                         placeholder="Your message"
                         value={messageForm.message}
                         onChange={(e) => setMessageForm({ message: e.target.value })}
-                        className="w-full p-2 mb-2 rounded resize-none text-gray-800"
+                        className="w-full p-3 mb-3 rounded-lg resize-none text-gray-800 border border-[--theme-border-color]"
                         required
-                        rows={6}
+                        rows={isMobile ? 3 : 6}
                       />
-                      <div className="flex justify-between">
+                      <div className="flex justify-between gap-3">
                         <button
                           type="button"
                           onClick={() => setShowMessageForm(false)}
-                          className="py-2 px-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                          className="py-2 px-4 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors min-w-[80px]"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="py-2 px-4 bg-[--theme-hover-color] text-[--theme-hover-text] rounded-md hover:opacity-80 transition-opacity"
+                          className="py-2 px-4 bg-[--theme-hover-color] text-[--theme-hover-text] rounded-lg hover:opacity-80 transition-opacity min-w-[80px]"
                         >
                           Send
                         </button>
