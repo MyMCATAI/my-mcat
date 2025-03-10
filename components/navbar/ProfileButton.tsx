@@ -4,11 +4,13 @@ import { FaUser, FaUserCog, FaSignOutAlt } from 'react-icons/fa';
 import UserProfileModal from '../social/profile/UserProfileModal';
 import { useUser } from '@/store/selectors';
 import Image from 'next/image';
+import { createPortal } from 'react-dom';
 
 export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
   const { openUserProfile, signOut } = useClerk();
   const { user } = useClerkUser();
   const { profile, profileLoading } = useUser();
@@ -16,7 +18,8 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
   // Handle clicks outside menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node) &&
+          buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
       }
     };
@@ -31,9 +34,10 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
   }, [isMenuOpen]);
 
   return (
-    <div className="relative" ref={menuRef}>
+    <>
       {/* Profile Button */}
       <button
+        ref={buttonRef}
         onClick={() => setIsMenuOpen(!isMenuOpen)}
         className="w-12 h-12 rounded-full overflow-hidden bg-[--theme-hover-color]/20 flex items-center justify-center hover:bg-[--theme-hover-color]/30 transition-colors relative group"
       >
@@ -66,48 +70,49 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
         )}
       </button>
 
-      {/* Menu Dropdown */}
-      <div 
-        className={`
-          absolute right-0 top-full mt-1 w-48 rounded-md overflow-hidden bg-white shadow-lg 
-          border border-gray-200 text-gray-700 text-base whitespace-nowrap z-[1000]
-          transition-all duration-200 origin-top
-          ${isMenuOpen 
-            ? 'transform scale-y-100 opacity-100' 
-            : 'transform scale-y-0 opacity-0 pointer-events-none'
-          }
-        `}
-      >
-        {!hideProfile && (
+      {/* Menu Dropdown - Rendered as a Portal */}
+      {isMenuOpen && typeof document !== 'undefined' && createPortal(
+        <div 
+          ref={menuRef}
+          className="fixed shadow-xl z-[9999] bg-white rounded-md overflow-hidden border border-gray-200"
+          style={{
+            width: '192px', // w-48
+            top: buttonRef.current ? buttonRef.current.getBoundingClientRect().bottom + 4 : 0,
+            left: buttonRef.current ? buttonRef.current.getBoundingClientRect().right - 192 : 0,
+          }}
+        >
+          {!hideProfile && (
+            <button
+              onClick={() => {
+                setIsProfileModalOpen(true);
+                setIsMenuOpen(false);
+              }}
+              className="w-full px-2 py-1.5 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+            >
+              <FaUser className="w-4 h-4" />
+              Customize profile
+            </button>
+          )}
           <button
             onClick={() => {
-              setIsProfileModalOpen(true);
+              openUserProfile();
               setIsMenuOpen(false);
             }}
-          className="w-full px-2 py-1.5 text-left hover:bg-gray-50 flex items-center gap-2"
-        >
-          <FaUser className="w-4 h-4" />
-          Customize profile
-        </button>
-        )}
-        <button
-          onClick={() => {
-            openUserProfile();
-            setIsMenuOpen(false);
-          }}
-          className="w-full px-2 py-1.5 text-left hover:bg-gray-50 flex items-center gap-2"
-        >
-          <FaUserCog className="w-4 h-4" />
-          Account & Security
-        </button>
-        <button
-          onClick={() => signOut()}
-          className="w-full px-2 py-1.5 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
-        >
-          <FaSignOutAlt className="w-4 h-4" />
-          Sign out
-        </button>
-      </div>
+            className="w-full px-2 py-1.5 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+          >
+            <FaUserCog className="w-4 h-4" />
+            Account & Security
+          </button>
+          <button
+            onClick={() => signOut()}
+            className="w-full px-2 py-1.5 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+          >
+            <FaSignOutAlt className="w-4 h-4" />
+            Sign out
+          </button>
+        </div>,
+        document.body
+      )}
 
       {/* Profile Modal */}
       <UserProfileModal
@@ -117,6 +122,6 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
         isEditable={true}
         isSelfProfile={true}
       />
-    </div>
+    </>
   );
 }; 

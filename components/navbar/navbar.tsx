@@ -40,7 +40,7 @@ const Navbar = ({ subscription = "free" }: NavbarProps) => {
   }
 
   return (
-    <nav className="flex items-center justify-between bg-transparent shadow-sm h-24 relative z-[40]">
+    <nav className="flex items-center justify-between bg-transparent shadow-sm h-16 relative z-[40]">
       <div className="flex items-center space-x-4 px-4">
         <Link href="/home" className="flex items-center">
           <div className="flex flex-col">
@@ -53,11 +53,11 @@ const Navbar = ({ subscription = "free" }: NavbarProps) => {
       </div>
       <div className="flex items-center h-full">
         <div className="flex flex-row w-full items-center gap-4">
-          <SubscriptionManagementButton isGoldMember={isSubscribed} />
+          {/* <SubscriptionManagementButton isGoldMember={isSubscribed} />*/}
           <MailButton />
           <div className="flex items-center w-full h-full relative z-[10]">
             <ProfileButton />
-          </div>
+          </div> 
         </div>
         <span
           ref={ballerSectionRef}
@@ -67,21 +67,10 @@ const Navbar = ({ subscription = "free" }: NavbarProps) => {
             opacity: 1,
           }}
         >
-          <p className="ms-12 mt-5 pr-1 text-xs whitespace-nowrap" style={{ color: 'var(--theme-text-color)' }}>
+          <p className="ms-12 mt-2 pr-1 text-xs whitespace-nowrap" style={{ color: 'var(--theme-text-color)' }}>
             designed by <br />&nbsp;&nbsp;&nbsp;&nbsp;a certified baller
           </p>
-          <div className="mt-6 mx-3">
-            <Link href="https://www.linkedin.com/in/prynce-karki-272965164/" target="_blank" rel="noopener noreferrer">
-              <FaLinkedin 
-                size={25} 
-                className="transition-colors duration-200 hover:fill-[var(--theme-hover-color)]"
-                style={{
-                  color: 'var(--theme-text-color)',
-                }}
-              />
-            </Link>
-          </div>
-          <div className="mt-5 mx-2">
+          <div className="mt-2 mx-2">
             <Link href="https://www.instagram.com/an0thermanicmonday/" target="_blank" rel="noopener noreferrer">
               <FaInstagram 
                 size={30} 

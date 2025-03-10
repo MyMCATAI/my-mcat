@@ -897,12 +897,12 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           onUnlocked={()=>setShowWelcomeDialogue(false)}
         />}
     <Suspense fallback={
-        <div className="flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
+        <div className="flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
           <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse" />
           <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />
         </div>
       }>
-        <div className={`flex w-full h-full max-w-full max-h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] ${isMobile ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
+        <div className={`flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] ${isMobile ? 'rounded-none' : 'rounded-lg'} overflow-hidden`}>
           {/* Mobile layout: completely separate components for sidebar and main content */}
           {isMobile ? (
             <>
