@@ -89,7 +89,7 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
       style={{ backgroundImage }}
     >
       <Navbar subscription={subscription}/>
-      <main className="w-full flex-grow relative overflow-hidden">
+      <main className="w-full flex-1 relative overflow-auto">
         {children}
       </main>
     </div>
