@@ -367,15 +367,17 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
         width: window.innerWidth,
         height: isMobile ? availableHeight : window.innerHeight * 0.9,
       });
-      
-      // Recalculate scale
-      setScale(calculateScale());
     };
     
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
-  }, [calculateScale, isMobile]);
+  }, [isMobile]);
+
+  // Separate effect for scale calculation to break the dependency cycle
+  useEffect(() => {
+    setScale(calculateScale());
+  }, [calculateScale, stageSize]);
 
   // Modify the moveSprite function to use currentWaypoints
   const moveSprite = useCallback((
