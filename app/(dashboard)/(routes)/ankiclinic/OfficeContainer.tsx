@@ -319,11 +319,9 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
 
   // Modify the calculateScale function
   const calculateScale = useCallback(() => {
-    const containerWidth = windowSize.width;
-    // Use full height but account for UI elements
-    const containerHeight = isMobile 
-      ? windowSize.height * 0.8  // More space for mobile UI
-      : windowSize.height * 0.9; // Slight reduction for desktop UI
+    // Use the current stage size instead of window size directly
+    const containerWidth = stageSize.width;
+    const containerHeight = stageSize.height;
     
     // Base dimensions of the isometric grid
     const baseWidth = (gridWidth + gridHeight) * (tileWidth / 2);
@@ -336,16 +334,15 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
     // Use the smaller scale to ensure content fits
     let scale = Math.min(scaleX, scaleY);
     
-    // Scale limits based on device
-    const minScale = isMobile ? 0.4 : 0.5;
-    const maxScale = isMobile ? 0.7 : 1.0;
-    scale = Math.min(Math.max(scale, minScale), maxScale);
-
-    // Progressive scale reduction based on level - higher levels need more zoomed out view
-    // Starts at 1.0 for level 0 and reduces by 7% per level, with a minimum of 0.5
-    const levelScaleFactor = Math.max(0.5, 1.0 - (currentLevel * 0.07));
+    // For mobile, ensure the scale is large enough to see content clearly
+    if (isMobile) {
+      // Set minimum scale for mobile
+      const minScale = 0.5;
+      scale = Math.max(scale, minScale);
+    }
     
     // Apply level-specific scaling
+    const levelScaleFactor = Math.max(0.5, 1.0 - (currentLevel * 0.07));
     scale *= levelScaleFactor;
     
     // Apply zoom level adjustment from predefined values
@@ -354,25 +351,31 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
     // Apply user zoom factor
     scale *= userZoom;
 
-    // Set the stage size to the full container
-    setStageSize({
-      width: containerWidth,
-      height: containerHeight,
-    });
-
     return scale;
-  }, [currentLevel, windowSize, isMobile, userZoom]);
+  }, [currentLevel, stageSize, isMobile, userZoom]);
 
+  // Update our calculations to get accurate window and container dimensions
   useEffect(() => {
-    const handleResize = () => {
+    const updateDimensions = () => {
+      // Adjust for the navbar height
+      const navbarHeight = 80; // Navbar is h-20 (80px)
+      const windowHeight = window.innerHeight;
+      const availableHeight = windowHeight - navbarHeight;
+      
+      // Set stage dimensions accounting for navbar
+      setStageSize({
+        width: window.innerWidth,
+        height: isMobile ? availableHeight : window.innerHeight * 0.9,
+      });
+      
+      // Recalculate scale
       setScale(calculateScale());
     };
-
-    window.addEventListener('resize', handleResize);
-    handleResize();
-
-    return () => window.removeEventListener('resize', handleResize);
-  }, [calculateScale]);
+    
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, [calculateScale, isMobile]);
 
   // Modify the moveSprite function to use currentWaypoints
   const moveSprite = useCallback((
