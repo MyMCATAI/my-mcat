@@ -1,4 +1,4 @@
-import React, {
+    import React, {
   useState,
   useEffect,
   useMemo,
@@ -11,7 +11,6 @@ import DonutChart from "./DonutChart";
 import { toast } from "react-hot-toast";
 import {
   Target,
-  ClipboardList,
 } from "lucide-react";
 import { 
   Tooltip,
@@ -34,9 +33,9 @@ import { SubscriptionButton } from "@/components/subscription-button";
 import Tutorial from "./Tutorial";
 import { UserInfo } from "@/types/user";
 
-type Section = "AdaptiveTutoringSuite" | "MCATGameAnkiClinic" | "DailyCARsSuite" | "Tests";
-
-interface ScheduleProps {
+/* --- Constants ----- */
+/* ----- Types ---- */
+interface SummaryProps {
   handleSetTab: (tab: string) => void;
   isActive: boolean;
   chatbotRef: React.MutableRefObject<{
@@ -45,7 +44,7 @@ interface ScheduleProps {
   userInfo: UserInfo | null
 }
 
-const Schedule: React.FC<ScheduleProps> = ({
+const Summary: React.FC<SummaryProps> = ({
   handleSetTab,
   userInfo,
 }) => {
@@ -61,10 +60,10 @@ const Schedule: React.FC<ScheduleProps> = ({
 
   const userCoinCount = userInfo?.score
 
-  const handleButtonClick = (section: Section) => {
-    handleSetTab("Tests");
-  };
-
+  /* ---- State ----- */
+  /* ---- Refs --- */
+  /* ----- Callbacks --- */
+  /* --- Animations & Effects --- */
   // Initialize target score from userInfo prop
   useEffect(() => {
     if (userInfo?.onboardingInfo?.targetScore) {
@@ -81,6 +80,7 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   }, [userCoinCount]);
 
+  /* ---- Event Handlers ----- */
   const getScoreFeedback = () => {
     if (!examScores.length) return null;
 
@@ -194,6 +194,7 @@ const Schedule: React.FC<ScheduleProps> = ({
     }
   };
 
+  /* ---- Render Methods ----- */
   return (
     <div className="w-full relative">
       <Tutorial runTutorial={runTutorial} setRunTutorial={setRunTutorial} />
@@ -210,6 +211,29 @@ const Schedule: React.FC<ScheduleProps> = ({
           boxShadow: "var(--theme-box-shadow)",
         }}
       >
+        {/* Target Score Button - Now in top right */}
+        <div className="absolute top-3 right-3 z-10">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setShowTargetScoreDialog(true)}
+                  className="group h-10 px-3 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
+                    border border-[--theme-border-color] 
+                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
+                    shadow-md rounded-md transition flex items-center justify-center gap-1"
+                >
+                  <Target className="w-5 h-5 mr-1" />
+                  <span className="text-xs font-medium">Target Score</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Set Target Score</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
         {/* Content Container */}
         <div className="relative w-full h-full flex-grow overflow-auto">
           {/* Analytics View - now always visible */}
@@ -244,18 +268,18 @@ const Schedule: React.FC<ScheduleProps> = ({
           </div>
         </div>
 
-        {/* Bottom Buttons */}
-        <div className="mt-auto flex justify-end items-center gap-2 pt-2 mr-5 mb-2">
+        {/* Bottom Area - Only Score Feedback and Subscription Button */}
+        <div className="mt-auto flex justify-between items-center gap-2 pt-2 mb-2 px-5">
           {/* Score Feedback */}
           {examScores.length > 0 && (
-            <div className="mr-auto">
+            <div>
               {(() => {
                 const feedback = getScoreFeedback();
                 if (!feedback) return null;
 
                 return (
                   <div 
-                    className="text-[--theme-text-color] ml-5 text-sm font-medium p-2 rounded-lg max-w-[24rem]"
+                    className="text-[--theme-text-color] text-sm font-medium p-2 rounded-lg max-w-[24rem]"
                     style={{
                       background: 'var(--theme-leaguecard-color)',
                       boxShadow: 'var(--theme-button-boxShadow)'
@@ -280,51 +304,6 @@ const Schedule: React.FC<ScheduleProps> = ({
               })()}
             </div>
           )}
-
-          {/* Subscription Button */}
-          <SubscriptionButton />
-
-          {/* Target Score Button */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setShowTargetScoreDialog(true)}
-                  className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                    border-2 border-[--theme-border-color] 
-                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                    shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
-                >
-                  <Target className="w-8 h-8" />
-                  <span className="text-xs font-medium">Target</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Set Target Score</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          {/* Practice Tests button */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => handleButtonClick("Tests")}
-                  className="group w-20 h-20 p-4 bg-[--theme-leaguecard-color] text-[--theme-text-color] 
-                    border-2 border-[--theme-border-color] 
-                    hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
-                    shadow-md rounded-full transition flex flex-col items-center justify-center gap-1"
-                >
-                  <ClipboardList className="w-8 h-8" />
-                  <span className="text-xs font-medium">Tests</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Practice Tests</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </div>
       </div>
 
@@ -392,4 +371,4 @@ const Schedule: React.FC<ScheduleProps> = ({
   );
 };
 
-export default Schedule;
+export default Summary; 

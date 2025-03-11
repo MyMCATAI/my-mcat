@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import { FetchedActivity } from '@/types';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -54,6 +54,7 @@ interface SideBarProps {
   handleSetTab: (tab: string) => void;
   onActivitiesUpdate: () => void;
   isSubscribed: boolean;
+  showTasks?: boolean;
 }
 
 type TabContent = 
@@ -72,7 +73,8 @@ const SideBar: React.FC<SideBarProps> = ({
   chatbotRef,
   handleSetTab,
   onActivitiesUpdate,
-  isSubscribed
+  isSubscribed,
+  showTasks = true
 }) => {
   const { userInfo } = useUserInfo();
   
@@ -88,7 +90,9 @@ const SideBar: React.FC<SideBarProps> = ({
       case "AdaptiveTutoringSuite":
         return "tab1"; // Insights tab
       case "Tests":
-        return "tab4"; // Help tab
+        return "tab5"; // Update from tab4 (Help) to tab5 (Leaderboard) since we removed Help
+      case "KalypsoAI":
+        return "tab2"; // Tasks tab for KalypsoAI
       default:
         return "tab1"; // Default to Insights tab
     }
@@ -181,7 +185,7 @@ const SideBar: React.FC<SideBarProps> = ({
   const renderInsights = () => {
     if (currentPage !== "CARS") {
       return (
-        <div className="h-[calc(100vh-11.6rem)] flex flex-col">
+        <div className="h-full flex flex-col">
           <div className="flex-1 min-h-0">
             <ChatBot
               chatbotRef={chatbotRef}
@@ -197,7 +201,7 @@ const SideBar: React.FC<SideBarProps> = ({
     }
 
     return (
-      <div className="h-[calc(100vh-11.6rem)] flex flex-col space-y-4 overflow-auto">
+      <div className="h-full flex flex-col space-y-4 overflow-auto">
         <Card className="flex-shrink-0">
           <CardContent className="p-4 relative">
             <div className="flex items-center mb-4">
@@ -251,7 +255,7 @@ const SideBar: React.FC<SideBarProps> = ({
   };
 
   const renderTutors = (tutors: Tutor[]) => (
-    <div className="h-[calc(100vh-12.3rem)] flex flex-col">
+    <div className="h-full flex flex-col">
       <ScrollArea className="flex-grow">
         <div className="pb-4">
           <div className="mb-3 flex justify-center">
@@ -340,7 +344,7 @@ const SideBar: React.FC<SideBarProps> = ({
   const renderTasks = () => {
     if (!isSubscribed) {
       return (
-        <div className="h-[calc(100vh-11rem)] flex flex-col items-center justify-center p-6 text-center space-y-6">
+        <div className="h-full flex flex-col items-center justify-center p-6 text-center space-y-6">
           <div className="max-w-md space-y-6">
             <div className="flex flex-col items-center">
               <div className="w-16 h-16 mb-4 rounded-full bg-[--theme-hover-color] flex items-center justify-center">
@@ -374,7 +378,7 @@ const SideBar: React.FC<SideBarProps> = ({
     }
 
     return (
-      <div className="h-[calc(100vh-11rem)] flex flex-col">
+      <div className="h-full flex flex-col">
         <div className="flex items-center justify-between px-4 py-2 bg-[--theme-leaguecard-color] rounded-lg">
           <button
             onClick={() => {
@@ -492,7 +496,7 @@ const SideBar: React.FC<SideBarProps> = ({
           </div>
         </ScrollArea>
 
-        <div className="mt-4 mb-3 bg-[--theme-leaguecard-color] rounded-lg flex items-center justify-between">
+        <div className="mt-4 bg-[--theme-leaguecard-color] rounded-lg flex items-center justify-between">
           <span className="text-sm font-medium opacity-75 ml-6">Wallet</span>
           <PurchaseButton 
             userCoinCount={userInfo?.score || 0}
@@ -508,7 +512,7 @@ const SideBar: React.FC<SideBarProps> = ({
   };
 
   const renderLeaderboard = () => (
-    <div className="h-[calc(100vh-11.6rem)] flex flex-col">
+    <div className="h-full flex flex-col">
       <Leaderboard 
         variant="sidebar"
         showAddFriend={true}
@@ -536,9 +540,13 @@ const SideBar: React.FC<SideBarProps> = ({
   const tabs: { id: string; label: string; content: TabContent }[] = [
     { id: "tab2", label: "Tasks", content: { type: 'tasks' } },
     { id: "tab3", label: "Tutors", content: { type: 'tutors', schools: tutors } },
-    { id: "tab4", label: "Help", content: { type: 'tutorial' } },
     { id: "tab5", label: "Friends", content: { type: 'leaderboard' } },
   ];
+
+  const displayTabs = useMemo(() => {
+    // Always show the Tasks tab (tab2) regardless of showTasks value
+    return tabs;
+  }, [tabs]);
 
   const TutorBookingDialog = () => {
     const { user } = useUser();
@@ -1047,21 +1055,24 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
   };
 
   return (
-    <div className="relative p-2 rounded-lg overflow-hidden h-[calc(100vh-4.1rem)]">
+    <div className="flex flex-col h-full">
       <div className="relative z-10 text-[--theme-text-color] p-2 rounded-lg h-full flex flex-col">
         <div className="flex items-center gap-4 mb-3 min-w-0">
-          <button
-            className={`flex-shrink-0 p-2 rounded-full transition-all duration-300 ${
-              activeTab === "tab1"
-                ? "bg-[--theme-hover-color] text-[--theme-hover-text] shadow-md transform scale-105"
-                : "bg-transparent text-[--theme-text-color] hover:opacity-50 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
-            }`}
-            onClick={() => setActiveTab("tab1")}
-          >
-            <Cat className="w-6 h-6" />
-          </button>
+          {/* Only show cat button when not on KalypsoAI page */}
+          {currentPage !== "KalypsoAI" && (
+            <button
+              className={`flex-shrink-0 p-2 rounded-full transition-all duration-300 ${
+                activeTab === "tab1"
+                  ? "bg-[--theme-hover-color] text-[--theme-hover-text] shadow-md transform scale-105"
+                  : "bg-transparent text-[--theme-text-color] hover:opacity-50 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
+              }`}
+              onClick={() => setActiveTab("tab1")}
+            >
+              <Cat className="w-6 h-6" />
+            </button>
+          )}
           <div className="flex flex-1 min-w-0 bg-[--theme-leaguecard-color] rounded-lg p-[1%]">
-            {tabs.map((tab) => (
+            {displayTabs.map((tab) => (
               <button
                 key={tab.id}
                 data-tab={tab.id}
@@ -1081,8 +1092,8 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
           activeTab === 'tab3'
             ? 'bg-transparent' 
             : 'bg-[--theme-mainbox-color]'
-          } flex-1 min-h-0 mb-8 overflow-hidden relative rounded-lg transition-all duration-300`}>
-          {renderContent({ type: activeTab === "tab1" ? 'insights' : tabs.find(tab => tab.id === activeTab)?.content.type || 'tasks', videos: activeTab === "tab1" ? videos : [], schools: tutors })}
+          } flex-1 min-h-0 overflow-hidden relative rounded-lg transition-all duration-300`}>
+          {renderContent({ type: activeTab === "tab1" ? 'insights' : displayTabs.find(tab => tab.id === activeTab)?.content.type || 'tasks', videos: activeTab === "tab1" ? videos : [], schools: tutors })}
         </div>
       </div>
       
