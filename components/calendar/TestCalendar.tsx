@@ -34,6 +34,11 @@ interface TestCalendarProps {
   }>;
   handleSetTab?: (tab: string) => void;
   onEventUpdate?: () => void;
+  buttonLabels?: {
+    generate?: string;
+    summarize?: string;
+    hideSummarize?: boolean;
+  };
 }
 
 interface ToolbarWithEventsProps {
@@ -45,6 +50,11 @@ interface ToolbarWithEventsProps {
   }>;
   onSummarize: () => void;
   onGenerate: () => void;
+  buttonLabels?: {
+    generate?: string;
+    summarize?: string;
+    hideSummarize?: boolean;
+  };
 }
 
 const getNextTestDate = (events: CalendarEvent[]): Date | null => {
@@ -84,9 +94,15 @@ const CustomToolbarWithEvents: React.FC<ToolbarWithEventsProps> = ({
   label, 
   onNavigate, 
   events,
+  chatbotRef,
   onSummarize,
-  onGenerate
+  onGenerate,
+  buttonLabels
 }) => {
+  const generateText = buttonLabels?.generate || "Generate";
+  const summarizeText = buttonLabels?.summarize || "Summarize";
+  const showSummarize = buttonLabels?.hideSummarize !== true;
+
   return (
     <div className="rbc-toolbar">
       <div className="header-content flex justify-between items-center w-full">
@@ -106,17 +122,19 @@ const CustomToolbarWithEvents: React.FC<ToolbarWithEventsProps> = ({
           </button>
         </div>
         <div className="flex-1 flex justify-center gap-4">
-          <button
-            onClick={onSummarize}
-            className="bg-[--theme-hover-color] text-[--theme-hover-text] hover:opacity-90 transition-all duration-200 px-4 py-1.5 rounded-lg text-sm"
-          >
-            Summarize
-          </button>
+          {showSummarize && (
+            <button
+              onClick={onSummarize}
+              className="bg-[--theme-hover-color] text-[--theme-hover-text] hover:opacity-90 transition-all duration-200 px-4 py-1.5 rounded-lg text-sm"
+            >
+              {summarizeText}
+            </button>
+          )}
           <button
             onClick={onGenerate}
-            className="bg-[--theme-hover-color] text-[--theme-hover-text] hover:opacity-90 transition-all duration-200 px-4 py-1.5 rounded-lg text-sm"
+            className="bg-[--theme-hover-color] text-[--theme-hover-text] hover:opacity-90 transition-all duration-200 px-8 py-2 rounded-lg text-sm border-[3px] border-solid !border-[--theme-border-color] animate-float"
           >
-            Generate
+            {generateText}
           </button>
         </div>
       </div>
@@ -131,7 +149,8 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
   onSelectEvent,
   chatbotRef,
   handleSetTab,
-  onEventUpdate
+  onEventUpdate,
+  buttonLabels
 }) => {
   const [isWeeklyModalOpen, setIsWeeklyModalOpen] = useState(false);
   const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false);
@@ -251,6 +270,7 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
         chatbotRef={chatbotRef}
         onSummarize={handleSummarizeWeek}
         onGenerate={handleGenerateSchedule}
+        buttonLabels={buttonLabels}
       />
     ),
     eventContent: (event: any) => (
@@ -312,7 +332,7 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
         events={events}
         startAccessor="start"
         endAccessor="end"
-        className="custom-calendar w-full max-w-full bg-transparent"
+        className="custom-calendar w-full h-full min-h-[500px] bg-transparent"
         views={['month']}
         defaultView="month"
         date={date}
@@ -323,6 +343,7 @@ const TestCalendar: React.FC<TestCalendarProps> = ({
         onSelectEvent={handleEventClick}
         eventPropGetter={eventStyleGetter}
         components={components}
+        style={{ height: '100%' }}
       />
       {isWeeklyModalOpen && (
         <div 

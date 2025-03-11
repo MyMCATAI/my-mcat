@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
 import { Styles } from "react-chatbotify";
 import { useAudio } from "@/contexts/AudioContext";
+import { useAllCalendarActivities } from "@/hooks/useCalendarActivities";
+import { useExamActivities } from "@/hooks/useCalendarActivities";
+import TestCalendar from '@/components/calendar/TestCalendar';
+import { X } from "lucide-react";
+import { CalendarEvent } from "@/types/calendar";
+// Import required CSS for the calendar
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "@/components/styles/CustomCalendar.css";
 
 // Dynamically import the chatbot component
 const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
@@ -39,6 +47,13 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [isFirstResponse, setIsFirstResponse] = useState(true);
   const [lastToggleTime, setLastToggleTime] = useState<number>(0);
+  const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+  const [calendarDate, setCalendarDate] = useState<Date>(new Date());
+  
+  // Get both exam and study activities
+  const { activities: examActivities, loading: examLoading, fetchExamActivities } = useExamActivities();
+  const { activities: studyActivities, loading: studyLoading, refetch: refetchStudyActivities } = useAllCalendarActivities();
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   
   /* ---- Refs --- */
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -147,6 +162,76 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
     };
   }, []);
   
+  useEffect(() => {
+    if (examActivities && studyActivities) {
+      const examEvents = examActivities.map((activity) => {
+        // Map exam titles to shorter display names
+        let displayTitle = "EXAM";
+        if (activity.activityTitle === "MCAT Exam") {
+          displayTitle = "MCAT";
+        } else if (activity.activityTitle.includes("Unscored Sample")) {
+          displayTitle = "Unscored";
+        } else if (activity.activityTitle.includes("Full Length Exam")) {
+          const number = activity.activityTitle.match(/\d+/)?.[0];
+          displayTitle = `FL${number}`;
+        } else if (activity.activityTitle.includes("Sample Scored")) {
+          displayTitle = "Scored";
+        }
+
+        return {
+          id: activity.id,
+          title: displayTitle,
+          start: new Date(activity.scheduledDate),
+          end: new Date(activity.scheduledDate),
+          allDay: true,
+          activityText: activity.activityText,
+          hours: activity.hours,
+          activityType: activity.activityType,
+          resource: { 
+            ...activity, 
+            eventType: 'exam' as const,
+            fullTitle: activity.activityTitle,
+            activityText: activity.activityText,
+            hours: activity.hours,
+            activityType: activity.activityType,
+            activityTitle: activity.activityTitle,
+            status: activity.status
+          }
+        };
+      });
+
+      const studyEvents = studyActivities.map((activity) => ({
+        id: activity.id,
+        title: activity.activityTitle,
+        start: new Date(activity.scheduledDate),
+        end: new Date(activity.scheduledDate),
+        allDay: true,
+        activityText: activity.activityText,
+        hours: activity.hours,
+        activityType: activity.activityType,
+        resource: { 
+          ...activity, 
+          eventType: 'study' as const,
+          fullTitle: `${activity.activityTitle} (${activity.hours}h)`,
+          activityText: activity.activityText,
+          hours: activity.hours,
+          activityType: activity.activityType,
+          activityTitle: activity.activityTitle,
+          status: activity.status
+        }
+      }));
+
+      setCalendarEvents([...examEvents, ...studyEvents]);
+    }
+  }, [examActivities, studyActivities]);
+
+  useEffect(() => {
+    if (isCalendarModalOpen) {
+      fetchExamActivities();
+      refetchStudyActivities();
+    }
+  }, [isCalendarModalOpen, fetchExamActivities, refetchStudyActivities]);
+  
   /* ---- Event Handlers ----- */
   const handleSendMessage = async (userInput: string, messageContext?: string) => {
     setIsLoading(true);
@@ -202,10 +287,28 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
-    const action = QUICK_ACTIONS.find(a => a.id === tabId);
-    if (action && chatbotRef) {
-      chatbotRef.current.sendMessage(action.prompt);
+    if (tabId === "schedule") {
+      setIsCalendarModalOpen(true);
+    } else {
+      const action = QUICK_ACTIONS.find(a => a.id === tabId);
+      if (action && chatbotRef) {
+        chatbotRef.current.sendMessage(action.prompt);
+      }
     }
+  };
+
+  const handleCalendarNavigate = (date: Date) => {
+    setCalendarDate(date);
+  };
+
+  const handleSelectEvent = (event: CalendarEvent) => {
+    // Optionally handle event selection
+    console.log('Selected event:', event);
+  };
+
+  const handleEventUpdate = async () => {
+    await fetchExamActivities();
+    await refetchStudyActivities();
   };
 
   const playAudio = (audioBase64: string) => {
@@ -321,8 +424,8 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
                 className={cn(
                   "px-3 py-1 rounded-full text-xs font-medium transition-colors duration-300", 
                   "bg-[--theme-leaguecard-color] text-[--theme-text-color] border border-[--theme-border-color]", 
-                  "hover:bg-[--theme-doctorsoffice-accent] hover:text-white",
-                  activeTab === action.id && "bg-[--theme-doctorsoffice-accent] text-white"
+                  "hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]",
+                  activeTab === action.id && "bg-[--theme-hover-color] text-[--theme-hover-text]"
                 )}
                 onClick={() => handleTabClick(action.id)}
               >
@@ -393,7 +496,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
       fontFamily:
         "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
       color: "white",
-      backgroundColor: "var(--theme-doctorsoffice-accent)",
+      backgroundColor: "var(--theme-userchatbox-color)",
       textAlign: "left",
     },
     headerStyle: {
@@ -441,6 +544,43 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
       {error && (
         <div className="p-4 bg-red-500 bg-opacity-10 border border-red-500 text-red-500 rounded-lg m-4">
           {error}
+        </div>
+      )}
+
+      {/* Calendar Modal */}
+      {isCalendarModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsCalendarModalOpen(false);
+            }
+          }}
+        >
+          <div className="w-[90vw] max-w-6xl max-h-[90vh] bg-transparent rounded-xl overflow-hidden">
+            <div className="p-4 h-[calc(90vh-4rem)] overflow-auto">
+              {(examLoading || studyLoading) ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[--theme-text-color]" />
+                </div>
+              ) : (
+                <div className="h-full flex flex-col min-h-[500px]">
+                  <TestCalendar
+                    events={calendarEvents}
+                    date={calendarDate}
+                    onNavigate={handleCalendarNavigate}
+                    onSelectEvent={handleSelectEvent}
+                    chatbotRef={chatbotRef}
+                    onEventUpdate={handleEventUpdate}
+                    buttonLabels={{
+                      generate: "Generate Tasks",
+                      hideSummarize: true
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
