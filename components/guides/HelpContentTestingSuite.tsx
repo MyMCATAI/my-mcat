@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import clsx from 'clsx';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FaDiscord } from 'react-icons/fa';
-import MessageButton from '@/components/MessageButton';
 import Link from 'next/link';
 import { SubscriptionButton } from '@/components/subscription-button';
 import { useRouter } from "next/navigation"; 
@@ -69,11 +68,11 @@ const ResourcePack: React.FC = () => {
           </h3>          
           <div className="space-y-6">
             <section>
-              <p className="text-sm opacity-80 mb-4">
+              <p className="text-sm opacity-80 mb-4 text-[--theme-text-color]">
                 The MCAT is a test of content and critical thinking. It consists of <strong>four sections</strong> spanning seven undergraduate topics. The test is a mile wide and an inch deep so <strong>don&apos;t overrely on content such as Anki or even UWorld.</strong> We have tagged every topic on the MCAT. For every question you answer, our model updates your knowledge profile which affects your flashcards, UWorld, ATS, and Anki Clinic.
               </p>
 
-              <h3 className="text-xs mb-4 text-center opacity-60 uppercase tracking-wide font-semibold">
+              <h3 className="text-xs mb-4 text-center opacity-60 uppercase tracking-wide font-semibold text-[--theme-text-color]">
                 Resources
               </h3>
               <div className="space-y-3">
@@ -97,8 +96,8 @@ const ResourcePack: React.FC = () => {
                     />
                   </svg>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium">MCAT PDF Guide</span>
-                    <span className="text-xs opacity-70">Comprehensive breakdown of test content.</span>
+                    <span className="text-sm font-medium text-[--theme-text-color]">MCAT PDF Guide</span>
+                    <span className="text-xs opacity-70 text-[--theme-text-color]">Comprehensive breakdown of test content.</span>
                   </div>
                 </a>
                 <a 
@@ -115,8 +114,8 @@ const ResourcePack: React.FC = () => {
                     <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
                   </svg>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium">r/MCAT Community</span>
-                    <span className="text-xs opacity-70">Join the discussion with fellow test-taker.</span>
+                    <span className="text-sm font-medium text-[--theme-text-color]">r/MCAT Community</span>
+                    <span className="text-xs opacity-70 text-[--theme-text-color]">Join the discussion with fellow test-taker.</span>
                   </div>
                 </a>
 
@@ -131,7 +130,7 @@ const ResourcePack: React.FC = () => {
             Starting with MyMCAT
           </h3>
           
-          <p className="text-sm opacity-80 mb-6">
+          <p className="text-sm opacity-80 mb-6 text-[--theme-text-color]">
             MyMCAT is a resource that can either be your <strong>only resource or within your rotation</strong> of resources. The biggest thing about our platform is that <strong>it knows you</strong>. When you enter your tests, it curates videos and readings and flashcards for your weaknesses.
           </p>
 
@@ -614,8 +613,8 @@ const ResourcePack: React.FC = () => {
                       className="flex items-center gap-2 px-4 py-3 bg-[--theme-doctorsoffice-accent] rounded-lg hover:opacity-80 transition-opacity w-full"
                     >
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium">MilesDown Anki Deck</span>
-                        <span className="text-xs opacity-70">Popular comprehensive Anki deck</span>
+                        <span className="text-sm font-medium text-[--theme-text-color]">MilesDown Anki Deck</span>
+                        <span className="text-xs opacity-70 text-[--theme-text-color]">Popular comprehensive Anki deck</span>
                       </div>
                     </a>
 
@@ -626,8 +625,8 @@ const ResourcePack: React.FC = () => {
                       className="flex items-center gap-2 px-4 py-3 bg-[--theme-doctorsoffice-accent] rounded-lg hover:opacity-80 transition-opacity w-full"
                     >
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium">Aiden Anki Deck</span>
-                        <span className="text-xs opacity-70">Extensive 6M card collection</span>
+                        <span className="text-sm font-medium text-[--theme-text-color]">Aiden Anki Deck</span>
+                        <span className="text-xs opacity-70 text-[--theme-text-color]">Extensive 6M card collection</span>
                       </div>
                     </a>
                   </div>
@@ -834,28 +833,28 @@ const ResourcePack: React.FC = () => {
                 <div className="w-10 h-10 relative">
                   <Image src="/game-components/PixelHeart.png" alt="Heart" layout="fill" objectFit="contain" />
                 </div>
-                <span className="text-xs mt-1">score</span>
+                <span className="text-xs mt-1 text-[--theme-text-color]">score</span>
               </div>
               <div className="flex flex-col items-center w-1/4">
                 <div className="w-10 h-10 relative">
                   <Image src="/game-components/PixelWatch.png" alt="Watch" layout="fill" objectFit="contain" />
                 </div>
-                <span className="text-xs mt-1">time</span>
+                <span className="text-xs mt-1 text-[--theme-text-color]">time</span>
               </div>
               <div className="flex flex-col items-center w-1/4">
                 <div className="w-10 h-10 relative">
                   <Image src="/game-components/PixelCupcake.png" alt="Diamond" layout="fill" objectFit="contain" />
                 </div>
-                <span className="text-xs mt-1">coins</span>
+                <span className="text-xs mt-1 text-[--theme-text-color]">coins</span>
               </div>
               <div className="flex flex-col items-center w-1/4">
                 <div className="w-10 h-10 relative">
                   <Image src="/game-components/PixelBook.png" alt="Flex" layout="fill" objectFit="contain" />
                 </div>
-                <span className="text-xs mt-1">tests</span>
+                <span className="text-xs mt-1 text-[--theme-text-color]">tests</span>
               </div>
             </div>
-            <div className="mt-4 space-y-2.5 text-sm">
+            <div className="mt-4 space-y-2.5 text-sm text-[--theme-text-color]">
               <p><span className="font-medium">Score:</span> Averaged from last 10 passages</p>
               <p><span className="font-medium">Time:</span> Target under 10 mins/passage</p>
               <p><span className="font-medium">Coins:</span> Pay a coin a passage, earn back at 80%+ score</p>
@@ -868,7 +867,7 @@ const ResourcePack: React.FC = () => {
             <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
               System Design
             </h3>
-            <ul className="text-sm space-y-2 list-disc pl-4">
+            <ul className="text-sm space-y-2 list-disc pl-4 text-[--theme-text-color]">
               <li><span className="font-medium">Cost:</span> 1 coin per passage</li>
               <li><span className="font-medium">Difficulty:</span> Levels 1-3, based on recent scores</li>
               <li><span className="font-medium">Part 2:</span> Most passages have bonus questions</li>
@@ -881,7 +880,7 @@ const ResourcePack: React.FC = () => {
             <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
               Sidebar
             </h3>
-            <ul className="text-sm space-y-2 list-disc pl-4">
+            <ul className="text-sm space-y-2 list-disc pl-4 text-[--theme-text-color]">
               <li>Videos are collected from YouTube to help with CARs.</li>
               <li>Insights from r/MCAT sends a feed of Reddit content to you for you to search and review.</li>
             </ul>
@@ -1270,8 +1269,8 @@ const ResourcePack: React.FC = () => {
               className="flex items-center gap-2 px-4 py-3 bg-[--theme-doctorsoffice-accent] rounded-lg hover:opacity-80 transition-opacity w-full"
             >
               <div className="flex flex-col">
-                <span className="text-sm font-medium">MilesDown Anki Deck</span>
-                <span className="text-xs opacity-70">Popular concise Anki deck</span>
+                <span className="text-sm font-medium text-[--theme-text-color]">MilesDown Anki Deck</span>
+                <span className="text-xs opacity-70 text-[--theme-text-color]">Popular comprehensive Anki deck</span>
               </div>
             </a>
 
@@ -1282,8 +1281,8 @@ const ResourcePack: React.FC = () => {
               className="flex items-center gap-2 px-4 py-3 bg-[--theme-doctorsoffice-accent] rounded-lg hover:opacity-80 transition-opacity w-full"
             >
               <div className="flex flex-col">
-                <span className="text-sm font-medium">Aiden Anki Deck</span>
-                <span className="text-xs opacity-70">Extensive card collection</span>
+                <span className="text-sm font-medium text-[--theme-text-color]">Aiden Anki Deck</span>
+                <span className="text-xs opacity-70 text-[--theme-text-color]">Extensive 6M card collection</span>
               </div>
             </a>
           </div>
@@ -1310,7 +1309,7 @@ const ResourcePack: React.FC = () => {
           <div className="space-y-8">
             <div className="space-y-8">
               <div className="space-y-4">
-                <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+                <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide text-[--theme-text-color]">
                   Introduction
                 </h3>
                 <button
@@ -1318,8 +1317,8 @@ const ResourcePack: React.FC = () => {
                   className="w-full p-4 rounded-lg text-left transition-all duration-200 bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] shadow-sm hover:shadow-md"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">What&apos;s on the MCAT?</span>
-                    <ChevronRight className="w-5 h-5" />
+                    <span className="text-sm font-medium text-[--theme-text-color]">What&apos;s on the MCAT?</span>
+                    <ChevronRight className="w-5 h-5 text-[--theme-text-color]" />
                   </div>
                 </button>
                 <button
@@ -1327,14 +1326,14 @@ const ResourcePack: React.FC = () => {
                   className="w-full p-4 rounded-lg text-left transition-all duration-200 bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] shadow-sm hover:shadow-md"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">How do I use MyMCAT?</span>
-                    <ChevronRight className="w-5 h-5" />
+                    <span className="text-sm font-medium text-[--theme-text-color]">How do I use MyMCAT?</span>
+                    <ChevronRight className="w-5 h-5 text-[--theme-text-color]" />
                   </div>
                 </button>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+                <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide text-[--theme-text-color]">
                   Test Information
                 </h3>
                 <button
@@ -1342,8 +1341,8 @@ const ResourcePack: React.FC = () => {
                   className="w-full p-4 rounded-lg text-left transition-all duration-200 bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] shadow-sm hover:shadow-md"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">How do I take a test?</span>
-                    <ChevronRight className="w-5 h-5" />
+                    <span className="text-sm font-medium text-[--theme-text-color]">How do I take a test?</span>
+                    <ChevronRight className="w-5 h-5 text-[--theme-text-color]" />
                   </div>
                 </button>
                 <button
@@ -1351,14 +1350,14 @@ const ResourcePack: React.FC = () => {
                   className="w-full p-4 rounded-lg text-left transition-all duration-200 bg-[--theme-doctorsoffice-accent] hover:bg-[--theme-hover-color] shadow-sm hover:shadow-md"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">How do I review a test?</span>
-                    <ChevronRight className="w-5 h-5" />
+                    <span className="text-sm font-medium text-[--theme-text-color]">How do I review a test?</span>
+                    <ChevronRight className="w-5 h-5 text-[--theme-text-color]" />
                   </div>
                 </button>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide">
+                <h3 className="text-xs mb-2 text-center opacity-60 uppercase tracking-wide text-[--theme-text-color]">
                   Strategies
                 </h3>
                 <button
@@ -1398,7 +1397,7 @@ const ResourcePack: React.FC = () => {
         {/* Need Help section - Only show in initial view */}
         {!activeSection && (
           <div className="mt-8 text-center">
-            <h3 className="text-xs mb-4 text-center opacity-60 uppercase tracking-wide">
+            <h3 className="text-xs mb-4 text-center opacity-60 uppercase tracking-wide text-[--theme-text-color]">
               Need help?
             </h3>
             <div className="flex flex-col gap-4">  {/* Changed gap-2 to gap-4 */}
@@ -1413,36 +1412,32 @@ const ResourcePack: React.FC = () => {
                     // Show success toast
                     toast.success(`Tutorials Reset! They'll pop up again when you visit new pages.`);
                   }}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg"
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg text-[--theme-text-color]"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  <span>Reset Tutorials</span>
+                  <span className="text-[--theme-text-color]">Reset Tutorials</span>
                 </button>
                 <Link
                   href="/preferences"
                   className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-all duration-200 shadow-md hover:shadow-lg"
                 >
                   <Bell className="w-4 h-4" />
-                  <span>Email Settings</span>
+                  <span className="text-[--theme-text-color]">Email Settings</span>
                 </Link>
               </div>
 
               {/* Discord Link */}
               <a
-                href="https://discord.gg/DcHWnEu8Xb"
+                href="https://discord.gg/j5ZHSPWZ9X"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
               >
                 <FaDiscord className="w-5 h-5" />
-                <span>Join Discord</span>
+                <span className="text-[--theme-text-color]">Join Discord</span>
               </a>
-              
-              <MessageButton 
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
-              />
             </div>
           </div>
         )}
