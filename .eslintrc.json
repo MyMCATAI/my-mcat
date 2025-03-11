@@ -51,14 +51,14 @@
   "settings": {
     "import/resolver": {
       "typescript": {}
+    },
+    "react": {
+      "version": "detect"
     }
   },
-  "overrides": [
-    {
-      "files": ["**/*.ts", "**/*.tsx"],
-      "rules": {
-        "@typescript-eslint/*": "warn"
-      }
-    }
-  ]
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  }
 }
