@@ -151,7 +151,7 @@ const ChatSidebar = ({ className, isSubscribed = true }: ChatSidebarProps) => {
   /* --- Animations & Effects --- */
   useEffect(() => {
     // Set active item based on current path
-    const currentPath = pathname;
+    const currentPath = pathname || '';
     const matchingItem = SIDEBAR_ITEMS.find(item => 
       currentPath === item.href || currentPath.startsWith(`${item.href.split('?')[0]}/`)
     );
@@ -414,7 +414,7 @@ const ChatSidebar = ({ className, isSubscribed = true }: ChatSidebarProps) => {
         </div>
         
         <div className="border-t border-[--theme-border-color] pt-4 opacity-90">
-          <h3 className="font-medium text-sm mb-3 px-2 text-[--theme-text-color]">Today's Tasks</h3>
+          <h3 className="font-medium text-sm mb-3 px-2 text-[--theme-text-color]">Today&apos;s Tasks</h3>
           {renderTasks()}
         </div>
       </ScrollArea>
