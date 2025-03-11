@@ -317,7 +317,9 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
               ))}
             </div>
           ) : (
-            renderHelp()
+            <div className="h-full overflow-y-auto">
+              {renderHelp()}
+            </div>
           )}
         </div>
         
