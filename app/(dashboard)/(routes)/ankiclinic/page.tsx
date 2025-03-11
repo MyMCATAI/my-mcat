@@ -1043,8 +1043,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       
       {/* Add HoverSidebar instead of FloatingButton */}
       <HoverSidebar
-        activities={activities as any[]}
-        onTasksUpdate={(tasks) => fetchActivities()}
+        activities={activities}
+        onTasksUpdate={fetchActivities}
         onTabChange={handleTabChange}
         currentPage="ankiclinic"
         isSubscribed={isSubscribed}
