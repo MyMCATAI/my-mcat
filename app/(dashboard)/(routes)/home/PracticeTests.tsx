@@ -748,7 +748,7 @@ const PracticeTests: React.FC<PracticeTestsProps> = ({
                           Completed Tests
                         </h3>
                         <button
-                          onClick={() => handleSetTab?.("Schedule")}
+                          onClick={() => handleSetTab?.("Summary")}
                           className="p-1.5 hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] 
                             rounded-lg transition-colors duration-200 text-sm font-medium flex items-center gap-1"
                         >

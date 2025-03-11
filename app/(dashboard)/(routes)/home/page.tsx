@@ -7,23 +7,22 @@ import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { FetchedActivity } from "@/types";
 import { isToday } from "date-fns";
-import Schedule from "./Schedule";
+import Summary from "./Summary";
 import SideBar from "./SideBar";
 import AdaptiveTutoring from "./AdaptiveTutoring";
-import FloatingButton from "./FloatingButton";
 import TestingSuit from "./TestingSuit";
 import ThemeSwitcher from "@/components/home/ThemeSwitcher";
 import FlashcardDeck from "./FlashcardDeck";
 import PracticeTests from "./PracticeTests";
 import StreakPopup from "@/components/score/StreakDisplay";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { checkProStatus, shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
 import { useAudio } from "@/contexts/AudioContext";
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import RedeemReferralModal from '@/components/social/friend-request/RedeemReferralModal';
+import ChatContainer from "@/components/chatgpt/ChatContainer";
+import HoverSidebar from "@/components/navigation/HoverSidebar";
 
 /* ----------------------------------------- Types ------------------------------------------ */
 interface ContentWrapperProps {
@@ -54,7 +53,7 @@ const ContentWrapper: React.FC<ContentWrapperProps> = memo(({ children }) => (
 ContentWrapper.displayName = 'ContentWrapper';
 
 // Memoize components that don't need frequent updates
-const MemoizedSchedule = memo(Schedule);
+const MemoizedSummary = memo(Summary);
 const MemoizedSideBar = memo(SideBar);
 const MemoizedAdaptiveTutoring = memo(AdaptiveTutoring);
 
@@ -72,16 +71,22 @@ const HomePage: React.FC = () => {
   // Debug mode check
   const isDebugMode = searchParams?.get('debug') === 'true';
 
+  // Get the default tab from query parameters or use KalypsoAI as default
+  const defaultTab = useMemo(() => {
+    const tabParam = searchParams?.get("tab");
+    return tabParam || "KalypsoAI";
+  }, [searchParams]);
+
   /* ---------------------------------------- State ---------------------------------------- */
   // Combine related states into a single object to reduce re-renders
   const [pageState, setPageState] = useState({
-    activeTab: searchParams?.get("tab") || "Schedule",
-    currentPage: "Schedule",
+    activeTab: defaultTab, // Use the calculated default tab
+    currentPage: defaultTab, // Match current page with active tab
     activities: [] as FetchedActivity[],
     isInitialized: false,
     currentStudyActivityId: null as string | null,
     chatbotContext: null as {contentTitle: string; context: string;} | null,
-    kalypsoState: "wait" as "wait" | "talk" | "end" | "start",
+    kalypsoState: "start" as "wait" | "talk" | "end" | "start", 
     isPro: false,
     showScorePopup: false,
     testScore: 0,
@@ -121,6 +126,11 @@ const HomePage: React.FC = () => {
   }, [pageState.isInitialized, userInfo, isLoadingUserInfo]);
 
   /* ---- Callbacks & Event Handlers ---- */
+  // Memoize chatbot context update
+  const updateChatbotContext = useCallback((context: {contentTitle: string; context: string;}) => {
+    updatePageState({ chatbotContext: context });
+  }, [updatePageState]);
+
   const initializePage = useCallback(async () => {
     if (!shouldInitialize) return;
     
@@ -205,96 +215,61 @@ const HomePage: React.FC = () => {
                 });
 
           return `${dayLabel}:
-      ${formatActivitiesForDate(dayActivities) || "No activities scheduled"}`;
+          ${formatActivitiesForDate(dayActivities) || "No activities scheduled"}`;
         })
         .join("\n\n")}
-    `.trim();
+    `;
 
-    setPageState(prev => ({ ...prev, chatbotContext: { contentTitle: "Personal Calendar", context: context } }));
+    if (chatbotRef.current) {
+      chatbotRef.current.sendMessage("", context);
+    }
   }, []);
 
+  // Fetch activities (used for refreshing data)
   const fetchActivities = useCallback(async () => {
+    if (loadingState.isLoading) return;
+
     try {
-      const response = await fetch("/api/calendar-activity");
-      if (!response.ok) {
-        console.error("[HOME_PAGE] Failed to fetch activities - status:", response.status);
-        throw new Error("Failed to fetch activities");
-      }
-      const activities = await response.json();
-
-      const todaysActivities = activities.filter((activity: FetchedActivity) =>
-        isToday(new Date(activity.scheduledDate))
-      );
-
-      // get UWorld activities that need task generation
-      const uworldActivities = todaysActivities.filter(
-        (activity: FetchedActivity) =>
-          activity.activityTitle === "UWorld" &&
-          (!activity.tasks || activity.tasks.length === 1)
-      );
-
-      let updatedActivities = [...activities];
-
-      // Only fetch UWorld updates if there are UWorld activities that need tasks
-      if (uworldActivities.length > 0) {
-        const responseUWorld = await fetch("/api/uworld/update", {
-          method: "POST",
-          body: JSON.stringify({ todayUWorldActivity: uworldActivities }),
-        });
-
-        const responseUWorldJson = await responseUWorld.json();
-        const uworldActivityTasks = responseUWorldJson.tasks;
-
-        // Update only the activities that needed new tasks
-        updatedActivities = updatedActivities.map((activity) =>
-          isToday(new Date(activity.scheduledDate)) &&
-          activity.activityTitle === "UWorld" &&
-          (!activity.tasks || activity.tasks.length === 1)
-            ? { ...activity, tasks: uworldActivityTasks }
-            : activity
-        );
-      }
-
-      // Force a new reference to trigger re-render
-      setPageState(prev => ({ ...prev, activities: [...updatedActivities] }));
-      updateCalendarChatContext(updatedActivities);
+      const activities = await fetch("/api/calendar-activity").then(res => res.json());
+      updatePageState({ activities });
     } catch (error) {
-      console.error("[HOME_PAGE] Error in fetchActivities:", error);
-      toast.error("Failed to fetch activities. Please try again.");
+      console.error('[HOME_PAGE] Error fetching activities:', error);
     }
-  }, [updateCalendarChatContext]);
+  }, [loadingState.isLoading, updatePageState]);
 
-  // Memoize activity handlers
-  const handleActivityChange = useCallback(async (newType: string, newLocation: string, metadata = {}) => {
+  // Handle activity tracking for user engagement
+  const handleActivityChange = useCallback(async (type: string, location: string) => {
     if (pageState.currentStudyActivityId) {
-      await endActivity(pageState.currentStudyActivityId);
-    }
-
-    const activity = await startActivity({
-      type: newType,
-      location: newLocation,
-      metadata: {
-        ...metadata,
-        timestamp: new Date().toISOString()
+      try {
+        await endActivity(pageState.currentStudyActivityId);
+      } catch (error) {
+        console.error('Error ending previous activity:', error);
       }
-    });
-
-    updatePageState({ currentStudyActivityId: activity.id });
-  }, [pageState.currentStudyActivityId, endActivity, startActivity, updatePageState]);
-
-  // Optimize tab change handler
-  const handleTabChange = useCallback(async (newTab: string) => {
-    if (newTab === "SUMMARIZE_WEEK") {
-        updatePageState({ activeTab: "Schedule" });
-        const sidebarInsightsTab = document.querySelector('[data-tab="tab1"]');
-        if (sidebarInsightsTab instanceof HTMLElement) {
-            sidebarInsightsTab.click();
-        }
-        return;
     }
 
-    if (newTab === "ankiclinic") {
+    try {
+      const activity = await startActivity({
+        type,
+        location,
+        metadata: {
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      if (activity) {
+        updatePageState({ currentStudyActivityId: activity.id });
+      }
+    } catch (error) {
+      console.error('Error starting new activity:', error);
+    }
+  }, [endActivity, startActivity, pageState.currentStudyActivityId, updatePageState]);
+
+  // Tab change handler with navigation logic
+  const handleTabChange = useCallback(async (newTab: string) => {
+    // Handle special navigation cases
+    if (newTab === 'AnkiClinic') {
         try {
+            // Clean up current activity first
             if (pageState.currentStudyActivityId) {
                 await endActivity(pageState.currentStudyActivityId);
             }
@@ -318,8 +293,8 @@ const HomePage: React.FC = () => {
         currentPage: tab
     };
 
-    if (tab === "Schedule" && view) {
-        router.push(`/home?tab=Schedule&view=${view}`);
+    if (tab === "Summary" && view) {
+        router.push(`/home?tab=Summary&view=${view}`);
     }
 
     updatePageState(updates);
@@ -342,17 +317,19 @@ const HomePage: React.FC = () => {
   };
 
   const toggleChatBot = () => {
-    // Implementation will be set up later
+    // Implement chatbot toggling functionality
+    updatePageState({ activeTab: "KalypsoAI" });
   };
 
   /* ---------------------------------------- Memoized Values ---------------------------------------- */
   const pageTitle = useMemo(() => {
     switch (pageState.activeTab) {
-      case "Schedule": return "Statistics";
+      case "Summary": return "Statistics";
       case "Tests": return "Testing Suite";
       case "AdaptiveTutoringSuite": return "Adaptive Tutoring Suite";
       case "flashcards": return "Flashcards";
       case "CARS": return "Daily CARs Practice";
+      case "KalypsoAI": return "Kalypso";
       default: return "Home";
     }
   }, [pageState.activeTab]);
@@ -394,7 +371,7 @@ const HomePage: React.FC = () => {
 
   useEffect(() => {
     updateCalendarChatContext(pageState.activities);
-  }, [pageState.activities]);
+  }, [pageState.activities, updateCalendarChatContext]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -417,10 +394,9 @@ const HomePage: React.FC = () => {
   }, [pageState.activities, pageState.activeTab]); // Re-run when content changes
 
   useEffect(() => {
-    switchKalypsoState("wait"); // Start with waiting animation
+    switchKalypsoState("start"); // Start with talking animation to encourage engagement
     return () => {
       if (timeoutRef.current) {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         clearTimeout(timeoutRef.current);
       }
     };
@@ -459,6 +435,17 @@ const HomePage: React.FC = () => {
     initializeActivity();
   }, [isLoadingUserInfo, pathname, pageState.activeTab, startActivity, pageState.currentStudyActivityId]);
 
+  // Handle URL without tab parameter - ensure we show Kalypso AI
+  useEffect(() => {
+    if (pathname === '/home' && !searchParams?.has('tab')) {
+      // Ensure we're showing Kalypso AI when user navigates directly to /home
+      updatePageState({
+        activeTab: 'KalypsoAI',
+        currentPage: 'KalypsoAI'
+      });
+    }
+  }, [pathname, searchParams, updatePageState]);
+
   useEffect(() => {
     if (!pageState.currentStudyActivityId) return;
 
@@ -489,38 +476,7 @@ const HomePage: React.FC = () => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, []);
-
-  // Monitor userInfo changes
-  useEffect(() => {
-    // Monitor userInfo
-  }, [userInfo]);
-
-  // Monitor loading state changes
-  useEffect(() => {
-    // Monitor loading state
-  }, [isLoadingUserInfo]);
-
-  // Add loading timeout effect
-  useEffect(() => {
-    if (isLoadingUserInfo) {
-      const timeout = setTimeout(() => {
-        updateLoadingState({
-          isLoadingTimeout: true,
-          isLoading: false
-        });
-        toast.error("Loading is taking longer than expected. Please refresh the page.");
-      }, 15000); // 15 second timeout
-
-      return () => clearTimeout(timeout);
-    }
-    return undefined;
-  }, [isLoadingUserInfo]);
-
-  // Memoize chatbot context update
-  const updateChatbotContext = useCallback((context: {contentTitle: string; context: string;}) => {
-    updatePageState({ chatbotContext: context });
-  }, [updatePageState]);
+  }, [endActivity, pageState.currentStudyActivityId]);
 
   /* -------------------------------------- Rendering ------------------------------------- */
   const content = useMemo(() => {
@@ -533,95 +489,104 @@ const HomePage: React.FC = () => {
     }
 
     return (
-      <ContentWrapper>
-        <div className="w-3/4 relative overflow-visible">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <h2
-                className="text-white text-2xl ml-3 font-thin leading-normal shadow-text cursor-pointer"
-                onClick={() => router.push("/home")}
-              >
-                {pageTitle}
-              </h2>
-              <ThemeSwitcher />
-            </div>
-          </div>
-          <div className="relative overflow-visible">
-            <div className="p-3 gradientbg h-[calc(100vh-5rem)] rounded-lg">
-              {pageState.activeTab === 'Schedule' && (
-                <MemoizedSchedule 
-                  handleSetTab={handleTabChange}
-                  isActive={pageState.activeTab === 'Schedule'}
-                  chatbotRef={chatbotRef}
-                  userInfo={userInfo}
-                />
-              )}
-              {pageState.activeTab === 'AdaptiveTutoringSuite' && (
-                <div className="h-full overflow-hidden">
-                  <MemoizedAdaptiveTutoring 
-                    toggleChatBot={toggleChatBot}
-                    setChatbotContext={updateChatbotContext}
-                    chatbotRef={chatbotRef}
-                    onActivityChange={handleActivityChange}
-                  />
-                </div>
-              )}
-              {pageState.activeTab === 'CARS' && <TestingSuit />}
-              {pageState.activeTab === 'flashcards' && <FlashcardDeck />}
-              {pageState.activeTab === 'Tests' && (
-                <PracticeTests 
-                  handleSetTab={handleTabChange} 
-                  chatbotRef={chatbotRef}
-                  onActivitiesUpdate={fetchActivities}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Floating Button - Positioned between main content and sidebar */}
-        <FloatingButton
+      <>
+        {/* Hover Sidebar - positioned outside ContentWrapper to be fixed */}
+        <HoverSidebar
+          activities={pageState.activities as any[]}
+          onTasksUpdate={(tasks) => {
+            updatePageState({ activities: tasks as FetchedActivity[] });
+          }}
           onTabChange={handleTabChange}
           currentPage={pageState.currentPage}
-          initialTab="Tests"
-          className="z-50"
-          activities={pageState.activities}
-          onTasksUpdate={(tasks) => updatePageState({ activities: tasks })}
           isSubscribed={isSubscribed}
         />
-
-        <div className="w-1/4">
-          <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
-            &nbsp;
-          </h2>
-          <div className="gradientbg p-3 h-[calc(100vh-5rem)] rounded-lg knowledge-profile-component">
-            <MemoizedSideBar 
-              activities={pageState.activities}
-              currentPage={pageState.currentPage}
-              chatbotContext={pageState.chatbotContext}
-              chatbotRef={chatbotRef}
-              handleSetTab={handleTabChange}
-              onActivitiesUpdate={fetchActivities}
-              isSubscribed={isSubscribed}
-            />
+        
+        <ContentWrapper>
+          <div className="w-3/4 relative overflow-visible">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <h2
+                  className="text-white text-2xl ml-3 font-thin leading-normal shadow-text cursor-pointer"
+                  onClick={() => router.push("/home")}
+                >
+                  {pageTitle}
+                </h2>
+                <ThemeSwitcher />
+              </div>
+            </div>
+            <div className="relative overflow-visible">
+              <div className="p-3 pb-6 gradientbg h-[calc(100vh-5.5rem)] rounded-lg mb-4">
+                {/* Set KalypsoAI as the main component to show */}
+                {(pageState.activeTab === 'KalypsoAI' || !pageState.activeTab) && (
+                  <div className="h-full overflow-hidden">
+                    <ChatContainer chatbotRef={chatbotRef} />
+                  </div>
+                )}
+                {pageState.activeTab === 'Summary' && (
+                  <MemoizedSummary 
+                    handleSetTab={handleTabChange}
+                    isActive={pageState.activeTab === 'Summary'}
+                    chatbotRef={chatbotRef}
+                    userInfo={userInfo}
+                  />
+                )}
+                {pageState.activeTab === 'AdaptiveTutoringSuite' && (
+                  <div className="h-full overflow-hidden">
+                    <MemoizedAdaptiveTutoring 
+                      toggleChatBot={toggleChatBot}
+                      setChatbotContext={updateChatbotContext}
+                      chatbotRef={chatbotRef}
+                      onActivityChange={handleActivityChange}
+                    />
+                  </div>
+                )}
+                {pageState.activeTab === 'CARS' && <TestingSuit />}
+                {pageState.activeTab === 'flashcards' && <FlashcardDeck />}
+                {pageState.activeTab === 'Tests' && (
+                  <PracticeTests 
+                    handleSetTab={handleTabChange} 
+                    chatbotRef={chatbotRef}
+                    onActivitiesUpdate={fetchActivities}
+                  />
+                )}
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Modals and Popups */}
-        {pageState.showReferralModal && (
-          <RedeemReferralModal 
-            isOpen={pageState.showReferralModal} 
-            onClose={() => updatePageState({ showReferralModal: false })}
-          />
-        )}
-        {pageState.showStreakPopup && (
-          <StreakPopup 
-            isOpen={pageState.showStreakPopup}
-            onClose={() => updatePageState({ showStreakPopup: false })}
-            streak={pageState.userStreak}
-          />
-        )}
-      </ContentWrapper>
+          <div className="w-1/4">
+            <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
+              &nbsp;
+            </h2>
+            <div className="gradientbg p-3 pb-6 h-[calc(100vh-5.5rem)] rounded-lg knowledge-profile-component mb-4">
+              <MemoizedSideBar 
+                activities={pageState.activities}
+                currentPage={pageState.currentPage}
+                chatbotContext={pageState.chatbotContext}
+                chatbotRef={chatbotRef}
+                handleSetTab={handleTabChange}
+                onActivitiesUpdate={fetchActivities}
+                isSubscribed={isSubscribed}
+                showTasks={true}
+              />
+            </div>
+          </div>
+
+          {/* Modals and Popups */}
+          {pageState.showReferralModal && (
+            <RedeemReferralModal 
+              isOpen={pageState.showReferralModal} 
+              onClose={() => updatePageState({ showReferralModal: false })}
+            />
+          )}
+          {pageState.showStreakPopup && (
+            <StreakPopup 
+              isOpen={pageState.showStreakPopup}
+              onClose={() => updatePageState({ showStreakPopup: false })}
+              streak={pageState.userStreak}
+            />
+          )}
+        </ContentWrapper>
+      </>
     );
   }, [
     isLoadingUserInfo,
@@ -642,7 +607,8 @@ const HomePage: React.FC = () => {
     pageState.showReferralModal,
     pageState.showStreakPopup,
     pageState.userStreak,
-    router
+    router,
+    updateChatbotContext
   ]);
 
   return content;
