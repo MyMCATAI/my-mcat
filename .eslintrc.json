@@ -26,7 +26,8 @@
     ],
     "import/no-unused-modules": ["warn", {
       "unusedExports": true
-    }]
+    }],
+    "@typescript-eslint/no-explicit-any": "warn"
   },
   "settings": {
     "import/resolver": {
