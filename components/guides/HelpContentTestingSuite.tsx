@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import clsx from 'clsx';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FaDiscord } from 'react-icons/fa';
-import MessageButton from '@/components/MessageButton';
 import Link from 'next/link';
 import { SubscriptionButton } from '@/components/subscription-button';
 import { useRouter } from "next/navigation"; 
@@ -1431,7 +1430,7 @@ const ResourcePack: React.FC = () => {
 
               {/* Discord Link */}
               <a
-                href="https://discord.gg/DcHWnEu8Xb"
+                href="https://discord.gg/j5ZHSPWZ9X"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
@@ -1439,10 +1438,6 @@ const ResourcePack: React.FC = () => {
                 <FaDiscord className="w-5 h-5" />
                 <span>Join Discord</span>
               </a>
-              
-              <MessageButton 
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[--theme-leaguecard-color] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text] transition-colors"
-              />
             </div>
           </div>
         )}

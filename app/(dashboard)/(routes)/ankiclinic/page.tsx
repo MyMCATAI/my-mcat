@@ -23,6 +23,7 @@ import { getAccentColor, getWelcomeMessage, getSuccessMessage } from './utils';
 import { useGame } from "@/store/selectors";
 import { useWindowSize } from "@/store/selectors";
 import ClinicHeader from "./components/ClinicHeader";
+import HoverSidebar from "@/components/navigation/HoverSidebar";
 
 // Dynamically import components with SSR disabled
 const ResourcesMenu = dynamic(() => import('./ResourcesMenu'), {
@@ -1040,19 +1041,14 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         setLargeDialogQuit={setLargeDialogQuit}
       />}
       
-      {/* Hide floating button on mobile */}
-      {!isMobile && (
-        <div className="absolute bottom-4 right-4 z-[100]">
-          <FloatingButton
-            currentPage="ankiclinic"
-            initialTab={activeTab}
-            activities={activities}
-            onTasksUpdate={fetchActivities}
-            isSubscribed={isSubscribed}
-            onTabChange={handleTabChange}
-          />
-        </div>
-      )}
+      {/* Add HoverSidebar instead of FloatingButton */}
+      <HoverSidebar
+        activities={activities as any[]}
+        onTasksUpdate={(tasks) => fetchActivities()}
+        onTabChange={handleTabChange}
+        currentPage="ankiclinic"
+        isSubscribed={isSubscribed}
+      />
       
       <RedeemReferralModal 
         isOpen={showReferralModal}
