@@ -24,8 +24,7 @@ const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
 /* --- Constants ----- */
 const QUICK_ACTIONS = [
   { id: "schedule", text: "Schedule", prompt: "What's my Schedule" },
-  { id: "weaknesses", text: "Weaknesses", prompt: "Summarize my Weakest Topics" },
-  { id: "progress", text: "Progress", prompt: "Show me my progress so far" }
+  { id: "knowledge", text: "Knowledge Profile", prompt: "Show me my Knowledge Profile" }
 ];
 
 /* ----- Types ---- */
