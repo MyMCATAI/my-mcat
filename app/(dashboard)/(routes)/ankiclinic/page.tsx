@@ -1,15 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, Suspense, forwardRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback, Suspense, useMemo } from "react";
 import ReactDOM from 'react-dom';
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { DoctorOfficeStats } from "@/types";
 import { toast, Toaster } from "react-hot-toast";
-import Image from "next/image";
-import { calculatePlayerLevel, getPatientsPerDay, calculateTotalQC, 
-  getClinicCostPerDay, getLevelNumber, calculateQualityOfCare } from "@/utils/calculateResourceTotals";
 import { imageGroups } from "./constants/imageGroups";
-import { PurchaseButton } from "@/components/purchase-button";
 import dynamic from 'next/dynamic';
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useUserActivity } from '@/hooks/useUserActivity';
@@ -17,32 +13,25 @@ import { useAudio } from "@/store/selectors";
 import type { UserResponse } from "@prisma/client";
 import type { FetchedActivity } from "@/types";
 import { GridImage } from './types';
-import type { UserResponseWithCategory } from "@/types";
-import { shouldShowRedeemReferralModal } from '@/lib/referral';
-import { getAccentColor, getWelcomeMessage, getSuccessMessage } from './utils';
+import { getWelcomeMessage, getSuccessMessage } from './utils';
 import { useGame } from "@/store/selectors";
 import { useWindowSize } from "@/store/selectors";
 import ClinicHeader from "./components/ClinicHeader";
 import HoverSidebar from "@/components/navigation/HoverSidebar";
+import OfficeContainer from './OfficeContainer';
+import ResourcesMenu from './ResourcesMenu';
 
-// Dynamically import components with SSR disabled
-const ResourcesMenu = dynamic(() => import('./ResourcesMenu'), {
-  ssr: false
+// Important UI components with loading fallbacks
+const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
+  ssr: false,
+  loading: () => (
+    <button className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center opacity-70">
+      <span className="animate-pulse">Loading...</span>
+    </button>
+  )
 });
 
-const WelcomeDialog = dynamic(() => import('./WelcomeDialog'), {
-  ssr: false
-});
-
-const OfficeContainer = dynamic(() => import('./OfficeContainer'), {
-  ssr: false
-});
-
-const FloatingButton = dynamic(() => import('../home/FloatingButton'), {
-  ssr: false
-});
-
-// Dynamically import components that can be lazy-loaded
+// Secondary components that can load later
 const ShoppingDialog = dynamic(() => import('./ShoppingDialog'), {
   ssr: false
 });
@@ -55,11 +44,11 @@ const AfterTestFeed = dynamic(() => import('./AfterTestFeed'), {
   ssr: false
 });
 
-const RedeemReferralModal = dynamic(() => import('@/components/social/friend-request/RedeemReferralModal'), {
+const WelcomeDialog = dynamic(() => import('./WelcomeDialog'), {
   ssr: false
 });
 
-const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
+const RedeemReferralModal = dynamic(() => import('@/components/social/friend-request/RedeemReferralModal'), {
   ssr: false
 });
 
@@ -72,29 +61,17 @@ const LoadingClinic = () => (
 );
 
 /* --- Constants ----- */
-const AMBIENT_SOUND = '/audio/flashcard-loop-catfootsteps.mp3';
+const AMBIENT_SOUND = 'flashcard-loop-catfootsteps';
 
 /* ----- Types ---- */
-interface DoctorsOfficePageProps {
-  // Add any props if needed
-}
 
-const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
+const DoctorsOfficePage = () => {
   // Add a check for window at the component level
   const isBrowser = typeof window !== 'undefined';
   
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  
-  // Add missing refs
-  const mountCountRef = useRef(0);
+  // Consolidate refs
   const isFetchingRef = useRef(false);
-  const isInitializedRef = useRef(false);
-  const stateUpdateInProgressRef = useRef(false);
   const isMountedRef = useRef(false);
-  const ambientSoundInitializedRef = useRef(false);
-  
-  // Keep only essential refs, remove debugging refs
   const officeContainerRef = useRef<HTMLDivElement>(null);
   const flashcardsDialogRef = useRef<{ 
     open: () => void, 
@@ -106,9 +83,10 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const hasCalculatedRef = useRef(false);
   
-  // Remove debug-related refs
-  // mountCountRef, isFetchingRef, isInitializedRef, stateUpdateInProgressRef, isMountedRef, etc.
-
+  // Use a ref instead of state to track ambient sound initialization
+  // This prevents re-renders when the ambient sound is initialized
+  const ambientSoundInitializedRef = useRef(false);
+  
   /* ------------------------------------------- Hooks -------------------------------------------- */
   const { isSubscribed, userInfo, incrementScore, decrementScore, refetch } = useUserInfo();
   const audio = useAudio();
@@ -131,21 +109,25 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
   } = useGame();
   
   /* ------------------------------------------- State -------------------------------------------- */
-  const [activeTab, setActiveTab] = useState("ankiclinic");
   const [showWelcomeDialogue, setShowWelcomeDialogue] = useState(false);
   const [isAfterTestDialogOpen, setIsAfterTestDialogOpen] = useState(false);
   const [largeDialogQuit, setLargeDialogQuit] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [totalMCQQuestions, setTotalMCQQuestions] = useState(0);
-  const [correctMCQQuestions, setCorrectMCQQuestions] = useState(0);
+  const [mcqState, setMcqState] = useState({
+    isLoading: true,
+    totalQuestions: 0,
+    correctQuestions: 0
+  });
   const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
-  const [clinicCostPerDay, setClinicCostPerDay] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [populateRoomsFn, setPopulateRoomsFn] = useState<(() => GridImage[]) | null>(null);
   const [activities, setActivities] = useState<FetchedActivity[]>([]);
   const [reportData, setReportData] = useState<DoctorOfficeStats | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
+  const marketplaceDialogRef = useRef<{
+    open: () => void
+  } | null>(null);
 
   /* ----------------------------------------- Computation ----------------------------------------- */
 
@@ -195,14 +177,39 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     setVisibleImages(newVisibleImages);
   }, []);
 
-  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    audio.setVolume(newVolume);
-  }, [audio]);
 
   // Create a stable callback for setting the function
   const handleSetPopulateRooms = useCallback((fn: () => GridImage[]) => {
     setPopulateRoomsFn(() => fn);
+  }, []);
+
+  // Create wrapper functions that match the expected React.Dispatch<React.SetStateAction<T>> type
+  const handleSetIsLoading = useCallback<React.Dispatch<React.SetStateAction<boolean>>>((value) => {
+    if (typeof value === 'function') {
+      // If it's a function updater, call it with the current value
+      const updaterFn = value as (prevState: boolean) => boolean;
+      setMcqState(prev => ({ 
+        ...prev, 
+        isLoading: updaterFn(prev.isLoading) 
+      }));
+    } else {
+      // If it's a direct value
+      setMcqState(prev => ({ ...prev, isLoading: value }));
+    }
+  }, []);
+
+  const handleSetTotalMCQQuestions = useCallback<React.Dispatch<React.SetStateAction<number>>>((value) => {
+    if (typeof value === 'function') {
+      // If it's a function updater, call it with the current value
+      const updaterFn = value as (prevState: number) => number;
+      setMcqState(prev => ({ 
+        ...prev, 
+        totalQuestions: updaterFn(prev.totalQuestions) 
+      }));
+    } else {
+      // If it's a direct value
+      setMcqState(prev => ({ ...prev, totalQuestions: value }));
+    }
   }, []);
 
   /* ----------------------------------------- UseEffects ---------------------------------------- */
@@ -214,174 +221,86 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     }
   }, [userInfo, isClinicUnlocked]);
 
-  // Use isBrowser check for any window/document access
+  // Improved audio management effect - using audio store state to prevent duplicate loops
   useEffect(() => {
     if (!isBrowser) return;
     
-    mountCountRef.current += 1;
+    // Set mounted flag only once
     isMountedRef.current = true;
     
-    console.log('[DEBUG] AnkiClinic mounted, pathname:', pathname);
-    console.log('[DEBUG] Mount count:', mountCountRef.current);
+    // Only initialize ambient sound once when component mounts
+    let timeoutId: NodeJS.Timeout | undefined;
     
-    // Check for React Strict Mode (which causes double renders)
-    if (mountCountRef.current === 2) {
-      console.log('[DEBUG] Detected possible React Strict Mode (double render)');
-    }
-    
-    // Create a stable reference to the audio object
-    const audioRef = audio;
-    
-    return () => {
-      console.log('[DEBUG] AnkiClinic unmounting');
-      isMountedRef.current = false;
-      
-      // Cleanup any in-progress operations
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      
-      // Ensure we stop all audio when component unmounts
-      console.log('[DEBUG] Stopping all audio on unmount');
-      audioRef.stopAllLoops();
-      
-      // Reset the ambient sound initialization flag
-      if (ambientSoundInitializedRef.current) {
-        console.log('[DEBUG] Resetting ambient sound initialization flag');
-        ambientSoundInitializedRef.current = false;
+    const initializeAmbientSound = () => {
+      // Only initialize if not already initialized, flashcards are not open, and no loop is currently playing
+      if (!ambientSoundInitializedRef.current && !isFlashcardsOpen && !audio.currentLoop) {
+        // Set the flag before playing to prevent race conditions
+        ambientSoundInitializedRef.current = true;
+        audio.playLoop(AMBIENT_SOUND);
       }
     };
-  }, [pathname, isBrowser]);
-
-  // Add a new effect to initialize ambient sound
-  useEffect(() => {
-    if (!isBrowser) return;
     
-    // Only play ambient sound if:
-    // 1. Component is mounted
-    // 2. Not in loading state
-    // 3. Flashcards are not open
-    // 4. Ambient sound hasn't been initialized yet
-    if (isMountedRef.current && !isLoading && !isFlashcardsOpen && !ambientSoundInitializedRef.current) {
-      // Add a longer delay to ensure audio context is ready and component is stable
-      const timeoutId = setTimeout(() => {
-        if (!isMountedRef.current) {
-          return;
-        }
+    // Handle flashcard state changes
+    if (isFlashcardsOpen) {
+      if (audio.currentLoop === AMBIENT_SOUND) {
+        audio.stopLoop();
+      }
+    } else if (!audio.currentLoop) {
+      // If no loop is playing, initialize with a small delay
+      if (!timeoutId && !ambientSoundInitializedRef.current) {
+        // Clear any existing timeout to prevent multiple initializations
+        if (timeoutId) clearTimeout(timeoutId);
         
-        try {
-          // Mark as initialized to prevent multiple initializations
-          ambientSoundInitializedRef.current = true;
-          
-          // Play the ambient sound loop
-          audio.loopSound(AMBIENT_SOUND);
-        } catch (error) {
-          console.error('[ERROR] Failed to play ambient sound:', error);
-          // Reset the initialized flag so we can try again
+        timeoutId = setTimeout(() => {
+          // Double-check conditions before initializing
+          if (!ambientSoundInitializedRef.current && !isFlashcardsOpen && !audio.currentLoop) {
+            initializeAmbientSound();
+          }
+        }, 1000);
+      } else if (ambientSoundInitializedRef.current) {
+        // Only restart if we've initialized before but no loop is playing
+        audio.playLoop(AMBIENT_SOUND);
+      }
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      
+      // Only stop audio on actual unmount, not just re-renders
+      const isRealUnmount = document.visibilityState === 'hidden' || 
+                            (officeContainerRef.current && !document.body.contains(officeContainerRef.current));
+      
+      if (isRealUnmount) {
+        isMountedRef.current = false;
+        
+        if (audio.currentLoop === AMBIENT_SOUND) {
+          audio.stopLoop();
           ambientSoundInitializedRef.current = false;
         }
-      }, 1500); // Longer delay to ensure stability
-      
-      return () => {
-        clearTimeout(timeoutId);
-      };
-    }
-  }, [isBrowser, isLoading, isFlashcardsOpen, audio]);
-
-  // Add a cleanup effect that only runs on unmount
-  useEffect(() => {
-    // This effect doesn't do anything on mount
-    
-    // But it provides a cleanup function for component unmount
-    return () => {
-      if (ambientSoundInitializedRef.current) {
-        console.log('[DEBUG] Final cleanup: Stopping all audio on unmount');
-        audio.stopAllLoops();
-        ambientSoundInitializedRef.current = false;
       }
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  // We intentionally use an empty dependency array to only run on mount/unmount
-  
-  // Add a separate effect to handle flashcard state changes
-  useEffect(() => {
-    if (!isBrowser || !isMountedRef.current) return;
-    
-    // If flashcards are open, stop the ambient sound
-    if (isFlashcardsOpen && ambientSoundInitializedRef.current) {
-      // Keep the small delay before stopping the ambient sound
-      // This ensures the door open sound has time to play
-      setTimeout(() => {
-        if (isMountedRef.current && isFlashcardsOpen) {
-          audio.stopLoopSound(AMBIENT_SOUND);
-        }
-      }, 300);
-      
-      // Don't reset the initialized flag, as we'll restart when flashcards close
-      return;
-    }
-    
-    // If flashcards were closed and ambient sound was initialized, restart it
-    if (!isFlashcardsOpen && ambientSoundInitializedRef.current && isMountedRef.current) {
-      // Use a ref to track the timeout ID to prevent multiple restarts
-      const timeoutIdRef = { current: null as NodeJS.Timeout | null };
-      
-      // Small delay before restarting
-      timeoutIdRef.current = setTimeout(() => {
-        if (isMountedRef.current) {
-          audio.loopSound(AMBIENT_SOUND);
-        }
-      }, 500);
-      
-      return () => {
-        // Only clear the timeout, don't stop the sound here
-        if (timeoutIdRef.current) {
-          clearTimeout(timeoutIdRef.current);
-          timeoutIdRef.current = null;
-        }
-      };
-    }
   }, [isBrowser, isFlashcardsOpen, audio]);
 
   // Simplified effect for flashcard dialog auto-open
   useEffect(() => {
-    if (isLoading || isClosingDialogRef.current) {
+    if (mcqState.isLoading || isClosingDialogRef.current) {
       return;
     }
     
     if (flashcardRoomId !== "" && !isFlashcardsOpen) {
       setIsFlashcardsOpen(true);
     }
-  }, [flashcardRoomId, isFlashcardsOpen, isLoading, setIsFlashcardsOpen]);
-
-  // Debug mode effect
-  useEffect(() => {
-    if (!isBrowser) return;
-    
-    // Check if user is signed in and refresh user info if needed
-    if (isSubscribed && !userInfo) {
-      refetch();
-    }
-  }, [isBrowser, isSubscribed, userInfo, refetch]);
+  }, [flashcardRoomId, isFlashcardsOpen, mcqState.isLoading, setIsFlashcardsOpen]);
 
   const fetchData = async () => {
     // If already fetching, don't start another fetch
-    if (isFetchingRef.current) {
-      // Skipping redundant data fetch - fetch already in progress
-      return;
-    }
-    
-    // Skip if we already have data and are not in loading state
-    if (reportData && !isLoading) {
-      // Data already loaded and not in loading state, skipping fetch
+    if (isFetchingRef.current || (reportData && !mcqState.isLoading)) {
       return;
     }
     
     // Set fetching flag and loading state
     isFetchingRef.current = true;
-    if (!isLoading) {
-      setIsLoading(true);
-    }
     
     // Create a new abort controller
     if (abortControllerRef.current) {
@@ -436,7 +355,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
             setTotalPatients(clinicData.totalPatientsTreated || 0);
           }
           
-          setIsLoading(false);
+          setMcqState(prev => ({ ...prev, isLoading: false }));
         });
       } else {
         // Fallback for server-side or if unstable_batchedUpdates is not available
@@ -457,7 +376,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           setTotalPatients(clinicData.totalPatientsTreated || 0);
         }
         
-        setIsLoading(false);
+        setMcqState(prev => ({ ...prev, isLoading: false }));
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
@@ -470,16 +389,14 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     } finally {
       if (isMountedRef.current) {
         isFetchingRef.current = false;
-        setIsLoading(false);
       }
     }
   };
 
   // Simplified effect for data initialization
   useEffect(() => {
-    // Add a small delay to ensure client-side hydration is complete
+    // Fetch data only once on mount
     const timer = setTimeout(() => {
-      console.log('[DEBUG] does not appear');
       fetchData();
     }, 10);
     
@@ -489,7 +406,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         abortControllerRef.current.abort();
       }
     };
-  }, []);
+  }, []); // Empty dependency array ensures it only runs once
 
   const performDailyCalculations = async () => {
     if (isCalculating) {
@@ -589,17 +506,17 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   // Effect to run daily calculations after data is loaded
   useEffect(() => {
-    if (!isLoading && userInfo && !hasCalculatedRef.current) {
+    if (!mcqState.isLoading && userInfo && !hasCalculatedRef.current) {
       performDailyCalculations();
       hasCalculatedRef.current = true;
     }
-  }, [isLoading, userInfo]);
+  }, [mcqState.isLoading, userInfo]);
 
   const handleTabChange = (tab: string) => {
     if (tab !== "ankiclinic") {
       router.push(`/home?tab=${tab}`);
     }
-    setActiveTab(tab);
+    // No need to update activeTab state
   };
 
   const handleCompleteAllRoom = () => {
@@ -679,8 +596,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     });
     
     // Reset local state that's not in the store
-    setTotalMCQQuestions(0);
-    setCorrectMCQQuestions(0);
+    setMcqState(prev => ({ ...prev, totalQuestions: 0, correctQuestions: 0 }));
 
     flashcardsDialogRef.current?.setWrongCards([])
     flashcardsDialogRef.current?.setCorrectCount(0)
@@ -734,7 +650,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   const handleMCQAnswer = (isCorrect: boolean) => {
     if (isCorrect) {
-      setCorrectMCQQuestions(prev => prev + 1);
+      setMcqState(prev => ({ ...prev, correctQuestions: prev.correctQuestions + 1 }));
     }
   };
 
@@ -745,7 +661,6 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     endGame();
   };
 
-  /* ----------------------------------------- Render  ---------------------------------------- */
 
   // Create wrapper functions to adapt between React's setState and Zustand's actions
   const handleSetFlashcardRoomId = useCallback((roomId: string | ((prevState: string) => string)) => {
@@ -771,22 +686,23 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     }
   }, [activeRooms, setActiveRooms]);
 
-  // Handle flashcard dialog open/close - simplified
-  const handleSetIsFlashcardsOpen = useCallback((open: boolean) => {
-    if (isClosingDialogRef.current && open) {
+
+  const handleSetIsFlashcardsOpen = useCallback((value: boolean) => {
+    // Prevent rapid open/close cycles or redundant updates
+    if ((isClosingDialogRef.current && value) || value === isFlashcardsOpen) {
       return;
     }
     
-    if (open) {
+    if (value) {
       // OPENING FLASHCARD DIALOG
-      // Note: We're keeping this here for cases where the dialog is opened programmatically,
-      // but in most cases, the sound will be played by the RoomSprite component when a question is clicked
-      if (!isFlashcardsOpen) {
-        // Only play the sound if it wasn't triggered by a room click
-        // This prevents duplicate sounds from playing
-        if (flashcardRoomId === "") {
-          audio.playSound('flashcard-door-open');
-        }
+      // Only play the sound if it wasn't triggered by a room click
+      if (flashcardRoomId === "") {
+        audio.playSound('flashcard-door-open');
+      }
+      
+      // Stop ambient sound when opening flashcards
+      if (audio.currentLoop === AMBIENT_SOUND) {
+        audio.stopLoop();
       }
     } else {
       // CLOSING FLASHCARD DIALOG
@@ -795,28 +711,21 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
       // Play door close sound when dialog is closed
       audio.playSound('flashcard-door-closed');
       
-      if (isLoading) {
-        setIsLoading(false);
-      }
-    }
-    
-    setIsFlashcardsOpen(open);
-    
-    if (!open) {
+      // Handle cleanup after closing
       setTimeout(() => {
-        // Remove this room removal logic and let FlashcardsDialog.handleClose handle it
-        
+        setFlashcardRoomId('');
         setTimeout(() => {
-          setFlashcardRoomId('');
-          
-          setTimeout(() => {
-            isClosingDialogRef.current = false;
-          }, 100);
-        }, 300);
+          isClosingDialogRef.current = false;
+        }, 100);
       }, 300);
     }
-  }, [flashcardRoomId, setFlashcardRoomId, setIsFlashcardsOpen, isLoading, audio, isFlashcardsOpen]);
+    
+    // Update state
+    setIsFlashcardsOpen(value);
+  }, [flashcardRoomId, setFlashcardRoomId, setIsFlashcardsOpen, audio, isFlashcardsOpen]);
 
+
+  // Handle flashcard dialog open/close - improved with audio state checks
   const handleSetCompleteAllRoom = useCallback((complete: boolean | ((prevState: boolean) => boolean)) => {
     if (typeof complete === 'function') {
       const newComplete = complete(completeAllRoom);
@@ -828,7 +737,7 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
   // Simplified effect for test completion
   useEffect(() => {
-    if (!isLoading && completeAllRoom && currentUserTestId) {
+    if (!mcqState.isLoading && completeAllRoom && currentUserTestId) {
       const finishTest = async () => {
         try {
           await fetchUserResponses(currentUserTestId);
@@ -864,15 +773,14 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
 
       finishTest();
     }
-  }, [currentUserTestId, completeAllRoom, isLoading, isFlashcardsOpen, largeDialogQuit, 
+  }, [currentUserTestId, completeAllRoom, mcqState.isLoading, isFlashcardsOpen, largeDialogQuit, 
       fetchUserResponses, correctCount, wrongCount, setTestScore]);
   
   // Show loading state during initial load
-  if (isLoading && !isClinicUnlocked) {
+  if (mcqState.isLoading && !isClinicUnlocked) {
     return <LoadingClinic />;
   }
 
-  // Add a toggle button component for the sidebar
   const SidebarToggleButton = ({ onClick }: { onClick: () => void }) => (
     <button 
       onClick={onClick}
@@ -887,7 +795,8 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
     </button>
   );
 
-  // Rest of the component remains the same
+  /* ----------------------------------------- Render  ---------------------------------------- */
+
   return (
     <div className={`absolute inset-0 flex bg-transparent text-[--theme-text-color] ${isMobile ? 'p-0' : 'p-4'}`}>
       <Toaster position="top-center" />
@@ -1007,8 +916,19 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
                   />
                 </div>
                 
-                {/* Right side - Sidebar toggle */}
-                <div>
+                {/* Right side - Sidebar toggle and Marketplace */}
+                <div className="flex gap-2">
+                  {/* Marketplace button */}
+                  <button 
+                    onClick={() => setIsMarketplaceOpen(true)}
+                    className="p-3 bg-[--theme-gradient-startstreak] rounded-full shadow-lg flex items-center justify-center"
+                    aria-label="Open marketplace"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </button>
+                  
                   <SidebarToggleButton onClick={() => setIsSidebarOpen(!isSidebarOpen)} />
                 </div>
               </div>
@@ -1060,10 +980,10 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         isOpen={isFlashcardsOpen}
         onOpenChange={handleSetIsFlashcardsOpen}
         roomId={flashcardRoomId}
-        isLoading={isLoading}
-        setIsLoading={setIsLoading}
+        isLoading={mcqState.isLoading}
+        setIsLoading={handleSetIsLoading}
         onMCQAnswer={handleMCQAnswer}
-        setTotalMCQQuestions={setTotalMCQQuestions}
+        setTotalMCQQuestions={handleSetTotalMCQQuestions}
         buttonContent={<div />}
       />}
 
@@ -1090,6 +1010,21 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
         </div>
       )}
 
+      {/* Desktop only - Marketplace button */}
+      {!isMobile && (
+        <div className="absolute bottom-4 left-[calc(25%+120px)] z-50">
+          <button 
+            className="text-sm text-white font-bold flex items-center p-2 bg-[--theme-gradient-startstreak] rounded-lg"
+            onClick={() => setIsMarketplaceOpen(true)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Marketplace
+          </button>
+        </div>
+      )}
+
       {/* Desktop only - New Game button */}
       {!isMobile && (
         <div className="absolute top-6 left-4 ml-[calc(25%+16px)] flex gap-2 z-50">
@@ -1098,13 +1033,24 @@ const DoctorsOfficePage = ({ ...props }: DoctorsOfficePageProps) => {
           />
         </div>
       )}
+
+      {/* Add ShoppingDialog */}
+      {isMarketplaceOpen && (
+        <ShoppingDialog
+          ref={marketplaceDialogRef}
+          imageGroups={imageGroups}
+          visibleImages={visibleImages}
+          toggleGroup={toggleGroup}
+          userScore={userInfo?.score || 0}
+          isOpen={isMarketplaceOpen}
+          onOpenChange={setIsMarketplaceOpen}
+        />
+      )}
     </div>
   );
 };
 
 // Wrap the component with React.memo to prevent unnecessary re-renders
-export default React.memo(DoctorsOfficePage, (prevProps, nextProps) => {
-  // Return true if props are equal (meaning no re-render needed)
-  // Since we don't have any props that should trigger re-renders, we return true
-  return true;
-});
+// eslint-disable-next-line import/no-unused-modules
+export default React.memo(DoctorsOfficePage);
+

@@ -112,7 +112,8 @@ const ProfilePhoto = React.memo(({
                   opacity: 1,
                   transition: 'opacity 300ms',
                 }}
-                onLoadingComplete={(img) => {
+                onLoad={(e) => {
+                  const img = e.target as HTMLImageElement;
                   if (img.src.includes(profilePhoto || 'doctor.png')) {
                     img.style.opacity = "1";
                   }

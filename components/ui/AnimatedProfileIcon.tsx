@@ -145,9 +145,6 @@ const AnimatedProfileIcon: React.FC<AnimatedProfileIconProps> = ({
               className="w-full h-full object-cover transition-opacity duration-300 cursor-pointer"
               quality={100}
               style={{ opacity: 1 }}
-              onLoadingComplete={(img) => {
-                img.style.opacity = "1";
-              }}
               onLoad={(e) => {
                 (e.target as HTMLImageElement).style.opacity = "1";
               }}

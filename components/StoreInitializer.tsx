@@ -3,6 +3,8 @@
 import { useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useStore } from '@/store/store';
+import { useAudioStore } from '@/store/slices/audioSlice';
+import { initializeGlobalStore } from '@/store';
 
 /**
  * StoreInitializer component
@@ -17,14 +19,20 @@ import { useStore } from '@/store/store';
 const StoreInitializer = () => {
   const { isLoaded, isSignedIn } = useUser();
   const refreshUserInfo = useStore(state => state.refreshUserInfo);
-  const initializeStore = useStore(state => state.initializeStore);
+  const initializeAudioContext = useAudioStore(state => state.initializeAudioContext);
   
   // Initialize the global store when the app starts
   useEffect(() => {
-    initializeStore().catch(error => {
+    // Initialize audio context
+    initializeAudioContext().catch(error => {
+      console.error('[StoreInitializer] Error initializing audio context:', error);
+    });
+    
+    // Initialize global store (will be expanded as we add more slices)
+    initializeGlobalStore().catch(error => {
       console.error('[StoreInitializer] Error initializing global store:', error);
     });
-  }, [initializeStore]);
+  }, [initializeAudioContext]);
   
   // Refresh user information when the user is signed in
   useEffect(() => {

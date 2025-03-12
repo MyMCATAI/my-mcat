@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { useUserActivity } from "@/hooks/useUserActivity";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudio } from "@/store/selectors";
 import { toast } from "react-hot-toast";
 
 /* ---------------------------------------- Types ---------------------------------------- */

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Styles } from "react-chatbotify";
 import Image from "next/image";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudio } from "@/store/selectors";
 
 const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
   ssr: false,

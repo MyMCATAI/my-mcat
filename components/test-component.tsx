@@ -9,7 +9,6 @@ import ChatBotInLine from "@/components/chatbot/ChatBotInLine";
 import ScoreDialog from "@/components/ScoreDialog";
 import TestHeader, { TestHeaderRef } from "@/components/test/TestHeader";
 import DictionaryLookup from "./DictionaryLookup";
-import { VocabContext } from "@/contexts/VocabContext";
 import VocabList from "@/components/VocabList";
 import { fetchDefinitionAndAddToVocab } from "@/lib/utils";
 import { TestIntroModal } from "@/components/test/TestIntroModal";
@@ -19,7 +18,7 @@ import MessageButton from "@/components/MessageButton";
 import { calculateScore, extractQuotedStrings, saveAnnotations } from "@/lib/test-utils";
 import { testApi } from "@/services/testApi";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudio, useVocab } from "@/store/selectors";
 
 interface TestComponentProps {
   testId: string;
@@ -106,7 +105,7 @@ const TestComponent: React.FC<TestComponentProps> = ({
     addVocabWord, 
     showVocabList,
     toggleVocabList,
-  } = useContext(VocabContext);
+  } = useVocab();
 
   const [shouldShowChatbot, setShouldShowChatbot] = useState(false);
   const [hasAnsweredFirstQuestion, setHasAnsweredFirstQuestion] =useState(false);
