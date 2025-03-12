@@ -166,6 +166,7 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
     setActiveTab(item.id);
     
     if (item.id === 'ankiclinic') {
+      console.log(`======== Anki Clinic clicked ${new Date().toISOString()} ========`);
       router.push('/ankiclinic');
     } else {
       onTabChange(item.tab);

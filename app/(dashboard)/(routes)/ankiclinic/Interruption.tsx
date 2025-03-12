@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAudio } from '@/contexts/AudioContext';
+import { useAudio } from '@/store/selectors';
 import Image from 'next/image';
 
 interface InterruptionProps {

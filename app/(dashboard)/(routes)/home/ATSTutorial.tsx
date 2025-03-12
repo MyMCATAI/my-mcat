@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useEffect, useState } from "react";
 import Joyride, { CallBackProps, STATUS, Step, EVENTS } from "react-joyride";
-import { useAudio } from '@/contexts/AudioContext';
+import { useAudio } from '@/store/selectors';
 
 interface ATSTutorialProps {
   runPart1: boolean;

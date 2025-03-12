@@ -1,0 +1,685 @@
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+import { ThemeType } from './uiSlice';
+
+
+
+//========================= Types ===============================
+interface VolumeCoefficients {
+  master: number;
+  music: number;
+  sfx: number;
+  loop: number;
+}
+// Default volume settings
+const DEFAULT_VOLUMES: VolumeCoefficients = {
+  master: 0.7,
+  music: 0.7,
+  sfx: 0.5,  // Increase to full volume for better audibility
+  loop: 0.5
+};
+
+interface AudioState {
+  masterVolume: number;
+  currentMusic: string | null;
+  currentLoop: string | null;
+  isPlaying: boolean;
+  audioContext: AudioContext | null;
+  musicSource: AudioBufferSourceNode | null;
+  loopSource: AudioBufferSourceNode | null;
+  bufferCache: Map<string, AudioBuffer>;
+  // Player state
+  volume: number;
+  currentSong: string | null;
+  songQueue: string[];
+  currentSongIndex: number;
+  // Audio nodes for proper volume control
+  masterGainNode: GainNode | null;
+  musicGainNode: GainNode | null;
+  sfxGainNode: GainNode | null;
+  loopGainNode: GainNode | null;
+
+  // Sound Mappings for SFX
+  _SOUND_MAPPINGS: Record<string, string>;
+  // Track loading state to prevent duplicate playback
+  _isLoopLoading: boolean;
+  _pendingLoopName: string | null;
+}
+
+interface AudioActions {
+  setMasterVolume: (volume: number) => void;
+  playMusic: (trackUrl: string) => Promise<void>;
+  stopMusic: () => void;
+  playSound: (sfxName: string) => Promise<void>;
+  playLoop: (loopName: string) => Promise<void>;
+  stopLoop: () => void;
+  loadAudioBuffer: (url: string) => Promise<AudioBuffer>;
+  initializeAudioContext: () => Promise<void>;
+  // Enhanced player controls
+  setVolume: (volume: number) => void;
+  skipToNext: () => Promise<void>;
+  togglePlayPause: () => Promise<void>;
+  handleThemeChange: (newTheme: ThemeType, wasPlaying?: boolean) => Promise<void>;
+  getCurrentSongTitle: () => string;
+  setSongQueue: (queue: string[]) => void;
+}
+
+// Helper function for sound paths
+const getAudioPath = (fileName: string, type: 'music' | 'sfx' | 'loop'): string => {
+  let path = '';
+  if (type === 'music') {
+    path = fileName; // Music URLs are already hosted
+  } else {
+    path = `/audio/${fileName}.${type === 'loop' ? 'wav' : 'mp3'}`; // SFX & Loop are in public/audio
+  }
+  console.log(`[AudioSlice] Generated audio path for ${fileName} (${type}): ${path}`);
+  return path;
+};
+
+// Helper function to extract song title from URL
+const getSongTitleFromUrl = (url: string): string => {
+  try {
+    const decodedUrl = decodeURIComponent(url);
+    const match = decodedUrl.match(/\/music\/([^.]+)/);
+    return match ? match[1] : 'Unknown';
+  } catch (e) {
+    return 'Unknown';
+  }
+};
+
+//========================= Initialization ===============================
+
+
+export const useAudioStore = create<AudioState & AudioActions>()(
+  devtools((set, get) => ({
+    masterVolume: DEFAULT_VOLUMES.master,
+    isPlaying: false,
+    currentMusic: null,
+    currentLoop: null,
+    audioContext: null,
+    musicSource: null,
+    loopSource: null,
+    bufferCache: new Map(),
+    
+    // Player state
+    volume: DEFAULT_VOLUMES.music,
+    currentSong: null,
+    songQueue: [],
+    currentSongIndex: 0,
+    
+    // Audio nodes
+    masterGainNode: null,
+    musicGainNode: null,
+    sfxGainNode: null,
+    loopGainNode: null,
+
+    // Sound mappings: maps SFX names to paths
+    _SOUND_MAPPINGS: {
+      'flashcard-door-open': 'flashcard-door-open',
+      'flashcard-door-closed': 'flashcard-door-closed',
+      'flashcard-loop-catfootsteps': 'flashcard-loop-catfootsteps',
+      'elevenlabs-response': 'elevenlabs-response',
+      'click': 'flashcard-select',
+      'hover': 'hover',
+      'success': 'correct',
+      'error': 'whoosh',
+      'notification': 'notification',
+      'cardFlip': 'cardFlip',
+      'levelUp': 'levelUp',
+      'coin': 'coin',
+      'achievement': 'achievement',
+      'flashcard-startup': 'flashcard-startup',
+      'flashcard-spacebar-reveal': 'flashcard-spacebar-reveal',
+      'flashcard-select': 'flashcard-select',
+      'correct': 'correct',
+      'whoosh': 'whoosh',
+    },
+
+    // Initialize new properties for loop loading state
+    _isLoopLoading: false,
+    _pendingLoopName: null,
+
+    // Set song queue
+    setSongQueue: (queue) => {
+      const state = get();
+      
+      // Check if the queue is actually different before updating state
+      const isQueueDifferent = state.songQueue.length !== queue.length || 
+        state.songQueue.some((url, index) => url !== queue[index]);
+      
+      // Only update state if the queue has actually changed
+      if (isQueueDifferent) {
+        // Reset song index when setting a new queue
+        set({ 
+          songQueue: queue,
+          currentSongIndex: 0
+        });
+      }
+    },
+
+    // Get the current song title
+    getCurrentSongTitle: () => {
+      const currentSong = get().currentSong;
+      if (!currentSong) return 'No song playing';
+      return getSongTitleFromUrl(currentSong);
+    },
+
+    // Handle theme changes
+    handleThemeChange: async (newTheme, wasPlaying = false) => {
+      const state = get();
+      
+      // Stop current music if playing
+      if (state.isPlaying) {
+        state.stopMusic();
+      }
+      
+      // Reset song index to 0 for the new theme
+      set({ currentSongIndex: 0 });
+      
+      // If we were playing before, start playing the first song of the new theme
+      if (wasPlaying && state.songQueue.length > 0) {
+        const firstSong = state.songQueue[0];
+        try {
+          await state.playMusic(firstSong);
+        } catch (error) {
+          // Error handling preserved but without logging
+        }
+      }
+    },
+
+    // Toggle play/pause with smart resume
+    togglePlayPause: async () => {
+      const state = get();
+
+      if (state.isPlaying) {
+        set({ isPlaying: false });
+        
+        if (state.musicSource) {
+          try {
+            state.musicSource.stop();
+            state.musicSource.disconnect();
+          } catch (error) {
+            // Error handling preserved but without logging
+          }
+        }
+      } else {
+        // Check if we have a song queue
+        if (state.songQueue.length === 0) {
+          return;
+        }
+        
+        // Get the current song from the queue
+        const songToPlay = state.songQueue[state.currentSongIndex];
+        
+        try {
+          await state.playMusic(songToPlay);
+        } catch (error) {
+          // Error handling preserved but without logging
+        }
+      }
+    },
+
+    // Initialize the audio context
+    initializeAudioContext: async () => {
+      const state = get();
+      
+      if (state.audioContext) {
+        // If suspended, try to resume
+        if (state.audioContext.state === 'suspended') {
+          try {
+            await state.audioContext.resume();
+          } catch (error) {
+            // Error handling preserved but without logging
+          }
+        }
+        
+        return;
+      }
+      
+      try {
+        // Create audio context
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        const audioContext = new AudioContext();
+        
+        // Create gain nodes using the default volume coefficients
+        const masterGainNode = audioContext.createGain();
+        masterGainNode.gain.value = DEFAULT_VOLUMES.master;
+        masterGainNode.connect(audioContext.destination);
+        
+        const musicGainNode = audioContext.createGain();
+        musicGainNode.gain.value = DEFAULT_VOLUMES.music;
+        musicGainNode.connect(masterGainNode);
+        
+        const sfxGainNode = audioContext.createGain();
+        sfxGainNode.gain.value = DEFAULT_VOLUMES.sfx; // Full volume for SFX
+        sfxGainNode.connect(masterGainNode);
+        
+        const loopGainNode = audioContext.createGain();
+        loopGainNode.gain.value = DEFAULT_VOLUMES.loop; // Lower volume for background loops
+        loopGainNode.connect(masterGainNode);
+        
+        // Update state with new audio context and gain nodes
+        set({
+          audioContext,
+          masterGainNode,
+          musicGainNode,
+          sfxGainNode,
+          loopGainNode
+        });
+      } catch (error) {
+        // Error handling preserved but without logging
+        throw error;
+      }
+    },
+
+    // Set global volume without pausing playback
+    setMasterVolume: (volume) => {
+      set({ masterVolume: volume });
+      const state = get();
+      
+      // Use proper gain node for volume control
+      if (state.masterGainNode) {
+        // Use exponential ramp for smoother volume changes
+        const now = state.audioContext?.currentTime || 0;
+        state.masterGainNode.gain.setValueAtTime(state.masterGainNode.gain.value, now);
+        state.masterGainNode.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), now + 0.1);
+      }
+    },
+
+    // Set volume (alias for setMasterVolume for musicplayer.tsx)
+    setVolume: (volume) => {
+      const state = get();
+      set({ volume });
+      
+      // Use proper gain node for volume control
+      if (state.musicGainNode && state.audioContext) {
+        // Use exponential ramp for smoother volume changes
+        const now = state.audioContext.currentTime;
+        state.musicGainNode.gain.setValueAtTime(state.musicGainNode.gain.value, now);
+        state.musicGainNode.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), now + 0.1);
+      }
+    },
+
+    // Skip to the next song in the queue
+    skipToNext: async () => {
+      const state = get();
+      const { songQueue, currentSongIndex, volume } = state;
+      
+      if (songQueue.length === 0) {
+        return;
+      }
+      
+      // Calculate the next song index
+      const nextIndex = (currentSongIndex + 1) % songQueue.length;
+      const nextSong = songQueue[nextIndex];
+      
+      // Update the current song index
+      set({ currentSongIndex: nextIndex });
+      
+      // Store the current volume for restoration
+      const currentVolume = volume;
+      
+      // Stop current music first
+      state.stopMusic();
+      
+      // Play the next song after a small delay
+      setTimeout(async () => {
+        // Ensure the volume is properly set before playing the next song
+        if (state.musicGainNode && state.audioContext) {
+          state.musicGainNode.gain.cancelScheduledValues(state.audioContext.currentTime);
+          state.musicGainNode.gain.setValueAtTime(currentVolume, state.audioContext.currentTime);
+        }
+        
+        await state.playMusic(nextSong);
+      }, 100);
+    },
+
+    // Load audio buffer for efficient playback
+    loadAudioBuffer: async (url) => {
+      console.log(`[AudioSlice] Loading audio buffer for URL: ${url}`);
+      const state = get();
+      if (!state.audioContext) {
+        console.log(`[AudioSlice] Audio context not initialized in loadAudioBuffer, initializing now...`);
+        await get().initializeAudioContext();
+      }
+      
+      if (state.bufferCache.has(url)) {
+        console.log(`[AudioSlice] Using cached buffer for: ${url}`);
+        const cachedBuffer = state.bufferCache.get(url);
+        if (cachedBuffer) return cachedBuffer;
+      }
+
+      try {
+        console.log(`[AudioSlice] Fetching audio from: ${url}`);
+        const response = await fetch(url);
+        if (!response.ok) {
+          console.error(`[AudioSlice] Failed to fetch audio: ${response.status} ${response.statusText} for URL: ${url}`);
+          throw new Error(`Failed to fetch audio: ${response.status} ${response.statusText}`);
+        }
+        
+        console.log(`[AudioSlice] Audio fetch successful, processing array buffer...`);
+        const arrayBuffer = await response.arrayBuffer();
+        
+        // Ensure audioContext exists
+        const audioContext = state.audioContext;
+        if (!audioContext) {
+          console.error(`[AudioSlice] Audio context not initialized after fetch`);
+          throw new Error('Audio context not initialized');
+        }
+        
+        console.log(`[AudioSlice] Decoding audio data...`);
+        const buffer = await audioContext.decodeAudioData(arrayBuffer);
+        console.log(`[AudioSlice] Audio data decoded successfully, caching buffer`);
+        state.bufferCache.set(url, buffer);
+        return buffer;
+      } catch (error) {
+        console.error(`[AudioSlice] Error in loadAudioBuffer for ${url}:`, error);
+        throw error;
+      }
+    },
+
+    // Play music from a theme playlist or specific URL
+    playMusic: async (trackUrl) => {
+      const state = get();
+      
+      // Check if audio context exists
+      if (!state.audioContext) {
+        try {
+          await state.initializeAudioContext();
+        } catch (error) {
+          return;
+        }
+      }
+      
+      // Resume audio context if it's suspended
+      if (state.audioContext?.state === 'suspended') {
+        try {
+          await state.audioContext.resume();
+        } catch (error) {
+          return;
+        }
+      }
+      
+      // Stop any currently playing music
+      if (state.musicSource) {
+        try {
+          state.musicSource.stop();
+          state.musicSource.disconnect();
+        } catch (error) {
+          // Error handling preserved but without logging
+        }
+      }
+      
+      try {
+        const buffer = await state.loadAudioBuffer(trackUrl);
+        
+        // Safely create source with null check
+        if (!state.audioContext) {
+          return;
+        }
+        
+        // IMPORTANT: Always reset the gain node to the current volume before creating a new source
+        // This fixes the issue where the gain node volume is very low after stopping a song
+        if (state.musicGainNode) {
+          const currentTime = state.audioContext.currentTime;
+          // Force reset the gain node to the current volume
+          state.musicGainNode.gain.cancelScheduledValues(currentTime);
+          state.musicGainNode.gain.setValueAtTime(state.volume, currentTime);
+        }
+        
+        const source = state.audioContext.createBufferSource();
+        source.buffer = buffer;
+        
+        // Connect to gain node for volume control
+        if (state.musicGainNode) {
+          source.connect(state.musicGainNode);
+          
+          // Double-check gain node has correct volume
+          if (state.musicGainNode.gain.value === 0 || state.musicGainNode.gain.value < 0.01) {
+            state.musicGainNode.gain.setValueAtTime(state.volume, state.audioContext.currentTime);
+          }
+        } else {
+          if (state.audioContext) {
+            source.connect(state.audioContext.destination);
+          }
+        }
+        
+        // Set up ended event handler
+        source.onended = () => {
+          // Auto-advance to next song
+          const currentState = get();
+          if (currentState.isPlaying) {
+            currentState.skipToNext();
+          }
+        };
+        
+        // Start playback
+        source.start(0);
+        
+        // Update state
+        set({ 
+          musicSource: source, 
+          currentSong: trackUrl,
+          isPlaying: true 
+        });
+      } catch (error) {
+        set({ isPlaying: false });
+      }
+    },
+
+    // Stop music
+    stopMusic: () => {
+      const state = get();
+      if (state.musicSource && state.audioContext) {
+        try {
+          // Create a local reference to the audio context after null check
+          const audioCtx = state.audioContext;
+          
+          // Create a short fade-out to prevent clicking
+          const now = audioCtx.currentTime;
+          
+          // If we have a music gain node, use it for the fade-out
+          if (state.musicGainNode) {
+            // Get current volume
+            const currentVolume = state.musicGainNode.gain.value;
+            
+            // Store the original volume to restore it later
+            const originalVolume = state.volume;
+            
+            // Schedule a very quick fade-out (30ms) but don't go all the way to zero
+            // This prevents the gain node from getting stuck at a very low value
+            state.musicGainNode.gain.setValueAtTime(currentVolume, now);
+            state.musicGainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
+            
+            // Stop the source after the fade-out
+            setTimeout(() => {
+              try {
+                if (state.musicSource) {
+                  state.musicSource.stop();
+                  state.musicSource.disconnect();
+                  
+                  // Immediately restore the gain node to the original volume
+                  if (state.musicGainNode && state.audioContext) {
+                    state.musicGainNode.gain.cancelScheduledValues(state.audioContext.currentTime);
+                    state.musicGainNode.gain.setValueAtTime(originalVolume, state.audioContext.currentTime);
+                  }
+                }
+              } catch (error) {
+                // Handle the case where the source might have already been stopped
+              }
+            }, 40); // Slightly longer than the fade-out time
+          } else {
+            // If no gain node, just stop immediately
+            state.musicSource.stop();
+            state.musicSource.disconnect();
+          }
+        } catch (error) {
+          // Error handling preserved but without logging
+        }
+      } else if (state.musicSource) {
+        // If we have a music source but no audio context, just stop it directly
+        try {
+          state.musicSource.stop();
+          state.musicSource.disconnect();
+        } catch (error) {
+          // Error handling preserved but without logging
+        }
+      }
+      set({ isPlaying: false, currentMusic: null, musicSource: null });
+      // Note: We keep currentSong to remember what was playing
+    },
+
+    // Play SFX
+    playSound: async (sfxName) => {
+      console.log(`[AudioSlice] Attempting to play sound effect: ${sfxName}`);
+      const state = get();
+      if (!state.audioContext) {
+        console.log(`[AudioSlice] Audio context not initialized for sound: ${sfxName}, initializing now...`);
+        await get().initializeAudioContext();
+      }
+      
+      const sfxPath = state._SOUND_MAPPINGS[sfxName];
+      if (!sfxPath) {
+        console.error(`[AudioSlice] Sound effect not found in mappings: ${sfxName}`);
+        return;
+      }
+
+      try {
+        console.log(`[AudioSlice] Loading buffer for sound: ${sfxName}`);
+        const buffer = await state.loadAudioBuffer(getAudioPath(sfxPath, 'sfx'));
+        
+        // Ensure audioContext exists
+        const audioContext = state.audioContext;
+        if (!audioContext) {
+          console.error(`[AudioSlice] Audio context not initialized after buffer load for: ${sfxName}`);
+          throw new Error('Audio context not initialized');
+        }
+        
+        console.log(`[AudioSlice] Creating source node for sound: ${sfxName}`);
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        
+        // Connect to SFX gain node instead of directly to destination
+        if (state.sfxGainNode) {
+          console.log(`[AudioSlice] Connecting to SFX gain node (volume: ${state.sfxGainNode.gain.value})`);
+          source.connect(state.sfxGainNode);
+        } else {
+          console.log(`[AudioSlice] No SFX gain node, connecting directly to destination`);
+          source.connect(audioContext.destination);
+        }
+        
+        // Set up cleanup when sound finishes
+        source.onended = () => {
+          console.log(`[AudioSlice] Sound effect finished playing: ${sfxName}`);
+          source.disconnect();
+        };
+        
+        console.log(`[AudioSlice] Starting sound playback: ${sfxName}`);
+        source.start();
+        return Promise.resolve();
+      } catch (error) {
+        console.error(`[AudioSlice] Error playing sound effect ${sfxName}:`, error);
+        return Promise.reject(error);
+      }
+    },
+
+    // Play a looping sound
+    playLoop: async (loopName) => {
+      console.log(`[AudioSlice] Attempting to play loop: ${loopName}`);
+      const state = get();
+      
+      // Check if this exact loop is already playing to prevent duplicates
+      if (state.currentLoop === loopName && state.loopSource) {
+        console.log(`[AudioSlice] Loop ${loopName} is already playing, skipping duplicate playback`);
+        return;
+      }
+      
+      // Check if we're already loading this loop
+      if (state._isLoopLoading && state._pendingLoopName === loopName) {
+        console.log(`[AudioSlice] Already loading loop ${loopName}, skipping duplicate request`);
+        return;
+      }
+      
+      // Set loading state
+      set({ _isLoopLoading: true, _pendingLoopName: loopName });
+      
+      if (!state.audioContext) {
+        console.log(`[AudioSlice] Audio context not initialized, initializing now...`);
+        await get().initializeAudioContext();
+      }
+
+      // Always stop any existing loop before starting a new one
+      state.stopLoop();
+      
+      try {
+        console.log(`[AudioSlice] Loading audio buffer for: ${loopName}`);
+        console.log(`[AudioSlice] Full path: ${getAudioPath(loopName, 'loop')}`);
+        const buffer = await state.loadAudioBuffer(getAudioPath(loopName, 'loop'));
+        
+        // Check if another loop was requested while we were loading
+        const currentState = get();
+        if (currentState._pendingLoopName !== loopName) {
+          console.log(`[AudioSlice] Another loop was requested while loading ${loopName}, aborting`);
+          set({ _isLoopLoading: false, _pendingLoopName: null });
+          return;
+        }
+        
+        // Ensure audioContext exists
+        const audioContext = state.audioContext;
+        if (!audioContext) {
+          console.error(`[AudioSlice] Audio context still not initialized after attempt`);
+          set({ _isLoopLoading: false, _pendingLoopName: null });
+          throw new Error('Audio context not initialized');
+        }
+
+        console.log(`[AudioSlice] Creating buffer source for loop`);
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+        
+        // Connect to loop gain node instead of directly to destination
+        if (state.loopGainNode) {
+          console.log(`[AudioSlice] Connecting to loop gain node`);
+          source.connect(state.loopGainNode);
+        } else {
+          console.log(`[AudioSlice] No loop gain node, connecting directly to destination`);
+          source.connect(audioContext.destination);
+        }
+        
+        console.log(`[AudioSlice] Starting loop playback`);
+        source.start();
+
+        set({ 
+          currentLoop: loopName, 
+          loopSource: source,
+          _isLoopLoading: false,
+          _pendingLoopName: null
+        });
+        console.log(`[AudioSlice] Loop playback started successfully`);
+      } catch (error) {
+        console.error(`[AudioSlice] Error playing loop ${loopName}:`, error);
+        set({ _isLoopLoading: false, _pendingLoopName: null });
+      }
+    },
+
+    // Stop a looping sound
+    stopLoop: () => {
+      const state = get();
+      if (state.loopSource) {
+        try {
+          state.loopSource.stop();
+          // Disconnect to free resources
+          state.loopSource.disconnect();
+        } catch (error) {
+          // Error handling preserved but without logging
+        }
+      }
+      set({ 
+        currentLoop: null, 
+        loopSource: null,
+        _isLoopLoading: false,
+        _pendingLoopName: null
+      });
+    },
+  }))
+);

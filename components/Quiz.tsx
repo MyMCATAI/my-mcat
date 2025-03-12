@@ -16,7 +16,7 @@ import { ExplanationImages } from "./ExplanationImages";
 import { QuizIntroDialog } from "./ATS/QuizIntroDialogue";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import DownvoteFeedback from './DownvoteFeedback';
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudio } from "@/store/selectors";
 /* ---------------------------------------- Types ------------------------------------------ */
 export interface QuizQuestion {
   categoryId: string;

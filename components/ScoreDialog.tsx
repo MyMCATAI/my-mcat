@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useRouter } from 'next/navigation'; 
 import Link from 'next/link';
 import Image from 'next/image'; // Added import
-import { useAudio } from '@/contexts/AudioContext'; // Replace useAudioManager
+import { useAudio } from '@/store/selectors'; // Replace useAudioManager
 
 interface ScoreDialogProps {
   open: boolean;

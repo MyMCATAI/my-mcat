@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { DoctorOfficeStats } from "@/types";
 import { FaFire } from "react-icons/fa";
 import {
@@ -6,7 +6,6 @@ import {
   getLevelNumber,
 } from "@/utils/calculateResourceTotals";
 import TutorialVidDialog from "@/components/ui/TutorialVidDialog";
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import Leaderboard from "@/components/leaderboard/Leaderboard";
 import AnimatedProfileIcon from '@/components/ui/AnimatedProfileIcon';
 import { useUser } from '@/store/selectors';
@@ -130,4 +129,3 @@ const ResourcesMenu: React.FC<ResourcesMenuProps> = ({
 };
 
 export default ResourcesMenu;
-

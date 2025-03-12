@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { FaLinkedin, FaInstagram } from 'react-icons/fa';
 
 import { useUI } from '@/store/selectors';
+import { useAudio } from '@/store/selectors';
 import { useUserInfo } from "@/hooks/useUserInfo";
 
 import { SubscriptionManagementButton } from "@/components/subscription-management-button";
