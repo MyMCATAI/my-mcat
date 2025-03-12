@@ -1,21 +1,21 @@
 # MyMCAT Weakness Finding Algorithm Documentation
 
 ## Overview
-The MyMCAT Weakness Finding Algorithm is a sophisticated system that helps identify and prioritize areas where students need the most practice. Operating as a closed feedback loop, it continuously analyzes student performance across multiple sources (AAMC, UWorld, and MyMCAT) and adapts content delivery using "Thompson sampling" principles from probability theory. By treating each MCAT topic like a slot machine arm in a multi-armed bandit problem, the algorithm balances exploration of new content with exploitation of known weaknesses, while applying time-decay to ensure recent performance carries more weight. The system then uses this data to make intelligent decisions about what content to show next, much like how a skilled tutor would adjust their teaching strategy based on a student's evolving needs.
+✓ The MyMCAT Weakness Finding Algorithm is a sophisticated system that helps identify and prioritize areas where students need the most practice. Operating as a closed feedback loop, it continuously analyzes student performance across multiple sources (AAMC, UWorld, and MyMCAT) and adapts content delivery using "Thompson sampling" principles from probability theory. By treating each MCAT topic like a slot machine arm in a multi-armed bandit problem, the algorithm balances exploration of new content with exploitation of known weaknesses, while applying time-decay to ensure recent performance carries more weight. The system then uses this data to make intelligent decisions about what content to show next, much like how a skilled tutor would adjust their teaching strategy based on a student's evolving needs.
 
 ## Knowledge Hierarchy
-The MCAT content is organized in a hierarchical structure that allows precise tracking and targeting of student knowledge:
+✓ The MCAT content is organized in a hierarchical structure that allows precise tracking and targeting of student knowledge:
 
 1. **Content Categories (CC)** - The four main MCAT sections:
-   - Chemical and Physical Foundations (C/P)
-   - Biological and Biochemical Foundations (B/B)
-   - Psychological, Social, and Biological Foundations (P/S)
-   - Critical Analysis and Reasoning Skills (CARS)
+   ✓ - Chemical and Physical Foundations (C/P)
+   ✓ - Biological and Biochemical Foundations (B/B)
+   ✓ - Psychological, Social, and Biological Foundations (P/S)
+   ✓ - Critical Analysis and Reasoning Skills (CARS)
 
 2. **Concept Categories (KC)** - More specific topics within each section, for example:
-   - Under B/B: "Enzymes", "Amino Acids", "Cell Biology"
-   - Under C/P: "Electricity & Magnetism", "Thermodynamics"
-   - Under P/S: "Social Psychology", "Memory"
+   ✓ - Under B/B: "Enzymes", "Amino Acids", "Cell Biology"
+   ✓ - Under C/P: "Electricity & Magnetism", "Thermodynamics"
+   ✓ - Under P/S: "Social Psychology", "Memory"
 
 ![MCAT Knowledge Hierarchy Pyramid](README_Docs/assets/weakness-algorithm-knowledge-heirarchy.png)
 
@@ -126,59 +126,59 @@ Made with https://eraser.io
 ## Landing Page Integration
 The landing page (`app/(dashboard)/(routes)/home/page.tsx`) integrates with the weakness algorithm through three primary pathways:
 
-1. **Knowledge Profile Updates**
+❌ 1. **Knowledge Profile Updates**
    - Triggered during page initialization
    - Checks if profile update is needed via `shouldUpdateKnowledgeProfiles()`
    - Updates through `/api/knowledge-profile/update` endpoint
 
-2. **Adaptive Content Selection**
+❌ 2. **Adaptive Content Selection**
    - Active during component rendering
    - Influences content shown in `<Schedule>` and `<AdaptiveTutoring>` components
    - Determines practice recommendations
 
-3. **Real-time Performance Tracking**
+❌ 3. **Real-time Performance Tracking**
    - Monitors user interactions
    - Updates `mastery` scores
    - Adjusts content difficulty
 
 ## Core Components
 
-### 1. Knowledge Profile Update
+### 1. Knowledge Profile Update ✓
 Located in `api/knowledge-profile/update/route.ts`
-- Handles student mastery level updates
-- Implements weighted scoring system:
-  - `AAMC`: 0.5 weight
-  - `UWorld`: 0.3 weight
-  - `MyMCAT`: 0.2 weight
-- Features time decay for older responses
-- Calculates dual mastery types:
-  - `conceptMastery` (specific topics)
-  - `contentMastery` (broader categories)
+✓ - Handles student mastery level updates
+✓ - Implements weighted scoring system:
+  ✓ - `AAMC`: 0.5 weight
+  ✓ - `UWorld`: 0.3 weight
+  ✓ - `MyMCAT`: 0.2 weight
+✓ - Features time decay for older responses
+✓ - Calculates dual mastery types:
+  ✓ - `conceptMastery` (specific topics)
+  ✓ - `contentMastery` (broader categories)
 
-### 2. Category Sorting and Selection
+### 2. Category Sorting and Selection ✓
 Located in `api/category/route.ts`
-- Determines topic prioritization
-- Implements sorting logic for weaknesses
-- Handles new material prioritization
-- Uses `contentMastery` for rankings
-- Manages topic completion filtering
+✓ - Determines topic prioritization
+✓ - Implements sorting logic for weaknesses
+✓ - Handles new material prioritization
+✓ - Uses `contentMastery` for rankings
+✓ - Manages topic completion filtering
 
-### 3. Question Selection
+### 3. Question Selection ✓
 Located in `api/question-selection/route.ts`
-- Implements core selection algorithm
-- Considers multiple weighted factors:
-  - `incorrectAnswerPatterns`
-  - `masteryLevels`
-  - `topicDifficulty`
-  - `testingFrequency`
-  - `historicalPerformance`
+✓ - Implements core selection algorithm
+✓ - Considers multiple weighted factors:
+  ✓ - `incorrectAnswerPatterns`
+  ✓ - `masteryLevels`
+  ✓ - `topicDifficulty`
+  ✓ - `testingFrequency`
+  ✓ - `historicalPerformance`
 
-### 4. Thompson Sampling Implementation
+### 4. Thompson Sampling Implementation ✓
 Located in `api/uworld/update/route.ts`
-- Manages exploration/exploitation balance
-- Implements `betaDistribution`
-- Uses `laplaceSmoothing`
-- Handles topic selection sampling
+✓ - Manages exploration/exploitation balance
+✓ - Implements `betaDistribution`
+✓ - Uses `laplaceSmoothing`
+✓ - Handles topic selection sampling
 
 ## The Algorithm Flow
 
@@ -204,47 +204,47 @@ Located in `api/uworld/update/route.ts`
 
 ## Key Features
 
-### 1. Multi-Source Integration
-- Combines various data sources
-- Implements `reliabilityWeighting`
-- Normalizes across platforms
+### 1. Multi-Source Integration ✓
+✓ - Combines various data sources
+✓ - Implements `reliabilityWeighting`
+✓ - Normalizes across platforms
 
-### 2. Time-Based Decay
-- Reduces old response impact
-- Prioritizes recent performance
-- Adjusts `masteryDynamically`
+### 2. Time-Based Decay ✓
+✓ - Reduces old response impact
+✓ - Prioritizes recent performance
+✓ - Adjusts `masteryDynamically`
 
-### 3. Adaptive Difficulty
-- Balances topic exploration
-- Uses `thompsonSampling`
-- Adapts to performance
+### 3. Adaptive Difficulty ❌
+❌ - Balances topic exploration
+❌ - Uses `thompsonSampling`
+❌ - Adapts to performance
 
-### 4. Hierarchical Knowledge Model
-- Tracks multiple mastery levels
-- Implements `hierarchyPropagation`
-- Ensures complete coverage
+### 4. Hierarchical Knowledge Model ✓
+✓ - Tracks multiple mastery levels
+✓ - Implements `hierarchyPropagation`
+✓ - Ensures complete coverage
 
 ## Implementation Notes
 
-### Trigger Points
-- Regular profile updates
-- Practice module interactions
-- Tutoring session adaptations
+### Trigger Points ❌
+❌ - Regular profile updates
+❌ - Practice module interactions
+❌ - Tutoring session adaptations
 
-### Configuration Parameters
-- `sourceWeightDefinitions`
-- `decayFactorSettings`
-- `samplingParameters`
-- `masteryThresholds`
+### Configuration Parameters ✓
+✓ - `sourceWeightDefinitions`
+✓ - `decayFactorSettings`
+✓ - `samplingParameters`
+✓ - `masteryThresholds`
 
-### Performance Optimization
-- `masteryScore` caching
-- Profile update batching
-- Efficient sampling methods
+### Performance Optimization ❌
+❌ - `masteryScore` caching
+❌ - Profile update batching
+❌ - Efficient sampling methods
 
 ### Future Enhancements
-- Dynamic weight adjustment
-- Enhanced decay modeling
-- Advanced exploration strategies
+❌ - Dynamic weight adjustment
+❌ - Enhanced decay modeling
+❌ - Advanced exploration strategies
 
 For detailed implementation specifics, refer to the blog post `weakness-finding-algorithm.mdx` which covers the casino/slot machine analogy and Thompson sampling practical applications. 
