@@ -1,10 +1,10 @@
 // components/VocabList.tsx
 
-import React, { useContext } from 'react';
-import { VocabContext } from '@/contexts/VocabContext';
+import React from 'react';
+import { useVocab } from '@/store/selectors';
 
 const VocabList: React.FC = () => {
-  const { vocabList, removeVocabWord } = useContext(VocabContext);
+  const { vocabList, removeVocabWord } = useVocab();
 
   return (
     <div className="p-4 bg-gray-100 text-black rounded-lg shadow-md">

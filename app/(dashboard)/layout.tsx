@@ -12,7 +12,6 @@ import { useUserInfo } from "@/hooks/useUserInfo";
 import Navbar from "@/components/navbar/navbar";
 import ThemeInitializer from "@/components/home/ThemeInitializer";
 import StoreInitializer from '@/components/StoreInitializer';
-import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
 
 /* --- Types ---- */
 interface LayoutProps {
@@ -97,7 +96,7 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
 }
 
 const DashboardLayout = ({ children }: LayoutProps) => (
-  <MusicPlayerProvider>
+  <>
     <Script
       src="https://tally.so/widgets/embed.js"
       strategy="lazyOnload"
@@ -106,7 +105,7 @@ const DashboardLayout = ({ children }: LayoutProps) => (
     <StoreInitializer />
     <ContextDebugger />
     <DashboardLayoutContent>{children}</DashboardLayoutContent>
-  </MusicPlayerProvider>
+  </>
 );
 
 export default DashboardLayout;

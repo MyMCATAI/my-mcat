@@ -4,7 +4,7 @@ import { Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudio } from "@/store/selectors";
 
 interface CompleteTopicButtonProps {
   categoryId: string;

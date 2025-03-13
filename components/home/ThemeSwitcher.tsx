@@ -1,7 +1,7 @@
 'use client'
 
 import { useUI } from '@/store/selectors';
-import type { ThemeType } from '@/store/store';
+import type { ThemeType } from '@/store/slices/uiSlice';
 
 const ThemeSwitcher = () => {
   const { theme, setTheme } = useUI();

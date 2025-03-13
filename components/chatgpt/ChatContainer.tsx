@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
 import { Styles } from "react-chatbotify";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudio } from '@/store/selectors';
 import { useAllCalendarActivities } from "@/hooks/useCalendarActivities";
 import { useExamActivities } from "@/hooks/useCalendarActivities";
 import TestCalendar from '@/components/calendar/TestCalendar';

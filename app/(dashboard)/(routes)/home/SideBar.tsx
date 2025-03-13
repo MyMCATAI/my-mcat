@@ -24,7 +24,7 @@ import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite
 import ScoreDisplay from '@/components/score/ScoreDisplay';
 import { PurchaseButton } from '@/components/purchase-button';
 import Leaderboard from "@/components/leaderboard/Leaderboard";
-import { useAudio } from '@/contexts/AudioContext';
+import { useAudio } from '@/store/selectors';
 import { useUserInfo } from '@/hooks/useUserInfo';
 
 interface Task {

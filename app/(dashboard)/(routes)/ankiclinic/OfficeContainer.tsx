@@ -201,7 +201,7 @@ const pixiConfig = {
   eventMode: 'dynamic' as EventMode, // Type assertion to EventMode
   backgroundAlpha: 0,
   antialias: true,
-  resolution: window.devicePixelRatio || 1,
+  resolution: typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1,
 };
 
 // Convert to forwardRef
@@ -211,6 +211,9 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
   imageGroups,
   updateVisibleImages
 }, ref) => {
+  // Check for browser environment
+  const isBrowser = typeof window !== 'undefined';
+  
   // Get game state from Zustand store
   const {
     userRooms,
@@ -261,6 +264,8 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
 
   // Update zoom when orientation changes
   useEffect(() => {
+    if (!isBrowser) return;
+    
     const handleOrientationChange = () => {
       if (isMobile) {
         const isPortrait = window.innerHeight > window.innerWidth;
@@ -274,7 +279,7 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
 
     window.addEventListener('orientationchange', handleOrientationChange);
     return () => window.removeEventListener('orientationchange', handleOrientationChange);
-  }, [isMobile]);
+  }, [isMobile, isBrowser]);
 
   // Tutorial room effect
   useEffect(() => {
@@ -356,6 +361,8 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
 
   // Update our calculations to get accurate window and container dimensions
   useEffect(() => {
+    if (!isBrowser) return;
+    
     const updateDimensions = () => {
       // Adjust for the navbar height
       const navbarHeight = 80; // Navbar is h-20 (80px)
@@ -372,7 +379,7 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
-  }, [isMobile]);
+  }, [isMobile, isBrowser]);
 
   // Separate effect for scale calculation to break the dependency cycle
   useEffect(() => {

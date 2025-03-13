@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import type { UserResponseWithCategory } from "@/types";
 import VideoRecommendations from './components/VideoRecommendations';
-import { useAudio } from '@/contexts/AudioContext';
+import { useAudio } from '@/store/selectors';
 import { useGame } from '@/store/selectors';
 import { useUserInfo } from '@/hooks/useUserInfo';
 

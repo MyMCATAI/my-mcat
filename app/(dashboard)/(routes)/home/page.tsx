@@ -18,8 +18,7 @@ import StreakPopup from "@/components/score/StreakDisplay";
 import { checkProStatus, shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
-import { useAudio } from "@/contexts/AudioContext";
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import { useAudio } from "@/store/selectors";
 import RedeemReferralModal from '@/components/social/friend-request/RedeemReferralModal';
 import ChatContainer from "@/components/chatgpt/ChatContainer";
 import HoverSidebar from "@/components/navigation/HoverSidebar";
@@ -65,7 +64,6 @@ const HomePage: React.FC = () => {
   const { userInfo, isLoading: isLoadingUserInfo, isSubscribed } = useUserInfo();
   const { startActivity, endActivity, updateActivityEndTime } = useUserActivity();
   const { playMusic, stopMusic, volume, setVolume, isPlaying } = useAudio();
-  const { setIsAutoPlay } = useMusicPlayer();
   const paymentStatus = searchParams?.get("payment");
   
   // Debug mode check
@@ -459,11 +457,6 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     setPageState(prev => ({ ...prev, showReferralModal: shouldShowRedeemReferralModal() }));
   }, []);
-
-  useEffect(() => {
-    setIsAutoPlay(true);
-    return () => setIsAutoPlay(false);
-  }, [setIsAutoPlay]);
 
   // Cleanup effect
   useEffect(() => {

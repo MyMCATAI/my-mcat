@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useUI } from '@/store/selectors'
-import type { ThemeType } from '@/store/store'
+import type { ThemeType } from '@/store/slices/uiSlice'
 
 /* --- Constants ----- */
 const scrollbarColors = {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useUI, useUser } from '@/store/selectors';
+import { useAudioStore } from '@/store/slices/audioSlice';
 import { OnboardingInfo } from '@/types';
 import { useUser as useClerkUser } from '@clerk/nextjs';
 
@@ -19,11 +20,32 @@ const RouteTracker = () => {
   const { userInfo, isSubscribed, onboardingComplete, profileLoading, statsLoading } = useUser();
   const { isSignedIn } = useClerkUser();
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const stopLoop = useAudioStore(state => state.stopLoop);
+  const currentLoop = useAudioStore(state => state.currentLoop);
+
+  console.log('[RouteTracker] Component rendered with pathname:', pathname);
+  console.log('[RouteTracker] Current loop state:', currentLoop);
 
   // Track route changes
   useEffect(() => {
-    if (pathname) setCurrentRoute(pathname);
+    if (pathname) {
+      console.log('[RouteTracker] Route change effect triggered with pathname:', pathname);
+      setCurrentRoute(pathname);
+    }
   }, [pathname, setCurrentRoute]);
+
+  // Handle ambient sound cleanup on route changes
+  useEffect(() => {
+    console.log('[RouteTracker] Audio cleanup effect triggered');
+    console.log('[RouteTracker] Current pathname:', pathname);
+    console.log('[RouteTracker] Current loop:', currentLoop);
+    
+    // Only stop the ambient loop if we're not in AnkiClinic and it's currently playing
+    if (currentLoop === 'flashcard-loop-catfootsteps' && !pathname?.startsWith('/ankiclinic')) {
+      console.log('[RouteTracker] Stopping ambient loop - route changed to:', pathname);
+      stopLoop();
+    }
+  }, [pathname]); // Only depend on pathname changes, not currentLoop
 
   // Track when initial loading is complete
   useEffect(() => {

@@ -1,8 +1,8 @@
-//components/musicplayer.tsx
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+//components/navbar/musicplayer.tsx
+import React, { useEffect, useRef, useCallback, useMemo } from "react";
 import { FaPlay, FaPause, FaForward, FaVolumeUp } from "react-icons/fa";
 import { useAudio } from "@/store/selectors";
-import { toast } from "react-hot-toast";
+import { ThemeType } from "@/store/slices/uiSlice";
 
 interface Song {
   title: string;
@@ -71,106 +71,122 @@ const playlists: Record<string, Song[]> = {
 };
 
 interface MusicPlayerProps {
-  theme: string;
+  theme: ThemeType;
 }
 
 const MusicPlayer = ({ theme }: MusicPlayerProps) => {
-  const [currentSongIndex, setCurrentSongIndex] = useState(0);
-  const [shuffledPlaylist, setShuffledPlaylist] = useState<Song[]>([]);
-  const songIndexMap = useRef<Record<string, number>>({});
+  const hasInitialized = useRef(false);
+  const queueInitialized = useRef(false);
   
   const { 
-    playMusic, 
-    stopMusic,
     volume,
     setVolume,
     isPlaying,
-    currentSong } = useAudio();
+    skipToNext,
+    togglePlayPause,
+    handleThemeChange,
+    initializeAudioContext,
+    setSongQueue,
+    songQueue,
+    audioContext,
+  } = useAudio();
 
   const playlist = useMemo(() => {
     if (!playlists[theme]) {
-      console.warn(`No playlist found for theme: ${theme}`);
       return [];
     }
     return playlists[theme];
   }, [theme]);
 
-  const shufflePlaylist = useCallback(() => {
-    const shuffled = [...playlist].sort(() => Math.random() - 0.6);
-    setShuffledPlaylist(shuffled);
-  }, [playlist]);
-
+  // Initialize audio context on mount
   useEffect(() => {
-    if (shuffledPlaylist.length === 0) {
-      shufflePlaylist();
+    if (!hasInitialized.current) {
+      initializeAudioContext().then(() => {
+        hasInitialized.current = true;
+      }).catch(() => {
+        // Error handling preserved but without logging
+      });
     }
-    if (songIndexMap.current[theme] !== undefined) {
-      setCurrentSongIndex(songIndexMap.current[theme]);
-    }
-  }, [theme, shufflePlaylist, shuffledPlaylist.length]);
+  }, [initializeAudioContext, audioContext]);
 
-  const playNextSong = useCallback(() => {
-    // Don't auto-advance if playback is paused
-    if (!isPlaying) {
+  // Initialize playlist and handle theme changes
+  useEffect(() => {
+    // Use the playlist in its original order instead of shuffling
+    const orderedPlaylist = [...playlist];
+    
+    // Check if the first song URL contains the current theme name
+    const firstSongMatchesTheme = songQueue.length > 0 && 
+                                 songQueue[0] && 
+                                 typeof songQueue[0] === 'string' && 
+                                 songQueue[0].toLowerCase().includes(theme.toLowerCase());
+    
+    // Only update queue if it's empty or theme has changed
+    const shouldUpdateQueue = !queueInitialized.current || 
+                             songQueue.length === 0 || 
+                             !firstSongMatchesTheme;
+    
+    if (shouldUpdateQueue && orderedPlaylist.length > 0) {
+      // Update song queue in audio store
+      const songUrls = orderedPlaylist.map(song => song.url);
+      queueInitialized.current = true;
+      setSongQueue(songUrls);
+      handleThemeChange(theme);
+    }
+  }, [theme, playlist, handleThemeChange, setSongQueue, songQueue]);
+
+  // UI handlers that delegate to audio slice
+  const handleTogglePlay = useCallback(() => {    
+    if (!audioContext) {
+      initializeAudioContext().then(() => {
+        togglePlayPause();
+      }).catch(() => {
+        // Error handling preserved but without logging
+      });
       return;
     }
-
-    const newIndex = (currentSongIndex + 1) % shuffledPlaylist.length;
-    const nextSong = shuffledPlaylist[newIndex];
     
-    if (nextSong) {      
-      // Update index before stopping current playback
-      setCurrentSongIndex(newIndex);
-      songIndexMap.current[theme] = newIndex;
+    if (songQueue.length === 0) {
+      // Try to initialize the queue
+      const orderedPlaylist = [...playlist];
+      const songUrls = orderedPlaylist.map(song => song.url);
+      setSongQueue(songUrls);
       
-      // Stop current playback
-      stopMusic();
-      
-      // Only start next song if we're still playing
-      if (isPlaying) {
-        setTimeout(() => {
-          playMusic(nextSong.url, true, playNextSong);
-        }, 50);
-      }
+      // Small delay to ensure queue is set before playing
+      setTimeout(() => {
+        togglePlayPause();
+      }, 100);
+      return;
     }
-  }, [shuffledPlaylist, currentSongIndex, theme, stopMusic, playMusic, isPlaying]);
+    
+    togglePlayPause();
+  }, [togglePlayPause, songQueue.length, audioContext, initializeAudioContext, playlist, setSongQueue]);
 
-  const handleTogglePlay = useCallback(() => {
-    if (isPlaying) {
-      stopMusic();
-    } else {
-      const currentSong = shuffledPlaylist[currentSongIndex];
-      if (currentSong) {
-        playMusic(currentSong.url, true, playNextSong);
-      }
+  const handleNextSong = useCallback(() => {
+    if (!audioContext || songQueue.length === 0) {
+      return;
     }
-  }, [isPlaying, currentSongIndex, shuffledPlaylist, stopMusic, playMusic, playNextSong]);
-
-  // Preload current and next song
-  useEffect(() => {
-    if (shuffledPlaylist.length > 0) {
-      const currentSong = shuffledPlaylist[currentSongIndex];
-      const nextIndex = (currentSongIndex + 1) % shuffledPlaylist.length;
-      const nextSong = shuffledPlaylist[nextIndex];
-
-      // Preload current song
-      fetch(currentSong.url).catch(console.error);
-      // Preload next song
-      fetch(nextSong.url).catch(console.error);
-    }
-  }, [currentSongIndex, shuffledPlaylist]);
+    
+    skipToNext();
+  }, [skipToNext, songQueue.length, audioContext]);
 
   const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
   }, [setVolume]);
 
+  // Render the UI with the same layout/look
   return (
     <div className="flex items-center space-x-2">
-      <button onClick={handleTogglePlay}>
+      <button 
+        onClick={handleTogglePlay}
+        className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+      >
         {isPlaying ? <FaPause /> : <FaPlay />}
       </button>
-      <button onClick={playNextSong}>
+      <button 
+        onClick={handleNextSong}
+        className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+      >
         <FaForward />
       </button>
       <div className="relative group flex items-center">

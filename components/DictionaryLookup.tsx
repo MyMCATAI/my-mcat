@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
-import { VocabContext } from '@/contexts/VocabContext'; // Update import path
+import { useVocab } from '@/store/selectors'; // Update import path
 
 interface DictionaryLookupProps {
   word: string;
@@ -14,7 +14,7 @@ interface Definition {
 }
 
 const DictionaryLookup: React.FC<DictionaryLookupProps> = ({ word, onClose }) => {
-  const { addVocabWord } = useContext(VocabContext);
+  const { addVocabWord } = useVocab();
   const [definitions, setDefinitions] = useState<Definition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
