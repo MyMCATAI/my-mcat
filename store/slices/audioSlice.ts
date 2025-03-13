@@ -291,12 +291,12 @@ export const useAudioStore = create<AudioState & AudioActions>()(
       const state = get();
       set({ volume });
       
-      // Use proper gain node for volume control
-      if (state.musicGainNode && state.audioContext) {
+      // Use master gain node for global volume control
+      if (state.masterGainNode && state.audioContext) {
         // Use exponential ramp for smoother volume changes
         const now = state.audioContext.currentTime;
-        state.musicGainNode.gain.setValueAtTime(state.musicGainNode.gain.value, now);
-        state.musicGainNode.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), now + 0.1);
+        state.masterGainNode.gain.setValueAtTime(state.masterGainNode.gain.value, now);
+        state.masterGainNode.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), now + 0.1);
       }
     },
 
@@ -594,41 +594,38 @@ export const useAudioStore = create<AudioState & AudioActions>()(
         return;
       }
       
-      // Check if we're already loading this loop
-      if (state._isLoopLoading && state._pendingLoopName === loopName) {
-        console.log(`[AudioSlice] Already loading loop ${loopName}, skipping duplicate request`);
-        return;
-      }
-      
-      // Set loading state
-      set({ _isLoopLoading: true, _pendingLoopName: loopName });
-      
+      // Initialize audio context if needed
       if (!state.audioContext) {
         console.log(`[AudioSlice] Audio context not initialized, initializing now...`);
-        await get().initializeAudioContext();
+        try {
+          await get().initializeAudioContext();
+          console.log(`[AudioSlice] Audio context initialized successfully`);
+        } catch (error) {
+          console.error(`[AudioSlice] Failed to initialize audio context:`, error);
+          return;
+        }
       }
 
       // Always stop any existing loop before starting a new one
       state.stopLoop();
       
       try {
+        const fullPath = getAudioPath(loopName, 'loop');
         console.log(`[AudioSlice] Loading audio buffer for: ${loopName}`);
-        console.log(`[AudioSlice] Full path: ${getAudioPath(loopName, 'loop')}`);
-        const buffer = await state.loadAudioBuffer(getAudioPath(loopName, 'loop'));
+        console.log(`[AudioSlice] Full path: ${fullPath}`);
+        console.log(`[AudioSlice] Audio context state:`, state.audioContext?.state);
         
-        // Check if another loop was requested while we were loading
-        const currentState = get();
-        if (currentState._pendingLoopName !== loopName) {
-          console.log(`[AudioSlice] Another loop was requested while loading ${loopName}, aborting`);
-          set({ _isLoopLoading: false, _pendingLoopName: null });
-          return;
-        }
+        const buffer = await state.loadAudioBuffer(fullPath);
+        console.log(`[AudioSlice] Buffer loaded successfully:`, {
+          duration: buffer.duration,
+          numberOfChannels: buffer.numberOfChannels,
+          sampleRate: buffer.sampleRate
+        });
         
         // Ensure audioContext exists
         const audioContext = state.audioContext;
         if (!audioContext) {
           console.error(`[AudioSlice] Audio context still not initialized after attempt`);
-          set({ _isLoopLoading: false, _pendingLoopName: null });
           throw new Error('Audio context not initialized');
         }
 
@@ -639,10 +636,10 @@ export const useAudioStore = create<AudioState & AudioActions>()(
         
         // Connect to loop gain node instead of directly to destination
         if (state.loopGainNode) {
-          console.log(`[AudioSlice] Connecting to loop gain node`);
+          console.log(`[AudioSlice] Connecting to loop gain node with gain value:`, state.loopGainNode.gain.value);
           source.connect(state.loopGainNode);
         } else {
-          console.log(`[AudioSlice] No loop gain node, connecting directly to destination`);
+          console.warn(`[AudioSlice] No loop gain node, connecting directly to destination`);
           source.connect(audioContext.destination);
         }
         
@@ -651,14 +648,11 @@ export const useAudioStore = create<AudioState & AudioActions>()(
 
         set({ 
           currentLoop: loopName, 
-          loopSource: source,
-          _isLoopLoading: false,
-          _pendingLoopName: null
+          loopSource: source
         });
         console.log(`[AudioSlice] Loop playback started successfully`);
       } catch (error) {
         console.error(`[AudioSlice] Error playing loop ${loopName}:`, error);
-        set({ _isLoopLoading: false, _pendingLoopName: null });
       }
     },
 

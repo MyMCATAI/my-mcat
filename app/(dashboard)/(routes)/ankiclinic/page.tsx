@@ -225,6 +225,13 @@ const DoctorsOfficePage = () => {
   useEffect(() => {
     if (!isBrowser) return;
     
+    console.log('[AnkiClinic] Audio initialization starting');
+    console.log('[AnkiClinic] Current audio state:', {
+      isFlashcardsOpen,
+      currentLoop: audio.currentLoop,
+      ambientSoundInitialized: ambientSoundInitializedRef.current
+    });
+    
     // Set mounted flag only once
     isMountedRef.current = true;
     
@@ -232,32 +239,51 @@ const DoctorsOfficePage = () => {
     let timeoutId: NodeJS.Timeout | undefined;
     
     const initializeAmbientSound = () => {
+      console.log('[AnkiClinic] Attempting to initialize ambient sound');
+      console.log('[AnkiClinic] Conditions:', {
+        ambientSoundInitialized: ambientSoundInitializedRef.current,
+        isFlashcardsOpen,
+        currentLoop: audio.currentLoop
+      });
+      
       // Only initialize if not already initialized, flashcards are not open, and no loop is currently playing
       if (!ambientSoundInitializedRef.current && !isFlashcardsOpen && !audio.currentLoop) {
+        console.log('[AnkiClinic] All conditions met, playing ambient sound');
+        console.log('[AnkiClinic] Using sound file:', AMBIENT_SOUND);
         // Set the flag before playing to prevent race conditions
         ambientSoundInitializedRef.current = true;
         audio.playLoop(AMBIENT_SOUND);
+      } else {
+        console.log('[AnkiClinic] Conditions not met for ambient sound initialization');
       }
     };
     
     // Handle flashcard state changes
     if (isFlashcardsOpen) {
+      console.log('[AnkiClinic] Flashcards open, checking if need to stop ambient sound');
       if (audio.currentLoop === AMBIENT_SOUND) {
+        console.log('[AnkiClinic] Stopping ambient sound due to flashcards');
         audio.stopLoop();
       }
     } else if (!audio.currentLoop) {
+      console.log('[AnkiClinic] No loop playing, checking if should start ambient sound');
       // If no loop is playing, initialize with a small delay
       if (!timeoutId && !ambientSoundInitializedRef.current) {
+        console.log('[AnkiClinic] Setting up delayed ambient sound initialization');
         // Clear any existing timeout to prevent multiple initializations
         if (timeoutId) clearTimeout(timeoutId);
         
         timeoutId = setTimeout(() => {
+          console.log('[AnkiClinic] Delayed initialization triggered');
           // Double-check conditions before initializing
           if (!ambientSoundInitializedRef.current && !isFlashcardsOpen && !audio.currentLoop) {
             initializeAmbientSound();
+          } else {
+            console.log('[AnkiClinic] Conditions changed during delay, skipping initialization');
           }
         }, 1000);
       } else if (ambientSoundInitializedRef.current) {
+        console.log('[AnkiClinic] Ambient sound was initialized before, restarting');
         // Only restart if we've initialized before but no loop is playing
         audio.playLoop(AMBIENT_SOUND);
       }
@@ -265,16 +291,28 @@ const DoctorsOfficePage = () => {
     
     // Cleanup on unmount
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      console.log('[AnkiClinic] Running cleanup');
+      if (timeoutId) {
+        console.log('[AnkiClinic] Clearing timeout');
+        clearTimeout(timeoutId);
+      }
       
       // Only stop audio on actual unmount, not just re-renders
       const isRealUnmount = document.visibilityState === 'hidden' || 
                             (officeContainerRef.current && !document.body.contains(officeContainerRef.current));
       
+      console.log('[AnkiClinic] Unmount check:', {
+        isRealUnmount,
+        visibilityState: document.visibilityState,
+        containerInDocument: officeContainerRef.current && document.body.contains(officeContainerRef.current)
+      });
+      
       if (isRealUnmount) {
+        console.log('[AnkiClinic] Real unmount detected, cleaning up audio');
         isMountedRef.current = false;
         
         if (audio.currentLoop === AMBIENT_SOUND) {
+          console.log('[AnkiClinic] Stopping ambient sound loop');
           audio.stopLoop();
           ambientSoundInitializedRef.current = false;
         }
