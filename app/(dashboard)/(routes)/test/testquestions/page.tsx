@@ -2,7 +2,6 @@
 import { useSearchParams } from "next/navigation";
 import TestComponent from "@/components/test-component";
 import { useEffect, useState } from "react";
-import { VocabProvider } from '@/contexts/VocabContext';
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { useUserInfo } from "@/hooks/useUserInfo";
 
@@ -65,11 +64,9 @@ const TestQuestions = () => {
   }
 
   return (
-    <VocabProvider>
-      <div className="fixed inset-0 overflow-hidden bg-black">
-        <TestComponent testId={testId} onTestComplete={handleUpdateActivityTime} updateActivityEndTime={handleUpdateActivityTime}/>
-      </div>
-    </VocabProvider>
+    <div className="fixed inset-0 overflow-hidden bg-black">
+      <TestComponent testId={testId} onTestComplete={handleUpdateActivityTime} updateActivityEndTime={handleUpdateActivityTime}/>
+    </div>
   )
 
   function handleUpdateActivityTime(){

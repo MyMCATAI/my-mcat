@@ -68,7 +68,7 @@ export const SparkleEffect: React.FC<SparkleEffectProps> = ({
         const radius = Math.random() * sizeConfig.radius;
         
         return {
-          id: Date.now() + i,
+          id: Date.now() + i + Math.random(),
           x: centerX + Math.cos(angle) * radius,
           y: centerY + Math.sin(angle) * radius,
           size: Math.random() * sizeConfig.sizeVariation + sizeConfig.baseSize,
@@ -88,7 +88,7 @@ export const SparkleEffect: React.FC<SparkleEffectProps> = ({
         const startOffset = (Math.random() - 0.5) * 20;
 
         return {
-          id: Date.now() + i,
+          id: Date.now() + i + Math.random(),
           x: centerX + startOffset,
           y: centerY,
           size: Math.random() * 15 + 30,

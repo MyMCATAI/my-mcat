@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { VocabContext } from '@/contexts/VocabContext';
+import { useVocab } from '@/store/selectors';
 import VocabList from '@/components/VocabList';
 import DialogWrapper from './DialogWrapper';
 
@@ -41,7 +41,7 @@ const MyChatBot: React.FC<MyChatBotProps> = ({
   const context = chatbotContext?.context;
   const contentTitle = chatbotContext?.contentTitle;
 
-  const { toggleVocabList, isCmdIEnabled, toggleCmdI } = useContext(VocabContext);
+  const { toggleVocabList, isCmdIEnabled, toggleCmdI } = useVocab();
 
   useEffect(() => {
     setIsMounted(true);

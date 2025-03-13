@@ -198,9 +198,9 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
     // Handle sound effects and callbacks
     if (isCorrect) {
       onCorrectAnswer();
-      playSound('correct');
+      playSound('correct').catch(err => console.error("Error playing correct sound:", err));
     } else {
-      playSound('whoosh');
+      playSound('whoosh').catch(err => console.error("Error playing whoosh sound:", err));
       onWrongAnswer(
         cleanQuestion(currentCard.questionContent),
         getAnswerContent()
@@ -240,7 +240,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
 
   const toggleReveal = useCallback(() => {
     if (isMCQ) return;
-    playSound('flashcard-spacebar-reveal');
+    playSound('flashcard-spacebar-reveal').catch(err => console.error("Error playing reveal sound:", err));
     const newRevealState = !isAnswerRevealed;
     setIsAnswerRevealed(newRevealState);
     onAnswerReveal?.(newRevealState);
@@ -311,13 +311,13 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
   // Add button handlers for mobile
   const handleCorrectButtonClick = useCallback(() => {
     if (!isAnswerRevealed) return;
-    playSound('flashcard-spacebar-reveal');
+    playSound('flashcard-spacebar-reveal').catch(err => console.error("Error playing sound:", err));
     handleSwipe('right');
   }, [handleSwipe, isAnswerRevealed, playSound]);
 
   const handleIncorrectButtonClick = useCallback(() => {
     if (!isAnswerRevealed) return;
-    playSound('flashcard-spacebar-reveal');
+    playSound('flashcard-spacebar-reveal').catch(err => console.error("Error playing sound:", err));
     handleSwipe('left');
   }, [handleSwipe, isAnswerRevealed, playSound]);
 
@@ -343,8 +343,10 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
         event.preventDefault();
         event.stopPropagation();
         if (selectedOption === shuffledOptions.correctIndex) {
+          // Don't play sound here, handleSwipe will handle it
           handleSwipe('right');
         } else {
+          // Don't play sound here, handleSwipe will handle it
           handleSwipe('left');
         }
         return;
@@ -521,7 +523,7 @@ const getQuestionContent = () => {
   };
 
   const handleOptionClick = useCallback((index: number, e: React.MouseEvent) => {
-    playSound('flashcard-select'); 
+    playSound('flashcard-select').catch(err => console.error("Error playing select sound:", err));
     if (answeredMCQ) return;
     
     e.stopPropagation();
@@ -533,7 +535,9 @@ const getQuestionContent = () => {
 
     const isCorrect = index === shuffledOptions.correctIndex;
     onMCQAnswer?.(isCorrect);
-  }, [answeredMCQ, shuffledOptions.correctIndex, onAnswerReveal, onMCQAnswer]);
+    
+    // No sound plays immediately after selecting - we'll play the sound when moving to next question
+  }, [answeredMCQ, shuffledOptions.correctIndex, onAnswerReveal, onMCQAnswer, playSound]);
 
   const fetchFlashcards = async () => {
     setIsLoading(true);

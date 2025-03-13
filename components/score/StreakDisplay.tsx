@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaFire } from "react-icons/fa";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudio } from "@/store/selectors";
 import { useUserInfo } from "@/hooks/useUserInfo";
 
 interface StreakPopupProps {

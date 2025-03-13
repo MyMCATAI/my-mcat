@@ -54,13 +54,9 @@ const RoomSprite = React.memo(({
           zIndex={img.zIndex+100}
           roomId={img.id}
           onClick={() => {
-            console.log('[DEBUG] Question sprite clicked, roomId:', img.id);
-            console.log('[DEBUG] About to play door open sound');
             setFlashcardRoomId(img.id);
             // Play the door open sound before opening the flashcard dialog
-            audio.playSound('flashcard-door-open');
-            console.log('[DEBUG] After audio.playSound call with flashcard-door-open');
-            
+            audio.playSound('flashcard-door-open');            
             // Add a small delay to ensure the sound plays before the dialog opens
             // This prevents the ambient sound effect from stopping the door sound
             setTimeout(() => {

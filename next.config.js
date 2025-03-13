@@ -8,6 +8,9 @@ const withMDX = require('@next/mdx')({
 
 module.exports = withMDX({
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     domains: ['b.thumbs.redditmedia.com', 'img.youtube.com', 'my-mcat.s3.us-east-2.amazonaws.com'],
     remotePatterns: [

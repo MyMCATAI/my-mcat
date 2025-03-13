@@ -2,7 +2,7 @@
 "use client";
 import React, { useEffect } from 'react';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudio } from "@/store/selectors";
 
 /* ---------------------------------------- Types -------------------------------------------- */
 interface AnswerSummary {

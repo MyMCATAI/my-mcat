@@ -178,6 +178,34 @@ const MyComponent = () => {
 }
 ```
 
+### Audio Store (`store.ts`)
+```typescript
+{
+  // Audio state
+  isPlayingSong: boolean;
+  currentSong: string | null;
+  currentLoop: string | null;
+  masterVolume: number;
+  
+  // Basic audio actions
+  playMusic: (src: string, startPlayback?: boolean, onEnded?: () => void) => void;
+  stopMusic: () => void;
+  playSound: (soundName: string) => void;
+  loopSound: (soundName: string) => Promise<void>;
+  stopLoopSound: (soundName: string) => void;
+  stopAllLoops: () => Promise<void>;
+  getCurrentLoop: () => string | null;
+  setMasterVolume: (newVolume: number) => void;
+  
+  // Audio context management
+  initializeAudioContext: () => Promise<AudioContext | null>;
+  loadAudioBuffer: (url: string) => Promise<AudioBuffer>;
+  
+  // Transition actions
+  handleFlashcardsTransition: (isOpen: boolean) => Promise<void>;
+}
+```
+
 ### Selectors (`selectors.ts`)
 ```typescript
 // UI Selectors
@@ -211,13 +239,20 @@ useGame() => {
   debugMode, setDebugMode
 }
 
-// Individual Profile Selectors
-useProfileComplete() => isProfileComplete
-useCompletedSteps() => completedSteps
-useStudyPreferences() => studyPreferences
-useInterfaceSettings() => interfaceSettings
-useTutorialProgress() => tutorialProgress
-useOnboardingStatus() => { hasCompletedOnboarding, lastVisitedRoute, onboardingRoute }
+// Audio Selectors
+useAudio() => {
+  // All audio-related state and actions
+  isPlayingSong, currentSong, currentLoop, masterVolume,
+  playMusic, stopMusic, playSound, loopSound, stopLoopSound,
+  stopAllLoops, getCurrentLoop, setMasterVolume,
+  handleFlashcardsTransition
+}
+
+useAudioPlayer() => {
+  // Music player specific state and actions
+  isPlayingSong, currentSong, masterVolume,
+  playMusic, stopMusic, setMasterVolume
+}
 ```
 
 ## Completed Migrations
@@ -232,6 +267,8 @@ useOnboardingStatus() => { hasCompletedOnboarding, lastVisitedRoute, onboardingR
 - ✅ Route Transitions: Enhanced RouteHandler with smooth transitions and debug mode support
 - ✅ Game State (AnkiClinic): Migrated core game state to Zustand Game Store
 - ✅ Server-Side Rendering Fixes: Updated components to handle SSR properly
+- ✅ Audio Management: Migrated from `AudioContext` to Zustand Audio Store with enhanced functionality
+- ✅ Music Player: Migrated from `MusicPlayerContext` to Zustand Audio Store
 
 ## Current Context API State (To Be Migrated)
 
@@ -243,31 +280,10 @@ useOnboardingStatus() => { hasCompletedOnboarding, lastVisitedRoute, onboardingR
   - `isCmdIEnabled: boolean`
   - `toggleCmdI: () => void`
 
-### [AudioContext](../contexts/AudioContext.tsx)
-- Sound Control:
-  - `volume: number`
-  - `isMuted: boolean`
-  - `playSound: (soundId: string) => void`
-  - `stopAllLoops: () => Promise<void>`
-  - `loopSound: (soundId: string) => Promise<void>`
-  - `setVolume: (volume: number) => void`
-
-### [MusicPlayerContext](../contexts/MusicPlayerContext.tsx)
-- Music Player:
-  - `isPlaying: boolean`
-  - `currentTrack: string`
-  - `isAutoPlay: boolean`
-  - `setIsAutoPlay: (autoPlay: boolean) => void`
-
 ## Migration Plan
 
 ### Priority for Migration to Zustand
-1. Media Management - Next Priority
-   - Combine `AudioContext`, `MusicPlayerContext`
-   - Create `mediaStore`
-   - Will handle sound effects, music, and volume controls
-
-2. Vocabulary Management - Low Priority
+1. Vocabulary Management - Low Priority
    - Migrate `VocabContext` to Zustand
    - Create `vocabStore`
    - Will handle vocabulary list and related functionality
@@ -347,4 +363,11 @@ useOnboardingStatus() => { hasCompletedOnboarding, lastVisitedRoute, onboardingR
 - RouteHandler has been enhanced with smooth transitions and debug mode support
 - Game State (AnkiClinic) has been migrated to Zustand with all core game functionality
 - Server-side rendering issues have been fixed in the ankiclinic page and API routes
-- Next steps: Complete Media Management store migration and implement Vocabulary Management store 
+- Audio and Music Player functionality has been migrated to Zustand with enhanced features:
+  - Improved audio buffer caching system
+  - Better error handling with user-friendly messages
+  - Consolidated audio transitions into the store
+  - Optimized volume management with category-based coefficients
+  - Added proper cleanup for audio resources
+  - Ensured SSR compatibility with browser environment checks
+- Next steps: Complete Vocabulary Management store migration 

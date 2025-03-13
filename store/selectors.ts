@@ -1,14 +1,17 @@
 import { useStore } from './store'
 import { useEffect, useCallback, useRef } from 'react'
+import { useAudioStore } from './slices/audioSlice'
+import { useUIStore } from './slices/uiSlice'
+import { useGameStore } from './slices/gameSlice'
 
 /* --- UI Selectors ---- */
 export const useUI = () => {
-  const theme = useStore((state) => state.theme)
-  const window = useStore((state) => state.window)
-  const currentRoute = useStore((state) => state.currentRoute)
-  const setTheme = useStore((state) => state.setTheme)
-  const setWindowSize = useStore((state) => state.setWindowSize)
-  const setCurrentRoute = useStore((state) => state.setCurrentRoute)
+  const theme = useUIStore((state) => state.theme)
+  const window = useUIStore((state) => state.window)
+  const currentRoute = useUIStore((state) => state.currentRoute)
+  const setTheme = useUIStore((state) => state.setTheme)
+  const setWindowSize = useUIStore((state) => state.setWindowSize)
+  const setCurrentRoute = useUIStore((state) => state.setCurrentRoute)
   
   return {
     theme,
@@ -21,9 +24,9 @@ export const useUI = () => {
 }
 
 // Individual property selectors for performance
-export const useTheme = () => useStore(state => state.theme)
-export const useWindowSize = () => useStore(state => state.window)
-export const useCurrentRoute = () => useStore(state => state.currentRoute)
+export const useTheme = () => useUIStore(state => state.theme)
+export const useWindowSize = () => useUIStore(state => state.window)
+export const useCurrentRoute = () => useUIStore(state => state.currentRoute)
 
 /* --- User Selector ---- */
 // Consolidated user selector that provides all user-related state and actions
@@ -109,43 +112,43 @@ export const useUser = () => {
 // Consolidated game selector that provides all game-related state and actions
 export const useGame = () => {
   // Game progress
-  const userRooms = useStore((state) => state.userRooms)
-  const userLevel = useStore((state) => state.userLevel)
-  const patientsPerDay = useStore((state) => state.patientsPerDay)
-  const totalPatients = useStore((state) => state.totalPatients)
-  const streakDays = useStore((state) => state.streakDays)
+  const userRooms = useGameStore((state) => state.userRooms)
+  const userLevel = useGameStore((state) => state.userLevel)
+  const patientsPerDay = useGameStore((state) => state.patientsPerDay)
+  const totalPatients = useGameStore((state) => state.totalPatients)
+  const streakDays = useGameStore((state) => state.streakDays)
   
   // Active game session
-  const isGameInProgress = useStore((state) => state.isGameInProgress)
-  const currentUserTestId = useStore((state) => state.currentUserTestId)
-  const isFlashcardsOpen = useStore((state) => state.isFlashcardsOpen)
-  const flashcardRoomId = useStore((state) => state.flashcardRoomId)
-  const activeRooms = useStore((state) => state.activeRooms)
-  const completeAllRoom = useStore((state) => state.completeAllRoom)
+  const isGameInProgress = useGameStore((state) => state.isGameInProgress)
+  const currentUserTestId = useGameStore((state) => state.currentUserTestId)
+  const isFlashcardsOpen = useGameStore((state) => state.isFlashcardsOpen)
+  const flashcardRoomId = useGameStore((state) => state.flashcardRoomId)
+  const activeRooms = useGameStore((state) => state.activeRooms)
+  const completeAllRoom = useGameStore((state) => state.completeAllRoom)
   
   // Test results
-  const userResponses = useStore((state) => state.userResponses)
-  const correctCount = useStore((state) => state.correctCount)
-  const wrongCount = useStore((state) => state.wrongCount)
-  const testScore = useStore((state) => state.testScore)
+  const userResponses = useGameStore((state) => state.userResponses)
+  const correctCount = useGameStore((state) => state.correctCount)
+  const wrongCount = useGameStore((state) => state.wrongCount)
+  const testScore = useGameStore((state) => state.testScore)
   
   // Game actions
-  const startGame = useStore((state) => state.startGame)
-  const endGame = useStore((state) => state.endGame)
-  const unlockRoom = useStore((state) => state.unlockRoom)
-  const setFlashcardRoomId = useStore((state) => state.setFlashcardRoomId)
-  const setIsFlashcardsOpen = useStore((state) => state.setIsFlashcardsOpen)
-  const setActiveRooms = useStore((state) => state.setActiveRooms)
-  const setCompleteAllRoom = useStore((state) => state.setCompleteAllRoom)
-  const setUserResponses = useStore((state) => state.setUserResponses)
-  const setCorrectCount = useStore((state) => state.setCorrectCount)
-  const setWrongCount = useStore((state) => state.setWrongCount)
-  const setTestScore = useStore((state) => state.setTestScore)
-  const resetGameState = useStore((state) => state.resetGameState)
-  const setUserRooms = useStore((state) => state.setUserRooms)
-  const updateUserLevel = useStore((state) => state.updateUserLevel)
-  const setStreakDays = useStore((state) => state.setStreakDays)
-  const setTotalPatients = useStore((state) => state.setTotalPatients)
+  const startGame = useGameStore((state) => state.startGame)
+  const endGame = useGameStore((state) => state.endGame)
+  const unlockRoom = useGameStore((state) => state.unlockRoom)
+  const setFlashcardRoomId = useGameStore((state) => state.setFlashcardRoomId)
+  const setIsFlashcardsOpen = useGameStore((state) => state.setIsFlashcardsOpen)
+  const setActiveRooms = useGameStore((state) => state.setActiveRooms)
+  const setCompleteAllRoom = useGameStore((state) => state.setCompleteAllRoom)
+  const setUserResponses = useGameStore((state) => state.setUserResponses)
+  const setCorrectCount = useGameStore((state) => state.setCorrectCount)
+  const setWrongCount = useGameStore((state) => state.setWrongCount)
+  const setTestScore = useGameStore((state) => state.setTestScore)
+  const resetGameState = useGameStore((state) => state.resetGameState)
+  const setUserRooms = useGameStore((state) => state.setUserRooms)
+  const updateUserLevel = useGameStore((state) => state.updateUserLevel)
+  const setStreakDays = useGameStore((state) => state.setStreakDays)
+  const setTotalPatients = useGameStore((state) => state.setTotalPatients)
   
   return {
     // Game progress
@@ -206,22 +209,32 @@ export const useOnboardingStatus = () => ({
 // Consolidated audio selector that provides all audio-related state and actions
 export const useAudio = () => {
   // Audio state
-  const isPlayingSong = useStore((state) => state.isPlayingSong)
-  const currentSong = useStore((state) => state.currentSong)
-  const currentLoop = useStore((state) => state.currentLoop)
-  const masterVolume = useStore((state) => state.masterVolume)
+  const isPlaying = useAudioStore((state) => state.isPlaying)
+  const currentSong = useAudioStore((state) => state.currentSong)
+  const currentLoop = useAudioStore((state) => state.currentLoop)
+  const volume = useAudioStore((state) => state.volume)
+  const songQueue = useAudioStore((state) => state.songQueue)
+  const audioContext = useAudioStore((state) => state.audioContext)
   
   // Audio actions
-  const playMusic = useStore((state) => state.playMusic)
-  const stopMusic = useStore((state) => state.stopMusic)
-  const playSound = useStore((state) => state.playSound)
-  const loopSound = useStore((state) => state.loopSound)
-  const stopLoopSound = useStore((state) => state.stopLoopSound)
-  const stopAllLoops = useStore((state) => state.stopAllLoops)
-  const getCurrentLoop = useStore((state) => state.getCurrentLoop)
-  const setMasterVolume = useStore((state) => state.setMasterVolume)
-  const initializeAudioContext = useStore((state) => state.initializeAudioContext)
-  const handleFlashcardsTransition = useStore((state) => state.handleFlashcardsTransition)
+  const playMusic = useAudioStore((state) => state.playMusic)
+  const stopMusic = useAudioStore((state) => state.stopMusic)
+  const playSound = useAudioStore((state) => state.playSound)
+  const playLoop = useAudioStore((state) => state.playLoop)
+  const stopLoop = useAudioStore((state) => state.stopLoop)
+  const setVolume = useAudioStore((state) => state.setVolume)
+  const initializeAudioContext = useAudioStore((state) => state.initializeAudioContext)
+  
+  // Theme-music integration
+  const handleThemeChange = useAudioStore((state) => state.handleThemeChange)
+  
+  // Song information
+  const getCurrentSongTitle = useAudioStore((state) => state.getCurrentSongTitle)
+  
+  // Queue system
+  const skipToNext = useAudioStore((state) => state.skipToNext)
+  const togglePlayPause = useAudioStore((state) => state.togglePlayPause)
+  const setSongQueue = useAudioStore((state) => state.setSongQueue)
   
   // Initialize audio context on first use - but only once per component instance
   const hasInitializedRef = useRef(false);
@@ -233,71 +246,127 @@ export const useAudio = () => {
     hasInitializedRef.current = true;
     
     initializeAudioContext().catch(error => {
-      console.error('[useAudio] Failed to initialize audio context:', error)
-      // Reset the flag to allow retry on next render
-      hasInitializedRef.current = false;
-    })
-    
-    // No cleanup needed - we want to keep the audio context alive
-  }, [initializeAudioContext])
-
-  // Enhanced API with additional debug logging
+      console.error('[useAudio] Failed to initialize audio context:', error);
+    });
+  }, [initializeAudioContext]);
+  
   return {
     // Audio state
-    isPlaying: isPlayingSong,
+    isPlaying,
     currentSong,
     currentLoop,
-    volume: masterVolume,
+    volume,
+    songQueue,
+    audioContext,
     
-    // Audio actions with debug logging
-    playMusic: useCallback(async (src: string, startPlayback = true, onEnded?: () => void) => {
-      console.debug(`[useAudio] Playing music: ${src}, startPlayback: ${startPlayback}`)
-      return playMusic(src, startPlayback, onEnded)
-    }, [playMusic]),
+    // Audio actions
+    playMusic,
+    stopMusic,
+    playSound,
+    playLoop,
+    stopLoop,
+    setVolume,
+    initializeAudioContext,
     
-    stopMusic: useCallback(() => {
-      console.debug('[useAudio] Stopping music')
-      stopMusic()
-    }, [stopMusic]),
+    // Theme-music integration
+    handleThemeChange,
     
-    playSound: useCallback(async (soundName: string) => {
-      console.debug(`[useAudio] Playing sound: ${soundName}`)
-      return playSound(soundName)
-    }, [playSound]),
+    // Song information
+    getCurrentSongTitle,
     
-    loopSound: useCallback(async (soundName: string) => {
-      console.debug(`[useAudio] Looping sound: ${soundName}`)
-      return loopSound(soundName)
-    }, [loopSound]),
+    // Queue system
+    skipToNext,
+    togglePlayPause,
+    setSongQueue,
+  };
+}
+
+/* --- Vocab Selector ---- */
+// Consolidated vocab selector that provides all vocabulary-related state and actions
+export const useVocab = () => {
+  // Vocab state
+  const vocabList = useStore((state) => state.vocabList)
+  const showVocabList = useStore((state) => state.showVocabList)
+  const isCmdIEnabled = useStore((state) => state.isCmdIEnabled)
+  
+  // Vocab actions
+  const addVocabWord = useStore((state) => state.addVocabWord)
+  const removeVocabWord = useStore((state) => state.removeVocabWord)
+  const toggleVocabList = useStore((state) => state.toggleVocabList)
+  const toggleCmdI = useStore((state) => state.toggleCmdI)
+  
+  return {
+    // State
+    vocabList,
+    showVocabList,
+    isCmdIEnabled,
     
-    stopLoopSound: useCallback((soundName: string) => {
-      console.debug(`[useAudio] Stopping loop: ${soundName}`)
-      stopLoopSound(soundName)
-    }, [stopLoopSound]),
-    
-    stopAllLoops: useCallback(async () => {
-      console.debug('[useAudio] Stopping all loops')
-      return stopAllLoops()
-    }, [stopAllLoops]),
-    
-    getCurrentLoop: useCallback(() => {
-      return getCurrentLoop()
-    }, [getCurrentLoop]),
-    
-    setVolume: useCallback((volume: number) => {
-      console.debug(`[useAudio] Setting volume: ${volume}`)
-      setMasterVolume(volume)
-    }, [setMasterVolume]),
-    
-    getActiveLoops: useCallback(() => {
-      // Access the store directly to get active loops
-      const store = useStore.getState();
-      return store._LOOP_SOURCES ? Array.from(store._LOOP_SOURCES.keys()) : [];
-    }, []),
-    
-    handleFlashcardsTransition: useCallback(async (isOpen: boolean) => {
-      console.debug(`[useAudio] Handling flashcards transition: ${isOpen ? 'open' : 'close'}`)
-      return handleFlashcardsTransition(isOpen)
-    }, [handleFlashcardsTransition])
+    // Actions
+    addVocabWord,
+    removeVocabWord,
+    toggleVocabList,
+    toggleCmdI
   }
-} 
+}
+
+// Individual property selectors for performance
+export const useVocabList = () => useStore(state => state.vocabList)
+export const useShowVocabList = () => useStore(state => state.showVocabList)
+export const useIsCmdIEnabled = () => useStore(state => state.isCmdIEnabled)
+
+/* --- Clinic Data Management ---- */
+export const useClinicData = () => {
+  // Clinic data state
+  const reportData = useGameStore((state) => state.reportData);
+  const isLoading = useGameStore((state) => state.isClinicDataLoading);
+  
+  // Clinic data actions
+  const fetchData = useGameStore((state) => state.fetchClinicData);
+  const resetData = useGameStore((state) => state.resetClinicData);
+  const performDailyCalculations = useGameStore((state) => state.performDailyCalculations);
+  
+  // Game state needed for clinic data
+  const userRooms = useGameStore((state) => state.userRooms);
+  const streakDays = useGameStore((state) => state.streakDays);
+  const totalPatients = useGameStore((state) => state.totalPatients);
+  
+  // Enhanced functionality for page.tsx
+  const initializeClinicData = useCallback(async () => {
+    try {
+      await fetchData();
+      return true;
+    } catch (error) {
+      console.error('[ERROR] Failed to initialize clinic data:', error);
+      return false;
+    }
+  }, [fetchData]);
+  
+  // Daily patient calculation with toast notifications now managed by the store
+  const calculateDailyPatients = useCallback(async () => {
+    try {
+      await performDailyCalculations();
+      return true;
+    } catch (error) {
+      console.error('[ERROR] Failed to calculate daily patients:', error);
+      return false;
+    }
+  }, [performDailyCalculations]);
+  
+  return {
+    // State
+    reportData,
+    isLoading,
+    userRooms,
+    streakDays,
+    totalPatients,
+    
+    // Actions
+    fetchData,
+    resetData,
+    
+    // Enhanced functionality
+    initializeClinicData,
+    calculateDailyPatients,
+    performDailyCalculations
+  };
+}; 
