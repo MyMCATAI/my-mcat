@@ -3,13 +3,13 @@ import { devtools } from 'zustand/middleware'
 import { UserInfo } from '@/types/user'
 import type { DoctorOfficeStats } from '@/types'
 import { toast } from 'react-hot-toast'
+import { isWithin14Days } from '@/lib/utils'
 // Import the audio slice for initialization
 import { useAudioStore } from './slices/audioSlice'
 // Import the UI slice for initialization
 import { useUIStore } from './slices/uiSlice'
 // Import the Game slice for initialization
 import { useGameStore } from './slices/gameSlice'
-
 
 // Add a flag to track global initialization
 let isStoreInitialized = false;
@@ -245,6 +245,9 @@ export const useStore = create<Store>()(
 
           if (!userInfoResponse.ok) throw new Error('Failed to fetch user info');
           const userInfo = await userInfoResponse.json();
+          
+          // Check if user is in 14-day free trial period based on account creation date
+          const isNewUserTrial = userInfo.createdAt ? isWithin14Days(new Date(userInfo.createdAt)) : false;
 
           // Prepare single state update with only changed values
           const updates: Partial<Store> = {
@@ -261,11 +264,13 @@ export const useStore = create<Store>()(
 
           // Only update subscription if changed
           // Match main branch behavior by including trial subscriptions
+          // Also include users in their 14-day trial period
           const newSubStatus = 
             userInfo.subscriptionType === 'gold' || 
             userInfo.subscriptionType === 'premium' ||
             userInfo.subscriptionType?.startsWith('Gold') ||
             userInfo.subscriptionType?.includes('_Trial') || 
+            isNewUserTrial || 
             false;
             
           if (newSubStatus !== get().isSubscribed) {
