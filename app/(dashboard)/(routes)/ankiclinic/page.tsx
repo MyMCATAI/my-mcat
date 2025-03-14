@@ -949,9 +949,10 @@ const DoctorsOfficePage = () => {
                 
                 {/* Center - New Game button */}
                 <div>
-                  <NewGameButton
-                    onGameStart={handleGameStart}
-                  />
+
+                    <NewGameButton
+                      onGameStart={handleGameStart}
+                    />
                 </div>
                 
                 {/* Right side - Sidebar toggle and Marketplace */}
@@ -1064,7 +1065,7 @@ const DoctorsOfficePage = () => {
       )}
 
       {/* Desktop only - New Game button */}
-      {!isMobile && (
+      {!isMobile  && (
         <div className="absolute top-6 left-4 ml-[calc(25%+16px)] flex gap-2 z-50">
           <NewGameButton
             onGameStart={handleGameStart}

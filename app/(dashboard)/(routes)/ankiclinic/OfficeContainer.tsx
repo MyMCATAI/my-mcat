@@ -290,13 +290,13 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
 
   // Define zoom levels for each test level
   const zoomLevels: Record<number, { scale: number, offsetX: number, offsetY: number }> = {
-    0: { scale: 3.2, offsetX: -50, offsetY: -450 },
+    0: { scale: 2, offsetX: -100, offsetY: -580 },
     1: { scale: 2.3, offsetX: 150, offsetY: -300 },
-    2: { scale: 1.9, offsetX: 150, offsetY: -250 },
-    3: { scale: 1.8, offsetX: 150, offsetY: -250 },
-    4: { scale: 1.6, offsetX: 150, offsetY: -200 },
-    5: { scale: 1.3, offsetX: 50, offsetY: -200 },
-    6: { scale: 1.2, offsetX: 0, offsetY: -160 },
+    2: { scale: 1.7, offsetX: 150, offsetY: -200 },
+    3: { scale: 1.7, offsetX: 150, offsetY: -200 },
+    4: { scale: 1.7, offsetX: 150, offsetY: -200 },
+    5: { scale: 1.5, offsetX: 50, offsetY: -200 },
+    6: { scale: 1.5, offsetX: 0, offsetY: -200 },
   };
 
   // Level-specific horizontal adjustment for better centering
