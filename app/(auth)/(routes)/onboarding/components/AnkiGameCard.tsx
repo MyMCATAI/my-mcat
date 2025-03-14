@@ -2,25 +2,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-
-function isMobileButNotIpad() {
-  if (typeof window === 'undefined') return false;
-  const toMatch = [
-    /Android/i,
-    /webOS/i,
-    /iPhone/i,
-    /iPod/i,
-    /BlackBerry/i,
-    /Windows Phone/i
-  ];
-  
-  const isIpad = /iPad/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-  return toMatch.some((toMatchItem) => {
-    return navigator.userAgent.match(toMatchItem);
-  }) && !isIpad;
-}
+import { isMobileButNotIpad } from "@/lib/utils";
 
 const gameFeatures = {
   title: "The Anki Clinic",

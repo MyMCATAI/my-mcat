@@ -9,6 +9,7 @@ interface SubscriptionStatus {
     cancelAtPeriodEnd?: boolean;
     subscriptionType: string;
     trialEnd?: Date;
+    isNewUserTrial?: boolean;
   } | null;
 }
 
@@ -59,20 +60,29 @@ export function useSubscriptionStatus() {
   // Check if user is in trial based on subscriptionType containing "_Trial"
   const hasTrialSuffix = userInfo?.subscriptionType?.includes('_Trial') || false;
   
-  // Determine trial status from Stripe or from subscriptionType
-  const isTrialing = stripeData.status?.status === 'trialing' || hasTrialSuffix;
+  // Check if user is in new user trial period
+  const isNewUserTrial = stripeData.status?.subscription?.isNewUserTrial || false;
   
-  // Check premium status - true if subscriptionType is "Premium" or "Premium_Trial"
-  const isPremium = userInfo?.subscriptionType?.startsWith('Premium') && 
-    (stripeData.status?.status === 'active' || isTrialing);
+  // Determine trial status from Stripe, subscriptionType, or new user status
+  const isTrialing = 
+    stripeData.status?.status === 'trialing' || 
+    hasTrialSuffix || 
+    isNewUserTrial;
   
-  // Check gold status - true if subscriptionType is "Gold" or "Gold_Trial"
-  const isGold = userInfo?.subscriptionType?.toLowerCase().startsWith('gold') || (stripeData.status?.status === 'active' || isTrialing) || false
+  // Check premium status - true if subscriptionType is "Premium" or "Premium_Trial" or in trial
+  const isPremium = (userInfo?.subscriptionType?.startsWith('Premium') && 
+    (stripeData.status?.status === 'active' || isTrialing)) || isNewUserTrial;
+  
+  // Check gold status - true if subscriptionType is "Gold" or "Gold_Trial" or in trial
+  const isGold = userInfo?.subscriptionType?.toLowerCase().startsWith('gold') || 
+    (stripeData.status?.status === 'active' || isTrialing) || 
+    isNewUserTrial;
   
   const isCanceled = stripeData.status?.subscription?.cancelAtPeriodEnd ?? false;
 
   // Calculate trial end date
   const trialEnd = stripeData.status?.subscription?.trialEnd;
+  
   // Calculate days remaining in trial if in trial period
   const trialDaysRemaining = trialEnd ? 
     Math.max(0, Math.ceil((trialEnd.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 
@@ -85,6 +95,7 @@ export function useSubscriptionStatus() {
     isGold,
     isCanceled,
     isTrialing,
+    isNewUserTrial,
     trialEnd,
     trialDaysRemaining,
     currentPeriodEnd: stripeData.status?.subscription?.currentPeriodEnd,

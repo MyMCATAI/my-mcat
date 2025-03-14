@@ -227,3 +227,38 @@ export const formatDisplayDate = (date: string | Date) => {
     year: 'numeric'
   });
 };
+
+/**
+ * Checks if the current device is a mobile device but not an iPad
+ * Used for redirecting users to mobile-optimized experiences
+ */
+export function isMobileButNotIpad(): boolean {
+  if (typeof window === 'undefined') return false;
+  const toMatch = [
+    /Android/i,
+    /webOS/i,
+    /iPhone/i,
+    /iPod/i,
+    /BlackBerry/i,
+    /Windows Phone/i
+  ];
+  
+  const isIpad = /iPad/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  return toMatch.some((toMatchItem) => {
+    return navigator.userAgent.match(toMatchItem);
+  }) && !isIpad;
+}
+
+/**
+ * Checks if a date is within the last 14 days
+ * Used for determining if a user is in their free trial period
+ */
+export function isWithin14Days(date: Date): boolean {
+  const now = new Date();
+  const fourteenDaysAgo = new Date();
+  fourteenDaysAgo.setDate(now.getDate() - 14);
+  
+  return date >= fourteenDaysAgo;
+}

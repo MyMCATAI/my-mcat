@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { OnboardingInfo } from '@/types';
 import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+import { isMobileButNotIpad } from '@/lib/utils';
 
 type OnboardingStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -22,6 +24,7 @@ function isValidStep(step: number): step is OnboardingStep {
 export function useOnboardingInfo() {
   const [onboardingInfo, setOnboardingInfo] = useState<OnboardingInfo | null>(null);
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(ONBOARDING_STEPS.NAME);
+  const router = useRouter();
 
   // Fetch initial onboarding info
   useEffect(() => {
@@ -135,10 +138,20 @@ export function useOnboardingInfo() {
     targetMedSchool: string;
   }) => {
     try {
+      // Mark onboarding as complete and redirect to home
       await updateOnboardingInfo({
         ...data,
-        currentStep: ONBOARDING_STEPS.KALYPSO_DIALOGUE as OnboardingStep,
+        onboardingComplete: true,
       });
+      
+      // Check if on mobile and redirect accordingly
+      if (isMobileButNotIpad()) {
+        // Mobile users go to the game (or redirect page) since home is not optimized for mobile
+        router.push('/redirect');
+      } else {
+        // Desktop users go to home page
+        router.push('/home');
+      }
     } catch (error) {
       console.error("Error saving goals:", error);
       toast.error("Failed to save your information");

@@ -2,25 +2,7 @@
 
 import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-
-function isMobileButNotIpad() {
-  if (typeof window === 'undefined') return false
-  const toMatch = [
-    /Android/i,
-    /webOS/i,
-    /iPhone/i,
-    /iPod/i,
-    /BlackBerry/i,
-    /Windows Phone/i
-  ];
-  
-  const isIpad = /iPad/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-  return toMatch.some((toMatchItem) => {
-    return navigator.userAgent.match(toMatchItem);
-  }) && !isIpad;
-}
+import { isMobileButNotIpad } from '@/lib/utils'
 
 export default function MobileRedirect() {
   const router = useRouter()
