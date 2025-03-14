@@ -29,6 +29,7 @@ export interface UserInfo {
   notificationPreference?: string;
   onboardingInfo?: OnboardingInfo;
   referrals?: any[];
+  createdAt: Date;
 }
 
 export interface Referral {

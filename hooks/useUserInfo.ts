@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { useUser as useClerkUser } from "@clerk/nextjs";
 import { useUser } from "@/store/selectors";
 import { UserInfo, Referral } from "@/types/user";
+import { isWithin14Days } from "@/lib/utils";
 
 interface UseUserInfoReturn {
   userInfo: UserInfo | null;
@@ -30,23 +31,28 @@ interface UseUserInfoReturn {
 }
 
 export const useUserInfo = (): UseUserInfoReturn => {
-  const { user } = useClerkUser();
-  const { userInfo, refreshUserInfo } = useUser();
+  const { user, isSignedIn, isLoaded } = useClerkUser();
+  const { setIsSubscribed, refreshUserInfo, userInfo } = useUser();
   const [isLoading, setIsLoading] = useState(true);
   const hasInitialized = useRef(false);
   
   const [referrals, setReferrals] = useState<Referral[]>([]);
 
   const fetchUserInfo = useCallback(async () => {
+    if (!isSignedIn) {
+      setIsLoading(false);
+      return;
+    }
     try {
+      setIsLoading(true);
+      // Refresh user info in store
       await refreshUserInfo();
     } catch (error) {
       console.error('Failed to fetch user info:', error);
-      toast.error('Failed to load user info');
     } finally {
       setIsLoading(false);
     }
-  }, [refreshUserInfo]);
+  }, [isSignedIn, refreshUserInfo]);
 
   useEffect(() => {
     if (user?.id && !hasInitialized.current) {
@@ -54,6 +60,9 @@ export const useUserInfo = (): UseUserInfoReturn => {
       fetchUserInfo();
     }
   }, [user?.id, fetchUserInfo]);
+
+  // Check if user is in 14-day trial period directly from userInfo
+  const isNewUserTrial = userInfo?.createdAt ? isWithin14Days(new Date(userInfo.createdAt)) : false;
 
   const updateScore = useCallback(async (amount: number) => {
     try {
@@ -263,7 +272,9 @@ export const useUserInfo = (): UseUserInfoReturn => {
       userInfo?.subscriptionType?.startsWith('Gold') || 
       userInfo?.subscriptionType === 'gold' || 
       userInfo?.subscriptionType === 'premium' ||
-      userInfo?.subscriptionType?.includes('_Trial') || false,
+      userInfo?.subscriptionType?.includes('_Trial') || 
+      isNewUserTrial || 
+      false,
     updateScore,
     updateNotificationPreference,
     updateUserProfile,

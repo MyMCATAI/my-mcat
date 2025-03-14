@@ -74,6 +74,8 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [isMigrating, setIsMigrating] = useState(false);
 
+  // Comment out migration check since it's no longer needed
+  /*
   useEffect(() => {
     const checkMigration = async () => {
       try {
@@ -102,6 +104,7 @@ export default function OnboardingPage() {
 
     checkMigration();
   }, [router]);
+  */
 
   // Add effect to check for successful payment return
   useEffect(() => {
@@ -117,9 +120,10 @@ export default function OnboardingPage() {
     checkPaymentAndRedirect();
   }, [router]);
 
-  if (isMigrating) {
-    return <MigrationLoading />;
-  }
+  // Removed migration check, so no need to show loading
+  // if (isMigrating) {
+  //   return <MigrationLoading />;
+  // }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#001226]">
@@ -169,23 +173,24 @@ export default function OnboardingPage() {
           />
         )}
 
-        {currentStep === ONBOARDING_STEPS.KALYPSO_DIALOGUE && (
+        {/* Temporarily removed steps - keeping them commented out for future restoration */}
+        {/* {currentStep === ONBOARDING_STEPS.KALYPSO_DIALOGUE && (
           <KalypsoDialogueStep
             onComplete={handleKalypsoComplete}
             firstName={onboardingInfo?.firstName || undefined}
             targetScore={onboardingInfo?.targetScore|| undefined}
             targetMedSchool={onboardingInfo?.targetMedSchool|| undefined}
           />
-        )}
+        )} */}
 
-        {currentStep === ONBOARDING_STEPS.REFERRAL && (
+        {/* {currentStep === ONBOARDING_STEPS.REFERRAL && (
           <FriendReferral 
             onComplete={handleReferralComplete}
             createReferral={createReferral}
           />
-        )}
+        )} */}
 
-        {currentStep === ONBOARDING_STEPS.UNLOCK && (
+        {/* {currentStep === ONBOARDING_STEPS.UNLOCK && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -193,7 +198,7 @@ export default function OnboardingPage() {
           >
             <UnlockOptions />
           </motion.div>
-        )}
+        )} */}
       </motion.div>
     </div>
   );
