@@ -87,6 +87,19 @@ export async function POST(req: Request) {
   }
 
   try {
+    // Define the subject/content/concept mapping from the CSV data
+    const subjectContentConceptMapping = [
+      { subjectCategory: "Biochemistry", contentCategory: "1A", conceptCategory: "Amino Acids" },
+      { subjectCategory: "Biochemistry", contentCategory: "1A", conceptCategory: "Enzymes" },
+      { subjectCategory: "Biochemistry", contentCategory: "1A", conceptCategory: "Proteins" },
+      // ... other mappings would be here
+    ];
+    
+    // Create a set of all concept categories for quick lookup
+    const allConceptCategories = new Set(
+      subjectContentConceptMapping.map(mapping => mapping.conceptCategory)
+    );
+
     // Get all user responses for the current user
     const userResponses = await prisma.userResponse.findMany({
       where: {
@@ -132,8 +145,13 @@ export async function POST(req: Request) {
       return acc;
     }, {} as Record<string, typeof userResponses>);
 
-    // Group data pulses by content category
+    // Group data pulses by content category, filtering out any that match concept categories
     const contentGroupedPulses = dataPulses.reduce((acc, pulse) => {
+      // Skip if pulse.name is a concept category
+      if (allConceptCategories.has(pulse.name)) {
+        return acc;
+      }
+      
       if (!acc[pulse.name]) {
         acc[pulse.name] = {
           aamc: { positive: 0, negative: 0 },
@@ -243,6 +261,7 @@ export async function POST(req: Request) {
       conceptToContentMap[mapping.conceptCategory] = mapping.contentCategory;
     });
 
+    /* Comment out DataPulse processing for concept categories
     // Process concept category DataPulses
     if (groupedPulses['conceptCategory']) {
       Object.entries(groupedPulses['conceptCategory']).forEach(([conceptCategory, sources]) => {
@@ -270,6 +289,7 @@ export async function POST(req: Request) {
         }
       });
     }
+    */
 
     // Add MyMCAT data to concept masteries with time decay
     const conceptGroupedResponses = userResponses.reduce((acc, response) => {
@@ -287,10 +307,7 @@ export async function POST(req: Request) {
       // Initialize if not already present
       if (!conceptCategoryMasteries[conceptCategory]) {
         conceptCategoryMasteries[conceptCategory] = {
-          mymcat: { mastery: 0, weight: BASE_WEIGHTS.mymcat },
-          aamc: { mastery: 0, weight: BASE_WEIGHTS.aamc },
-          uworld: { mastery: 0, weight: BASE_WEIGHTS.uworld },
-          other: { mastery: 0, weight: 0 },
+          mymcat: { mastery: 0, weight: 1 }, // Use weight 1 since we're only using MyMCAT data
           finalMastery: 0,
           contentCategory: conceptToContentMap[conceptCategory] || null
         };
@@ -311,11 +328,14 @@ export async function POST(req: Request) {
       const totalWeighted = weightedCorrect + weightedIncorrect;
       
       if (totalWeighted > 0) {
-        conceptCategoryMasteries[conceptCategory].mymcat.mastery = 
-          weightedCorrect / totalWeighted;
+        const mymcatMastery = weightedCorrect / totalWeighted;
+        conceptCategoryMasteries[conceptCategory].mymcat.mastery = mymcatMastery;
+        // Since we're only using MyMCAT data, the final mastery is the same as MyMCAT mastery
+        conceptCategoryMasteries[conceptCategory].finalMastery = mymcatMastery;
       }
     });
 
+    /* Comment out the weighted concept mastery calculation since we're only using MyMCAT data
     // Calculate final weighted concept mastery scores
     Object.entries(conceptCategoryMasteries).forEach(([conceptCategory, data]) => {
       // Determine which sources are available
@@ -334,7 +354,9 @@ export async function POST(req: Request) {
       
       conceptCategoryMasteries[conceptCategory].finalMastery = finalMastery;
     });
+    */
 
+    /* Comment out content-concept relationship processing
     // Group concept categories by content category
     const contentToConceptsMap = {};
 
@@ -380,6 +402,7 @@ export async function POST(req: Request) {
         contentCategoryMasteries[contentCategory].finalMastery = averageConceptMastery;
       }
     });
+    */
 
     // Update knowledge profiles
     const updatePromises = [];
@@ -433,66 +456,66 @@ export async function POST(req: Request) {
 
     // Also update profiles for categories that only have DataPulse data
     // (no direct user responses)
-    const categoryMap = await prisma.category.findMany();
-    const categoryLookup = {};
+    // const categoryMap = await prisma.category.findMany();
+    // const categoryLookup = {};
 
-    // Build lookup maps
-    categoryMap.forEach(category => {
-      // Map content category to category ID
-      if (!categoryLookup[category.contentCategory]) {
-        categoryLookup[category.contentCategory] = [];
-      }
-      categoryLookup[category.contentCategory].push(category.id);
+    // // Build lookup maps
+    // categoryMap.forEach(category => {
+    //   // Map content category to category ID
+    //   if (!categoryLookup[category.contentCategory]) {
+    //     categoryLookup[category.contentCategory] = [];
+    //   }
+    //   categoryLookup[category.contentCategory].push(category.id);
       
-      // Map concept category to category ID
-      if (!categoryLookup[category.conceptCategory]) {
-        categoryLookup[category.conceptCategory] = [];
-      }
-      categoryLookup[category.conceptCategory].push(category.id);
-    });
+    //   // Map concept category to category ID
+    //   if (!categoryLookup[category.conceptCategory]) {
+    //     categoryLookup[category.conceptCategory] = [];
+    //   }
+    //   categoryLookup[category.conceptCategory].push(category.id);
+    // });
 
-    // Update profiles for content categories with only DataPulse data
-    Object.entries(contentCategoryMasteries).forEach(([contentCategory, data]) => {
-      const categoryIds = categoryLookup[contentCategory] || [];
+    // // Update profiles for content categories with only DataPulse data
+    // Object.entries(contentCategoryMasteries).forEach(([contentCategory, data]) => {
+    //   const categoryIds = categoryLookup[contentCategory] || [];
       
-      categoryIds.forEach(categoryId => {
-        // Skip if we already processed this category
-        if (groupedResponses[categoryId]) return;
+    //   categoryIds.forEach(categoryId => {
+    //     // Skip if we already processed this category
+    //     if (groupedResponses[categoryId]) return;
         
-        // Find concept category for this category ID
-        const category = categoryMap.find(c => c.id === categoryId);
-        if (!category) return;
+    //     // Find concept category for this category ID
+    //     const category = categoryMap.find(c => c.id === categoryId);
+    //     if (!category) return;
         
-        const conceptMastery = conceptCategoryMasteries[category.conceptCategory]?.finalMastery || 0;
+    //     const conceptMastery = conceptCategoryMasteries[category.conceptCategory]?.finalMastery || 0;
         
-        // Update knowledge profile
-        updatePromises.push(
-          prisma.knowledgeProfile.upsert({
-            where: {
-              userId_categoryId: {
-                userId: userId,
-                categoryId: categoryId,
-              },
-            },
-            update: {
-              contentMastery: data.finalMastery,
-              conceptMastery: conceptMastery,
-              lastUpdatedAt: new Date()
-            },
-            create: {
-              userId: userId,
-              categoryId: categoryId,
-              correctAnswers: 0,
-              totalAttempts: 0,
-              lastAttemptAt: new Date(),
-              contentMastery: data.finalMastery,
-              conceptMastery: conceptMastery,
-              lastUpdatedAt: new Date()
-            },
-          })
-        );
-      });
-    });
+    //     // Update knowledge profile
+    //     updatePromises.push(
+    //       prisma.knowledgeProfile.upsert({
+    //         where: {
+    //           userId_categoryId: {
+    //             userId: userId,
+    //             categoryId: categoryId,
+    //           },
+    //         },
+    //         update: {
+    //           contentMastery: data.finalMastery,
+    //           conceptMastery: conceptMastery,
+    //           lastUpdatedAt: new Date()
+    //         },
+    //         create: {
+    //           userId: userId,
+    //           categoryId: categoryId,
+    //           correctAnswers: 0,
+    //           totalAttempts: 0,
+    //           lastAttemptAt: new Date(),
+    //           contentMastery: data.finalMastery,
+    //           conceptMastery: conceptMastery,
+    //           lastUpdatedAt: new Date()
+    //         },
+    //       })
+    //     );
+    //   });
+    // });
 
     // Execute all updates
     await Promise.all(updatePromises);
