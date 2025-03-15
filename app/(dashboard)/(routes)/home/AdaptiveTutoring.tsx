@@ -25,6 +25,7 @@ import DiagnosticDialog from "./DiagnosticDialog";
 import ATSTutorial from "./ATSTutorial";
 import CompleteTopicButton from "@/components/CompleteTopicButton";
 import ReactConfetti from "react-confetti";
+import { useVideoControl } from "@/store/video-control";
 
 interface ContentItem {
   id: string;
@@ -68,6 +69,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   chatbotRef,
   onActivityChange,
 }) => {
+  const { shouldPauseVideo } = useVideoControl();
   const [isFirstVisit] = useState(() => !localStorage.getItem("initialTutorialPlayed"));
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [contentType, setContentType] = useState("video");
@@ -997,7 +999,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                         <ReactPlayer
                           className="w-full h-full"
                           url={currentContent.link}
-                          playing={isPlaying}
+                          playing={isPlaying && !shouldPauseVideo}
                           width="100%"
                           height="100%"
                           onProgress={({ playedSeconds }) =>

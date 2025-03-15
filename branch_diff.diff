@@ -1,0 +1,826 @@
+diff --git a/README_Docs/tasks/user-dennis/tasks.md b/README_Docs/tasks/user-dennis/tasks.md
+index e2e1eac..3405bf9 100644
+--- a/README_Docs/tasks/user-dennis/tasks.md
++++ b/README_Docs/tasks/user-dennis/tasks.md
+@@ -1,13 +1,6 @@
+ TODO: 
+-
+-
+-## Store Migration Progress
+-[✓] Implemented audioSlice (complete)
+-[✓] Implemented uiSlice (complete)
+-[ ] Implement userSlice (files created but not implemented)
+-[✓ ] Implement gameSlice (files created but not implemented)
+-[ ] Implement vocabSlice (files created but not implemented)
+-[ ] CARS Suite - take out sound when you select answer. (Prynce bug)
++[ ] add test to calendar (Tuesday)
++[ ] ATS - 40 seconds in we ask "What defines an alpha carbon in an amino acid, and why is it important?"
+ 
+ 
+ ----
+diff --git a/app/(dashboard)/(routes)/home/AdaptiveTutoring.tsx b/app/(dashboard)/(routes)/home/AdaptiveTutoring.tsx
+index a509b67..0a69fdd 100644
+--- a/app/(dashboard)/(routes)/home/AdaptiveTutoring.tsx
++++ b/app/(dashboard)/(routes)/home/AdaptiveTutoring.tsx
+@@ -25,6 +25,7 @@ import DiagnosticDialog from "./DiagnosticDialog";
+ import ATSTutorial from "./ATSTutorial";
+ import CompleteTopicButton from "@/components/CompleteTopicButton";
+ import ReactConfetti from "react-confetti";
++import { useVideoControl } from "@/store/video-control";
+ 
+ interface ContentItem {
+   id: string;
+@@ -68,6 +69,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
+   chatbotRef,
+   onActivityChange,
+ }) => {
++  const { shouldPauseVideo } = useVideoControl();
+   const [isFirstVisit] = useState(() => !localStorage.getItem("initialTutorialPlayed"));
+   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+   const [contentType, setContentType] = useState("video");
+@@ -997,7 +999,7 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
+                         <ReactPlayer
+                           className="w-full h-full"
+                           url={currentContent.link}
+-                          playing={isPlaying}
++                          playing={isPlaying && !shouldPauseVideo}
+                           width="100%"
+                           height="100%"
+                           onProgress={({ playedSeconds }) =>
+diff --git a/app/(dashboard)/(routes)/home/page.tsx b/app/(dashboard)/(routes)/home/page.tsx
+index d39a340..a774a9f 100644
+--- a/app/(dashboard)/(routes)/home/page.tsx
++++ b/app/(dashboard)/(routes)/home/page.tsx
+@@ -22,6 +22,8 @@ import { useAudio } from "@/store/selectors";
+ import RedeemReferralModal from '@/components/social/friend-request/RedeemReferralModal';
+ import ChatContainer from "@/components/chatgpt/ChatContainer";
+ import HoverSidebar from "@/components/navigation/HoverSidebar";
++import KalypsoGreeting from "@/components/home/KalypsoGreeting";
++import QuickPrompts from "@/components/chatgpt/QuickPrompts";
+ 
+ /* ----------------------------------------- Types ------------------------------------------ */
+ interface ContentWrapperProps {
+@@ -508,11 +510,21 @@ const HomePage: React.FC = () => {
+               </div>
+             </div>
+             <div className="relative overflow-visible">
+-              <div className="p-3 pb-6 gradientbg h-[calc(100vh-5.5rem)] rounded-lg mb-4">
++              <div className="p-3 gradientbg h-[calc(100vh-5.5rem)] rounded-lg mb-4">
+                 {/* Set KalypsoAI as the main component to show */}
+                 {(pageState.activeTab === 'KalypsoAI' || !pageState.activeTab) && (
+-                  <div className="h-full overflow-hidden">
+-                    <ChatContainer chatbotRef={chatbotRef} />
++                  <div className="h-full w-full overflow-visible relative bg-orange-500/50">
++                    <div className="flex h-full">
++                      {/* Chat container */}
++                      <div className="w-[70%] h-full p-4">
++                        <ChatContainer chatbotRef={chatbotRef} />
++                        <QuickPrompts />
++                      </div>
++                      {/* Kalypso area */}
++                      <div className="w-[30%] h-full relative">
++                        <KalypsoGreeting />
++                      </div>
++                    </div>
+                   </div>
+                 )}
+                 {pageState.activeTab === 'Summary' && (
+diff --git a/components/RouteTracker.tsx b/components/RouteTracker.tsx
+index 6de99c7..5dbf805 100644
+--- a/components/RouteTracker.tsx
++++ b/components/RouteTracker.tsx
+@@ -71,12 +71,14 @@ const RouteTracker = () => {
+       if (
+         pathname === '/redirect' ||
+         pathname.startsWith('/onboarding') ||
+-        pathname.startsWith('/pricing')
++        pathname.startsWith('/pricing') ||
++        pathname === '/home'  // Allow /home access
+       ) {
+         return;
+       }
+ 
+       // 1. Redirect to onboarding if user has not completed onboarding
++      // Only redirect to onboarding if trying to access other protected routes
+       if (!onboardingComplete) {
+         router.push('/onboarding');
+         
+diff --git a/components/StoreInitializer.tsx b/components/StoreInitializer.tsx
+index f069d69..c49f21c 100644
+--- a/components/StoreInitializer.tsx
++++ b/components/StoreInitializer.tsx
+@@ -4,6 +4,7 @@ import { useEffect } from 'react';
+ import { useUser } from '@clerk/nextjs';
+ import { useStore } from '@/store/store';
+ import { useAudioStore } from '@/store/slices/audioSlice';
++import { useChatStore } from '@/store/slices/chatSlice';
+ import { initializeGlobalStore } from '@/store';
+ 
+ /**
+@@ -13,6 +14,7 @@ import { initializeGlobalStore } from '@/store';
+  * It handles:
+  * 1. Audio initialization
+  * 2. User data synchronization
++ * 3. Chat state initialization
+  * 
+  * It doesn't render anything visible, just handles initialization.
+  */
+@@ -20,6 +22,7 @@ const StoreInitializer = () => {
+   const { isLoaded, isSignedIn } = useUser();
+   const refreshUserInfo = useStore(state => state.refreshUserInfo);
+   const initializeAudioContext = useAudioStore(state => state.initializeAudioContext);
++  const clearChat = useChatStore(state => state.clearChat);
+   
+   // Initialize the global store when the app starts
+   useEffect(() => {
+@@ -28,11 +31,14 @@ const StoreInitializer = () => {
+       console.error('[StoreInitializer] Error initializing audio context:', error);
+     });
+     
++    // Clear any existing chat history
++    clearChat();
++    
+     // Initialize global store (will be expanded as we add more slices)
+     initializeGlobalStore().catch(error => {
+       console.error('[StoreInitializer] Error initializing global store:', error);
+     });
+-  }, [initializeAudioContext]);
++  }, [initializeAudioContext, clearChat]);
+   
+   // Refresh user information when the user is signed in
+   useEffect(() => {
+diff --git a/components/chatbot/ChatBot.tsx b/components/chatbot/ChatBot.tsx
+index 85bd5af..3ab6466 100644
+--- a/components/chatbot/ChatBot.tsx
++++ b/components/chatbot/ChatBot.tsx
+@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
+ import { Styles } from "react-chatbotify";
+ import Image from "next/image";
+ import { useAudio } from "@/store/selectors";
++import { useVideoControl } from "@/store/video-control";
+ 
+ const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
+   ssr: false,
+@@ -33,6 +34,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
+   chatbotRef,
+ }) => {
+   const audio = useAudio();
++  const { setShouldPauseVideo } = useVideoControl();
+   const [isLoading, setIsLoading] = useState(false);
+   const [error, setError] = useState<string | null>(null);
+   const [isMounted, setIsMounted] = useState(false);
+@@ -94,9 +96,18 @@ const ChatBot: React.FC<ChatBotProps> = ({
+         );
+       }, 1000);
+ 
+-      return () => clearTimeout(timer);
++      // Add new timer for video pause
++      const pauseTimer = setTimeout(() => {
++        console.log('🎥 Pausing video after 40 seconds - ChatBot component');
++        setShouldPauseVideo(true);
++      }, 40000);
++
++      return () => {
++        clearTimeout(timer);
++        clearTimeout(pauseTimer);
++      };
+     }
+-  }, [isMounted]);
++  }, [isMounted, setShouldPauseVideo]);
+ 
+   useEffect(() => {
+     const handleKeyDown = (event: KeyboardEvent) => {
+diff --git a/components/chatgpt/Chat-Console.txt b/components/chatgpt/Chat-Console.txt
+new file mode 100644
+index 0000000..dd07858
+--- /dev/null
++++ b/components/chatgpt/Chat-Console.txt
+@@ -0,0 +1,127 @@
++initializationContentScript.js:1 Chrome storage API available, initializing emoji style sync
++content.js:1 [Deprecation] Listener added for a 'DOMNodeInserted' mutation event. Support for this event type has been removed, and this event will no longer be fired. See https://chromestatus.com/feature/5083947249172480 for more information.
++(anonymous) @ content.js:1
++j @ jquery.js:2
++fireWith @ jquery.js:2
++ready @ jquery.js:2
++I @ jquery.js:2
++contentScript.js:2 Chrome storage API available, initializing emoji style sync
++RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
++RouteTracker.tsx:27 [RouteTracker] Current loop state: null
++RouteTracker.tsx:32 [RouteTracker] Route change effect triggered with pathname: /home
++RouteTracker.tsx:39 [RouteTracker] Audio cleanup effect triggered
++RouteTracker.tsx:40 [RouteTracker] Current pathname: /home
++RouteTracker.tsx:41 [RouteTracker] Current loop: null
++layout.tsx:46 🎫 Subscription Status: FREE
++RouteTracker.tsx:32 [RouteTracker] Route change effect triggered with pathname: /home
++RouteTracker.tsx:39 [RouteTracker] Audio cleanup effect triggered
++RouteTracker.tsx:40 [RouteTracker] Current pathname: /home
++RouteTracker.tsx:41 [RouteTracker] Current loop: null
++layout.tsx:46 🎫 Subscription Status: FREE
++RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
++RouteTracker.tsx:27 [RouteTracker] Current loop state: null
++
++                
++          
++          
++          
++         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
++script.debug.js:1 [Vercel Web Analytics] Debug mode is enabled by default in development. No requests will be sent to the server.
++script.debug.js:1 [Vercel Web Analytics] [pageview] http://localhost:3000/home?debug=true {o: 'http://localhost:3000/home?debug=true', sv: '0.1.2', sdkn: '@vercel/analytics/react', sdkv: '1.3.1', ts: 1742031155968, …}
++RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
++RouteTracker.tsx:27 [RouteTracker] Current loop state: null
++RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
++RouteTracker.tsx:27 [RouteTracker] Current loop state: null
++layout.tsx:46 🎫 Subscription Status: GOLD or PREMIUM
++RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
++RouteTracker.tsx:27 [RouteTracker] Current loop state: null
++RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
++RouteTracker.tsx:27 [RouteTracker] Current loop state: null
++RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
++RouteTracker.tsx:27 [RouteTracker] Current loop state: null
++RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
++RouteTracker.tsx:27 [RouteTracker] Current loop state: null
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:87 [ChatContainer] Mount effect triggered {isMounted: false, currentHistory: Array(0), settings: {…}}
++ChatContainer.tsx:94 [ChatContainer] Component not mounted, initializing...
++ChatContainer.tsx:99 [ChatContainer] Current chat history: []
++ChatContainer.tsx:107 [ChatContainer] Has initial message: false
++ChatContainer.tsx:110 [ChatContainer] Adding initial message: Hey Mike! Welcome back, I've missed seeing ya! This week you've got:
++
++1) a practice test - UWorld at 4:00 PM
++
++2) According to your knowledge profiles, you're weakest in:
++   Biochemistry, Physics, Psychology
++
++3) Your UWorld exam is coming up in 21 days!
++
++How can I help you prepare today?
++ChatContainer.tsx:112 [ChatContainer] Updated chat history: [{…}]
++ChatContainer.tsx:284 [ChatContainer] Current prompt changed: {currentPrompt: null}
++ChatContainer.tsx:297 [Debug] Chat history updated: [{…}]
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:596 [ChatContainer] Chat history state: {messages: Array(1), count: 1, timestamp: '2025-03-15T09:32:39.324Z'}
++ChatContainer.tsx:87 [ChatContainer] Mount effect triggered {isMounted: false, currentHistory: Array(1), settings: {…}}
++ChatContainer.tsx:94 [ChatContainer] Component not mounted, initializing...
++ChatContainer.tsx:99 [ChatContainer] Current chat history: [{…}]
++ChatContainer.tsx:103 [ChatContainer] Checking message: {msg: {…}, matches: true}
++ChatContainer.tsx:107 [ChatContainer] Has initial message: true
++ChatContainer.tsx:284 [ChatContainer] Current prompt changed: {currentPrompt: null}
++ChatContainer.tsx:297 [Debug] Chat history updated: [{…}]
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:596 [ChatContainer] Chat history state: {messages: Array(1), count: 1, timestamp: '2025-03-15T09:32:39.337Z'}
++RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
++RouteTracker.tsx:27 [RouteTracker] Current loop state: null
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:87 [ChatContainer] Mount effect triggered {isMounted: true, currentHistory: Array(1), settings: {…}}
++ChatContainer.tsx:297 [Debug] Chat history updated: [{…}]
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:596 [ChatContainer] Chat history state: {messages: Array(1), count: 1, timestamp: '2025-03-15T09:32:39.358Z'}
++RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
++RouteTracker.tsx:27 [RouteTracker] Current loop state: null
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
++RouteTracker.tsx:27 [RouteTracker] Current loop state: null
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
++RouteTracker.tsx:27 [RouteTracker] Current loop state: null
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
++RouteTracker.tsx:27 [RouteTracker] Current loop state: null
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
++ChatContainer.tsx:70 [ChatContainer] Initial render with props: {className: undefined, hasRef: true}
++ChatContainer.tsx:585 [ChatContainer] Render effect: {hasInitialMessage: true, storeHistory: Array(1), disabled: true, storageKey: undefined}
+diff --git a/components/chatgpt/ChatContainer.tsx b/components/chatgpt/ChatContainer.tsx
+index 6ae8b68..2dd3a11 100644
+--- a/components/chatgpt/ChatContainer.tsx
++++ b/components/chatgpt/ChatContainer.tsx
+@@ -67,7 +67,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
+       setIsMounted(true);
+ 
+       const timer = setTimeout(() => {
+-        const botMessage = "Hello! I'm Kalypso AI, your medical education assistant. How can I help with your studies today?";
++        const botMessage = `Hey Mike! Welcome back, I've missed seeing ya! This week you've got:\n\n1) a practice test - UWorld at 4:00 PM\n\n2) According to your knowledge profiles, you're weakest in:\n   Biochemistry, Physics, Psychology\n\n3) Your UWorld exam is coming up in 21 days!\n\nHow can I help you prepare today?`;
+         window.dispatchEvent(
+           new CustomEvent("chatbot-event", {
+             detail: { message: botMessage },
+@@ -355,7 +355,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
+   /* ---- ChatBot Settings ----- */
+   const flow = {
+     start: {
+-      message: "Hello! I'm Kalypso AI, your medical education assistant. How can I help with your studies today?",
++      message: `Hey Mike! Welcome back, I've missed seeing ya! This week you've got:\n\n1) a practice test - UWorld at 4:00 PM\n\n2) According to your knowledge profiles, you're weakest in:\n   Biochemistry, Physics, Psychology\n\n3) Your UWorld exam is coming up in 21 days!\n\nHow can I help you prepare today?`,
+       path: "loop",
+     },
+     loop: {
+diff --git a/components/chatgpt/QuickPrompts.tsx b/components/chatgpt/QuickPrompts.tsx
+new file mode 100644
+index 0000000..8910f4e
+--- /dev/null
++++ b/components/chatgpt/QuickPrompts.tsx
+@@ -0,0 +1,28 @@
++import { useChatStore } from '@/store/slices/chatSlice';
++
++/* --- Constants ----- */
++const QUICK_PROMPTS = [
++  { id: "schedule", text: "What's my schedule?", prompt: "What's on my schedule today?" },
++  { id: "knowledge", text: "Show my progress", prompt: "Show me my current progress" },
++  { id: "next-exam", text: "Next exam?", prompt: "When is my next practice exam?" }
++];
++
++const QuickPrompts = () => {
++  const { setCurrentPrompt } = useChatStore();
++
++  return (
++    <div className="flex justify-center gap-4 p-4 border-t border-[--theme-border-color]">
++      {QUICK_PROMPTS.map((action) => (
++        <button
++          key={action.id}
++          onClick={() => setCurrentPrompt(action.prompt)}
++          className="px-4 py-2 rounded-full bg-[--theme-doctorsoffice-accent] text-white text-sm hover:opacity-90 transition-opacity"
++        >
++          {action.text}
++        </button>
++      ))}
++    </div>
++  );
++};
++
++export default QuickPrompts; 
+\ No newline at end of file
+diff --git a/components/home/KalypsoGreeting.tsx b/components/home/KalypsoGreeting.tsx
+new file mode 100644
+index 0000000..d8d430a
+--- /dev/null
++++ b/components/home/KalypsoGreeting.tsx
+@@ -0,0 +1,44 @@
++import { motion } from "framer-motion";
++import Image from "next/image";
++
++/* --- Constants ----- */
++const KALYPSO_SIZE = {
++  width: 280,
++  height: 280
++};
++
++/* ----- Types ---- */
++interface KalypsoGreetingProps {
++  className?: string;
++}
++
++const KalypsoGreeting = ({ className }: KalypsoGreetingProps) => {
++  /* ---- Render Methods ----- */
++  return (
++    <motion.div
++      initial={{ opacity: 0, scale: 0.8 }}
++      animate={{ opacity: 1, scale: 1 }}
++      transition={{ duration: 0.5 }}
++      style={{
++        position: 'absolute',
++        bottom: '0',
++        right: '0',
++        transform: 'translate(0, 0)',
++        zIndex: 10
++      }}
++      className={`pointer-events-none ${className}`}
++    >
++      <div className="relative" style={{ width: KALYPSO_SIZE.width, height: KALYPSO_SIZE.height }}>
++        <Image
++          src="/kalypso/kalypsostart.gif"
++          alt="Kalypso Greeting"
++          fill
++          className="object-contain"
++          priority
++        />
++      </div>
++    </motion.div>
++  );
++};
++
++export default KalypsoGreeting; 
+\ No newline at end of file
+diff --git a/components/ui/DebugPanel.tsx b/components/ui/DebugPanel.tsx
+index 409d3e2..448b5ac 100644
+--- a/components/ui/DebugPanel.tsx
++++ b/components/ui/DebugPanel.tsx
+@@ -2,7 +2,8 @@
+ 
+ import { useState, useEffect } from 'react';
+ import { usePathname, useSearchParams } from 'next/navigation';
+-import { useUI, useUser, useGame, useAudio } from '@/store/selectors'
++import { useUI, useUser, useGame, useAudio, useChat } from '@/store/selectors'
++import { useVideoControl } from '@/store/video-control';
+ 
+ /* --- Constants ----- */
+ const DEBUG_PARAM = 'debug'
+@@ -14,10 +15,12 @@ const DebugPanel = () => {
+   const [isDebug, setIsDebug] = useState(false)
+   
+   // Zustand state
++  const videoState = useVideoControl()
+   const uiState = useUI()
+   const userState = useUser()
+   const gameState = useGame()
+   const audioState = useAudio()
++  const chatState = useChat()
+ 
+   /* --- Effects --- */
+   // Simple debug mode logic - only use URL parameter
+@@ -43,6 +46,12 @@ const DebugPanel = () => {
+     songQueue: audioState.songQueue
+   };
+ 
++  // Create a safe version of chat state for display (without functions)
++  const displayChatState = {
++    currentPrompt: chatState.currentPrompt,
++    chatHistory: chatState.chatHistory
++  };
++
+   // Don't render anything if not in debug mode
+   if (!isDebug) return null;
+ 
+@@ -51,6 +60,16 @@ const DebugPanel = () => {
+     <div className="fixed bottom-4 right-4 z-[9999] bg-black/80 text-white p-4 rounded-lg max-w-[400px] max-h-[80vh] overflow-auto text-xs">
+       <h3 className="text-lg font-bold mb-2">Debug Panel</h3>
+       <div className="grid grid-cols-1 gap-2">
++        <div>
++          <h4 className="font-bold">Video Control State</h4>
++          <pre>{JSON.stringify({ shouldPauseVideo: videoState.shouldPauseVideo }, null, 2)}</pre>
++        </div>
++        <hr className="border-white/30 my-2" />
++        <div>
++          <h4 className="font-bold">Chat State</h4>
++          <pre>{JSON.stringify(displayChatState, null, 2)}</pre>
++        </div>
++        <hr className="border-white/30 my-2" />
+         <div>
+           <h4 className="font-bold">Audio State</h4>
+           <pre>{JSON.stringify(displayAudioState, null, 2)}</pre>
+diff --git a/cookies.txt b/cookies.txt
+new file mode 100644
+index 0000000..c31d989
+--- /dev/null
++++ b/cookies.txt
+@@ -0,0 +1,4 @@
++# Netscape HTTP Cookie File
++# https://curl.se/docs/http-cookies.html
++# This file was generated by libcurl! Edit at your own risk.
++
+diff --git a/public/KalypsoPicture.png b/public/kalypso/KalypsoPicture.png
+similarity index 100%
+rename from public/KalypsoPicture.png
+rename to public/kalypso/KalypsoPicture.png
+diff --git a/public/Kalypsoapproval.gif b/public/kalypso/Kalypsoapproval.gif
+similarity index 100%
+rename from public/Kalypsoapproval.gif
+rename to public/kalypso/Kalypsoapproval.gif
+diff --git a/public/Kalypsodistressed.gif b/public/kalypso/Kalypsodistressed.gif
+similarity index 100%
+rename from public/Kalypsodistressed.gif
+rename to public/kalypso/Kalypsodistressed.gif
+diff --git a/public/Kalypsotumble.gif b/public/kalypso/Kalypsotumble.gif
+similarity index 100%
+rename from public/Kalypsotumble.gif
+rename to public/kalypso/Kalypsotumble.gif
+diff --git a/public/kalypotesting.png b/public/kalypso/kalypotesting.png
+similarity index 100%
+rename from public/kalypotesting.png
+rename to public/kalypso/kalypotesting.png
+diff --git a/public/kalypsocalendar.png b/public/kalypso/kalypsocalendar.png
+similarity index 100%
+rename from public/kalypsocalendar.png
+rename to public/kalypso/kalypsocalendar.png
+diff --git a/public/kalypsodancing.gif b/public/kalypso/kalypsodancing.gif
+similarity index 100%
+rename from public/kalypsodancing.gif
+rename to public/kalypso/kalypsodancing.gif
+diff --git a/public/kalypsodiagnostic.png b/public/kalypso/kalypsodiagnostic.png
+similarity index 100%
+rename from public/kalypsodiagnostic.png
+rename to public/kalypso/kalypsodiagnostic.png
+diff --git a/public/kalypsoend.gif b/public/kalypso/kalypsoend.gif
+similarity index 100%
+rename from public/kalypsoend.gif
+rename to public/kalypso/kalypsoend.gif
+diff --git a/public/kalypsofloating.gif b/public/kalypso/kalypsofloating.gif
+similarity index 100%
+rename from public/kalypsofloating.gif
+rename to public/kalypso/kalypsofloating.gif
+diff --git a/public/kalypsofloatinghappy.gif b/public/kalypso/kalypsofloatinghappy.gif
+similarity index 100%
+rename from public/kalypsofloatinghappy.gif
+rename to public/kalypso/kalypsofloatinghappy.gif
+diff --git a/public/kalypsohi.gif b/public/kalypso/kalypsohi.gif
+similarity index 100%
+rename from public/kalypsohi.gif
+rename to public/kalypso/kalypsohi.gif
+diff --git a/public/kalypsostart.gif b/public/kalypso/kalypsostart.gif
+similarity index 100%
+rename from public/kalypsostart.gif
+rename to public/kalypso/kalypsostart.gif
+diff --git a/public/kalypsotalk.gif b/public/kalypso/kalypsotalk.gif
+similarity index 100%
+rename from public/kalypsotalk.gif
+rename to public/kalypso/kalypsotalk.gif
+diff --git a/public/kalypsoteaching.png b/public/kalypso/kalypsoteaching.png
+similarity index 100%
+rename from public/kalypsoteaching.png
+rename to public/kalypso/kalypsoteaching.png
+diff --git a/public/kalypsothumbs.gif b/public/kalypso/kalypsothumbs.gif
+similarity index 100%
+rename from public/kalypsothumbs.gif
+rename to public/kalypso/kalypsothumbs.gif
+diff --git a/public/kalypsotyping.gif b/public/kalypso/kalypsotyping.gif
+similarity index 100%
+rename from public/kalypsotyping.gif
+rename to public/kalypso/kalypsotyping.gif
+diff --git a/public/kalypsowait.gif b/public/kalypso/kalypsowait.gif
+similarity index 100%
+rename from public/kalypsowait.gif
+rename to public/kalypso/kalypsowait.gif
+diff --git a/public/kalypsoyouate.gif b/public/kalypso/kalypsoyouate.gif
+similarity index 100%
+rename from public/kalypsoyouate.gif
+rename to public/kalypso/kalypsoyouate.gif
+diff --git a/store/index.ts b/store/index.ts
+index bf1e9e6..be9b56b 100644
+--- a/store/index.ts
++++ b/store/index.ts
+@@ -2,6 +2,7 @@
+ export { useAudioStore } from './slices/audioSlice';
+ export { useUIStore } from './slices/uiSlice';
+ export { useGameStore } from './slices/gameSlice';
++export { useChatStore } from './slices/chatSlice';
+ 
+ // Re-export all types
+ export * from './types';
+@@ -11,6 +12,7 @@ export type { ThemeType, WindowSize } from './slices/uiSlice';
+ import { useAudioStore } from './slices/audioSlice';
+ import { useUIStore } from './slices/uiSlice';
+ import { useGameStore } from './slices/gameSlice';
++import { useChatStore } from './slices/chatSlice';
+ import { create } from 'zustand';
+ 
+ // Flag to track global initialization
+@@ -23,17 +25,20 @@ export const useStore = {
+     ...useAudioStore.getState(),
+     ...useUIStore.getState(),
+     ...useGameStore.getState(),
++    ...useChatStore.getState(),
+   }),
+   setState: (updates: any) => {
+     // Determine which slice each update belongs to and apply accordingly
+     const audioKeys = new Set(Object.keys(useAudioStore.getState()));
+     const uiKeys = new Set(Object.keys(useUIStore.getState()));
+     const gameKeys = new Set(Object.keys(useGameStore.getState()));
++    const chatKeys = new Set(Object.keys(useChatStore.getState()));
+     
+     // Extract updates for each slice
+     const audioUpdates: Record<string, any> = {};
+     const uiUpdates: Record<string, any> = {};
+     const gameUpdates: Record<string, any> = {};
++    const chatUpdates: Record<string, any> = {};
+     
+     // Sort updates into appropriate slices
+     Object.entries(updates).forEach(([key, value]) => {
+@@ -43,6 +48,8 @@ export const useStore = {
+         uiUpdates[key] = value;
+       } else if (gameKeys.has(key)) {
+         gameUpdates[key] = value;
++      } else if (chatKeys.has(key)) {
++        chatUpdates[key] = value;
+       }
+     });
+     
+@@ -56,18 +63,23 @@ export const useStore = {
+     if (Object.keys(gameUpdates).length > 0) {
+       useGameStore.setState(gameUpdates);
+     }
++    if (Object.keys(chatUpdates).length > 0) {
++      useChatStore.setState(chatUpdates);
++    }
+   },
+   subscribe: (callback: (state: any, prevState: any) => void) => {
+     // Subscribe to all slice stores
+     const unsubAudio = useAudioStore.subscribe(callback);
+     const unsubUI = useUIStore.subscribe(callback);
+     const unsubGame = useGameStore.subscribe(callback);
++    const unsubChat = useChatStore.subscribe(callback);
+     
+     // Return a function to unsubscribe from all
+     return () => {
+       unsubAudio();
+       unsubUI();
+       unsubGame();
++      unsubChat();
+     };
+   }
+ };
+diff --git a/store/selectors.ts b/store/selectors.ts
+index 69f8462..294d729 100644
+--- a/store/selectors.ts
++++ b/store/selectors.ts
+@@ -3,6 +3,7 @@ import { useEffect, useCallback, useRef } from 'react'
+ import { useAudioStore } from './slices/audioSlice'
+ import { useUIStore } from './slices/uiSlice'
+ import { useGameStore } from './slices/gameSlice'
++import { useChatStore } from './slices/chatSlice'
+ 
+ /* --- UI Selectors ---- */
+ export const useUI = () => {
+@@ -369,4 +370,21 @@ export const useClinicData = () => {
+     calculateDailyPatients,
+     performDailyCalculations
+   };
+-}; 
+\ No newline at end of file
++};
++
++/* --- Chat Selector ---- */
++export const useChat = () => {
++  const currentPrompt = useChatStore((state) => state.currentPrompt)
++  const chatHistory = useChatStore((state) => state.chatHistory)
++  const setCurrentPrompt = useChatStore((state) => state.setCurrentPrompt)
++  const addChatMessage = useChatStore((state) => state.addChatMessage)
++  const clearChat = useChatStore((state) => state.clearChat)
++  
++  return {
++    currentPrompt,
++    chatHistory,
++    setCurrentPrompt,
++    addChatMessage,
++    clearChat,
++  }
++} 
+\ No newline at end of file
+diff --git a/store/slices/chatSlice.ts b/store/slices/chatSlice.ts
+new file mode 100644
+index 0000000..e6dba9b
+--- /dev/null
++++ b/store/slices/chatSlice.ts
+@@ -0,0 +1,39 @@
++import { create } from 'zustand';
++import { devtools } from 'zustand/middleware';
++
++interface ChatState {
++  currentPrompt: string | null;
++  chatHistory: Array<{
++    role: 'user' | 'assistant';
++    content: string;
++    timestamp: number;
++  }>;
++}
++
++interface ChatActions {
++  setCurrentPrompt: (prompt: string | null) => void;
++  addChatMessage: (message: { role: 'user' | 'assistant'; content: string }) => void;
++  clearChat: () => void;
++}
++
++type ChatSlice = ChatState & ChatActions;
++
++export const useChatStore = create<ChatSlice>()(
++  devtools(
++    (set) => ({
++      // Initial state
++      currentPrompt: null,
++      chatHistory: [],
++
++      // Actions
++      setCurrentPrompt: (prompt) => set({ currentPrompt: prompt }),
++      addChatMessage: (message) => set((state) => ({
++        chatHistory: [...state.chatHistory, { ...message, timestamp: Date.now() }]
++      })),
++      clearChat: () => set({ chatHistory: [] })
++    }),
++    {
++      name: 'chat-store'
++    }
++  )
++); 
+\ No newline at end of file
+diff --git a/store/store.ts b/store/store.ts
+index 341f139..85bed4e 100644
+--- a/store/store.ts
++++ b/store/store.ts
+@@ -235,14 +235,73 @@ export const useStore = create<Store>()(
+             }
+           }, 10000);
+ 
+-          // Batch all fetch requests together
++          // Get user name from Clerk
++          const clerkResponse = await fetch('/api/user-info/profile', {
++            credentials: 'include',
++            headers: {
++              'Content-Type': 'application/json'
++            }
++          });
++          
++          const clerkData = clerkResponse.ok ? await clerkResponse.json() : null;
++          const firstName = clerkData?.firstName || "";
++
++          // Batch all fetch requests together with auth headers
+           const [userInfoResponse, profileResponse] = await Promise.all([
+-            fetch('/api/user-info'),
+-            fetch('/api/user-info/profile')
++            fetch('/api/user-info', {
++              credentials: 'include',
++              headers: {
++                'Content-Type': 'application/json'
++              }
++            }),
++            fetch('/api/user-info/profile', {
++              credentials: 'include',
++              headers: {
++                'Content-Type': 'application/json'
++              }
++            })
+           ]);
+ 
+           clearTimeout(loadingTimeout);
+ 
++          // If user info doesn't exist, create it with the name from Clerk
++          if (userInfoResponse.status === 404) {
++            const createResponse = await fetch('/api/user-info', {
++              method: 'POST',
++              credentials: 'include',
++              headers: {
++                'Content-Type': 'application/json'
++              },
++              body: JSON.stringify({
++                firstName: firstName,
++                bio: "MCAT Student",
++                onboardingInfo: {
++                  targetScore: 520,  // Default target score
++                  onboardingComplete: true,
++                  firstName: firstName
++                }
++              })
++            });
++            
++            if (!createResponse.ok) throw new Error('Failed to create user info');
++            const userInfo = await createResponse.json();
++            
++            set({
++              userInfo,
++              profile: {
++                ...get().profile,
++                firstName: firstName,
++                bio: "MCAT Student"
++              },
++              onboardingComplete: true,  // Mark onboarding as complete
++              statsLoading: false,
++              profileLoading: false,
++              error: null,
++              coins: userInfo.score || 0
++            });
++            return;
++          }
++
+           if (!userInfoResponse.ok) throw new Error('Failed to fetch user info');
+           const userInfo = await userInfoResponse.json();
+           
+@@ -252,6 +311,11 @@ export const useStore = create<Store>()(
+           // Prepare single state update with only changed values
+           const updates: Partial<Store> = {
+             userInfo,
++            profile: {
++              ...get().profile,
++              firstName: userInfo.firstName,
++              bio: userInfo.bio
++            },
+             statsLoading: false,
+             profileLoading: false,
+             error: null

@@ -1,13 +1,6 @@
 TODO: 
-
-
-## Store Migration Progress
-[✓] Implemented audioSlice (complete)
-[✓] Implemented uiSlice (complete)
-[ ] Implement userSlice (files created but not implemented)
-[✓ ] Implement gameSlice (files created but not implemented)
-[ ] Implement vocabSlice (files created but not implemented)
-[ ] CARS Suite - take out sound when you select answer. (Prynce bug)
+[ ] add test to calendar (Tuesday)
+[ ] ATS - 40 seconds in we ask "What defines an alpha carbon in an amino acid, and why is it important?"
 
 
 ----
