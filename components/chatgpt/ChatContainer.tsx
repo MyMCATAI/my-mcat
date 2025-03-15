@@ -67,7 +67,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
       setIsMounted(true);
 
       const timer = setTimeout(() => {
-        const botMessage = "Hello! I'm Kalypso AI, your medical education assistant. How can I help with your studies today?";
+        const botMessage = `Hey Mike! Welcome back, I've missed seeing ya! This week you've got:\n\n1) a practice test - UWorld at 4:00 PM\n\n2) According to your knowledge profiles, you're weakest in:\n   Biochemistry, Physics, Psychology\n\n3) Your UWorld exam is coming up in 21 days!\n\nHow can I help you prepare today?`;
         window.dispatchEvent(
           new CustomEvent("chatbot-event", {
             detail: { message: botMessage },
@@ -355,7 +355,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   /* ---- ChatBot Settings ----- */
   const flow = {
     start: {
-      message: "Hello! I'm Kalypso AI, your medical education assistant. How can I help with your studies today?",
+      message: `Hey Mike! Welcome back, I've missed seeing ya! This week you've got:\n\n1) a practice test - UWorld at 4:00 PM\n\n2) According to your knowledge profiles, you're weakest in:\n   Biochemistry, Physics, Psychology\n\n3) Your UWorld exam is coming up in 21 days!\n\nHow can I help you prepare today?`,
       path: "loop",
     },
     loop: {

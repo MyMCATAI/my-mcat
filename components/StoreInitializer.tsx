@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useStore } from '@/store/store';
 import { useAudioStore } from '@/store/slices/audioSlice';
+import { useChatStore } from '@/store/slices/chatSlice';
 import { initializeGlobalStore } from '@/store';
 
 /**
@@ -13,6 +14,7 @@ import { initializeGlobalStore } from '@/store';
  * It handles:
  * 1. Audio initialization
  * 2. User data synchronization
+ * 3. Chat state initialization
  * 
  * It doesn't render anything visible, just handles initialization.
  */
@@ -20,6 +22,7 @@ const StoreInitializer = () => {
   const { isLoaded, isSignedIn } = useUser();
   const refreshUserInfo = useStore(state => state.refreshUserInfo);
   const initializeAudioContext = useAudioStore(state => state.initializeAudioContext);
+  const clearChat = useChatStore(state => state.clearChat);
   
   // Initialize the global store when the app starts
   useEffect(() => {
@@ -28,11 +31,14 @@ const StoreInitializer = () => {
       console.error('[StoreInitializer] Error initializing audio context:', error);
     });
     
+    // Clear any existing chat history
+    clearChat();
+    
     // Initialize global store (will be expanded as we add more slices)
     initializeGlobalStore().catch(error => {
       console.error('[StoreInitializer] Error initializing global store:', error);
     });
-  }, [initializeAudioContext]);
+  }, [initializeAudioContext, clearChat]);
   
   // Refresh user information when the user is signed in
   useEffect(() => {

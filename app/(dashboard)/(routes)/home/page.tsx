@@ -22,6 +22,8 @@ import { useAudio } from "@/store/selectors";
 import RedeemReferralModal from '@/components/social/friend-request/RedeemReferralModal';
 import ChatContainer from "@/components/chatgpt/ChatContainer";
 import HoverSidebar from "@/components/navigation/HoverSidebar";
+import KalypsoGreeting from "@/components/home/KalypsoGreeting";
+import QuickPrompts from "@/components/chatgpt/QuickPrompts";
 
 /* ----------------------------------------- Types ------------------------------------------ */
 interface ContentWrapperProps {
@@ -508,11 +510,21 @@ const HomePage: React.FC = () => {
               </div>
             </div>
             <div className="relative overflow-visible">
-              <div className="p-3 pb-6 gradientbg h-[calc(100vh-5.5rem)] rounded-lg mb-4">
+              <div className="p-3 gradientbg h-[calc(100vh-5.5rem)] rounded-lg mb-4">
                 {/* Set KalypsoAI as the main component to show */}
                 {(pageState.activeTab === 'KalypsoAI' || !pageState.activeTab) && (
-                  <div className="h-full overflow-hidden">
-                    <ChatContainer chatbotRef={chatbotRef} />
+                  <div className="h-full w-full overflow-visible relative bg-orange-500/50">
+                    <div className="flex h-full">
+                      {/* Chat container */}
+                      <div className="w-[70%] h-full p-4">
+                        <ChatContainer chatbotRef={chatbotRef} />
+                        <QuickPrompts />
+                      </div>
+                      {/* Kalypso area */}
+                      <div className="w-[30%] h-full relative">
+                        <KalypsoGreeting />
+                      </div>
+                    </div>
                   </div>
                 )}
                 {pageState.activeTab === 'Summary' && (
