@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useUI, useUser, useGame, useAudio, useChat } from '@/store/selectors'
+import { useVideoControl } from '@/store/video-control';
 
 /* --- Constants ----- */
 const DEBUG_PARAM = 'debug'
@@ -14,6 +15,7 @@ const DebugPanel = () => {
   const [isDebug, setIsDebug] = useState(false)
   
   // Zustand state
+  const videoState = useVideoControl()
   const uiState = useUI()
   const userState = useUser()
   const gameState = useGame()
@@ -83,6 +85,11 @@ const DebugPanel = () => {
     <div className="fixed bottom-4 right-4 z-[9999] bg-black/80 text-white p-4 rounded-lg max-w-[400px] max-h-[80vh] overflow-auto text-xs">
       <h3 className="text-lg font-bold mb-2">Debug Panel</h3>
       <div className="grid grid-cols-1 gap-2">
+        <div>
+          <h4 className="font-bold">Video Control State</h4>
+          <pre>{JSON.stringify({ shouldPauseVideo: videoState.shouldPauseVideo }, null, 2)}</pre>
+        </div>
+        <hr className="border-white/30 my-2" />
         <div>
           <h4 className="font-bold">Chat State</h4>
           <pre>{JSON.stringify(displayChatState, null, 2)}</pre>

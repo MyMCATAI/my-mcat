@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Styles } from "react-chatbotify";
 import Image from "next/image";
 import { useAudio } from "@/store/selectors";
+import { useVideoControl } from "@/store/video-control";
 
 const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
   ssr: false,
@@ -33,6 +34,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
   chatbotRef,
 }) => {
   const audio = useAudio();
+  const { setShouldPauseVideo } = useVideoControl();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -94,9 +96,18 @@ const ChatBot: React.FC<ChatBotProps> = ({
         );
       }, 1000);
 
-      return () => clearTimeout(timer);
+      // Add new timer for video pause
+      const pauseTimer = setTimeout(() => {
+        console.log('🎥 Pausing video after 40 seconds - ChatBot component');
+        setShouldPauseVideo(true);
+      }, 40000);
+
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(pauseTimer);
+      };
     }
-  }, [isMounted]);
+  }, [isMounted, setShouldPauseVideo]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
