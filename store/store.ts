@@ -235,13 +235,72 @@ export const useStore = create<Store>()(
             }
           }, 10000);
 
-          // Batch all fetch requests together
+          // Get user name from Clerk
+          const clerkResponse = await fetch('/api/user-info/profile', {
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          const clerkData = clerkResponse.ok ? await clerkResponse.json() : null;
+          const firstName = clerkData?.firstName || "";
+
+          // Batch all fetch requests together with auth headers
           const [userInfoResponse, profileResponse] = await Promise.all([
-            fetch('/api/user-info'),
-            fetch('/api/user-info/profile')
+            fetch('/api/user-info', {
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            }),
+            fetch('/api/user-info/profile', {
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
           ]);
 
           clearTimeout(loadingTimeout);
+
+          // If user info doesn't exist, create it with the name from Clerk
+          if (userInfoResponse.status === 404) {
+            const createResponse = await fetch('/api/user-info', {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                firstName: firstName,
+                bio: "MCAT Student",
+                onboardingInfo: {
+                  targetScore: 520,  // Default target score
+                  onboardingComplete: true,
+                  firstName: firstName
+                }
+              })
+            });
+            
+            if (!createResponse.ok) throw new Error('Failed to create user info');
+            const userInfo = await createResponse.json();
+            
+            set({
+              userInfo,
+              profile: {
+                ...get().profile,
+                firstName: firstName,
+                bio: "MCAT Student"
+              },
+              onboardingComplete: true,  // Mark onboarding as complete
+              statsLoading: false,
+              profileLoading: false,
+              error: null,
+              coins: userInfo.score || 0
+            });
+            return;
+          }
 
           if (!userInfoResponse.ok) throw new Error('Failed to fetch user info');
           const userInfo = await userInfoResponse.json();
@@ -252,6 +311,11 @@ export const useStore = create<Store>()(
           // Prepare single state update with only changed values
           const updates: Partial<Store> = {
             userInfo,
+            profile: {
+              ...get().profile,
+              firstName: userInfo.firstName,
+              bio: userInfo.bio
+            },
             statsLoading: false,
             profileLoading: false,
             error: null

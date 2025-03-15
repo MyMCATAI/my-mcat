@@ -124,12 +124,14 @@ const RouteTracker = () => {
       if (
         pathname === '/redirect' ||
         pathname.startsWith('/onboarding') ||
-        pathname.startsWith('/pricing')
+        pathname.startsWith('/pricing') ||
+        pathname === '/home'  // Allow /home access
       ) {
         return;
       }
 
       // 1. Redirect to onboarding if user has not completed onboarding
+      // Only redirect to onboarding if trying to access other protected routes
       if (!onboardingComplete) {
         router.push('/onboarding');
         

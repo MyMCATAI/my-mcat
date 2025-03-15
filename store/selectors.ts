@@ -3,6 +3,7 @@ import { useEffect, useCallback, useRef } from 'react'
 import { useAudioStore } from './slices/audioSlice'
 import { useUIStore } from './slices/uiSlice'
 import { useGameStore } from './slices/gameSlice'
+import { useChatStore } from './slices/chatSlice'
 
 /* --- UI Selectors ---- */
 export const useUI = () => {
@@ -408,4 +409,21 @@ export const useClinicData = () => {
     calculateDailyPatients,
     performDailyCalculations
   };
-}; 
+};
+
+/* --- Chat Selector ---- */
+export const useChat = () => {
+  const currentPrompt = useChatStore((state) => state.currentPrompt)
+  const chatHistory = useChatStore((state) => state.chatHistory)
+  const setCurrentPrompt = useChatStore((state) => state.setCurrentPrompt)
+  const addChatMessage = useChatStore((state) => state.addChatMessage)
+  const clearChat = useChatStore((state) => state.clearChat)
+  
+  return {
+    currentPrompt,
+    chatHistory,
+    setCurrentPrompt,
+    addChatMessage,
+    clearChat,
+  }
+} 
