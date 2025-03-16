@@ -1,0 +1,331 @@
+initializationContentScript.js:1 Chrome storage API available, initializing emoji style sync
+content.js:1 [Deprecation] Listener added for a 'DOMNodeInserted' mutation event. Support for this event type has been removed, and this event will no longer be fired. See https://chromestatus.com/feature/5083947249172480 for more information.
+(anonymous) @ content.js:1
+j @ jquery.js:2
+fireWith @ jquery.js:2
+ready @ jquery.js:2
+I @ jquery.js:2
+contentScript.js:2 Chrome storage API available, initializing emoji style sync
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+RouteTracker.tsx:32 [RouteTracker] Route change effect triggered with pathname: /home
+RouteTracker.tsx:39 [RouteTracker] Audio cleanup effect triggered
+RouteTracker.tsx:40 [RouteTracker] Current pathname: /home
+RouteTracker.tsx:41 [RouteTracker] Current loop: null
+layout.tsx:46 🎫 Subscription Status: FREE
+RouteTracker.tsx:32 [RouteTracker] Route change effect triggered with pathname: /home
+RouteTracker.tsx:39 [RouteTracker] Audio cleanup effect triggered
+RouteTracker.tsx:40 [RouteTracker] Current pathname: /home
+RouteTracker.tsx:41 [RouteTracker] Current loop: null
+layout.tsx:46 🎫 Subscription Status: FREE
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+script.debug.js:1 [Vercel Web Analytics] Debug mode is enabled by default in development. No requests will be sent to the server.
+script.debug.js:1 [Vercel Web Analytics] [pageview] http://localhost:3000/home {o: 'http://localhost:3000/home', sv: '0.1.2', sdkn: '@vercel/analytics/react', sdkv: '1.3.1', ts: 1742091667631, …}
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+layout.tsx:46 🎫 Subscription Status: GOLD or PREMIUM
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+RouteTracker.tsx:26 [RouteTracker] Component rendered with pathname: /home
+RouteTracker.tsx:27 [RouteTracker] Current loop state: null
+AdaptiveTutoring.tsx:428 Video state changed - isPlaying: false ATSVideoPauseGlobal: false
+AdaptiveTutoring.tsx:428 Video state changed - isPlaying: false ATSVideoPauseGlobal: false
+ChatBot.tsx:813 [DEBUG] Component not mounted yet, showing loading spinner
+ChatBot.tsx:92 [DEBUG] ChatBot mounted, isMounted set to true
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: false, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:302 [DEBUG] rcbAddMessage function added to window
+ChatBot.tsx:445 [DEBUG] Setting up rcb-bot-message listener
+ChatBot.tsx:479 [DEBUG] rcb-bot-message listener added
+ChatBot.tsx:306 [DEBUG] rcbAddMessage function removed from window
+ChatBot.tsx:483 [DEBUG] rcb-bot-message listener removed
+ChatBot.tsx:92 [DEBUG] ChatBot mounted, isMounted set to true
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: false, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:302 [DEBUG] rcbAddMessage function added to window
+ChatBot.tsx:445 [DEBUG] Setting up rcb-bot-message listener
+ChatBot.tsx:479 [DEBUG] rcb-bot-message listener added
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+_next/image?url=%2Fkalypsoend.gif&w=256&q=75:1 
+            
+            
+           GET http://localhost:3000/_next/image?url=%2Fkalypsoend.gif&w=256&q=75 400 (Bad Request)
+AdaptiveTutoring.tsx:148 (6) [{…}, {…}, {…}, {…}, {…}, {…}]
+AdaptiveTutoring.tsx:148 (6) [{…}, {…}, {…}, {…}, {…}, {…}]
+AdaptiveTutoring.tsx:415 Found first content item: {id: 'cm2ooe0000001spru9dh9x184', title: 'AK: Introduction to Amino Acids', categoryId: 'clywfuyme000011jwnyhonmor', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0', type: 'video', …}
+AdaptiveTutoring.tsx:419 Setting initial video state - isPlaying: true
+AdaptiveTutoring.tsx:428 Video state changed - isPlaying: true ATSVideoPauseGlobal: false
+AdaptiveTutoring.tsx:436 Current content changed: {id: 'cm2ooe0000001spru9dh9x184', type: 'video', title: 'AK: Introduction to Amino Acids', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0'}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+AdaptiveTutoring.tsx:291 Content loaded: {content: Array(20), totalPages: 31, currentPage: 1}
+AdaptiveTutoring.tsx:300 Setting first video as current content: {id: 'cm2ooe0000001spru9dh9x184', title: 'AK: Introduction to Amino Acids', categoryId: 'clywfuyme000011jwnyhonmor', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0', type: 'video', …}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+AdaptiveTutoring.tsx:415 Found first content item: {id: 'cm2ooe0000001spru9dh9x184', title: 'AK: Introduction to Amino Acids', categoryId: 'clywfuyme000011jwnyhonmor', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0', type: 'video', …}
+AdaptiveTutoring.tsx:419 Setting initial video state - isPlaying: true
+AdaptiveTutoring.tsx:436 Current content changed: {id: 'cm2ooe0000001spru9dh9x184', type: 'video', title: 'AK: Introduction to Amino Acids', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0'}
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+AdaptiveTutoring.tsx:415 Found first content item: {id: 'cm2ooe0000001spru9dh9x184', title: 'AK: Introduction to Amino Acids', categoryId: 'clywfuyme000011jwnyhonmor', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0', type: 'video', …}
+AdaptiveTutoring.tsx:419 Setting initial video state - isPlaying: true
+AdaptiveTutoring.tsx:436 Current content changed: {id: 'cm2ooe0000001spru9dh9x184', type: 'video', title: 'AK: Introduction to Amino Acids', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0'}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+AdaptiveTutoring.tsx:415 Found first content item: {id: 'cm2ooe0000001spru9dh9x184', title: 'AK: Introduction to Amino Acids', categoryId: 'clywfuyme000011jwnyhonmor', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0', type: 'video', …}
+AdaptiveTutoring.tsx:419 Setting initial video state - isPlaying: true
+AdaptiveTutoring.tsx:436 Current content changed: {id: 'cm2ooe0000001spru9dh9x184', type: 'video', title: 'AK: Introduction to Amino Acids', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0'}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+AdaptiveTutoring.tsx:291 Content loaded: {content: Array(20), totalPages: 31, currentPage: 1}
+AdaptiveTutoring.tsx:300 Setting first video as current content: {id: 'cm2ooe0000001spru9dh9x184', title: 'AK: Introduction to Amino Acids', categoryId: 'clywfuyme000011jwnyhonmor', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0', type: 'video', …}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+AdaptiveTutoring.tsx:415 Found first content item: {id: 'cm2ooe0000001spru9dh9x184', title: 'AK: Introduction to Amino Acids', categoryId: 'clywfuyme000011jwnyhonmor', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0', type: 'video', …}
+AdaptiveTutoring.tsx:419 Setting initial video state - isPlaying: true
+AdaptiveTutoring.tsx:436 Current content changed: {id: 'cm2ooe0000001spru9dh9x184', type: 'video', title: 'AK: Introduction to Amino Acids', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0'}
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+AdaptiveTutoring.tsx:1041 Video ready to play
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+AdaptiveTutoring.tsx:291 Content loaded: {content: Array(20), totalPages: 31, currentPage: 1}
+AdaptiveTutoring.tsx:300 Setting first video as current content: {id: 'cm2ooe0000001spru9dh9x184', title: 'AK: Introduction to Amino Acids', categoryId: 'clywfuyme000011jwnyhonmor', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0', type: 'video', …}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+AdaptiveTutoring.tsx:415 Found first content item: {id: 'cm2ooe0000001spru9dh9x184', title: 'AK: Introduction to Amino Acids', categoryId: 'clywfuyme000011jwnyhonmor', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0', type: 'video', …}
+AdaptiveTutoring.tsx:419 Setting initial video state - isPlaying: true
+AdaptiveTutoring.tsx:436 Current content changed: {id: 'cm2ooe0000001spru9dh9x184', type: 'video', title: 'AK: Introduction to Amino Acids', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0'}
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+AdaptiveTutoring.tsx:1046 Video playing
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: false, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: false hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: false, alreadyAsked: false, currentlyProcessing: false}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+AdaptiveTutoring.tsx:415 Found first content item: {id: 'cm2ooe0000001spru9dh9x184', title: 'AK: Introduction to Amino Acids', categoryId: 'clywfuyme000011jwnyhonmor', link: 'https://www.youtube.com/watch?v=LHNNOIMt5x0', type: 'video', …}
+AdaptiveTutoring.tsx:419 Setting initial video state - isPlaying: false
+AdaptiveTutoring.tsx:428 Video state changed - isPlaying: true ATSVideoPauseGlobal: true
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: false, videoPause: true, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: true hasAskedAlphaCarbonQuestion: false isProcessingPause: false
+ChatBot.tsx:116 [DEBUG] Conditions met to ask alpha carbon question
+ChatBot.tsx:120 [DEBUG] Set isProcessingPauseRef to true
+ChatBot.tsx:123 [DEBUG] Playing notification sound
+audioSlice.ts:534 [AudioSlice] Attempting to play sound effect: meow
+ChatBot.tsx:127 [DEBUG] Setting timeout for alpha carbon question
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+AdaptiveTutoring.tsx:428 Video state changed - isPlaying: false ATSVideoPauseGlobal: true
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: true, videoPause: true, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: true hasAskedAlphaCarbonQuestion: false isProcessingPause: true
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: true, alreadyAsked: false, currentlyProcessing: true}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: true, videoPause: true, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: true hasAskedAlphaCarbonQuestion: false isProcessingPause: true
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: true, alreadyAsked: false, currentlyProcessing: true}alreadyAsked: falsecurrentlyProcessing: truevideoPaused: true[[Prototype]]: Object
+AdaptiveTutoring.tsx:1050 Video paused
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: true, videoPause: true, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: true hasAskedAlphaCarbonQuestion: false isProcessingPause: true
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: true, alreadyAsked: false, currentlyProcessing: true}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: true, videoPause: true, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: true hasAskedAlphaCarbonQuestion: false isProcessingPause: true
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: true, alreadyAsked: false, currentlyProcessing: true}
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: false, isProcessingPause: true, videoPause: true, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: true hasAskedAlphaCarbonQuestion: false isProcessingPause: true
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: true, alreadyAsked: false, currentlyProcessing: true}
+ChatBot.tsx:129 [DEBUG] Timeout triggered, preparing to ask alpha carbon question
+ChatBot.tsx:134 [DEBUG] Alpha carbon question: Meow! While we're taking a break, let me ask you something important: What defines an alpha carbon in an amino acid, and why is it important?
+ChatBot.tsx:137 [DEBUG] Calling sendBotMessage with alpha carbon question
+ChatBot.tsx:371 [DEBUG] sendBotMessage called with: Meow! While we're taking a break, let me ask you something important: What defines an alpha carbon in an amino acid, and why is it important?
+ChatBot.tsx:374 [DEBUG] Preparing API request payload: {message: "Meow! While we're taking a break, let me ask you s…carbon in an amino acid, and why is it important?", context: "I'm currently at timestamp 0:14 in the video. Here…I ask a question directly about what I'm studying", threadId: null, generateAudio: false, isBot: true}context: "I'm currently at timestamp 0:14 in the video. Here's a transcript of what I'm looking at: acid group why well it turns out that the pH of the solution in which that amino acid is in determines whether or not these are proteinated or proteinated and it turns out that at a neutral pH of around seven our amino acids exist prominantly in their dipolar form and the dipolar form is also known as the zitter ion form now what do we mean by the zitter ion form so in the zitter ion form this amino group is protonated it has a full positive charge and this carboxylic acid group is deprotonated it has a full negative charge and so we have a dipolar species dipolar simply means we have two dipole moments so we can basically redraw this diagram in the following way where this carbon is this Center carbon this orange group is this H atom this green group is the r atom this carboxylic acid group contains a negative charge this amino group contains a positive charge and so because we have these two separate and opposite charges this is the dipolar form of the amino acid this V ion form and because the majority of the cells and the solutions inside our body have a pH of around four the majority of the amino acids exist in this Z ion form now the next question is what exactly happens to our amino acid to the vit ion if we decrease the pH make it more acidic or increase the pH make it more basic well it turns out in various acidic Solutions if the pH of our solution is let's say one then because we have so many H ions in our solution this here will be protonated and so our amino acid will exist in the following form it will have an overall charge of positive one this is called the posit relatively charged amino acid species so at a pH at a very acidic pH of around one this amino acid and in general amino acids exist in their positively charged species form now as we begin to increase our pH we decrease the concentration of the H+ ions inside our solution and add around to this age found on the carboxylic acid group begins to dis associate it deprotonates it loses that H atom and so it gains that full negative charge so we see that if we continue going higher at a pH of around four five six and seven our amino acid exists in its zitter ion form that means we have a positive charge here we have a negative charge here now as we continue driving the ph up as we continue decreasing the amount of H+ ions in our solution eventually we get to the point where we have so little H+ ions in solution that this H found on a nitrogen is going to deprotonate it will dissociate as to increase the amount of h plus ions in solution and at around a pH of nine that is exactly where that begins to happen so at a pH of 9 this is deprotonated and notice that now this has a new neutral charge this has a negative charge and so what that means this entire amino acid will be negatively charged as a result of this fact and so this is a positively charged amino acid and that is found in a very low pH in a pH of around one now in the middle we have this zv ion form and at this end when we are above a pH of n when it's very basic we have negatively charged species as shown in the following diagram now the final thing that I'd like to mention about amino acids is so amino acids essentially are the same on this group on this group and on this group now where we can differentiate one amino acid from another is by the R Group by that side chain so we have different types of side chains and these different side uh these different types of side chains basically determine the type of amino acid that we are discussing now these side chains can basically differ based on their size based on their shape based on their structure they can differ based on the amount of charge found on that side chain based on the polarity based on the hydrophobic character as well as on their ability to create hydrogen bonds and so these differences these different properties of these side chain groups basically determine the properties and the chemical reactivities of our amino acids and in the next several lectures we're going to focus on these different types of amino acids and they different types of side chains that are found on those amino acids. Refer to this as context if I ask a question directly about what I'm studying"generateAudio: falseisBot: truemessage: "Meow! While we're taking a break, let me ask you something important: What defines an alpha carbon in an amino acid, and why is it important?"threadId: null[[Prototype]]: Object
+ChatBot.tsx:312 [DEBUG] Attempting to inject bot message directly: Meow! While we're taking a break, let me ask you something important: What defines an alpha carbon in an amino acid, and why is it important?
+ChatBot.tsx:361 [DEBUG] Bot message directly injected into DOM
+ChatBot.tsx:384 [DEBUG] Direct injection result: true
+ChatBot.tsx:142 [DEBUG] hasAskedAlphaCarbonQuestion set to true
+ChatBot.tsx:148 [DEBUG] Reset isProcessingPauseRef to false
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: true, isProcessingPause: false, videoPause: true, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: true hasAskedAlphaCarbonQuestion: true isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: true, alreadyAsked: true, currentlyProcessing: false}
+ChatBot.tsx:399 [DEBUG] API response status: 200
+ChatBot.tsx:407 [DEBUG] Bot message API response data: {message: 'Meow! The alpha carbon in an amino acid is the cen…p change the properties of different amino acids?', audio: null, threadId: 'thread_HbFGtHakzMrVCq2faDXR61Gu'}
+ChatBot.tsx:411 [DEBUG] Thread ID set to: thread_HbFGtHakzMrVCq2faDXR61Gu
+ChatBot.tsx:821 [DEBUG] Rendering chatbot component
+ChatBot.tsx:98 [DEBUG] Component state: {isMounted: true, isLoading: false, hasAskedAlphaCarbonQuestion: true, isProcessingPause: false, videoPause: true, …}
+ChatBot.tsx:111 [DEBUG] Video pause effect triggered. ATSVideoPause: true hasAskedAlphaCarbonQuestion: true isProcessingPause: false
+ChatBot.tsx:152 [DEBUG] Conditions NOT met to ask alpha carbon question. Reasons: {videoPaused: true, alreadyAsked: true, currentlyProcessing: false}

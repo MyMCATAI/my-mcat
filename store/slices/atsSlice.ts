@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
+import { VIDEO_TIMESTAMPS } from './atsVariables'
 
 /* --- Types ---- */
 export interface ATSState {
@@ -39,8 +40,8 @@ export const useATSStore = create<ATSSlice>()(
         const formattedTime = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
         
         set((state) => {
-          // Set videoPause to true when timer reaches 45 seconds
-          if (time >= 45 && !state.videoPause) {
+          // Set videoPause to true when timer reaches configured timestamp
+          if (time >= VIDEO_TIMESTAMPS.ALPHA_CARBON && !state.videoPause) {
             return {
               timer: time,
               timerFormatted: formattedTime,
