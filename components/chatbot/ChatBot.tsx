@@ -51,7 +51,6 @@ const ChatBot: React.FC<ChatBotProps> = ({
   const cmdReleaseTimer = useRef<NodeJS.Timeout | null>(null);
   const [lastToggleTime, setLastToggleTime] = useState<number>(0);
   const hasAskedAlphaCarbonQuestion = useRef(false);
-  const isProcessingPauseRef = useRef(false);
 
   useEffect(() => {
     if (chatbotRef) {
@@ -99,7 +98,6 @@ const ChatBot: React.FC<ChatBotProps> = ({
       isMounted,
       isLoading,
       hasAskedAlphaCarbonQuestion: hasAskedAlphaCarbonQuestion.current,
-      isProcessingPause: isProcessingPauseRef.current,
       videoPause: ATSVideoPause,
       threadId,
       audioEnabled
@@ -108,54 +106,64 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
   // Handle video pause to ask alpha carbon question
   useEffect(() => {
-    console.log("[DEBUG] Video pause effect triggered. ATSVideoPause:", ATSVideoPause, 
-      "hasAskedAlphaCarbonQuestion:", hasAskedAlphaCarbonQuestion.current,
-      "isProcessingPause:", isProcessingPauseRef.current);
+    console.log("[DEBUG] Video pause effect triggered. ATSVideoPause:", ATSVideoPause);
     
-    if (ATSVideoPause && !hasAskedAlphaCarbonQuestion.current && !isProcessingPauseRef.current) {
+    if (ATSVideoPause && !hasAskedAlphaCarbonQuestion.current) {
       console.log("[DEBUG] Conditions met to ask alpha carbon question");
       
-      // Set processing flag to prevent multiple triggers
-      isProcessingPauseRef.current = true;
-      console.log("[DEBUG] Set isProcessingPauseRef to true");
-      
       // Play notification sound
-      console.log("[DEBUG] Playing meow sound");
       audio.playSound('meow'); // Use 'meow' sound file
       
-      // Wait a moment then add the alpha carbon question
-      console.log("[DEBUG] Setting timeout for alpha carbon question");
-      setTimeout(() => {
-        console.log("[DEBUG] Timeout triggered, preparing to ask alpha carbon question");
-        
-        try {
-          // Use the sendMessage API directly
-          const botMessage = KALYPSO_PROMPTS.ALPHA_CARBON;
-          console.log("[DEBUG] Alpha carbon question:", botMessage);
-          
-          // Add the message directly to the chat as a bot message
-          console.log("[DEBUG] Calling sendBotMessage with alpha carbon question");
-          sendBotMessage(botMessage);
-          
-          // Mark as asked
-          hasAskedAlphaCarbonQuestion.current = true;
-          console.log("[DEBUG] hasAskedAlphaCarbonQuestion set to true");
-        } catch (error) {
-          console.error("[DEBUG] Error sending alpha carbon question:", error);
-        } finally {
-          // Reset processing flag
-          isProcessingPauseRef.current = false;
-          console.log("[DEBUG] Reset isProcessingPauseRef to false");
+      // Try multiple selectors to find the initial greeting message
+      const selectors = [
+        '.rcb-bot-bubble', 
+        '.rcb-bot-message', 
+        '.rcb-bot-message-container div',
+        '.rcb-chatbot .rcb-chat-window div'
+      ];
+      
+      let messageElement = null;
+      for (const selector of selectors) {
+        const elements = document.querySelectorAll(selector);
+        if (elements.length > 0) {
+          messageElement = elements[0];
+          console.log("[DEBUG] Found message element using selector:", selector);
+          break;
         }
-      }, 1000);
-    } else {
-      console.log("[DEBUG] Conditions NOT met to ask alpha carbon question. Reasons:", {
-        videoPaused: ATSVideoPause,
-        alreadyAsked: hasAskedAlphaCarbonQuestion.current,
-        currentlyProcessing: isProcessingPauseRef.current
-      });
+      }
+      
+      if (messageElement) {
+        // Replace the text with alpha carbon question
+        messageElement.textContent = KALYPSO_PROMPTS.ALPHA_CARBON;
+        console.log("[DEBUG] Initial greeting replaced with alpha carbon question");
+        
+        // Force a re-render of the chat window
+        const chatWindow = messageElement.closest('.rcb-chat-window');
+        if (chatWindow) {
+          chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+      } else {
+        console.log("[DEBUG] Could not find initial message element to replace");
+        // Fallback: try to inject a new message
+        injectBotMessageDirectly(KALYPSO_PROMPTS.ALPHA_CARBON);
+      }
+      
+      // Mark as asked
+      hasAskedAlphaCarbonQuestion.current = true;
     }
   }, [ATSVideoPause, audio]);
+  
+  // Force re-render of chatbot when videoPause changes
+  useEffect(() => {
+    if (ATSVideoPause && !hasAskedAlphaCarbonQuestion.current) {
+      console.log("[DEBUG] Forcing chatbot re-render with alpha carbon question");
+      // Force a re-render of the component
+      setIsMounted(false);
+      setTimeout(() => {
+        setIsMounted(true);
+      }, 50);
+    }
+  }, [ATSVideoPause]);
 
   // Add rcbAddMessage to window for bot messages
   useEffect(() => {
@@ -540,8 +548,40 @@ const ChatBot: React.FC<ChatBotProps> = ({
       // Press Alt+Q to manually trigger the alpha carbon question
       if (event.altKey && event.key === 'q') {
         console.log("[DEBUG] Manual trigger (Alt+Q) for alpha carbon question");
-        const botMessage = KALYPSO_PROMPTS.ALPHA_CARBON;
-        sendBotMessage(botMessage);
+        
+        // Try multiple selectors to find the initial greeting message
+        const selectors = [
+          '.rcb-bot-bubble', 
+          '.rcb-bot-message', 
+          '.rcb-bot-message-container div',
+          '.rcb-chatbot .rcb-chat-window div'
+        ];
+        
+        let messageElement = null;
+        for (const selector of selectors) {
+          const elements = document.querySelectorAll(selector);
+          if (elements.length > 0) {
+            messageElement = elements[0];
+            console.log("[DEBUG] Found message element using selector:", selector);
+            break;
+          }
+        }
+        
+        if (messageElement) {
+          // Replace the text with alpha carbon question
+          messageElement.textContent = KALYPSO_PROMPTS.ALPHA_CARBON;
+          console.log("[DEBUG] Initial greeting replaced with alpha carbon question");
+          
+          // Force a re-render of the chat window
+          const chatWindow = messageElement.closest('.rcb-chat-window');
+          if (chatWindow) {
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+          }
+        } else {
+          console.log("[DEBUG] Could not find initial message element to replace");
+          // Fallback: try to inject a new message
+          injectBotMessageDirectly(KALYPSO_PROMPTS.ALPHA_CARBON);
+        }
       }
     };
 
@@ -708,7 +748,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
   const flow = {
     start: {
-      message: KALYPSO_PROMPTS.INITIAL,
+      message: ATSVideoPause ? KALYPSO_PROMPTS.ALPHA_CARBON : KALYPSO_PROMPTS.INITIAL,
       path: "loop",
     },
     loop: {
@@ -858,6 +898,47 @@ const ChatBot: React.FC<ChatBotProps> = ({
   };
 
   const themes = [{ id: "simple_blue", version: "0.1.0" }];
+
+  // Update initial message on mount based on videoPause state
+  useEffect(() => {
+    if (isMounted) {
+      console.log("[DEBUG] Component mounted, checking if initial message needs update");
+      
+      // Wait a moment for the DOM to be fully rendered
+      setTimeout(() => {
+        if (ATSVideoPause) {
+          console.log("[DEBUG] VideoPause is true, updating initial message");
+          
+          // Try multiple selectors to find the initial greeting message
+          const selectors = [
+            '.rcb-bot-bubble', 
+            '.rcb-bot-message', 
+            '.rcb-bot-message-container div',
+            '.rcb-chatbot .rcb-chat-window div'
+          ];
+          
+          let messageElement = null;
+          for (const selector of selectors) {
+            const elements = document.querySelectorAll(selector);
+            if (elements.length > 0) {
+              messageElement = elements[0];
+              console.log("[DEBUG] Found message element using selector:", selector);
+              break;
+            }
+          }
+          
+          if (messageElement) {
+            // Replace the text with alpha carbon question
+            messageElement.textContent = KALYPSO_PROMPTS.ALPHA_CARBON;
+            console.log("[DEBUG] Initial greeting replaced with alpha carbon question on mount");
+            
+            // Mark as asked
+            hasAskedAlphaCarbonQuestion.current = true;
+          }
+        }
+      }, 500);
+    }
+  }, [isMounted, ATSVideoPause]);
 
   if (!isMounted) {
     console.log("[DEBUG] Component not mounted yet, showing loading spinner");

@@ -2,7 +2,7 @@
 
 // Video pause timestamps and their corresponding prompts
 export const VIDEO_TIMESTAMPS = {
-  ALPHA_CARBON: 15, // seconds
+  ALPHA_CARBON: 45, // seconds
 } as const;
 
 export const KALYPSO_PROMPTS = {
