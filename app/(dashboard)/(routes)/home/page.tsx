@@ -517,7 +517,7 @@ const HomePage: React.FC = () => {
                       <ChatContainer chatbotRef={chatbotRef} />
                     </div>
                     {/* Position Kalypso in the bottom right corner of the chat area */}
-                    <div className="absolute bottom-0 right-0 z-50 pointer-events-none" style={{ marginBottom: '20px', marginRight: '20px' }}>
+                    <div className="absolute bottom-0 right-0 z-50 pointer-events-none" style={{ marginBottom: '-20px', marginRight: '-80px', transform: 'translate(0, 0)' }}>
                       <KalypsoGreeting />
                     </div>
                   </div>
