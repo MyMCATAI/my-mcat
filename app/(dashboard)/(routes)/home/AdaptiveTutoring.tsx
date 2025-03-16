@@ -1050,9 +1050,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                             console.log('Video paused');
                             setIsPlaying(false);
                             setATSVideoPauseGlobal(true);
-                            if (Math.floor(playedSeconds) >= 45) {
-                              toggleChatBot();
-                            }
                           }}
                           onEnded={() => {
                             console.log('Video ended');
