@@ -1,0 +1,30 @@
+/* Target the chat input container */
+.rcb-chat-input {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 60px !important;
+  padding: 0.5rem 1rem !important;
+  background-color: orange !important;
+}
+
+/* Target the textarea directly */
+textarea.rcb-chat-input-textarea {
+  box-sizing: border-box !important;
+  padding: 12px !important;
+  height: 40px !important;
+  line-height: 1.2 !important;
+  margin: auto !important;
+}
+
+/* Fix the button container alignment */
+.rcb-chat-input-button-container {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Override any inline styles */
+.rcb-chat-input-area {
+  display: flex !important;
+  align-items: center !important;
+} 
