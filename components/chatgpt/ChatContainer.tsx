@@ -23,8 +23,9 @@ const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
 
 /* --- Constants ----- */
 const QUICK_ACTIONS = [
-  { id: "schedule", text: "Schedule", prompt: "What's my Schedule" },
-  { id: "knowledge", text: "Knowledge Profile", prompt: "Show me my Knowledge Profile" }
+  { id: "schedule", text: "What's my schedule?", prompt: "What's on my schedule today?" },
+  { id: "knowledge", text: "Show my progress", prompt: "Show me my current progress" },
+  { id: "next-exam", text: "Next exam?", prompt: "When is my next practice exam?" }
 ];
 
 /* ----- Types ---- */
@@ -48,6 +49,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   const [lastToggleTime, setLastToggleTime] = useState<number>(0);
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
+  const [isBotResponding, setIsBotResponding] = useState(false);
   
   // Get both exam and study activities
   const { activities: examActivities, loading: examLoading, fetchExamActivities } = useExamActivities();
@@ -224,6 +226,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   const handleSendMessage = async (userInput: string, messageContext?: string) => {
     setIsLoading(true);
     setError(null);
+    setIsBotResponding(true);
     
     try {
       // Call the API
@@ -263,10 +266,15 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
         }
       }
       
+      setTimeout(() => {
+        setIsBotResponding(false);
+      }, 3000);
+      
       return data.message || "I'm sorry, I couldn't process your request.";
     } catch (error) {
       console.error("Error:", error);
       setError(`An error occurred: ${error instanceof Error ? error.message : String(error)}`);
+      setIsBotResponding(false);
       return "Sorry, there was an error processing your request. Please try again.";
     } finally {
       setIsLoading(false);
@@ -530,7 +538,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
 
       {/* Error display */}
       {error && (
-        <div className="p-4 bg-red-500 bg-opacity-10 border border-red-500 text-red-500 rounded-lg m-4">
+        <div className="p-4 bg-red-500 bg-opacity-10 border borr-red-500 text-red-500 rounded-lg m-4">
           {error}
         </div>
       )}

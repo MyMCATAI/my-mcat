@@ -23,7 +23,6 @@ import RedeemReferralModal from '@/components/social/friend-request/RedeemReferr
 import ChatContainer from "@/components/chatgpt/ChatContainer";
 import HoverSidebar from "@/components/navigation/HoverSidebar";
 import KalypsoGreeting from "@/components/home/KalypsoGreeting";
-import QuickPrompts from "@/components/chatgpt/QuickPrompts";
 
 /* ----------------------------------------- Types ------------------------------------------ */
 interface ContentWrapperProps {
@@ -513,17 +512,13 @@ const HomePage: React.FC = () => {
               <div className="p-3 gradientbg h-[calc(100vh-5.5rem)] rounded-lg mb-4">
                 {/* Set KalypsoAI as the main component to show */}
                 {(pageState.activeTab === 'KalypsoAI' || !pageState.activeTab) && (
-                  <div className="h-full w-full overflow-visible relative bg-orange-500/50">
-                    <div className="flex h-full">
-                      {/* Chat container */}
-                      <div className="w-[70%] h-full p-4">
-                        <ChatContainer chatbotRef={chatbotRef} />
-                        <QuickPrompts />
-                      </div>
-                      {/* Kalypso area */}
-                      <div className="w-[30%] h-full relative">
-                        <KalypsoGreeting />
-                      </div>
+                  <div className="h-full w-full overflow-visible relative">
+                    <div className="w-full h-full p-4">
+                      <ChatContainer chatbotRef={chatbotRef} />
+                    </div>
+                    {/* Position Kalypso in the bottom right corner of the chat area */}
+                    <div className="absolute bottom-0 right-0 z-50 pointer-events-none" style={{ marginBottom: '20px', marginRight: '20px' }}>
+                      <KalypsoGreeting />
                     </div>
                   </div>
                 )}
@@ -562,7 +557,7 @@ const HomePage: React.FC = () => {
             <h2 className="text-white text-2xl font-thin leading-normal shadow-text">
               &nbsp;
             </h2>
-            <div className="gradientbg p-3 pb-6 h-[calc(100vh-5.5rem)] rounded-lg knowledge-profile-component mb-4">
+            <div className="gradientbg p-3 pb-6 h-[calc(100vh-5.5rem)] rounded-lg knowledge-profile-component mb-4 relative">
               <MemoizedSideBar 
                 activities={pageState.activities}
                 currentPage={pageState.currentPage}
