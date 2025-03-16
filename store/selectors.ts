@@ -4,23 +4,28 @@ import { useAudioStore } from './slices/audioSlice'
 import { useUIStore } from './slices/uiSlice'
 import { useGameStore } from './slices/gameSlice'
 import { useChatStore } from './slices/chatSlice'
+import { useATSStore } from './slices/atsSlice'
 
 /* --- UI Selectors ---- */
 export const useUI = () => {
   const theme = useUIStore((state) => state.theme)
   const window = useUIStore((state) => state.window)
   const currentRoute = useUIStore((state) => state.currentRoute)
+  const activeTab = useUIStore((state) => state.activeTab)
   const setTheme = useUIStore((state) => state.setTheme)
   const setWindowSize = useUIStore((state) => state.setWindowSize)
   const setCurrentRoute = useUIStore((state) => state.setCurrentRoute)
+  const setActiveTab = useUIStore((state) => state.setActiveTab)
   
   return {
     theme,
     window,
     currentRoute,
+    activeTab,
     setTheme,
     setWindowSize,
     setCurrentRoute,
+    setActiveTab,
   }
 }
 
@@ -387,4 +392,31 @@ export const useChat = () => {
     addChatMessage,
     clearChat,
   }
-} 
+}
+
+/* --- ATS Selector ---- */
+export const useATS = () => {
+  const timer = useATSStore((state) => state.timer)
+  const timerFormatted = useATSStore((state) => state.timerFormatted)
+  const videoPause = useATSStore((state) => state.videoPause)
+  const setTimer = useATSStore((state) => state.setTimer)
+  const setVideoPause = useATSStore((state) => state.setVideoPause)
+  const startTimer = useATSStore((state) => state.startTimer)
+  const stopTimer = useATSStore((state) => state.stopTimer)
+  const resetState = useATSStore((state) => state.resetState)
+  
+  return {
+    timer,
+    timerFormatted,
+    videoPause,
+    setTimer,
+    setVideoPause,
+    startTimer,
+    stopTimer,
+    resetState,
+  }
+}
+
+// Individual property selectors for performance
+export const useATSTimer = () => useATSStore(state => state.timer)
+export const useATSVideoPause = () => useATSStore(state => state.videoPause) 

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-
+import { useATSStore } from './atsSlice'
 
 /* --- Types ---- */
 export interface WindowSize {
@@ -16,19 +16,28 @@ interface UIState {
   window: WindowSize
   currentRoute: string
   theme: ThemeType
+  activeTab: string
 }
 
 interface UIActions {
   setWindowSize: (size: WindowSize) => void
   setCurrentRoute: (route: string) => void
   setTheme: (theme: ThemeType) => void
+  setActiveTab: (tab: string) => void
 }
 
 export type UISlice = UIState & UIActions
 
+/* --- Utils ---- */
+const formatTime = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
 export const useUIStore = create<UISlice>()(
   devtools(
-    (set) => ({
+    (set, get) => ({
       //***********************************************************************************************//
       //************************************** UI State ***********************************************//
       //***********************************************************************************************//
@@ -39,6 +48,7 @@ export const useUIStore = create<UISlice>()(
       },
       currentRoute: '/',
       theme: 'cyberSpace',
+      activeTab: 'KalypsoAI',
 
       // UI Actions
       setWindowSize: (size) => set({ window: size }),
@@ -49,6 +59,15 @@ export const useUIStore = create<UISlice>()(
           localStorage.setItem('theme', theme)
         }
       },
+      setActiveTab: (tab) => {
+        set({ activeTab: tab })
+        // Handle ATS timer in the ATS store
+        if (tab === 'AdaptiveTutoringSuite') {
+          useATSStore.getState().startTimer()
+        } else {
+          useATSStore.getState().resetState()
+        }
+      }
     }),
     {
       name: 'ui-store'

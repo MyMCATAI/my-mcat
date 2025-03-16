@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { Styles } from "react-chatbotify";
 import Image from "next/image";
 import { useAudio } from "@/store/selectors";
-import { useVideoControl } from "@/store/video-control";
+import { useATSStore } from "@/store/slices/atsSlice";
 
 const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
   ssr: false,
@@ -34,7 +34,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
   chatbotRef,
 }) => {
   const audio = useAudio();
-  const { setShouldPauseVideo } = useVideoControl();
+  const { videoPause: ATSVideoPause, setVideoPause: setATSVideoPause } = useATSStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -49,6 +49,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
   const cmdPressedTime = useRef<number | null>(null);
   const cmdReleaseTimer = useRef<NodeJS.Timeout | null>(null);
   const [lastToggleTime, setLastToggleTime] = useState<number>(0);
+  const hasAskedAlphaCarbonQuestion = useRef(false);
 
   useEffect(() => {
     if (chatbotRef) {
@@ -96,18 +97,11 @@ const ChatBot: React.FC<ChatBotProps> = ({
         );
       }, 1000);
 
-      // Add new timer for video pause
-      const pauseTimer = setTimeout(() => {
-        console.log('🎥 Pausing video after 40 seconds - ChatBot component');
-        setShouldPauseVideo(true);
-      }, 40000);
-
       return () => {
         clearTimeout(timer);
-        clearTimeout(pauseTimer);
       };
     }
-  }, [isMounted, setShouldPauseVideo]);
+  }, [isMounted]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -159,6 +153,23 @@ const ChatBot: React.FC<ChatBotProps> = ({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (ATSVideoPause && !hasAskedAlphaCarbonQuestion.current) {
+      // Play notification sound
+      audio.playSound('notification');
+      
+      // Ask the question after a short delay
+      setTimeout(() => {
+        if (chatbotRef?.current) {
+          const botMessage = "Meow! While we're taking a break, let me ask you something important: What defines an alpha carbon in an amino acid, and why is it important?";
+          // Use the chatbot's sendMessage function directly
+          chatbotRef.current.sendMessage(botMessage);
+          hasAskedAlphaCarbonQuestion.current = true;
+        }
+      }, 500);
+    }
+  }, [ATSVideoPause, audio, chatbotRef]);
 
   const sendMessage = async (message: string, messageContext?: string) => {
     setIsLoading(true);
