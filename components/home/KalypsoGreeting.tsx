@@ -3,16 +3,17 @@ import Image from "next/image";
 
 /* --- Constants ----- */
 const KALYPSO_SIZE = {
-  width: 280,
-  height: 280
+  width: 400,
+  height: 400
 };
 
 /* ----- Types ---- */
 interface KalypsoGreetingProps {
   className?: string;
+  position?: 'left' | 'right';
 }
 
-const KalypsoGreeting = ({ className }: KalypsoGreetingProps) => {
+const KalypsoGreeting = ({ className, position = 'right' }: KalypsoGreetingProps) => {
   /* ---- Render Methods ----- */
   return (
     <motion.div
@@ -22,7 +23,7 @@ const KalypsoGreeting = ({ className }: KalypsoGreetingProps) => {
       style={{
         position: 'absolute',
         bottom: '0',
-        right: '0',
+        [position]: '0',
         transform: 'translate(0, 0)',
         zIndex: 10
       }}
