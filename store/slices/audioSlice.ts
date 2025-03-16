@@ -141,6 +141,7 @@ export const useAudioStore = create<AudioState & AudioActions>()(
       'flashcard-select': 'flashcard-select',
       'correct': 'correct',
       'whoosh': 'whoosh',
+      'meow': 'meow',
     },
 
     // Initialize new properties for loop loading state
