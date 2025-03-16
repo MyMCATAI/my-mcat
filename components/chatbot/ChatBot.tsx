@@ -119,9 +119,9 @@ const ChatBot: React.FC<ChatBotProps> = ({
       isProcessingPauseRef.current = true;
       console.log("[DEBUG] Set isProcessingPauseRef to true");
       
-      // Play meow sound 
-      console.log("[DEBUG] Playing notification sound");
-      audio.playSound('meow');
+      // Play notification sound
+      console.log("[DEBUG] Playing meow sound");
+      audio.playSound('meow'); // Use 'meow' sound file
       
       // Wait a moment then add the alpha carbon question
       console.log("[DEBUG] Setting timeout for alpha carbon question");
@@ -312,7 +312,46 @@ const ChatBot: React.FC<ChatBotProps> = ({
     console.log("[DEBUG] Attempting to inject bot message directly:", message);
     
     try {
-      // Find the chatbot container
+      // Find the first bot message to insert after
+      const firstBotMessage = document.querySelector('.rcb-bot-bubble');
+      if (firstBotMessage) {
+        console.log("[DEBUG] Found first bot message to insert after");
+        
+        // Create a new message element
+        const messageEl = document.createElement('div');
+        messageEl.className = 'rcb-bot-bubble';
+        messageEl.textContent = message;
+        
+        // Add inline styles to ensure proper display
+        messageEl.style.padding = '10px';
+        messageEl.style.margin = '10px';
+        messageEl.style.borderRadius = '8px';
+        messageEl.style.backgroundColor = 'var(--theme-botchatbox-color)';
+        messageEl.style.color = 'var(--theme-text-color)';
+        messageEl.style.maxWidth = '80%';
+        messageEl.style.wordWrap = 'break-word';
+        
+        // Insert after the first bot message
+        if (firstBotMessage.parentNode) {
+          firstBotMessage.parentNode.insertBefore(messageEl, firstBotMessage.nextSibling);
+          console.log("[DEBUG] Bot message inserted after first bot message");
+          
+          // Find the chat window to scroll
+          const chatWindow = firstBotMessage.closest('.rcb-chat-window') || 
+                            firstBotMessage.closest('.rcb-chatbot > div');
+          
+          if (chatWindow) {
+            // Scroll to bottom
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            console.log("[DEBUG] Scrolled chat window to bottom");
+          }
+          
+          return true;
+        }
+      }
+      
+      // Fallback: try to find the chat window directly
+      console.log("[DEBUG] Fallback: searching for chat window directly");
       const chatbotContainer = document.querySelector('.flex-1.relative.w-full');
       if (!chatbotContainer) {
         console.error("[DEBUG] Chatbot container not found");
@@ -326,7 +365,8 @@ const ChatBot: React.FC<ChatBotProps> = ({
         // Try to find any scrollable div that might be the chat window
         const divs = chatbotContainer.querySelectorAll('div');
         for (const div of divs) {
-          if (div.scrollHeight > 100 && !div.classList.contains('rcb-header')) {
+          if (div.scrollHeight > 100 && !div.classList.contains('rcb-header') && 
+              !div.classList.contains('rcb-chat-input-container')) {
             chatWindow = div;
             break;
           }
@@ -352,8 +392,18 @@ const ChatBot: React.FC<ChatBotProps> = ({
       messageEl.style.maxWidth = '80%';
       messageEl.style.wordWrap = 'break-word';
       
-      // Append the message
-      chatWindow.appendChild(messageEl);
+      // Find the input container to insert before
+      const inputContainer = chatbotContainer.querySelector('.rcb-chat-input-container');
+      
+      if (inputContainer && inputContainer.parentNode === chatWindow) {
+        // Insert before the input container
+        chatWindow.insertBefore(messageEl, inputContainer);
+        console.log("[DEBUG] Bot message inserted before input container");
+      } else {
+        // Append to the chat window
+        chatWindow.appendChild(messageEl);
+        console.log("[DEBUG] Bot message appended to chat window");
+      }
       
       // Scroll to bottom
       chatWindow.scrollTop = chatWindow.scrollHeight;
