@@ -24,8 +24,8 @@ const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
 /* --- Constants ----- */
 const QUICK_ACTIONS = [
   { id: "schedule", text: "What's my schedule?", prompt: "What's on my schedule today?" },
-  { id: "knowledge", text: "Show my progress", prompt: "Show me my current progress" },
-  { id: "next-exam", text: "Next exam?", prompt: "When is my next practice exam?" }
+  { id: "knowledge", text: "What should I focus on?", prompt: "Hey, here are my three weakest categories: Circuits, Organic Compounds and Kinematics. Recommend to me how I should spend my daily 2 hrs to increase my mastery in these?" },
+  // { id: "next-exam", text: "Next exam?", prompt: "When is my next practice exam?" }
 ];
 
 /* ----- Types ---- */
