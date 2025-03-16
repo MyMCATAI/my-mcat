@@ -8,7 +8,7 @@ import { OnboardingInfo } from "@/types";
 export async function PUT(req: Request) {
   try {
     const { userId } = auth();
-    
+
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
@@ -56,7 +56,7 @@ export async function PUT(req: Request) {
 export async function GET(req: Request) {
   try {
     const { userId } = auth();
-    
+
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }

@@ -66,7 +66,19 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { firstName, bio } = body;
 
-    // Create the new user info first
+    // Check if user already exists and delete if found
+    const existingUser = await prismadb.userInfo.findUnique({
+      where: { userId }
+    });
+
+    if (existingUser) {
+      // Delete the existing user record
+      await prismadb.userInfo.delete({
+        where: { userId }
+      });
+    }
+
+    // Create the new user info
     const userInfo = await prismadb.userInfo.create({
       data: {
         userId,
@@ -74,7 +86,7 @@ export async function POST(req: Request) {
         firstName: firstName || "",
         apiCount: 0,
         score: 30,
-        clinicRooms: "",
+        clinicRooms: JSON.stringify(["INTERN LEVEL"]),
         hasPaid: false,
         subscriptionType: "",
         diagnosticScores: {
@@ -83,6 +95,21 @@ export async function POST(req: Request) {
           cars: "",
           bb: "",
           ps: ""
+        },
+        onboardingInfo: {
+          currentStep: 1,
+          onboardingComplete: false,
+          firstName: firstName || null,
+          college: null,
+          isNonTraditional: null,
+          isCanadian: null,
+          gpa: null,
+          currentMcatScore: null,
+          hasNotTakenMCAT: null,
+          mcatAttemptNumber: null,
+          targetMedSchool: null,
+          targetScore: null,
+          referralEmail: null
         }
       }
     });

@@ -24,13 +24,19 @@ export function CollegeStep({ onSubmit, firstName, initialValues = {} }: College
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (collegeQuery.length >= 3) {
-        const results = await searchUniversities(collegeQuery);
-        setSuggestions(results);
-        setShowSuggestions(true);
+        setIsSearching(true);
+        try {
+          const results = await searchUniversities(collegeQuery);
+          setSuggestions(results);
+          setShowSuggestions(true);
+        } finally {
+          setIsSearching(false);
+        }
       } else {
         setSuggestions([]);
         setShowSuggestions(false);
@@ -40,6 +46,29 @@ export function CollegeStep({ onSubmit, firstName, initialValues = {} }: College
     const debounceTimer = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(debounceTimer);
   }, [collegeQuery]);
+
+  // Handle input focus/blur
+  const handleFocus = () => {
+    setIsInputFocused(true);
+    if (collegeQuery.length >= 3 && suggestions.length > 0) {
+      setShowSuggestions(true);
+    }
+  };
+
+  const handleBlur = () => {
+    // Delay hiding suggestions to allow click events to fire
+    setTimeout(() => {
+      setIsInputFocused(false);
+      setShowSuggestions(false);
+    }, 200);
+  };
+
+  // Handle suggestion selection
+  const handleSuggestionSelect = (college: { name: string; city: string; state: string }) => {
+    setCollegeQuery(college.name);
+    setShowSuggestions(false);
+    setIsInputFocused(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -89,13 +118,33 @@ export function CollegeStep({ onSubmit, firstName, initialValues = {} }: College
                 name="college"
                 value={collegeQuery}
                 onChange={(e) => setCollegeQuery(e.target.value)}
-                onFocus={() => setIsInputFocused(true)}
-                onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
                 className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                 placeholder="Start typing your college name..."
                 required={!isNonTraditional && !isCanadian}
                 disabled={loading}
               />
+              {isSearching && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <svg className="animate-spin h-5 w-5 text-white/60" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                </div>
+              )}
               {showSuggestions && suggestions.length > 0 && isInputFocused && (
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }}
@@ -105,25 +154,20 @@ export function CollegeStep({ onSubmit, firstName, initialValues = {} }: College
                              border border-white/10 rounded-xl shadow-lg max-h-60 overflow-auto 
                              scrollbar-thin scrollbar-thumb-white/20"
                 >
-                  {suggestions.map((school, index) => (
-                    <motion.button
+                  {suggestions.map((college, index) => (
+                    <button
                       key={index}
                       type="button"
-                      whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-                      onClick={() => {
-                        setCollegeQuery(school.name);
-                        setShowSuggestions(false);
-                        setIsInputFocused(false);
-                      }}
+                      onClick={() => handleSuggestionSelect(college)}
                       className="w-full px-4 py-3 text-left hover:bg-white/5 
                                transition-colors border-b border-white/5 last:border-b-0"
                       disabled={loading}
                     >
-                      <div className="text-white/90 text-sm font-medium">{school.name}</div>
+                      <div className="text-white/90 text-sm font-medium">{college.name}</div>
                       <div className="text-white/60 text-xs mt-0.5">
-                        {school.city}, {school.state}
+                        {college.city}, {college.state}
                       </div>
-                    </motion.button>
+                    </button>
                   ))}
                 </motion.div>
               )}

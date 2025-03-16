@@ -9,6 +9,8 @@ import StoreInitializer from '@/components/StoreInitializer'
 import LayoutWindowSizeTracker from './layoutWindowSizeTracker'
 import { metadata } from './metadata'
 import RouteTracker from '@/components/RouteTracker'
+import { Toaster } from 'react-hot-toast';
+import { toastConfig } from '@/lib/toast';
 
 import './globals.css'
 
@@ -40,6 +42,7 @@ export default function RootLayout({
             </div>
             <Analytics />
             <DebugPanel />
+            <Toaster toastOptions={toastConfig} />
           </div>
         </body>
       </html>

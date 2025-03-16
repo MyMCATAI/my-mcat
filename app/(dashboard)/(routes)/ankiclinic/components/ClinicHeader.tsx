@@ -14,7 +14,7 @@ const TutorialVidDialog = dynamic(() => import('@/components/ui/TutorialVidDialo
 interface ClinicHeaderProps {
   totalPatients: number;
   patientsPerDay: number; 
-  userInfo: { score?: number } | null;
+  userInfo: { score?: number; clinicRooms?: string } | null;
   userLevel: string | null;
   imageGroups: ImageGroup[];
   visibleImages: Set<string>;
@@ -145,6 +145,7 @@ const ClinicHeader = ({
                 userScore={userInfo?.score || 0}
                 isOpen={isMarketplaceOpen}
                 onOpenChange={setIsMarketplaceOpen}
+                clinicRooms={userInfo?.clinicRooms || "[]"}
               />
             )}
             </div>

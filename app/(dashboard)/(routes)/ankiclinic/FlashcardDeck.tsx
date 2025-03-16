@@ -60,6 +60,7 @@ interface FlashcardDeckProps {
   onQuestionChange?: (question: Flashcard | null) => void;
   onAnswerReveal?: (revealed: boolean) => void;
   isChatFocused?: boolean;
+  isFeedbackOpen?: boolean;
 }
 
 interface OptionsArray extends Array<string> {
@@ -98,7 +99,7 @@ const shuffleFlashcards = (array: Flashcard[]): Flashcard[] => {
 /* ----------------------------------------- Component ------------------------------------------- */
 const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, onCorrectAnswer, 
   activeRooms, setActiveRooms, currentUserTestId, isLoading, setIsLoading, onClose, onMCQAnswer,
-  handleCompleteAllRoom, setTotalMCQQuestions, onQuestionChange, onAnswerReveal, isChatFocused = false }): JSX.Element => {
+  handleCompleteAllRoom, setTotalMCQQuestions, onQuestionChange, onAnswerReveal, isChatFocused = false, isFeedbackOpen = false }): JSX.Element => {
 
 /* -------------------------------------------- State -------------------------------------------- */
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
@@ -328,7 +329,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (isTransitioning || isChatFocused) return;
+      if (isTransitioning || isChatFocused || isFeedbackOpen) return;
   
       // If deck is complete, any key press closes dialog
       if (currentCardIndex >= flashcards.length) {
@@ -339,7 +340,8 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
       }
   
       // Progress MCQ on any key press after answering
-      if (isMCQ && answeredMCQ) {
+      if (isMCQ) {
+        if (!answeredMCQ) return;
         event.preventDefault();
         event.stopPropagation();
         if (selectedOption === shuffledOptions.correctIndex) {
@@ -398,7 +400,8 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
     shuffledOptions.correctIndex,
     hasSeenAnswer,
     handleSwipe,
-    toggleReveal
+    toggleReveal,
+    isFeedbackOpen
   ]);
 
 
@@ -536,7 +539,10 @@ const getQuestionContent = () => {
     const isCorrect = index === shuffledOptions.correctIndex;
     onMCQAnswer?.(isCorrect);
     
-    // No sound plays immediately after selecting - we'll play the sound when moving to next question
+    // Auto scroll to answer explanation
+    requestAnimationFrame(() => {
+      answerSectionRef.current?.scrollIntoView({ block: 'start' });
+    });
   }, [answeredMCQ, shuffledOptions.correctIndex, onAnswerReveal, onMCQAnswer, playSound]);
 
   const fetchFlashcards = async () => {
@@ -677,6 +683,7 @@ const getQuestionContent = () => {
                                   : 'border-[--theme-border-color]'
                               }
                               disabled:cursor-default
+                              relative
                             `}
                           >
                             <div className="text-left">
