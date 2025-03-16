@@ -10,7 +10,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import FlashcardDeck, { Flashcard } from './FlashcardDeck';
 import { useSpring, animated, config } from '@react-spring/web';
-import { ThumbsDown, HelpCircle } from 'lucide-react';
+import { ThumbsDown, Cat } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -89,7 +89,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
     sendMessage: (message: string) => void;
   }>({ sendMessage: () => {} });
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-
+  const [isChatFocused, setIsChatFocused] = useState(false);
   const [springs, api] = useSpring(() => ({
     from: { x: 0 }
   }));
@@ -191,34 +191,11 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
   const handleHint = () => {
     if (currentQuestion) {
       setShowChat(true);
-      setIsAnswerRevealed(true);
-      const cleanedQuestion = cleanQuestion(currentQuestion.questionContent);
-      
-      // Determine the correct answer based on question type
-      let correctAnswer = '';
-      if (currentQuestion.questionType === 'normal' && currentQuestion.questionOptions?.length > 0) {
-        correctAnswer = currentQuestion.questionOptions[0];
-      } else {
-        correctAnswer = cleanAnswer(currentQuestion.questionContent);
-      }
-      
-      const cleanedAnswer = cleanAnswer(correctAnswer);
-      
-      const message = `I need help understanding this question: "${cleanedQuestion}". The correct answer is "${cleanedAnswer}". Can you explain why this is the correct answer?`;
-      
-      setTimeout(() => {
-        chatbotRef.current?.sendMessage(message);
-      }, 500);
     }
-  };
-
-  const handleShowChat = () => {
-    setShowChat(true);
   };
 
   const handleHideChat = () => {
     setShowChat(false);
-    setIsAnswerRevealed(false);
   };
 
   const getRandomEncouragement = (streak: number) => {
@@ -342,7 +319,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
             </DialogDescription>
           </DialogHeader>
           
-          <div className="flex flex-grow min-h-0 relative flex-col">
+          <div className="flex flex-grow flex-col min-h-0 overflow-y-hidden relative">
             <div className={`flex flex-grow min-h-0 ${isMobile ? 'px-2 flex-col' : 'px-6 flex-row'} space-x-4`}>
               {/* Flashcard Deck */}
               <div className={`${isMobile ? 'w-full' : 'w-2/3'} bg-[--theme-leaguecard-color] p-2 rounded-lg flex flex-col`}>
@@ -380,19 +357,19 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                     {/* Hint Button */}
                     {currentQuestionContext && !isMobile && (
                       <TooltipProvider>
-                        <Tooltip>
+                        <Tooltip delayDuration={0}>
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={handleHint}
+                              onClick={showChat ? handleHideChat : handleHint}
                               className="hover:bg-transparent text-[--theme-text-color] hover:text-[--theme-hover-color] transition-colors group"
                             >
-                              <HelpCircle className="h-5 w-5 transition-transform duration-200 group-hover:rotate-12" />
+                              <Cat className="h-5 w-5 transition-transform duration-300 origin-bottom group-hover:[animation:cat-nod_1s_ease-in-out_1]" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side="left">
-                            {showChat ? "Hide Chat" : "Get a hint"}
+                            {showChat ? "Hide chat" : (isAnswerRevealed ? "Explain answer" : "Get a hint")}
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -400,7 +377,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                     {/* Downvote Button */}
                     {currentQuestionContext && (
                       <TooltipProvider>
-                        <Tooltip>
+                        <Tooltip delayDuration={0}>
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
@@ -421,7 +398,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                 </div>
 
                 {/* Flashcard content */}
-                <div className={`flex-grow overflow-y-auto ${isMobile ? 'max-h-[62vh]' : 'min-h-[60vh]'}`}>
+                <div className={`flex-grow overflow-y-auto ${isMobile && 'max-h-[62vh]'}`}>
                   <div className="h-full w-full flex items-center justify-center overflow-hidden">
                     <FlashcardDeck 
                       handleCompleteAllRoom={handleCompleteAllRoom}
@@ -438,7 +415,8 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                       setTotalMCQQuestions={setTotalMCQQuestions}
                       onQuestionChange={(question) => setCurrentQuestion(question)}
                       onAnswerReveal={(revealed: boolean) => setIsAnswerRevealed(revealed)}
-                      isChatFocused={showChat}
+                      isChatFocused={isChatFocused}
+                      isFeedbackOpen={isFeedbackOpen}
                     />
                   </div>
                 </div>
@@ -538,8 +516,8 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                             : ""
                         }}
                         chatbotRef={chatbotRef}
-                        onFocus={() => {}}
-                        onBlur={() => {}}
+                        onFocus={() => setIsChatFocused(true)}
+                        onBlur={() => setIsChatFocused(false)}
                       />
                     </div>
                   </div>
@@ -547,14 +525,6 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                   <>
                     <div className={`flex justify-between items-center ${isMobile ? 'mb-2 mt-1 px-1' : 'mb-2'}`}>
                       <h3 className="text-lg font-semibold text-[--theme-text-color]">Kitty Litter</h3>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleShowChat}
-                        className="text-[--theme-hover-text] hover:text-[--theme-hover-text] bg-[--theme-gradient-startstreak] hover:bg-[--theme-hover-color] border-[--theme-border-color] transition-colors rounded-lg"
-                      >
-                        Ask Kalypso
-                      </Button>
                     </div>
                     <ScrollArea className={`flex-grow ${isMobile ? 'max-h-[60vh]' : ''} pr-2`}>
                       <div className="space-y-4">
@@ -565,7 +535,6 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
                               style={index === 0 ? springs : undefined}
                               className="p-4 border border-[--theme-border-color] rounded-lg bg-[--theme-flashcard-color] shadow-sm"
                             >
-                              <div className="text-sm text-[--theme-text-color] opacity-50 mb-2">{card.timestamp}</div>
                               <div className="font-semibold mb-2 text-[--theme-text-color]">{card.question}</div>
                               <div className="text-[--theme-hover-color] font-medium">{card.answer}</div>
                             </animated.div>

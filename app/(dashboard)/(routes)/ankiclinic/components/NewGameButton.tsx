@@ -57,15 +57,14 @@ const NewGameButton: FC<NewGameButtonProps> = ({
       const userTestId = await createNewUserTest();
       if (userTestId) {
         onGameStart(userTestId);
-        toast.success("New game started! 1 coin deducted.");
       } else {
         console.error("Failed to create new user test");
         toast.error("Failed to start new game. Please try again.");
+        setIsLoading(false);
       }
     } catch (error) {
       console.error("Error starting new game:", error);
       toast.error("Failed to start new game. Please try again.");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -91,7 +90,7 @@ const NewGameButton: FC<NewGameButtonProps> = ({
           }`}
       >
         <span className={`text-[--theme-hover-text] border-r border-[--theme-border-color] ${!isGameInProgress && 'hover:border-white/30'} pr-2`}>
-          {isGameInProgress && 'Game in Progress' || isLoading && 'Loading Game...' || 'New Game'}
+          {isGameInProgress ? 'Game in Progress' : isLoading ? 'Loading Game...' : 'New Game'}
         </span>
         <span className="text-[--theme-hover-text]">
           {isGameInProgress || isLoading ? '' : '-1'}

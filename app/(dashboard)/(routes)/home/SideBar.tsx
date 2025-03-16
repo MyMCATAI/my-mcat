@@ -497,13 +497,14 @@ const SideBar: React.FC<SideBarProps> = ({
         </ScrollArea>
 
         <div className="mt-4 bg-[--theme-leaguecard-color] rounded-lg flex items-center justify-between">
-          <span className="text-sm font-medium opacity-75 ml-6">Wallet</span>
+          <span className="text-sm opacity-75 ml-6">Wallet</span>
           <PurchaseButton 
             userCoinCount={userInfo?.score || 0}
             tooltipText="Click to purchase more coins"
+            className="bg-[--theme-leaguecard-color] text-[--theme-hover-text]"
           >
-            <div className="cursor-pointer hover:opacity-80 transition-opacity">
-              <ScoreDisplay score={userInfo?.score || 0} />
+            <div className="cursor-pointer hover:opacity-80 transition-opacity text-sm">
+              <ScoreDisplay score={userInfo?.score || 0} textClassName="text-xl font-bold" />
             </div>
           </PurchaseButton>
         </div>

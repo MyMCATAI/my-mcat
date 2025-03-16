@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle, useCallback, useEffect } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useCallback, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -34,6 +34,7 @@ interface ShoppingDistrictProps {
   userScore: number;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  clinicRooms: string;
 }
 
 const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>(({
@@ -43,7 +44,8 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
   buttonContent,
   userScore,
   isOpen,
-  onOpenChange
+  onOpenChange,
+  clinicRooms
 }, ref) => {
   const { user } = useUser();
   const windowSize = useWindowSize();
@@ -53,6 +55,19 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
   const [showMessageForm, setShowMessageForm] = useState(false);
   const [messageForm, setMessageForm] = useState({ message: '' });
   const [isMounted, setIsMounted] = useState(false);
+  const [purchasingLevel, setPurchasingLevel] = useState<number | null>(null);
+
+  // Parse clinicRooms string into array
+  const parsedClinicRooms = useMemo(() => {
+    if (!clinicRooms || clinicRooms === "undefined") return [];
+    
+    try {
+      return JSON.parse(clinicRooms);
+    } catch (error) {
+      console.error('Error parsing clinicRooms:', error);
+      return [];
+    }
+  }, [clinicRooms]);
 
   const levelInfo = [
     { level: 1, title: "INTERN LEVEL", image: "/game-components/INTERNLEVEL.png", cost: 4 },
@@ -63,18 +78,25 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
     { level: 6, title: "MEDICAL DIRECTOR LEVEL", image: "/game-components/MEDICALDIRECTORLEVEL.png", cost: 24 },
   ];
 
-  const handleLevelClick = (level: number) => {
-    const group = imageGroups.find(g => g.cost === levelInfo[level - 1].cost);
+  const handleLevelClick = async (level: number) => {
+    if (purchasingLevel !== null) return;
+    
+    const levelTitle = levelInfo[level - 1].title;
+    const group = imageGroups.find(g => g.name === levelTitle);
+
     if (group) {
-      const previousLevelPurchased = level === 1 || imageGroups
-        .find(g => g.cost === levelInfo[level - 2].cost)?.items
-        .every(item => visibleImages.has(item.id));
+      const previousLevelPurchased = level === 1 || parsedClinicRooms.includes(levelInfo[level - 2].title);
 
       if (previousLevelPurchased) {
-        if (group.items.every(item => visibleImages.has(item.id))) {
+        if (parsedClinicRooms.includes(group.name)) {
           toast.error("This level is already purchased.");
         } else {
-          toggleGroup(group.name);
+          setPurchasingLevel(level);
+          try {
+            await toggleGroup(group.name);
+          } finally {
+            setPurchasingLevel(null);
+          }
         }
       } else {
         toast.error(`You need to purchase level ${level - 1} first.`);
@@ -152,20 +174,18 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
               <div className="pr-4 pb-4 themed-scrollbar">
                 <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-2'} p-1`}>
                   {levelInfo.map(({ level, title, image, cost }, index) => {
-                    const group = imageGroups.find(g => g.cost === cost);
-                    const isPurchased = group ? group.items.every((item) => visibleImages.has(item.id)) : false;
-                    const previousLevelPurchased = level === 1 || imageGroups
-                      .find(g => g.cost === levelInfo[level - 2].cost)?.items
-                      .every(item => visibleImages.has(item.id));
-                    const isAvailable = isPurchased || previousLevelPurchased;
+                    const group = imageGroups.find(g => g.name === title);
+                    const isPurchased = parsedClinicRooms.includes(title);
+                    const previousLevelPurchased = level === 1 || parsedClinicRooms.includes(levelInfo[level - 2].title);
+                    const isAvailable = !isPurchased && previousLevelPurchased;
 
                     return (
                       <div
                         key={title}
-                        onClick={() => isAvailable && handleLevelClick(level)}
+                        onClick={() => isAvailable && purchasingLevel === null && handleLevelClick(level)}
                         onMouseEnter={() => setHoveredLevel(level)}
                         onMouseLeave={() => setHoveredLevel(null)}
-                        className={`relative cursor-pointer transition-all duration-200 ${isMobile ? 'aspect-[5/2]' : 'aspect-[4/3]'} group w-full ${!isAvailable && 'opacity-50 cursor-not-allowed'}`}
+                        className={`relative cursor-pointer transition-all duration-200 ${isMobile ? 'aspect-[5/2]' : 'aspect-[4/3]'} group w-full ${(!isAvailable || purchasingLevel !== null) && 'opacity-50 cursor-not-allowed'}`}
                       >
                         <div className={`absolute inset-0 transition-all duration-200 
                           ${isPurchased ? 'opacity-100' : 'opacity-100'}
@@ -205,6 +225,14 @@ const ShoppingDistrict = forwardRef<{ open: () => void }, ShoppingDistrictProps>
                             <div className="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center">
                               <div className="text-white text-lg font-bold text-center">
                                 Purchase previous level first
+                              </div>
+                            </div>
+                          )}
+                          {purchasingLevel === level && (
+                            <div className="absolute inset-0 bg-[--theme-gradient-startstreak] bg-opacity-50 flex items-center justify-center">
+                              <div className="flex flex-col items-center gap-2">
+                                <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <div className="text-white text-lg font-bold">Processing...</div>
                               </div>
                             </div>
                           )}

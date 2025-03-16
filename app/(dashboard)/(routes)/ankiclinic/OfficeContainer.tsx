@@ -11,6 +11,7 @@ import { useUserInfo } from "@/hooks/useUserInfo";
 import { useGame } from "@/store/selectors";
 import { useAudio } from "@/store/selectors";
 import { useWindowSize } from '@/store/selectors';
+import { zoomLevels } from './constants';
 
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 
@@ -288,17 +289,6 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
     }
   }, [currentLevel, setActiveRooms]);
 
-  // Define zoom levels for each test level
-  const zoomLevels: Record<number, { scale: number, offsetX: number, offsetY: number }> = {
-    0: { scale: 2, offsetX: -100, offsetY: -580 },
-    1: { scale: 2.3, offsetX: 150, offsetY: -300 },
-    2: { scale: 1.7, offsetX: 150, offsetY: -200 },
-    3: { scale: 1.7, offsetX: 150, offsetY: -200 },
-    4: { scale: 1.7, offsetX: 150, offsetY: -200 },
-    5: { scale: 1.5, offsetX: 50, offsetY: -200 },
-    6: { scale: 1.5, offsetX: 0, offsetY: -200 },
-  };
-
   // Level-specific horizontal adjustment for better centering
   const levelHorizontalAdjustment = useMemo(() => {
     // As level increases, we need to adjust the horizontal position differently
@@ -395,6 +385,8 @@ const OfficeContainer = forwardRef<HTMLDivElement, OfficeContainerProps>(({
       const newPositions = { ...prevPositions };
       const sprite = newPositions[spriteId];
       const currentWaypoint = currentWaypoints[waypointIndexRef.current];
+
+      if (!sprite || !currentWaypoint) return prevPositions;
 
       const speed = 0.07
       const dx = currentWaypoint.x - sprite.x;
