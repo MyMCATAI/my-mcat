@@ -65,17 +65,6 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   useEffect(() => {
     if (!isMounted) {
       setIsMounted(true);
-
-      const timer = setTimeout(() => {
-        const botMessage = `Hey Mike! Welcome back, I've missed seeing ya! This week you've got:\n\n1) a practice test - UWorld at 4:00 PM\n\n2) According to your knowledge profiles, you're weakest in:\n   Biochemistry, Physics, Psychology\n\n3) Your UWorld exam is coming up in 21 days!\n\nHow can I help you prepare today?`;
-        window.dispatchEvent(
-          new CustomEvent("chatbot-event", {
-            detail: { message: botMessage },
-          })
-        );
-      }, 1000);
-
-      return () => clearTimeout(timer);
     }
   }, [isMounted]);
   
@@ -363,7 +352,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   /* ---- ChatBot Settings ----- */
   const flow = {
     start: {
-      message: `Hey Mike! Welcome back, I've missed seeing ya! This week you've got:\n\n1) a practice test - UWorld at 4:00 PM\n\n2) According to your knowledge profiles, you're weakest in:\n   Biochemistry, Physics, Psychology\n\n3) Your UWorld exam is coming up in 21 days!\n\nHow can I help you prepare today?`,
+      message: `Hey Mike! Welcome back, I've missed seeing ya! This week you've got:\n\n1) A full length practice exam on Wednesday \n\n2) According to your knowledge profiles, you're weakest in:\n   Biochemistry, Physics, Psychology\n\n3) Your UWorld exam is coming up in 21 days!\n\nHow can I help you prepare today?`,
       path: "loop",
     },
     loop: {

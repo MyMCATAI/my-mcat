@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";
+import { useUIStore } from "@/store/slices/uiSlice";
 
 /* ----- Types ---- */
 interface Task {
@@ -86,11 +87,6 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
 }) => {
   /* ---- State ----- */
   const [isVisible, setIsVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState<string | null>(() => {
-    // Initialize based on currentPage
-    const matchingItem = NAVIGATION_ITEMS.find(item => item.tab === currentPage);
-    return matchingItem ? matchingItem.id : "kalypso-ai";
-  });
   const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [visibleSection, setVisibleSection] = useState<'nav' | 'tasks'>('nav');
@@ -99,6 +95,12 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   /* ---- Refs --- */
   const sidebarRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  /* ---- Store ----- */
+  const { activeTab, setActiveTab } = useUIStore(state => ({
+    activeTab: state.activeTab,
+    setActiveTab: state.setActiveTab
+  }));
   
   /* --- Animations & Effects --- */
   useEffect(() => {
@@ -112,14 +114,6 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
     
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
-  
-  useEffect(() => {
-    // Update active tab when currentPage changes
-    const matchingItem = NAVIGATION_ITEMS.find(item => item.tab === currentPage);
-    if (matchingItem) {
-      setActiveTab(matchingItem.id);
-    }
-  }, [currentPage]);
   
   useEffect(() => {
     // Handle hover detection on the edge of the screen
@@ -163,7 +157,7 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   };
 
   const handleNavigationClick = (item: NavigationItem) => {
-    setActiveTab(item.id);
+    setActiveTab(item.tab);
     
     if (item.id === 'ankiclinic') {
       console.log(`======== Anki Clinic clicked ${new Date().toISOString()} ========`);

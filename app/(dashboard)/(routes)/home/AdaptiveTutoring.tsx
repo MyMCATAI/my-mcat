@@ -25,7 +25,8 @@ import DiagnosticDialog from "./DiagnosticDialog";
 import ATSTutorial from "./ATSTutorial";
 import CompleteTopicButton from "@/components/CompleteTopicButton";
 import ReactConfetti from "react-confetti";
-import { useVideoControl } from "@/store/video-control";
+import { useUI } from "@/store/selectors";
+import { useATSStore } from "@/store/slices/atsSlice";
 
 interface ContentItem {
   id: string;
@@ -69,7 +70,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   chatbotRef,
   onActivityChange,
 }) => {
-  const { shouldPauseVideo } = useVideoControl();
+  const { activeTab } = useUI();
+  const { videoPause: ATSVideoPauseGlobal, setVideoPause: setATSVideoPauseGlobal, startTimer, resetState, setTimer } = useATSStore();
   const [isFirstVisit] = useState(() => !localStorage.getItem("initialTutorialPlayed"));
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [contentType, setContentType] = useState("video");
@@ -279,39 +281,40 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     }
   }, [currentContentId, content, isPlaying, playedSeconds]);
 
-  const updateContentVisibility = useCallback(
-    (fetchedContent: ContentItem[]) => {
-      const hasVideos = fetchedContent.some((item) => item.type === "video");
-      const hasReadings = fetchedContent.some(
-        (item) => item.type === "reading"
-      );
-
-      if (hasVideos) {
+  // Update content visibility with video pause check
+  const updateContentVisibility = useCallback(async (category: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/content?category=${category}`);
+      if (!response.ok) throw new Error("Failed to fetch content");
+      const data = await response.json();
+      console.log('Content loaded:', data);
+      
+      // Ensure data is properly structured
+      const contentArray = Array.isArray(data) ? data : Array.isArray(data.content) ? data.content : [];
+      setContent(contentArray);
+      
+      // Find first video content
+      const firstVideo = contentArray.find((item: ContentItem) => item.type === "video");
+      if (firstVideo) {
+        console.log('Setting first video as current content:', firstVideo);
+        setCurrentContentId(firstVideo.id);
         setContentType("video");
-      } else if (hasReadings) {
-        setContentType("reading");
-      } else {
-        setContentType("quiz");
+        setATSVideoPauseGlobal(false); // Ensure video starts playing
+        setIsPlaying(true);
       }
-
-      if (hasVideos) {
-        const firstVideo = fetchedContent.find((item) => item.type === "video");
-        if (firstVideo) {
-          setCurrentContentId(firstVideo.id);
-        }
-      } else if (hasReadings) {
-        const firstReading = fetchedContent.find(
-          (item) => item.type === "reading"
-        );
-        if (firstReading) {
-          setCurrentContentId(firstReading.id);
-        }
-      } else {
-        setCurrentContentId(null);
-      }
-    },
-    []
-  );
+    } catch (error) {
+      console.error("Error fetching content:", error);
+      setContent([]);
+      toast({
+        title: "Error",
+        description: "Failed to load content. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast, setATSVideoPauseGlobal]);
 
   const extractVideoId = (url: string) => {
     try {
@@ -328,12 +331,15 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   };
 
   const handleContentClick = (contentId: string) => {
+    console.log('Content clicked:', contentId);
     setCurrentContentId(contentId);
     const clickedContent = content.find((item) => item.id === contentId);
     if (clickedContent) {
       setContentType(clickedContent.type);
+      setATSVideoPauseGlobal(false);
 
       if (clickedContent.type === "video") {
+        console.log('Setting video to play');
         setIsPlaying(true);
       }
 
@@ -364,7 +370,8 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         throw new Error("Network response was not ok");
       }
       const data = await response.json();
-      return data.content;
+      // Ensure we return an array
+      return Array.isArray(data.content) ? data.content : [];
     } catch (error) {
       console.error("Error fetching content:", error);
       return [];
@@ -375,11 +382,15 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     async (category: string) => {
       setIsLoading(true);
       try {
-        const [contentData] = await Promise.all([fetchContent(category)]);
-        setContent(contentData);
-        updateContentVisibility(contentData);
+        const contentData = await fetchContent(category);
+        // Ensure content is an array before setting it
+        setContent(Array.isArray(contentData) ? contentData : []);
+        if (Array.isArray(contentData) && contentData.length > 0) {
+          await updateContentVisibility(category);
+        }
       } catch (error) {
         console.error("Error fetching content and questions:", error);
+        setContent([]);
       } finally {
         setIsLoading(false);
       }
@@ -401,11 +412,35 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         (item) => item.type === "video" || item.type === "reading"
       );
       if (firstItem) {
+        console.log('Found first content item:', firstItem);
         setCurrentContentId(firstItem.id);
         setContentType(firstItem.type);
+        if (firstItem.type === "video") {
+          console.log('Setting initial video state - isPlaying:', !ATSVideoPauseGlobal);
+          setIsPlaying(!ATSVideoPauseGlobal);
+        }
       }
     }
-  }, [content]);
+  }, [content, ATSVideoPauseGlobal]);
+
+  // Add effect to monitor video state changes
+  useEffect(() => {
+    console.log('Video state changed - isPlaying:', isPlaying, 'ATSVideoPauseGlobal:', ATSVideoPauseGlobal);
+  }, [isPlaying, ATSVideoPauseGlobal]);
+
+  const currentContent = content.find((item) => item.id === currentContentId);
+
+  // Add effect to monitor content changes
+  useEffect(() => {
+    if (currentContent) {
+      console.log('Current content changed:', {
+        id: currentContent.id,
+        type: currentContent.type,
+        title: currentContent.title,
+        link: currentContent.link
+      });
+    }
+  }, [currentContent]);
 
   const handleCameraClick = () => {
     setContentType("video");
@@ -418,7 +453,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
   };
 
   const handleBookClick = () => {
-
     setContentType("reading");
 
     const firstPDF = content.find((item) => item.type === "reading");
@@ -460,11 +494,9 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     
     if (existingContent.length > 0) {
       setContent(existingContent);
-      updateContentVisibility(existingContent);
+      updateContentVisibility(selectedCategory);
     }
   };
-
-  const currentContent = content.find((item) => item.id === currentContentId);
 
   const formatSummary = (summary: string) => {
     return summary
@@ -710,6 +742,13 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
     }
   }, []);
 
+  // Add effect to reset timer when switching away from ATS tab
+  useEffect(() => {
+    if (activeTab !== 'AdaptiveTutoringSuite') {
+      resetState();
+    }
+  }, [activeTab, resetState]);
+
   return (
     <div className="relative p-2 h-full flex flex-col overflow-visible">
       {showConfetti && (
@@ -905,25 +944,16 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                   </div>
                   {selectedCategory && (
                     <div className="absolute left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      {categories.find(
-                        (cat) => cat.conceptCategory === selectedCategory
-                      )?.isCompleted ? (
-                        <p className="text-green-500 flex items-center">
-                          <Check className="w-4 h-4 mr-1" />
-                          Completed
-                        </p>
-                      ) : (
-                        <CompleteTopicButton
-                          categoryId={
-                            categories.find(
-                              (cat) => cat.conceptCategory === selectedCategory
-                            )?.id || ""
-                          }
-                          categoryName={selectedCategory}
-                          onComplete={handleTopicComplete}
-                          setShowConfetti={setShowConfetti}
-                        />
-                      )}
+                      <CompleteTopicButton
+                        categoryId={
+                          categories.find(
+                            (cat) => cat.conceptCategory === selectedCategory
+                          )?.id || ""
+                        }
+                        categoryName={selectedCategory}
+                        onComplete={handleTopicComplete}
+                        setShowConfetti={setShowConfetti}
+                      />
                     </div>
                   )}
                 </div>
@@ -999,14 +1029,41 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
                         <ReactPlayer
                           className="w-full h-full"
                           url={currentContent.link}
-                          playing={isPlaying && !shouldPauseVideo}
+                          playing={isPlaying && !ATSVideoPauseGlobal}
                           width="100%"
                           height="100%"
-                          onProgress={({ playedSeconds }) =>
-                            setPlayedSeconds(playedSeconds)
-                          }
-                          onEnded={() => setIsPlaying(false)}
                           controls={true}
+                          onProgress={({ playedSeconds }) => {
+                            setPlayedSeconds(playedSeconds);
+                            setTimer(playedSeconds);
+                          }}
+                          onReady={() => {
+                            console.log('Video ready to play');
+                            setIsPlaying(true);
+                            startTimer();
+                          }}
+                          onPlay={() => {
+                            console.log('Video playing');
+                            setIsPlaying(true);
+                          }}
+                          onPause={() => {
+                            console.log('Video paused');
+                            setIsPlaying(false);
+                            setATSVideoPauseGlobal(true);
+                            if (Math.floor(playedSeconds) >= 45) {
+                              toggleChatBot();
+                            }
+                          }}
+                          onEnded={() => {
+                            console.log('Video ended');
+                            setIsPlaying(false);
+                            resetState();
+                          }}
+                          onError={(error) => {
+                            console.error('Video error:', error);
+                            setIsPlaying(false);
+                            resetState();
+                          }}
                         />
                         <div className="mt-4 flex justify-between items-center">
                           <Collapsible open={isSummaryOpen}>

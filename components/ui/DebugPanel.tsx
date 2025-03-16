@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useUI, useUser, useGame, useAudio, useChat } from '@/store/selectors'
-import { useVideoControl } from '@/store/video-control';
+import { useUI, useUser, useGame, useAudio, useChat } from '@/store/selectors';
+import { useATSStore } from '@/store/slices/atsSlice';
 
 /* --- Constants ----- */
 const DEBUG_PARAM = 'debug'
@@ -14,9 +14,9 @@ const DebugPanel = () => {
   const pathname = usePathname() || ''
   const [isDebug, setIsDebug] = useState(false)
   
-  // Zustand state
-  const videoState = useVideoControl()
-  const uiState = useUI()
+  // Zustand state - selective subscriptions to avoid unnecessary re-renders
+  const { activeTab, currentRoute, theme, window } = useUI()
+  const { timerFormatted, videoPause } = useATSStore()
   const userState = useUser()
   const gameState = useGame()
   const audioState = useAudio()
@@ -86,8 +86,26 @@ const DebugPanel = () => {
       <h3 className="text-lg font-bold mb-2">Debug Panel</h3>
       <div className="grid grid-cols-1 gap-2">
         <div>
-          <h4 className="font-bold">Video Control State</h4>
-          <pre>{JSON.stringify({ shouldPauseVideo: videoState.shouldPauseVideo }, null, 2)}</pre>
+          <h4 className="font-bold">UI State</h4>
+          <pre>{JSON.stringify({
+            activeTab,
+            currentRoute,
+            theme,
+            window
+          }, null, 2)}</pre>
+        </div>
+        <hr className="border-white/30 my-2" />
+        <div>
+          <h4 className="font-bold">ATS State</h4>
+          <pre>{JSON.stringify({
+            timer: timerFormatted,
+            videoPause
+          }, null, 2)}</pre>
+        </div>
+        <hr className="border-white/30 my-2" />
+        <div>
+          <h4 className="font-bold">User State</h4>
+          <pre>{JSON.stringify(userState, null, 2)}</pre>
         </div>
         <hr className="border-white/30 my-2" />
         <div>
@@ -104,16 +122,6 @@ const DebugPanel = () => {
         <div>
           <h4 className="font-bold">Game State</h4>
           <pre>{JSON.stringify(gameState, null, 2)}</pre>
-        </div>
-        <hr className="border-white/30 my-2" />
-        <div>
-          <h4 className="font-bold">UI State</h4>
-          <pre>{JSON.stringify(uiState, null, 2)}</pre>
-        </div>
-        <hr className="border-white/30 my-2" />
-        <div>
-          <h4 className="font-bold">User State</h4>
-          <pre>{JSON.stringify(userState, null, 2)}</pre>
         </div>
       </div>
     </div>
