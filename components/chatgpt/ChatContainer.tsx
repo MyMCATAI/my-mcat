@@ -12,6 +12,7 @@ import { useExamActivities } from "@/hooks/useCalendarActivities";
 import TestCalendar from '@/components/calendar/TestCalendar';
 import { X } from "lucide-react";
 import { CalendarEvent } from "@/types/calendar";
+import TutorReportModal from "./TutorReportModal";
 // Import required CSS for the calendar
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/components/styles/CustomCalendar.css";
@@ -24,7 +25,7 @@ const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
 /* --- Constants ----- */
 const QUICK_ACTIONS = [
   { id: "schedule", text: "What's my schedule?", prompt: "What's on my schedule today?" },
-  { id: "knowledge", text: "What should I focus on?", prompt: "Hey, here are my three weakest categories: Circuits, Organic Compounds and Kinematics. Recommend to me how I should spend my daily 2 hrs to increase my mastery in these?" },
+  { id: "knowledge", text: "What was in my tutor's last report?", prompt: "Show me my tutor's last report" },
   // { id: "next-exam", text: "Next exam?", prompt: "When is my next practice exam?" }
 ];
 
@@ -48,6 +49,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   const [isFirstResponse, setIsFirstResponse] = useState(true);
   const [lastToggleTime, setLastToggleTime] = useState<number>(0);
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+  const [isTutorReportOpen, setIsTutorReportOpen] = useState(false);
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
   const [isBotResponding, setIsBotResponding] = useState(false);
   
@@ -285,6 +287,8 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
     setActiveTab(tabId);
     if (tabId === "schedule") {
       setIsCalendarModalOpen(true);
+    } else if (tabId === "knowledge") {
+      setIsTutorReportOpen(true);
     } else {
       const action = QUICK_ACTIONS.find(a => a.id === tabId);
       if (action && chatbotRef) {
@@ -352,7 +356,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   /* ---- ChatBot Settings ----- */
   const flow = {
     start: {
-      message: `Hey Mike! Welcome back, I've missed seeing ya! This week you've got:\n\n1) A full length practice exam on Wednesday \n\n2) According to your knowledge profiles, you're weakest in:\n   Biochemistry, Physics, Psychology\n\n3) Your UWorld exam is coming up in 21 days!\n\nHow can I help you prepare today?`,
+      message: `Meow there, I'm Kalypso! It's great to see you again. Look, you may not have done the best on your last test — with a 492 — but you're getting more consistent! That's a victory! Speaking of which, here's what you have to worry about:\n\n1) Your profile shows that you're not doing as well as you could be in physics so your ATS is mainly physics this week.\n\n2) And you've got a HUGE test on Friday — the next full length exam — so we're going to really focus on that.\n\nWe're still on track for your 510 in three months. Want to hear a joke about physics?`,
       path: "loop",
     },
     loop: {
@@ -578,6 +582,11 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Tutor Report Modal */}
+      {isTutorReportOpen && (
+        <TutorReportModal onClose={() => setIsTutorReportOpen(false)} />
       )}
     </div>
   );
