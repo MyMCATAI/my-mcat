@@ -35,7 +35,7 @@ export const useUserInfo = (): UseUserInfoReturn => {
   const { setIsSubscribed, refreshUserInfo, userInfo } = useUser();
   const [isLoading, setIsLoading] = useState(true);
   const hasInitialized = useRef(false);
-  
+
   const [referrals, setReferrals] = useState<Referral[]>([]);
 
   const fetchUserInfo = useCallback(async () => {
@@ -66,20 +66,28 @@ export const useUserInfo = (): UseUserInfoReturn => {
 
   const updateScore = useCallback(async (amount: number) => {
     try {
-      const response = await fetch('/api/user/score', {
-        method: 'POST',
+      const response = await fetch('/api/user-info', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount })
       });
 
-      if (!response.ok) throw new Error();
+      if (!response.ok) {
+        throw new Error('Failed to update score');
+      }
+
+      const data = await response.json();
 
       // Refresh userInfo to update all components
       await refreshUserInfo();
 
+      // Return the result so the component knows the update was successful
+      return data;
+
     } catch (error) {
       console.error('Failed to update score:', error);
       toast.error('Failed to update score');
+      throw error; // Re-throw to let component know update failed
     }
   }, [refreshUserInfo]);
 
@@ -268,12 +276,12 @@ export const useUserInfo = (): UseUserInfoReturn => {
   return {
     userInfo: userInfo as UserInfo | null,
     isLoading,
-    isSubscribed: 
-      userInfo?.subscriptionType?.startsWith('Gold') || 
-      userInfo?.subscriptionType === 'gold' || 
+    isSubscribed:
+      userInfo?.subscriptionType?.startsWith('Gold') ||
+      userInfo?.subscriptionType === 'gold' ||
       userInfo?.subscriptionType === 'premium' ||
-      userInfo?.subscriptionType?.includes('_Trial') || 
-      isNewUserTrial || 
+      userInfo?.subscriptionType?.includes('_Trial') ||
+      isNewUserTrial ||
       false,
     updateScore,
     updateNotificationPreference,

@@ -14,7 +14,6 @@ import TestingSuit from "./TestingSuit";
 import ThemeSwitcher from "@/components/home/ThemeSwitcher";
 import FlashcardDeck from "./FlashcardDeck";
 import PracticeTests from "./PracticeTests";
-import StreakPopup from "@/components/score/StreakDisplay";
 import { checkProStatus, shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
@@ -571,13 +570,6 @@ const HomePage: React.FC = () => {
               onClose={() => updatePageState({ showReferralModal: false })}
             />
           )}
-          {pageState.showStreakPopup && (
-            <StreakPopup 
-              isOpen={pageState.showStreakPopup}
-              onClose={() => updatePageState({ showStreakPopup: false })}
-              streak={pageState.userStreak}
-            />
-          )}
         </ContentWrapper>
       </>
     );
@@ -598,8 +590,6 @@ const HomePage: React.FC = () => {
     handleActivityChange,
     pageTitle,
     pageState.showReferralModal,
-    pageState.showStreakPopup,
-    pageState.userStreak,
     router,
     updateChatbotContext
   ]);

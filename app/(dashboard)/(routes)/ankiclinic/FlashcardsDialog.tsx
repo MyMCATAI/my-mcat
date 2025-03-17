@@ -300,7 +300,7 @@ const FlashcardsDialog = forwardRef<{ open: () => void, setWrongCards: (cards: a
         <DialogContent 
           className={`${
             isMobile ? 'max-w-[98vw] h-[85vh] p-3 overflow-hidden' : 'max-w-[80vw] h-[80vh]'
-          } gradientbg border text-[--theme-text-color] border-[--theme-border-color] flex flex-col z-[100] focus:outline-none rounded-xl`}
+          } gradientbg border text-[--theme-text-color] border-[--theme-border-color] flex flex-col focus:outline-none rounded-xl`}
           onKeyDown={handleKeyDown}
         >
           <DialogHeader className={`mb-2 flex-shrink-0 ${isMobile ? 'px-2' : 'px-6'}`}>

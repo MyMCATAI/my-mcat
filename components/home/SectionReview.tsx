@@ -8,6 +8,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Confetti from 'react-confetti';
 import { useDataPulse } from '@/hooks/useDataPulse';
 import { toast } from 'react-hot-toast';
+import { TASK_REWARDS } from "@/lib/coin/constants";
 
 
 export interface Section {
@@ -157,7 +158,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
       const response = await fetch('/api/user-info', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: 1 }),
+        body: JSON.stringify({ amount: TASK_REWARDS.COMPLETE_ATS_TOPIC }),
       });
 
       if (!response.ok) {
@@ -165,7 +166,7 @@ const SectionReview: React.FC<SectionReviewProps> = ({
       }
       
       // Show toast message
-      toast.success("Congratulations! You've earned 1 coin for reviewing the section!");
+      toast.success(`Congratulations! You've earned ${TASK_REWARDS.COMPLETE_ATS_TOPIC} coin for reviewing the section!`);
 
       // Call the onComplete callback to update frontend state
       onComplete();

@@ -1109,3 +1109,14 @@ html::-webkit-scrollbar {
   transition: none !important;
   animation-duration: 0ms !important;
 }
+
+.toast-container {
+  position: relative;
+  z-index: 2147483647;
+}
+
+body>.toast-container {
+  position: fixed;
+  pointer-events: none;
+  inset: 0;
+}
