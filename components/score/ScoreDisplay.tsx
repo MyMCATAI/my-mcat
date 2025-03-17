@@ -2,9 +2,10 @@ import Image from 'next/image';
 
 interface ScoreDisplayProps {
   score: number;
+  textClassName?: string;
 }
 
-const ScoreDisplay = ({ score }: ScoreDisplayProps) => {
+const ScoreDisplay = ({ score, textClassName="font-bold text-2xl" }: ScoreDisplayProps) => {
   return (
     <div 
       className="flex items-center gap-2 rounded-2xl px-4 py-2 transition-all duration-200"
@@ -15,7 +16,7 @@ const ScoreDisplay = ({ score }: ScoreDisplayProps) => {
       }}
     >
       <span 
-        className="font-bold text-2xl" 
+        className={textClassName} 
         style={{ color: 'var(--theme-text-color)' }}
       >
         {score}

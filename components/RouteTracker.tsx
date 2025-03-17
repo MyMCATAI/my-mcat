@@ -23,23 +23,65 @@ const RouteTracker = () => {
   const stopLoop = useAudioStore(state => state.stopLoop);
   const currentLoop = useAudioStore(state => state.currentLoop);
 
-  console.log('[RouteTracker] Component rendered with pathname:', pathname);
-  console.log('[RouteTracker] Current loop state:', currentLoop);
+  // Handle immediate redirection for users with no userInfo
+  useEffect(() => {
+    // Define exempt paths that should never redirect to onboarding
+    const exemptPaths = [
+      '/auth',
+      '/api',
+      '/redirect',
+      '/sign-in',
+      '/sign-up',
+      '/login',
+      '/register'
+    ];
+
+    // If user is signed in but has no userInfo, redirect to onboarding immediately
+    if (isSignedIn && !profileLoading && !userInfo) {
+      // Only allow exempt paths to proceed without redirection
+      if (!exemptPaths.some(path => pathname.startsWith(path))) {
+        router.push('/onboarding');
+      }
+    }
+  }, [isSignedIn, userInfo, profileLoading, pathname, router]);
 
   // Track route changes
   useEffect(() => {
     if (pathname) {
-      console.log('[RouteTracker] Route change effect triggered with pathname:', pathname);
       setCurrentRoute(pathname);
+
+      // Define exempt paths that should never redirect to onboarding
+      const exemptPaths = [
+        '/auth',
+        '/api',
+        '/redirect',
+        '/sign-in',
+        '/sign-up',
+        '/login',
+        '/register'
+      ];
+
+      // Skip remaining redirection checks for exempt paths
+      if (exemptPaths.some(path => pathname.startsWith(path))) {
+        return;
+      }
+
+      // Only redirect to onboarding if:
+      // 1. User is signed in
+      // 2. Not already on onboarding page
+      // 3. Not in loading state
+      // 4. Onboarding is not complete
+      if (isSignedIn && !profileLoading && pathname !== '/onboarding') {
+        if (!onboardingComplete) {
+          router.push('/onboarding');
+          return;
+        }
+      }
     }
-  }, [pathname, setCurrentRoute]);
+  }, [pathname, setCurrentRoute, isSignedIn, userInfo, onboardingComplete, profileLoading, router]);
 
   // Handle ambient sound cleanup on route changes
-  useEffect(() => {
-    console.log('[RouteTracker] Audio cleanup effect triggered');
-    console.log('[RouteTracker] Current pathname:', pathname);
-    console.log('[RouteTracker] Current loop:', currentLoop);
-    
+  useEffect(() => {    
     // Only stop the ambient loop if we're not in AnkiClinic and it's currently playing
     if (currentLoop === 'flashcard-loop-catfootsteps' && !pathname?.startsWith('/ankiclinic')) {
       console.log('[RouteTracker] Stopping ambient loop - route changed to:', pathname);
@@ -47,17 +89,28 @@ const RouteTracker = () => {
     }
   }, [pathname]); // Only depend on pathname changes, not currentLoop
 
-  // Track when initial loading is complete
+  // Track when initial loading is complete - skip for onboarding
   useEffect(() => {
+    // Skip loading state tracking if we're on onboarding
+    if (pathname === '/onboarding') {
+      setInitialLoadComplete(true);
+      return;
+    }
+
     // Consider data loaded when both profile and stats are loaded
     // and we have userInfo data
     if (!profileLoading && !statsLoading && userInfo && !initialLoadComplete) {
       setInitialLoadComplete(true);
     }
-  }, [profileLoading, statsLoading, userInfo, initialLoadComplete]);
+  }, [profileLoading, statsLoading, userInfo, initialLoadComplete, pathname]);
 
   // Handle redirection logic
   useEffect(() => {
+    // Skip redirection checks if we're on onboarding
+    if (pathname === '/onboarding') {
+      return;
+    }
+
     // Only proceed if we have user info, a valid pathname, and initial loading is complete
     // IMPORTANT: Also check if the user is signed in before redirecting
     if (!userInfo || !pathname || !initialLoadComplete || !isSignedIn) {
