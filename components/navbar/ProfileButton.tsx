@@ -1,10 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { useClerk, useUser as useClerkUser } from '@clerk/nextjs';
 import { FaUser, FaUserCog, FaSignOutAlt } from 'react-icons/fa';
 import UserProfileModal from '../social/profile/UserProfileModal';
 import { useUser } from '@/store/selectors';
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
+
+const ProfileImage = memo(({ profilePhoto }: { profilePhoto: string | undefined }) => {
+  return (
+    <Image
+      key={profilePhoto} // Now safe to use key here since component is memoized
+      src={`/profile-photo/${profilePhoto || 'doctor.png'}`}
+      alt="Profile"
+      width={64}
+      height={64}
+      className="w-full h-full object-cover opacity-0 transition-opacity duration-300"
+      quality={100}
+      onLoad={(e) => {
+        (e.target as HTMLImageElement).classList.remove('opacity-0');
+      }}
+      priority
+      unoptimized
+    />
+  );
+});
+
+ProfileImage.displayName = 'ProfileImage';
 
 export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -52,21 +73,7 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-[--theme-hover-color] border-t-transparent" />
           </div>
         ) : (
-          <Image
-            key={profile?.profilePhoto}
-            src={`/profile-photo/${profile?.profilePhoto || 'doctor.png'}`}
-            alt="Profile"
-            width={64}
-            height={64}
-            className="w-full h-full object-cover transition-opacity duration-300"
-            quality={100}
-            style={{ opacity: 0 }}
-            onLoad={(e) => {
-              (e.target as HTMLImageElement).style.opacity = "1";
-            }}
-            priority
-            unoptimized
-          />
+          <ProfileImage profilePhoto={profile?.profilePhoto} />
         )}
       </button>
 

@@ -52,6 +52,11 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
     e.preventDefault();
     if (loading) return;
 
+    if (!selectedSchool) {
+      alert("Please select a medical school from the dropdown list");
+      return;
+    }
+
     const scoreNum = parseInt(targetScore);
     if (isNaN(scoreNum) || scoreNum < 472 || scoreNum > 528) {
       alert("Please enter a valid MCAT score between 472 and 528");
@@ -62,7 +67,7 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
     try {
       await onSubmit({
         targetScore: scoreNum,
-        targetMedSchool: selectedSchool ? selectedSchool.name : medSchoolQuery,
+        targetMedSchool: selectedSchool.name,
       });
     } finally {
       setLoading(false);
@@ -132,6 +137,31 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
                 required
                 disabled={loading}
               />
+              {isSearching && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <svg className="animate-spin h-5 w-5 text-white/60" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                </div>
+              )}
+              {!isSearching && !selectedSchool && medSchoolQuery.length > 0 && medSchoolSuggestions.length === 0 && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400 text-sm">
+                  No schools found
+                </div>
+              )}
               {medSchoolSuggestions.length > 0 && isMedSchoolInputFocused && (
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }}
@@ -209,8 +239,8 @@ export function GoalsStep({ onSubmit, initialValues = {} }: GoalsStepProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
           type="submit"
-          disabled={loading || !targetScore || !medSchoolQuery.trim() || !isValidScore(targetScore)}
-          className="w-full bg-white/10 backdrop-blur-md hover:bg-white/20 text-white 
+          disabled={loading || !selectedSchool || !targetScore || !isValidScore(targetScore)}
+          className="w-full bg-white/10 backdrop-blur-md hover:bg-white/20 text-white hover:bg-white/20
                      px-6 py-3 rounded-xl transition-all duration-300 
                      focus:outline-none focus:ring-2 focus:ring-blue-500/50
                      disabled:opacity-50 disabled:cursor-not-allowed"

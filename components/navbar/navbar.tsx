@@ -68,14 +68,15 @@ const Navbar = ({ subscription = "free" }: NavbarProps) => {
               ref={ballerSectionRef}
               className="flex items-center justify-center w-full h-full gradientbg"
               style={{
-                clipPath: "polygon(100% 0%, 100% 51%, 100% 73%, 18% 72%, 11% 48%, 0 0)",
+                clipPath: "polygon(100% 0%, 100% 51%, 100% 80%, 18% 80%, 11% 48%, 0 0)",
                 opacity: 1,
-                minWidth: "240px", // Ensure enough width for the text
-                height: "64px", // Match navbar height
-                marginRight: "0" // Align with content area
+                minWidth: "240px",
+                width: "100%",
+                height: "74px",
+                marginRight: "-1px"
               }}
             >
-              <div className="flex items-center h-full" style={{ marginLeft: "30px" }}>
+              <div className="flex items-center h-full ml-[30px]">
                 <div className="flex flex-col justify-center">
                   <p className="text-xs whitespace-nowrap" style={{ color: 'var(--theme-text-color)' }}>
                     designed by <br />a certified baller
@@ -121,8 +122,10 @@ const Navbar = ({ subscription = "free" }: NavbarProps) => {
               ref={ballerSectionRef}
               className="flex items-start w-full h-full gradientbg mr-[-1px]"
               style={{
-                clipPath: "polygon(100% 0%, 100% 51%, 100% 73%, 18% 72%, 11% 48%, 0 0)",
+                clipPath: "polygon(100% 0%, 100% 51%, 100% 80%, 18% 80%, 11% 48%, 0 0)",
                 opacity: 1,
+                width: "100%",
+                height: "74px"
               }}
             >
               <p className="ms-12 mt-2 pr-1 text-xs whitespace-nowrap" style={{ color: 'var(--theme-text-color)' }}>

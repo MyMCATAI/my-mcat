@@ -20,6 +20,7 @@ import ClinicHeader from "./components/ClinicHeader";
 import HoverSidebar from "@/components/navigation/HoverSidebar";
 import OfficeContainer from './OfficeContainer';
 import ResourcesMenu from './ResourcesMenu';
+import { useUser } from "@/store/selectors";
 
 // Important UI components with loading fallbacks
 const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
@@ -88,7 +89,8 @@ const DoctorsOfficePage = () => {
   const ambientSoundInitializedRef = useRef(false);
   
   /* ------------------------------------------- Hooks -------------------------------------------- */
-  const { isSubscribed, userInfo, incrementScore, decrementScore, refetch } = useUserInfo();
+  const { isSubscribed, userInfo, incrementScore, decrementScore, refetch, updateScore } = useUserInfo();
+  const { refreshUserInfo } = useUser();
   const audio = useAudio();
   const { startActivity } = useUserActivity();
   const router = useRouter();
@@ -142,6 +144,18 @@ const DoctorsOfficePage = () => {
     return unlocks?.includes('game');
   }, [userInfo?.unlocks]);
 
+  // Parse clinicRooms string into array
+  const parsedClinicRooms = useMemo(() => {
+    if (!userInfo?.clinicRooms || userInfo.clinicRooms === "undefined") return [];
+    
+    try {
+      return JSON.parse(userInfo.clinicRooms);
+    } catch (error) {
+      console.error('Error parsing clinicRooms:', error);
+      return [];
+    }
+  }, [userInfo?.clinicRooms]);
+
   /* ----------------------------------------- Callbacks ------------------------------------------ */
 
   const fetchUserResponses = useCallback(async (testId: string) => {
@@ -176,7 +190,6 @@ const DoctorsOfficePage = () => {
   const updateVisibleImages = useCallback((newVisibleImages: Set<string>) => {
     setVisibleImages(newVisibleImages);
   }, []);
-
 
   // Create a stable callback for setting the function
   const handleSetPopulateRooms = useCallback((fn: () => GridImage[]) => {
@@ -225,13 +238,6 @@ const DoctorsOfficePage = () => {
   useEffect(() => {
     if (!isBrowser) return;
     
-    console.log('[AnkiClinic] Audio initialization starting');
-    console.log('[AnkiClinic] Current audio state:', {
-      isFlashcardsOpen,
-      currentLoop: audio.currentLoop,
-      ambientSoundInitialized: ambientSoundInitializedRef.current
-    });
-    
     // Set mounted flag only once
     isMountedRef.current = true;
     
@@ -239,51 +245,32 @@ const DoctorsOfficePage = () => {
     let timeoutId: NodeJS.Timeout | undefined;
     
     const initializeAmbientSound = () => {
-      console.log('[AnkiClinic] Attempting to initialize ambient sound');
-      console.log('[AnkiClinic] Conditions:', {
-        ambientSoundInitialized: ambientSoundInitializedRef.current,
-        isFlashcardsOpen,
-        currentLoop: audio.currentLoop
-      });
-      
       // Only initialize if not already initialized, flashcards are not open, and no loop is currently playing
       if (!ambientSoundInitializedRef.current && !isFlashcardsOpen && !audio.currentLoop) {
-        console.log('[AnkiClinic] All conditions met, playing ambient sound');
-        console.log('[AnkiClinic] Using sound file:', AMBIENT_SOUND);
         // Set the flag before playing to prevent race conditions
         ambientSoundInitializedRef.current = true;
         audio.playLoop(AMBIENT_SOUND);
-      } else {
-        console.log('[AnkiClinic] Conditions not met for ambient sound initialization');
       }
     };
     
     // Handle flashcard state changes
     if (isFlashcardsOpen) {
-      console.log('[AnkiClinic] Flashcards open, checking if need to stop ambient sound');
       if (audio.currentLoop === AMBIENT_SOUND) {
-        console.log('[AnkiClinic] Stopping ambient sound due to flashcards');
         audio.stopLoop();
       }
     } else if (!audio.currentLoop) {
-      console.log('[AnkiClinic] No loop playing, checking if should start ambient sound');
       // If no loop is playing, initialize with a small delay
       if (!timeoutId && !ambientSoundInitializedRef.current) {
-        console.log('[AnkiClinic] Setting up delayed ambient sound initialization');
         // Clear any existing timeout to prevent multiple initializations
         if (timeoutId) clearTimeout(timeoutId);
         
         timeoutId = setTimeout(() => {
-          console.log('[AnkiClinic] Delayed initialization triggered');
           // Double-check conditions before initializing
           if (!ambientSoundInitializedRef.current && !isFlashcardsOpen && !audio.currentLoop) {
             initializeAmbientSound();
-          } else {
-            console.log('[AnkiClinic] Conditions changed during delay, skipping initialization');
           }
         }, 1000);
       } else if (ambientSoundInitializedRef.current) {
-        console.log('[AnkiClinic] Ambient sound was initialized before, restarting');
         // Only restart if we've initialized before but no loop is playing
         audio.playLoop(AMBIENT_SOUND);
       }
@@ -291,9 +278,7 @@ const DoctorsOfficePage = () => {
     
     // Cleanup on unmount
     return () => {
-      console.log('[AnkiClinic] Running cleanup');
       if (timeoutId) {
-        console.log('[AnkiClinic] Clearing timeout');
         clearTimeout(timeoutId);
       }
       
@@ -301,18 +286,10 @@ const DoctorsOfficePage = () => {
       const isRealUnmount = document.visibilityState === 'hidden' || 
                             (officeContainerRef.current && !document.body.contains(officeContainerRef.current));
       
-      console.log('[AnkiClinic] Unmount check:', {
-        isRealUnmount,
-        visibilityState: document.visibilityState,
-        containerInDocument: officeContainerRef.current && document.body.contains(officeContainerRef.current)
-      });
-      
       if (isRealUnmount) {
-        console.log('[AnkiClinic] Real unmount detected, cleaning up audio');
         isMountedRef.current = false;
         
         if (audio.currentLoop === AMBIENT_SOUND) {
-          console.log('[AnkiClinic] Stopping ambient sound loop');
           audio.stopLoop();
           ambientSoundInitializedRef.current = false;
         }
@@ -565,46 +542,41 @@ const DoctorsOfficePage = () => {
     const group = imageGroups.find((g) => g.name === groupName);
     if (!group) return;
 
-    const allVisible = group.items.every((item) => visibleImages.has(item.id));
-
-    if (allVisible) {
+    // Buying logic
+    if (userInfo?.score && userInfo.score < group.cost) {
+      toast.error(`You need ${group.cost} coins to buy ${groupName}.`);
       return;
-    } else {
-      // Buying logic
-      if (userInfo?.score && userInfo.score < group.cost) {
-        toast.error(`You need ${group.cost} coins to buy ${groupName}.`);
-        return;
-      }
+    }
 
-      try {
-        const response = await fetch("/api/clinic", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ room: groupName, cost: group.cost }),
-        });
+    try {
+      const response = await fetch("/api/clinic", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ room: groupName, cost: group.cost }),
+      });
 
-        if (!response.ok) throw new Error();
-        const { rooms: updatedRooms } = await response.json();
-        
-        // Update the store with the new room
-        unlockRoom(groupName);
-        
-        await decrementScore();
-        setVisibleImages((prev) => {
-          const newSet = new Set(prev);
-          group.items.forEach((item) => newSet.add(item.id));
-          return newSet;
-        });
-        // Refetch user data after successful purchase
-        await fetchData();
+      if (!response.ok) throw new Error();
+      const { rooms: updatedRooms } = await response.json();
+      
+      // Update the store with the new room
+      unlockRoom(groupName);
+      
+      // Refresh user info to update coins and rooms in UI
+      await refreshUserInfo();
+      
+      // Update visible images
+      setVisibleImages((prev) => {
+        const newSet = new Set(prev);
+        group.items.forEach((item) => newSet.add(item.id));
+        return newSet;
+      });
 
-        toast.success(`Added ${groupName} to your clinic!`);
-      } catch (error) {
-        console.error("Error updating clinic rooms:", error);
-        toast.error(
-          (error as Error).message || "Failed to update clinic rooms"
-        );
-      }
+      toast.success(`Added ${groupName} to your clinic!`);
+    } catch (error) {
+      console.error("Error updating clinic rooms:", error);
+      toast.error(
+        (error as Error).message || "Failed to update clinic rooms"
+      );
     }
   };
 
@@ -670,9 +642,9 @@ const DoctorsOfficePage = () => {
       
       toast.success(
         <div>
-          <p className="font-bold mb-1">New game started!</p>
-          <p className="text-sm mb-1">Selected rooms:</p>
-          <ul className="text-sm list-disc list-inside">
+          <p className="font-bold mb-1 text-gray-900 dark:text-gray-100">New game started!</p>
+          <p className="text-sm mb-1 text-gray-600 dark:text-gray-300">Selected rooms:</p>
+          <ul className="text-sm list-disc list-inside text-gray-600 dark:text-gray-300">
             {roomNames.map((name, index) => (
               <li key={`room-name-${index}`}>{name}</li>
             ))}
@@ -1049,21 +1021,6 @@ const DoctorsOfficePage = () => {
         </div>
       )}
 
-      {/* Desktop only - Marketplace button */}
-      {!isMobile && (
-        <div className="absolute bottom-4 left-[calc(25%+120px)] z-50">
-          <button 
-            className="text-sm text-white font-bold flex items-center p-2 bg-[--theme-gradient-startstreak] rounded-lg"
-            onClick={() => setIsMarketplaceOpen(true)}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            Marketplace
-          </button>
-        </div>
-      )}
-
       {/* Desktop only - New Game button */}
       {!isMobile  && (
         <div className="absolute top-6 left-4 ml-[calc(25%+16px)] flex gap-2 z-50">
@@ -1073,18 +1030,17 @@ const DoctorsOfficePage = () => {
         </div>
       )}
 
-      {/* Add ShoppingDialog */}
-      {isMarketplaceOpen && (
-        <ShoppingDialog
-          ref={marketplaceDialogRef}
-          imageGroups={imageGroups}
-          visibleImages={visibleImages}
-          toggleGroup={toggleGroup}
-          userScore={userInfo?.score || 0}
-          isOpen={isMarketplaceOpen}
-          onOpenChange={setIsMarketplaceOpen}
-        />
-      )}
+      {/* Add ShoppingDialog - always mounted */}
+      <ShoppingDialog
+        ref={marketplaceDialogRef}
+        imageGroups={imageGroups}
+        visibleImages={visibleImages}
+        toggleGroup={toggleGroup}
+        userScore={userInfo?.score || 0}
+        isOpen={isMarketplaceOpen}
+        onOpenChange={setIsMarketplaceOpen}
+        clinicRooms={userInfo?.clinicRooms || "[]"}
+      />
     </div>
   );
 };

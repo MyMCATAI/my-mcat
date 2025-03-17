@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { useOnboardingInfo } from "@/hooks/useOnboardingInfo";
-import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { UnlockOptions } from "./components/UnlockOptions";
 import { FriendReferral } from "./components/FriendReferral";
@@ -14,40 +13,6 @@ import { CollegeStep } from "./components/steps/CollegeStep";
 import { AcademicsStep } from "./components/steps/AcademicsStep";
 import { GoalsStep } from "./components/steps/GoalsStep";
 import { KalypsoDialogueStep } from "./components/steps/KalypsoDialogueStep";
-
-// Add this component at the top of the file, after imports
-const MigrationLoading = () => {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#001226]">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center space-y-6"
-      >
-        <div className="w-64 h-64 mx-auto mb-8">
-          <Image
-            src="/kalypsodiagnostic.png"
-            alt="Kalypso Loading"
-            width={256}
-            height={256}
-            className="rounded-full"
-          />
-        </div>
-        <h2 className="text-2xl font-light text-white">
-          Migrating Your Study Plan...
-        </h2>
-        <p className="text-blue-300/80 max-w-md mx-auto">
-          Please wait while we migrate your study data. Kalypso is working hard to transfer all your progress!
-        </p>
-        <div className="flex justify-center mt-8">
-          <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-        </div>
-      </motion.div>
-    </div>
-  );
-};
-
-type OnboardingStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 const ONBOARDING_STEPS = {
   NAME: 1,
@@ -72,133 +37,40 @@ export default function OnboardingPage() {
     currentStep 
   } = useOnboardingInfo();
   const router = useRouter();
-  const [isMigrating, setIsMigrating] = useState(false);
 
-  // Comment out migration check since it's no longer needed
-  /*
-  useEffect(() => {
-    const checkMigration = async () => {
-      try {
-        setIsMigrating(true);
-        const response = await fetch("/api/user-migration", {
-          method: "POST"
-        });
-        
-        const data = await response.json();
-        
-        if (data.needsMigration && data.migrationComplete) {
-          toast.success(`Successfully migrated account for ${data.email}!`);
-          router.push("/home");
-        } else {
-          setIsMigrating(false);
-        }
-      } catch (error) {
-        console.error("Migration check failed:", error);
-        setIsMigrating(false);
-        toast.error(
-          "Migration failed. Please reach out to josh on Discord or email josh@mymcat.ai for assistance.",
-          { duration: 6000 }
-        );
-      }
-    };
-
-    checkMigration();
-  }, [router]);
-  */
-
-  // Add effect to check for successful payment return
-  useEffect(() => {
-    const checkPaymentAndRedirect = async () => {
-      const searchParams = new URLSearchParams(window.location.search);
-      const paymentStatus = searchParams.get('payment');
-
-      if (paymentStatus === 'success') {
-        router.push('/examcalendar');
-      }
-    };
-
-    checkPaymentAndRedirect();
-  }, [router]);
-
-  // Removed migration check, so no need to show loading
-  // if (isMigrating) {
-  //   return <MigrationLoading />;
-  // }
+  // Render the appropriate step based on currentStep
+  const renderStep = () => {
+    switch (currentStep) {
+      case ONBOARDING_STEPS.NAME:
+        return <NameStep onSubmit={handleNameSubmit} />;
+      case ONBOARDING_STEPS.COLLEGE:
+        return <CollegeStep 
+          onSubmit={handleCollegeSubmit} 
+          firstName={onboardingInfo?.firstName || "Future Doctor"}
+        />;
+      case ONBOARDING_STEPS.ACADEMICS:
+        return <AcademicsStep onSubmit={handleAcademicsSubmit} />;
+      case ONBOARDING_STEPS.GOALS:
+        return <GoalsStep onSubmit={handleGoalsSubmit} />;
+      case ONBOARDING_STEPS.KALYPSO_DIALOGUE:
+        return <KalypsoDialogueStep onComplete={handleKalypsoComplete} />;
+      case ONBOARDING_STEPS.REFERRAL:
+        return <FriendReferral onComplete={handleReferralComplete} createReferral={createReferral} />;
+      case ONBOARDING_STEPS.UNLOCK:
+        return <UnlockOptions />;
+      default:
+        return <NameStep onSubmit={handleNameSubmit} />;
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#001226]">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="w-full max-w-6xl px-4 md:px-8 py-6 md:py-12"
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md p-6"
       >
-        {currentStep === ONBOARDING_STEPS.NAME && (
-          <NameStep 
-            onSubmit={handleNameSubmit}
-            initialValue={onboardingInfo?.firstName || undefined}
-          />
-        )}
-
-        {currentStep === ONBOARDING_STEPS.COLLEGE && (
-          <CollegeStep
-            onSubmit={handleCollegeSubmit}
-            firstName={onboardingInfo?.firstName || "Future Doctor"}
-            initialValues={{
-              college: onboardingInfo?.college || undefined,
-              isNonTraditional: onboardingInfo?.isNonTraditional || undefined,
-              isCanadian: onboardingInfo?.isCanadian || undefined,
-            }}
-          />
-        )}
-
-        {currentStep === ONBOARDING_STEPS.ACADEMICS && (
-          <AcademicsStep
-            onSubmit={handleAcademicsSubmit}
-            initialValues={{
-              gpa: onboardingInfo?.gpa,
-              currentMcatScore: onboardingInfo?.currentMcatScore,
-              hasNotTakenMCAT: onboardingInfo?.hasNotTakenMCAT || undefined,
-              mcatAttemptNumber: onboardingInfo?.mcatAttemptNumber || undefined,
-            }}
-          />
-        )}
-
-        {currentStep === ONBOARDING_STEPS.GOALS && (
-          <GoalsStep
-            onSubmit={handleGoalsSubmit}
-            initialValues={{
-              targetScore: onboardingInfo?.targetScore || undefined,
-              targetMedSchool: onboardingInfo?.targetMedSchool || undefined,
-            }}
-          />
-        )}
-
-        {/* Temporarily removed steps - keeping them commented out for future restoration */}
-        {/* {currentStep === ONBOARDING_STEPS.KALYPSO_DIALOGUE && (
-          <KalypsoDialogueStep
-            onComplete={handleKalypsoComplete}
-            firstName={onboardingInfo?.firstName || undefined}
-            targetScore={onboardingInfo?.targetScore|| undefined}
-            targetMedSchool={onboardingInfo?.targetMedSchool|| undefined}
-          />
-        )} */}
-
-        {/* {currentStep === ONBOARDING_STEPS.REFERRAL && (
-          <FriendReferral 
-            onComplete={handleReferralComplete}
-            createReferral={createReferral}
-          />
-        )} */}
-
-        {/* {currentStep === ONBOARDING_STEPS.UNLOCK && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-8 w-full"
-          >
-            <UnlockOptions />
-          </motion.div>
-        )} */}
+        {renderStep()}
       </motion.div>
     </div>
   );
