@@ -23,6 +23,7 @@ import RedeemReferralModal from '@/components/social/friend-request/RedeemReferr
 import ChatContainer from "@/components/chatgpt/ChatContainer";
 import HoverSidebar from "@/components/navigation/HoverSidebar";
 import KalypsoGreeting from "@/components/home/KalypsoGreeting";
+import DraggableKalypso from "@/components/home/DraggableKalypso";
 
 /* ----------------------------------------- Types ------------------------------------------ */
 interface ContentWrapperProps {
@@ -516,10 +517,6 @@ const HomePage: React.FC = () => {
                     <div className="w-full h-full p-4">
                       <ChatContainer chatbotRef={chatbotRef} />
                     </div>
-                    {/* Position Kalypso in the bottom right corner of the chat area */}
-                    <div className="absolute bottom-0 right-0 z-50 pointer-events-none" style={{ marginBottom: '-20px', marginRight: '-80px', transform: 'translate(0, 0)' }}>
-                      <KalypsoGreeting />
-                    </div>
                   </div>
                 )}
                 {pageState.activeTab === 'Summary' && (
@@ -586,6 +583,11 @@ const HomePage: React.FC = () => {
             />
           )}
         </ContentWrapper>
+
+        {/* Draggable Kalypso at page level - only visible when KalypsoAI tab is active */}
+        {(pageState.activeTab === 'KalypsoAI' || !pageState.activeTab) && (
+          <DraggableKalypso buttonSize="25rem" />
+        )}
       </>
     );
   }, [
