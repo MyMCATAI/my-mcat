@@ -40,7 +40,7 @@ const Navbar = ({ subscription = "free" }: NavbarProps) => {
   }
 
   return (
-    <nav className="flex items-center justify-between bg-black/80 backdrop-blur-sm h-16 relative z-[50] shadow-md">
+    <nav className="flex items-center justify-between bg-transparent h-16 relative z-[40]">
       {isDesktop ? (
         // Desktop layout - matching main branch styling
         <div className="flex items-center justify-between w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem]">
