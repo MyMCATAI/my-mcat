@@ -1,0 +1,2254 @@
+initializationContentScript.js:1 Chrome storage API available, initializing emoji style sync
+content.js:1 [Deprecation] Listener added for a 'DOMNodeInserted' mutation event. Support for this event type has been removed, and this event will no longer be fired. See https://chromestatus.com/feature/5083947249172480 for more information.
+(anonymous) @ content.js:1
+j @ jquery.js:2
+fireWith @ jquery.js:2
+ready @ jquery.js:2
+I @ jquery.js:2
+contentScript.js:2 Chrome storage API available, initializing emoji style sync
+clerk.browser.js:1 Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview Error Component Stack
+    at ClerkContextProvider (index.mjs:1794:11)
+    at ClerkProviderBase (index.mjs:1869:11)
+    at Hoc (index.mjs:113:1)
+    at ClerkNextOptionsProvider (NextOptionsContext.js:9:11)
+    at ClientClerkProvider (ClerkProvider.tsx:61:11)
+    at ClerkProvider [Server] (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at DevRootNotFoundBoundary (dev-root-not-found-boundary.tsx:20:3)
+    at ReactDevOverlay (ReactDevOverlay.tsx:98:3)
+    at HotReload (hot-reloader-client.tsx:452:3)
+    at Router (app-router.tsx:300:9)
+    at ErrorBoundaryHandler (error-boundary.tsx:68:11)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at AppRouter (app-router.tsx:716:3)
+    at ServerRoot (app-index.tsx:126:13)
+    at Root (app-index.tsx:133:17)
+overrideMethod @ hook.js:608
+warnOnce @ clerk.browser.js:1
+(anonymous) @ clerk.browser.js:1
+loadClerkJS @ index.mjs:1646
+_IsomorphicClerk @ index.mjs:1547
+getOrCreateInstance @ index.mjs:1557
+eval @ index.mjs:1849
+mountMemo @ react-dom.development.js:12600
+useMemo @ react-dom.development.js:13305
+useMemo @ react.development.js:2536
+useLoadedIsomorphicClerk @ index.mjs:1849
+ClerkContextProvider @ index.mjs:1795
+renderWithHooks @ react-dom.development.js:11121
+mountIndeterminateComponent @ react-dom.development.js:16869
+beginWork$1 @ react-dom.development.js:18458
+beginWork @ react-dom.development.js:26927
+performUnitOfWork @ react-dom.development.js:25748
+workLoopConcurrent @ react-dom.development.js:25734
+renderRootConcurrent @ react-dom.development.js:25690
+performConcurrentWorkOnRoot @ react-dom.development.js:24504
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+clerk.browser.js:1 Clerk: The prop "afterSignInUrl" is deprecated and should be replaced with the new "fallbackRedirectUrl" or "forceRedirectUrl" props instead. Learn more: https://clerk.com/docs/guides/custom-redirects#redirect-url-props Error Component Stack
+    at ClerkContextProvider (index.mjs:1794:11)
+    at ClerkProviderBase (index.mjs:1869:11)
+    at Hoc (index.mjs:113:1)
+    at ClerkNextOptionsProvider (NextOptionsContext.js:9:11)
+    at ClientClerkProvider (ClerkProvider.tsx:61:11)
+    at ClerkProvider [Server] (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at DevRootNotFoundBoundary (dev-root-not-found-boundary.tsx:20:3)
+    at ReactDevOverlay (ReactDevOverlay.tsx:98:3)
+    at HotReload (hot-reloader-client.tsx:452:3)
+    at Router (app-router.tsx:300:9)
+    at ErrorBoundaryHandler (error-boundary.tsx:68:11)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at AppRouter (app-router.tsx:716:3)
+    at ServerRoot (app-index.tsx:126:13)
+    at Root (app-index.tsx:133:17)
+overrideMethod @ hook.js:608
+warnOnce @ clerk.browser.js:1
+r @ clerk.browser.js:1
+(anonymous) @ clerk.browser.js:1
+loadClerkJS @ index.mjs:1646
+_IsomorphicClerk @ index.mjs:1547
+getOrCreateInstance @ index.mjs:1557
+eval @ index.mjs:1849
+mountMemo @ react-dom.development.js:12600
+useMemo @ react-dom.development.js:13305
+useMemo @ react.development.js:2536
+useLoadedIsomorphicClerk @ index.mjs:1849
+ClerkContextProvider @ index.mjs:1795
+renderWithHooks @ react-dom.development.js:11121
+mountIndeterminateComponent @ react-dom.development.js:16869
+beginWork$1 @ react-dom.development.js:18458
+beginWork @ react-dom.development.js:26927
+performUnitOfWork @ react-dom.development.js:25748
+workLoopConcurrent @ react-dom.development.js:25734
+renderRootConcurrent @ react-dom.development.js:25690
+performConcurrentWorkOnRoot @ react-dom.development.js:24504
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
+app-index.tsx:25 Warning: Extra attributes from the server: cz-shortcut-listen Error Component Stack
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at SWRConfig (index.mjs:529:13)
+    at OrganizationProvider (index.mjs:64:1)
+    at ClerkContextProvider (index.mjs:1794:11)
+    at ClerkProviderBase (index.mjs:1869:11)
+    at Hoc (index.mjs:113:1)
+    at ClerkNextOptionsProvider (NextOptionsContext.js:9:11)
+    at ClientClerkProvider (ClerkProvider.tsx:61:11)
+    at ClerkProvider [Server] (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at DevRootNotFoundBoundary (dev-root-not-found-boundary.tsx:20:3)
+    at ReactDevOverlay (ReactDevOverlay.tsx:98:3)
+    at HotReload (hot-reloader-client.tsx:452:3)
+    at Router (app-router.tsx:300:9)
+    at ErrorBoundaryHandler (error-boundary.tsx:68:11)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at AppRouter (app-router.tsx:716:3)
+    at ServerRoot (app-index.tsx:126:13)
+    at Root (app-index.tsx:133:17)
+overrideMethod @ hook.js:608
+window.console.error @ app-index.tsx:25
+console.error @ hydration-error-info.ts:72
+printWarning @ react-dom.development.js:94
+error @ react-dom.development.js:68
+warnForExtraAttributes @ react-dom.development.js:32731
+diffHydratedProperties @ react-dom.development.js:35117
+hydrateInstance @ react-dom.development.js:36127
+prepareToHydrateHostInstance @ react-dom.development.js:7246
+completeWork @ react-dom.development.js:19725
+completeUnitOfWork @ react-dom.development.js:25963
+performUnitOfWork @ react-dom.development.js:25759
+workLoopConcurrent @ react-dom.development.js:25734
+renderRootConcurrent @ react-dom.development.js:25690
+performConcurrentWorkOnRoot @ react-dom.development.js:24504
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+StoreInitializer.tsx:30 DEBUG: localStorage.onboardingComplete = true
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/', isSignedIn: undefined, userInfo: false, onboardingComplete: false, profileLoading: true, …}
+StoreInitializer.tsx:30 DEBUG: localStorage.onboardingComplete = true
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/', isSignedIn: undefined, userInfo: false, onboardingComplete: false, profileLoading: true, …}
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/', isSignedIn: true, userInfo: false, onboardingComplete: false, profileLoading: true, …}
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/', isSignedIn: true, userInfo: false, onboardingComplete: false, profileLoading: true, …}
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/', isSignedIn: true, userInfo: false, onboardingComplete: true, profileLoading: true, …}
+warn-once.ts:6 Image with src "/landingpage/mymcatstudyverse.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+overrideMethod @ hook.js:608
+warnOnce @ warn-once.ts:6
+eval @ image-component.tsx:132
+Promise.then
+handleLoading @ image-component.tsx:77
+eval @ image-component.tsx:271
+commitAttachRef @ react-dom.development.js:21677
+safelyAttachRef @ react-dom.development.js:20803
+commitLayoutEffectOnFiber @ react-dom.development.js:21498
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21437
+commitLayoutEffects @ react-dom.development.js:22912
+commitRootImpl @ react-dom.development.js:26226
+commitRoot @ react-dom.development.js:26077
+commitRootWhenReady @ react-dom.development.js:24749
+finishConcurrentRender @ react-dom.development.js:24714
+performConcurrentWorkOnRoot @ react-dom.development.js:24559
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+script.debug.js:1 [Vercel Web Analytics] Debug mode is enabled by default in development. No requests will be sent to the server.
+script.debug.js:1 [Vercel Web Analytics] [pageview] http://localhost:3000/ {o: 'http://localhost:3000/', sv: '0.1.2', sdkn: '@vercel/analytics/react', sdkv: '1.3.1', ts: 1742330489742, …}
+warn-once.ts:6 Image with src "/parallax/mountain-3.svg" has legacy prop "layout". Did you forget to run the codemod?
+Read more: https://nextjs.org/docs/messages/next-image-upgrade-to-13 Error Component Stack
+    at eval (image-component.tsx:369:5)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Product (Product.tsx:11:47)
+    at BailoutToCSR (dynamic-bailout-to-csr.tsx:16:7)
+    at Suspense (<anonymous>)
+    at LoadableComponent (<anonymous>)
+    at ProductWrapper (<anonymous>)
+    at BailoutToCSR (dynamic-bailout-to-csr.tsx:16:7)
+    at Suspense (<anonymous>)
+    at LoadableComponent (<anonymous>)
+    at Suspense (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at LandingPage (page.tsx:44:27)
+    at ClientPageRoot (client-page.tsx:11:3)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at div (<anonymous>)
+    at main (<anonymous>)
+    at LandingLayout [Server] (<anonymous>)
+    at LandingLayout [Server] (<anonymous>)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at SWRConfig (index.mjs:529:13)
+    at OrganizationProvider (index.mjs:64:1)
+    at ClerkContextProvider (index.mjs:1794:11)
+    at ClerkProviderBase (index.mjs:1869:11)
+    at Hoc (index.mjs:113:1)
+    at ClerkNextOptionsProvider (NextOptionsContext.js:9:11)
+    at ClientClerkProvider (ClerkProvider.tsx:61:11)
+    at ClerkProvider [Server] (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at DevRootNotFoundBoundary (dev-root-not-found-boundary.tsx:20:3)
+    at ReactDevOverlay (ReactDevOverlay.tsx:98:3)
+    at HotReload (hot-reloader-client.tsx:452:3)
+    at Router (app-router.tsx:300:9)
+    at ErrorBoundaryHandler (error-boundary.tsx:68:11)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at AppRouter (app-router.tsx:716:3)
+    at ServerRoot (app-index.tsx:126:13)
+    at Root (app-index.tsx:133:17)
+overrideMethod @ hook.js:608
+warnOnce @ warn-once.ts:6
+getImgProps @ get-img-props.ts:551
+eval @ image-component.tsx:397
+renderWithHooks @ react-dom.development.js:11121
+updateForwardRef @ react-dom.development.js:15854
+beginWork$1 @ react-dom.development.js:18521
+beginWork @ react-dom.development.js:26927
+performUnitOfWork @ react-dom.development.js:25748
+workLoopConcurrent @ react-dom.development.js:25734
+renderRootConcurrent @ react-dom.development.js:25690
+performConcurrentWorkOnRoot @ react-dom.development.js:24504
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+warn-once.ts:6 Image with src "/parallax/mountain-2.svg" has legacy prop "layout". Did you forget to run the codemod?
+Read more: https://nextjs.org/docs/messages/next-image-upgrade-to-13 Error Component Stack
+    at eval (image-component.tsx:369:5)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Product (Product.tsx:11:47)
+    at BailoutToCSR (dynamic-bailout-to-csr.tsx:16:7)
+    at Suspense (<anonymous>)
+    at LoadableComponent (<anonymous>)
+    at ProductWrapper (<anonymous>)
+    at BailoutToCSR (dynamic-bailout-to-csr.tsx:16:7)
+    at Suspense (<anonymous>)
+    at LoadableComponent (<anonymous>)
+    at Suspense (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at LandingPage (page.tsx:44:27)
+    at ClientPageRoot (client-page.tsx:11:3)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at div (<anonymous>)
+    at main (<anonymous>)
+    at LandingLayout [Server] (<anonymous>)
+    at LandingLayout [Server] (<anonymous>)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at SWRConfig (index.mjs:529:13)
+    at OrganizationProvider (index.mjs:64:1)
+    at ClerkContextProvider (index.mjs:1794:11)
+    at ClerkProviderBase (index.mjs:1869:11)
+    at Hoc (index.mjs:113:1)
+    at ClerkNextOptionsProvider (NextOptionsContext.js:9:11)
+    at ClientClerkProvider (ClerkProvider.tsx:61:11)
+    at ClerkProvider [Server] (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at DevRootNotFoundBoundary (dev-root-not-found-boundary.tsx:20:3)
+    at ReactDevOverlay (ReactDevOverlay.tsx:98:3)
+    at HotReload (hot-reloader-client.tsx:452:3)
+    at Router (app-router.tsx:300:9)
+    at ErrorBoundaryHandler (error-boundary.tsx:68:11)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at AppRouter (app-router.tsx:716:3)
+    at ServerRoot (app-index.tsx:126:13)
+    at Root (app-index.tsx:133:17)
+overrideMethod @ hook.js:608
+warnOnce @ warn-once.ts:6
+getImgProps @ get-img-props.ts:551
+eval @ image-component.tsx:397
+renderWithHooks @ react-dom.development.js:11121
+updateForwardRef @ react-dom.development.js:15854
+beginWork$1 @ react-dom.development.js:18521
+beginWork @ react-dom.development.js:26927
+performUnitOfWork @ react-dom.development.js:25748
+workLoopConcurrent @ react-dom.development.js:25734
+renderRootConcurrent @ react-dom.development.js:25690
+performConcurrentWorkOnRoot @ react-dom.development.js:24504
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+warn-once.ts:6 Image with src "/parallax/mountain-1.svg" has legacy prop "layout". Did you forget to run the codemod?
+Read more: https://nextjs.org/docs/messages/next-image-upgrade-to-13 Error Component Stack
+    at eval (image-component.tsx:369:5)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Product (Product.tsx:11:47)
+    at BailoutToCSR (dynamic-bailout-to-csr.tsx:16:7)
+    at Suspense (<anonymous>)
+    at LoadableComponent (<anonymous>)
+    at ProductWrapper (<anonymous>)
+    at BailoutToCSR (dynamic-bailout-to-csr.tsx:16:7)
+    at Suspense (<anonymous>)
+    at LoadableComponent (<anonymous>)
+    at Suspense (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at LandingPage (page.tsx:44:27)
+    at ClientPageRoot (client-page.tsx:11:3)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at div (<anonymous>)
+    at main (<anonymous>)
+    at LandingLayout [Server] (<anonymous>)
+    at LandingLayout [Server] (<anonymous>)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at SWRConfig (index.mjs:529:13)
+    at OrganizationProvider (index.mjs:64:1)
+    at ClerkContextProvider (index.mjs:1794:11)
+    at ClerkProviderBase (index.mjs:1869:11)
+    at Hoc (index.mjs:113:1)
+    at ClerkNextOptionsProvider (NextOptionsContext.js:9:11)
+    at ClientClerkProvider (ClerkProvider.tsx:61:11)
+    at ClerkProvider [Server] (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at DevRootNotFoundBoundary (dev-root-not-found-boundary.tsx:20:3)
+    at ReactDevOverlay (ReactDevOverlay.tsx:98:3)
+    at HotReload (hot-reloader-client.tsx:452:3)
+    at Router (app-router.tsx:300:9)
+    at ErrorBoundaryHandler (error-boundary.tsx:68:11)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at AppRouter (app-router.tsx:716:3)
+    at ServerRoot (app-index.tsx:126:13)
+    at Root (app-index.tsx:133:17)
+overrideMethod @ hook.js:608
+warnOnce @ warn-once.ts:6
+getImgProps @ get-img-props.ts:551
+eval @ image-component.tsx:397
+renderWithHooks @ react-dom.development.js:11121
+updateForwardRef @ react-dom.development.js:15854
+beginWork$1 @ react-dom.development.js:18521
+beginWork @ react-dom.development.js:26927
+performUnitOfWork @ react-dom.development.js:25748
+workLoopConcurrent @ react-dom.development.js:25734
+renderRootConcurrent @ react-dom.development.js:25690
+performConcurrentWorkOnRoot @ react-dom.development.js:24504
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+warn-once.ts:6 Image with src "http://localhost:3000/_next/static/media/hero.8f59f916.gif" has "fill" and parent element with invalid "position". Provided "static" should be one of absolute,fixed,relative.
+overrideMethod @ hook.js:608
+warnOnce @ warn-once.ts:6
+eval @ image-component.tsx:144
+Promise.then
+handleLoading @ image-component.tsx:77
+onLoad @ image-component.tsx:296
+callCallback @ react-dom.development.js:20565
+invokeGuardedCallbackImpl @ react-dom.development.js:20614
+invokeGuardedCallback @ react-dom.development.js:20689
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:20703
+executeDispatch @ react-dom.development.js:32128
+processDispatchQueueItemsInOrder @ react-dom.development.js:32160
+processDispatchQueue @ react-dom.development.js:32173
+dispatchEventsForPlugins @ react-dom.development.js:32184
+eval @ react-dom.development.js:32374
+batchedUpdates$1 @ react-dom.development.js:24953
+batchedUpdates @ react-dom.development.js:28844
+dispatchEventForPluginEventSystem @ react-dom.development.js:32373
+dispatchEvent @ react-dom.development.js:30141
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/sign-in', isSignedIn: true, userInfo: false, onboardingComplete: true, profileLoading: true, …}
+RouteTracker.tsx:85 [RouteTracker] SKIPPING REDIRECT - exempt path: /sign-in
+script.debug.js:1 [Vercel Web Analytics] [pageview] http://localhost:3000/sign-in {o: 'http://localhost:3000/sign-in', sv: '0.1.2', sdkn: '@vercel/analytics/react', sdkv: '1.3.1', ts: 1742330502316, …}
+ui-common_bef0ff_5.56.0.js:1 🔒 Clerk:
+The <SignIn/> component cannot render when a user is already signed in, unless the application allows multiple sessions. Since a user is signed in and this application only allows a single session, Clerk is redirecting to the `afterSignIn` URL instead.
+(This notice only appears in development)
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/sign-in', isSignedIn: true, userInfo: true, onboardingComplete: true, profileLoading: false, …}
+RouteTracker.tsx:85 [RouteTracker] SKIPPING REDIRECT - exempt path: /sign-in
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/sign-in', isSignedIn: true, userInfo: true, onboardingComplete: true, profileLoading: false, …}
+layout-router.tsx:139 Skipping auto-scroll behavior due to `position: sticky` or `position: fixed` on element: <div class=​"fixed inset-0 flex justify-center items-center bg-black/​50 z-[9999]​">​…​</div>​flex Error Component Stack
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at DashboardLayoutContent (layout.tsx:34:35)
+    at DashboardLayout (layout.tsx:98:28)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at SWRConfig (index.mjs:529:13)
+    at OrganizationProvider (index.mjs:64:1)
+    at ClerkContextProvider (index.mjs:1794:11)
+    at ClerkProviderBase (index.mjs:1869:11)
+    at Hoc (index.mjs:113:1)
+    at ClerkNextOptionsProvider (NextOptionsContext.js:9:11)
+    at ClientClerkProvider (ClerkProvider.tsx:61:11)
+    at ClerkProvider [Server] (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at DevRootNotFoundBoundary (dev-root-not-found-boundary.tsx:20:3)
+    at ReactDevOverlay (ReactDevOverlay.tsx:98:3)
+    at HotReload (hot-reloader-client.tsx:452:3)
+    at Router (app-router.tsx:300:9)
+    at ErrorBoundaryHandler (error-boundary.tsx:68:11)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at AppRouter (app-router.tsx:716:3)
+    at ServerRoot (app-index.tsx:126:13)
+    at Root (app-index.tsx:133:17)
+overrideMethod @ hook.js:608
+shouldSkipElement @ layout-router.tsx:139
+InnerScrollAndFocusHandler.handlePotentialScroll @ layout-router.tsx:224
+componentDidMount @ layout-router.tsx:283
+commitClassLayoutLifecycles @ react-dom.development.js:21249
+commitLayoutEffectOnFiber @ react-dom.development.js:21421
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21437
+commitLayoutEffects @ react-dom.development.js:22912
+commitRootImpl @ react-dom.development.js:26226
+commitRoot @ react-dom.development.js:26077
+onUnsuspend @ react-dom.development.js:37661
+layout-router.tsx:139 Skipping auto-scroll behavior due to `position: sticky` or `position: fixed` on element: <div class=​"fixed inset-0 flex justify-center items-center bg-black/​50 z-[9999]​">​…​</div>​flex Error Component Stack
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at DashboardLayoutContent (layout.tsx:34:35)
+    at DashboardLayout (layout.tsx:98:28)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at SWRConfig (index.mjs:529:13)
+    at OrganizationProvider (index.mjs:64:1)
+    at ClerkContextProvider (index.mjs:1794:11)
+    at ClerkProviderBase (index.mjs:1869:11)
+    at Hoc (index.mjs:113:1)
+    at ClerkNextOptionsProvider (NextOptionsContext.js:9:11)
+    at ClientClerkProvider (ClerkProvider.tsx:61:11)
+    at ClerkProvider [Server] (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at DevRootNotFoundBoundary (dev-root-not-found-boundary.tsx:20:3)
+    at ReactDevOverlay (ReactDevOverlay.tsx:98:3)
+    at HotReload (hot-reloader-client.tsx:452:3)
+    at Router (app-router.tsx:300:9)
+    at ErrorBoundaryHandler (error-boundary.tsx:68:11)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at AppRouter (app-router.tsx:716:3)
+    at ServerRoot (app-index.tsx:126:13)
+    at Root (app-index.tsx:133:17)
+overrideMethod @ hook.js:608
+shouldSkipElement @ layout-router.tsx:139
+InnerScrollAndFocusHandler.handlePotentialScroll @ layout-router.tsx:224
+componentDidMount @ layout-router.tsx:283
+commitClassLayoutLifecycles @ react-dom.development.js:21249
+commitLayoutEffectOnFiber @ react-dom.development.js:21421
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21437
+commitLayoutEffects @ react-dom.development.js:22912
+commitRootImpl @ react-dom.development.js:26226
+commitRoot @ react-dom.development.js:26077
+onUnsuspend @ react-dom.development.js:37661
+layout-router.tsx:139 Skipping auto-scroll behavior due to `position: sticky` or `position: fixed` on element: <div class=​"fixed inset-0 flex justify-center items-center bg-black/​50 z-[9999]​">​…​</div>​flex Error Component Stack
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at DashboardLayoutContent (layout.tsx:34:35)
+    at DashboardLayout (layout.tsx:98:28)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at SWRConfig (index.mjs:529:13)
+    at OrganizationProvider (index.mjs:64:1)
+    at ClerkContextProvider (index.mjs:1794:11)
+    at ClerkProviderBase (index.mjs:1869:11)
+    at Hoc (index.mjs:113:1)
+    at ClerkNextOptionsProvider (NextOptionsContext.js:9:11)
+    at ClientClerkProvider (ClerkProvider.tsx:61:11)
+    at ClerkProvider [Server] (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at DevRootNotFoundBoundary (dev-root-not-found-boundary.tsx:20:3)
+    at ReactDevOverlay (ReactDevOverlay.tsx:98:3)
+    at HotReload (hot-reloader-client.tsx:452:3)
+    at Router (app-router.tsx:300:9)
+    at ErrorBoundaryHandler (error-boundary.tsx:68:11)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at AppRouter (app-router.tsx:716:3)
+    at ServerRoot (app-index.tsx:126:13)
+    at Root (app-index.tsx:133:17)
+overrideMethod @ hook.js:608
+shouldSkipElement @ layout-router.tsx:139
+InnerScrollAndFocusHandler.handlePotentialScroll @ layout-router.tsx:224
+componentDidMount @ layout-router.tsx:283
+commitClassLayoutLifecycles @ react-dom.development.js:21249
+commitLayoutEffectOnFiber @ react-dom.development.js:21421
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21488
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21418
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21407
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21577
+recursivelyTraverseLayoutEffects @ react-dom.development.js:22926
+commitLayoutEffectOnFiber @ react-dom.development.js:21437
+commitLayoutEffects @ react-dom.development.js:22912
+commitRootImpl @ react-dom.development.js:26226
+commitRoot @ react-dom.development.js:26077
+onUnsuspend @ react-dom.development.js:37661
+script.debug.js:1 [Vercel Web Analytics] [pageview] http://localhost:3000/home {o: 'http://localhost:3000/home', sv: '0.1.2', sdkn: '@vercel/analytics/react', sdkv: '1.3.1', ts: 1742330509436, …}
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/home', isSignedIn: true, userInfo: true, onboardingComplete: true, profileLoading: false, …}
+RouteTracker.tsx:105 [RouteTracker] NOT REDIRECTING - onboarding complete: {onboardingComplete: true}
+StoreInitializer.tsx:30 DEBUG: localStorage.onboardingComplete = true
+musicplayer.tsx:104 [MusicPlayer] Initializing audio context
+musicplayer.tsx:116 [MusicPlayer] Theme changed or component mounted, theme: sakuraTrees
+musicplayer.tsx:131 [MusicPlayer] Queue status: {initialized: false, queueLength: 0, firstSongMatchesTheme: false, shouldUpdateQueue: true}
+musicplayer.tsx:139 [MusicPlayer] Updating song queue for theme: sakuraTrees
+audioSlice.ts:177 [AudioSlice] Theme changed to sakuraTrees wasPlaying: false
+layout.tsx:46 🎫 Subscription Status: GOLD or PREMIUM
+StoreInitializer.tsx:30 DEBUG: localStorage.onboardingComplete = true
+musicplayer.tsx:104 [MusicPlayer] Initializing audio context
+musicplayer.tsx:116 [MusicPlayer] Theme changed or component mounted, theme: sakuraTrees
+musicplayer.tsx:131 [MusicPlayer] Queue status: {initialized: true, queueLength: 0, firstSongMatchesTheme: false, shouldUpdateQueue: true}
+musicplayer.tsx:139 [MusicPlayer] Updating song queue for theme: sakuraTrees
+audioSlice.ts:177 [AudioSlice] Theme changed to sakuraTrees wasPlaying: false
+layout.tsx:46 🎫 Subscription Status: GOLD or PREMIUM
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/home', isSignedIn: true, userInfo: true, onboardingComplete: true, profileLoading: false, …}
+musicplayer.tsx:116 [MusicPlayer] Theme changed or component mounted, theme: sakuraTrees
+musicplayer.tsx:131 [MusicPlayer] Queue status: {initialized: true, queueLength: 10, firstSongMatchesTheme: true, shouldUpdateQueue: false}
+musicplayer.tsx:107 [MusicPlayer] Audio context initialized successfully
+musicplayer.tsx:107 [MusicPlayer] Audio context initialized successfully
+audioSlice.ts:203 [AudioSlice] Not playing music after theme change
+audioSlice.ts:203 [AudioSlice] Not playing music after theme change
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/home', isSignedIn: true, userInfo: true, onboardingComplete: true, profileLoading: false, …}
+RouteTracker.tsx:105 [RouteTracker] NOT REDIRECTING - onboarding complete: {onboardingComplete: true}
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/home', isSignedIn: true, userInfo: true, onboardingComplete: true, profileLoading: false, …}
+RouteTracker.tsx:105 [RouteTracker] NOT REDIRECTING - onboarding complete: {onboardingComplete: true}
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/home', isSignedIn: true, userInfo: true, onboardingComplete: true, profileLoading: false, …}
+RouteTracker.tsx:105 [RouteTracker] NOT REDIRECTING - onboarding complete: {onboardingComplete: true}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #1), styles object same reference: false
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #2), styles object same reference: false
+ChatContainer.tsx:102 [ChatContainer] isLoading changed: false
+ChatContainer.tsx:106 [ChatContainer] threadId changed: null
+ChatContainer.tsx:110 [ChatContainer] isMounted changed: false
+ChatContainer.tsx:114 [ChatContainer] isPlaying changed: false
+ChatContainer.tsx:118 [ChatContainer] audioEnabled changed: false
+ChatContainer.tsx:122 [ChatContainer] activeTab changed: null
+ChatContainer.tsx:126 [ChatContainer] examActivities length changed: 0
+ChatContainer.tsx:130 [ChatContainer] studyActivities length changed: 0
+ChatContainer.tsx:134 [ChatContainer] calendarEvents length changed: 0
+ChatContainer.tsx:139 [ChatContainer] isMounted effect running, isMounted: false
+ChatContainer.tsx:158 [ChatContainer] chatbotRef effect running
+ChatContainer.tsx:637 [ChatContainer] Styles validated once
+ChatContainer.tsx:647 [ChatContainer] audioEnabled changed: false
+ChatContainer.tsx:651 [ChatContainer] isPlaying changed: false
+ChatContainer.tsx:655 [ChatContainer] calendar events changed, count: 0
+ChatContainer.tsx:659 [ChatContainer] activeTab changed: null
+ChatContainer.tsx:102 [ChatContainer] isLoading changed: false
+ChatContainer.tsx:106 [ChatContainer] threadId changed: null
+ChatContainer.tsx:110 [ChatContainer] isMounted changed: false
+ChatContainer.tsx:114 [ChatContainer] isPlaying changed: false
+ChatContainer.tsx:118 [ChatContainer] audioEnabled changed: false
+ChatContainer.tsx:122 [ChatContainer] activeTab changed: null
+ChatContainer.tsx:126 [ChatContainer] examActivities length changed: 0
+ChatContainer.tsx:130 [ChatContainer] studyActivities length changed: 0
+ChatContainer.tsx:134 [ChatContainer] calendarEvents length changed: 0
+ChatContainer.tsx:139 [ChatContainer] isMounted effect running, isMounted: false
+ChatContainer.tsx:158 [ChatContainer] chatbotRef effect running
+ChatContainer.tsx:637 [ChatContainer] Styles validated once
+ChatContainer.tsx:647 [ChatContainer] audioEnabled changed: false
+ChatContainer.tsx:651 [ChatContainer] isPlaying changed: false
+ChatContainer.tsx:655 [ChatContainer] calendar events changed, count: 0
+ChatContainer.tsx:659 [ChatContainer] activeTab changed: null
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #3), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #4), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/home', isSignedIn: true, userInfo: true, onboardingComplete: true, profileLoading: false, …}
+ChatContainer.tsx:110 [ChatContainer] isMounted changed: true
+ChatContainer.tsx:134 [ChatContainer] calendarEvents length changed: 0
+ChatContainer.tsx:139 [ChatContainer] isMounted effect running, isMounted: true
+ChatContainer.tsx:655 [ChatContainer] calendar events changed, count: 0
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #5), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #6), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:126 [ChatContainer] examActivities length changed: 8
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #7), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #8), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:134 [ChatContainer] calendarEvents length changed: 8
+ChatContainer.tsx:655 [ChatContainer] calendar events changed, count: 8
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #9), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #10), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/home', isSignedIn: true, userInfo: true, onboardingComplete: true, profileLoading: false, …}
+RouteTracker.tsx:105 [RouteTracker] NOT REDIRECTING - onboarding complete: {onboardingComplete: true}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #11), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #12), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:130 [ChatContainer] studyActivities length changed: 0
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #13), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #14), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:134 [ChatContainer] calendarEvents length changed: 8
+ChatContainer.tsx:655 [ChatContainer] calendar events changed, count: 8
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #15), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #16), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/home', isSignedIn: true, userInfo: true, onboardingComplete: true, profileLoading: false, …}
+RouteTracker.tsx:105 [RouteTracker] NOT REDIRECTING - onboarding complete: {onboardingComplete: true}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #17), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #18), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:126 [ChatContainer] examActivities length changed: 8
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #19), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #20), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:134 [ChatContainer] calendarEvents length changed: 8
+ChatContainer.tsx:655 [ChatContainer] calendar events changed, count: 8
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #21), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #22), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:162 [ChatContainer] Using ref to send message: ...
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #23), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #24), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #25), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #26), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:130 [ChatContainer] studyActivities length changed: 0
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #27), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #28), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:134 [ChatContainer] calendarEvents length changed: 8
+ChatContainer.tsx:655 [ChatContainer] calendar events changed, count: 8
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #29), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #30), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+RouteTracker.tsx:28 [RouteTracker] STATE DEBUG: {pathname: '/home', isSignedIn: true, userInfo: true, onboardingComplete: true, profileLoading: false, …}
+RouteTracker.tsx:105 [RouteTracker] NOT REDIRECTING - onboarding complete: {onboardingComplete: true}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #31), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #32), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+warn-once.ts:6 Image with src "/game-components/PixelCupcake.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+overrideMethod @ hook.js:608
+warnOnce @ warn-once.ts:6
+eval @ image-component.tsx:163
+Promise.then
+handleLoading @ image-component.tsx:77
+onLoad @ image-component.tsx:296
+callCallback @ react-dom.development.js:20565
+invokeGuardedCallbackImpl @ react-dom.development.js:20614
+invokeGuardedCallback @ react-dom.development.js:20689
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:20703
+executeDispatch @ react-dom.development.js:32128
+processDispatchQueueItemsInOrder @ react-dom.development.js:32160
+processDispatchQueue @ react-dom.development.js:32173
+dispatchEventsForPlugins @ react-dom.development.js:32184
+eval @ react-dom.development.js:32374
+batchedUpdates$1 @ react-dom.development.js:24953
+batchedUpdates @ react-dom.development.js:28844
+dispatchEventForPluginEventSystem @ react-dom.development.js:32373
+dispatchEvent @ react-dom.development.js:30141
+app-index.tsx:25 Warning: `NaN` is an invalid value for the `minWidth` css style property. Error Component Stack
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at me (index.js:933:1)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Po (index.js:2816:1)
+    at div (<anonymous>)
+    at be (index.js:928:83)
+    at de (index.js:614:1)
+    at ge (index.js:769:77)
+    at ue (index.js:595:1)
+    at ve (index.js:818:79)
+    at ie (index.js:568:1)
+    at ce (index.js:502:1)
+    at div (<anonymous>)
+    at Mo (index.js:3006:1)
+    at jo (index.js:3113:1)
+    at BailoutToCSR (dynamic-bailout-to-csr.tsx:16:7)
+    at Suspense (<anonymous>)
+    at LoadableComponent (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at ChatContainer (ChatContainer.tsx:39:26)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at eval (page.tsx:45:63)
+    at HomePage (page.tsx:61:27)
+    at ClientPageRoot (client-page.tsx:11:3)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at DashboardLayoutContent (layout.tsx:34:35)
+    at DashboardLayout (layout.tsx:98:28)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at SWRConfig (index.mjs:529:13)
+    at OrganizationProvider (index.mjs:64:1)
+    at ClerkContextProvider (index.mjs:1794:11)
+    at ClerkProviderBase (index.mjs:1869:11)
+    at Hoc (index.mjs:113:1)
+    at ClerkNextOptionsProvider (NextOptionsContext.js:9:11)
+    at ClientClerkProvider (ClerkProvider.tsx:61:11)
+    at ClerkProvider [Server] (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at DevRootNotFoundBoundary (dev-root-not-found-boundary.tsx:20:3)
+    at ReactDevOverlay (ReactDevOverlay.tsx:98:3)
+    at HotReload (hot-reloader-client.tsx:452:3)
+    at Router (app-router.tsx:300:9)
+    at ErrorBoundaryHandler (error-boundary.tsx:68:11)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at AppRouter (app-router.tsx:716:3)
+    at ServerRoot (app-index.tsx:126:13)
+    at Root (app-index.tsx:133:17)
+overrideMethod @ hook.js:608
+window.console.error @ app-index.tsx:25
+console.error @ hydration-error-info.ts:72
+printWarning @ react-dom.development.js:94
+error @ react-dom.development.js:68
+warnStyleValueIsNaN @ react-dom.development.js:4534
+warnValidStyle @ react-dom.development.js:4562
+setValueForStyle @ react-dom.development.js:4638
+setValueForStyles @ react-dom.development.js:4721
+setProp @ react-dom.development.js:32875
+setInitialProperties @ react-dom.development.js:33788
+finalizeInitialChildren @ react-dom.development.js:35515
+completeWork @ react-dom.development.js:19782
+completeUnitOfWork @ react-dom.development.js:25963
+performUnitOfWork @ react-dom.development.js:25759
+workLoopSync @ react-dom.development.js:25464
+renderRootSync @ react-dom.development.js:25419
+performConcurrentWorkOnRoot @ react-dom.development.js:24504
+workLoop @ scheduler.development.js:256
+flushWork @ scheduler.development.js:225
+performWorkUntilDeadline @ scheduler.development.js:534
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #33), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #34), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #35), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #36), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #37), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #38), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #39), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #40), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #41), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #42), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+app-index.tsx:25 Warning: Updating a style property during rerender (outline) when a conflicting property is set (outlineColor) can lead to styling bugs. To avoid this, don't mix shorthand and non-shorthand properties for the same value; instead, replace the shorthand with separate values. Error Component Stack
+    at textarea (<anonymous>)
+    at div (<anonymous>)
+    at qe (index.js:1850:15)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Po (index.js:2816:1)
+    at div (<anonymous>)
+    at be (index.js:928:83)
+    at de (index.js:614:1)
+    at ge (index.js:769:77)
+    at ue (index.js:595:1)
+    at ve (index.js:818:79)
+    at ie (index.js:568:1)
+    at ce (index.js:502:1)
+    at div (<anonymous>)
+    at Mo (index.js:3006:1)
+    at jo (index.js:3113:1)
+    at BailoutToCSR (dynamic-bailout-to-csr.tsx:16:7)
+    at Suspense (<anonymous>)
+    at LoadableComponent (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at ChatContainer (ChatContainer.tsx:39:26)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at eval (page.tsx:45:63)
+    at HomePage (page.tsx:61:27)
+    at ClientPageRoot (client-page.tsx:11:3)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at DashboardLayoutContent (layout.tsx:34:35)
+    at DashboardLayout (layout.tsx:98:28)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at SWRConfig (index.mjs:529:13)
+    at OrganizationProvider (index.mjs:64:1)
+    at ClerkContextProvider (index.mjs:1794:11)
+    at ClerkProviderBase (index.mjs:1869:11)
+    at Hoc (index.mjs:113:1)
+    at ClerkNextOptionsProvider (NextOptionsContext.js:9:11)
+    at ClientClerkProvider (ClerkProvider.tsx:61:11)
+    at ClerkProvider [Server] (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at DevRootNotFoundBoundary (dev-root-not-found-boundary.tsx:20:3)
+    at ReactDevOverlay (ReactDevOverlay.tsx:98:3)
+    at HotReload (hot-reloader-client.tsx:452:3)
+    at Router (app-router.tsx:300:9)
+    at ErrorBoundaryHandler (error-boundary.tsx:68:11)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at AppRouter (app-router.tsx:716:3)
+    at ServerRoot (app-index.tsx:126:13)
+    at Root (app-index.tsx:133:17)
+overrideMethod @ hook.js:608
+window.console.error @ app-index.tsx:25
+console.error @ hydration-error-info.ts:72
+printWarning @ react-dom.development.js:94
+error @ react-dom.development.js:68
+validateShorthandPropertyCollisionInDev @ react-dom.development.js:4816
+setValueForStyles @ react-dom.development.js:4692
+setProp @ react-dom.development.js:32875
+updateProperties @ react-dom.development.js:34075
+commitUpdate @ react-dom.development.js:35632
+commitMutationEffectsOnFiber @ react-dom.development.js:22635
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22786
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22720
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+app-index.tsx:25 Warning: Removing a style property during rerender (outline) when a conflicting property is set (outlineColor) can lead to styling bugs. To avoid this, don't mix shorthand and non-shorthand properties for the same value; instead, replace the shorthand with separate values. Error Component Stack
+    at textarea (<anonymous>)
+    at div (<anonymous>)
+    at qe (index.js:1850:15)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Po (index.js:2816:1)
+    at div (<anonymous>)
+    at be (index.js:928:83)
+    at de (index.js:614:1)
+    at ge (index.js:769:77)
+    at ue (index.js:595:1)
+    at ve (index.js:818:79)
+    at ie (index.js:568:1)
+    at ce (index.js:502:1)
+    at div (<anonymous>)
+    at Mo (index.js:3006:1)
+    at jo (index.js:3113:1)
+    at BailoutToCSR (dynamic-bailout-to-csr.tsx:16:7)
+    at Suspense (<anonymous>)
+    at LoadableComponent (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at ChatContainer (ChatContainer.tsx:39:26)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at eval (page.tsx:45:63)
+    at HomePage (page.tsx:61:27)
+    at ClientPageRoot (client-page.tsx:11:3)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at DashboardLayoutContent (layout.tsx:34:35)
+    at DashboardLayout (layout.tsx:98:28)
+    at InnerLayoutRouter (layout-router.tsx:329:3)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at LoadingBoundary (layout-router.tsx:484:3)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at InnerScrollAndFocusHandler (layout-router.tsx:294:3)
+    at ScrollAndFocusHandler (layout-router.tsx:304:9)
+    at RenderFromTemplateContext (render-from-template-context.tsx:8:10)
+    at OuterLayoutRouter (layout-router.tsx:532:9)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at SWRConfig (index.mjs:529:13)
+    at OrganizationProvider (index.mjs:64:1)
+    at ClerkContextProvider (index.mjs:1794:11)
+    at ClerkProviderBase (index.mjs:1869:11)
+    at Hoc (index.mjs:113:1)
+    at ClerkNextOptionsProvider (NextOptionsContext.js:9:11)
+    at ClientClerkProvider (ClerkProvider.tsx:61:11)
+    at ClerkProvider [Server] (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at RedirectErrorBoundary (redirect-boundary.tsx:48:5)
+    at RedirectBoundary (redirect-boundary.tsx:79:9)
+    at NotFoundErrorBoundary (not-found-boundary.tsx:32:5)
+    at NotFoundBoundary (not-found-boundary.tsx:117:9)
+    at DevRootNotFoundBoundary (dev-root-not-found-boundary.tsx:20:3)
+    at ReactDevOverlay (ReactDevOverlay.tsx:98:3)
+    at HotReload (hot-reloader-client.tsx:452:3)
+    at Router (app-router.tsx:300:9)
+    at ErrorBoundaryHandler (error-boundary.tsx:68:11)
+    at ErrorBoundary (error-boundary.tsx:171:9)
+    at AppRouter (app-router.tsx:716:3)
+    at ServerRoot (app-index.tsx:126:13)
+    at Root (app-index.tsx:133:17)
+overrideMethod @ hook.js:608
+window.console.error @ app-index.tsx:25
+console.error @ hydration-error-info.ts:72
+printWarning @ react-dom.development.js:94
+error @ react-dom.development.js:68
+validateShorthandPropertyCollisionInDev @ react-dom.development.js:4816
+setValueForStyles @ react-dom.development.js:4692
+setProp @ react-dom.development.js:32875
+updateProperties @ react-dom.development.js:34075
+commitUpdate @ react-dom.development.js:35632
+commitMutationEffectsOnFiber @ react-dom.development.js:22635
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22786
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22720
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22593
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22876
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22488
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+commitMutationEffectsOnFiber @ react-dom.development.js:22449
+recursivelyTraverseMutationEffects @ react-dom.development.js:22427
+musicplayer.tsx:150 [MusicPlayer] Toggle play button clicked
+musicplayer.tsx:177 [MusicPlayer] Toggling playback with existing queue
+audioSlice.ts:209 [AudioSlice] togglePlayPause called, checking current state
+audioSlice.ts:240 [AudioSlice] Starting playback from queue
+audioSlice.ts:243 [AudioSlice] Playing song at index 0 : /api/audio?url=https%3A%2F%2Fmy-mcat.s3.us-east-2.amazonaws.com%2Fmusic%2FsakuraTrees1.mp3
+audioSlice.ts:433 [AudioSlice] playMusic called with URL: /api/audio?url=https%3A%2F%2Fmy-mcat.s3.us-east-2.amazonaws.com%2Fmusic%2FsakuraTrees1.mp3
+audioSlice.ts:473 [AudioSlice] Loading audio buffer for track
+audioSlice.ts:389 [AudioSlice] Loading audio buffer for URL: /api/audio?url=https%3A%2F%2Fmy-mcat.s3.us-east-2.amazonaws.com%2Fmusic%2FsakuraTrees1.mp3
+audioSlice.ts:403 [AudioSlice] Fetching audio from: /api/audio?url=https%3A%2F%2Fmy-mcat.s3.us-east-2.amazonaws.com%2Fmusic%2FsakuraTrees1.mp3
+audioSlice.ts:410 [AudioSlice] Audio fetch successful, processing array buffer...
+audioSlice.ts:420 [AudioSlice] Decoding audio data...
+audioSlice.ts:422 [AudioSlice] Audio data decoded successfully, caching buffer
+audioSlice.ts:476 [AudioSlice] Audio buffer loaded successfully
+audioSlice.ts:492 [AudioSlice] Reset music gain node to volume: 0.7
+audioSlice.ts:496 [AudioSlice] Creating audio source node
+audioSlice.ts:502 [AudioSlice] Connecting to music gain node with volume: 0.699999988079071
+audioSlice.ts:527 [AudioSlice] Starting playback
+audioSlice.ts:537 [AudioSlice] Playback started, state updated
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #43), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #44), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #45), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #46), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+audioSlice.ts:247 [AudioSlice] Playback started successfully
+musicplayer.tsx:150 [MusicPlayer] Toggle play button clicked
+musicplayer.tsx:177 [MusicPlayer] Toggling playback with existing queue
+audioSlice.ts:209 [AudioSlice] togglePlayPause called, checking current state
+audioSlice.ts:213 [AudioSlice] Currently playing, stopping music
+audioSlice.ts:225 [AudioSlice] Music source stopped and disconnected
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #47), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #48), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+audioSlice.ts:517 [AudioSlice] Track ended naturally, advancing to next song
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #49), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
+ChatContainer.tsx:683 [ChatContainer] Rendering component (render #50), styles object same reference: false
+ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}

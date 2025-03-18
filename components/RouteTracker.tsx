@@ -23,6 +23,19 @@ const RouteTracker = () => {
   const stopLoop = useAudioStore(state => state.stopLoop);
   const currentLoop = useAudioStore(state => state.currentLoop);
 
+  // DEBUG LOGGING
+  useEffect(() => {
+    console.log('[RouteTracker] STATE DEBUG:', { 
+      pathname,
+      isSignedIn,
+      userInfo: !!userInfo,
+      onboardingComplete,
+      profileLoading,
+      statsLoading,
+      initialLoadComplete
+    });
+  }, [pathname, isSignedIn, userInfo, onboardingComplete, profileLoading, statsLoading, initialLoadComplete]);
+
   // Handle immediate redirection for users with no userInfo
   useEffect(() => {
     // Define exempt paths that should never redirect to onboarding
@@ -40,6 +53,12 @@ const RouteTracker = () => {
     if (isSignedIn && !profileLoading && !userInfo) {
       // Only allow exempt paths to proceed without redirection
       if (!exemptPaths.some(path => pathname.startsWith(path))) {
+        console.log('[RouteTracker] REDIRECTING TO ONBOARDING (no userInfo):', {
+          isSignedIn,
+          profileLoading,
+          hasUserInfo: !!userInfo,
+          pathname
+        });
         router.push('/onboarding');
       }
     }
@@ -63,6 +82,7 @@ const RouteTracker = () => {
 
       // Skip remaining redirection checks for exempt paths
       if (exemptPaths.some(path => pathname.startsWith(path))) {
+        console.log('[RouteTracker] SKIPPING REDIRECT - exempt path:', pathname);
         return;
       }
 
@@ -73,8 +93,18 @@ const RouteTracker = () => {
       // 4. Onboarding is not complete
       if (isSignedIn && !profileLoading && pathname !== '/onboarding') {
         if (!onboardingComplete) {
+          console.log('[RouteTracker] REDIRECTING TO ONBOARDING (not complete):', {
+            isSignedIn,
+            profileLoading,
+            pathname,
+            onboardingComplete
+          });
           router.push('/onboarding');
           return;
+        } else {
+          console.log('[RouteTracker] NOT REDIRECTING - onboarding complete:', {
+            onboardingComplete
+          });
         }
       }
     }

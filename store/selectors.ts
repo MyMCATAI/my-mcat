@@ -3,6 +3,8 @@ import { useEffect, useCallback, useRef } from 'react'
 import { useAudioStore } from './slices/audioSlice'
 import { useUIStore } from './slices/uiSlice'
 import { useGameStore } from './slices/gameSlice'
+import { useUserStore } from './slices/userSlice'
+import { useVocabStore } from './slices/vocabSlice'
 
 /* --- UI Selectors ---- */
 export const useUI = () => {
@@ -32,41 +34,41 @@ export const useCurrentRoute = () => useUIStore(state => state.currentRoute)
 // Consolidated user selector that provides all user-related state and actions
 export const useUser = () => {
   // Profile state and actions
-  const profile = useStore((state) => state.profile)
-  const profileLoading = useStore((state) => state.profileLoading)
-  const updateProfile = useStore((state) => state.updateProfile)
-  const isProfileComplete = useStore((state) => state.isProfileComplete)
-  const completedSteps = useStore((state) => state.completedSteps)
-  const studyPreferences = useStore((state) => state.studyPreferences)
-  const interfaceSettings = useStore((state) => state.interfaceSettings)
-  const tutorialProgress = useStore((state) => state.tutorialProgress)
-  const onboardingComplete = useStore((state) => state.onboardingComplete)
-  const lastVisitedRoute = useStore((state) => state.lastVisitedRoute)
-  const onboardingRoute = useStore((state) => state.onboardingRoute)
+  const profile = useUserStore((state) => state.profile)
+  const profileLoading = useUserStore((state) => state.profileLoading)
+  const updateProfile = useUserStore((state) => state.updateProfile)
+  const isProfileComplete = useUserStore((state) => state.isProfileComplete)
+  const completedSteps = useUserStore((state) => state.completedSteps)
+  const studyPreferences = useUserStore((state) => state.studyPreferences)
+  const interfaceSettings = useUserStore((state) => state.interfaceSettings)
+  const tutorialProgress = useUserStore((state) => state.tutorialProgress)
+  const onboardingComplete = useUserStore((state) => state.onboardingComplete)
+  const lastVisitedRoute = useUserStore((state) => state.lastVisitedRoute)
+  const onboardingRoute = useUserStore((state) => state.onboardingRoute)
   
   // Profile actions
-  const setCompletedSteps = useStore((state) => state.setCompletedSteps)
-  const addCompletedStep = useStore((state) => state.addCompletedStep)
-  const updateStudyPreferences = useStore((state) => state.updateStudyPreferences)
-  const updateInterfaceSettings = useStore((state) => state.updateInterfaceSettings)
-  const updateTutorialProgress = useStore((state) => state.updateTutorialProgress)
-  const setOnboardingComplete = useStore((state) => state.setOnboardingComplete)
-  const setLastVisitedRoute = useStore((state) => state.setLastVisitedRoute)
-  const setOnboardingRoute = useStore((state) => state.setOnboardingRoute)
+  const setCompletedSteps = useUserStore((state) => state.setCompletedSteps)
+  const addCompletedStep = useUserStore((state) => state.addCompletedStep)
+  const updateStudyPreferences = useUserStore((state) => state.updateStudyPreferences)
+  const updateInterfaceSettings = useUserStore((state) => state.updateInterfaceSettings)
+  const updateTutorialProgress = useUserStore((state) => state.updateTutorialProgress)
+  const setOnboardingComplete = useUserStore((state) => state.setOnboardingComplete)
+  const setLastVisitedRoute = useUserStore((state) => state.setLastVisitedRoute)
+  const setOnboardingRoute = useUserStore((state) => state.setOnboardingRoute)
   
   // User info state and actions
-  const userInfo = useStore((state) => state.userInfo)
-  const isSubscribed = useStore((state) => state.isSubscribed)
-  const setIsSubscribed = useStore((state) => state.setIsSubscribed)
+  const userInfo = useUserStore((state) => state.userInfo)
+  const isSubscribed = useUserStore((state) => state.isSubscribed)
+  const setIsSubscribed = useUserStore((state) => state.setIsSubscribed)
   
   // User stats state and actions
-  const coins = useStore((state) => state.coins)
-  const statsLoading = useStore((state) => state.statsLoading)
-  const updateCoins = useStore((state) => state.updateCoins)
-  const updateCoinsDisplay = useStore((state) => state.updateCoinsDisplay)
+  const coins = useUserStore((state) => state.coins)
+  const statsLoading = useUserStore((state) => state.statsLoading)
+  const updateCoins = useUserStore((state) => state.updateCoins)
+  const updateCoinsDisplay = useUserStore((state) => state.updateCoinsDisplay)
   
   // Shared actions
-  const refreshUserInfo = useStore((state) => state.refreshUserInfo)
+  const refreshUserInfo = useUserStore((state) => state.refreshUserInfo)
   
   return {
     // Profile state and actions
@@ -194,15 +196,15 @@ export const useGame = () => {
 
 /* --- Individual Profile Selectors ---- */
 // For components that only need specific profile data
-export const useProfileComplete = () => useStore(state => state.isProfileComplete)
-export const useCompletedSteps = () => useStore(state => state.completedSteps)
-export const useStudyPreferences = () => useStore(state => state.studyPreferences)
-export const useInterfaceSettings = () => useStore(state => state.interfaceSettings)
-export const useTutorialProgress = () => useStore(state => state.tutorialProgress)
+export const useProfileComplete = () => useUserStore(state => state.isProfileComplete)
+export const useCompletedSteps = () => useUserStore(state => state.completedSteps)
+export const useStudyPreferences = () => useUserStore(state => state.studyPreferences)
+export const useInterfaceSettings = () => useUserStore(state => state.interfaceSettings)
+export const useTutorialProgress = () => useUserStore(state => state.tutorialProgress)
 export const useOnboardingStatus = () => ({
-  onboardingComplete: useStore(state => state.onboardingComplete),
-  lastVisitedRoute: useStore(state => state.lastVisitedRoute),
-  onboardingRoute: useStore(state => state.onboardingRoute)
+  onboardingComplete: useUserStore(state => state.onboardingComplete),
+  lastVisitedRoute: useUserStore(state => state.lastVisitedRoute),
+  onboardingRoute: useUserStore(state => state.onboardingRoute)
 })
 
 /* --- Audio Selector ---- */
@@ -324,15 +326,15 @@ export const useAudio = () => {
 // Consolidated vocab selector that provides all vocabulary-related state and actions
 export const useVocab = () => {
   // Vocab state
-  const vocabList = useStore((state) => state.vocabList)
-  const showVocabList = useStore((state) => state.showVocabList)
-  const isCmdIEnabled = useStore((state) => state.isCmdIEnabled)
+  const vocabList = useVocabStore((state) => state.vocabList)
+  const showVocabList = useVocabStore((state) => state.showVocabList)
+  const isCmdIEnabled = useVocabStore((state) => state.isCmdIEnabled)
   
   // Vocab actions
-  const addVocabWord = useStore((state) => state.addVocabWord)
-  const removeVocabWord = useStore((state) => state.removeVocabWord)
-  const toggleVocabList = useStore((state) => state.toggleVocabList)
-  const toggleCmdI = useStore((state) => state.toggleCmdI)
+  const addVocabWord = useVocabStore((state) => state.addVocabWord)
+  const removeVocabWord = useVocabStore((state) => state.removeVocabWord)
+  const toggleVocabList = useVocabStore((state) => state.toggleVocabList)
+  const toggleCmdI = useVocabStore((state) => state.toggleCmdI)
   
   return {
     // State
@@ -349,9 +351,9 @@ export const useVocab = () => {
 }
 
 // Individual property selectors for performance
-export const useVocabList = () => useStore(state => state.vocabList)
-export const useShowVocabList = () => useStore(state => state.showVocabList)
-export const useIsCmdIEnabled = () => useStore(state => state.isCmdIEnabled)
+export const useVocabList = () => useVocabStore(state => state.vocabList)
+export const useShowVocabList = () => useVocabStore(state => state.showVocabList)
+export const useIsCmdIEnabled = () => useVocabStore(state => state.isCmdIEnabled)
 
 /* --- Clinic Data Management ---- */
 export const useClinicData = () => {

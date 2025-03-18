@@ -15,6 +15,7 @@ import { CalendarEvent } from "@/types/calendar";
 // Import required CSS for the calendar
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/components/styles/CustomCalendar.css";
+import React from "react";
 
 // Dynamically import the chatbot component
 const DynamicChatBot = dynamic(() => import("react-chatbotify"), {
@@ -59,8 +60,13 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   const cmdPressedRef = useRef(false);
   const cmdPressedTime = useRef<number | null>(null);
   const cmdReleaseTimer = useRef<NodeJS.Timeout | null>(null);
-  const audio = useAudio();
-  
+  const { 
+    playSound, 
+    playVoice, 
+    stopVoice,
+    audioContext
+  } = useAudio();
+
   /* --- Animations & Effects --- */
   useEffect(() => {
     if (!isMounted) {
@@ -114,38 +120,31 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      console.log('[ChatContainer] KeyDown:', event.key, 'repeat:', event.repeat, 'cmdPressedRef:', cmdPressedRef.current);
       if ((event.key === 'Meta' || event.key === 'Control') && !event.repeat) {
         // Only set command pressed if no other keys are already pressed
         if (!cmdPressedRef.current) {
-          console.log('[ChatContainer] Setting cmdPressedRef to true');
           cmdPressedRef.current = true;
           cmdPressedTime.current = Date.now();
         }
       } else if (cmdPressedRef.current) {
         // If any other key is pressed while Command is down, mark it as a combo
         // This prevents toggling audio when Command is used for shortcuts
-        console.log('[ChatContainer] Combo detected, clearing cmdPressedTime');
         cmdPressedTime.current = null;
       }
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      console.log('[ChatContainer] KeyUp:', event.key, 'cmdPressedRef:', cmdPressedRef.current, 'cmdPressedTime:', cmdPressedTime.current);
       if (event.key === 'Meta' || event.key === 'Control') {
         // Only toggle if it was a standalone Command press (not part of a combo)
         if (cmdPressedRef.current && cmdPressedTime.current) {
           const pressDuration = Date.now() - cmdPressedTime.current;
-          console.log('[ChatContainer] Command press duration:', pressDuration, 'ms');
           if (pressDuration < 500) { // Only toggle if pressed for less than 500ms
             // Clear any existing timer to prevent multiple toggles
             if (cmdReleaseTimer.current) {
               clearTimeout(cmdReleaseTimer.current);
             }
             
-            console.log('[ChatContainer] Setting up toggleAudio timer');
             cmdReleaseTimer.current = setTimeout(() => {
-              console.log('[ChatContainer] Executing toggleAudio from timer');
               toggleAudio();
               cmdReleaseTimer.current = null;
             }, 50); // Small delay to ensure no other keys were pressed
@@ -238,6 +237,68 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
     }
   }, [isCalendarModalOpen, fetchExamActivities, refetchStudyActivities]);
   
+  /* ---- Memoized Values ---- */
+  // Memoize the styles object to prevent recreation on every render
+  const styles = React.useMemo<Styles>(() => ({
+    chatWindowStyle: {
+      display: "flex",
+      flexDirection: "column" as const,
+      height: "calc(100vh - 8rem)",
+      width: "100%",
+      backgroundColor: "var(--theme-leaguecard-color)",
+      position: "relative",
+      zIndex: 1,
+    },
+    bodyStyle: {
+      flexGrow: 1,
+      overflowY: "auto" as const,
+    },
+    chatInputContainerStyle: {
+      position: 'sticky',
+      bottom: 0,
+      backgroundColor: "var(--theme-leaguecard-color)",
+      borderTop: "1px solid var(--theme-border-color)",
+      padding: "1rem",
+      width: "100%",
+      zIndex: 2,
+    },
+    chatInputAreaStyle: {
+      border: "1px solid var(--theme-border-color)",
+      borderRadius: "8px",
+      backgroundColor: "transparent",
+      color: "var(--theme-text-color)",
+      width: "100%",
+    },
+    botBubbleStyle: {
+      fontSize: ".9rem",
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
+      color: "var(--theme-text-color)",
+      backgroundColor: "var(--theme-botchatbox-color)",
+    },
+    userBubbleStyle: {
+      fontSize: ".9rem",
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
+      color: "white",
+      backgroundColor: "var(--theme-userchatbox-color)",
+      textAlign: "left",
+    },
+    headerStyle: {
+      background: "transparent",
+      borderBottom: "1px solid var(--theme-border-color)",
+      padding: "0.75rem 1rem",
+    },
+    chatHistoryButtonStyle: {
+      fontSize: "0.5rem !important", 
+    },
+  }), []); // Empty dependency array means this will only be created once
+
+  // Memoize the themes array
+  const themes = React.useMemo(() => [
+    { id: "simple_blue", version: "0.1.0" }
+  ], []);
+  
   /* ---- Event Handlers ----- */
   const handleSendMessage = async (userInput: string, messageContext?: string) => {
     setIsLoading(true);
@@ -318,11 +379,14 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   };
 
   const playAudio = (audioBase64: string) => {
-    console.log('[ChatContainer] Playing audio response');
     setIsPlaying(true);
     
     // Use the voice channel instead of music channel
-    audio.playVoice(audioBase64);
+    try {
+      playVoice(audioBase64);
+    } catch (error) {
+      console.error('Error playing voice audio:', error);
+    }
     
     // Set isPlaying to false after a short delay
     setTimeout(() => {
@@ -331,9 +395,8 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   };
 
   const stopAudio = () => {
-    console.log('[ChatContainer] Stopping audio');
     setIsPlaying(false);
-    audio.stopVoice();
+    stopVoice();
   };
 
   const toggleAudio = () => {
@@ -341,22 +404,21 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
     const now = Date.now();
     const timeSinceLastToggle = now - lastToggleTime;
     
-    console.log('[ChatContainer] toggleAudio called, time since last toggle:', timeSinceLastToggle, 'ms');
-    
     // Only allow toggle if it's been at least 500ms since the last toggle
     if (timeSinceLastToggle < 500) {
-      console.log('[ChatContainer] Ignoring toggle, too soon after last toggle');
       return;
     }
     
     setLastToggleTime(now);
     
     if (!audioEnabled) {
-      console.log('[ChatContainer] Enabling audio and playing sound');
-      audio.playSound('chatbot-open');
-    } else {
-      console.log('[ChatContainer] Disabling audio');
+      try {
+        playSound('chatbot-open');
+      } catch (error) {
+        console.error('Error playing sound:', error);
+      }
     }
+    
     setAudioEnabled(!audioEnabled);
   };
 
@@ -460,63 +522,6 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
       streamSpeed: audioEnabled ? 80 : 25,
     },
   };
-
-  const styles: Styles = {
-    chatWindowStyle: {
-      display: "flex",
-      flexDirection: "column" as const,
-      height: "calc(100vh - 8rem)",
-      width: "100%",
-      backgroundColor: "var(--theme-leaguecard-color)",
-      position: "relative",
-      zIndex: 1,
-    },
-    bodyStyle: {
-      flexGrow: 1,
-      overflowY: "auto" as const,
-    },
-    chatInputContainerStyle: {
-      position: 'sticky',
-      bottom: 0,
-      backgroundColor: "var(--theme-leaguecard-color)",
-      borderTop: "1px solid var(--theme-border-color)",
-      padding: "1rem",
-      width: "100%",
-      zIndex: 2,
-    },
-    chatInputAreaStyle: {
-      border: "1px solid var(--theme-border-color)",
-      borderRadius: "8px",
-      backgroundColor: "transparent",
-      color: "var(--theme-text-color)",
-      width: "100%",
-    },
-    botBubbleStyle: {
-      fontSize: ".9rem",
-      fontFamily:
-        "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-      color: "var(--theme-text-color)",
-      backgroundColor: "var(--theme-botchatbox-color)",
-    },
-    userBubbleStyle: {
-      fontSize: ".9rem",
-      fontFamily:
-        "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-      color: "white",
-      backgroundColor: "var(--theme-userchatbox-color)",
-      textAlign: "left",
-    },
-    headerStyle: {
-      background: "transparent",
-      borderBottom: "1px solid var(--theme-border-color)",
-      padding: "0.75rem 1rem",
-    },
-    chatHistoryButtonStyle: {
-      fontSize: "0.5rem !important", 
-    },
-  };
-
-  const themes = [{ id: "simple_blue", version: "0.1.0" }];
 
   /* ---- Render Methods ----- */
   if (!isMounted) {

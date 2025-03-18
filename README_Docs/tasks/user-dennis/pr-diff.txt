@@ -1,0 +1,1357 @@
+diff --git a/README_Docs/tasks/user-dennis/tasks.md b/README_Docs/tasks/user-dennis/tasks.md
+deleted file mode 100644
+index e2e1eac..0000000
+--- a/README_Docs/tasks/user-dennis/tasks.md
++++ /dev/null
+@@ -1,36 +0,0 @@
+-TODO: 
+-
+-
+-## Store Migration Progress
+-[✓] Implemented audioSlice (complete)
+-[✓] Implemented uiSlice (complete)
+-[ ] Implement userSlice (files created but not implemented)
+-[✓ ] Implement gameSlice (files created but not implemented)
+-[ ] Implement vocabSlice (files created but not implemented)
+-[ ] CARS Suite - take out sound when you select answer. (Prynce bug)
+-
+-
+-----
+-## Cursor Notes
+-
+-#### Prompts
+-` Do not apply code changes, just analyze the issue and respond to the question`
+-
+-#### Add new branch to worktree
+-add new branch for Cursor to compare: 
+-`git worktree add localstate-compare`
+-
+-remove it before pushing back up 
+-`git worktree remove localstate-compare`
+-
+-#### Create diff file for Cursor
+-
+-To create a detailed diff against `main` with context:
+-```
+-git diff --full-index main > branch-diff-full.diff
+-```
+-
+-To feed the diff back into Cursor:
+-1. Create the diff file
+-2. Open the diff file in Cursor
+-3. Ask Cursor to analyze the changes
+\ No newline at end of file
+diff --git a/components/StoreInitializer.tsx b/components/StoreInitializer.tsx
+index f069d69..7cc492a 100644
+--- a/components/StoreInitializer.tsx
++++ b/components/StoreInitializer.tsx
+@@ -2,8 +2,8 @@
+ 
+ import { useEffect } from 'react';
+ import { useUser } from '@clerk/nextjs';
+-import { useStore } from '@/store/store';
+ import { useAudioStore } from '@/store/slices/audioSlice';
++import { useUserStore } from '@/store/slices/userSlice';
+ import { initializeGlobalStore } from '@/store';
+ 
+ /**
+@@ -18,7 +18,8 @@ import { initializeGlobalStore } from '@/store';
+  */
+ const StoreInitializer = () => {
+   const { isLoaded, isSignedIn } = useUser();
+-  const refreshUserInfo = useStore(state => state.refreshUserInfo);
++  const refreshUserInfo = useUserStore(state => state.refreshUserInfo);
++  const onboardingComplete = useUserStore(state => state.onboardingComplete);
+   const initializeAudioContext = useAudioStore(state => state.initializeAudioContext);
+   
+   // Initialize the global store when the app starts
+@@ -34,6 +35,13 @@ const StoreInitializer = () => {
+     });
+   }, [initializeAudioContext]);
+   
++  // Save onboardingComplete state to localStorage when it changes
++  useEffect(() => {
++    if (onboardingComplete) {
++      localStorage.setItem('onboardingComplete', 'true');
++    }
++  }, [onboardingComplete]);
++  
+   // Refresh user information when the user is signed in
+   useEffect(() => {
+     if (isLoaded && isSignedIn) {
+diff --git a/store/index.ts b/store/index.ts
+index bf1e9e6..3a8bf22 100644
+--- a/store/index.ts
++++ b/store/index.ts
+@@ -2,6 +2,8 @@
+ export { useAudioStore } from './slices/audioSlice';
+ export { useUIStore } from './slices/uiSlice';
+ export { useGameStore } from './slices/gameSlice';
++export { useUserStore } from './slices/userSlice';
++export { useVocabStore } from './slices/vocabSlice';
+ 
+ // Re-export all types
+ export * from './types';
+@@ -11,29 +13,38 @@ export type { ThemeType, WindowSize } from './slices/uiSlice';
+ import { useAudioStore } from './slices/audioSlice';
+ import { useUIStore } from './slices/uiSlice';
+ import { useGameStore } from './slices/gameSlice';
+-import { create } from 'zustand';
++import { useUserStore } from './slices/userSlice';
++import { useVocabStore } from './slices/vocabSlice';
+ 
+ // Flag to track global initialization
+ let isStoreInitialized = false;
+ 
++type StoreUpdates = Record<string, any>;
++
+ // Create a combined store for backward compatibility
+-// This will be expanded as we migrate more slices
+ export const useStore = {
+   getState: () => ({
+     ...useAudioStore.getState(),
+     ...useUIStore.getState(),
+     ...useGameStore.getState(),
++    ...useUserStore.getState(),
++    ...useVocabStore.getState(),
+   }),
+-  setState: (updates: any) => {
++  
++  setState: (updates: StoreUpdates) => {
+     // Determine which slice each update belongs to and apply accordingly
+     const audioKeys = new Set(Object.keys(useAudioStore.getState()));
+     const uiKeys = new Set(Object.keys(useUIStore.getState()));
+     const gameKeys = new Set(Object.keys(useGameStore.getState()));
++    const userKeys = new Set(Object.keys(useUserStore.getState()));
++    const vocabKeys = new Set(Object.keys(useVocabStore.getState()));
+     
+     // Extract updates for each slice
+-    const audioUpdates: Record<string, any> = {};
+-    const uiUpdates: Record<string, any> = {};
+-    const gameUpdates: Record<string, any> = {};
++    const audioUpdates: StoreUpdates = {};
++    const uiUpdates: StoreUpdates = {};
++    const gameUpdates: StoreUpdates = {};
++    const userUpdates: StoreUpdates = {};
++    const vocabUpdates: StoreUpdates = {};
+     
+     // Sort updates into appropriate slices
+     Object.entries(updates).forEach(([key, value]) => {
+@@ -43,6 +54,10 @@ export const useStore = {
+         uiUpdates[key] = value;
+       } else if (gameKeys.has(key)) {
+         gameUpdates[key] = value;
++      } else if (userKeys.has(key)) {
++        userUpdates[key] = value;
++      } else if (vocabKeys.has(key)) {
++        vocabUpdates[key] = value;
+       }
+     });
+     
+@@ -56,27 +71,39 @@ export const useStore = {
+     if (Object.keys(gameUpdates).length > 0) {
+       useGameStore.setState(gameUpdates);
+     }
++    if (Object.keys(userUpdates).length > 0) {
++      useUserStore.setState(userUpdates);
++    }
++    if (Object.keys(vocabUpdates).length > 0) {
++      useVocabStore.setState(vocabUpdates);
++    }
+   },
++  
+   subscribe: (callback: (state: any, prevState: any) => void) => {
+     // Subscribe to all slice stores
+     const unsubAudio = useAudioStore.subscribe(callback);
+     const unsubUI = useUIStore.subscribe(callback);
+     const unsubGame = useGameStore.subscribe(callback);
++    const unsubUser = useUserStore.subscribe(callback);
++    const unsubVocab = useVocabStore.subscribe(callback);
+     
+     // Return a function to unsubscribe from all
+     return () => {
+       unsubAudio();
+       unsubUI();
+       unsubGame();
++      unsubUser();
++      unsubVocab();
+     };
+   }
+ };
+ 
+ // Export a function to initialize the store at the app level
+-export const initializeGlobalStore = async () => {
++export const initializeGlobalStore = async (): Promise<void> => {
+   if (typeof window !== 'undefined' && !isStoreInitialized) {
+-    console.debug('[DEBUG][Store] Initializing global store from exported function');
++    console.debug('[Store] Initializing global store');
+     try {
++      // Initialize audio context
+       await useAudioStore.getState().initializeAudioContext();
+       
+       // Initialize UI state
+@@ -85,10 +112,21 @@ export const initializeGlobalStore = async () => {
+         useUIStore.getState().setTheme(savedTheme as any);
+       }
+       
++      // Try to load user state from localStorage if available
++      try {
++        const savedOnboardingComplete = localStorage.getItem('onboardingComplete');
++        if (savedOnboardingComplete === 'true') {
++          useUserStore.getState().setOnboardingComplete(true);
++        }
++      } catch (err) {
++        console.error('[Store] Error restoring user state:', err);
++      }
++      
+       isStoreInitialized = true;
+-      console.debug('[DEBUG][Store] Store initialization complete');
++      console.debug('[Store] Store initialization complete');
+     } catch (error) {
+-      console.error('[DEBUG][Store] Store initialization failed:', error);
++      console.error('[Store] Store initialization failed:', error);
++      throw error;
+     }
+   }
+ }; 
+\ No newline at end of file
+diff --git a/store/selectors.ts b/store/selectors.ts
+index 41348a5..c9e5a5f 100644
+--- a/store/selectors.ts
++++ b/store/selectors.ts
+@@ -3,6 +3,8 @@ import { useEffect, useCallback, useRef } from 'react'
+ import { useAudioStore } from './slices/audioSlice'
+ import { useUIStore } from './slices/uiSlice'
+ import { useGameStore } from './slices/gameSlice'
++import { useUserStore } from './slices/userSlice'
++import { useVocabStore } from './slices/vocabSlice'
+ 
+ /* --- UI Selectors ---- */
+ export const useUI = () => {
+@@ -32,41 +34,41 @@ export const useCurrentRoute = () => useUIStore(state => state.currentRoute)
+ // Consolidated user selector that provides all user-related state and actions
+ export const useUser = () => {
+   // Profile state and actions
+-  const profile = useStore((state) => state.profile)
+-  const profileLoading = useStore((state) => state.profileLoading)
+-  const updateProfile = useStore((state) => state.updateProfile)
+-  const isProfileComplete = useStore((state) => state.isProfileComplete)
+-  const completedSteps = useStore((state) => state.completedSteps)
+-  const studyPreferences = useStore((state) => state.studyPreferences)
+-  const interfaceSettings = useStore((state) => state.interfaceSettings)
+-  const tutorialProgress = useStore((state) => state.tutorialProgress)
+-  const onboardingComplete = useStore((state) => state.onboardingComplete)
+-  const lastVisitedRoute = useStore((state) => state.lastVisitedRoute)
+-  const onboardingRoute = useStore((state) => state.onboardingRoute)
++  const profile = useUserStore((state) => state.profile)
++  const profileLoading = useUserStore((state) => state.profileLoading)
++  const updateProfile = useUserStore((state) => state.updateProfile)
++  const isProfileComplete = useUserStore((state) => state.isProfileComplete)
++  const completedSteps = useUserStore((state) => state.completedSteps)
++  const studyPreferences = useUserStore((state) => state.studyPreferences)
++  const interfaceSettings = useUserStore((state) => state.interfaceSettings)
++  const tutorialProgress = useUserStore((state) => state.tutorialProgress)
++  const onboardingComplete = useUserStore((state) => state.onboardingComplete)
++  const lastVisitedRoute = useUserStore((state) => state.lastVisitedRoute)
++  const onboardingRoute = useUserStore((state) => state.onboardingRoute)
+   
+   // Profile actions
+-  const setCompletedSteps = useStore((state) => state.setCompletedSteps)
+-  const addCompletedStep = useStore((state) => state.addCompletedStep)
+-  const updateStudyPreferences = useStore((state) => state.updateStudyPreferences)
+-  const updateInterfaceSettings = useStore((state) => state.updateInterfaceSettings)
+-  const updateTutorialProgress = useStore((state) => state.updateTutorialProgress)
+-  const setOnboardingComplete = useStore((state) => state.setOnboardingComplete)
+-  const setLastVisitedRoute = useStore((state) => state.setLastVisitedRoute)
+-  const setOnboardingRoute = useStore((state) => state.setOnboardingRoute)
++  const setCompletedSteps = useUserStore((state) => state.setCompletedSteps)
++  const addCompletedStep = useUserStore((state) => state.addCompletedStep)
++  const updateStudyPreferences = useUserStore((state) => state.updateStudyPreferences)
++  const updateInterfaceSettings = useUserStore((state) => state.updateInterfaceSettings)
++  const updateTutorialProgress = useUserStore((state) => state.updateTutorialProgress)
++  const setOnboardingComplete = useUserStore((state) => state.setOnboardingComplete)
++  const setLastVisitedRoute = useUserStore((state) => state.setLastVisitedRoute)
++  const setOnboardingRoute = useUserStore((state) => state.setOnboardingRoute)
+   
+   // User info state and actions
+-  const userInfo = useStore((state) => state.userInfo)
+-  const isSubscribed = useStore((state) => state.isSubscribed)
+-  const setIsSubscribed = useStore((state) => state.setIsSubscribed)
++  const userInfo = useUserStore((state) => state.userInfo)
++  const isSubscribed = useUserStore((state) => state.isSubscribed)
++  const setIsSubscribed = useUserStore((state) => state.setIsSubscribed)
+   
+   // User stats state and actions
+-  const coins = useStore((state) => state.coins)
+-  const statsLoading = useStore((state) => state.statsLoading)
+-  const updateCoins = useStore((state) => state.updateCoins)
+-  const updateCoinsDisplay = useStore((state) => state.updateCoinsDisplay)
++  const coins = useUserStore((state) => state.coins)
++  const statsLoading = useUserStore((state) => state.statsLoading)
++  const updateCoins = useUserStore((state) => state.updateCoins)
++  const updateCoinsDisplay = useUserStore((state) => state.updateCoinsDisplay)
+   
+   // Shared actions
+-  const refreshUserInfo = useStore((state) => state.refreshUserInfo)
++  const refreshUserInfo = useUserStore((state) => state.refreshUserInfo)
+   
+   return {
+     // Profile state and actions
+@@ -194,15 +196,15 @@ export const useGame = () => {
+ 
+ /* --- Individual Profile Selectors ---- */
+ // For components that only need specific profile data
+-export const useProfileComplete = () => useStore(state => state.isProfileComplete)
+-export const useCompletedSteps = () => useStore(state => state.completedSteps)
+-export const useStudyPreferences = () => useStore(state => state.studyPreferences)
+-export const useInterfaceSettings = () => useStore(state => state.interfaceSettings)
+-export const useTutorialProgress = () => useStore(state => state.tutorialProgress)
++export const useProfileComplete = () => useUserStore(state => state.isProfileComplete)
++export const useCompletedSteps = () => useUserStore(state => state.completedSteps)
++export const useStudyPreferences = () => useUserStore(state => state.studyPreferences)
++export const useInterfaceSettings = () => useUserStore(state => state.interfaceSettings)
++export const useTutorialProgress = () => useUserStore(state => state.tutorialProgress)
+ export const useOnboardingStatus = () => ({
+-  onboardingComplete: useStore(state => state.onboardingComplete),
+-  lastVisitedRoute: useStore(state => state.lastVisitedRoute),
+-  onboardingRoute: useStore(state => state.onboardingRoute)
++  onboardingComplete: useUserStore(state => state.onboardingComplete),
++  lastVisitedRoute: useUserStore(state => state.lastVisitedRoute),
++  onboardingRoute: useUserStore(state => state.onboardingRoute)
+ })
+ 
+ /* --- Audio Selector ---- */
+@@ -324,15 +326,15 @@ export const useAudio = () => {
+ // Consolidated vocab selector that provides all vocabulary-related state and actions
+ export const useVocab = () => {
+   // Vocab state
+-  const vocabList = useStore((state) => state.vocabList)
+-  const showVocabList = useStore((state) => state.showVocabList)
+-  const isCmdIEnabled = useStore((state) => state.isCmdIEnabled)
++  const vocabList = useVocabStore((state) => state.vocabList)
++  const showVocabList = useVocabStore((state) => state.showVocabList)
++  const isCmdIEnabled = useVocabStore((state) => state.isCmdIEnabled)
+   
+   // Vocab actions
+-  const addVocabWord = useStore((state) => state.addVocabWord)
+-  const removeVocabWord = useStore((state) => state.removeVocabWord)
+-  const toggleVocabList = useStore((state) => state.toggleVocabList)
+-  const toggleCmdI = useStore((state) => state.toggleCmdI)
++  const addVocabWord = useVocabStore((state) => state.addVocabWord)
++  const removeVocabWord = useVocabStore((state) => state.removeVocabWord)
++  const toggleVocabList = useVocabStore((state) => state.toggleVocabList)
++  const toggleCmdI = useVocabStore((state) => state.toggleCmdI)
+   
+   return {
+     // State
+@@ -349,9 +351,9 @@ export const useVocab = () => {
+ }
+ 
+ // Individual property selectors for performance
+-export const useVocabList = () => useStore(state => state.vocabList)
+-export const useShowVocabList = () => useStore(state => state.showVocabList)
+-export const useIsCmdIEnabled = () => useStore(state => state.isCmdIEnabled)
++export const useVocabList = () => useVocabStore(state => state.vocabList)
++export const useShowVocabList = () => useVocabStore(state => state.showVocabList)
++export const useIsCmdIEnabled = () => useVocabStore(state => state.isCmdIEnabled)
+ 
+ /* --- Clinic Data Management ---- */
+ export const useClinicData = () => {
+diff --git a/store/slices/userSlice.ts b/store/slices/userSlice.ts
+index e69de29..f50ffb9 100644
+--- a/store/slices/userSlice.ts
++++ b/store/slices/userSlice.ts
+@@ -0,0 +1,391 @@
++import { create } from 'zustand';
++import { devtools } from 'zustand/middleware';
++import { UserInfo } from '@/types/user';
++
++//========================= Helpers ===============================
++// Helper function to check if a date is within 14 days of now
++const isWithin14Days = (date: Date): boolean => {
++  const now = new Date();
++  const diffTime = Math.abs(now.getTime() - date.getTime());
++  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
++  return diffDays <= 14;
++};
++
++//========================= Types ===============================
++interface UserProfile {
++  userId?: string;
++  firstName?: string;
++  bio?: string;
++  coins?: number;
++  patientsCount?: number;
++  profilePhoto?: string;
++  studyPreferences?: {
++    dailyGoal?: number;
++    reminderTime?: string;
++  };
++  interfaceSettings?: {
++    darkMode?: boolean;
++    fontSize?: string;
++  };
++  tutorialProgress?: {
++    currentStep?: number;
++    completedRoutes?: string[];
++  };
++  completedSteps?: string[];
++  onboardingComplete?: boolean;
++  lastVisitedRoute?: string;
++  onboardingRoute?: string;
++}
++
++interface UserState {
++  // Profile state
++  profile: UserProfile | null;
++  profileLoading: boolean;
++  isProfileComplete: boolean;
++  completedSteps: string[];
++  studyPreferences: {
++    dailyGoal: number;
++    reminderTime: string;
++  };
++  interfaceSettings: {
++    darkMode: boolean;
++    fontSize: string;
++  };
++  tutorialProgress: {
++    currentStep: number;
++    completedRoutes: string[];
++  };
++  onboardingComplete: boolean;
++  lastVisitedRoute: string;
++  onboardingRoute: string;
++  
++  // User info state
++  userInfo: UserInfo | null;
++  isSubscribed: boolean;
++  
++  // User stats state
++  coins: number;
++  statsLoading: boolean;
++  error: string | null;
++}
++
++interface UserActions {
++  // Profile actions
++  updateProfile: (updates: any) => Promise<void>;
++  setCompletedSteps: (steps: string[]) => void;
++  addCompletedStep: (step: string) => void;
++  
++  // Preferences actions
++  updateStudyPreferences: (preferences: Partial<UserState['studyPreferences']>) => void;
++  updateInterfaceSettings: (settings: Partial<UserState['interfaceSettings']>) => void;
++  updateTutorialProgress: (progress: Partial<UserState['tutorialProgress']>) => void;
++  
++  // Onboarding actions
++  setOnboardingComplete: (completed: boolean) => void;
++  setLastVisitedRoute: (route: string) => void;
++  setOnboardingRoute: (route: string) => void;
++  
++  // User info actions
++  refreshUserInfo: () => Promise<void>;
++  setIsSubscribed: (status: boolean) => void;
++  
++  // Stats actions
++  updateCoins: (amount: number) => Promise<void>;
++  updateCoinsDisplay: (newAmount: number) => void;
++}
++
++//========================= Store Creation ===============================
++export const useUserStore = create<UserState & UserActions>()(
++  devtools((set, get) => ({
++    // Profile state
++    profile: null,
++    profileLoading: true,
++    isProfileComplete: false,
++    completedSteps: [],
++    
++    // Preferences state
++    studyPreferences: {
++      dailyGoal: 30, // Default: 30 minutes
++      reminderTime: '09:00', // Default: 9 AM
++    },
++    interfaceSettings: {
++      darkMode: false,
++      fontSize: 'medium',
++    },
++    tutorialProgress: {
++      currentStep: 0,
++      completedRoutes: [],
++    },
++    
++    // Onboarding state
++    onboardingComplete: false,
++    lastVisitedRoute: '/',
++    onboardingRoute: '/onboarding',
++    
++    // User info state
++    userInfo: null,
++    isSubscribed: false,
++    
++    // Stats state
++    coins: 0,
++    statsLoading: false,
++    error: null,
++    
++    // Profile actions
++    updateProfile: async (updates) => {
++      set({ profileLoading: true });
++      
++      try {
++        // Get the current profile and email/userId for the API call
++        const state = get();
++        const userInfo = state.userInfo;
++        
++        if (!userInfo || (!userInfo.email && !userInfo.userId)) {
++          console.error('Cannot update profile: No user email or ID available');
++          set({ 
++            profileLoading: false,
++            error: 'Cannot update profile: No user email or ID available'
++          });
++          return;
++        }
++        
++        // Determine which query param to use (email or userId)
++        const queryParam = userInfo.email 
++          ? `email=${encodeURIComponent(userInfo.email)}`
++          : `userId=${userInfo.userId}`;
++        
++        // Send the update to the API
++        const response = await fetch(`/api/user-info/profile?${queryParam}`, {
++          method: 'PATCH',
++          headers: {
++            'Content-Type': 'application/json',
++          },
++          body: JSON.stringify(updates),
++        });
++        
++        if (!response.ok) {
++          throw new Error(`Failed to update profile: ${response.status} ${response.statusText}`);
++        }
++        
++        const updatedProfile = await response.json();
++        
++        // Update the local state with the response
++        set({
++          profile: updatedProfile,
++          profileLoading: false,
++          isProfileComplete: !!updatedProfile,
++          error: null,
++        });
++      } catch (error) {
++        console.error('Error updating profile:', error);
++        set({
++          profileLoading: false,
++          error: error instanceof Error ? error.message : 'Failed to update profile',
++        });
++      }
++    },
++    
++    setCompletedSteps: (steps) => {
++      set({ completedSteps: steps });
++    },
++    
++    addCompletedStep: (step) => {
++      set(state => ({
++        completedSteps: [...state.completedSteps, step]
++      }));
++    },
++    
++    // Preferences actions
++    updateStudyPreferences: (preferences) => {
++      set(state => ({
++        studyPreferences: {
++          ...state.studyPreferences,
++          ...preferences
++        }
++      }));
++    },
++    
++    updateInterfaceSettings: (settings) => {
++      set(state => ({
++        interfaceSettings: {
++          ...state.interfaceSettings,
++          ...settings
++        }
++      }));
++    },
++    
++    updateTutorialProgress: (progress) => {
++      set(state => ({
++        tutorialProgress: {
++          ...state.tutorialProgress,
++          ...progress
++        }
++      }));
++    },
++    
++    // Onboarding actions
++    setOnboardingComplete: (completed) => {
++      set({ onboardingComplete: completed });
++    },
++    
++    setLastVisitedRoute: (route) => {
++      set({ lastVisitedRoute: route });
++    },
++    
++    setOnboardingRoute: (route) => {
++      set({ onboardingRoute: route });
++    },
++    
++    // User info actions
++    refreshUserInfo: async () => {
++      set({ statsLoading: true });
++      
++      try {
++        // Fetch both user info and profile in parallel
++        const [userInfoResponse, profileResponse] = await Promise.all([
++          fetch('/api/user-info'),
++          fetch('/api/user-info/profile')
++        ]);
++        
++        // Parse the user info response
++        if (!userInfoResponse.ok) throw new Error('Failed to fetch user info');
++        const userInfo = await userInfoResponse.json();
++        
++        // Check if user is in 14-day free trial period based on account creation date
++        const isNewUserTrial = userInfo.createdAt ? isWithin14Days(new Date(userInfo.createdAt)) : false;
++        
++        // Update state with user info
++        const updates: Partial<UserState> = {
++          userInfo,
++          statsLoading: false,
++        };
++        
++        // Update coins if they changed
++        if (userInfo.score !== get().coins) {
++          updates.coins = userInfo.score || 0;
++        }
++        
++        // Update subscription status
++        // Include Gold, Premium, and trial subscriptions
++        // Also include users in their 14-day trial period
++        updates.isSubscribed = !!(
++          userInfo.subscriptionType === 'gold' ||
++          userInfo.subscriptionType === 'premium' ||
++          userInfo.subscriptionType?.startsWith('Gold') ||
++          userInfo.subscriptionType?.includes('_Trial') ||
++          isNewUserTrial ||
++          userInfo.hasPaid
++        );
++        
++        // Check onboarding status
++        // IMPORTANT: Check onboarding status from userInfo.onboardingInfo
++        if (userInfo.onboardingInfo && typeof userInfo.onboardingInfo === 'object') {
++          // Get target score from user's onboarding info
++          const targetScore = userInfo.onboardingInfo.targetScore;
++          if (targetScore && typeof targetScore === 'number') {
++            updates.studyPreferences = {
++              ...get().studyPreferences,
++              dailyGoal: targetScore,
++            };
++          }
++          
++          // Update onboarding complete flag
++          const dbOnboardingComplete = userInfo.onboardingInfo.onboardingComplete === true;
++          if (dbOnboardingComplete !== get().onboardingComplete) {
++            updates.onboardingComplete = dbOnboardingComplete;
++          }
++        }
++        
++        // Parse the profile response
++        if (profileResponse.ok) {
++          const profile = await profileResponse.json();
++          
++          // Only update profile if it exists
++          if (profile) {
++            updates.profile = profile;
++            updates.isProfileComplete = true;
++            updates.profileLoading = false;
++            
++            // Update study preferences if they exist
++            if (profile.studyPreferences) {
++              updates.studyPreferences = {
++                ...get().studyPreferences,
++                ...profile.studyPreferences,
++              };
++            }
++            
++            // Update interface settings if they exist
++            if (profile.interfaceSettings) {
++              updates.interfaceSettings = {
++                ...get().interfaceSettings,
++                ...profile.interfaceSettings,
++              };
++            }
++            
++            // Update tutorial progress if it exists
++            if (profile.tutorialProgress) {
++              updates.tutorialProgress = {
++                ...get().tutorialProgress,
++                ...profile.tutorialProgress,
++              };
++            }
++            
++            // Update completed steps if they exist
++            if (profile.completedSteps && Array.isArray(profile.completedSteps)) {
++              updates.completedSteps = profile.completedSteps;
++            }
++          }
++        }
++        
++        // Apply all updates to state
++        set(updates);
++        
++      } catch (error) {
++        console.error('Error in refreshUserInfo:', error);
++        set({
++          statsLoading: false,
++          error: error instanceof Error ? error.message : 'Failed to refresh user info',
++        });
++      }
++    },
++    
++    setIsSubscribed: (status) => {
++      set({ isSubscribed: status });
++    },
++    
++    // Stats actions
++    updateCoins: async (amount) => {
++      // Set loading state
++      set({ statsLoading: true });
++      
++      try {
++        // Send request to update coins/score
++        const response = await fetch('/api/user/score', {
++          method: 'POST',
++          headers: {
++            'Content-Type': 'application/json',
++          },
++          body: JSON.stringify({ amount }),
++        });
++        
++        if (!response.ok) {
++          throw new Error(`Failed to update score: ${response.status} ${response.statusText}`);
++        }
++        
++        // After successful update, refresh user info to get updated data
++        await get().refreshUserInfo();
++        
++      } catch (error) {
++        console.error('Error updating coins:', error);
++        set({
++          statsLoading: false,
++          error: error instanceof Error ? error.message : 'Failed to update coins',
++        });
++      }
++    },
++    
++    updateCoinsDisplay: (newAmount) => {
++      set({ coins: newAmount });
++    },
++  }))
++);
+diff --git a/store/slices/vocalSlice.ts b/store/slices/vocalSlice.ts
+deleted file mode 100644
+index e69de29..0000000
+diff --git a/store/store.ts b/store/store.ts
+deleted file mode 100644
+index 341f139..0000000
+--- a/store/store.ts
++++ /dev/null
+@@ -1,592 +0,0 @@
+-import { create } from 'zustand'
+-import { devtools } from 'zustand/middleware'
+-import { UserInfo } from '@/types/user'
+-import type { DoctorOfficeStats } from '@/types'
+-import { toast } from 'react-hot-toast'
+-import { isWithin14Days } from '@/lib/utils'
+-// Import the audio slice for initialization
+-import { useAudioStore } from './slices/audioSlice'
+-// Import the UI slice for initialization
+-import { useUIStore } from './slices/uiSlice'
+-// Import the Game slice for initialization
+-import { useGameStore } from './slices/gameSlice'
+-
+-// Add a flag to track global initialization
+-let isStoreInitialized = false;
+-
+-//***************************************** User Slice ********************************************************//
+-//************************* UserProfile, UserInfo, UserStats, User  *******************************************//
+-
+-interface UserProfile {
+-  profile: {
+-    userId?: string;
+-    firstName?: string;
+-    bio?: string;
+-    coins?: number;
+-    patientsCount?: number;
+-    profilePhoto?: string;
+-    studyPreferences?: {
+-      dailyGoal?: number;
+-      reminderTime?: string;
+-    };
+-    interfaceSettings?: {
+-      darkMode?: boolean;
+-      fontSize?: string;
+-    };
+-    tutorialProgress?: {
+-      currentStep?: number;
+-      completedRoutes?: string[];
+-    };
+-    completedSteps?: string[];
+-    onboardingComplete?: boolean;
+-    lastVisitedRoute?: string;
+-    onboardingRoute?: string;
+-  } | null;
+-  isLoading: boolean;
+-}
+-
+-interface UserInfoState {
+-  userInfo: UserInfo | null;
+-  isSubscribed: boolean;
+-}
+-
+-interface UserStats {
+-  coins: number;
+-  isLoading: boolean;
+-}
+-
+-/* --- User Slice ---- */
+-interface UserSlice {
+-  // UserProfile state
+-  profile: UserProfile['profile'];
+-  profileLoading: boolean;
+-  isProfileComplete: boolean;
+-  completedSteps: string[];
+-  studyPreferences: {
+-    dailyGoal: number;
+-    reminderTime: string;
+-  };
+-  interfaceSettings: {
+-    darkMode: boolean;
+-    fontSize: string;
+-  };
+-  tutorialProgress: {
+-    currentStep: number;
+-    completedRoutes: string[];
+-  };
+-  onboardingComplete: boolean;
+-  lastVisitedRoute: string;
+-  onboardingRoute: string;
+-  
+-  // UserInfo state
+-  userInfo: UserInfoState['userInfo'];
+-  isSubscribed: boolean;
+-  
+-  // UserStats state
+-  coins: number;
+-  statsLoading: boolean;
+-  error: string | null;
+-  
+-  // Actions
+-  updateProfile: (updates: any) => Promise<void>;
+-  refreshUserInfo: () => Promise<void>;
+-  updateCoins: (amount: number) => Promise<void>;
+-  updateCoinsDisplay: (newAmount: number) => void;
+-  setIsSubscribed: (status: boolean) => void;
+-  setCompletedSteps: (steps: string[]) => void;
+-  addCompletedStep: (step: string) => void;
+-  updateStudyPreferences: (preferences: Partial<UserSlice['studyPreferences']>) => void;
+-  updateInterfaceSettings: (settings: Partial<UserSlice['interfaceSettings']>) => void;
+-  updateTutorialProgress: (progress: Partial<UserSlice['tutorialProgress']>) => void;
+-  setOnboardingComplete: (completed: boolean) => void;
+-  setLastVisitedRoute: (route: string) => void;
+-  setOnboardingRoute: (route: string) => void;
+-}
+-
+-// Audio Slice has been moved to its own file: slices/audioSlice.ts
+-// Game Slice has been moved to its own file: slices/gameSlice.ts
+-
+-//******************************************* Vocab Slice ****************************************************//
+-interface VocabSlice {
+-  // Vocab state
+-  vocabList: Array<{
+-    word: string;
+-    definitions: string;
+-  }>;
+-  showVocabList: boolean;
+-  isCmdIEnabled: boolean;
+-  
+-  // Vocab actions
+-  addVocabWord: (word: string, definition: string) => void;
+-  removeVocabWord: (word: string) => void;
+-  toggleVocabList: () => void;
+-  toggleCmdI: () => void;
+-}
+-
+-// Updated to exclude AudioSlice, UISlice, and GameSlice since they're now in their own files
+-type Store = UserSlice & VocabSlice;
+-
+-//====================================================================================================//
+-//================================= Store Initialization =============================================//
+-//====================================================================================================//
+-
+-export const useStore = create<Store>()(
+-  devtools(
+-    (set, get) => ({
+-      //***********************************************************************************************//
+-      //************************************** USER State *********************************************//
+-      //***********************************************************************************************//
+-      // User State
+-      profile: null,
+-      profileLoading: true,
+-      isProfileComplete: false,
+-      completedSteps: [],
+-      studyPreferences: {
+-        dailyGoal: 30, // Default: 30 minutes
+-        reminderTime: '09:00', // Default: 9 AM
+-      },
+-      interfaceSettings: {
+-        darkMode: false,
+-        fontSize: 'medium',
+-      },
+-      tutorialProgress: {
+-        currentStep: 0,
+-        completedRoutes: [],
+-      },
+-      onboardingComplete: false,
+-      lastVisitedRoute: '/',
+-      onboardingRoute: '/onboarding',
+-      userInfo: null,
+-      isSubscribed: false,
+-      coins: 0,
+-      statsLoading: true,
+-      error: null,
+-
+-      // User Actions
+-      updateProfile: async (updates) => {
+-        try {
+-          // Get the current profile and email/userId for the API call
+-          const currentProfile = get().profile;
+-          const userInfo = get().userInfo;
+-          
+-          if (!userInfo || (!userInfo.email && !userInfo.userId)) {
+-            console.error('Cannot update profile: No user email or ID available');
+-            return;
+-          }
+-          
+-          // Determine query parameter
+-          
+-          const queryParam = userInfo.email 
+-            ? `email=${encodeURIComponent(userInfo.email)}` 
+-            : `userId=${userInfo.userId}`;
+-          
+-          // Implement your API call here
+-          const response = await fetch(`/api/user-info/profile?${queryParam}`, {
+-            method: 'PATCH',
+-            headers: { 'Content-Type': 'application/json' },
+-            body: JSON.stringify(updates)
+-          });
+-          
+-          if (!response.ok) throw new Error('Failed to update profile');
+-          
+-          const updatedProfile = await response.json();
+-          
+-          // Update the profile and related state
+-          set({ 
+-            profile: updatedProfile,
+-            profileLoading: false,
+-            // Update other profile-related state if present in the response
+-            ...(updatedProfile.completedSteps && { completedSteps: updatedProfile.completedSteps }),
+-            ...(updatedProfile.studyPreferences && { studyPreferences: updatedProfile.studyPreferences }),
+-            ...(updatedProfile.interfaceSettings && { interfaceSettings: updatedProfile.interfaceSettings }),
+-            ...(updatedProfile.tutorialProgress && { tutorialProgress: updatedProfile.tutorialProgress }),
+-            ...(updatedProfile.onboardingComplete !== undefined && { 
+-              onboardingComplete: updatedProfile.onboardingComplete 
+-            }),
+-            ...(updatedProfile.lastVisitedRoute && { lastVisitedRoute: updatedProfile.lastVisitedRoute }),
+-            ...(updatedProfile.onboardingRoute && { onboardingRoute: updatedProfile.onboardingRoute }),
+-          });
+-          
+-          // Update isProfileComplete based on completedSteps
+-          const steps = updatedProfile.completedSteps || get().completedSteps;
+-          set({ isProfileComplete: steps.length >= 3 }); // Assuming 3 steps is complete
+-        } catch (error) {
+-          console.error('Failed to update profile:', error);
+-        }
+-      },
+-      
+-      refreshUserInfo: async () => {
+-        try {
+-          // Only set loading if not already loading
+-          const currentState = get();
+-          if (!currentState.statsLoading && !currentState.profileLoading) {
+-            set({ statsLoading: true, profileLoading: true, error: null });
+-          }
+-
+-          // Add loading timeout
+-          const loadingTimeout = setTimeout(() => {
+-            const state = get();
+-            if (state.statsLoading || state.profileLoading) {
+-              set({ 
+-                statsLoading: false,
+-                profileLoading: false,
+-                error: 'Loading timeout - please try again'
+-              });
+-            }
+-          }, 10000);
+-
+-          // Batch all fetch requests together
+-          const [userInfoResponse, profileResponse] = await Promise.all([
+-            fetch('/api/user-info'),
+-            fetch('/api/user-info/profile')
+-          ]);
+-
+-          clearTimeout(loadingTimeout);
+-
+-          if (!userInfoResponse.ok) throw new Error('Failed to fetch user info');
+-          const userInfo = await userInfoResponse.json();
+-          
+-          // Check if user is in 14-day free trial period based on account creation date
+-          const isNewUserTrial = userInfo.createdAt ? isWithin14Days(new Date(userInfo.createdAt)) : false;
+-
+-          // Prepare single state update with only changed values
+-          const updates: Partial<Store> = {
+-            userInfo,
+-            statsLoading: false,
+-            profileLoading: false,
+-            error: null
+-          };
+-
+-          // Only update coins if changed
+-          if (userInfo.score !== get().coins) {
+-            updates.coins = userInfo.score || 0;
+-          }
+-
+-          // Only update subscription if changed
+-          // Match main branch behavior by including trial subscriptions
+-          // Also include users in their 14-day trial period
+-          const newSubStatus = 
+-            userInfo.subscriptionType === 'gold' || 
+-            userInfo.subscriptionType === 'premium' ||
+-            userInfo.subscriptionType?.startsWith('Gold') ||
+-            userInfo.subscriptionType?.includes('_Trial') || 
+-            isNewUserTrial || 
+-            false;
+-            
+-          if (newSubStatus !== get().isSubscribed) {
+-            updates.isSubscribed = newSubStatus;
+-          }
+-
+-          // IMPORTANT: Check onboarding status from userInfo.onboardingInfo
+-          if (userInfo.onboardingInfo && typeof userInfo.onboardingInfo === 'object') {
+-            // Check if targetScore exists (main branch logic)
+-            const targetScore = userInfo.onboardingInfo.targetScore;
+-            const isOnboardingComplete = targetScore !== undefined && 
+-                                  targetScore !== null && 
+-                                  targetScore > 0;
+-            
+-            // Set onboardingComplete based on targetScore criteria to match main branch
+-            if (isOnboardingComplete !== get().onboardingComplete) {
+-              // Apply this update immediately and separately from the batch update
+-              set({ onboardingComplete: isOnboardingComplete });
+-              
+-              // Remove from batch updates to avoid overwriting
+-              delete updates.onboardingComplete;
+-              
+-              // Sync with database if there's a mismatch
+-              const dbOnboardingComplete = userInfo.onboardingInfo.onboardingComplete === true;
+-              if (dbOnboardingComplete !== isOnboardingComplete) {
+-                // Queue an update to sync the database value
+-                setTimeout(() => {
+-                  get().updateProfile({ onboardingComplete: isOnboardingComplete });
+-                }, 0);
+-              }
+-            }
+-          }
+-
+-          if (profileResponse.ok) {
+-            const profileData = await profileResponse.json();
+-            const currentProfile = get().profile;
+-            
+-            // Only update profile fields that have changed
+-            if (JSON.stringify(currentProfile) !== JSON.stringify(profileData)) {
+-              Object.assign(updates, {
+-                profile: profileData,
+-                completedSteps: profileData.completedSteps || [],
+-                studyPreferences: profileData.studyPreferences || {
+-                  dailyGoal: 30,
+-                  reminderTime: '09:00'
+-                },
+-                interfaceSettings: profileData.interfaceSettings || {
+-                  darkMode: false,
+-                  fontSize: 'medium'
+-                },
+-                tutorialProgress: profileData.tutorialProgress || {
+-                  currentStep: 0,
+-                  completedRoutes: []
+-                },
+-                lastVisitedRoute: profileData.lastVisitedRoute || '/',
+-                onboardingRoute: profileData.onboardingRoute || '/onboarding',
+-                isProfileComplete: (profileData.completedSteps || []).length >= 3
+-              });
+-            }
+-          }
+-
+-          // Single state update for all other fields
+-          set(updates);
+-
+-        } catch (error) {
+-          console.error('Error in refreshUserInfo:', error);
+-          set({ 
+-            error: error instanceof Error ? error.message : 'Failed to refresh user info',
+-            statsLoading: false,
+-            profileLoading: false
+-          });
+-        }
+-      },
+-      
+-      updateCoins: async (amount) => {
+-        try {
+-          // Implement your API call to update coins/score
+-          const response = await fetch('/api/user/score', {
+-            method: 'POST',
+-            headers: { 'Content-Type': 'application/json' },
+-            body: JSON.stringify({ amount })
+-          });
+-          
+-          if (!response.ok) throw new Error('Failed to update coins');
+-          
+-          // After successful update, refresh user info to get updated data
+-          await get().refreshUserInfo();
+-        } catch (error) {
+-          console.error('Failed to update coins:', error);
+-        }
+-      },
+-      
+-      updateCoinsDisplay: (newAmount) => {
+-        set({ coins: newAmount });
+-      },
+-      
+-      setIsSubscribed: (status) => {
+-        set({ isSubscribed: status });
+-      },
+-      
+-      // New profile-related actions
+-      setCompletedSteps: (steps) => {
+-        set({ completedSteps: steps });
+-        set({ isProfileComplete: steps.length >= 3 }); // Assuming 3 steps is complete
+-        
+-        // Also update the profile object for consistency
+-        const profile = get().profile;
+-        if (profile) {
+-          set({ profile: { ...profile, completedSteps: steps } });
+-        }
+-        
+-        // Persist to backend if possible
+-        get().updateProfile({ completedSteps: steps });
+-      },
+-      
+-      addCompletedStep: (step) => {
+-        const currentSteps = get().completedSteps;
+-        if (!currentSteps.includes(step)) {
+-          const newSteps = [...currentSteps, step];
+-          set({ completedSteps: newSteps });
+-          set({ isProfileComplete: newSteps.length >= 3 }); // Assuming 3 steps is complete
+-          
+-          // Also update the profile object for consistency
+-          const profile = get().profile;
+-          if (profile) {
+-            set({ profile: { ...profile, completedSteps: newSteps } });
+-          }
+-          
+-          // Persist to backend if possible
+-          get().updateProfile({ completedSteps: newSteps });
+-        }
+-      },
+-      
+-      updateStudyPreferences: (preferences) => {
+-        const currentPreferences = get().studyPreferences;
+-        const updatedPreferences = { ...currentPreferences, ...preferences };
+-        set({ studyPreferences: updatedPreferences });
+-        
+-        // Also update the profile object for consistency
+-        const profile = get().profile;
+-        if (profile) {
+-          set({ 
+-            profile: { 
+-              ...profile, 
+-              studyPreferences: updatedPreferences 
+-            } 
+-          });
+-        }
+-        
+-        // Persist to backend if possible
+-        get().updateProfile({ studyPreferences: updatedPreferences });
+-      },
+-      
+-      updateInterfaceSettings: (settings) => {
+-        const currentSettings = get().interfaceSettings;
+-        const updatedSettings = { ...currentSettings, ...settings };
+-        set({ interfaceSettings: updatedSettings });
+-        
+-        // Also update the profile object for consistency
+-        const profile = get().profile;
+-        if (profile) {
+-          set({ 
+-            profile: { 
+-              ...profile, 
+-              interfaceSettings: updatedSettings 
+-            } 
+-          });
+-        }
+-        
+-        // Persist to backend if possible
+-        get().updateProfile({ interfaceSettings: updatedSettings });
+-      },
+-      
+-      updateTutorialProgress: (progress) => {
+-        const currentProgress = get().tutorialProgress;
+-        const updatedProgress = { ...currentProgress, ...progress };
+-        set({ tutorialProgress: updatedProgress });
+-        
+-        // Also update the profile object for consistency
+-        const profile = get().profile;
+-        if (profile) {
+-          set({ 
+-            profile: { 
+-              ...profile, 
+-              tutorialProgress: updatedProgress 
+-            } 
+-          });
+-        }
+-        
+-        // Persist to backend if possible
+-        get().updateProfile({ tutorialProgress: updatedProgress });
+-      },
+-      
+-      setOnboardingComplete: (completed) => {
+-        set({ onboardingComplete: completed });
+-        
+-        // Also update the profile object for consistency
+-        const profile = get().profile;
+-        if (profile) {
+-          set({ 
+-            profile: { 
+-              ...profile, 
+-              onboardingComplete: completed 
+-            } 
+-          });
+-        }
+-        
+-        // Persist to backend if possible
+-        get().updateProfile({ onboardingComplete: completed });
+-      },
+-      
+-      setLastVisitedRoute: (route) => {
+-        set({ lastVisitedRoute: route });
+-        
+-        // Also update the profile object for consistency
+-        const profile = get().profile;
+-        if (profile) {
+-          set({ 
+-            profile: { 
+-              ...profile, 
+-              lastVisitedRoute: route 
+-            } 
+-          });
+-        }
+-        
+-        // Persist to backend if possible
+-        get().updateProfile({ lastVisitedRoute: route });
+-      },
+-      
+-      setOnboardingRoute: (route) => {
+-        set({ onboardingRoute: route });
+-        
+-        // Also update the profile object for consistency
+-        const profile = get().profile;
+-        if (profile) {
+-          set({ 
+-            profile: { 
+-              ...profile, 
+-              onboardingRoute: route 
+-            } 
+-          });
+-        }
+-        
+-        // Persist to backend if possible
+-        get().updateProfile({ onboardingRoute: route });
+-      },
+-
+-      //************************************************************************************************//
+-      //************************************** Vocab State *******************************************//
+-      //***********************************************************************************************//
+-      
+-      // Vocab state
+-      vocabList: [],
+-      showVocabList: false,
+-      isCmdIEnabled: false,
+-      
+-      // Vocab actions
+-      addVocabWord: (word, definition) => {
+-        set((state) => ({
+-          vocabList: [...state.vocabList, { word, definitions: definition }],
+-          showVocabList: true
+-        }));
+-      },
+-      removeVocabWord: (word) => {
+-        set((state) => ({
+-          vocabList: state.vocabList.filter((v) => v.word !== word),
+-          showVocabList: state.vocabList.length > 1
+-        }));
+-      },
+-      toggleVocabList: () => {
+-        set((state) => ({
+-          showVocabList: !state.showVocabList
+-        }));
+-      },
+-      toggleCmdI: () => {
+-        set((state) => ({
+-          isCmdIEnabled: !state.isCmdIEnabled
+-        }));
+-      }
+-    }),
+-    {
+-      name: 'main-store'
+-    }
+-  )
+-) 
+-
+-// Export a function to initialize the store at the app level
+-export const initializeGlobalStore = async () => {
+-  if (typeof window !== 'undefined' && !isStoreInitialized) {
+-    console.debug('[DEBUG][Store] Initializing global store from exported function');
+-    
+-    try {
+-      // Initialize audio context from the audio slice
+-      await useAudioStore.getState().initializeAudioContext();
+-      
+-      // Initialize UI state
+-      const savedTheme = localStorage.getItem('theme');
+-      if (savedTheme && ['cyberSpace', 'sakuraTrees', 'sunsetCity', 'mykonosBlue'].includes(savedTheme)) {
+-        useUIStore.getState().setTheme(savedTheme as any);
+-      }
+-      
+-      // Set initialization flag
+-      isStoreInitialized = true;
+-      console.debug('[DEBUG][Store] Store initialization complete');
+-    } catch (error) {
+-      console.error('[DEBUG][Store] Store initialization failed:', error);
+-    }
+-  }
+-};
+-
+-export type Card = {
+-  id: string;
+-  question: string;
+-  answer: string;
+-  explanation?: string;
+-  category?: string;
+-  difficulty?: string;
+-  otherOptions?: string[];
+-}; 
+\ No newline at end of file
