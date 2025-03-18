@@ -1,0 +1,120 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+ ---
+name: State Management Patterns
+description: Guidelines for managing state in the application
+globs: ["**/*.tsx", "**/*.ts"]
+alwaysApply: true
+---
+
+### State Management Patterns
+
+#### Store Access
+Always use the consolidated selector pattern from `@/store/selectors.ts` instead of directly importing from slice files.
+
+✅ Correct: Use consolidated selectors
+```typescript
+import { useUI, useUser, useAudio } from '@/store/selectors';
+
+const MyComponent = () => {
+  const { theme } = useUI();
+  const { isSubscribed } = useUser();
+  const { playSound, stopLoop } = useAudio();
+  
+  // Component implementation
+};
+```
+
+❌ Incorrect: Direct imports from slice files
+```typescript
+import { useUIStore } from '@/store/slices/uiSlice';
+import { useUserStore } from '@/store/slices/userSlice';
+import { useAudioStore } from '@/store/slices/audioSlice';
+
+const MyComponent = () => {
+  const theme = useUIStore(state => state.theme);
+  const isSubscribed = useUserStore(state => state.isSubscribed);
+  const playSound = useAudioStore(state => state.playSound);
+  
+  // Component implementation
+};
+```
+
+#### Local vs. Global State
+
+Consider using global state (Zustand) when:
+
+✅ Use Global State When:
+- State needs to be accessed by multiple components across different parts of the app
+- State needs to persist between route changes
+- State changes in one component need to trigger updates in other components
+- You find yourself prop drilling (passing props through 3+ levels of components)
+- State represents app-wide settings or user preferences
+- The state represents a shared resource (e.g., audio player, notifications)
+
+❌ Keep State Local When:
+- State is only relevant to a single component or a small component tree
+- State is temporary or transient (e.g., form inputs before submission)
+- State represents UI-only concerns contained to a single component (e.g., isHovered, isExpanded)
+- State is reset when the component unmounts
+- Performance is critical and the state changes frequently
+
+#### Store Organization
+
+When adding state to the global Zustand store:
+
+1. **Choose the Appropriate Slice**
+   - Identify which existing slice is most appropriate for your state:
+     - `uiSlice`: UI-related state (themes, viewport, modals, navigation)
+     - `userSlice`: User profile, authentication, preferences
+     - `gameSlice`: Game mechanics, progress, scores
+     - `audioSlice`: Sound effects, music, audio settings
+     - `vocabSlice`: Vocabulary and content data
+
+2. **Create New Slices Sparingly**
+   - Only create a new slice if the state represents an entirely new domain
+   - Get approval before creating new slices to maintain architecture coherence
+
+3. **Slice Placement Guidelines**:
+   ```typescript
+   // UI State (uiSlice.ts)
+   - Theme settings
+   - Responsive layout information
+   - Modal/drawer open states
+   - Navigation state
+   - Toast notifications
+   
+   // User State (userSlice.ts)
+   - User profile/authentication
+   - User preferences
+   - Study settings
+   - Progress tracking
+   - Subscription status
+   
+   // Game State (gameSlice.ts)
+   - Active game session data
+   - Scores and statistics
+   - Game progression
+   - Game mechanics state
+   
+   // Audio State (audioSlice.ts)
+   - Sound effect states
+   - Music playback
+   - Volume settings
+   - Audio resources
+   
+   // Vocab State (vocabSlice.ts)
+   - Content and vocabulary data
+   - Learning materials
+   - Study resources
+   ```
+
+4. **Update Selectors**
+   - When adding new state, create or update the appropriate selectors in `selectors.ts`
+   - Consider creating granular selectors for specific use cases to minimize re-renders
+
+#### Exception: Store Initialization Components
+The only exception to this pattern is in components specifically designed for store initialization (e.g., `StoreInitializer.tsx`), where direct access to store actions may be required.

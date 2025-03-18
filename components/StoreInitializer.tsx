@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from 'react';
-import { useUser } from '@clerk/nextjs';
-import { useStore } from '@/store/store';
+import { useUser as useClerkUser } from '@clerk/nextjs';
+import { useUser } from '@/store/selectors';
 import { useAudioStore } from '@/store/slices/audioSlice';
 import { initializeGlobalStore } from '@/store';
 
@@ -17,20 +17,22 @@ import { initializeGlobalStore } from '@/store';
  * It doesn't render anything visible, just handles initialization.
  */
 const StoreInitializer = () => {
-  const { isLoaded, isSignedIn } = useUser();
-  const refreshUserInfo = useStore(state => state.refreshUserInfo);
+  const { isLoaded, isSignedIn } = useClerkUser();
+  const { refreshUserInfo } = useUser();
   const initializeAudioContext = useAudioStore(state => state.initializeAudioContext);
   
   // Initialize the global store when the app starts
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Initialize global store
+    initializeGlobalStore().catch(error => {
+      console.error('[StoreInitializer] Error initializing global store:', error);
+    });
+    
     // Initialize audio context
     initializeAudioContext().catch(error => {
       console.error('[StoreInitializer] Error initializing audio context:', error);
-    });
-    
-    // Initialize global store (will be expanded as we add more slices)
-    initializeGlobalStore().catch(error => {
-      console.error('[StoreInitializer] Error initializing global store:', error);
     });
   }, [initializeAudioContext]);
   

@@ -1,206 +1,261 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useUI, useUser } from '@/store/selectors';
-import { useAudioStore } from '@/store/slices/audioSlice';
-import { OnboardingInfo } from '@/types';
+import { useUI, useUser, useAudio } from '@/store/selectors';
 import { useUser as useClerkUser } from '@clerk/nextjs';
+import { useAuth as useClerkAuth } from '@clerk/nextjs';
 
 /**
  * RouteTracker - Updates the Zustand store with the current route
  * and handles redirection based on user status and subscription.
  */
 
+// Define auth-related paths that should be exempt from redirects
+const AUTH_PATHS = ['/sign-in', '/sign-up', '/login', '/register', '/auth', '/sso-callback'];
+
+// Define other exempt paths
+const EXEMPT_PATHS = ['/auth', '/api', '/redirect', '/examcalendar', '/pricing', '/terms'];
+
 const RouteTracker = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { setCurrentRoute } = useUI();
-  const { userInfo, isSubscribed, onboardingComplete, profileLoading, statsLoading } = useUser();
+  const { userInfo, isSubscribed, onboardingComplete, profileLoading, statsLoading, refreshUserInfo } = useUser();
   const { isSignedIn } = useClerkUser();
+  const { isLoaded } = useClerkAuth();
+  const { stopLoop, currentLoop } = useAudio();
+  
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const stopLoop = useAudioStore(state => state.stopLoop);
-  const currentLoop = useAudioStore(state => state.currentLoop);
+  const lastRedirectTime = useRef<number>(0);
+  const isRedirecting = useRef<boolean>(false);
 
-  // Handle immediate redirection for users with no userInfo
-  useEffect(() => {
-    // Define exempt paths that should never redirect to onboarding
-    const exemptPaths = [
-      '/auth',
-      '/api',
-      '/redirect',
-      '/sign-in',
-      '/sign-up',
-      '/login',
-      '/register'
-    ];
+  // Memoize values that are used in effect dependencies to prevent unnecessary re-renders
+  const isExemptPath = useMemo(() => {
+    if (!pathname) return false;
+    return AUTH_PATHS.some(path => pathname.includes(path)) || 
+           EXEMPT_PATHS.some(path => pathname.startsWith(path));
+  }, [pathname]);
 
-    // If user is signed in but has no userInfo, redirect to onboarding immediately
-    if (isSignedIn && !profileLoading && !userInfo) {
-      // Only allow exempt paths to proceed without redirection
-      if (!exemptPaths.some(path => pathname.startsWith(path))) {
-        router.push('/onboarding');
-      }
+  // Validate onboarding status (memoized)
+  const effectiveOnboardingComplete = useMemo(() => {
+    const targetScore = userInfo?.onboardingInfo?.targetScore;
+    return targetScore !== undefined && targetScore !== null && targetScore > 0;
+  }, [userInfo?.onboardingInfo?.targetScore]);
+
+  // Local utility function for preserving debug parameter
+  const preserveDebugParam = useCallback((path: string): string => {
+    if (!searchParams) return path;
+    
+    const debugParam = searchParams.get('debug');
+    if (debugParam === 'true') {
+      return path.includes('?') ? `${path}&debug=true` : `${path}?debug=true`;
     }
-  }, [isSignedIn, userInfo, profileLoading, pathname, router]);
+    
+    return path;
+  }, [searchParams]);
 
-  // Track route changes
+  // Perform redirect with fallback like main branch
+  const performRedirect = useCallback((targetPath: string, reason: string) => {
+    // Prevent duplicate redirects and throttle redirect attempts
+    if (Date.now() - lastRedirectTime.current < 1000 || isRedirecting.current) {
+      return false;
+    }
+
+    isRedirecting.current = true;
+    lastRedirectTime.current = Date.now();
+    
+    // Use the local function to preserve debug parameter
+    const redirectPath = preserveDebugParam(targetPath);
+    
+    // Perform the redirect
+    router.push(redirectPath);
+    
+    // Fallback for critical redirects (like main branch)
+    const fallbackTimeout = setTimeout(() => {
+      // Also preserve debug parameter in fallback URL
+      window.location.href = redirectPath;
+    }, 2000); // 2 second timeout
+    
+    // Reset redirect flag after 1.5 seconds
+    setTimeout(() => {
+      isRedirecting.current = false;
+    }, 1500);
+    
+    // Return the fallback timeout to allow cleanup
+    return fallbackTimeout;
+  }, [router, preserveDebugParam]);
+
+  // Update current route in the store
   useEffect(() => {
     if (pathname) {
       setCurrentRoute(pathname);
-
-      // Define exempt paths that should never redirect to onboarding
-      const exemptPaths = [
-        '/auth',
-        '/api',
-        '/redirect',
-        '/sign-in',
-        '/sign-up',
-        '/login',
-        '/register'
-      ];
-
-      // Skip remaining redirection checks for exempt paths
-      if (exemptPaths.some(path => pathname.startsWith(path))) {
-        return;
-      }
-
-      // Only redirect to onboarding if:
-      // 1. User is signed in
-      // 2. Not already on onboarding page
-      // 3. Not in loading state
-      // 4. Onboarding is not complete
-      if (isSignedIn && !profileLoading && pathname !== '/onboarding') {
-        if (!onboardingComplete) {
-          router.push('/onboarding');
-          return;
-        }
-      }
     }
-  }, [pathname, setCurrentRoute, isSignedIn, userInfo, onboardingComplete, profileLoading, router]);
+  }, [pathname, setCurrentRoute]);
 
-  // Handle ambient sound cleanup on route changes
-  useEffect(() => {    
-    // Only stop the ambient loop if we're not in AnkiClinic and it's currently playing
-    if (currentLoop === 'flashcard-loop-catfootsteps' && !pathname?.startsWith('/ankiclinic')) {
-      console.log('[RouteTracker] Stopping ambient loop - route changed to:', pathname);
-      stopLoop();
-    }
-  }, [pathname]); // Only depend on pathname changes, not currentLoop
-
-  // Track when initial loading is complete - skip for onboarding
+  // Track initial load completion - match main branch behavior
   useEffect(() => {
     // Skip loading state tracking if we're on onboarding
     if (pathname === '/onboarding') {
-      setInitialLoadComplete(true);
+      if (!initialLoadComplete) {
+        setInitialLoadComplete(true);
+      }
       return;
     }
 
     // Consider data loaded when both profile and stats are loaded
-    // and we have userInfo data
+    // and we have userInfo data (like main branch)
     if (!profileLoading && !statsLoading && userInfo && !initialLoadComplete) {
       setInitialLoadComplete(true);
     }
   }, [profileLoading, statsLoading, userInfo, initialLoadComplete, pathname]);
 
-  // Handle redirection logic
+  // Handle ambient sound cleanup on route changes
+  useEffect(() => {    
+    // Only stop the ambient loop if we're not in AnkiClinic and it's currently playing
+    if (currentLoop === 'flashcard-loop-catfootsteps' && pathname && !pathname.startsWith('/ankiclinic')) {
+      stopLoop();
+    }
+  }, [pathname, stopLoop, currentLoop]);
+
+  // EFFECT 1: Handle immediate redirection for users with no userInfo (like main branch)
   useEffect(() => {
-    // Skip redirection checks if we're on onboarding
-    if (pathname === '/onboarding') {
+    // Don't redirect during loads or for exempt paths
+    if (!isLoaded || isRedirecting.current || isExemptPath) {
       return;
     }
 
-    // Only proceed if we have user info, a valid pathname, and initial loading is complete
-    // IMPORTANT: Also check if the user is signed in before redirecting
-    if (!userInfo || !pathname || !initialLoadComplete || !isSignedIn) {
+    // If user is signed in but has no userInfo, redirect to onboarding immediately
+    if (isSignedIn && !profileLoading && !userInfo && !pathname?.startsWith('/onboarding')) {
+      const fallback = performRedirect('/onboarding', 'No userInfo');
+      
+      // Clean up fallback timeout if component unmounts
+      return () => {
+        if (fallback) clearTimeout(fallback);
+      };
+    }
+  }, [isSignedIn, userInfo, profileLoading, pathname, isLoaded, isExemptPath, performRedirect]);
+
+  // EFFECT 2: Handle redirects based on onboarding status (like main branch)
+  useEffect(() => {
+    if (pathname === '/onboarding' || isExemptPath) {
+      return;
+    }
+    
+    // Only redirect to onboarding if:
+    // 1. User is signed in
+    // 2. Not already on onboarding page
+    // 3. Not in loading state
+    // 4. Onboarding is not complete
+    if (isSignedIn && !profileLoading && !isRedirecting.current && !effectiveOnboardingComplete) {
+      const fallback = performRedirect('/onboarding', 'Onboarding not complete');
+      
+      // Clean up fallback timeout if component unmounts
+      return () => {
+        if (fallback) clearTimeout(fallback);
+      };
+    }
+    
+    // Onboarding complete but on onboarding page, redirect to home
+    if (isSignedIn && !profileLoading && effectiveOnboardingComplete && pathname === '/onboarding') {
+      const fallback = performRedirect('/home', 'Onboarding complete but on onboarding page');
+      
+      // Clean up fallback timeout if component unmounts
+      return () => {
+        if (fallback) clearTimeout(fallback);
+      };
+    }
+    
+    // Special case: If on root path and signed in with completed onboarding, redirect to home
+    if (isSignedIn && !profileLoading && effectiveOnboardingComplete && pathname === '/') {
+      const fallback = performRedirect('/home', 'On root with completed onboarding');
+      
+      // Clean up fallback timeout if component unmounts
+      return () => {
+        if (fallback) clearTimeout(fallback);
+      };
+    }
+  }, [isSignedIn, profileLoading, pathname, effectiveOnboardingComplete, isExemptPath, performRedirect]);
+
+  // EFFECT 3: Main redirection logic for subscription checks (like main branch)
+  useEffect(() => {
+    // Skip redirection checks for specific paths
+    if (
+      pathname === '/onboarding' || 
+      pathname === '/redirect' ||
+      pathname?.startsWith('/onboarding') ||
+      pathname?.startsWith('/pricing') ||
+      isExemptPath ||
+      isRedirecting.current ||
+      !initialLoadComplete ||
+      !isLoaded ||
+      !isSignedIn ||
+      !userInfo
+    ) {
+      return;
+    }
+
+    // Check if we have userInfo, if not refresh it
+    if (isSignedIn && !userInfo) {
+      refreshUserInfo();
       return;
     }
 
     const checkRedirectPath = async () => {
-      // Check for debug mode in query parameters
-      const isDebugMode = searchParams?.get('debug') === 'true';
-      
-      if (
-        pathname === '/redirect' ||
-        pathname.startsWith('/onboarding') ||
-        pathname.startsWith('/pricing')
-      ) {
-        return;
+      // 1. Subscription check - redirect non-subscribers to ankiclinic
+      if (effectiveOnboardingComplete && !isSubscribed && pathname && !pathname.startsWith('/ankiclinic')) {
+        const fallback = performRedirect('/ankiclinic', 'Not subscribed');
+        if (fallback) return fallback;
       }
 
-      // 1. Redirect to onboarding if user has not completed onboarding
-      if (!onboardingComplete) {
-        router.push('/onboarding');
-        
-        // Fallback for critical redirects
-        const fallbackTimeout = setTimeout(() => {
-          window.location.href = '/onboarding';
-        }, 2000); // 2 second timeout
-        
-        // Clear timeout if component unmounts
-        return () => clearTimeout(fallbackTimeout);
-        
-        return;
-      }
-
-      // 2. Redirect non-gold users to ankiclinic
-      if (!isSubscribed && !pathname.startsWith('/ankiclinic')) {
-        router.push('/ankiclinic');
-        
-        // Fallback for critical redirects
-        const fallbackTimeout = setTimeout(() => {
-          window.location.href = '/ankiclinic';
-        }, 2000); // 2 second timeout
-        
-        // Clear timeout if component unmounts
-        return () => clearTimeout(fallbackTimeout);
-        
-        return;
-      }
-
-      // 3. Check if gold user needs study plan (skip for exempt paths)
-      // Match main branch exempt paths
+      // 2. Check study plan for subscribed users
       const studyPlanExemptPaths = ['/examcalendar', '/api', '/auth', '/onboarding', '/redirect'];
-      const shouldCheckStudyPlan = !studyPlanExemptPaths.some(path => pathname.startsWith(path));
+      const shouldCheckStudyPlan = pathname ? !studyPlanExemptPaths.some(path => pathname.startsWith(path)) : false;
       
-      if (isSubscribed && shouldCheckStudyPlan) {
+      if (effectiveOnboardingComplete && isSubscribed && shouldCheckStudyPlan) {
         try {
           const response = await fetch('/api/study-plan');
-          
-          // Add response validation like main branch
           if (!response.ok) {
             throw new Error('Failed to fetch study plan');
           }
           
           const data = await response.json();
           
-          // Redirect to examcalendar if no study plan
           if (!data.studyPlan) {
-            router.push('/examcalendar');
-            
-            // Add fallback for critical redirects
-            const fallbackTimeout = setTimeout(() => {
-              window.location.href = '/examcalendar';
-            }, 2000); // 2 second timeout
-            
-            // Clear timeout if component unmounts
-            return () => clearTimeout(fallbackTimeout);
+            const fallback = performRedirect('/examcalendar', 'No study plan');
+            if (fallback) return fallback;
           }
         } catch (error) {
-          console.error('Error checking study plan:', error);
+          console.error('[RouteTracker] Error checking study plan:', error);
         }
       }
     };
-
-    checkRedirectPath();
     
-    // onboardingComplete is critical in this dependency array
-    // When it changes (via store updates), this effect re-runs and ensures
-    // the user is redirected correctly based on their current onboarding status
-  }, [pathname, router, userInfo, isSubscribed, onboardingComplete, initialLoadComplete, isSignedIn, searchParams]);
+    // Handle async redirects with proper typing
+    let fallbackTimeout: ReturnType<typeof setTimeout> | undefined;
+    checkRedirectPath().then(timeout => {
+      fallbackTimeout = timeout;
+    });
+    
+    // Clean up fallback timeouts
+    return () => {
+      if (fallbackTimeout) clearTimeout(fallbackTimeout);
+    };
+  }, [
+    initialLoadComplete,
+    isLoaded,
+    isSignedIn,
+    pathname,
+    userInfo,
+    effectiveOnboardingComplete,
+    isSubscribed,
+    refreshUserInfo,
+    isExemptPath,
+    performRedirect
+  ]);
 
   return null;
 };
 
-export default RouteTracker; 
+export default RouteTracker;
