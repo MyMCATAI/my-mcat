@@ -92,7 +92,81 @@ export async function POST(req: Request) {
       { subjectCategory: "Biochemistry", contentCategory: "1A", conceptCategory: "Amino Acids" },
       { subjectCategory: "Biochemistry", contentCategory: "1A", conceptCategory: "Enzymes" },
       { subjectCategory: "Biochemistry", contentCategory: "1A", conceptCategory: "Proteins" },
-      // ... other mappings would be here
+      { subjectCategory: "Biochemistry", contentCategory: "1B", conceptCategory: "DNA and Biotechnology" },
+      { subjectCategory: "Biochemistry", contentCategory: "1B", conceptCategory: "Eukaryotic Gene Expression" },
+      { subjectCategory: "Biochemistry", contentCategory: "1B", conceptCategory: "RNA and The Central Dogma" },
+      { subjectCategory: "Biochemistry", contentCategory: "1C", conceptCategory: "Evolution" },
+      { subjectCategory: "Biochemistry", contentCategory: "1C", conceptCategory: "Genetics" },
+      { subjectCategory: "Biochemistry", contentCategory: "1C", conceptCategory: "Meiosis and Genetic Diversity" },
+      { subjectCategory: "Biochemistry", contentCategory: "1D", conceptCategory: "Aerobic Respiration" },
+      { subjectCategory: "Biochemistry", contentCategory: "1D", conceptCategory: "Bioenergetics and Regulation of Metabolism" },
+      { subjectCategory: "Biochemistry", contentCategory: "1D", conceptCategory: "Glycolysis, Glycogen, Gluconeogenesis, and The Pentose Phosphate Pathway" },
+      { subjectCategory: "Biochemistry", contentCategory: "1D", conceptCategory: "Lipid and Amino Acid Metabolism" },
+      { subjectCategory: "Biology", contentCategory: "2A", conceptCategory: "Plasma Membrane" },
+      { subjectCategory: "Biology", contentCategory: "2A", conceptCategory: "The Cell" },
+      { subjectCategory: "Biology", contentCategory: "2B", conceptCategory: "Prokaryotes" },
+      { subjectCategory: "Biology", contentCategory: "2B", conceptCategory: "Viruses" },
+      { subjectCategory: "Biology", contentCategory: "2C", conceptCategory: "Embryogenesis" },
+      { subjectCategory: "Biology", contentCategory: "2C", conceptCategory: "Mitosis" },
+      { subjectCategory: "Biology", contentCategory: "3A", conceptCategory: "Endocrine System" },
+      { subjectCategory: "Biology", contentCategory: "3A", conceptCategory: "Nervous System" },
+      { subjectCategory: "Biology", contentCategory: "3B", conceptCategory: "Digestion System" },
+      { subjectCategory: "Biology", contentCategory: "3B", conceptCategory: "Excretion System" },
+      { subjectCategory: "Biology", contentCategory: "3B", conceptCategory: "Immune System" },
+      { subjectCategory: "Biology", contentCategory: "3B", conceptCategory: "Muscular System" },
+      { subjectCategory: "Biology", contentCategory: "3B", conceptCategory: "Reproductive System" },
+      { subjectCategory: "Biology", contentCategory: "3B", conceptCategory: "Respiration and Circulation" },
+      { subjectCategory: "Biology", contentCategory: "3B", conceptCategory: "Skin and Bones" },
+      { subjectCategory: "CARs", contentCategory: "CARs", conceptCategory: "Foundations of Comprehension" },
+      { subjectCategory: "CARs", contentCategory: "CARs", conceptCategory: "Reasoning Beyond the Text" },
+      { subjectCategory: "CARs", contentCategory: "CARs", conceptCategory: "Reasoning Within the Text" },
+      { subjectCategory: "Chemistry", contentCategory: "4E", conceptCategory: "Atoms" },
+      { subjectCategory: "Chemistry", contentCategory: "4E", conceptCategory: "Periodic Trends" },
+      { subjectCategory: "Chemistry", contentCategory: "4E", conceptCategory: "Stoichiometry" },
+      { subjectCategory: "Chemistry", contentCategory: "5A", conceptCategory: "Acid-Base" },
+      { subjectCategory: "Chemistry", contentCategory: "5A", conceptCategory: "Solutions" },
+      { subjectCategory: "Chemistry", contentCategory: "5B", conceptCategory: "Covalent Bonds" },
+      { subjectCategory: "Chemistry", contentCategory: "5B", conceptCategory: "Intermolecular Forces" },
+      { subjectCategory: "Chemistry", contentCategory: "5C", conceptCategory: "Seperations and Purifications" },
+      { subjectCategory: "Chemistry", contentCategory: "5C", conceptCategory: "Spectroscopy" },
+      { subjectCategory: "Chemistry", contentCategory: "5D", conceptCategory: "Carbohydrate Structure and Function" },
+      { subjectCategory: "Chemistry", contentCategory: "5D", conceptCategory: "Lipid Structure and Function" },
+      { subjectCategory: "Chemistry", contentCategory: "5D", conceptCategory: "Organic Compounds" },
+      { subjectCategory: "Chemistry", contentCategory: "5E", conceptCategory: "Enzyme Kinetics" },
+      { subjectCategory: "Chemistry", contentCategory: "5E", conceptCategory: "Equilibrium" },
+      { subjectCategory: "Chemistry", contentCategory: "5E", conceptCategory: "Thermodynamics and Thermochemistry" },
+      { subjectCategory: "Physics", contentCategory: "4A", conceptCategory: "Energy" },
+      { subjectCategory: "Physics", contentCategory: "4A", conceptCategory: "Force" },
+      { subjectCategory: "Physics", contentCategory: "4A", conceptCategory: "Kinematics" },
+      { subjectCategory: "Physics", contentCategory: "4B", conceptCategory: "Fluids" },
+      { subjectCategory: "Physics", contentCategory: "4B", conceptCategory: "Gases" },
+      { subjectCategory: "Physics", contentCategory: "4C", conceptCategory: "Circuits" },
+      { subjectCategory: "Physics", contentCategory: "4C", conceptCategory: "Electrochemistry" },
+      { subjectCategory: "Physics", contentCategory: "4C", conceptCategory: "Electrostatics and Magnetism" },
+      { subjectCategory: "Physics", contentCategory: "4D", conceptCategory: "Light and Optics" },
+      { subjectCategory: "Physics", contentCategory: "4D", conceptCategory: "Sound and Waves" },
+      { subjectCategory: "Psychology", contentCategory: "6A", conceptCategory: "Perception" },
+      { subjectCategory: "Psychology", contentCategory: "6A", conceptCategory: "Sensation" },
+      { subjectCategory: "Psychology", contentCategory: "6B", conceptCategory: "Cognition" },
+      { subjectCategory: "Psychology", contentCategory: "6B", conceptCategory: "Memory and Language" },
+      { subjectCategory: "Psychology", contentCategory: "6C", conceptCategory: "Emotions and Stress" },
+      { subjectCategory: "Psychology", contentCategory: "7A", conceptCategory: "Biology and Behavior" },
+      { subjectCategory: "Psychology", contentCategory: "7A", conceptCategory: "Motivation and Attitudes" },
+      { subjectCategory: "Psychology", contentCategory: "7A", conceptCategory: "Personality" },
+      { subjectCategory: "Psychology", contentCategory: "7B", conceptCategory: "Social Processes on Communities" },
+      { subjectCategory: "Psychology", contentCategory: "7B", conceptCategory: "Social Processes on Individuals" },
+      { subjectCategory: "Psychology", contentCategory: "7C", conceptCategory: "Attitude and Behavior Change" },
+      { subjectCategory: "Psychology", contentCategory: "7C", conceptCategory: "Learning" },
+      { subjectCategory: "Sociology", contentCategory: "10A", conceptCategory: "Social Stratification" },
+      { subjectCategory: "Sociology", contentCategory: "8A", conceptCategory: "Self-Identity" },
+      { subjectCategory: "Sociology", contentCategory: "8B", conceptCategory: "Attribution" },
+      { subjectCategory: "Sociology", contentCategory: "8B", conceptCategory: "Stereotypes and Bias" },
+      { subjectCategory: "Sociology", contentCategory: "8C", conceptCategory: "Self Presentation" },
+      { subjectCategory: "Sociology", contentCategory: "8C", conceptCategory: "Social Interaction" },
+      { subjectCategory: "Sociology", contentCategory: "9A", conceptCategory: "Culture" },
+      { subjectCategory: "Sociology", contentCategory: "9A", conceptCategory: "Social Institutions" },
+      { subjectCategory: "Sociology", contentCategory: "9B", conceptCategory: "Demographic Shift" },
+      { subjectCategory: "Sociology", contentCategory: "9B", conceptCategory: "Demographic Structure" }
     ];
     
     // Create a set of all concept categories for quick lookup
@@ -117,7 +191,7 @@ export async function POST(req: Request) {
           }
         }
       }
-    });
+    }); 
 
     // Get all data pulses for the user
     const dataPulses = await prisma.dataPulse.findMany({
@@ -126,7 +200,7 @@ export async function POST(req: Request) {
       }
     });
 
-    // Group responses by category (for concept mastery)
+    // Group responses by concept category (for concept mastery)
     const groupedResponses = userResponses.reduce((acc, response) => {
       if (!acc[response.categoryId!]) {
         acc[response.categoryId!] = [];
@@ -174,10 +248,16 @@ export async function POST(req: Request) {
     }>);
 
     // Process DataPulses with level="contentCategory"
-    const contentCategoryMasteries = {};
+    const contentCategoryMasteries: Record<string, any> = {};
 
     if (contentGroupedPulses['contentCategory']) {
-      Object.entries(contentGroupedPulses['contentCategory']).forEach(([contentCategory, sources]) => {
+      // Use type assertion to tell TypeScript the structure of the data
+      const typedCategoryData = contentGroupedPulses['contentCategory'] as Record<string, {
+        aamc: { positive: number, negative: number },
+        uworld: { positive: number, negative: number }
+      }>;
+      
+      Object.entries(typedCategoryData).forEach(([contentCategory, sources]) => {
         // Initialize content mastery structure if not exists
         if (!contentCategoryMasteries[contentCategory]) {
           contentCategoryMasteries[contentCategory] = {
@@ -203,7 +283,10 @@ export async function POST(req: Request) {
     }
 
     // Add MyMCAT data to content masteries
-    Object.entries(contentGroupedResponses).forEach(([contentCategory, responses]) => {
+    // Create a typed version of contentGroupedResponses
+    const typedContentResponses = contentGroupedResponses as Record<string, any[]>;
+    
+    Object.entries(typedContentResponses).forEach(([contentCategory, responses]) => {
       // Initialize if not already present
       if (!contentCategoryMasteries[contentCategory]) {
         contentCategoryMasteries[contentCategory] = {
@@ -301,9 +384,12 @@ export async function POST(req: Request) {
       }
       acc[conceptCategory].push(response);
       return acc;
-    }, {});
+    }, {} as Record<string, any[]>);
 
-    Object.entries(conceptGroupedResponses).forEach(([conceptCategory, responses]) => {
+    // Create a typed version of conceptGroupedResponses
+    const typedConceptResponses = conceptGroupedResponses as Record<string, any[]>;
+    
+    Object.entries(typedConceptResponses).forEach(([conceptCategory, responses]) => {
       // Initialize if not already present
       if (!conceptCategoryMasteries[conceptCategory]) {
         conceptCategoryMasteries[conceptCategory] = {
@@ -405,10 +491,13 @@ export async function POST(req: Request) {
     */
 
     // Update knowledge profiles
-    const updatePromises = [];
+    const updatePromises: any[] = [];
 
     // Update profiles for categories with user responses
-    Object.entries(groupedResponses).forEach(([categoryId, responses]) => {
+    // Create a typed version of groupedResponses
+    const typedGroupedResponses = groupedResponses as Record<string, any[]>;
+    
+    Object.entries(typedGroupedResponses).forEach(([categoryId, responses]) => {
       // Get category information
       const category = responses[0].Category;
       const contentCategory = category.contentCategory;
