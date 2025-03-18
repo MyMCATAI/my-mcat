@@ -318,20 +318,16 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   };
 
   const playAudio = (audioBase64: string) => {
-    console.log('[ChatContainer] Playing audio from base64');
-    
-    // Use the dedicated voice playback method
+    console.log('[ChatContainer] Playing audio response');
     setIsPlaying(true);
-    audio.playVoice(audioBase64)
-      .catch((error: Error) => {
-        console.error('[ChatContainer] Error playing voice audio:', error);
-      })
-      .finally(() => {
-        // Voice playback automatically cleans up when done
-        setTimeout(() => {
-          setIsPlaying(false);
-        }, 500);
-      });
+    
+    // Use the voice channel instead of music channel
+    audio.playVoice(audioBase64);
+    
+    // Set isPlaying to false after a short delay
+    setTimeout(() => {
+      setIsPlaying(false);
+    }, 500);
   };
 
   const stopAudio = () => {

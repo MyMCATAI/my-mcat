@@ -208,7 +208,7 @@ export const useOnboardingStatus = () => ({
 /* --- Audio Selector ---- */
 // Consolidated audio selector that provides all audio-related state and actions
 export const useAudio = () => {
-  // State
+  /* ---- State ----- */
   const isPlaying = useAudioStore((state) => state.isPlaying)
   const currentSong = useAudioStore((state) => state.currentSong)
   const currentLoop = useAudioStore((state) => state.currentLoop)
@@ -255,19 +255,23 @@ export const useAudio = () => {
   const togglePlayPause = useAudioStore((state) => state.togglePlayPause)
   const setSongQueue = useAudioStore((state) => state.setSongQueue)
   
+  // Use a ref to track initialization
+  const hasInitializedRef = useRef(false);
+  
   // Effect to initialize audio context on component mount
   useEffect(() => {
-    // Only initialize if not already initialized
-    if (!audioContext) {
-      console.debug('[useAudio] Initializing audio context on hook mount')
-      initializeAudioContext().catch(error => {
-        console.error('[useAudio] Failed to initialize audio context:', error);
-      });
-    }
-  }, [audioContext, initializeAudioContext]);
+    if (hasInitializedRef.current) return;
+    
+    console.debug('[useAudio] Initializing audio context on hook mount')
+    hasInitializedRef.current = true;
+    
+    initializeAudioContext().catch(error => {
+      console.error('[useAudio] Failed to initialize audio context:', error);
+    });
+  }, [initializeAudioContext]);
   
   return {
-    // State
+    /* ---- State ----- */
     isPlaying,
     currentSong,
     currentLoop,
@@ -312,8 +316,8 @@ export const useAudio = () => {
     // Player navigation
     skipToNext,
     togglePlayPause,
-    setSongQueue
-  }
+    setSongQueue,
+  };
 }
 
 /* --- Vocab Selector ---- */

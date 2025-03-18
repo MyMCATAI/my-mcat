@@ -18,7 +18,7 @@ const DEFAULT_VOLUMES: VolumeCoefficients = {
   music: 0.7,
   sfx: 0.5,  // Increase to full volume for better audibility
   loop: 0.5,
-  voice: 0.9
+  voice: 0.9  // Voice should be loud and clear
 };
 
 interface AudioState {
@@ -108,10 +108,10 @@ export const useAudioStore = create<AudioState & AudioActions>()(
     voiceSource: null,
     bufferCache: new Map(),
     
-    // Player state
+    // Player state - ensure arrays are always initialized
     volume: DEFAULT_VOLUMES.music,
     currentSong: null,
-    songQueue: [],
+    songQueue: [], // Explicitly initialize as empty array
     currentSongIndex: 0,
     
     // Audio nodes
@@ -176,29 +176,31 @@ export const useAudioStore = create<AudioState & AudioActions>()(
     handleThemeChange: async (newTheme, wasPlaying = false) => {
       console.log('[AudioSlice] Theme changed to', newTheme, 'wasPlaying:', wasPlaying);
       const state = get();
-      const currentlyPlaying = state.isPlaying;
       
-      // Only restart music if it was playing or if override flag is set
-      if (currentlyPlaying || wasPlaying) {
-        // First stop any current music
+      // Stop current music if playing
+      if (state.isPlaying) {
+        console.log('[AudioSlice] Stopping current music before theme change');
         state.stopMusic();
-        
-        // Wait a moment for the previous track to clean up
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // If we have a queue with songs, start playing the first one
-        if (state.songQueue.length > 0) {
-          console.log('[AudioSlice] Auto-playing first song from new theme');
-          try {
-            await state.playMusic(state.songQueue[0]);
-          } catch (error) {
-            console.error('[AudioSlice] Error playing music after theme change:', error);
-          }
-        } else {
-          console.log('[AudioSlice] No songs in queue after theme change');
+      }
+      
+      // Reset song index to 0 for the new theme
+      set({ currentSongIndex: 0 });
+      
+      // Wait a moment for the previous track to clean up
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // If we were playing before, start playing the first song of the new theme
+      if ((wasPlaying || state.isPlaying) && state.songQueue.length > 0) {
+        console.log('[AudioSlice] Auto-playing first song from new theme');
+        const firstSong = state.songQueue[0];
+        try {
+          await state.playMusic(firstSong);
+          console.log('[AudioSlice] New theme music started successfully');
+        } catch (error) {
+          console.error('[AudioSlice] Error playing music after theme change:', error);
         }
       } else {
-        console.log('[AudioSlice] Not currently playing, no auto-play after theme change');
+        console.log('[AudioSlice] Not playing music after theme change');
       }
     },
 
@@ -209,15 +211,23 @@ export const useAudioStore = create<AudioState & AudioActions>()(
 
       if (state.isPlaying) {
         console.log('[AudioSlice] Currently playing, stopping music');
+        
+        // Update state before stopping to prevent any race conditions
         set({ isPlaying: false });
         
+        // Stop musicSource if it exists
         if (state.musicSource) {
           try {
-            state.musicSource.stop();
+            // First disconnect to immediately stop any audio output
+            // This ensures audio stops even if the stop() call fails
             state.musicSource.disconnect();
+            state.musicSource.stop();
             console.log('[AudioSlice] Music source stopped and disconnected');
           } catch (error) {
             console.error('[AudioSlice] Error stopping music source:', error);
+          } finally {
+            // Always clear the musicSource to prevent zombie references
+            set({ musicSource: null, currentMusic: null });
           }
         }
       } else {
@@ -237,6 +247,8 @@ export const useAudioStore = create<AudioState & AudioActions>()(
           console.log('[AudioSlice] Playback started successfully');
         } catch (error) {
           console.error('[AudioSlice] Error starting playback:', error);
+          // Ensure state is reset if playback fails
+          set({ isPlaying: false });
         }
       }
     },
@@ -280,7 +292,6 @@ export const useAudioStore = create<AudioState & AudioActions>()(
         loopGainNode.gain.value = DEFAULT_VOLUMES.loop; // Lower volume for background loops
         loopGainNode.connect(masterGainNode);
         
-        // Create voice gain node
         const voiceGainNode = audioContext.createGain();
         voiceGainNode.gain.value = DEFAULT_VOLUMES.voice;
         voiceGainNode.connect(masterGainNode);
@@ -328,34 +339,49 @@ export const useAudioStore = create<AudioState & AudioActions>()(
       }
     },
 
-    // Skip to next song in queue
+    // Skip to the next song in the queue
     skipToNext: async () => {
       console.log('[AudioSlice] skipToNext called');
       const state = get();
-
-      if (state.songQueue.length === 0) {
+      const { songQueue, currentSongIndex, volume } = state;
+      
+      if (songQueue.length === 0) {
         console.log('[AudioSlice] Cannot skip - song queue is empty');
         return;
       }
-
-      // Calculate next index with wrap-around
-      const nextIndex = (state.currentSongIndex + 1) % state.songQueue.length;
-      console.log('[AudioSlice] Advancing from index', state.currentSongIndex, 'to', nextIndex);
       
-      // Update state with new index
+      // Calculate the next song index
+      const nextIndex = (currentSongIndex + 1) % songQueue.length;
+      const nextSong = songQueue[nextIndex];
+      console.log('[AudioSlice] Advancing from index', currentSongIndex, 'to', nextIndex);
+      
+      // Update the current song index
       set({ currentSongIndex: nextIndex });
       
-      // Only play the next song if we were already playing
-      if (state.isPlaying) {
-        console.log('[AudioSlice] Auto-playing next song:', state.songQueue[nextIndex]);
+      // Store the current volume for restoration
+      const currentVolume = volume;
+      console.log('[AudioSlice] Storing current volume for restoration:', currentVolume);
+      
+      // Stop current music first
+      state.stopMusic();
+      
+      // Play the next song after a small delay
+      setTimeout(async () => {
+        console.log('[AudioSlice] Timeout completed, playing next song:', nextSong);
+        // Ensure the volume is properly set before playing the next song
+        if (state.musicGainNode && state.audioContext) {
+          state.musicGainNode.gain.cancelScheduledValues(state.audioContext.currentTime);
+          state.musicGainNode.gain.setValueAtTime(currentVolume, state.audioContext.currentTime);
+          console.log('[AudioSlice] Reset music gain node to original volume:', currentVolume);
+        }
+        
         try {
-          await state.playMusic(state.songQueue[nextIndex]);
+          await state.playMusic(nextSong);
+          console.log('[AudioSlice] Next song playback started successfully');
         } catch (error) {
           console.error('[AudioSlice] Error playing next song:', error);
         }
-      } else {
-        console.log('[AudioSlice] Not currently playing, just updating index');
-      }
+      }, 100);
     },
 
     // Load audio buffer for efficient playback
@@ -456,6 +482,16 @@ export const useAudioStore = create<AudioState & AudioActions>()(
           throw new Error('Audio context not initialized');
         }
         
+        // IMPORTANT: Always reset the gain node to the current volume before creating a new source
+        // This fixes the issue where the gain node volume is very low after stopping a song
+        if (state.musicGainNode) {
+          const currentTime = audioContext.currentTime;
+          // Force reset the gain node to the current volume
+          state.musicGainNode.gain.cancelScheduledValues(currentTime);
+          state.musicGainNode.gain.setValueAtTime(state.volume, currentTime);
+          console.log('[AudioSlice] Reset music gain node to volume:', state.volume);
+        }
+        
         // Create a new source node
         console.log('[AudioSlice] Creating audio source node');
         const source = audioContext.createBufferSource();
@@ -465,6 +501,12 @@ export const useAudioStore = create<AudioState & AudioActions>()(
         if (state.musicGainNode) {
           console.log('[AudioSlice] Connecting to music gain node with volume:', state.musicGainNode.gain.value);
           source.connect(state.musicGainNode);
+          
+          // Double-check gain node has correct volume
+          if (state.musicGainNode.gain.value === 0 || state.musicGainNode.gain.value < 0.01) {
+            console.log('[AudioSlice] Gain node volume too low, resetting to:', state.volume);
+            state.musicGainNode.gain.setValueAtTime(state.volume, audioContext.currentTime);
+          }
         } else {
           console.warn('[AudioSlice] No music gain node, connecting directly to destination');
           source.connect(audioContext.destination);
@@ -503,9 +545,15 @@ export const useAudioStore = create<AudioState & AudioActions>()(
 
     // Stop music
     stopMusic: () => {
+      console.log('[AudioSlice] stopMusic called');
       const state = get();
+      
+      // Set state to not playing immediately
+      set({ isPlaying: false, currentMusic: null });
+      
       if (state.musicSource && state.audioContext) {
         try {
+          console.log('[AudioSlice] Stopping music with audio context');
           // Create a local reference to the audio context after null check
           const audioCtx = state.audioContext;
           
@@ -514,6 +562,7 @@ export const useAudioStore = create<AudioState & AudioActions>()(
           
           // If we have a music gain node, use it for the fade-out
           if (state.musicGainNode) {
+            console.log('[AudioSlice] Using gain node for smooth fade-out');
             // Get current volume
             const currentVolume = state.musicGainNode.gain.value;
             
@@ -529,38 +578,65 @@ export const useAudioStore = create<AudioState & AudioActions>()(
             setTimeout(() => {
               try {
                 if (state.musicSource) {
-                  state.musicSource.stop();
+                  // Disconnect first to ensure audio stops immediately
                   state.musicSource.disconnect();
+                  state.musicSource.stop();
+                  console.log('[AudioSlice] Music source stopped with fade-out');
                   
                   // Immediately restore the gain node to the original volume
                   if (state.musicGainNode && state.audioContext) {
                     state.musicGainNode.gain.cancelScheduledValues(state.audioContext.currentTime);
                     state.musicGainNode.gain.setValueAtTime(originalVolume, state.audioContext.currentTime);
                   }
+                  
+                  // Clear the music source
+                  set({ musicSource: null });
                 }
               } catch (error) {
-                // Handle the case where the source might have already been stopped
+                console.error('[AudioSlice] Error during fade-out stop:', error);
+                // Ensure node is disconnected even if stop fails
+                if (state.musicSource) {
+                  try {
+                    state.musicSource.disconnect();
+                  } catch (e) {
+                    // Ignore any additional errors
+                  }
+                  set({ musicSource: null });
+                }
               }
             }, 40); // Slightly longer than the fade-out time
           } else {
             // If no gain node, just stop immediately
-            state.musicSource.stop();
+            console.log('[AudioSlice] No gain node, stopping immediately');
             state.musicSource.disconnect();
+            state.musicSource.stop();
+            set({ musicSource: null });
           }
         } catch (error) {
-          // Error handling preserved but without logging
+          console.error('[AudioSlice] Error in stopMusic:', error);
+          // Try a more direct approach if the controlled stop fails
+          try {
+            state.musicSource.disconnect();
+            state.musicSource.stop();
+          } catch (e) {
+            // Ignore any additional errors
+          }
+          set({ musicSource: null });
         }
       } else if (state.musicSource) {
         // If we have a music source but no audio context, just stop it directly
+        console.log('[AudioSlice] Stopping music without audio context');
         try {
-          state.musicSource.stop();
           state.musicSource.disconnect();
+          state.musicSource.stop();
         } catch (error) {
-          // Error handling preserved but without logging
+          console.error('[AudioSlice] Error stopping music without context:', error);
         }
+        set({ musicSource: null });
       }
-      set({ isPlaying: false, currentMusic: null, musicSource: null });
-      // Note: We keep currentSong to remember what was playing
+      
+      // Ensure the state is cleaned up properly
+      console.log('[AudioSlice] Music playback stopped');
     },
 
     // Play SFX
@@ -710,8 +786,8 @@ export const useAudioStore = create<AudioState & AudioActions>()(
       });
     },
 
-    // New method: Play voice audio from base64
-    playVoice: async (audioBase64: string) => {
+    // Play voice
+    playVoice: async (audioBase64) => {
       console.log('[AudioSlice] playVoice called with base64 audio');
       const state = get();
       
@@ -781,19 +857,22 @@ export const useAudioStore = create<AudioState & AudioActions>()(
         console.error('[AudioSlice] Error playing voice audio:', error);
       }
     },
-    
-    // Stop voice playback
+
+    // Stop voice
     stopVoice: () => {
       const state = get();
-      if (state.voiceSource && state.audioContext) {
+      if (state.voiceSource) {
         try {
           state.voiceSource.stop();
+          // Disconnect to free resources
           state.voiceSource.disconnect();
         } catch (error) {
-          // Handle the case where the source might have already stopped
+          // Error handling preserved but without logging
         }
       }
-      set({ voiceSource: null });
-    }
+      set({ 
+        voiceSource: null
+      });
+    },
   }))
 );
