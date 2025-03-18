@@ -114,31 +114,38 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      console.log('[ChatContainer] KeyDown:', event.key, 'repeat:', event.repeat, 'cmdPressedRef:', cmdPressedRef.current);
       if ((event.key === 'Meta' || event.key === 'Control') && !event.repeat) {
         // Only set command pressed if no other keys are already pressed
         if (!cmdPressedRef.current) {
+          console.log('[ChatContainer] Setting cmdPressedRef to true');
           cmdPressedRef.current = true;
           cmdPressedTime.current = Date.now();
         }
       } else if (cmdPressedRef.current) {
         // If any other key is pressed while Command is down, mark it as a combo
         // This prevents toggling audio when Command is used for shortcuts
+        console.log('[ChatContainer] Combo detected, clearing cmdPressedTime');
         cmdPressedTime.current = null;
       }
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
+      console.log('[ChatContainer] KeyUp:', event.key, 'cmdPressedRef:', cmdPressedRef.current, 'cmdPressedTime:', cmdPressedTime.current);
       if (event.key === 'Meta' || event.key === 'Control') {
         // Only toggle if it was a standalone Command press (not part of a combo)
         if (cmdPressedRef.current && cmdPressedTime.current) {
           const pressDuration = Date.now() - cmdPressedTime.current;
+          console.log('[ChatContainer] Command press duration:', pressDuration, 'ms');
           if (pressDuration < 500) { // Only toggle if pressed for less than 500ms
             // Clear any existing timer to prevent multiple toggles
             if (cmdReleaseTimer.current) {
               clearTimeout(cmdReleaseTimer.current);
             }
             
+            console.log('[ChatContainer] Setting up toggleAudio timer');
             cmdReleaseTimer.current = setTimeout(() => {
+              console.log('[ChatContainer] Executing toggleAudio from timer');
               toggleAudio();
               cmdReleaseTimer.current = null;
             }, 50); // Small delay to ensure no other keys were pressed
@@ -311,27 +318,26 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   };
 
   const playAudio = (audioBase64: string) => {
-    const audioData = atob(audioBase64);
-    const arrayBuffer = new ArrayBuffer(audioData.length);
-    const view = new Uint8Array(arrayBuffer);
-    for (let i = 0; i < audioData.length; i++) {
-      view[i] = audioData.charCodeAt(i);
-    }
-    const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
-    const audioUrl = URL.createObjectURL(audioBlob);
+    console.log('[ChatContainer] Playing audio from base64');
     
+    // Use the dedicated voice playback method
     setIsPlaying(true);
-    audio.playMusic(audioUrl);
-    // Clean up URL after a delay to ensure audio starts playing
-    setTimeout(() => {
-      setIsPlaying(false);
-      URL.revokeObjectURL(audioUrl);
-    }, 500);
+    audio.playVoice(audioBase64)
+      .catch((error: Error) => {
+        console.error('[ChatContainer] Error playing voice audio:', error);
+      })
+      .finally(() => {
+        // Voice playback automatically cleans up when done
+        setTimeout(() => {
+          setIsPlaying(false);
+        }, 500);
+      });
   };
 
   const stopAudio = () => {
+    console.log('[ChatContainer] Stopping audio');
     setIsPlaying(false);
-    audio.stopMusic();
+    audio.stopVoice();
   };
 
   const toggleAudio = () => {
@@ -339,15 +345,21 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
     const now = Date.now();
     const timeSinceLastToggle = now - lastToggleTime;
     
+    console.log('[ChatContainer] toggleAudio called, time since last toggle:', timeSinceLastToggle, 'ms');
+    
     // Only allow toggle if it's been at least 500ms since the last toggle
     if (timeSinceLastToggle < 500) {
+      console.log('[ChatContainer] Ignoring toggle, too soon after last toggle');
       return;
     }
     
     setLastToggleTime(now);
     
     if (!audioEnabled) {
+      console.log('[ChatContainer] Enabling audio and playing sound');
       audio.playSound('chatbot-open');
+    } else {
+      console.log('[ChatContainer] Disabling audio');
     }
     setAudioEnabled(!audioEnabled);
   };
