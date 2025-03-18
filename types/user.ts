@@ -1,11 +1,7 @@
 // types/user.ts
 // This file contains shared types for user-related data
 
-export interface OnboardingInfo {
-  targetScore?: number;
-  testDate?: string;
-  // Add other onboarding fields as needed
-}
+import { OnboardingInfo } from './index';
 
 export interface UserInfo {
   unlocks?: string[];

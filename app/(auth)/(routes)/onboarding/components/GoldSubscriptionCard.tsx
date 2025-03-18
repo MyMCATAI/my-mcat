@@ -81,21 +81,14 @@ export function GoldSubscriptionCard({ context }: { context: 'onboarding' | 'off
       setIsLoading(true);
 
       if (isGold) {
-        // Manage existing subscription
-        const response = await axios.get("/api/stripe");
-        window.location.href = response.data.url;
-        return
+        router.push('/pricing');
+        return;
       }
       
       if (context === 'onboarding') {
-        // Show the pricing page with more options
         router.push('/pricing');
       } else {
-        // Direct checkout for gold
-        const response = await axios.post("/api/stripe/checkout", {
-          productType: "gold"
-        });
-        window.location.href = response.data.url;
+        router.push('/pricing');
       }
     } catch (error) {
       console.error("Error:", error);

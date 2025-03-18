@@ -1,6 +1,6 @@
 import { CustomVideo } from "../CustomVideo";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { ProductType } from "@/types";
@@ -28,8 +28,6 @@ const SoftwareSection = ({
 }: SoftwareSectionProps) => {
   /* ---- State ----- */
   const [showTestimonials, setShowTestimonials] = useState(false);
-  const [localLoading, setLocalLoading] = useState(false);
-  const [isTrialEligible, setIsTrialEligible] = useState(true);
   const { isTrialing, isCanceled } = useSubscriptionStatus();
 
   /* ---- Helper Methods ----- */
@@ -59,74 +57,9 @@ const SoftwareSection = ({
     }
   };
 
-  /* ---- Animations & Effects --- */
-  useEffect(() => {
-    // Check trial eligibility when component mounts and user is available
-    if (user?.id) {
-      checkTrialEligibility();
-    }
-  }, [user?.id]);
-
   /* ---- Event Handlers ----- */
   const handlePeriodSelection = (period: 'monthly' | 'biannual' | 'annual') => {
     setPricingPeriod(period);
-  };
-
-  const checkTrialEligibility = async () => {
-    try {
-      const response = await axios.get('/api/subscription/check-trial-eligibility');
-      setIsTrialEligible(response.data.isEligible);
-      
-      if (!response.data.isEligible) {
-        console.log("User not eligible for trial:", response.data.reason);
-      }
-    } catch (error) {
-      console.error("Error checking trial eligibility:", error);
-      // Default to eligible if we can't check
-      setIsTrialEligible(true);
-    }
-  };
-
-  // Handle starting a free trial
-  const handleStartTrial = async () => {
-    try {
-      // Check eligibility first
-      const response = await axios.get('/api/subscription/check-trial-eligibility');
-      if (!response.data.isEligible) {
-        toast.error("You're not eligible for a free trial");
-        return;
-      }
-      
-      setLocalLoading(true);
-      
-      const userId = user?.id;
-      
-      if (!userId) {
-        // If not authenticated, redirect to sign-up with return URL
-        const returnUrl = encodeURIComponent(window.location.pathname);
-        window.location.href = `/sign-up?redirect_url=${returnUrl}`;
-        return;
-      }
-
-      // Map pricing period to the correct product type
-      const priceType = pricingPeriod === 'monthly' ? ProductType.MD_GOLD :
-                       pricingPeriod === 'annual' ? ProductType.MD_GOLD_ANNUAL :
-                       ProductType.MD_GOLD_BIANNUAL;
-
-      // Pass trial=true to the API
-      const checkoutResponse = await axios.post("/api/stripe/checkout", {
-        priceType: priceType,
-        isSpecialStatus: isSpecialStatus,
-        isTrial: true
-      });
-      
-      window.location.href = checkoutResponse.data.url;
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to start trial");
-    } finally {
-      setLocalLoading(false);
-    }
   };
 
   /* ---- Render Methods ----- */
@@ -147,9 +80,6 @@ const SoftwareSection = ({
             <p className="text-white/60 text-sm mt-1">
               ${getMonthlyPrice(pricingPeriod)}/month for comprehensive MCAT prep
             </p>
-            <div className="mt-2 inline-flex items-center justify-center bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm font-medium">
-              New 14-day free trial! ✨
-            </div>
           </div>
 
           <div className="flex flex-col md:flex-row">
@@ -340,52 +270,30 @@ const SoftwareSection = ({
                         <span>Annual Plan</span>
                         <div className="flex items-center gap-2">
                           {isSpecialStatus && (
-                            <span className="line-through opacity-60">$1,200</span>
+                            <span className="line-through opacity-60">$1200</span>
                           )}
-                          <span>${isSpecialStatus ? '800' : '1,200'}</span>
+                          <span>${isSpecialStatus ? '800' : '1200'}</span>
                         </div>
                       </div>
                     </button>
                   </div>
 
-                  {/* Upgrade button - Shows first */}
+                  {/* Upgrade button */}
                   <button
                     onClick={handleUpgradeClick}
                     className="w-full relative overflow-hidden bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-500 text-black py-3 rounded-lg font-semibold 
                       transition-all duration-300
-                      hover:from-amber-300 hover:via-yellow-400 hover:to-amber-400
-                      hover:shadow-[0_0_30px_rgba(251,191,36,0.6)]
+                      hover:from-amber-400 hover:to-amber-700
+                      hover:shadow-[0_0_20px_rgba(251,191,36,0.5)]
                       hover:scale-[1.02] hover:-translate-y-0.5
-                      active:scale-[0.98] active:shadow-[0_0_20px_rgba(251,191,36,0.5)]
+                      active:scale-[0.98] active:shadow-[0_0_15px_rgba(251,191,36,0.4)]
                       before:absolute before:content-[''] before:top-0 before:left-0 before:w-full before:h-full 
-                      before:bg-gradient-to-r before:from-transparent before:via-yellow-100/20 before:to-transparent
+                      before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent
                       before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700
-                      mt-4"
-                    disabled={isLoading}
+                      mt-8"
                   >
                     {isLoading ? 'Processing...' : `Get Gold ${pricingPeriod === 'monthly' ? 'Monthly' : pricingPeriod === 'biannual' ? 'Bi-Annual' : 'Annual'}`}
                   </button>
-
-                  {/* Trial button - Only show if eligible, now appears below Gold button */}
-                  {isTrialEligible &&(
-                    <div className="space-y-2 mt-24">
-                      <button
-                        onClick={handleStartTrial}
-                        className="w-full relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-lg font-semibold 
-                          transition-all duration-300
-                          hover:from-blue-400 hover:to-blue-700
-                          hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]
-                          hover:scale-[1.02] hover:-translate-y-0.5
-                          active:scale-[0.98] active:shadow-[0_0_15px_rgba(59,130,246,0.4)]
-                          before:absolute before:content-[''] before:top-0 before:left-0 before:w-full before:h-full 
-                          before:bg-gradient-to-r before:from-transparent before:via-blue-200/10 before:to-transparent
-                          before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700"
-                        disabled={localLoading}
-                      >
-                        {localLoading ? 'Processing...' : 'Start 14-Day Free Trial'}
-                      </button>
-                    </div>
-                  )}
                 </>
               )}
             </div>

@@ -1,0 +1,47 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+name: State Management Patterns
+description: Guidelines for accessing store state and actions in components
+globs: ["**/*.tsx", "**/*.ts"]
+alwaysApply: true
+---
+
+### State Management Patterns
+
+#### Store Access
+Always use the consolidated selector pattern from `@/store/selectors.ts` instead of directly importing from slice files.
+
+✅ Correct: Use consolidated selectors
+```typescript
+import { useUI, useUser, useAudio } from '@/store/selectors';
+
+const MyComponent = () => {
+  const { theme } = useUI();
+  const { isSubscribed } = useUser();
+  const { playSound, stopLoop } = useAudio();
+  
+  // Component implementation
+};
+```
+
+❌ Incorrect: Direct imports from slice files
+```typescript
+import { useUIStore } from '@/store/slices/uiSlice';
+import { useUserStore } from '@/store/slices/userSlice';
+import { useAudioStore } from '@/store/slices/audioSlice';
+
+const MyComponent = () => {
+  const theme = useUIStore(state => state.theme);
+  const isSubscribed = useUserStore(state => state.isSubscribed);
+  const playSound = useAudioStore(state => state.playSound);
+  
+  // Component implementation
+};
+```
+
+#### Exception: Store Initialization Components
+The only exception to this pattern is in components specifically designed for store initialization (e.g., `StoreInitializer.tsx`), where direct access to store actions may be required.
