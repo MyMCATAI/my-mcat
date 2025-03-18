@@ -2,6 +2,8 @@
 
 ### Branch Steps: Route and Navigation Tracking
 
+# Feature #2: Track UI Globally
+
 ## Navigation State Management Strategy
 
 ### Problem Analysis
@@ -16,35 +18,36 @@
    - No tracking of deeper navigation contexts (sections within sections)
    - No persistence of navigation state
 
-### Architecture Decision: Extend UISlice vs New ATSSlice
+### Architecture Decision: General Context vs Section-Specific Contexts
 
-#### Option 1: Extend UISlice (RECOMMENDED)
+#### Approach 1: Section-Specific Context Objects (Original)
 - **Pros**:
-  - Central location for all routing-related state
-  - Maintains separation of concerns (UI layer handles routes)
-  - Simpler integration with existing code
-  - Avoids creating extra slices for functionality closely related to UI
-  - More consistent with current architecture
+  - Clear organization by section
+  - Strong typing for each section's unique data
+  - Follows domain-driven design principles
+  - Easy to understand what belongs where
 
 - **Cons**:
-  - UISlice becomes more complex
-  - Could mix general UI state with route-specific logic
+  - More complex nested structure
+  - Requires more code to update specific sections
+  - May lead to duplication of similar structures
 
-#### Option 2: Create New ATSSlice
-- **Pros**: 
-  - Cleaner separation of concerns for ATS-specific state
-  - More scalable for future ATS features
-  - Progress tracking fits naturally in dedicated slice
+#### Approach 2: General Context Object (RECOMMENDED)
+- **Pros**:
+  - Simpler flat structure
+  - More flexible for changing requirements
+  - Easier to update single properties
+  - Cleaner for components that need a subset of properties
+  - Can still be type-safe with discriminated unions
 
 - **Cons**:
-  - Splits routing logic across multiple slices
-  - Duplication between UI and ATS routing logic
-  - Requires more coordination between slices
-  - More complex implementation
+  - May need careful property naming to avoid collisions
+  - Less obvious organization at a glance
+  - Potentially less strong typing
 
-### Decision: EXTEND UISLICE but with clear subsections
+### Decision: EXTEND UISLICE with a general context object
 
-The routing state should live in UISlice, but we'll create dedicated sections for different app areas:
+The navigation and context state should live in UISlice, using a general context object that adapts based on the current route:
 
 ```typescript
 // In uiSlice.ts
@@ -57,47 +60,53 @@ interface UIState {
   currentRoute: string;
   navigationHistory: string[];
   
-  // Section-specific navigation
-  sectionStates: {
-    ats?: {
-      activeSubject: string;
-      learningMode: LearningMode;
-      lastViewedContent: string;
-    },
-    cars?: {
-      activeSection: string;
-      // other CARS-specific navigation state
-    },
-    // other sections as needed
+  // General context - dynamic based on current route
+  context: {
+    // Common properties across all routes
+    pageTitle?: string;
+    lastUpdated?: string;
+    
+    // ATS route properties
+    subject?: string;
+    contentType?: 'video' | 'reading' | 'quiz' | 'highlight' | 'askKalypso';
+    timestamp?: number;
+    transcription?: string;
+    
+    // CARS route properties
+    passageContent?: string;
+    questionsAsked?: string[];
+    explanationNotes?: string;
+    
+    // Other route-specific properties as needed
+    [key: string]: any;
   }
 }
 ```
 
 This approach:
-1. Keeps routing in one place (UISlice)
-2. Organizes section-specific state clearly
-3. Makes it easy to share navigation info with Kalypso
+1. Keeps all state in one place (UISlice)
+2. Uses a flexible structure that can adapt to any route
+3. Makes it easy to update individual properties
+4. Simplifies state subscription for components
+5. Makes it easy to share context with Kalypso
 
 ## Implementation Steps
 
-### 1. Extend UISlice with Enhanced Navigation State
+### 1. Extend UISlice with Enhanced Navigation and Context State
 
 ```typescript
 // Add these to uiSlice.ts
-interface NavigationState {
-  currentRoute: string;         // Primary route (/home, /ATS, etc)
-  navigationHistory: string[];  // Record of past routes
-  sectionContext: {            // Section-specific navigation context
-    ats?: ATSNavigationContext;
-    cars?: CarsNavigationContext;
-    // other sections as needed
-  }
-}
-
-interface ATSNavigationContext {
-  activeSubject: string;
-  learningMode: 'highlight' | 'video' | 'reading' | 'practice' | 'askKalypso';
-  lastViewedContent: string;
+interface UIState {
+  // Existing state
+  window: WindowSize;
+  currentRoute: string;
+  theme: ThemeType;
+  
+  // New navigation state
+  navigationHistory: string[];
+  
+  // New general context state
+  context: Record<string, any>;
 }
 
 // Add new actions
@@ -108,16 +117,17 @@ const setCurrentRoute = (route: string) => {
   }));
 }
 
-const setSectionContext = (section: string, context: any) => {
+const setContext = (updates: Record<string, any>) => {
   set((state) => ({
-    sectionContext: {
-      ...state.sectionContext,
-      [section]: {
-        ...state.sectionContext[section],
-        ...context
-      }
+    context: {
+      ...state.context,
+      ...updates
     }
   }));
+}
+
+const clearContext = () => {
+  set(() => ({ context: {} }));
 }
 ```
 
@@ -131,54 +141,67 @@ import { useUIStore } from '@/store/slices/uiSlice';
 export function useNavigation() {
   const router = useRouter();
   const setCurrentRoute = useUIStore(state => state.setCurrentRoute);
-  const setSectionContext = useUIStore(state => state.setSectionContext);
+  const setContext = useUIStore(state => state.setContext);
+  const clearContext = useUIStore(state => state.clearContext);
   
   // Navigate to a main route with URL change
   const navigateTo = (route: string) => {
     router.push(route);
     setCurrentRoute(route);
+    clearContext(); // Clear context when changing routes
   };
   
-  // Update section context without changing URL
-  const updateSectionContext = (section: string, context: any) => {
-    setSectionContext(section, context);
+  // Update context without changing URL
+  const updateContext = (context: Record<string, any>) => {
+    setContext(context);
   };
   
   // Navigate within ATS (common case)
-  const navigateATS = (subject: string, mode: string) => {
+  const navigateATS = (subject: string, contentType: string) => {
     // Only change URL to /ATS if not already there
     if (window.location.pathname !== '/ATS') {
       router.push('/ATS');
     }
     
     setCurrentRoute('/ATS');
-    setSectionContext('ats', {
-      activeSubject: subject,
-      learningMode: mode,
-      lastAccessed: new Date().toISOString()
+    setContext({
+      subject,
+      contentType,
+      lastUpdated: new Date().toISOString()
     });
   };
   
   return {
     navigateTo,
-    updateSectionContext,
+    updateContext,
     navigateATS
   };
 }
 ```
 
-### 3. Usage in Components
+### 3. Usage in Components with Selective Subscriptions
 
 ```typescript
 // In any component needing navigation
 import { useNavigation } from '@/hooks/useNavigation';
+import { useUIStore } from '@/store/slices/uiSlice';
 
 const MyComponent = () => {
-  const { navigateTo, navigateATS } = useNavigation();
+  const { navigateTo, updateContext } = useNavigation();
+  
+  // Subscribe only to specific context properties to optimize re-renders
+  const subject = useUIStore(state => state.context.subject);
+  const contentType = useUIStore(state => state.context.contentType);
   
   const goToHome = () => navigateTo('/home');
   
-  const openBiologyVideos = () => navigateATS('biology', 'video');
+  const openBiologyVideos = () => {
+    navigateTo('/ATS');
+    updateContext({
+      subject: 'biology',
+      contentType: 'video'
+    });
+  };
   
   // ...
 };
@@ -191,24 +214,17 @@ const MyComponent = () => {
 import { useUIStore } from '@/store/slices/uiSlice';
 
 const KalypsoContextProvider = ({ children }) => {
-  const { currentRoute, sectionContext } = useUIStore();
+  // Get both route and context information
+  const currentRoute = useUIStore(state => state.currentRoute);
+  const context = useUIStore(state => state.context);
   
-  // Build context object for Kalypso that includes navigation state
+  // Build context object for Kalypso that includes navigation and content context
   const buildContextForKalypso = () => {
     return {
       currentRoute,
-      currentSection: getCurrentSection(currentRoute),
-      sectionDetails: sectionContext[getCurrentSection(currentRoute)],
-      // ... other context
+      ...context,
+      // Additional useful information for Kalypso can be added here
     };
-  };
-  
-  // Helper to extract section from route
-  const getCurrentSection = (route: string) => {
-    if (route === '/ATS') return 'ats';
-    if (route.includes('/CARS')) return 'cars';
-    // ... other mappings
-    return 'general';
   };
   
   // ... rest of provider
@@ -217,50 +233,56 @@ const KalypsoContextProvider = ({ children }) => {
 
 ### 5. Debug Panel Integration
 
-Ensure DebugPanel reads and displays navigation state:
-
 ```typescript
 // In DebugPanel.tsx
 const uiState = useUIStore();
 
-// Format navigation for display
-const displayNavigationState = {
+// Format navigation and context for display
+const displayState = {
   currentRoute: uiState.currentRoute,
   recentHistory: uiState.navigationHistory.slice(-3), // Show last 3
-  atsContext: uiState.sectionContext?.ats || 'Not in ATS',
-  carsContext: uiState.sectionContext?.cars || 'Not in CARS'
+  context: uiState.context
 };
 
 // Then in the render:
 <div>
-  <h4 className="font-bold">Navigation State</h4>
-  <pre>{JSON.stringify(displayNavigationState, null, 2)}</pre>
+  <h4 className="font-bold">Navigation & Context State</h4>
+  <pre>{JSON.stringify(displayState, null, 2)}</pre>
 </div>
 ```
 
-## Benefits of This Approach
+## Benefits of General Context Approach
 
-1. **Clear Organization**: Navigation state remains in UISlice but is well-structured
-2. **Single Source of Truth**: One place for determining where the user is
-3. **Flexible**: Can track section-specific context without changing URLs
-4. **Persistent**: State persists between sessions via Zustand persistence
-5. **Compatible**: Works with both URL-based and state-based navigation
-6. **Developer-Friendly**: Easy to understand and extend
+1. **Simpler State Structure**: Flat object is easier to understand and update
+2. **Selective Subscriptions**: Components can subscribe to exactly what they need:
+   ```typescript
+   // Only re-render when specific properties change
+   const transcript = useUIStore(state => state.context.transcript);
+   const timestamp = useUIStore(state => state.context.timestamp);
+   ```
+3. **Optimized Re-renders**: When one part of context changes, only components that subscribe to that specific property will re-render
+4. **Easier Updates**: Simpler API for updating context:
+   ```typescript
+   updateContext({ timestamp: currentTime, transcript: currentTranscript });
+   ```
+5. **More Flexible**: Easier to add new properties without changing the structure
+6. **Fewer Nested Updates**: No need to worry about deeply nested state updates
+7. **Cleaner Implementation**: Less code overall for the same functionality
 
 ## Next Steps
 
-1. Implement the UISlice extensions
+1. Implement the UISlice extensions with general context
 2. Create the navigation hooks
 3. Update all navigation calls in the app to use the new system
-4. Add section context updates in ATS components
-5. Connect Kalypso context to navigation state
-6. Update DebugPanel to show navigation state
+4. Add context updates in various components
+5. Connect Kalypso to the context state
+6. Update DebugPanel to show navigation and context state
 
 ## Future Considerations
 
 1. Analytics integration to track user navigation patterns
-2. Deeper section context for more granular tracking
-3. Breadcrumb generation from navigation state
+2. Property validation for context to ensure type safety
+3. Automatic context clearing when changing routes
 4. Session replay capabilities using navigation history
 
 ## Comprehensive Navigation Tracking Checklist
@@ -279,107 +301,51 @@ Based on the entire codebase, here's a complete checklist of all sections/areas 
 - [ ] Help (`/help`)
 - [ ] Onboarding (`/onboarding`)
 
-### Subsections to Track (No URL Changes)
+### Context Information to Track Per Route
 
-#### ATS Subsections
-- [ ] Subject Selection  
-  - [ ] Track active subject
-  - [ ] Track previously viewed subjects
-  - [ ] Track completion status per subject
-  
-- [ ] Learning Mode
-  - [ ] Highlight mode
-  - [ ] Video mode
-  - [ ] Reading mode
-  - [ ] Practice mode
-  - [ ] Ask Kalypso mode
-  
-- [ ] Content Progress
-  - [ ] Current content item ID
-  - [ ] Progress percentage in current content
-  - [ ] Last accessed timestamps
+#### ATS Route Context
+- [ ] Current subject
+- [ ] Content type (video, reading, quiz, etc.)
+- [ ] Content ID/title
+- [ ] Timestamp (for videos)
+- [ ] Transcription excerpts
+- [ ] Progress percentage
 
-#### CARS Subsections
-- [ ] Passage Selection
-  - [ ] Current passage ID
-  - [ ] Passage category/type
-  
-- [ ] Question Navigation
-  - [ ] Current question index
-  - [ ] Answered/unanswered status
-  - [ ] Flagged questions
-  
-- [ ] Review Mode
-  - [ ] Track when user is in review vs. test mode
-  - [ ] Track which passages/questions are being reviewed
+#### CARS Route Context
+- [ ] Passage content/ID
+- [ ] Current question
+- [ ] Questions asked
+- [ ] User answers
+- [ ] Explanation notes
+- [ ] Test vs. review mode
 
-#### Flashcard Subsections
-- [ ] Deck Selection
-  - [ ] Current deck ID
-  - [ ] Previously studied decks
-  
-- [ ] Study Session
-  - [ ] Current card index
-  - [ ] Study session stats (correct/incorrect)
-  - [ ] Session duration
+#### Flashcards Route Context
+- [ ] Current deck ID
+- [ ] Current card
+- [ ] Study statistics
+- [ ] Session duration
 
-#### Profile Subsections
-- [ ] Account Settings
-- [ ] Study Statistics
-- [ ] Subscription Management
-- [ ] Achievement Tracking
-
-### Dialog/Modal States to Track
-- [ ] Active modal/dialog type
-- [ ] Previous screen before modal opened
-- [ ] Modal navigation history (for multi-step modals)
-
-### Contextual Learning States
-- [ ] Current study session duration
-- [ ] Session goals/progress
-- [ ] Break reminders/status
-- [ ] Study streak information
-
-### Implementation Priority Order
-1. [ ] Extend UISlice with navigation structure
+#### Implementation Priority Order
+1. [ ] Extend UISlice with navigation and context structure
    - [ ] Add `navigationHistory` array
-   - [ ] Add `sectionContext` object
-   - [ ] Add action creators for navigation
+   - [ ] Add `context` object
+   - [ ] Add action creators
 
 2. [ ] Create common `useNavigation` hook
    - [ ] Implement general navigation methods
-   - [ ] Add section-specific navigation helpers
+   - [ ] Add context update helpers
 
 3. [ ] Update main section navigation (Primary Routes)
    - [ ] Modify all route changes to update state
-   - [ ] Add entry point tracking for each major section
+   - [ ] Add context tracking for each major section
 
-4. [ ] Implement ATS tracking
-   - [ ] Add subject selection tracking
-   - [ ] Add learning mode tracking
-   - [ ] Add content progress tracking
-
-5. [ ] Implement CARS tracking
-   - [ ] Add passage selection tracking
-   - [ ] Add question navigation tracking
-   - [ ] Add review mode state
-
-6. [ ] Add remaining subsection tracking
-   - [ ] Flashcards subsections
-   - [ ] Profile subsections
-   - [ ] Modal/dialog tracking
-
-7. [ ] Enhance DebugPanel
-   - [ ] Add navigation state visualization
-   - [ ] Add history view
-   - [ ] Add section context details 
-
-8. [ ] Integrate with Kalypso
-   - [ ] Provide navigation context to AI
-   - [ ] Enable section-aware responses
+4. [ ] Integrate with Kalypso
+   - [ ] Provide context to AI
+   - [ ] Enable context-aware responses
 
 ### Technical Requirements
 - [ ] Persist navigation state in localStorage
 - [ ] Handle back/forward browser navigation
 - [ ] Maintain URL synchronization where appropriate
 - [ ] Add analytics tracking for navigation events
+- [ ] Implement selective subscriptions for performance optimization

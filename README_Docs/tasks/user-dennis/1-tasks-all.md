@@ -1,6 +1,40 @@
 # Features / Branch Ideas:
-[ ] Talking to kalypso - better UI - waveform shows - when talking to Kalypso AI 
-[ ] ATS State Management and Routing Strategy - Implement proper state tracking for Adaptive Tutoring Suite (See `2-single-task-steps.md` for implementation details)
+1. **Talking to Kalypso**
+- better UI  you should hold a button its listening and transcribing as opposed to just press command once.
+- when you hold down command, a waveform thats flat begins then you talk the waveform changes based on energy.
+- current behavior: - if you play music and press command,  you can  talk to kalypso and music is playing, we suggest evaluate if music is playing then just pause it - to not interfere with user talking or Kalypso talking back (user can play it again manually)
+- current behavior: when user says Kalypso the transcription says "Calypso", make sure its spelled right with a K 
+- change transcription to be real time (while cmd is being held down). 
+
+2.**Track UI Globally**
+- current Schema in UI State: 
+` "currentRoute": "/home"`  
+- navigation: {
+    page:  //  ex: `/home` , `/test`, `/cars`, `/ats` // anki clinic done
+    subSection: // object that encapsulates all subsections - each page could have different looking subsections
+}
+
+    // ex: if user lands in `/ats`
+    UI State would look like 
+    navigation:{
+        page: `/ats`
+        subSection: {
+            concept: "Amino Acids" //this is the top 6 button
+            contentType:   Video, reading, quiz, etc
+    }
+}
+ - make sure every route is accounted for,
+
+ CARS: `context:passage, questionsAsked , explanationNotes`
+ 
+ 3. **In ATS - Kalypso knows the content you are looking at and will quiz you (depends on 2).**
+ - given that #2 is done and we track user's ats context which might look like "timestamp, videoTranscript", we have kalypso pop in randomly it pauses the video kapyso asks a question based on the content the user has already seen (see our `refactor-home-final` branch ) .
+
+ 4) **in Home - we need to fetch the user's information**
+ - `knowledgeProfiles, calendarActivities`, create some `progress` property
+ we need to calculate some metric for progress - suggest doing this on backend, but we can do this on frontend if faster.
+ - track when user signs in for the first time that day - boolean flag
+ - if true, Kalypso has context of user and summarizes their information - "heres your week ____, heres what you're good at___ and can improve in ___" 
 
 
 ---
