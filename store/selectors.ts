@@ -208,7 +208,7 @@ export const useOnboardingStatus = () => ({
 /* --- Audio Selector ---- */
 // Consolidated audio selector that provides all audio-related state and actions
 export const useAudio = () => {
-  // Audio state
+  // State
   const isPlaying = useAudioStore((state) => state.isPlaying)
   const currentSong = useAudioStore((state) => state.currentSong)
   const currentLoop = useAudioStore((state) => state.currentLoop)
@@ -216,42 +216,58 @@ export const useAudio = () => {
   const songQueue = useAudioStore((state) => state.songQueue)
   const audioContext = useAudioStore((state) => state.audioContext)
   
-  // Audio actions
+  // Additional state for debugging
+  const currentMusic = useAudioStore((state) => state.currentMusic)
+  const masterVolume = useAudioStore((state) => state.masterVolume)
+  const currentSongIndex = useAudioStore((state) => state.currentSongIndex)
+  
+  // Audio sources for debugging
+  const musicSource = useAudioStore((state) => state.musicSource)
+  const loopSource = useAudioStore((state) => state.loopSource)
+  const voiceSource = useAudioStore((state) => state.voiceSource)
+  
+  // Gain nodes for debugging
+  const masterGainNode = useAudioStore((state) => state.masterGainNode)
+  const musicGainNode = useAudioStore((state) => state.musicGainNode)
+  const sfxGainNode = useAudioStore((state) => state.sfxGainNode)
+  const loopGainNode = useAudioStore((state) => state.loopGainNode)
+  const voiceGainNode = useAudioStore((state) => state.voiceGainNode)
+  
+  // Methods
   const playMusic = useAudioStore((state) => state.playMusic)
   const stopMusic = useAudioStore((state) => state.stopMusic)
   const playSound = useAudioStore((state) => state.playSound)
   const playLoop = useAudioStore((state) => state.playLoop)
   const stopLoop = useAudioStore((state) => state.stopLoop)
+  const playVoice = useAudioStore((state) => state.playVoice)
+  const stopVoice = useAudioStore((state) => state.stopVoice)
   const setVolume = useAudioStore((state) => state.setVolume)
   const initializeAudioContext = useAudioStore((state) => state.initializeAudioContext)
   
-  // Theme-music integration
+  // Player controls
   const handleThemeChange = useAudioStore((state) => state.handleThemeChange)
   
-  // Song information
+  // Metadata
   const getCurrentSongTitle = useAudioStore((state) => state.getCurrentSongTitle)
   
-  // Queue system
+  // Player navigation
   const skipToNext = useAudioStore((state) => state.skipToNext)
   const togglePlayPause = useAudioStore((state) => state.togglePlayPause)
   const setSongQueue = useAudioStore((state) => state.setSongQueue)
   
-  // Initialize audio context on first use - but only once per component instance
-  const hasInitializedRef = useRef(false);
-  
+  // Effect to initialize audio context on component mount
   useEffect(() => {
-    if (hasInitializedRef.current) return;
-    
-    console.debug('[useAudio] Initializing audio context on hook mount')
-    hasInitializedRef.current = true;
-    
-    initializeAudioContext().catch(error => {
-      console.error('[useAudio] Failed to initialize audio context:', error);
-    });
-  }, [initializeAudioContext]);
+    // Only initialize if not already initialized
+    if (!audioContext) {
+      console.debug('[useAudio] Initializing audio context on hook mount')
+      initializeAudioContext().catch(error => {
+        console.error('[useAudio] Failed to initialize audio context:', error);
+      });
+    }
+  }, [audioContext, initializeAudioContext]);
   
   return {
-    // Audio state
+    // State
     isPlaying,
     currentSong,
     currentLoop,
@@ -259,26 +275,45 @@ export const useAudio = () => {
     songQueue,
     audioContext,
     
-    // Audio actions
+    // Additional state for debugging
+    currentMusic,
+    masterVolume,
+    currentSongIndex,
+    
+    // Audio sources for debugging
+    musicSource,
+    loopSource,
+    voiceSource,
+    
+    // Gain nodes for debugging
+    masterGainNode,
+    musicGainNode,
+    sfxGainNode,
+    loopGainNode,
+    voiceGainNode,
+    
+    // Methods
     playMusic,
     stopMusic,
     playSound,
     playLoop,
     stopLoop,
+    playVoice,
+    stopVoice,
     setVolume,
     initializeAudioContext,
     
-    // Theme-music integration
+    // Player controls
     handleThemeChange,
     
-    // Song information
+    // Metadata
     getCurrentSongTitle,
     
-    // Queue system
+    // Player navigation
     skipToNext,
     togglePlayPause,
-    setSongQueue,
-  };
+    setSongQueue
+  }
 }
 
 /* --- Vocab Selector ---- */
