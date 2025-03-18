@@ -1,4 +1,7 @@
 # Features:
+[ ] Talking to kalypso - better UI - waveform shows - when talking to Kalypso AI 
+[ ] 
+
 
 
 ---
