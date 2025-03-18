@@ -311,27 +311,20 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   };
 
   const playAudio = (audioBase64: string) => {
-    const audioData = atob(audioBase64);
-    const arrayBuffer = new ArrayBuffer(audioData.length);
-    const view = new Uint8Array(arrayBuffer);
-    for (let i = 0; i < audioData.length; i++) {
-      view[i] = audioData.charCodeAt(i);
-    }
-    const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
-    const audioUrl = URL.createObjectURL(audioBlob);
-    
     setIsPlaying(true);
-    audio.playMusic(audioUrl);
-    // Clean up URL after a delay to ensure audio starts playing
+    
+    // Use the voice channel instead of music channel
+    audio.playVoice(audioBase64);
+    
+    // Set isPlaying to false after a short delay
     setTimeout(() => {
       setIsPlaying(false);
-      URL.revokeObjectURL(audioUrl);
     }, 500);
   };
 
   const stopAudio = () => {
     setIsPlaying(false);
-    audio.stopMusic();
+    audio.stopVoice();
   };
 
   const toggleAudio = () => {

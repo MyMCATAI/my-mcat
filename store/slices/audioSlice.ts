@@ -10,13 +10,15 @@ interface VolumeCoefficients {
   music: number;
   sfx: number;
   loop: number;
+  voice: number;
 }
 // Default volume settings
 const DEFAULT_VOLUMES: VolumeCoefficients = {
   master: 0.7,
   music: 0.7,
   sfx: 0.5,  // Increase to full volume for better audibility
-  loop: 0.5
+  loop: 0.5,
+  voice: 0.9  // Voice should be loud and clear
 };
 
 interface AudioState {
@@ -27,6 +29,7 @@ interface AudioState {
   audioContext: AudioContext | null;
   musicSource: AudioBufferSourceNode | null;
   loopSource: AudioBufferSourceNode | null;
+  voiceSource: AudioBufferSourceNode | null;
   bufferCache: Map<string, AudioBuffer>;
   // Player state
   volume: number;
@@ -38,6 +41,7 @@ interface AudioState {
   musicGainNode: GainNode | null;
   sfxGainNode: GainNode | null;
   loopGainNode: GainNode | null;
+  voiceGainNode: GainNode | null;
 
   // Sound Mappings for SFX
   _SOUND_MAPPINGS: Record<string, string>;
@@ -53,6 +57,8 @@ interface AudioActions {
   playSound: (sfxName: string) => Promise<void>;
   playLoop: (loopName: string) => Promise<void>;
   stopLoop: () => void;
+  playVoice: (audioBase64: string) => Promise<void>;
+  stopVoice: () => void;
   loadAudioBuffer: (url: string) => Promise<AudioBuffer>;
   initializeAudioContext: () => Promise<void>;
   // Enhanced player controls
@@ -99,12 +105,13 @@ export const useAudioStore = create<AudioState & AudioActions>()(
     audioContext: null,
     musicSource: null,
     loopSource: null,
+    voiceSource: null,
     bufferCache: new Map(),
     
-    // Player state
+    // Player state - ensure arrays are always initialized
     volume: DEFAULT_VOLUMES.music,
     currentSong: null,
-    songQueue: [],
+    songQueue: [], // Explicitly initialize as empty array
     currentSongIndex: 0,
     
     // Audio nodes
@@ -112,6 +119,7 @@ export const useAudioStore = create<AudioState & AudioActions>()(
     musicGainNode: null,
     sfxGainNode: null,
     loopGainNode: null,
+    voiceGainNode: null,
 
     // Sound mappings: maps SFX names to paths
     _SOUND_MAPPINGS: {
@@ -189,32 +197,49 @@ export const useAudioStore = create<AudioState & AudioActions>()(
 
     // Toggle play/pause with smart resume
     togglePlayPause: async () => {
+      console.log('[AudioSlice] togglePlayPause called, checking current state');
       const state = get();
 
       if (state.isPlaying) {
+        console.log('[AudioSlice] Currently playing, stopping music');
+        
+        // Update state before stopping to prevent any race conditions
         set({ isPlaying: false });
         
+        // Stop musicSource if it exists
         if (state.musicSource) {
           try {
-            state.musicSource.stop();
+            // First disconnect to immediately stop any audio output
+            // This ensures audio stops even if the stop() call fails
             state.musicSource.disconnect();
+            state.musicSource.stop();
+            console.log('[AudioSlice] Music source stopped and disconnected');
           } catch (error) {
-            // Error handling preserved but without logging
+            console.error('[AudioSlice] Error stopping music source:', error);
+          } finally {
+            // Always clear the musicSource to prevent zombie references
+            set({ musicSource: null, currentMusic: null });
           }
         }
       } else {
         // Check if we have a song queue
         if (state.songQueue.length === 0) {
+          console.log('[AudioSlice] Cannot play - song queue is empty');
           return;
         }
         
+        console.log('[AudioSlice] Starting playback from queue');
         // Get the current song from the queue
         const songToPlay = state.songQueue[state.currentSongIndex];
+        console.log('[AudioSlice] Playing song at index', state.currentSongIndex, ':', songToPlay);
         
         try {
           await state.playMusic(songToPlay);
+          console.log('[AudioSlice] Playback started successfully');
         } catch (error) {
-          // Error handling preserved but without logging
+          console.error('[AudioSlice] Error starting playback:', error);
+          // Ensure state is reset if playback fails
+          set({ isPlaying: false });
         }
       }
     },
@@ -258,13 +283,18 @@ export const useAudioStore = create<AudioState & AudioActions>()(
         loopGainNode.gain.value = DEFAULT_VOLUMES.loop; // Lower volume for background loops
         loopGainNode.connect(masterGainNode);
         
+        const voiceGainNode = audioContext.createGain();
+        voiceGainNode.gain.value = DEFAULT_VOLUMES.voice;
+        voiceGainNode.connect(masterGainNode);
+        
         // Update state with new audio context and gain nodes
         set({
           audioContext,
           masterGainNode,
           musicGainNode,
           sfxGainNode,
-          loopGainNode
+          loopGainNode,
+          voiceGainNode
         });
       } catch (error) {
         // Error handling preserved but without logging
@@ -469,9 +499,15 @@ export const useAudioStore = create<AudioState & AudioActions>()(
 
     // Stop music
     stopMusic: () => {
+      console.log('[AudioSlice] stopMusic called');
       const state = get();
+      
+      // Set state to not playing immediately
+      set({ isPlaying: false, currentMusic: null });
+      
       if (state.musicSource && state.audioContext) {
         try {
+          console.log('[AudioSlice] Stopping music with audio context');
           // Create a local reference to the audio context after null check
           const audioCtx = state.audioContext;
           
@@ -480,6 +516,7 @@ export const useAudioStore = create<AudioState & AudioActions>()(
           
           // If we have a music gain node, use it for the fade-out
           if (state.musicGainNode) {
+            console.log('[AudioSlice] Using gain node for smooth fade-out');
             // Get current volume
             const currentVolume = state.musicGainNode.gain.value;
             
@@ -495,38 +532,65 @@ export const useAudioStore = create<AudioState & AudioActions>()(
             setTimeout(() => {
               try {
                 if (state.musicSource) {
-                  state.musicSource.stop();
+                  // Disconnect first to ensure audio stops immediately
                   state.musicSource.disconnect();
+                  state.musicSource.stop();
+                  console.log('[AudioSlice] Music source stopped with fade-out');
                   
                   // Immediately restore the gain node to the original volume
                   if (state.musicGainNode && state.audioContext) {
                     state.musicGainNode.gain.cancelScheduledValues(state.audioContext.currentTime);
                     state.musicGainNode.gain.setValueAtTime(originalVolume, state.audioContext.currentTime);
                   }
+                  
+                  // Clear the music source
+                  set({ musicSource: null });
                 }
               } catch (error) {
-                // Handle the case where the source might have already been stopped
+                console.error('[AudioSlice] Error during fade-out stop:', error);
+                // Ensure node is disconnected even if stop fails
+                if (state.musicSource) {
+                  try {
+                    state.musicSource.disconnect();
+                  } catch (e) {
+                    // Ignore any additional errors
+                  }
+                  set({ musicSource: null });
+                }
               }
             }, 40); // Slightly longer than the fade-out time
           } else {
             // If no gain node, just stop immediately
-            state.musicSource.stop();
+            console.log('[AudioSlice] No gain node, stopping immediately');
             state.musicSource.disconnect();
+            state.musicSource.stop();
+            set({ musicSource: null });
           }
         } catch (error) {
-          // Error handling preserved but without logging
+          console.error('[AudioSlice] Error in stopMusic:', error);
+          // Try a more direct approach if the controlled stop fails
+          try {
+            state.musicSource.disconnect();
+            state.musicSource.stop();
+          } catch (e) {
+            // Ignore any additional errors
+          }
+          set({ musicSource: null });
         }
       } else if (state.musicSource) {
         // If we have a music source but no audio context, just stop it directly
+        console.log('[AudioSlice] Stopping music without audio context');
         try {
-          state.musicSource.stop();
           state.musicSource.disconnect();
+          state.musicSource.stop();
         } catch (error) {
-          // Error handling preserved but without logging
+          console.error('[AudioSlice] Error stopping music without context:', error);
         }
+        set({ musicSource: null });
       }
-      set({ isPlaying: false, currentMusic: null, musicSource: null });
-      // Note: We keep currentSong to remember what was playing
+      
+      // Ensure the state is cleaned up properly
+      console.log('[AudioSlice] Music playback stopped');
     },
 
     // Play SFX
@@ -673,6 +737,95 @@ export const useAudioStore = create<AudioState & AudioActions>()(
         loopSource: null,
         _isLoopLoading: false,
         _pendingLoopName: null
+      });
+    },
+
+    // Play voice
+    playVoice: async (audioBase64) => {
+      console.log('[AudioSlice] playVoice called with base64 audio');
+      const state = get();
+      
+      // Make sure the audio context is initialized
+      if (!state.audioContext) {
+        console.log('[AudioSlice] No audio context, initializing for voice');
+        try {
+          await state.initializeAudioContext();
+        } catch (error) {
+          console.error('[AudioSlice] Failed to initialize audio context for voice:', error);
+          return;
+        }
+      }
+      
+      // Resume audio context if suspended
+      if (state.audioContext?.state === 'suspended') {
+        try {
+          await state.audioContext.resume();
+        } catch (error) {
+          console.error('[AudioSlice] Failed to resume audio context for voice:', error);
+          return;
+        }
+      }
+      
+      // Stop any previously playing voice
+      state.stopVoice();
+      
+      try {
+        // Convert base64 to blob
+        const audioData = atob(audioBase64);
+        const arrayBuffer = new ArrayBuffer(audioData.length);
+        const view = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < audioData.length; i++) {
+          view[i] = audioData.charCodeAt(i);
+        }
+        const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        // Load the audio buffer
+        console.log('[AudioSlice] Loading voice audio buffer');
+        const buffer = await state.loadAudioBuffer(audioUrl);
+        
+        // Create a source node
+        const source = state.audioContext!.createBufferSource();
+        source.buffer = buffer;
+        
+        // Connect to the voice gain node
+        if (state.voiceGainNode) {
+          source.connect(state.voiceGainNode);
+        } else {
+          source.connect(state.audioContext!.destination);
+        }
+        
+        // Clean up when done playing
+        source.onended = () => {
+          console.log('[AudioSlice] Voice audio playback completed');
+          // Revoke URL to free memory
+          URL.revokeObjectURL(audioUrl);
+          set({ voiceSource: null });
+        };
+        
+        // Start playback
+        source.start();
+        set({ voiceSource: source });
+        console.log('[AudioSlice] Voice playback started');
+      } catch (error) {
+        console.error('[AudioSlice] Error playing voice audio:', error);
+      }
+    },
+
+    // Stop voice
+    stopVoice: () => {
+      const state = get();
+      if (state.voiceSource) {
+        try {
+          state.voiceSource.stop();
+          // Disconnect to free resources
+          state.voiceSource.disconnect();
+        } catch (error) {
+          // Error handling preserved but without logging
+        }
+      }
+      set({ 
+        voiceSource: null
       });
     },
   }))

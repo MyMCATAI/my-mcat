@@ -36,11 +36,31 @@ const DebugPanel = () => {
 
   // Create a safe version of audio state for display (without functions)
   const displayAudioState = {
+    // Basic state
     isPlaying: audioState.isPlaying,
     currentSong: audioState.currentSong,
     currentLoop: audioState.currentLoop,
     volume: audioState.volume,
-    songQueue: audioState.songQueue
+    songQueue: Array.isArray(audioState.songQueue) ? audioState.songQueue : [],
+    queueLength: Array.isArray(audioState.songQueue) ? audioState.songQueue.length : 0,
+    currentSongIndex: audioState.currentSongIndex,
+    currentMusic: audioState.currentMusic,
+    masterVolume: audioState.masterVolume,
+    
+    // Audio context and sources
+    audioContext: audioState.audioContext ? 'initialized' : 'null',
+    musicSource: audioState.musicSource ? 'active' : 'null',
+    loopSource: audioState.loopSource ? 'active' : 'null',
+    voiceSource: audioState.voiceSource ? 'active' : 'null',
+    
+    // Gain nodes
+    gainNodes: {
+      master: audioState.masterGainNode ? 'active' : 'null',
+      music: audioState.musicGainNode ? 'active' : 'null',
+      sfx: audioState.sfxGainNode ? 'active' : 'null',
+      loop: audioState.loopGainNode ? 'active' : 'null',
+      voice: audioState.voiceGainNode ? 'active' : 'null'
+    }
   };
 
   // Don't render anything if not in debug mode
