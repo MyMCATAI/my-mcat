@@ -21,8 +21,6 @@ let isStoreInitialized = false;
 
 type StoreUpdates = Record<string, any>;
 
-// Create a combined store for backward compatibility
-// @ts-ignore - This is exported for backward compatibility but might not be used directly
 export const useStore = {
   getState: () => ({
     ...useAudioStore.getState(),
@@ -102,7 +100,7 @@ export const useStore = {
 // Export a function to initialize the store at the app level
 export const initializeGlobalStore = async (options?: { forceOnboarding?: boolean }): Promise<void> => {
   if (typeof window !== 'undefined' && !isStoreInitialized) {
-    console.debug('[Store] Initializing global store');
+    console.debug('[DEBUG][Store] Initializing global store from exported function');
     try {
       // Initialize audio context
       await useAudioStore.getState().initializeAudioContext();
@@ -115,14 +113,14 @@ export const initializeGlobalStore = async (options?: { forceOnboarding?: boolea
       
       // Process debug options
       if (options?.forceOnboarding) {
-        console.debug('[Store] DEBUG MODE: Forcing onboardingComplete to true for testing');
+        console.debug('[DEBUG][Store] DEBUG MODE: Forcing onboardingComplete to true for testing');
         useUserStore.getState().setOnboardingComplete(true);
       }
       
       isStoreInitialized = true;
-      console.debug('[Store] Store initialization complete');
+      console.debug('[DEBUG][Store] Store initialization complete');
     } catch (error) {
-      console.error('[Store] Store initialization failed:', error);
+      console.error('[DEBUG][Store] Store initialization failed:', error);
       throw error;
     }
   }

@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useUI, useUser } from '@/store/selectors';
-import { useAudioStore } from '@/store/slices/audioSlice';
-import { OnboardingInfo } from '@/types';
+import { useUI, useUser, useAudio } from '@/store/selectors';
 import { useUser as useClerkUser } from '@clerk/nextjs';
 
 /**
@@ -20,21 +18,7 @@ const RouteTracker = () => {
   const { userInfo, isSubscribed, onboardingComplete, profileLoading, statsLoading } = useUser();
   const { isSignedIn } = useClerkUser();
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const stopLoop = useAudioStore(state => state.stopLoop);
-  const currentLoop = useAudioStore(state => state.currentLoop);
-
-  // DEBUG LOGGING
-  useEffect(() => {
-    console.log('[RouteTracker] STATE DEBUG:', { 
-      pathname,
-      isSignedIn,
-      userInfo: !!userInfo,
-      onboardingComplete,
-      profileLoading,
-      statsLoading,
-      initialLoadComplete
-    });
-  }, [pathname, isSignedIn, userInfo, onboardingComplete, profileLoading, statsLoading, initialLoadComplete]);
+  const { stopLoop, currentLoop } = useAudio();
 
   // Handle immediate redirection for users with no userInfo
   useEffect(() => {
@@ -50,15 +34,9 @@ const RouteTracker = () => {
     ];
 
     // If user is signed in but has no userInfo, redirect to onboarding immediately
-    if (isSignedIn && !profileLoading && !userInfo) {
+    if (isSignedIn && !profileLoading && !userInfo && pathname) {
       // Only allow exempt paths to proceed without redirection
       if (!exemptPaths.some(path => pathname.startsWith(path))) {
-        console.log('[RouteTracker] REDIRECTING TO ONBOARDING (no userInfo):', {
-          isSignedIn,
-          profileLoading,
-          hasUserInfo: !!userInfo,
-          pathname
-        });
         router.push('/onboarding');
       }
     }
@@ -82,7 +60,6 @@ const RouteTracker = () => {
 
       // Skip remaining redirection checks for exempt paths
       if (exemptPaths.some(path => pathname.startsWith(path))) {
-        console.log('[RouteTracker] SKIPPING REDIRECT - exempt path:', pathname);
         return;
       }
 
@@ -93,18 +70,8 @@ const RouteTracker = () => {
       // 4. Onboarding is not complete
       if (isSignedIn && !profileLoading && pathname !== '/onboarding') {
         if (!onboardingComplete) {
-          console.log('[RouteTracker] REDIRECTING TO ONBOARDING (not complete):', {
-            isSignedIn,
-            profileLoading,
-            pathname,
-            onboardingComplete
-          });
           router.push('/onboarding');
           return;
-        } else {
-          console.log('[RouteTracker] NOT REDIRECTING - onboarding complete:', {
-            onboardingComplete
-          });
         }
       }
     }
@@ -114,10 +81,9 @@ const RouteTracker = () => {
   useEffect(() => {    
     // Only stop the ambient loop if we're not in AnkiClinic and it's currently playing
     if (currentLoop === 'flashcard-loop-catfootsteps' && !pathname?.startsWith('/ankiclinic')) {
-      console.log('[RouteTracker] Stopping ambient loop - route changed to:', pathname);
       stopLoop();
     }
-  }, [pathname]); // Only depend on pathname changes, not currentLoop
+  }, [pathname, currentLoop, stopLoop]); // Only depend on pathname changes, not currentLoop
 
   // Track when initial loading is complete - skip for onboarding
   useEffect(() => {

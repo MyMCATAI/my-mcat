@@ -2,23 +2,32 @@
 
 #### Prompts
 ` Do not apply code changes, just analyze the codebase and write out your steps to 2-single-task-steps.md`
-`I added main branch to the worktree @main , evaluate whether or not our branch behaves and acts functionally the SAME as main.` 
 
-#### Add new branch to worktree
-add new branch for Cursor to compare: 
-`git worktree add main`
-
-remove it before pushing back up 
-`git worktree remove main`
-
-#### Create diff file for Cursor
-
-To create a detailed diff against `main` with context:
-```
-git diff --full-index main > branch-diff-full.diff
+#### Compare functionality to main
+To thoroughly evaluate whether our branch behaves functionally the same as main, use both approaches:
+1. Add main branch to worktree for direct file comparison:
+```bash
+# Add main branch as a worktree for comparison
+git worktree add main
+# When finished with comparison
+git worktree remove main
 ```
 
-To feed the diff back into Cursor:
-1. Create the diff file
-2. Open the diff file in Cursor
-3. Ask Cursor to analyze the changes
+2. Create a diff file for Cursor analysis:
+```bash
+# Generate detailed diff against main
+git diff --full-index main -- > README_Docs/tasks/user-dennis/3-pr-diff.txt
+```
+
+3. Working with Cursor:
+Prompt to use for comparison
+
+```
+Carefully examine both the diff against main @3-pr-diff.txt and our `main` branch repo itself, which was added to our worktree @main 
+Evaluate whether our branch behaves and acts functionally the SAME as main.
+```
+
+Having both the worktree and diff file available provides:
+- Direct access to main branch files for inspection
+- A comprehensive diff that Cursor can analyze
+- The ability to verify functional equivalence with confidence

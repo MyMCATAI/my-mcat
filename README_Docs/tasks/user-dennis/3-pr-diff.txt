@@ -1,8 +1,367 @@
-diff --git a/README_Docs/tasks/user-dennis/debug-console.txt b/README_Docs/tasks/user-dennis/debug-console.txt
+diff --git a/.cursorrules b/.cursorrules
+deleted file mode 100644
+index e5ce9fd85fcb3a53d58eebbc398b787b63b6c829..0000000000000000000000000000000000000000
+--- a/.cursorrules
++++ /dev/null
+@@ -1,207 +0,0 @@
+-# =====================
+-# CURSOR AI GUIDELINES
+-# =====================
+-
+-# Load developer configuration
+-LOAD_CONFIG: |
+-  const devConfig = require('./README_Docs/config/developer.json');
+-  const DEVELOPER_NAME = devConfig.DEVELOPER_NAME;
+-  const technical = require('./README_Docs/architecture/technical.md');
+-  const architecture = require('./README_Docs/architecture/architecture.md');
+-
+-SYSTEM_CONTEXT: |
+-  You are a senior developer working on the MYMCAT TypeScript/Next.js project.
+-  
+-  # Documentation Hierarchy
+-  1. Primary Documentation:
+-     - technical.md: Source of truth for coding standards
+-     - architecture.md: System design and patterns
+-     - tasks/${DEVELOPER_NAME}/tasks.md: Current tasks
+-     - tasks/${DEVELOPER_NAME}/status.md: Progress tracking
+-
+-  2. Implementation Requirements:
+-     - Follow section headers from technical.md
+-     - Use animation patterns from technical.md
+-     - Implement feature gates per architecture.md
+-     - Follow component organization rules
+-
+-  3. Before ANY Code Changes:
+-     - PARSE technical.md for relevant patterns
+-     - VERIFY against architecture.md
+-     - CHECK current task context
+-     - VALIDATE component structure
+-
+-# Enforce Technical Standards
+-ENFORCE_TECHNICAL: |
+-  On every query:
+-  1. Load technical.md section standards
+-  2. Apply animation patterns
+-  3. Follow component organization
+-  4. Use proper section headers
+-  5. Implement proper loading states
+-  6. Follow markdown code block standards
+-
+-# Enforce Architectural Patterns
+-ENFORCE_ARCHITECTURE: |
+-  On every component:
+-  1. Verify premium feature gates
+-  2. Check component dependencies
+-  3. Follow data flow patterns
+-  4. Implement proper auth checks
+-
+-# Error Prevention
+-VALIDATION_RULES: |
+-  Before responding to any query:
+-  1. Load and parse technical.md completely
+-  2. Check section dividers (100 dashes)
+-  3. Validate heading hierarchy
+-  4. Ensure code blocks follow documentation rules
+-  5. Verify file paths in examples
+-
+-# File Management Rules
+-ON_FILE_CHANGE: |
+-  Required actions after code changes:
+-  1. VERIFY premium feature gates implementation
+-  2. CHECK README_Docs/architecture/architecture.md compliance
+-  3. UPDATE personal status.md with:
+-     - Current progress
+-     - Any blockers
+-     - Completed items
+-  4. VALIDATE against technical.md specifications
+-  5. VERIFY task progress
+-  6. NEVER modify package-lock.json directly
+-
+-# Package Management Rules
+-PACKAGE_GUIDELINES: |
+-  - Never manually edit package-lock.json
+-  - Use npm install for adding new packages
+-  - Commit both package.json and package-lock.json together
+-  - Report conflicts in package-lock.json to team lead
+-  - Run npm ci for clean installs
+-  - Contact Josh for dependency updates
+-
+-# Code Style Reference
+-CODE_STYLE_RULES: |
+-  All code style, formatting, and organization rules are defined in technical.md:
+-  - Component Structure
+-  - Section Headers (100 characters)
+-  - Import Standards
+-  - Route-Component Relationships
+-  - Component Naming
+-  - File Organization
+-  - Animation Patterns
+-  - Error Handling
+-  
+-  Always parse technical.md before implementing any component or feature.
+-
+-  Component Template Requirements:
+-  1. Import Order:
+-     - React/Next.js
+-     - External libraries
+-     - Internal utilities/types
+-     - Internal components
+-  
+-  2. Section Headers:
+-     - Must be 100 characters wide
+-     - Must follow standard order
+-     - Constants/Types outside component
+-  
+-  3. Component Structure:
+-     - Default export
+-     - CamelCase naming
+-     - Props interface with Types section
+-
+-# Architecture Understanding
+-READ_ARCHITECTURE: |
+-  File: README_Docs/architecture/architecture.md
+-  Required parsing:
+-  1. Load and parse Mermaid diagram focusing on:
+-     - Auth -> Onboarding flow
+-     - Feature Gates system
+-     - Free vs Premium features
+-     - Game systems
+-     - Data collection flow
+-  2. Extract and understand:
+-     - Premium vs Free feature boundaries
+-     - Clerk Auth integration points
+-     - Data flow patterns
+-     - Component dependencies
+-  3. Validate changes against architectural constraints
+-  4. Ensure proper feature gating
+-
+-# Task Management
+-TASK_WORKFLOW: |
+-  Required files:
+-  - README_Docs/tasks/user-${DEVELOPER_NAME}/tasks.md
+-  - README_Docs/tasks/user-${DEVELOPER_NAME}/status.md
+-  - README_Docs/architecture/technical.md
+-  
+-  Workflow steps:
+-  1. READ personal tasks.md:
+-     - Parse requirements
+-     - Check premium feature implications
+-     - Identify dependencies
+-  
+-  2. VALIDATE against architecture.md:
+-     - Verify feature gate compliance
+-     - Check component interactions
+-     - Confirm Clerk Auth integration
+-  
+-  3. UPDATE personal status.md:
+-     - Track progress
+-     - Document blockers
+-     - Note premium feature considerations
+-
+-# Feature Gate Implementation
+-PREMIUM_FEATURES: |
+-  # AI Behavior for Premium Features
+-  1. Source of Truth:
+-     - Load feature definitions from "Feature Control" section in technical.md
+-     - Follow implementation patterns from "Feature Gates" section
+-     - Reference component examples from technical.md
+-  
+-  2. Validation Requirements:
+-     - Verify component against documented feature gate patterns
+-     - Ensure proper hook usage (useSubscriptionStatus) as shown in examples
+-     - Confirm implementation matches technical.md specifications
+-     
+-  3. Documentation Requirements:
+-     - Reference "Free Features" and "Premium Features" sections in technical.md
+-     - Link to relevant implementation examples
+-     - Keep implementation aligned with documentation
+-
+-  4. Response Guidelines:
+-     - Always cite specific sections from technical.md
+-     - Point developers to relevant code examples
+-     - Ensure responses align with documented patterns
+-
+-# Technical Documentation Parser
+-PARSE_TECHNICAL_MD: |
+-  1. Section Hierarchy:
+-     - Parse h1 (#) for main document title
+-     - Parse h2 (##) for major sections
+-     - Parse h3 (###) for subsections
+-     - Parse h4 (####) for detailed guidelines
+-  
+-  2. Special Sections:
+-     - Always validate Feature Control section for premium gates
+-     - Check Component Guidelines for structure requirements
+-     - Verify Documentation Guidelines for formatting rules
+-
+-# Component Structure Enforcement
+-ENFORCE_COMPONENT_STRUCTURE: |
+-  For all .tsx files:
+-  1. Verify file header comment
+-  2. Check import order against technical.md standards
+-  3. Validate section headers match technical.md template
+-  4. Ensure premium feature gates are implemented
+-  5. Check component naming conventions
+-
+-# Documentation Standards
+-DOCUMENTATION_RULES: |
+-  For all .md files:
+-  1. Verify proper markdown link syntax
+-  2. Check code block formatting
+-  3. Validate section dividers
+-  4. Ensure proper heading hierarchy
+-  5. Check for complete examples in guidelines
+\ No newline at end of file
+diff --git a/README_Docs/tasks/user-dennis/1-tasks-all.md b/README_Docs/tasks/user-dennis/1-tasks-all.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..6116ec1663b5d4ebc4c9a2b6ad16a9bd0b4838b8
+--- /dev/null
++++ b/README_Docs/tasks/user-dennis/1-tasks-all.md
+@@ -0,0 +1,125 @@
++# Features:
++
++
++---
++
++# Tech Debt:
++
++## Update Cursor Rules
++[ ] .mdc - cursor rules - update to always use zustand not context API - also consider rules when creating a new state in a component? should multiple components have access to it? consider global state. 
++[ ] when creating new global state - make sure our DebugPanel renders it too.
++
++### Unmigrated Content from .cursorrules
++Content from .cursorrules that hasn't been migrated to .mdc files yet:
++
++#### Documentation Hierarchy
++```markdown
++# Documentation Hierarchy
++1. Primary Documentation:
++   - technical.md: Source of truth for coding standards
++   - architecture.md: System design and patterns
++   - tasks/${DEVELOPER_NAME}/tasks.md: Current tasks
++   - tasks/${DEVELOPER_NAME}/status.md: Progress tracking
++
++2. Implementation Requirements:
++   - Follow section headers from technical.md
++   - Use animation patterns from technical.md
++   - Implement feature gates per architecture.md
++   - Follow component organization rules
++
++3. Before ANY Code Changes:
++   - PARSE technical.md for relevant patterns
++   - VERIFY against architecture.md
++   - CHECK current task context
++   - VALIDATE component structure
++```
++
++#### Premium Features / Feature Gates
++```markdown
++# Feature Gate Implementation
++1. Source of Truth:
++   - Load feature definitions from "Feature Control" section in technical.md
++   - Follow implementation patterns from "Feature Gates" section
++   - Reference component examples from technical.md
++
++2. Validation Requirements:
++   - Verify component against documented feature gate patterns
++   - Ensure proper hook usage (useSubscriptionStatus) as shown in examples
++   - Confirm implementation matches technical.md specifications
++   
++3. Documentation Requirements:
++   - Reference "Free Features" and "Premium Features" sections in technical.md
++   - Link to relevant implementation examples
++   - Keep implementation aligned with documentation
++```
++
++#### Architecture Understanding
++```markdown
++# Architecture Understanding
++Required parsing:
++1. Load and parse Mermaid diagram focusing on:
++   - Auth -> Onboarding flow
++   - Feature Gates system
++   - Free vs Premium features
++   - Game systems
++   - Data collection flow
++2. Extract and understand:
++   - Premium vs Free feature boundaries
++   - Clerk Auth integration points
++   - Data flow patterns
++   - Component dependencies
++3. Validate changes against architectural constraints
++4. Ensure proper feature gating
++```
++
++#### Package Management
++```markdown
++# Package Management Rules
++- Never manually edit package-lock.json
++- Use npm install for adding new packages
++- Commit both package.json and package-lock.json together
++- Report conflicts in package-lock.json to team lead
++- Run npm ci for clean installs
++- Contact Josh for dependency updates
++```
++
++#### Error Prevention & Documentation Standards
++```markdown
++# Error Prevention
++Before responding to any query:
++1. Load and parse technical.md completely
++2. Check section dividers (100 dashes)
++3. Validate heading hierarchy
++4. Ensure code blocks follow documentation rules
++5. Verify file paths in examples
++
++# Documentation Standards
++For all .md files:
++1. Verify proper markdown link syntax
++2. Check code block formatting
++3. Validate section dividers
++4. Ensure proper heading hierarchy
++5. Check for complete examples in guidelines
++```
++
++#### File Management Rules
++```markdown
++# File Management Rules
++Required actions after code changes:
++1. VERIFY premium feature gates implementation
++2. CHECK README_Docs/architecture/architecture.md compliance
++3. UPDATE personal status.md with:
++   - Current progress
++   - Any blockers
++   - Completed items
++4. VALIDATE against technical.md specifications
++5. VERIFY task progress
++```
++
++[x] Create component-guidelines.mdc and state-management.mdc files
++[ ] Migrate remaining content from .cursorrules to appropriate .mdc files
++[ ] Delete .cursorrules file after migration is complete
++
++## Bugs
++[ ] CARS Suite - take out sound when you select answer. (Prynce bug)
++
+diff --git a/README_Docs/tasks/user-dennis/2-single-task-steps.md b/README_Docs/tasks/user-dennis/2-single-task-steps.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..bbf9870979f593b222ae3040e4f9a21a2e3fd6be
+--- /dev/null
++++ b/README_Docs/tasks/user-dennis/2-single-task-steps.md
+@@ -0,0 +1,2 @@
++### Branch Steps:
++- make sure debugPanelprints out stuff correctly. 
+\ No newline at end of file
+diff --git a/store/slices/vocalSlice.ts b/README_Docs/tasks/user-dennis/3-pr-diff.txt
+similarity index 100%
+rename from store/slices/vocalSlice.ts
+rename to README_Docs/tasks/user-dennis/3-pr-diff.txt
+index e69de29bb2d1d6434b8b29ae775ad8c2e48c5391..457c802ee9f0217bd2e0f56fe61422681544f607 100644
+diff --git a/README_Docs/tasks/user-dennis/4-debug-console.txt b/README_Docs/tasks/user-dennis/4-debug-console.txt
 new file mode 100644
 index 0000000000000000000000000000000000000000..281719ff74a34810062f43bc2858c07559198518
 --- /dev/null
-+++ b/README_Docs/tasks/user-dennis/debug-console.txt
++++ b/README_Docs/tasks/user-dennis/4-debug-console.txt
 @@ -0,0 +1,2254 @@
 +initializationContentScript.js:1 Chrome storage API available, initializing emoji style sync
 +content.js:1 [Deprecation] Listener added for a 'DOMNodeInserted' mutation event. Support for this event type has been removed, and this event will no longer be fired. See https://chromestatus.com/feature/5083947249172480 for more information.
@@ -2258,209 +2617,138 @@ index 0000000000000000000000000000000000000000..281719ff74a34810062f43bc2858c075
 +ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
 +ChatContainer.tsx:683 [ChatContainer] Rendering component (render #50), styles object same reference: false
 +ChatContainer.tsx:731 [ChatContainer] Rendering with styles: {windowWidth: 1504, windowHeight: 746, styles: {…}}
-diff --git a/store/slices/vocalSlice.ts b/README_Docs/tasks/user-dennis/pr-diff.txt
-similarity index 100%
-rename from store/slices/vocalSlice.ts
-rename to README_Docs/tasks/user-dennis/pr-diff.txt
-index e69de29bb2d1d6434b8b29ae775ad8c2e48c5391..eff3bba1d253cf24d6b5f4d36a40b86874b4d1f6 100644
-diff --git a/README_Docs/tasks/user-dennis/tasks.md b/README_Docs/tasks/user-dennis/tasks-all.md
-similarity index 73%
-rename from README_Docs/tasks/user-dennis/tasks.md
-rename to README_Docs/tasks/user-dennis/tasks-all.md
-index e2e1eaca7220ce90137d26ef9962411f472192f6..21786260c6e1c0228a5ff78ed44ac4c721b153d9 100644
+diff --git a/README_Docs/tasks/user-dennis/5-cursor-notes.md b/README_Docs/tasks/user-dennis/5-cursor-notes.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..591db39c2a4ac75651db6c85540a2fc303c991b4
+--- /dev/null
++++ b/README_Docs/tasks/user-dennis/5-cursor-notes.md
+@@ -0,0 +1,31 @@
++## Cursor Notes
++
++#### Prompts
++` Do not apply code changes, just analyze the codebase and write out your steps to 2-single-task-steps.md`
++
++#### Compare functionality to main
++To thoroughly evaluate whether our branch behaves functionally the same as main, use both approaches:
++1. Add main branch to worktree for direct file comparison:
++```bash
++# Add main branch as a worktree for comparison
++git worktree add main
++# When finished with comparison
++git worktree remove main
++```
++
++2. Create a diff file for Cursor analysis:
++```bash
++# Generate detailed diff against main
++git diff --full-index main > README_Docs/tasks/user-dennis/3-pr-diff.txt
++```
++
++3. Working with Cursor:
++```
++# Prompt to use for comparison
++I added main branch to the worktree @main, evaluate whether our branch behaves and acts functionally the SAME as main.
++```
++
++Having both the worktree and diff file available provides:
++- Direct access to main branch files for inspection
++- A comprehensive diff that Cursor can analyze
++- The ability to verify functional equivalence with confidence
+\ No newline at end of file
+diff --git a/README_Docs/tasks/user-dennis/tasks.md b/README_Docs/tasks/user-dennis/tasks.md
+deleted file mode 100644
+index e2e1eaca7220ce90137d26ef9962411f472192f6..0000000000000000000000000000000000000000
 --- a/README_Docs/tasks/user-dennis/tasks.md
-+++ b/README_Docs/tasks/user-dennis/tasks-all.md
-@@ -2,13 +2,15 @@ TODO:
- 
- 
- ## Store Migration Progress
++++ /dev/null
+@@ -1,36 +0,0 @@
+-TODO: 
+-
+-
+-## Store Migration Progress
 -[✓] Implemented audioSlice (complete)
 -[✓] Implemented uiSlice (complete)
- [ ] Implement userSlice (files created but not implemented)
+-[ ] Implement userSlice (files created but not implemented)
 -[✓ ] Implement gameSlice (files created but not implemented)
- [ ] Implement vocabSlice (files created but not implemented)
- [ ] CARS Suite - take out sound when you select answer. (Prynce bug)
- 
-+# Cursor Rules
-+[ ] cursor rules - update to always use zustand not context API - also consider rules when creating a new state in a component? should multiple components have access to it? consider global state. 
-+[ ] when creating new global state - make sure our DebugPanel renders it too.
-+
-+
- 
- ----
- ## Cursor Notes
-diff --git a/README_Docs/tasks/user-dennis/tasks-steps.md b/README_Docs/tasks/user-dennis/tasks-steps.md
-new file mode 100644
-index 0000000000000000000000000000000000000000..2845e89e6072f502e7293553ff7b92a0d0d654e4
---- /dev/null
-+++ b/README_Docs/tasks/user-dennis/tasks-steps.md
-@@ -0,0 +1,79 @@
-+<!-- README_Docs/tasks/user-dennis/tasks-steps.md -->
-+
-+# User State Migration Plan
-+
-+## 1. Analysis Phase
-+- [x] Identify all user-related state in current store.ts
-+  - UserProfile (profile, profileLoading, isProfileComplete, etc.)
-+  - UserInfo (userInfo, isSubscribed)
-+  - UserStats (coins, statsLoading)
-+  - Associated preferences (studyPreferences, interfaceSettings, tutorialProgress)
-+  - Onboarding state (onboardingComplete, lastVisitedRoute, onboardingRoute)
-+
-+- [x] Document all user-related actions/methods in store.ts
-+  - Profile: updateProfile, setCompletedSteps, addCompletedStep
-+  - Preferences: updateStudyPreferences, updateInterfaceSettings, updateTutorialProgress
-+  - Onboarding: setOnboardingComplete, setLastVisitedRoute, setOnboardingRoute
-+  - UserInfo: refreshUserInfo, setIsSubscribed
-+  - Stats: updateCoins, updateCoinsDisplay
-+
-+- [x] Identify all components that consume user state
-+  - Direct useUser consumers: DebugPanel, FriendInteraction/CoinModal, UserProfileModal, ProfileButton, RouteTracker, Dashboard layout
-+  - Via useUserInfo hook: Many components including Leaderboard, StreakDisplay, Quiz, etc.
-+  - Clerk vs Store: Some components use Clerk's useUser while others use our store's useUser
-+
-+- [x] Map out dependencies between user state and other slices
-+  - Game state uses user coins/points
-+  - UI state might depend on user preferences (theme/darkMode)
-+  - No direct dependencies from Audio slice
-+
-+## 2. Create userSlice.ts
-+- [x] Create basic slice structure following the pattern in audioSlice.ts
-+- [x] Define UserState interface with all necessary properties
-+- [x] Define UserActions interface with all necessary methods
-+- [x] Implement default/initial state values
-+
-+## 3. Implement Core Functionality
-+- [x] Migrate state properties from store.ts
-+- [x] Implement all user-related actions/methods
-+- [x] Add proper TypeScript typing for all functions
-+- [x] Add error handling for critical operations
-+- [x] Ensure proper state immutability in all setters
-+
-+## 4. Update selectors.ts
-+- [x] Add useUser hook that returns the user state and actions
-+- [x] Ensure proper typing for the hook return value
-+- [x] Test the hook functionality in isolation
-+
-+## 5. Testing and Validation
-+- [x] Create test component to verify userSlice functionality
-+- [x] Create test page to access the test component
-+- [x] Verify that useUser hook returns correct state and actions
-+- [x] Verify that state updates correctly when actions are called
-+
-+## 6. Component Migration
-+- [x] Identify all components using the old user state pattern
-+- [x] Update StoreInitializer.tsx to use useUserStore
-+- [x] Create vocabSlice.ts and update useVocab selectors
-+- [x] Update other imports to use the new useUser hook from selectors.ts
-+- [x] Replace direct store references with hook-based approach
-+- [x] Test each component after migration
-+
-+## 7. Clean Up
-+- [x] Remove user-related code from store.ts
-+- [x] Update any cross-slice dependencies (if other slices depend on user state)
-+- [x] Document any breaking changes or API differences
-+- [x] Create a placeholder for the `useStore` for backward compatibility
-+- [x] Update relevant documentation
-+
-+## 8. Testing
-+- [x] Test user authentication flows in test page
-+- [x] Test user preference saving/loading in test page
-+- [x] Test user profile functionality in test page
-+- [x] Verify that all components still function correctly
-+
-+## 9. Final Review
-+- [x] Conduct code review of all changes
-+- [x] Verify no remaining references to old user state pattern
-+- [x] Check for any performance issues with the new implementation
-+- [x] Ensure proper error handling throughout the slice
-\ No newline at end of file
-diff --git a/app/(dashboard)/(routes)/test-userslice/page.tsx b/app/(dashboard)/(routes)/test-userslice/page.tsx
-new file mode 100644
-index 0000000000000000000000000000000000000000..c409c3b66c86b38decf61b24eb7c768e3c5f1767
---- /dev/null
-+++ b/app/(dashboard)/(routes)/test-userslice/page.tsx
-@@ -0,0 +1,10 @@
-+import UserSliceTest from '@/components/tests/UserSliceTest';
-+
-+export default function TestUserSlicePage() {
-+  return (
-+    <div className="container mx-auto py-8">
-+      <h1 className="text-2xl font-bold mb-6">User Slice Integration Test</h1>
-+      <UserSliceTest />
-+    </div>
-+  );
-+} 
+-[ ] Implement vocabSlice (files created but not implemented)
+-[ ] CARS Suite - take out sound when you select answer. (Prynce bug)
+-
+-
+-----
+-## Cursor Notes
+-
+-#### Prompts
+-` Do not apply code changes, just analyze the issue and respond to the question`
+-
+-#### Add new branch to worktree
+-add new branch for Cursor to compare: 
+-`git worktree add localstate-compare`
+-
+-remove it before pushing back up 
+-`git worktree remove localstate-compare`
+-
+-#### Create diff file for Cursor
+-
+-To create a detailed diff against `main` with context:
+-```
+-git diff --full-index main > branch-diff-full.diff
+-```
+-
+-To feed the diff back into Cursor:
+-1. Create the diff file
+-2. Open the diff file in Cursor
+-3. Ask Cursor to analyze the changes
 \ No newline at end of file
 diff --git a/components/RouteTracker.tsx b/components/RouteTracker.tsx
-index 76a2738f71962de9bc7eba9a4b6f0149114605cd..a532af149815bef657c83363e1b3d844540592da 100644
+index 76a2738f71962de9bc7eba9a4b6f0149114605cd..5bda569660afb41dacf471abace4b05e363bbe54 100644
 --- a/components/RouteTracker.tsx
 +++ b/components/RouteTracker.tsx
-@@ -23,6 +23,19 @@ const RouteTracker = () => {
-   const stopLoop = useAudioStore(state => state.stopLoop);
-   const currentLoop = useAudioStore(state => state.currentLoop);
+@@ -2,9 +2,7 @@
  
-+  // DEBUG LOGGING
-+  useEffect(() => {
-+    console.log('[RouteTracker] STATE DEBUG:', { 
-+      pathname,
-+      isSignedIn,
-+      userInfo: !!userInfo,
-+      onboardingComplete,
-+      profileLoading,
-+      statsLoading,
-+      initialLoadComplete
-+    });
-+  }, [pathname, isSignedIn, userInfo, onboardingComplete, profileLoading, statsLoading, initialLoadComplete]);
-+
+ import { useEffect, useState } from 'react';
+ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+-import { useUI, useUser } from '@/store/selectors';
+-import { useAudioStore } from '@/store/slices/audioSlice';
+-import { OnboardingInfo } from '@/types';
++import { useUI, useUser, useAudio } from '@/store/selectors';
+ import { useUser as useClerkUser } from '@clerk/nextjs';
+ 
+ /**
+@@ -20,8 +18,7 @@ const RouteTracker = () => {
+   const { userInfo, isSubscribed, onboardingComplete, profileLoading, statsLoading } = useUser();
+   const { isSignedIn } = useClerkUser();
+   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+-  const stopLoop = useAudioStore(state => state.stopLoop);
+-  const currentLoop = useAudioStore(state => state.currentLoop);
++  const { stopLoop, currentLoop } = useAudio();
+ 
    // Handle immediate redirection for users with no userInfo
    useEffect(() => {
-     // Define exempt paths that should never redirect to onboarding
-@@ -40,6 +53,12 @@ const RouteTracker = () => {
-     if (isSignedIn && !profileLoading && !userInfo) {
+@@ -37,7 +34,7 @@ const RouteTracker = () => {
+     ];
+ 
+     // If user is signed in but has no userInfo, redirect to onboarding immediately
+-    if (isSignedIn && !profileLoading && !userInfo) {
++    if (isSignedIn && !profileLoading && !userInfo && pathname) {
        // Only allow exempt paths to proceed without redirection
        if (!exemptPaths.some(path => pathname.startsWith(path))) {
-+        console.log('[RouteTracker] REDIRECTING TO ONBOARDING (no userInfo):', {
-+          isSignedIn,
-+          profileLoading,
-+          hasUserInfo: !!userInfo,
-+          pathname
-+        });
          router.push('/onboarding');
-       }
+@@ -84,10 +81,9 @@ const RouteTracker = () => {
+   useEffect(() => {    
+     // Only stop the ambient loop if we're not in AnkiClinic and it's currently playing
+     if (currentLoop === 'flashcard-loop-catfootsteps' && !pathname?.startsWith('/ankiclinic')) {
+-      console.log('[RouteTracker] Stopping ambient loop - route changed to:', pathname);
+       stopLoop();
      }
-@@ -63,6 +82,7 @@ const RouteTracker = () => {
+-  }, [pathname]); // Only depend on pathname changes, not currentLoop
++  }, [pathname, currentLoop, stopLoop]); // Only depend on pathname changes, not currentLoop
  
-       // Skip remaining redirection checks for exempt paths
-       if (exemptPaths.some(path => pathname.startsWith(path))) {
-+        console.log('[RouteTracker] SKIPPING REDIRECT - exempt path:', pathname);
-         return;
-       }
- 
-@@ -73,8 +93,18 @@ const RouteTracker = () => {
-       // 4. Onboarding is not complete
-       if (isSignedIn && !profileLoading && pathname !== '/onboarding') {
-         if (!onboardingComplete) {
-+          console.log('[RouteTracker] REDIRECTING TO ONBOARDING (not complete):', {
-+            isSignedIn,
-+            profileLoading,
-+            pathname,
-+            onboardingComplete
-+          });
-           router.push('/onboarding');
-           return;
-+        } else {
-+          console.log('[RouteTracker] NOT REDIRECTING - onboarding complete:', {
-+            onboardingComplete
-+          });
-         }
-       }
-     }
+   // Track when initial loading is complete - skip for onboarding
+   useEffect(() => {
 diff --git a/components/StoreInitializer.tsx b/components/StoreInitializer.tsx
-index f069d69db98090edc13beb96fef5d28f95a86c62..0a0aa9ad8302770d576a9a60dc693772e82a5bd9 100644
+index f069d69db98090edc13beb96fef5d28f95a86c62..ea303b94f3dc703043e3cbf0f2c7fe982b5ad066 100644
 --- a/components/StoreInitializer.tsx
 +++ b/components/StoreInitializer.tsx
-@@ -2,60 +2,50 @@
+@@ -2,60 +2,47 @@
  
  import { useEffect } from 'react';
  import { useUser } from '@clerk/nextjs';
@@ -2499,10 +2787,7 @@ index f069d69db98090edc13beb96fef5d28f95a86c62..0a0aa9ad8302770d576a9a60dc693772
 -      console.error('[StoreInitializer] Error initializing audio context:', error);
 +    if (typeof window === 'undefined') return;
 +    
-+    // Let's check the localStorage value for onboardingComplete
-+    console.log('DEBUG: localStorage.onboardingComplete =', localStorage.getItem('onboardingComplete'));
-+    
-+    // Using the debug parameter to force onboarding
++    // Initialize global store
 +    initializeGlobalStore({ forceOnboarding: true }).catch(error => {
 +      console.error('Failed to initialize global store:', error);
      });
@@ -2545,7 +2830,7 @@ index f069d69db98090edc13beb96fef5d28f95a86c62..0a0aa9ad8302770d576a9a60dc693772
    }, [isLoaded, isSignedIn, refreshUserInfo]);
    
 diff --git a/components/chatgpt/ChatContainer.tsx b/components/chatgpt/ChatContainer.tsx
-index f5d89973e7e6250c9f019041a3f41ce03b521255..d401ec03c902627acd52f68feb9480aa6e16e911 100644
+index f5d89973e7e6250c9f019041a3f41ce03b521255..3b194da6ce5535936da84f69ec0484eaaee2422f 100644
 --- a/components/chatgpt/ChatContainer.tsx
 +++ b/components/chatgpt/ChatContainer.tsx
 @@ -15,6 +15,7 @@ import { CalendarEvent } from "@/types/calendar";
@@ -2572,7 +2857,27 @@ index f5d89973e7e6250c9f019041a3f41ce03b521255..d401ec03c902627acd52f68feb9480aa
    /* --- Animations & Effects --- */
    useEffect(() => {
      if (!isMounted) {
-@@ -114,38 +120,31 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
+@@ -87,7 +93,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
+           const textarea = document.querySelector('.rcb-chat-input-textarea');
+           if (textarea instanceof HTMLTextAreaElement) {
+             // Set value and trigger input event
+-            textarea.value = message;
++            textarea.value = message || '';
+             textarea.dispatchEvent(new Event('input', { bubbles: true }));
+             
+             // Create and dispatch Enter keydown event
+@@ -104,7 +110,9 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
+             // Focus the textarea and dispatch the event
+             textarea.focus();
+             setTimeout(() => {
+-              textarea.dispatchEvent(enterEvent);
++              if (textarea && textarea.value && textarea.value.trim()) {
++                textarea.dispatchEvent(enterEvent);
++              }
+             }, 100);
+           }
+         }
+@@ -114,38 +122,31 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
  
    useEffect(() => {
      const handleKeyDown = (event: KeyboardEvent) => {
@@ -2611,7 +2916,7 @@ index f5d89973e7e6250c9f019041a3f41ce03b521255..d401ec03c902627acd52f68feb9480aa
                toggleAudio();
                cmdReleaseTimer.current = null;
              }, 50); // Small delay to ensure no other keys were pressed
-@@ -238,6 +237,68 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
+@@ -238,8 +239,74 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
      }
    }, [isCalendarModalOpen, fetchExamActivities, refetchStudyActivities]);
    
@@ -2679,12 +2984,23 @@ index f5d89973e7e6250c9f019041a3f41ce03b521255..d401ec03c902627acd52f68feb9480aa
 +  
    /* ---- Event Handlers ----- */
    const handleSendMessage = async (userInput: string, messageContext?: string) => {
++    if (!userInput || !userInput.trim()) {
++      return "Please enter a message to send.";
++    }
++
      setIsLoading(true);
-@@ -318,11 +379,14 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
+     setError(null);
+     
+@@ -318,11 +385,20 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
    };
  
    const playAudio = (audioBase64: string) => {
 -    console.log('[ChatContainer] Playing audio response');
++    if (!audioBase64) {
++      console.warn('No audio data provided to playAudio');
++      return;
++    }
++    
      setIsPlaying(true);
      
      // Use the voice channel instead of music channel
@@ -2693,11 +3009,12 @@ index f5d89973e7e6250c9f019041a3f41ce03b521255..d401ec03c902627acd52f68feb9480aa
 +      playVoice(audioBase64);
 +    } catch (error) {
 +      console.error('Error playing voice audio:', error);
++      setIsPlaying(false);
 +    }
      
      // Set isPlaying to false after a short delay
      setTimeout(() => {
-@@ -331,9 +395,8 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
+@@ -331,9 +407,8 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
    };
  
    const stopAudio = () => {
@@ -2708,7 +3025,7 @@ index f5d89973e7e6250c9f019041a3f41ce03b521255..d401ec03c902627acd52f68feb9480aa
    };
  
    const toggleAudio = () => {
-@@ -341,22 +404,21 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
+@@ -341,22 +416,21 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
      const now = Date.now();
      const timeSinceLastToggle = now - lastToggleTime;
      
@@ -2737,7 +3054,26 @@ index f5d89973e7e6250c9f019041a3f41ce03b521255..d401ec03c902627acd52f68feb9480aa
      setAudioEnabled(!audioEnabled);
    };
  
-@@ -461,63 +523,6 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
+@@ -368,8 +442,16 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
+     },
+     loop: {
+       message: async (params: { userInput: string, messageContext?: string }) => {
+-        const response = await handleSendMessage(params.userInput, params.messageContext);
+-        return response;
++        try {
++          if (!params.userInput || !params.userInput.trim()) {
++            return "Please enter a message.";
++          }
++          const response = await handleSendMessage(params.userInput, params.messageContext);
++          return response;
++        } catch (error) {
++          console.error('Error in chatbot flow:', error);
++          return "Sorry, there was an error processing your request. Please try again.";
++        }
+       },
+       path: "loop",
+     },
+@@ -461,63 +543,6 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
      },
    };
  
@@ -2801,148 +3137,15 @@ index f5d89973e7e6250c9f019041a3f41ce03b521255..d401ec03c902627acd52f68feb9480aa
    /* ---- Render Methods ----- */
    if (!isMounted) {
      return (
-diff --git a/components/tests/UserSliceTest.tsx b/components/tests/UserSliceTest.tsx
-new file mode 100644
-index 0000000000000000000000000000000000000000..5a39f5dc16bab611c71794a221fac4b79087be46
+diff --git a/main b/main
+new file mode 160000
+index 0000000000000000000000000000000000000000..9718e11fc684593a8a3da67c42f56a3b61037a69
 --- /dev/null
-+++ b/components/tests/UserSliceTest.tsx
-@@ -0,0 +1,133 @@
-+'use client';
-+
-+import { useEffect, useState } from 'react';
-+import { useUser } from '@/store/selectors';
-+
-+const UserSliceTest = () => {
-+  const [loading, setLoading] = useState(true);
-+  const userState = useUser();
-+  
-+  useEffect(() => {
-+    // Test loading user info on mount
-+    const init = async () => {
-+      try {
-+        await userState.refreshUserInfo();
-+        console.log('User info loaded successfully');
-+      } catch (error) {
-+        console.error('Error loading user info:', error);
-+      } finally {
-+        setLoading(false);
-+      }
-+    };
-+    
-+    init();
-+  }, [userState.refreshUserInfo]);
-+  
-+  const handleUpdatePreferences = () => {
-+    userState.updateStudyPreferences({
-+      dailyGoal: Math.floor(Math.random() * 60) + 15, // Random between 15-75 minutes
-+    });
-+  };
-+  
-+  const handleUpdateInterfaceSettings = () => {
-+    userState.updateInterfaceSettings({
-+      darkMode: !userState.interfaceSettings.darkMode,
-+    });
-+  };
-+  
-+  const handleAddStep = () => {
-+    userState.addCompletedStep(`step-${Date.now()}`);
-+  };
-+  
-+  return (
-+    <div className="p-4 border rounded-lg shadow-sm max-w-2xl mx-auto my-8">
-+      <h2 className="text-xl font-bold mb-4">User Slice Test Component</h2>
-+      
-+      {loading ? (
-+        <div className="text-center py-4">Loading user data...</div>
-+      ) : (
-+        <div className="space-y-4">
-+          <div>
-+            <h3 className="font-semibold">User Info</h3>
-+            <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-40">
-+              {JSON.stringify(userState.userInfo, null, 2)}
-+            </pre>
-+          </div>
-+          
-+          <div>
-+            <h3 className="font-semibold">Profile</h3>
-+            <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-40">
-+              {JSON.stringify(userState.profile, null, 2)}
-+            </pre>
-+          </div>
-+          
-+          <div>
-+            <h3 className="font-semibold">Study Preferences</h3>
-+            <pre className="bg-gray-100 p-2 rounded text-xs">
-+              {JSON.stringify(userState.studyPreferences, null, 2)}
-+            </pre>
-+            <button 
-+              onClick={handleUpdatePreferences}
-+              className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
-+            >
-+              Update Study Preferences
-+            </button>
-+          </div>
-+          
-+          <div>
-+            <h3 className="font-semibold">Interface Settings</h3>
-+            <pre className="bg-gray-100 p-2 rounded text-xs">
-+              {JSON.stringify(userState.interfaceSettings, null, 2)}
-+            </pre>
-+            <button 
-+              onClick={handleUpdateInterfaceSettings}
-+              className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
-+            >
-+              Toggle Dark Mode
-+            </button>
-+          </div>
-+          
-+          <div>
-+            <h3 className="font-semibold">Completed Steps ({userState.completedSteps.length})</h3>
-+            <pre className="bg-gray-100 p-2 rounded text-xs max-h-40 overflow-auto">
-+              {JSON.stringify(userState.completedSteps, null, 2)}
-+            </pre>
-+            <button 
-+              onClick={handleAddStep}
-+              className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
-+            >
-+              Add Random Step
-+            </button>
-+          </div>
-+          
-+          <div>
-+            <h3 className="font-semibold">Coins: {userState.coins}</h3>
-+            <div className="flex space-x-2 mt-2">
-+              <button 
-+                onClick={() => userState.updateCoins(10)}
-+                className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600"
-+              >
-+                Add 10 Coins
-+              </button>
-+              <button 
-+                onClick={() => userState.updateCoins(-5)}
-+                className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
-+              >
-+                Remove 5 Coins
-+              </button>
-+            </div>
-+          </div>
-+          
-+          <div>
-+            <h3 className="font-semibold">Subscription Status</h3>
-+            <div className={`inline-block px-2 py-1 rounded text-sm ${userState.isSubscribed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-+              {userState.isSubscribed ? 'Subscribed' : 'Not Subscribed'}
-+            </div>
-+          </div>
-+        </div>
-+      )}
-+    </div>
-+  );
-+};
-+
-+export default UserSliceTest; 
-\ No newline at end of file
++++ b/main
+@@ -0,0 +1 @@
++Subproject commit 9718e11fc684593a8a3da67c42f56a3b61037a69
 diff --git a/store/index.ts b/store/index.ts
-index bf1e9e6743b34f074104a4c04974983ccea88a60..2cfa260f02c77a7b76b15d18d38b13544700d77f 100644
+index bf1e9e6743b34f074104a4c04974983ccea88a60..45a6aae94af146727a66949cc31951a1a470fc7e 100644
 --- a/store/index.ts
 +++ b/store/index.ts
 @@ -2,6 +2,8 @@
@@ -2954,7 +3157,7 @@ index bf1e9e6743b34f074104a4c04974983ccea88a60..2cfa260f02c77a7b76b15d18d38b1354
  
  // Re-export all types
  export * from './types';
-@@ -11,29 +13,39 @@ export type { ThemeType, WindowSize } from './slices/uiSlice';
+@@ -11,29 +13,37 @@ export type { ThemeType, WindowSize } from './slices/uiSlice';
  import { useAudioStore } from './slices/audioSlice';
  import { useUIStore } from './slices/uiSlice';
  import { useGameStore } from './slices/gameSlice';
@@ -2965,11 +3168,10 @@ index bf1e9e6743b34f074104a4c04974983ccea88a60..2cfa260f02c77a7b76b15d18d38b1354
  // Flag to track global initialization
  let isStoreInitialized = false;
  
+-// Create a combined store for backward compatibility
+-// This will be expanded as we migrate more slices
 +type StoreUpdates = Record<string, any>;
 +
- // Create a combined store for backward compatibility
--// This will be expanded as we migrate more slices
-+// @ts-ignore - This is exported for backward compatibility but might not be used directly
  export const useStore = {
    getState: () => ({
      ...useAudioStore.getState(),
@@ -3000,7 +3202,7 @@ index bf1e9e6743b34f074104a4c04974983ccea88a60..2cfa260f02c77a7b76b15d18d38b1354
      
      // Sort updates into appropriate slices
      Object.entries(updates).forEach(([key, value]) => {
-@@ -43,6 +55,10 @@ export const useStore = {
+@@ -43,6 +53,10 @@ export const useStore = {
          uiUpdates[key] = value;
        } else if (gameKeys.has(key)) {
          gameUpdates[key] = value;
@@ -3011,7 +3213,7 @@ index bf1e9e6743b34f074104a4c04974983ccea88a60..2cfa260f02c77a7b76b15d18d38b1354
        }
      });
      
-@@ -56,27 +72,39 @@ export const useStore = {
+@@ -56,27 +70,39 @@ export const useStore = {
      if (Object.keys(gameUpdates).length > 0) {
        useGameStore.setState(gameUpdates);
      }
@@ -3053,7 +3255,7 @@ index bf1e9e6743b34f074104a4c04974983ccea88a60..2cfa260f02c77a7b76b15d18d38b1354
        await useAudioStore.getState().initializeAudioContext();
        
        // Initialize UI state
-@@ -85,10 +113,17 @@ export const initializeGlobalStore = async () => {
+@@ -85,10 +111,17 @@ export const initializeGlobalStore = async () => {
          useUIStore.getState().setTheme(savedTheme as any);
        }
        
@@ -3075,10 +3277,12 @@ index bf1e9e6743b34f074104a4c04974983ccea88a60..2cfa260f02c77a7b76b15d18d38b1354
  }; 
 \ No newline at end of file
 diff --git a/store/selectors.ts b/store/selectors.ts
-index 41348a50142d8d1425258f5e589a7b541803cd35..c9e5a5f5702fa0bab48be25590a2ab79cab9497d 100644
+index 41348a50142d8d1425258f5e589a7b541803cd35..dfcae748337020f0ab58ccb89ad3bf2ce8146702 100644
 --- a/store/selectors.ts
 +++ b/store/selectors.ts
-@@ -3,6 +3,8 @@ import { useEffect, useCallback, useRef } from 'react'
+@@ -1,8 +1,9 @@
+-import { useStore } from './store'
+ import { useEffect, useCallback, useRef } from 'react'
  import { useAudioStore } from './slices/audioSlice'
  import { useUIStore } from './slices/uiSlice'
  import { useGameStore } from './slices/gameSlice'
@@ -3087,7 +3291,15 @@ index 41348a50142d8d1425258f5e589a7b541803cd35..c9e5a5f5702fa0bab48be25590a2ab79
  
  /* --- UI Selectors ---- */
  export const useUI = () => {
-@@ -32,41 +34,41 @@ export const useCurrentRoute = () => useUIStore(state => state.currentRoute)
+@@ -23,7 +24,6 @@ export const useUI = () => {
+   }
+ }
+ 
+-// Individual property selectors for performance
+ export const useTheme = () => useUIStore(state => state.theme)
+ export const useWindowSize = () => useUIStore(state => state.window)
+ export const useCurrentRoute = () => useUIStore(state => state.currentRoute)
+@@ -32,41 +32,41 @@ export const useCurrentRoute = () => useUIStore(state => state.currentRoute)
  // Consolidated user selector that provides all user-related state and actions
  export const useUser = () => {
    // Profile state and actions
@@ -3156,7 +3368,7 @@ index 41348a50142d8d1425258f5e589a7b541803cd35..c9e5a5f5702fa0bab48be25590a2ab79
    
    return {
      // Profile state and actions
-@@ -194,15 +196,15 @@ export const useGame = () => {
+@@ -194,16 +194,17 @@ export const useGame = () => {
  
  /* --- Individual Profile Selectors ---- */
  // For components that only need specific profile data
@@ -3165,22 +3377,26 @@ index 41348a50142d8d1425258f5e589a7b541803cd35..c9e5a5f5702fa0bab48be25590a2ab79
 -export const useStudyPreferences = () => useStore(state => state.studyPreferences)
 -export const useInterfaceSettings = () => useStore(state => state.interfaceSettings)
 -export const useTutorialProgress = () => useStore(state => state.tutorialProgress)
-+export const useProfileComplete = () => useUserStore(state => state.isProfileComplete)
-+export const useCompletedSteps = () => useUserStore(state => state.completedSteps)
-+export const useStudyPreferences = () => useUserStore(state => state.studyPreferences)
-+export const useInterfaceSettings = () => useUserStore(state => state.interfaceSettings)
-+export const useTutorialProgress = () => useUserStore(state => state.tutorialProgress)
- export const useOnboardingStatus = () => ({
+-export const useOnboardingStatus = () => ({
 -  onboardingComplete: useStore(state => state.onboardingComplete),
 -  lastVisitedRoute: useStore(state => state.lastVisitedRoute),
 -  onboardingRoute: useStore(state => state.onboardingRoute)
-+  onboardingComplete: useUserStore(state => state.onboardingComplete),
-+  lastVisitedRoute: useUserStore(state => state.lastVisitedRoute),
-+  onboardingRoute: useUserStore(state => state.onboardingRoute)
- })
+-})
++// Commented out as they're currently unused in the codebase
++// export const useProfileComplete = () => useUserStore(state => state.isProfileComplete)
++// export const useCompletedSteps = () => useUserStore(state => state.completedSteps)
++// export const useStudyPreferences = () => useUserStore(state => state.studyPreferences)
++// export const useInterfaceSettings = () => useUserStore(state => state.interfaceSettings)
++// export const useTutorialProgress = () => useUserStore(state => state.tutorialProgress)
++// export const useOnboardingStatus = () => ({
++//   onboardingComplete: useUserStore(state => state.onboardingComplete),
++//   lastVisitedRoute: useUserStore(state => state.lastVisitedRoute),
++//   onboardingRoute: useUserStore(state => state.onboardingRoute)
++// })
  
  /* --- Audio Selector ---- */
-@@ -324,15 +326,15 @@ export const useAudio = () => {
+ // Consolidated audio selector that provides all audio-related state and actions
+@@ -324,15 +325,15 @@ export const useAudio = () => {
  // Consolidated vocab selector that provides all vocabulary-related state and actions
  export const useVocab = () => {
    // Vocab state
@@ -3203,16 +3419,17 @@ index 41348a50142d8d1425258f5e589a7b541803cd35..c9e5a5f5702fa0bab48be25590a2ab79
    
    return {
      // State
-@@ -349,9 +351,9 @@ export const useVocab = () => {
+@@ -349,9 +350,10 @@ export const useVocab = () => {
  }
  
  // Individual property selectors for performance
 -export const useVocabList = () => useStore(state => state.vocabList)
 -export const useShowVocabList = () => useStore(state => state.showVocabList)
 -export const useIsCmdIEnabled = () => useStore(state => state.isCmdIEnabled)
-+export const useVocabList = () => useVocabStore(state => state.vocabList)
-+export const useShowVocabList = () => useVocabStore(state => state.showVocabList)
-+export const useIsCmdIEnabled = () => useVocabStore(state => state.isCmdIEnabled)
++// Commented out as they're currently unused in the codebase
++// export const useVocabList = () => useVocabStore(state => state.vocabList)
++// export const useShowVocabList = () => useVocabStore(state => state.showVocabList)
++// export const useIsCmdIEnabled = () => useVocabStore(state => state.isCmdIEnabled)
  
  /* --- Clinic Data Management ---- */
  export const useClinicData = () => {

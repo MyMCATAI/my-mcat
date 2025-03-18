@@ -1,4 +1,3 @@
-import { useStore } from './store'
 import { useEffect, useCallback, useRef } from 'react'
 import { useAudioStore } from './slices/audioSlice'
 import { useUIStore } from './slices/uiSlice'
@@ -25,7 +24,6 @@ export const useUI = () => {
   }
 }
 
-// Individual property selectors for performance
 export const useTheme = () => useUIStore(state => state.theme)
 export const useWindowSize = () => useUIStore(state => state.window)
 export const useCurrentRoute = () => useUIStore(state => state.currentRoute)
@@ -196,16 +194,17 @@ export const useGame = () => {
 
 /* --- Individual Profile Selectors ---- */
 // For components that only need specific profile data
-export const useProfileComplete = () => useUserStore(state => state.isProfileComplete)
-export const useCompletedSteps = () => useUserStore(state => state.completedSteps)
-export const useStudyPreferences = () => useUserStore(state => state.studyPreferences)
-export const useInterfaceSettings = () => useUserStore(state => state.interfaceSettings)
-export const useTutorialProgress = () => useUserStore(state => state.tutorialProgress)
-export const useOnboardingStatus = () => ({
-  onboardingComplete: useUserStore(state => state.onboardingComplete),
-  lastVisitedRoute: useUserStore(state => state.lastVisitedRoute),
-  onboardingRoute: useUserStore(state => state.onboardingRoute)
-})
+// Commented out as they're currently unused in the codebase
+// export const useProfileComplete = () => useUserStore(state => state.isProfileComplete)
+// export const useCompletedSteps = () => useUserStore(state => state.completedSteps)
+// export const useStudyPreferences = () => useUserStore(state => state.studyPreferences)
+// export const useInterfaceSettings = () => useUserStore(state => state.interfaceSettings)
+// export const useTutorialProgress = () => useUserStore(state => state.tutorialProgress)
+// export const useOnboardingStatus = () => ({
+//   onboardingComplete: useUserStore(state => state.onboardingComplete),
+//   lastVisitedRoute: useUserStore(state => state.lastVisitedRoute),
+//   onboardingRoute: useUserStore(state => state.onboardingRoute)
+// })
 
 /* --- Audio Selector ---- */
 // Consolidated audio selector that provides all audio-related state and actions
@@ -351,9 +350,10 @@ export const useVocab = () => {
 }
 
 // Individual property selectors for performance
-export const useVocabList = () => useVocabStore(state => state.vocabList)
-export const useShowVocabList = () => useVocabStore(state => state.showVocabList)
-export const useIsCmdIEnabled = () => useVocabStore(state => state.isCmdIEnabled)
+// Commented out as they're currently unused in the codebase
+// export const useVocabList = () => useVocabStore(state => state.vocabList)
+// export const useShowVocabList = () => useVocabStore(state => state.showVocabList)
+// export const useIsCmdIEnabled = () => useVocabStore(state => state.isCmdIEnabled)
 
 /* --- Clinic Data Management ---- */
 export const useClinicData = () => {

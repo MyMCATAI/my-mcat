@@ -93,7 +93,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
           const textarea = document.querySelector('.rcb-chat-input-textarea');
           if (textarea instanceof HTMLTextAreaElement) {
             // Set value and trigger input event
-            textarea.value = message;
+            textarea.value = message || '';
             textarea.dispatchEvent(new Event('input', { bubbles: true }));
             
             // Create and dispatch Enter keydown event
@@ -110,7 +110,9 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
             // Focus the textarea and dispatch the event
             textarea.focus();
             setTimeout(() => {
-              textarea.dispatchEvent(enterEvent);
+              if (textarea && textarea.value && textarea.value.trim()) {
+                textarea.dispatchEvent(enterEvent);
+              }
             }, 100);
           }
         }
@@ -301,6 +303,10 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   
   /* ---- Event Handlers ----- */
   const handleSendMessage = async (userInput: string, messageContext?: string) => {
+    if (!userInput || !userInput.trim()) {
+      return "Please enter a message to send.";
+    }
+
     setIsLoading(true);
     setError(null);
     
@@ -379,6 +385,11 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   };
 
   const playAudio = (audioBase64: string) => {
+    if (!audioBase64) {
+      console.warn('No audio data provided to playAudio');
+      return;
+    }
+    
     setIsPlaying(true);
     
     // Use the voice channel instead of music channel
@@ -386,6 +397,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
       playVoice(audioBase64);
     } catch (error) {
       console.error('Error playing voice audio:', error);
+      setIsPlaying(false);
     }
     
     // Set isPlaying to false after a short delay
@@ -430,8 +442,16 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
     },
     loop: {
       message: async (params: { userInput: string, messageContext?: string }) => {
-        const response = await handleSendMessage(params.userInput, params.messageContext);
-        return response;
+        try {
+          if (!params.userInput || !params.userInput.trim()) {
+            return "Please enter a message.";
+          }
+          const response = await handleSendMessage(params.userInput, params.messageContext);
+          return response;
+        } catch (error) {
+          console.error('Error in chatbot flow:', error);
+          return "Sorry, there was an error processing your request. Please try again.";
+        }
       },
       path: "loop",
     },

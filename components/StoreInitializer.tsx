@@ -26,10 +26,7 @@ const StoreInitializer = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    // Let's check the localStorage value for onboardingComplete
-    console.log('DEBUG: localStorage.onboardingComplete =', localStorage.getItem('onboardingComplete'));
-    
-    // Using the debug parameter to force onboarding
+    // Initialize global store
     initializeGlobalStore({ forceOnboarding: true }).catch(error => {
       console.error('Failed to initialize global store:', error);
     });
@@ -43,9 +40,29 @@ const StoreInitializer = () => {
   // Refresh user information when the user is signed in
   useEffect(() => {
     if (isLoaded && isSignedIn) {
+      // Initial refresh
       refreshUserInfo().catch(error => {
         console.error('Failed to refresh user info:', error);
       });
+      
+      /**
+       * IMPORTANT: Secondary refresh to ensure state synchronization
+       * 
+       * This solves a race condition where:
+       * 1. The first refreshUserInfo() updates hasCompletedOnboarding in the store
+       * 2. But RouteTracker might read the old value before the update is fully applied
+       * 3. This causes incorrect redirects (e.g., to onboarding when it should go to home)
+       * 
+       * The delayed second refresh ensures all components have the correct state
+       * after the initial data load is complete.
+       */
+      const refreshTimeout = setTimeout(() => {
+        refreshUserInfo().catch(error => {
+          console.error('Failed to refresh user info in secondary refresh:', error);
+        });
+      }, 1000);
+      
+      return () => clearTimeout(refreshTimeout);
     }
   }, [isLoaded, isSignedIn, refreshUserInfo]);
   
