@@ -1,7 +1,6 @@
-# Features:
+# Features / Branch Ideas:
 [ ] Talking to kalypso - better UI - waveform shows - when talking to Kalypso AI 
-[ ] 
-
+[ ] ATS State Management and Routing Strategy - Implement proper state tracking for Adaptive Tutoring Suite (See `2-single-task-steps.md` for implementation details)
 
 
 ---
