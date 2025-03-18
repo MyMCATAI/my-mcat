@@ -101,16 +101,19 @@ const MusicPlayer = ({ theme }: MusicPlayerProps) => {
   // Initialize audio context on mount
   useEffect(() => {
     if (!hasInitialized.current) {
+      console.log('[MusicPlayer] Initializing audio context');
       initializeAudioContext().then(() => {
         hasInitialized.current = true;
-      }).catch(() => {
-        // Error handling preserved but without logging
+        console.log('[MusicPlayer] Audio context initialized successfully');
+      }).catch((error) => {
+        console.error('[MusicPlayer] Failed to initialize audio context:', error);
       });
     }
   }, [initializeAudioContext, audioContext]);
 
   // Initialize playlist and handle theme changes
   useEffect(() => {
+    console.log('[MusicPlayer] Theme changed or component mounted, theme:', theme);
     // Use the playlist in its original order instead of shuffling
     const orderedPlaylist = [...playlist];
     
@@ -125,7 +128,15 @@ const MusicPlayer = ({ theme }: MusicPlayerProps) => {
                              songQueue.length === 0 || 
                              !firstSongMatchesTheme;
     
+    console.log('[MusicPlayer] Queue status:', { 
+      initialized: queueInitialized.current, 
+      queueLength: songQueue.length, 
+      firstSongMatchesTheme, 
+      shouldUpdateQueue 
+    });
+    
     if (shouldUpdateQueue && orderedPlaylist.length > 0) {
+      console.log('[MusicPlayer] Updating song queue for theme:', theme);
       // Update song queue in audio store
       const songUrls = orderedPlaylist.map(song => song.url);
       queueInitialized.current = true;
@@ -136,16 +147,20 @@ const MusicPlayer = ({ theme }: MusicPlayerProps) => {
 
   // UI handlers that delegate to audio slice
   const handleTogglePlay = useCallback(() => {    
+    console.log('[MusicPlayer] Toggle play button clicked');
     if (!audioContext) {
+      console.log('[MusicPlayer] No audio context, initializing first');
       initializeAudioContext().then(() => {
+        console.log('[MusicPlayer] Audio context initialized, now toggling playback');
         togglePlayPause();
-      }).catch(() => {
-        // Error handling preserved but without logging
+      }).catch((error) => {
+        console.error('[MusicPlayer] Failed to initialize audio context:', error);
       });
       return;
     }
     
     if (songQueue.length === 0) {
+      console.log('[MusicPlayer] Empty song queue, initializing with current theme');
       // Try to initialize the queue
       const orderedPlaylist = [...playlist];
       const songUrls = orderedPlaylist.map(song => song.url);
@@ -153,19 +168,24 @@ const MusicPlayer = ({ theme }: MusicPlayerProps) => {
       
       // Small delay to ensure queue is set before playing
       setTimeout(() => {
+        console.log('[MusicPlayer] Queue set, now toggling playback');
         togglePlayPause();
       }, 100);
       return;
     }
     
+    console.log('[MusicPlayer] Toggling playback with existing queue');
     togglePlayPause();
   }, [togglePlayPause, songQueue.length, audioContext, initializeAudioContext, playlist, setSongQueue]);
 
   const handleNextSong = useCallback(() => {
+    console.log('[MusicPlayer] Next song button clicked');
     if (!audioContext || songQueue.length === 0) {
+      console.log('[MusicPlayer] Cannot skip, no audio context or empty queue');
       return;
     }
     
+    console.log('[MusicPlayer] Skipping to next song');
     skipToNext();
   }, [skipToNext, songQueue.length, audioContext]);
 
