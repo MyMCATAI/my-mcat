@@ -12,6 +12,7 @@ const DebugPanel = () => {
   const searchParams = useSearchParams()
   const pathname = usePathname() || ''
   const [isDebug, setIsDebug] = useState(false)
+  const [audioTab, setAudioTab] = useState<'basic'|'advanced'|'nodes'>('basic')
   
   // Zustand state
   const uiState = useUI()
@@ -43,12 +44,14 @@ const DebugPanel = () => {
     volume: audioState.volume,
     songQueue: Array.isArray(audioState.songQueue) ? audioState.songQueue : [],
     queueLength: Array.isArray(audioState.songQueue) ? audioState.songQueue.length : 0,
-    currentSongIndex: audioState.currentSongIndex,
+    
+    // Advanced state
     currentMusic: audioState.currentMusic,
     masterVolume: audioState.masterVolume,
-    
-    // Audio context and sources
+    currentSongIndex: audioState.currentSongIndex,
     audioContext: audioState.audioContext ? 'initialized' : 'null',
+    
+    // Audio sources
     musicSource: audioState.musicSource ? 'active' : 'null',
     loopSource: audioState.loopSource ? 'active' : 'null',
     voiceSource: audioState.voiceSource ? 'active' : 'null',
@@ -72,9 +75,106 @@ const DebugPanel = () => {
       <h3 className="text-lg font-bold mb-2">Debug Panel</h3>
       <div className="grid grid-cols-1 gap-2">
         <div>
-          <h4 className="font-bold">Audio State</h4>
-          <pre>{JSON.stringify(displayAudioState, null, 2)}</pre>
+          <h4 className="font-bold">Audio System</h4>
+          <div className="flex space-x-2 mb-2">
+            <button 
+              className={`px-2 py-1 text-xs rounded ${audioTab === 'basic' ? 'bg-blue-600' : 'bg-gray-700'}`}
+              onClick={() => setAudioTab('basic')}
+            >
+              Basic
+            </button>
+            <button 
+              className={`px-2 py-1 text-xs rounded ${audioTab === 'advanced' ? 'bg-blue-600' : 'bg-gray-700'}`}
+              onClick={() => setAudioTab('advanced')}
+            >
+              Advanced
+            </button>
+            <button 
+              className={`px-2 py-1 text-xs rounded ${audioTab === 'nodes' ? 'bg-blue-600' : 'bg-gray-700'}`}
+              onClick={() => setAudioTab('nodes')}
+            >
+              Nodes
+            </button>
+          </div>
+          
+          {audioTab === 'basic' && (
+            <div>
+              <div className="grid grid-cols-2 gap-1">
+                <div className="font-semibold">Playing:</div>
+                <div>{displayAudioState.isPlaying ? 'Yes' : 'No'}</div>
+                
+                <div className="font-semibold">Current Song:</div>
+                <div className="truncate">{displayAudioState.currentSong ? audioState.getCurrentSongTitle() : 'None'}</div>
+                
+                <div className="font-semibold">Current Loop:</div>
+                <div className="truncate">{displayAudioState.currentLoop || 'None'}</div>
+                
+                <div className="font-semibold">Volume:</div>
+                <div>{displayAudioState.volume}</div>
+                
+                <div className="font-semibold">Queue Size:</div>
+                <div>{displayAudioState.queueLength}</div>
+              </div>
+            </div>
+          )}
+          
+          {audioTab === 'advanced' && (
+            <div>
+              <div className="grid grid-cols-2 gap-1">
+                <div className="font-semibold">Current Music:</div>
+                <div className="truncate">{displayAudioState.currentMusic || 'None'}</div>
+                
+                <div className="font-semibold">Master Volume:</div>
+                <div>{displayAudioState.masterVolume}</div>
+                
+                <div className="font-semibold">Song Index:</div>
+                <div>{displayAudioState.currentSongIndex}</div>
+                
+                <div className="font-semibold">Audio Context:</div>
+                <div>{displayAudioState.audioContext}</div>
+              </div>
+              
+              <div className="mt-2">
+                <div className="font-semibold mb-1">Active Sources:</div>
+                <div className="grid grid-cols-3 gap-1">
+                  <div className={`px-1 py-0.5 rounded ${displayAudioState.musicSource === 'active' ? 'bg-green-700' : 'bg-gray-700'}`}>
+                    Music: {displayAudioState.musicSource}
+                  </div>
+                  <div className={`px-1 py-0.5 rounded ${displayAudioState.loopSource === 'active' ? 'bg-green-700' : 'bg-gray-700'}`}>
+                    Loop: {displayAudioState.loopSource}
+                  </div>
+                  <div className={`px-1 py-0.5 rounded ${displayAudioState.voiceSource === 'active' ? 'bg-green-700' : 'bg-gray-700'}`}>
+                    Voice: {displayAudioState.voiceSource}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {audioTab === 'nodes' && (
+            <div>
+              <div className="font-semibold mb-1">Gain Nodes:</div>
+              <div className="grid grid-cols-3 gap-1">
+                <div className={`px-1 py-0.5 rounded ${displayAudioState.gainNodes.master === 'active' ? 'bg-green-700' : 'bg-gray-700'}`}>
+                  Master: {displayAudioState.gainNodes.master}
+                </div>
+                <div className={`px-1 py-0.5 rounded ${displayAudioState.gainNodes.music === 'active' ? 'bg-green-700' : 'bg-gray-700'}`}>
+                  Music: {displayAudioState.gainNodes.music}
+                </div>
+                <div className={`px-1 py-0.5 rounded ${displayAudioState.gainNodes.sfx === 'active' ? 'bg-green-700' : 'bg-gray-700'}`}>
+                  SFX: {displayAudioState.gainNodes.sfx}
+                </div>
+                <div className={`px-1 py-0.5 rounded ${displayAudioState.gainNodes.loop === 'active' ? 'bg-green-700' : 'bg-gray-700'}`}>
+                  Loop: {displayAudioState.gainNodes.loop}
+                </div>
+                <div className={`px-1 py-0.5 rounded ${displayAudioState.gainNodes.voice === 'active' ? 'bg-green-700' : 'bg-gray-700'}`}>
+                  Voice: {displayAudioState.gainNodes.voice}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
+        
         <hr className="border-white/30 my-2" />
         <div>
           <h4 className="font-bold">Game State</h4>
