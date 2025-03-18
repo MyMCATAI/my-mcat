@@ -5,6 +5,7 @@ import { FaCheckCircle } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { isToday } from "date-fns";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
+import { TASK_REWARDS } from "@/lib/coin/constants";
 
 interface Task {
   text: string;
@@ -97,11 +98,11 @@ const FloatingTaskList: React.FC<FloatingTaskListProps> = ({
           await fetch("/api/user-info", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount: 1 }),
+            body: JSON.stringify({ amount: TASK_REWARDS.COMPLETE_TASK }),
           });
           
           toast.success(
-            `You've completed all tasks for ${activity.activityTitle}! You earned a coin!`
+            `You've completed all tasks for ${activity.activityTitle}! You earned ${TASK_REWARDS.COMPLETE_TASK} coin!`
           );
         } else {
           toast.success(

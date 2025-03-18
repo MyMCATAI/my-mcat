@@ -72,18 +72,26 @@ The game uses a coin-based reward system that encourages consistent study habits
 
 | Activity | Coin Change | Game Suite | Description |
 |----------|-------------|------------|-------------|
-| Taking a quiz | -1 | Doctor's Office | Initial cost to take any quiz in the Doctor's Office |
-| Quiz score 100% | +2 | Doctor's Office | Perfect score reward in Doctor's Office quizzes |
-| Quiz score 70%+ | +1 | Doctor's Office | Good performance reward in Doctor's Office |
-| Taking a passage | -1 | CARS Suite | Initial cost per CARS passage attempt |
-| Passage score 80%+ | +1 | CARS Suite | Get your coin back for good CARS performance |
-| Perfect passage (9 stars) on difficulty 3+ | +3 | CARS Suite | Maximum reward for challenging CARS passages |
-| Perfect passage (9 stars) on lower difficulty | +2 | CARS Suite | Reward for perfect CARS performance |
-| Passage with 6+ stars | +1 | CARS Suite | Decent CARS passage performance reward |
-| Report validated bug/unfair question | +2 | All Suites | Compensation for helping improve any game section |
-| Access ANKI game | -5 | Doctor's Office | One-time access fee to Doctor's Office |
-| Access Adaptive Tutoring Suite | -5 | Tutoring Suite | One-time access fee to Adaptive Tutoring |
-| Access Test Review (Premium) | -25 | All Suites | Premium feature access across all game modes |
+| Taking a quiz | -2 | Doctor's Office | Initial cost to take any quiz in the Doctor's Office |
+| Quiz score 100% | +3 | Doctor's Office | Perfect score reward in Doctor's Office quizzes |
+| Quiz score 70-99% | +2 | Doctor's Office | Good performance reward in Doctor's Office |
+| Quiz score 50-70% | +1 | Doctor's Office | Okay performance reward in Doctor's Office |
+| Quiz score 30-50% | 0 | Doctor's Office | Bad performance in Doctor's Office |
+| Quiz score 0-30% | -1 | Doctor's Office | Really bad performance in Doctor's Office |
+| Perfect passage (9 stars) on difficulty 3+ | +4 | CARS Suite | Maximum reward for challenging CARS passages |
+| Perfect passage (9 stars) on lower difficulty | +3 | CARS Suite | Reward for perfect CARS performance |
+| Passage with 6-8 stars | +2 | CARS Suite | Good CARS passage performance reward |
+| Passage with 4-5 stars | +1 | CARS Suite | Decent CARS passage performance reward |
+| Completing a task | +1 | All Suites | Reward for completing any task |
+| Completing test review | +2 | All Suites | Reward for completing test review |
+| Completing ATS topic | +1 | All Suites | Reward for completing an ATS topic |
+| Starting Anki Clinic cycle in ATS | -2 | ATS | Initial cost to start Anki Clinic cycle |
+| Missing daily tasks | -1 | All Suites | Penalty for missing tasks on calendar |
+| Missing 7-day study period | -5 | All Suites | Penalty for missing 7-day study period with tasks |
+
+### Streak Rewards
+- 7-day streak: +1 coin per day
+- 21-day streak: +2 coins per day
 
 ### Star System for Passages
 Passages use a 9-star rating system:

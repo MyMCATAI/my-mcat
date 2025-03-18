@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback, Suspense, useMemo } fr
 import ReactDOM from 'react-dom';
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { DoctorOfficeStats } from "@/types";
-import { toast, Toaster } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { imageGroups } from "./constants/imageGroups";
 import dynamic from 'next/dynamic';
 import { useUserInfo } from "@/hooks/useUserInfo";
@@ -21,6 +21,7 @@ import HoverSidebar from "@/components/navigation/HoverSidebar";
 import OfficeContainer from './OfficeContainer';
 import ResourcesMenu from './ResourcesMenu';
 import { useUser } from "@/store/selectors";
+import { PENALTY_COSTS } from '@/lib/coin/constants';
 
 // Important UI components with loading fallbacks
 const NewGameButton = dynamic(() => import('./components/NewGameButton'), {
@@ -441,24 +442,28 @@ const DoctorsOfficePage = () => {
       const data = await response.json();
       
       if (data.error || data.alreadyUpdatedToday) {
+        // Store the message to show after streak display closes
         const { greeting, message } = getWelcomeMessage(userInfo?.firstName);
-        toast.custom(
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-amber-600 dark:text-amber-400">{greeting}</p>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <p className="italic">{message}</p>
-              <p>{"You've already treated your patients for today. Total patients treated:"} <span className="font-medium text-amber-600 dark:text-amber-400">{data.totalPatientsTreated}</span></p>
-              <p className="text-emerald-600 dark:text-emerald-400">{"Come back tomorrow to treat more patients!"}</p>
-            </div>
-          </div>,
-          {
-            duration: 5000,
-            position: 'top-center',
-          }
-        );
-        return;
+        const showWelcomeToast = () => {
+          toast.custom(
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-amber-600 dark:text-amber-400">{greeting}</p>
+              </div>
+              <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <p className="italic">{message}</p>
+                <p>{"You've already treated your patients for today. Total patients treated:"} <span className="font-medium text-amber-600 dark:text-amber-400">{data.totalPatientsTreated}</span></p>
+                <p className="text-emerald-600 dark:text-emerald-400">{"Come back tomorrow to treat more patients!"}</p>
+              </div>
+            </div>,
+            {
+              duration: 5000,
+              position: 'top-center',
+            }
+          );
+        };
+        // Pass the toast function to StreakDisplay
+        return showWelcomeToast;
       }
 
       await incrementScore();
@@ -467,47 +472,53 @@ const DoctorsOfficePage = () => {
 
       if (data.newPatientsTreated > 0) {
         const { greeting, message } = getSuccessMessage(userInfo?.firstName);
-        toast.custom(
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-emerald-600 dark:text-emerald-400">{greeting}</p>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <p className="italic">{message}</p>
-              <ul className="space-y-1 mt-2">
-                <li className="flex items-center gap-2">
-                  <span className="font-medium">New patients treated:</span> 
-                  <span className="text-emerald-600 dark:text-emerald-400">{data.newPatientsTreated}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="font-medium">Total patients:</span> 
-                  <span className="text-emerald-600 dark:text-emerald-400">{data.totalPatientsTreated}</span>
-                </li>
-              </ul>
-            </div>
-          </div>,
-          {
-            duration: 5000,
-            position: 'top-center',
-          }
-        );
+        const showSuccessToast = () => {
+          toast.custom(
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-emerald-600 dark:text-emerald-400">{greeting}</p>
+              </div>
+              <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <p className="italic">{message}</p>
+                <ul className="space-y-1 mt-2">
+                  <li className="flex items-center gap-2">
+                    <span className="font-medium">New patients treated:</span> 
+                    <span className="text-emerald-600 dark:text-emerald-400">{data.newPatientsTreated}</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="font-medium">Total patients:</span> 
+                    <span className="text-emerald-600 dark:text-emerald-400">{data.totalPatientsTreated}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>,
+            {
+              duration: 5000,
+              position: 'top-center',
+            }
+          );
+        };
+        return showSuccessToast;
       } else {
         const { greeting, message } = getWelcomeMessage(userInfo?.firstName);
-        toast.custom(
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-gray-900 dark:text-gray-100">{greeting}</p>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <p className="italic">{message}</p>
-              <p>No new patients to treat today. Try completing more flashcards!</p>
-            </div>
-          </div>,
-          {
-            duration: 5000,
-            position: 'top-center',
-          }
-        );
+        const showNoNewPatientsToast = () => {
+          toast.custom(
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col gap-2 min-w-[300px]">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-gray-900 dark:text-gray-100">{greeting}</p>
+              </div>
+              <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <p className="italic">{message}</p>
+                <p>No new patients to treat today. Try completing more flashcards!</p>
+              </div>
+            </div>,
+            {
+              duration: 5000,
+              position: 'top-center',
+            }
+          );
+        };
+        return showNoNewPatientsToast;
       }
     } catch (error) {
       console.error('🚨 Error in daily calculations:', error);
@@ -522,7 +533,25 @@ const DoctorsOfficePage = () => {
   // Effect to run daily calculations after data is loaded
   useEffect(() => {
     if (!mcqState.isLoading && userInfo && !hasCalculatedRef.current) {
-      performDailyCalculations();
+      performDailyCalculations().then(showToast => {
+        if (showToast) {
+          // Store the toast function to be called after streak display closes
+          const streakDisplay = document.querySelector('div[role="dialog"]');
+          if (streakDisplay) {
+            // If streak display is open, wait for it to close
+            const observer = new MutationObserver((mutations, obs) => {
+              if (!document.contains(streakDisplay)) {
+                showToast();
+                obs.disconnect();
+              }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+          } else {
+            // If no streak display, show toast immediately
+            showToast();
+          }
+        }
+      });
       hasCalculatedRef.current = true;
     }
   }, [mcqState.isLoading, userInfo]);
@@ -614,47 +643,71 @@ const DoctorsOfficePage = () => {
   };
 
   const handleGameStart = async (userTestId: string) => {
-    // Play startup sound
-    audio.playSound('flashcard-startup');
-    
-    // Start new testing activity
-    await startActivity({
-      type: 'testing',
-      location: 'Game',
-      metadata: {
+    try {
+      console.log('[DoctorsOfficePage] Starting new game:', {
         userTestId,
-        timestamp: new Date().toISOString()
-      }
-    });
+        largeDialogQuit,
+        isAfterTestDialogOpen
+      });
 
-    // Update game state in the store
-    startGame(userTestId);
-    
-    if (typeof populateRoomsFn === 'function') {
-      const selectedRooms = populateRoomsFn();
-      const roomNames = selectedRooms.map(room => {
-        // Remove numbers from room names and add spaces before capitals
-        return room.id
-          .replace(/\d+/g, '')
-          .replace(/([A-Z])/g, ' $1')
-          .trim();
+      // Reset largeDialogQuit to allow AfterTestFeed to show
+      setLargeDialogQuit(false);
+      
+      // Play startup sound
+      audio.playSound('flashcard-startup');
+      
+      // Apply the coin penalty for starting a game
+      // Since PENALTY_COSTS.START_ANKI_CLINIC is already negative, we pass it directly
+      await updateScore(PENALTY_COSTS.START_ANKI_CLINIC);
+      
+      // Start new testing activity
+      await startActivity({
+        type: 'testing',
+        location: 'Game',
+        metadata: {
+          userTestId,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      // Update game state in the store
+      startGame(userTestId);
+      
+      console.log('[DoctorsOfficePage] Game started successfully:', {
+        userTestId,
+        largeDialogQuit,
+        isAfterTestDialogOpen
       });
       
-      toast.success(
-        <div>
-          <p className="font-bold mb-1 text-gray-900 dark:text-gray-100">New game started!</p>
-          <p className="text-sm mb-1 text-gray-600 dark:text-gray-300">Selected rooms:</p>
-          <ul className="text-sm list-disc list-inside text-gray-600 dark:text-gray-300">
-            {roomNames.map((name, index) => (
-              <li key={`room-name-${index}`}>{name}</li>
-            ))}
-          </ul>
-        </div>,
-        { duration: 5000 }
-      );
-    } else {
-      console.error("populateRoomsFn is not a function");
-      toast.error("Failed to start new game. Please try refreshing the page.");
+      if (typeof populateRoomsFn === 'function') {
+        const selectedRooms = populateRoomsFn();
+        const roomNames = selectedRooms.map(room => {
+          // Remove numbers from room names and add spaces before capitals
+          return room.id
+            .replace(/\d+/g, '')
+            .replace(/([A-Z])/g, ' $1')
+            .trim();
+        });
+        
+        toast.success(
+          <div>
+            <p className="font-bold mb-1 text-gray-900 dark:text-gray-100">New game started!</p>
+            <p className="text-sm mb-1 text-gray-600 dark:text-gray-300">Selected rooms:</p>
+            <ul className="text-sm list-disc list-inside text-gray-600 dark:text-gray-300">
+              {roomNames.map((name, index) => (
+                <li key={`room-name-${index}`}>{name}</li>
+              ))}
+            </ul>
+          </div>,
+          { duration: 5000 }
+        );
+      } else {
+        console.error("[DoctorsOfficePage] populateRoomsFn is not a function");
+        toast.error("Failed to start new game. Please try refreshing the page.");
+      }
+    } catch (error) {
+      console.error('[DoctorsOfficePage] Error starting game:', error);
+      toast.error('Failed to start game. Please try again.');
     }
   };
 
@@ -664,12 +717,37 @@ const DoctorsOfficePage = () => {
     }
   };
 
-  const handleAfterTestDialogClose = () => {
-    setIsAfterTestDialogOpen(false);
-    // Reset game state when dialog is closed
-    resetLocalGameState();
+  const handleAfterTestDialogClose = useCallback(() => {
+    console.log('[DoctorsOfficePage] Closing AfterTestFeed:', {
+      isAfterTestDialogOpen,
+      largeDialogQuit,
+      isGameInProgress
+    });
+
+    // First, end the game to clean up game state
     endGame();
-  };
+    
+    // Then reset local state
+    setIsAfterTestDialogOpen(false);
+    setMcqState(prev => ({ ...prev, totalQuestions: 0, correctQuestions: 0 }));
+    
+    // Reset refs and other component state
+    if (flashcardsDialogRef.current) {
+      flashcardsDialogRef.current.setWrongCards([]);
+      flashcardsDialogRef.current.setCorrectCount(0);
+    }
+    if (afterTestFeedRef.current) {
+      afterTestFeedRef.current.setWrongCards([]);
+    }
+    
+    // Finally, reset the game state
+    resetLocalGameState();
+    
+    // Set large dialog quit to true to prevent reopening
+    setLargeDialogQuit(true);
+
+    console.log('[DoctorsOfficePage] AfterTestFeed closed and state reset');
+  }, [endGame, resetLocalGameState]);
 
 
   // Create wrapper functions to adapt between React's setState and Zustand's actions
@@ -748,6 +826,14 @@ const DoctorsOfficePage = () => {
   // Simplified effect for test completion
   useEffect(() => {
     if (!mcqState.isLoading && completeAllRoom && currentUserTestId) {
+      console.log('[DoctorsOfficePage] Test completion conditions met:', {
+        isLoading: mcqState.isLoading,
+        completeAllRoom,
+        currentUserTestId,
+        isFlashcardsOpen,
+        largeDialogQuit
+      });
+
       const finishTest = async () => {
         try {
           await fetchUserResponses(currentUserTestId);
@@ -773,11 +859,17 @@ const DoctorsOfficePage = () => {
             }),
           }).catch(console.error);
 
+          console.log('[DoctorsOfficePage] Attempting to show AfterTestFeed:', {
+            isFlashcardsOpen,
+            largeDialogQuit,
+            isAfterTestDialogOpen
+          });
+
           if (!isFlashcardsOpen && !largeDialogQuit) {
             setIsAfterTestDialogOpen(true);
           }
         } catch (error) {
-          console.error("Error finishing test:", error);
+          console.error("[DoctorsOfficePage] Error finishing test:", error);
         }
       };
 
@@ -809,14 +901,12 @@ const DoctorsOfficePage = () => {
 
   return (
     <div className={`absolute inset-0 flex bg-transparent text-[--theme-text-color] ${isMobile ? 'p-0' : 'p-4'}`}>
-      <Toaster position="top-center" />
-      
       {showWelcomeDialogue && 
         <WelcomeDialog 
           isOpen={showWelcomeDialogue}
           onUnlocked={()=>setShowWelcomeDialogue(false)}
         />}
-    <Suspense fallback={
+      <Suspense fallback={
         <div className="flex w-full h-full bg-opacity-50 bg-black border-4 border-[--theme-gradient-startstreak] rounded-lg overflow-hidden">
           <div className="w-1/4 p-4 bg-[--theme-gradient-startstreak] animate-pulse" />
           <div className="w-3/4 bg-gray-900/50 animate-pulse rounded-r-lg" />
@@ -924,6 +1014,7 @@ const DoctorsOfficePage = () => {
 
                     <NewGameButton
                       onGameStart={handleGameStart}
+                      onAfterTestDialogOpen={setIsAfterTestDialogOpen}
                     />
                 </div>
                 
@@ -1026,6 +1117,7 @@ const DoctorsOfficePage = () => {
         <div className="absolute top-6 left-4 ml-[calc(25%+16px)] flex gap-2 z-50">
           <NewGameButton
             onGameStart={handleGameStart}
+            onAfterTestDialogOpen={setIsAfterTestDialogOpen}
           />
         </div>
       )}

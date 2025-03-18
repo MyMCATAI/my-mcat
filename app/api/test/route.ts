@@ -43,7 +43,7 @@ async function getOrderedTests(
     },
     include: { category: true },
   });
-  
+
   // Calculate average scores for each concept category and collect content categories
   const conceptCategories: {
     [key: string]: ConceptCategory & { count: number };
@@ -126,7 +126,7 @@ async function getOrderedTests(
       },
     },
   });
-  
+
   // If no tests were fetched, log a warning and fetch all tests without any filter
   if (allTests.length === 0) {
     console.warn(
@@ -175,7 +175,7 @@ async function getOrderedTests(
       .filter((test: any) => test.finishedAt !== null)
       .map((test: any) => test.testId)
   );
-  
+
   const recentlyTakenPassageIds = new Set(
     userTests.map((test: any) => test.passageId)
   );
@@ -184,7 +184,7 @@ async function getOrderedTests(
   const filteredTests = allTests.filter(
     (test: { id: unknown }) => !takenTestIds.has(test.id)
   );
-  
+
   // Further filter tests that have passages that have already been taken
   const finalFilteredTests = filteredTests.filter(
     (test: { questions: any[] }) =>
@@ -295,14 +295,14 @@ async function getOrderedTests(
   const recentScores = await getRecentTestScores(userId);
 
   function getRecommendedDifficulty(scores: number[]) {
-    
+
     // If no scores yet, start with level 1
     if (scores.length === 0) {
       return 1;
     }
-    
+
     const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-    
+
     if (averageScore < 65) {
       return 1;        // Level 1 for < 65%
     }
@@ -351,7 +351,7 @@ async function getOrderedTests(
           taken: false
         } as TestWithRelevance);
       }
-    } 
+    }
     return test;
   }));
 
@@ -372,24 +372,24 @@ async function getOrderedTests(
 
     // Rest of the sorting logic remains the same...
     const recommendedDifficulty = getRecommendedDifficulty(recentScores);
-    
+
     // If neither test has been taken
     if (!a.taken && !b.taken) {
-      
+
       // First, compare by how close they are to the recommended difficulty
       const aDiffDist = Math.abs((a.difficulty || 1) - recommendedDifficulty);
       const bDiffDist = Math.abs((b.difficulty || 1) - recommendedDifficulty);
-      
+
       if (aDiffDist !== bDiffDist) {
         const result = aDiffDist - bDiffDist;
         return result;
       }
-      
+
       // If they're equally close to recommended difficulty, use relevance score
       const result = b.relevanceScore - a.relevanceScore;
       return result;
     }
-    
+
     // Keep existing logic for taken tests
     if (!a.taken) return -1;
     if (!b.taken) return 1;
@@ -399,7 +399,7 @@ async function getOrderedTests(
   // Apply pagination
   let paginatedTests = finalSortedTests.slice(skip, skip + pageSize);
   const totalPages = Math.ceil(finalSortedTests.length / pageSize);
-  
+
   const introTestCompleted = await hasCompletedIntroTest(userId);
 
   if (!introTestCompleted) {
@@ -482,7 +482,7 @@ export async function GET(req: Request) {
       },
     });
 
-    
+
     // Then do our actual count
     const testsCompletedToday = await prisma.userTest.count({
       where: {
@@ -539,7 +539,7 @@ export async function GET(req: Request) {
       });
     } else {
       const testsData = await getOrderedTests(userId, page, pageSize, CARSonly);
-      
+
       return new NextResponse(
         JSON.stringify({ ...testsData, testsCompletedToday }),
         {

@@ -17,6 +17,9 @@ import { QuizIntroDialog } from "./ATS/QuizIntroDialogue";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import DownvoteFeedback from './DownvoteFeedback';
 import { useAudio } from "@/store/selectors";
+import { calculateAnkiReward } from '@/lib/coin/utils';
+import { ATS_ANKI_THRESHOLDS, CARS_THRESHOLDS, PENALTY_COSTS } from '@/lib/coin/constants';
+import { shouldShowCorrectAnswer } from '@/lib/utils';
 /* ---------------------------------------- Types ------------------------------------------ */
 export interface QuizQuestion {
   categoryId: string;
@@ -102,11 +105,12 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
   const [isQuizComplete, setIsQuizComplete] = useState(false);
   const [hasAwardedCoins, setHasAwardedCoins] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [showCorrectAnswer] = useState(() => shouldShowCorrectAnswer());
 
   const handleStartQuiz = async () => {
     try {
       setIsStarting(true);
-      await decrementScore(); // Spend 1 coin to start
+      await updateScore(PENALTY_COSTS.START_ATS_QUIZ);
       setShowIntroDialog(false);
       setHasStarted(true);
       await fetchQuestions();
@@ -368,19 +372,26 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
       
       if (!hasAwardedCoins) {
         try {
-          if (score >= 100) {
-            await updateScore(2);
-            audio.playSound('fanfare');
-            toast.success("Congratulations! You earned 2 coins for a perfect score! 🎉");
-          } else if (score >= 70) {
-            await updateScore(1);
-            audio.playSound('levelup');
-            toast.success("Congratulations! You earned 1 coin for scoring above 70%! 🎉");
+          const coinsEarned = calculateAnkiReward(score);
+          if (coinsEarned > 0) {
+            await updateScore(coinsEarned);
+            if (score >= ATS_ANKI_THRESHOLDS.GREAT) {
+              audio.playSound('fanfare');
+              toast.success(`Congratulations! You earned ${coinsEarned} coins for a perfect score! 🎉`);
+            } else if (score >= ATS_ANKI_THRESHOLDS.GOOD) {
+              audio.playSound('levelup');
+              toast.success(`Congratulations! You earned ${coinsEarned} coins for your excellent performance! 🎉`);
+            } else if (score >= ATS_ANKI_THRESHOLDS.OKAY) {
+              toast.success(`You earned ${coinsEarned} coin for scoring above ${ATS_ANKI_THRESHOLDS.OKAY}%! 🎉`);
+            }
+          } else if (coinsEarned < 0) {
+            await updateScore(coinsEarned);
+            toast.error(`You lost ${Math.abs(coinsEarned)} coin due to low performance.`);
           }
           setHasAwardedCoins(true);
         } catch (error) {
-          console.error("Error incrementing score:", error);
-          toast.error("Failed to award coin");
+          console.error("Error updating score:", error);
+          toast.error("Failed to update coins");
         }
       }
 
@@ -445,26 +456,34 @@ const Quiz: React.FC<QuizProps> = ({ category, shuffle = false, setChatbotContex
                 "bg-[--theme-leaguecard-color] hover:bg-[--theme-hover-color]";
             }
 
+            // Show correct answer indicator if enabled
+            const correctAnswerIndicator = showCorrectAnswer && isCorrectAnswer && !hasAnswered ? (
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[--theme-text-color] opacity-50">
+                ✓
+              </span>
+            ) : null;
+
             return (
               <button
                 key={index}
                 onClick={() => handleAnswerSelect(option)}
                 disabled={hasAnswered}
-                className={buttonClass}
+                className={`${buttonClass} relative`}
               >
                 <Latex>
                   {String.fromCharCode(65 + index)}. {option}
                 </Latex>
+                {correctAnswerIndicator}
               </button>
             );
           })}
         </div>
 
         {/* Explanation Section */}
-        {hasAnswered && explanations && (
+        {(hasAnswered || showCorrectAnswer) && explanations && (
           <div className="mt-6 p-4 rounded-lg">
             <h3 className="text-lg font-semibold text-[--theme-hover-color] mb-2">
-              Explanation
+              {showCorrectAnswer && !hasAnswered ? "Answer: " : ""}Explanation
             </h3>
             <div className="text-[--theme-text-color]">
               <ContentRenderer

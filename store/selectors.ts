@@ -12,7 +12,7 @@ export const useUI = () => {
   const setTheme = useUIStore((state) => state.setTheme)
   const setWindowSize = useUIStore((state) => state.setWindowSize)
   const setCurrentRoute = useUIStore((state) => state.setCurrentRoute)
-  
+
   return {
     theme,
     window,
@@ -43,7 +43,7 @@ export const useUser = () => {
   const onboardingComplete = useStore((state) => state.onboardingComplete)
   const lastVisitedRoute = useStore((state) => state.lastVisitedRoute)
   const onboardingRoute = useStore((state) => state.onboardingRoute)
-  
+
   // Profile actions
   const setCompletedSteps = useStore((state) => state.setCompletedSteps)
   const addCompletedStep = useStore((state) => state.addCompletedStep)
@@ -53,21 +53,21 @@ export const useUser = () => {
   const setOnboardingComplete = useStore((state) => state.setOnboardingComplete)
   const setLastVisitedRoute = useStore((state) => state.setLastVisitedRoute)
   const setOnboardingRoute = useStore((state) => state.setOnboardingRoute)
-  
+
   // User info state and actions
   const userInfo = useStore((state) => state.userInfo)
   const isSubscribed = useStore((state) => state.isSubscribed)
   const setIsSubscribed = useStore((state) => state.setIsSubscribed)
-  
+
   // User stats state and actions
   const coins = useStore((state) => state.coins)
   const statsLoading = useStore((state) => state.statsLoading)
   const updateCoins = useStore((state) => state.updateCoins)
   const updateCoinsDisplay = useStore((state) => state.updateCoinsDisplay)
-  
+
   // Shared actions
   const refreshUserInfo = useStore((state) => state.refreshUserInfo)
-  
+
   return {
     // Profile state and actions
     profile,
@@ -81,7 +81,7 @@ export const useUser = () => {
     onboardingComplete,
     lastVisitedRoute,
     onboardingRoute,
-    
+
     // Profile actions
     setCompletedSteps,
     addCompletedStep,
@@ -91,18 +91,18 @@ export const useUser = () => {
     setOnboardingComplete,
     setLastVisitedRoute,
     setOnboardingRoute,
-    
+
     // User info state and actions
     userInfo,
     isSubscribed,
     setIsSubscribed,
-    
+
     // User stats state and actions
     coins,
     statsLoading,
     updateCoins,
     updateCoinsDisplay,
-    
+
     // Shared actions
     refreshUserInfo,
   }
@@ -117,7 +117,7 @@ export const useGame = () => {
   const patientsPerDay = useGameStore((state) => state.patientsPerDay)
   const totalPatients = useGameStore((state) => state.totalPatients)
   const streakDays = useGameStore((state) => state.streakDays)
-  
+
   // Active game session
   const isGameInProgress = useGameStore((state) => state.isGameInProgress)
   const currentUserTestId = useGameStore((state) => state.currentUserTestId)
@@ -125,13 +125,13 @@ export const useGame = () => {
   const flashcardRoomId = useGameStore((state) => state.flashcardRoomId)
   const activeRooms = useGameStore((state) => state.activeRooms)
   const completeAllRoom = useGameStore((state) => state.completeAllRoom)
-  
+
   // Test results
   const userResponses = useGameStore((state) => state.userResponses)
   const correctCount = useGameStore((state) => state.correctCount)
   const wrongCount = useGameStore((state) => state.wrongCount)
   const testScore = useGameStore((state) => state.testScore)
-  
+
   // Game actions
   const startGame = useGameStore((state) => state.startGame)
   const endGame = useGameStore((state) => state.endGame)
@@ -149,7 +149,7 @@ export const useGame = () => {
   const updateUserLevel = useGameStore((state) => state.updateUserLevel)
   const setStreakDays = useGameStore((state) => state.setStreakDays)
   const setTotalPatients = useGameStore((state) => state.setTotalPatients)
-  
+
   return {
     // Game progress
     userRooms,
@@ -157,7 +157,7 @@ export const useGame = () => {
     patientsPerDay,
     totalPatients,
     streakDays,
-    
+
     // Active game session
     isGameInProgress,
     currentUserTestId,
@@ -165,13 +165,13 @@ export const useGame = () => {
     flashcardRoomId,
     activeRooms,
     completeAllRoom,
-    
+
     // Test results
     userResponses,
     correctCount,
     wrongCount,
     testScore,
-    
+
     // Game actions
     startGame,
     endGame,
@@ -204,6 +204,7 @@ export const useOnboardingStatus = () => ({
   lastVisitedRoute: useStore(state => state.lastVisitedRoute),
   onboardingRoute: useStore(state => state.onboardingRoute)
 })
+export const useProfilePhoto = () => useStore(state => state.profile?.profilePhoto)
 
 /* --- Audio Selector ---- */
 // Consolidated audio selector that provides all audio-related state and actions
@@ -215,7 +216,7 @@ export const useAudio = () => {
   const volume = useAudioStore((state) => state.volume)
   const songQueue = useAudioStore((state) => state.songQueue)
   const audioContext = useAudioStore((state) => state.audioContext)
-  
+
   // Audio actions
   const playMusic = useAudioStore((state) => state.playMusic)
   const stopMusic = useAudioStore((state) => state.stopMusic)
@@ -224,32 +225,32 @@ export const useAudio = () => {
   const stopLoop = useAudioStore((state) => state.stopLoop)
   const setVolume = useAudioStore((state) => state.setVolume)
   const initializeAudioContext = useAudioStore((state) => state.initializeAudioContext)
-  
+
   // Theme-music integration
   const handleThemeChange = useAudioStore((state) => state.handleThemeChange)
-  
+
   // Song information
   const getCurrentSongTitle = useAudioStore((state) => state.getCurrentSongTitle)
-  
+
   // Queue system
   const skipToNext = useAudioStore((state) => state.skipToNext)
   const togglePlayPause = useAudioStore((state) => state.togglePlayPause)
   const setSongQueue = useAudioStore((state) => state.setSongQueue)
-  
+
   // Initialize audio context on first use - but only once per component instance
   const hasInitializedRef = useRef(false);
-  
+
   useEffect(() => {
     if (hasInitializedRef.current) return;
-    
+
     console.debug('[useAudio] Initializing audio context on hook mount')
     hasInitializedRef.current = true;
-    
+
     initializeAudioContext().catch(error => {
       console.error('[useAudio] Failed to initialize audio context:', error);
     });
   }, [initializeAudioContext]);
-  
+
   return {
     // Audio state
     isPlaying,
@@ -258,7 +259,7 @@ export const useAudio = () => {
     volume,
     songQueue,
     audioContext,
-    
+
     // Audio actions
     playMusic,
     stopMusic,
@@ -267,13 +268,13 @@ export const useAudio = () => {
     stopLoop,
     setVolume,
     initializeAudioContext,
-    
+
     // Theme-music integration
     handleThemeChange,
-    
+
     // Song information
     getCurrentSongTitle,
-    
+
     // Queue system
     skipToNext,
     togglePlayPause,
@@ -288,19 +289,19 @@ export const useVocab = () => {
   const vocabList = useStore((state) => state.vocabList)
   const showVocabList = useStore((state) => state.showVocabList)
   const isCmdIEnabled = useStore((state) => state.isCmdIEnabled)
-  
+
   // Vocab actions
   const addVocabWord = useStore((state) => state.addVocabWord)
   const removeVocabWord = useStore((state) => state.removeVocabWord)
   const toggleVocabList = useStore((state) => state.toggleVocabList)
   const toggleCmdI = useStore((state) => state.toggleCmdI)
-  
+
   return {
     // State
     vocabList,
     showVocabList,
     isCmdIEnabled,
-    
+
     // Actions
     addVocabWord,
     removeVocabWord,
@@ -319,17 +320,17 @@ export const useClinicData = () => {
   // Clinic data state
   const reportData = useGameStore((state) => state.reportData);
   const isLoading = useGameStore((state) => state.isClinicDataLoading);
-  
+
   // Clinic data actions
   const fetchData = useGameStore((state) => state.fetchClinicData);
   const resetData = useGameStore((state) => state.resetClinicData);
   const performDailyCalculations = useGameStore((state) => state.performDailyCalculations);
-  
+
   // Game state needed for clinic data
   const userRooms = useGameStore((state) => state.userRooms);
   const streakDays = useGameStore((state) => state.streakDays);
   const totalPatients = useGameStore((state) => state.totalPatients);
-  
+
   // Enhanced functionality for page.tsx
   const initializeClinicData = useCallback(async () => {
     try {
@@ -340,7 +341,7 @@ export const useClinicData = () => {
       return false;
     }
   }, [fetchData]);
-  
+
   // Daily patient calculation with toast notifications now managed by the store
   const calculateDailyPatients = useCallback(async () => {
     try {
@@ -351,7 +352,7 @@ export const useClinicData = () => {
       return false;
     }
   }, [performDailyCalculations]);
-  
+
   return {
     // State
     reportData,
@@ -359,11 +360,11 @@ export const useClinicData = () => {
     userRooms,
     streakDays,
     totalPatients,
-    
+
     // Actions
     fetchData,
     resetData,
-    
+
     // Enhanced functionality
     initializeClinicData,
     calculateDailyPatients,

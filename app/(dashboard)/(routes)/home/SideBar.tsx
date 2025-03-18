@@ -26,6 +26,7 @@ import { PurchaseButton } from '@/components/purchase-button';
 import Leaderboard from "@/components/leaderboard/Leaderboard";
 import { useAudio } from '@/store/selectors';
 import { useUserInfo } from '@/hooks/useUserInfo';
+import { TASK_REWARDS } from "@/lib/coin/constants";
 
 interface Task {
   text: string;
@@ -877,11 +878,11 @@ Package: ${formData.selectedPackage === 'free' ? 'Free Consultation' : formData.
           await fetch("/api/user-info", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount: 1 }),
+            body: JSON.stringify({ amount: TASK_REWARDS.COMPLETE_TASK }),
           });
           
           toast.success(
-            `You've completed all tasks for ${activity.activityTitle}! You earned a coin!`
+            `You've completed all tasks for ${activity.activityTitle}! You earned ${TASK_REWARDS.COMPLETE_TASK} coin!`
           );
         } else {
           toast.success(

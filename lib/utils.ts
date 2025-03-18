@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function absoluteUrl(path: string){
+export function absoluteUrl(path: string) {
   return `${process.env.NEXT_PUBLIC_APP_URL}${path}`;
 }
 
@@ -37,7 +37,7 @@ interface TranscriptSegment {
 export function parseTranscript(transcript: string): TranscriptSegment[] {
   const segments: TranscriptSegment[] = [];
   const parts = transcript.split(/\[(\d{2}):(\d{2}):?(\d{2})?\]/);
-  
+
   let currentText = parts[0].trim(); // Text before first timestamp
   if (currentText) {
     segments.push({ timestamp: 0, text: currentText });
@@ -50,7 +50,7 @@ export function parseTranscript(transcript: string): TranscriptSegment[] {
     const hours = parseInt(parts[i + 2] || '0');
     const timestamp = hours * 3600 + minutes * 60 + seconds;
     const text = parts[i + 3]?.trim();
-    
+
     if (text) {
       segments.push({ timestamp, text });
     }
@@ -63,15 +63,15 @@ export function getRelevantTranscript(transcript: string, currentTime: number, m
   const segments = parseTranscript(transcript);
   let relevantText = '';
   let wordCount = 0;
-  
+
   // Find the current segment
   const currentSegmentIndex = segments.findIndex(seg => seg.timestamp > currentTime);
   const startIndex = currentSegmentIndex === -1 ? segments.length - 1 : currentSegmentIndex - 1;
-  
+
   // Start from current segment and work backwards
   for (let i = startIndex; i >= 0; i--) {
     const segmentWords = segments[i].text.split(/\s+/);
-    
+
     // Check if adding this segment would exceed word limit
     if (wordCount + segmentWords.length > maxWords) {
       // Add partial segment up to word limit
@@ -80,7 +80,7 @@ export function getRelevantTranscript(transcript: string, currentTime: number, m
       relevantText = partialText + ' ' + relevantText;
       break;
     }
-    
+
     // Add full segment
     relevantText = segments[i].text + ' ' + relevantText;
     wordCount += segmentWords.length;
@@ -102,11 +102,11 @@ export interface TaskMapping {
 export const parseDefaultTasks = (csvContent: string): TaskMapping => {
   const lines = csvContent.split('\n').filter(line => line.trim());
   const mapping: TaskMapping = {};
-  
+
   // Skip header row
   for (let i = 1; i < lines.length; i++) {
     const row = lines[i].split(',').map(cell => cell.trim());
-    
+
     // CSV format: Minutes,Task,Task 1,Task 2,Task 3
     const minutes = row[0];
     const taskName = row[1];
@@ -116,7 +116,7 @@ export const parseDefaultTasks = (csvContent: string): TaskMapping => {
         text: task,
         completed: false
       }));
-    
+
     if (taskName) {
       // If taskName already exists, append new tasks to existing array
       if (mapping[taskName]) {
@@ -127,7 +127,7 @@ export const parseDefaultTasks = (csvContent: string): TaskMapping => {
       }
     }
   }
-  
+
   return mapping;
 };
 
@@ -147,7 +147,7 @@ export async function checkAllActivitiesComplete(userId: string): Promise<boolea
     },
   });
 
-  return todaysActivities.length > 0 && 
+  return todaysActivities.length > 0 &&
     todaysActivities.every(activity => activity.status === "Complete");
 }
 
@@ -159,7 +159,7 @@ export const shouldUpdateKnowledgeProfiles = (): boolean => {
 
   const lastUpdateDate = new Date(lastUpdate);
   const currentDate = new Date();
-  
+
   // Check if last update was on a different day
   return lastUpdateDate.toDateString() !== currentDate.toDateString();
 };
@@ -176,14 +176,14 @@ export const fetchDefinitionAndAddToVocab = async (
     const response = await fetch(
       `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`
     );
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch definition');
     }
-    
+
     const data = await response.json();
     const firstEntry = data[0];
-    
+
     const uniqueDefinitions = firstEntry.meanings.reduce(
       (acc: any[], meaning: any) => {
         if (
@@ -242,7 +242,7 @@ export function isMobileButNotIpad(): boolean {
     /BlackBerry/i,
     /Windows Phone/i
   ];
-  
+
   const isIpad = /iPad/i.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
@@ -259,6 +259,11 @@ export function isWithin14Days(date: Date): boolean {
   const now = new Date();
   const fourteenDaysAgo = new Date();
   fourteenDaysAgo.setDate(now.getDate() - 14);
-  
+
   return date >= fourteenDaysAgo;
+}
+
+// Simple environment variable check for showing correct answers
+export function shouldShowCorrectAnswer(): boolean {
+  return process.env.NEXT_PUBLIC_SHOW_CORRECT_ANSWER === 'true';
 }

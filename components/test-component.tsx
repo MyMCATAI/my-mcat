@@ -19,6 +19,10 @@ import { calculateScore, extractQuotedStrings, saveAnnotations } from "@/lib/tes
 import { testApi } from "@/services/testApi";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useAudio, useVocab } from "@/store/selectors";
+import { calculateCarsReward } from '@/lib/coin/utils';
+import { CARS_THRESHOLDS } from '@/lib/coin/constants';
+import { toast } from 'react-hot-toast';
+import { shouldShowCorrectAnswer } from "@/lib/utils";
 
 interface TestComponentProps {
   testId: string;
@@ -118,6 +122,8 @@ const TestComponent: React.FC<TestComponentProps> = ({
   }>({ sendMessage: () => {} });
 
   const audio = useAudio();
+
+  const showCorrectAnswer = shouldShowCorrectAnswer();
 
   // Handler to set the active editor
   const handleSetActiveEditor = (editor: ActiveEditor) => {
@@ -451,19 +457,10 @@ const TestComponent: React.FC<TestComponentProps> = ({
       const techniqueStars = technique;
       
       const totalStars = scoreStars + timingStars + techniqueStars;
+      const difficulty = currentPassage?.difficulty || 1;
 
-      // New coin reward logic
-      let coinsEarned = 0;
-      if (totalStars === 9) {
-        // Check if test difficulty is 3 or higher for 3 coins
-        if (currentPassage && currentPassage.difficulty >= 3) {
-          coinsEarned = 3; // 3 coins for perfect score on difficult passage
-        } else {
-          coinsEarned = 2; // 2 coins for perfect score on easier passage
-        }
-      } else if (totalStars >= 6) {
-        coinsEarned = 1; // 1 coin for 6+ stars
-      }
+      // Calculate coins using the CARS-specific function
+      const coinsEarned = calculateCarsReward(totalStars, difficulty);
 
       // Update user's score if coins were earned
       if (coinsEarned > 0) {
@@ -476,12 +473,24 @@ const TestComponent: React.FC<TestComponentProps> = ({
         if (!scoreResponse.ok) {
           throw new Error("Failed to update user score");
         }
+
+        if (totalStars === 9) {
+          audio.playSound('fanfare');
+          const difficultyText = difficulty >= 3 ? 'difficult ' : '';
+          toast.success(`Perfect score on ${difficultyText}passage! You earned ${coinsEarned} coins! 🌟`);
+        } else if (totalStars >= 6) {
+          audio.playSound('levelup');
+          toast.success(`Excellent work! You earned ${coinsEarned} coins! 🎉`);
+        }
+      } else {
+        toast.error(`Keep practicing! You'll earn coins when you improve your performance.`);
       }
 
       setShowScorePopup(true);
       onTestComplete && onTestComplete(score);
-    } catch (err) {
-      console.error("Error finishing test:", err);
+    } catch (error) {
+      console.error('Error completing test:', error);
+      toast.error('Failed to complete test');
     } finally {
       setIsSubmitting(false);
     }

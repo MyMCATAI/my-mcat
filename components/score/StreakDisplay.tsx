@@ -1,142 +1,192 @@
-// components/streak/StreakPopup.tsx
+"use client";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
 import { FaFire } from "react-icons/fa";
 import { useAudio } from "@/store/selectors";
-import { useUserInfo } from "@/hooks/useUserInfo";
+import { useUserInfo } from '@/hooks/useUserInfo';
 
-interface StreakPopupProps {
-  streak: number;
-  isOpen: boolean;
-  onClose: () => void;
+/* --- Constants ----- */
+const ANIMATION_DURATION = 300;
+
+type StreakThreshold = 1 | 7 | 14 | 30;
+
+const STREAK_MESSAGES = {
+  30: {
+    image: "/kalypsodancing.gif",
+    subtitle: "You're a rockstar!"
+  },
+  14: {
+    image: "/kalypsofloatinghappy.gif",
+    subtitle: "I'm so proud of you! ❤️"
+  },
+  7: {
+    image: "/kalypsothumbs.gif",
+    subtitle: "You're becoming my bestie now!"
+  },
+  1: {
+    image: "/kalypsoyouate.gif",
+    subtitle: "You ate with that!"
+  }
+} as const satisfies Record<StreakThreshold, { image: string; subtitle: string }>;
+
+/* ----- Types ---- */
+type StreakMessage = {
+  image: string;
+  title: string;
+  subtitle: string;
+} | null;
+
+interface StreakDisplayProps {
+  onClose?: () => void;
 }
 
-const StreakDisplay = ({ streak, isOpen, onClose }: StreakPopupProps) => {
-  const [previousStreak, setPreviousStreak] = useState(streak);
+const StreakDisplay = ({ onClose }: StreakDisplayProps) => {
+  /* ---- State ----- */
+  const { userInfo } = useUserInfo();
+  const [isOpen, setIsOpen] = useState(false);
+  const [showContent, setShowContent] = useState(false);
   const audio = useAudio();
-  const { userInfo, isLoading } = useUserInfo();
 
-  useEffect(() => {    
-    if (streak > previousStreak && streak > 1) {  // Only play on streak increases
+  /* ---- Refs --- */
+  const closeTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastShownStreakRef = useRef<number>(0);
+
+  /* ----- Callbacks --- */
+  const getStreakMessage = (streak: number): StreakMessage => {
+    if (streak <= 1) return null;
+
+    // Find the highest threshold that the streak exceeds
+    const threshold = Object.keys(STREAK_MESSAGES)
+      .map(Number)
+      .sort((a, b) => b - a)
+      .find(t => streak >= t) ?? 1;
+
+    const { image, subtitle } = STREAK_MESSAGES[threshold as StreakThreshold];
+    
+    return {
+      image,
+      title: `${streak} DAY STREAK!`,
+      subtitle
+    };
+  };
+
+  /* --- Animations & Effects --- */
+  const streak = userInfo?.streak ?? 0;
+
+  useEffect(() => {
+    if (streak <= 1) return;
+    if (streak === lastShownStreakRef.current) return;
+
+    const lastVisit = localStorage.getItem('lastVisitDate');
+    const today = new Date().toDateString();
+
+    if (lastVisit !== today) {
+      setIsOpen(true);
+      lastShownStreakRef.current = streak;
       if (streak >= 30) {
         audio.playSound('streakmonth');
       } else {
         audio.playSound('streakdaily');
       }
+      localStorage.setItem('lastVisitDate', today);
     }
-    
-    setPreviousStreak(streak);
-  }, [streak, previousStreak, audio, isOpen, userInfo, isLoading]);
+  }, [streak, audio]);
 
-  const getStreakMessage = (streak: number) => {
-    if (streak <= 1) {
-      return null;
+  useEffect(() => {
+    if (isOpen) {
+      // Slight delay to ensure dialog is mounted
+      const timer = setTimeout(() => setShowContent(true), 100);
+      return () => clearTimeout(timer);
     } else {
-      return {
-        image: streak >= 30
-          ? "/kalypsodancing.gif"
-          : streak >= 14 
-            ? "/kalypsofloatinghappy.gif"
-            : streak >= 7 
-              ? "/kalypsothumbs.gif"
-              : "/kalypsoyouate.gif",
-        title: `${streak} DAY STREAK!`,
-        subtitle: streak >= 30
-          ? "You're a rockstar!"
-          : streak >= 14
-            ? "I'm so proud of you! ❤️"
-            : streak >= 7
-              ? "You're becoming my bestie now!"
-              : "You ate with that!",
-        style: {
-          objectPosition: streak >= 30
-            ? 'center -50%'  // Dancing Kalypso position
-            : streak >= 14
-              ? 'center -100%'  // Floating happy Kalypso position
-              : streak >= 7
-                ? 'center -80%'  // Thumbs up Kalypso position
-                : 'center center'  // Default typing position
-        }
-      };
+      setShowContent(false);
+    }
+  }, [isOpen]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  /* ---- Event Handlers ----- */
+  const handleOpenChange = (open: boolean) => {
+    // Clear any existing timeout
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
+
+    if (!open) {
+      // First fade out the content
+      setShowContent(false);
+      // Then close the dialog after animation completes
+      closeTimeoutRef.current = setTimeout(() => {
+        setIsOpen(false);
+        closeTimeoutRef.current = undefined;
+        onClose?.();
+      }, ANIMATION_DURATION);
+    } else {
+      setIsOpen(true);
     }
   };
 
   const message = getStreakMessage(streak);
-
   if (!message) return null;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-          <DialogContent 
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-0 rounded-2xl shadow-2xl max-w-[36rem] w-full z-[9999] overflow-hidden border-0"
-            style={{ 
-              backgroundColor: 'var(--theme-leaguecard-color)'
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent 
+        className="bg-[--theme-leaguecard-color] p-6 pt-[30px] rounded-2xl shadow-2xl max-w-[36rem] w-full mx-auto flex flex-col items-center gap-4 border-0 overflow-visible fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none"
+      >
+        {/* Static Background */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <FaFire 
+            className="text-[20rem] opacity-10" 
+            style={{ color: 'var(--theme-hover-color)', transform: 'translateY(-5rem)' }}
+          />
+        </div>
+
+        {/* Content Container */}
+        <div className="relative z-10 flex flex-col items-center gap-4 w-full">
+          {/* Kalypso Image */}
+          <div 
+            className={`relative w-[24rem] h-[18rem] rounded-xl pointer-events-none overflow-hidden transition-opacity duration-300 ${showContent ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <Image
+              src={message.image}
+              alt="Kalypso"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+
+          {/* Streak Counter */}
+          <div 
+            className={`flex items-center gap-4 px-6 py-3 rounded-full shadow-lg transition-all duration-300 ${showContent ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+            style={{
+              background: `linear-gradient(to right, var(--theme-gradient-startstreak), var(--theme-gradient-endstreak))`
             }}
           >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="relative"
-            >
-              {/* Streak Fire Background */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-10">
-                <FaFire 
-                  className="text-[20rem]" 
-                  style={{ color: 'var(--theme-hover-color)' }}
-                />
-              </div>
+            <FaFire className="text-4xl text-white animate-pulse" />
+            <h2 className="text-[2.5rem] font-bold text-white tracking-wider">
+              {message.title}
+            </h2>
+          </div>
 
-              <div className="flex flex-col items-center justify-center p-8 space-y-6 relative z-10">
-                {/* Kalypso Image */}
-                <div className="relative w-[24rem] h-[16rem] rounded-xl overflow-hidden transform hover:scale-105 transition-transform duration-300">
-                  <Image
-                    src={message.image}
-                    alt="Kalypso"
-                    fill
-                    className="object-cover"
-                    style={{ 
-                      ...message.style
-                    }}
-                  />
-                </div>
-
-                {/* Streak Counter */}
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                  className="flex items-center gap-4 px-6 py-3 rounded-full shadow-lg"
-                  style={{
-                    background: `linear-gradient(to right, var(--theme-gradient-startstreak), var(--theme-gradient-endstreak))`
-                  }}
-                >
-                  <FaFire className="text-4xl text-white animate-pulse" />
-                  <h2 className="text-[2.5rem] font-bold text-white tracking-wider">
-                    {message.title}
-                  </h2>
-                </motion.div>
-
-                {/* Subtitle */}
-                <motion.p 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-center text-[1.5rem] font-medium"
-                  style={{ color: 'var(--theme-text-color)' }}
-                >
-                  {message.subtitle}
-                </motion.p>
-              </div>
-            </motion.div>
-          </DialogContent>
-        </Dialog>
-      )}
-    </AnimatePresence>
+          {/* Subtitle */}
+          <p 
+            className={`text-center text-[1.5rem] font-medium transition-all duration-300 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            style={{ color: 'var(--theme-text-color)' }}
+          >
+            {message.subtitle}
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

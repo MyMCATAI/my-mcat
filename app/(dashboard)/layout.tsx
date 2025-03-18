@@ -1,17 +1,21 @@
 'use client'
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
 import Script from 'next/script';
+import { Toaster } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 import { useUI, useUser } from "@/store/selectors";
 import { useUserInfo } from "@/hooks/useUserInfo";
+import { toastConfig } from '@/lib/toast';
 
 import Navbar from "@/components/navbar/navbar";
 import ThemeInitializer from "@/components/home/ThemeInitializer";
 import StoreInitializer from '@/components/StoreInitializer';
+import StreakDisplay from '@/components/score/StreakDisplay';
 
 /* --- Types ---- */
 interface LayoutProps {
@@ -91,6 +95,9 @@ const DashboardLayoutContent = ({ children }: DashboardLayoutContentProps) => {
       <main className="w-full flex-1 relative">
         {children}
       </main>
+      {isLoaded && isSignedIn && (
+        <StreakDisplay />
+      )}
     </div>
    );
 }

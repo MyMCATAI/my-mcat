@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
+import { TASK_REWARDS } from "@/lib/coin/constants";
 
 export async function POST(req: Request) {
   const { userId } = auth();
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
 
     // Check if the test has already been reviewed
     if (userTest.reviewedAt) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         message: "This test has already been reviewed. No additional points awarded.",
         alreadyReviewed: true
       });
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
     // Increment user score
     const updatedUserInfo = await prisma.userInfo.update({
       where: { userId },
-      data: { score: { increment: 1 } },
+      data: { score: { increment: TASK_REWARDS.COMPLETE_REVIEW } },
     });
 
     return NextResponse.json({

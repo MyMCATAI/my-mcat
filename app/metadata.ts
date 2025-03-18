@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.mymcat.ai'),
-  title: 'MyMCAT - High-Tech AI Platform for Active and Adaptive MCAT Prep',
-  description: 'Our AI-powered platform actively adapts to your learning patterns, using high-tech analytics to transform passive studying into dynamic, personalized MCAT preparation that evolves with you.',
+  title: 'MyMCAT',
+  description: 'MCAT preparation made simple',
   keywords: 'AI MCAT prep, adaptive learning technology, high-tech medical education, active learning platform, personalized MCAT AI, real-time adaptation, medical school admission, learning analytics, CARS mastery, Fee Assistance Program',
   robots: {
     index: true,

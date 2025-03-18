@@ -2,7 +2,7 @@ import React, { useState, useEffect, memo } from 'react';
 import { useClerk, useUser as useClerkUser } from '@clerk/nextjs';
 import { FaUser, FaUserCog, FaSignOutAlt } from 'react-icons/fa';
 import UserProfileModal from '../social/profile/UserProfileModal';
-import { useUser } from '@/store/selectors';
+import { useProfilePhoto } from '@/store/selectors';
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
 
@@ -27,14 +27,14 @@ const ProfileImage = memo(({ profilePhoto }: { profilePhoto: string | undefined 
 
 ProfileImage.displayName = 'ProfileImage';
 
-export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
+export const ProfileButton = memo(({hideProfile}: {hideProfile?: boolean}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
   const buttonRef = React.useRef<HTMLButtonElement>(null);
   const { openUserProfile, signOut } = useClerk();
   const { user } = useClerkUser();
-  const { profile, profileLoading } = useUser();
+  const profilePhoto = useProfilePhoto();
 
   // Handle clicks outside menu
   useEffect(() => {
@@ -67,14 +67,8 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
           <div className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
         </div>
         
-        {/* Profile Image with Loading State */}
-        {profileLoading ? (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-[--theme-hover-color] border-t-transparent" />
-          </div>
-        ) : (
-          <ProfileImage profilePhoto={profile?.profilePhoto} />
-        )}
+        {/* Profile Image */}
+        <ProfileImage profilePhoto={profilePhoto} />
       </button>
 
       {/* Menu Dropdown - Rendered as a Portal */}
@@ -131,4 +125,8 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
       />
     </>
   );
-}; 
+});
+
+ProfileButton.displayName = 'ProfileButton';
+
+export default ProfileButton; 

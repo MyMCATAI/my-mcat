@@ -1,10 +1,9 @@
 //app/(dashboard)/(routes)/ankiclinic/AfterTestFeed.tsx
-import React, { useState, useEffect, useRef, useCallback, ReactNode, forwardRef, useImperativeHandle } from 'react';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import React, { useState, useEffect, useRef, useCallback, ReactNode, forwardRef, useImperativeHandle, useMemo } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { motion } from 'framer-motion';
 import AnimatedStar from "./AnimatedStar";
 import { Button } from "@/components/ui/button";
-import { cleanQuestion, cleanAnswer } from './utils/testUtils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { animated, useSpring } from 'react-spring';
 import ChatBot from "@/components/chatbot/ChatBotFlashcard";
@@ -17,6 +16,8 @@ import VideoRecommendations from './components/VideoRecommendations';
 import { useAudio } from '@/store/selectors';
 import { useGame } from '@/store/selectors';
 import { useUserInfo } from '@/hooks/useUserInfo';
+import { ATS_ANKI_THRESHOLDS } from '@/lib/coin/constants';
+import { calculateAnkiReward } from '@/lib/coin/utils';
 
 /* ------------------------------------------ Types ------------------------------------------ */
 interface LargeDialogProps {
@@ -26,6 +27,12 @@ interface LargeDialogProps {
   children?: ReactNode;
   largeDialogQuit: boolean;
   setLargeDialogQuit: (quit: boolean) => void;
+}
+
+interface ConceptData {
+  correct: number;
+  incorrect: number;
+  total: number;
 }
 
 interface FeedItem {
@@ -104,15 +111,14 @@ const STAR_THRESHOLDS = {
   POOR: 20,
 } as const;
 
-const COIN_THRESHOLDS = {
-  PERFECT_SCORE: 100,
-  HIGH_SCORE: 70,
-} as const;
-
-const COIN_REWARDS = {
-  PERFECT: 2,
-  HIGH: 1,
-} as const;
+const LOADING_REVIEW_MESSAGES: string[] = [
+  "Paws... Kalypso is carefully preparing your review 🐾...",
+  "Kalypso is giving your review a thorough cat scan 🏥🐱...",
+  "Kalypso is consulting the Great Book of Meowdicine 📖🐾...",
+  "Kalypso is running a full diagnostic—complete with purrfect analysis 😺💉...",
+  "Kalypso is double-checking with the lab rats 🐭🔬...",
+  "Kalypso is preparing a meowvaluation 🏥🐾..."
+];
 
 /* ----------------------------------------------------------------------------------------- */
 /* --------------------------------------- Component --------------------------------------- */
@@ -130,16 +136,14 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   const audio = useAudio();
   const router = useRouter();
   const { user } = useUser();
-  const { isSubscribed } = useUserInfo();
-  const { userResponses, correctCount, wrongCount } = useGame();
+  const { isSubscribed, updateScore } = useUserInfo();
+  const { userResponses, correctCount, wrongCount, isGameInProgress } = useGame();
+  
+  // Only keep refs that need to persist between renders without triggering re-renders
   const chatbotRef = useRef<{
     sendMessage: (message: string) => void;
   }>({ sendMessage: () => {} });
-  const levelUpSound = useRef<HTMLAudioElement | null>(null);
-  const fanfareSound = useRef<HTMLAudioElement | null>(null);
   const videoScrollContainerRef = useRef<HTMLDivElement>(null);
-  const [showLeftScroll, setShowLeftScroll] = useState(false);
-  const [showRightScroll, setShowRightScroll] = useState(false);
 
   /* --------------------------------------- State ---------------------------------------- */
   const [review, setReview] = useState<Review | null>(null);
@@ -150,11 +154,20 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   const [wrongCards, setWrongCards] = useState<WrongCard[]>([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState(() => 
+    LOADING_REVIEW_MESSAGES[Math.floor(Math.random() * LOADING_REVIEW_MESSAGES.length)]
+  );
   const [chatbotContext, setChatbotContext] = useState({
     contentTitle: "",
     context: "",
   });
   const [recommendedVideos, setRecommendedVideos] = useState<VideoRecommendation[]>([]);
+  // Convert ref flags to state
+  const [hasAwardedCoins, setHasAwardedCoins] = useState(false);
+  const [hasFetchedReview, setHasFetchedReview] = useState(false);
+  const [hasProcessedResponses, setHasProcessedResponses] = useState(false);
+  const [showLeftScroll, setShowLeftScroll] = useState(false);
+  const [showRightScroll, setShowRightScroll] = useState(false);
 
   /* ------------------------------------ Expose Methods ---------------------------------- */
   useImperativeHandle(ref, () => ({
@@ -164,7 +177,10 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   }));
 
   /* ------------------------------------ Computed Values --------------------------------- */
-  const score = correctCount/(correctCount+wrongCount) * 100;
+  const score = useMemo(() => {
+    if (correctCount + wrongCount === 0) return 0;
+    return correctCount/(correctCount+wrongCount) * 100;
+  }, [correctCount, wrongCount]);
 
   /* ------------------------------------ Animations ------------------------------------- */
   const springs = useSpring({
@@ -180,6 +196,9 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   const handleExit = useCallback(() => {
     onOpenChange(false);
     setLargeDialogQuit(true);
+    setHasAwardedCoins(false);
+    setHasFetchedReview(false);
+    setHasProcessedResponses(false);
   }, [onOpenChange, setLargeDialogQuit]);
 
   const handleCardFlip = useCallback((index: number) => {
@@ -267,10 +286,12 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
       const response = await fetch(url);
 
       if (!response.ok) {
+        console.error('Review fetch failed:', response.status, response.statusText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      
       if (data && data.length > 0) {
         return data[0];
       }
@@ -283,12 +304,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   const parseUserResponses = useCallback((responses: UserResponseWithCategory[]) => {
     if (!responses?.length) return {};
 
-    const conceptStats: Record<string, {
-      correct: number;
-      incorrect: number;
-      total: number;
-    }> = {};
-
+    const conceptStats: Record<string, ConceptData> = {};
     const newWrongCards: WrongCard[] = [];
 
     responses.forEach(response => {
@@ -296,11 +312,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
       if (!concept) return;
 
       if (!conceptStats[concept]) {
-        conceptStats[concept] = {
-          correct: 0,
-          incorrect: 0,
-          total: 0
-        };
+        conceptStats[concept] = { correct: 0, incorrect: 0, total: 0 };
       }
 
       if (response.isCorrect) {
@@ -308,22 +320,23 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
       } else {
         conceptStats[concept].incorrect += 1;
         
-        newWrongCards.push({
-          id: response.questionId,
-          timestamp: new Date(response.answeredAt ?? new Date()).toLocaleString(),
-          question: cleanQuestion(response.question?.questionContent || ''),
-          answer: getAnswerContent(response),
-          questionOptions: response.question.types === 'normal' ? 
-            JSON.parse(response.question?.questionOptions || '[]') : [],
-          isFlipped: false,
-          types: response.question.types || 'normal'
-        });
+        if (response.question) {
+          newWrongCards.push({
+            id: response.questionId,
+            timestamp: new Date(response.answeredAt ?? new Date()).toLocaleString(),
+            question: response.question.questionContent.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim(),
+            answer: getAnswerContent(response),
+            questionOptions: response.question.types === 'normal' ? 
+              JSON.parse(response.question?.questionOptions || '[]') : [],
+            isFlipped: false,
+            types: response.question.types || 'normal'
+          });
+        }
       }
       conceptStats[concept].total += 1;
     });
 
-    setWrongCards(newWrongCards);
-    return conceptStats;
+    return { conceptStats, newWrongCards };
   }, [getAnswerContent]);
 
   const replaceNameInReview = useCallback((review: string): string => {
@@ -335,135 +348,183 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     return review.replace(/\$NAME/g, userName);
   }, [user]);
 
-  /* ------------------------------------ Effects -------------------------------------- */
-  useEffect(() => {
-    if (open) {
-      const starCount = getStarCount(score);
-      fetchReview(starCount).then(reviewData => {
-        if (reviewData) {
-          setReview(reviewData);
-        }
-      });
-    }
-  }, [open, score, getStarCount, fetchReview]);
+  const handleCoinReward = useCallback(async () => {
+    // If coins have already been awarded or there are no responses, return early
+    if (hasAwardedCoins || !userResponses.length) return;
 
+    // Mark coins as awarded immediately to prevent multiple executions
+    setHasAwardedCoins(true);
+
+    try {
+      const mcqResponses = userResponses.filter(r => r.question?.types === 'normal');
+      const mcqCorrect = mcqResponses.filter(r => r.isCorrect).length;
+      const mcqTotal = mcqResponses.length;
+      
+      if (!mcqTotal) return;
+
+      const mcqPercentage = Math.round((mcqCorrect / mcqTotal) * 100);
+      const coinsEarned = calculateAnkiReward(mcqPercentage);
+
+      if (!coinsEarned) return;
+
+      await updateScore(coinsEarned);
+
+      if (coinsEarned > 0) {
+        if (mcqPercentage >= ATS_ANKI_THRESHOLDS.GREAT) {
+          audio.playSound('fanfare');
+          toast.success(`Congratulations! You earned ${coinsEarned} coins for a perfect score! 🎉`);
+        } else if (mcqPercentage >= ATS_ANKI_THRESHOLDS.GOOD) {
+          audio.playSound('levelup');
+          toast.success(`Congratulations! You earned ${coinsEarned} coins for your excellent performance! 🎉`);
+        } else if (mcqPercentage >= ATS_ANKI_THRESHOLDS.OKAY) {
+          toast.success(`You earned ${coinsEarned} coin for scoring above ${ATS_ANKI_THRESHOLDS.OKAY}%! 🎉`);
+        }
+      } else {
+        toast.error(`You lost ${Math.abs(coinsEarned)} coin due to low performance. Don't worry, Kalypso is here to help you improve!`);
+      }
+    } catch (error) {
+      console.error('Error in coin reward process:', error);
+      toast.error("Failed to update coins");
+    }
+  }, [userResponses, updateScore, audio]);
+
+  /* ------------------------------------ Effects -------------------------------------- */
+  // Reset state when dialog opens
   useEffect(() => {
     if (open) {
       setShowReviewFeed(false);
       setShowStats(false);
-
-      const animateScore = () => {
-        const duration = 2000;
-        const start = Date.now();
-
-        const animate = () => {
-          const elapsed = Date.now() - start;
-          const progress = Math.min(elapsed / duration, 1);
-
-          if (progress < 1) {
-            requestAnimationFrame(animate);
-          } else {
-            setTimeout(() => setShowStats(true), 500);
-          }
-        };
-
-        animate();
-      };
-
-      animateScore();
+      setReview(null);
+      setMostMissed({});
+      setMostCorrect({});
+      setConceptStats({});
+      setWrongCards([]);
+      setIsDataLoaded(false);
+      setHasAwardedCoins(false);
+      setHasFetchedReview(false);
+      setHasProcessedResponses(false);
     }
   }, [open]);
 
+  // Process user responses
   useEffect(() => {
-    levelUpSound.current = new Audio('/levelup.mp3');
-    fanfareSound.current = new Audio('/fanfare.mp3');
-  }, []);
+    if (userResponses.length > 0 && !hasProcessedResponses) {
+      setHasProcessedResponses(true);
+      const { conceptStats: newConceptStats = {}, newWrongCards = [] } = parseUserResponses(userResponses) || {};
+      const convertedStats: ConceptScore = Object.entries(newConceptStats).reduce((acc, [key, value]) => ({
+        ...acc,
+        [key]: [value.correct, value.incorrect, value.total]
+      }), {});
+      setConceptStats(convertedStats);
+      setWrongCards(newWrongCards);
+    }
+  }, [userResponses, hasProcessedResponses, parseUserResponses]);
 
+  // Process concept stats for most missed/correct
+  useEffect(() => {
+    if (Object.keys(conceptStats).length > 0) {
+      // Proficient: Only topics with 100% correct answers
+      const proficient = Object.entries(conceptStats)
+        .filter(([concept, [correct, incorrect]]) => incorrect === 0)
+        .sort(([concept1, stats1], [concept2, stats2]) => stats2[0] - stats1[0]) // Sort by number of correct answers
+        .reduce((acc, [concept, stats]) => {
+          acc[concept] = stats;
+          return acc;
+        }, {} as ConceptScore);
+      setMostCorrect(proficient);
+
+      // Needs Review: Any topic with incorrect answers
+      const needsReview = Object.entries(conceptStats)
+        .filter(([concept, [correct, incorrect]]) => incorrect > 0)
+        .sort(([concept1, stats1], [concept2, stats2]) => stats2[1] - stats1[1]) // Sort by number of incorrect answers
+        .reduce((acc, [concept, stats]) => {
+          acc[concept] = stats;
+          return acc;
+        }, {} as ConceptScore);
+      setMostMissed(needsReview);
+    }
+  }, [conceptStats]);
+
+  // Fetch review data
   useEffect(() => {
     if (open) {
-      const mcqResponses = userResponses.filter(r => r.question.types === 'normal');
-      const mcqCorrect = mcqResponses.filter(r => r.isCorrect).length;
-      const mcqTotal = mcqResponses.length;
-      const mcqPercentage = mcqTotal > 0 ? Math.round((mcqCorrect / mcqTotal) * 100) : 0;
-
-      if (mcqPercentage === COIN_THRESHOLDS.PERFECT_SCORE) {
-        audio.playSound('fanfare');
-      } else if (mcqPercentage >= COIN_THRESHOLDS.HIGH_SCORE) {
-        audio.playSound('levelup');
-      }
-    }
-  }, [open, userResponses, audio]);
-
-  useEffect(() => {
-    const handleCoinReward = async () => {
-      if (open) {
-        const mcqResponses = userResponses.filter(r => r.question.types === 'normal');
-        const mcqCorrect = mcqResponses.filter(r => r.isCorrect).length;
-        const mcqTotal = mcqResponses.length;
-        const mcqPercentage = mcqTotal > 0 ? Math.round((mcqCorrect / mcqTotal) * 100) : 0;
-        
-        let coinsEarned = 0;
-        if (mcqPercentage === COIN_THRESHOLDS.PERFECT_SCORE) {
-          coinsEarned = COIN_REWARDS.PERFECT;
-        } else if (mcqPercentage >= COIN_THRESHOLDS.HIGH_SCORE) {
-          coinsEarned = COIN_REWARDS.HIGH;
-        }
-
-        if (coinsEarned > 0) {
-          const response = await fetch("/api/user-info", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount: coinsEarned }),
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to increment coin");
+      const starCount = getStarCount(score);
+      fetchReview(starCount)
+        .then(reviewData => {
+          if (reviewData) {
+            setReview(reviewData);
+            setIsDataLoaded(true);
+          } else {
+            setIsDataLoaded(true);
           }
+        })
+        .catch(error => {
+          console.error('Error fetching review:', error);
+          setIsDataLoaded(true);
+        });
+    }
+  }, [open, score, getStarCount, fetchReview]);
 
-          toast.success(`You earned ${coinsEarned} coin(s) for your performance!`);
-        } else if (mcqTotal > 0) {
-          toast.error(`You need at least ${COIN_THRESHOLDS.HIGH_SCORE}% correct MCQs to earn a coin. You got ${mcqPercentage.toFixed(1)}%`);
-        }
-      }
-    };
-
-    handleCoinReward();
-  }, [open, userResponses]);
-
+  // Handle coin rewards
   useEffect(() => {
-    const stats = parseUserResponses(userResponses);
-    const convertedStats: ConceptScore = Object.entries(stats || {}).reduce((acc, [concept, data]) => {
-      acc[concept] = [
-        data?.correct || 0,
-        data?.incorrect || 0,
-        data?.total || 0
-      ];
-      return acc;
-    }, {} as ConceptScore);
-    
-    setConceptStats(convertedStats || {});
+    if (isDataLoaded && !hasAwardedCoins) {
+      handleCoinReward();
+    }
+  }, [isDataLoaded, hasAwardedCoins, handleCoinReward]);
 
-    const sortedByCorrect = Object.entries(convertedStats)
-      .filter(([_, [correct]]) => correct > 0)
-      .sort(([_c1, a], [_c2, b]) => b[0] - a[0])
-      .reduce((acc, [concept, stats]) => {
-        acc[concept] = stats;
-        return acc;
-      }, {} as ConceptScore);
-    setMostCorrect(sortedByCorrect);
+  // Handle chatbot context
+  useEffect(() => {
+    if (isDataLoaded) {
+      setChatbotContext({
+        contentTitle: "Test Results",
+        context: `Score: ${score}%, Correct: ${correctCount}, Wrong: ${wrongCount}`
+      });
+    }
+  }, [isDataLoaded, score, correctCount, wrongCount]);
 
-    const sortedByMissed = Object.entries(convertedStats)
-      .filter(([_c1, [_c2, incorrect]]) => incorrect > 0)
-      .sort(([_c1, a], [_c2, b]) => b[1] - a[1])
-      .reduce((acc, [concept, stats]) => {
-        acc[concept] = stats;
-        return acc;
-      }, {} as ConceptScore);
-    setMostMissed(sortedByMissed);
+  // Handle video recommendations
+  useEffect(() => {
+    if (isDataLoaded) {
+      const fetchRecommendedVideos = async () => {
+        if (!userResponses.length) return;
+        
+        const categories = [...new Set(userResponses
+          .map(r => r.question?.category?.conceptCategory)
+          .filter(Boolean))];
 
-    setIsDataLoaded(true);
-  }, [userResponses, parseUserResponses]);
+        try {
+          const response = await fetch(`/api/videos/recommendations?categories=${categories.join(',')}&maxDuration=300`);
+          if (!response.ok) throw new Error('Failed to fetch videos');
+          const videos = await response.json();
+          setRecommendedVideos(videos);
+        } catch (error) {
+          console.error('Error fetching recommended videos:', error);
+        }
+      };
 
+      fetchRecommendedVideos();
+    }
+  }, [isDataLoaded, userResponses]);
+
+  // Handle game state changes
+  useEffect(() => {
+    if (!isGameInProgress && open) {
+      onOpenChange(false);
+      setLargeDialogQuit(true);
+    }
+  }, [isGameInProgress, open, onOpenChange, setLargeDialogQuit]);
+
+  // Handle scroll events
+  useEffect(() => {
+    const scrollContainer = videoScrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      handleScroll(); 
+      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    }
+  }, [handleScroll]);
+
+  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       const isInputActive = document.activeElement?.tagName === 'INPUT' || 
@@ -479,114 +540,21 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [wrongCards.length, handleCardFlip]);
 
-  useEffect(() => {
-    const contextTitle = "Test Review Summary";
-    const contextIntro = "I just completed a test. Here are the questions I got wrong:";
-    const contextContent = wrongCards.map(card => {
-      if (card.types === 'normal') {
-        return `Question: ${card.question}\nOptions: ${card.questionOptions.join(' | ')}\nCorrect Answer: ${card.answer}`;
-      } else {
-        return `Question: ${card.question}\nAnswer: ${card.answer}`;
-      }
-    }).join('\n\n');
-
-    setChatbotContext({
-      contentTitle: contextTitle,
-      context: contextIntro + contextContent,
-    });
-  }, [wrongCards]);
-
-  useEffect(() => {
-    const fetchRecommendedVideos = async () => {
-      if (!userResponses.length) return;
-      
-      // Get unique concept categories from responses
-      const categories = [...new Set(userResponses
-        .map(r => r.question?.category?.conceptCategory)
-        .filter(Boolean))];
-
-      try {
-        const response = await fetch(`/api/videos/recommendations?categories=${categories.join(',')}&maxDuration=300`);
-        if (!response.ok) throw new Error('Failed to fetch videos');
-        const videos = await response.json();
-        setRecommendedVideos(videos);
-      } catch (error) {
-        console.error('Error fetching recommended videos:', error);
-      }
-    };
-
-    fetchRecommendedVideos();
-  }, [userResponses]);
-
-  useEffect(() => {
-    const scrollContainer = videoScrollContainerRef.current;
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll);
-      handleScroll(); 
-      return () => scrollContainer.removeEventListener('scroll', handleScroll);
-    }
-  }, [handleScroll]);
+  // Only show loading state if we have no responses and data hasn't been loaded yet
+  if (userResponses.length === 0 && !isDataLoaded) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl h-[80vh] overflow-y-auto">
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white"></div>
+            <p className="mt-4 text-lg font-medium">Loading your results...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   /* ------------------------------------ Render Methods ------------------------------------ */
-  const renderStars = () => {
-    return (
-      <div className="flex justify-center mb-4">
-        {[...Array(5)].map((_, i) => {
-          const starProgress = Math.max(Math.min(score - i, 1), 0);
-          const delay = i * 200;
-
-          return (
-            <animated.div
-              key={i}
-              style={{
-                opacity: starProgress,
-                transform: starProgress ? 'scale(1)' : 'scale(0.5)',
-                transition: `opacity 0.5s ${delay}ms, transform 0.5s ${delay}ms`,
-              }}
-            >
-              <AnimatedStar
-                progress={starProgress}
-                uniqueId={`dialog-star-${i}`}
-              />
-            </animated.div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const renderPerformanceSummary = () => (
-    <div className="mt-4 text-left">
-      <p className="font-bold">Missed {wrongCount} Questions</p>
-      <p className="font-semibold mt-2">Most missed concepts</p>
-      <ul className="list-disc list-inside">
-        {Object.keys(mostMissed).length === 0 ? (
-          <li>No missed questions!</li>
-        ) : (
-          <>
-            {Object.entries(mostMissed).slice(0, 3).map(([concept, [correct, incorrect, total]], index) => (
-              <li key={concept}>{concept} ({incorrect}/{total})</li>
-            ))}
-          </>
-        )}
-      </ul>
-      <p className="font-bold mt-4">Correct {correctCount} Questions</p>
-      <p className="font-semibold mt-2">Most mastered concepts</p>
-      <ul className="list-disc list-inside">
-        {Object.keys(mostCorrect).length === 0 ? (
-          <li>No mastered questions!</li>
-        ) : (
-          <>
-            {Object.entries(mostCorrect).slice(0, 3).map(([concept, [correct, incorrect, total]], index) => (
-              <li key={concept}>{concept} ({correct}/{total})</li>
-            ))}
-          </>
-        )}
-      </ul>
-    </div>
-  );
-  
-
   const renderReviewSection = () => (
     <ScrollArea className="h-[calc(95vh-6rem)] scrollbar-none">
       <div className="space-y-4 pr-4 pb-4">
@@ -614,14 +582,22 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
                     </div>
                     {card.types === 'normal' && (
                       <div className="mt-2 space-y-2">
-                        {card.questionOptions.map((option, optIndex) => (
-                          <div 
-                            key={optIndex}
-                            className="p-2 rounded-md bg-[--theme-doctorsoffice-accent] bg-opacity-20 text-sm text-[--theme-text-color]"
-                          >
-                            {option}
-                          </div>
-                        ))}
+                        {card.questionOptions.map((option, optIndex) => {
+                          const isCorrectAnswer = option === card.answer;
+                          return (
+                            <div 
+                              key={optIndex}
+                              className={`p-2 rounded-md ${isCorrectAnswer ? 'bg-green-500/20' : 'bg-[--theme-doctorsoffice-accent] bg-opacity-20'} text-sm text-[--theme-text-color] relative`}
+                            >
+                              {option}
+                              {isCorrectAnswer && (
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[--theme-text-color] opacity-50">
+                                  ✓
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -666,7 +642,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   );
 
   const renderInitialScore = () => {
-    const mcqResponses = userResponses.filter(r => r.question.types === 'normal');
+    const mcqResponses = userResponses.filter(r => r.question?.types === 'normal');
     const mcqCorrect = mcqResponses.filter(r => r.isCorrect).length;
     const mcqTotal = mcqResponses.length;
     const mcqPercentage = mcqTotal > 0 ? Math.round((mcqCorrect / mcqTotal) * 100) : 0;
@@ -686,7 +662,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
         >
           <h1 className="text-2xl md:text-3xl font-bold text-[--theme-text-color] text-center mb-2">
             {mcqPercentage >= 80 ? (
-              "Today was so good we won a coin!"
+              "The checkup went so well, we earned coins!"
             ) : (
               "It was just another day in clinic..."
             )}
@@ -709,7 +685,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
             transition={{ delay: 0.2 }}
             className="flex-1 bg-[--theme-flashcard-color] p-6 rounded-2xl shadow-lg flex items-center"
           >
-            {review && (
+            {review ? (
               <div className="flex flex-col gap-4 w-full">
                 <div className="flex gap-4 items-center">
                   <img 
@@ -723,15 +699,12 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
                     </p>
                   </div>
                 </div>
-
-                <div className="flex justify-center mt-2">
-                  {[...Array(5)].map((_, i) => (
-                    <AnimatedStar
-                      key={i}
-                      progress={i < review.rating ? 1 : 0}
-                      uniqueId={`review-star-${i}`}
-                    />
-                  ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center w-full gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-[--theme-text-color]">{loadingMessage}</span>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[--theme-text-color]" />
                 </div>
               </div>
             )}
@@ -787,7 +760,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
               <h3 className="text-xl font-bold text-[--theme-text-color] flex items-center gap-2">
                 <span>Needs Review</span>
                 <span className="text-sm px-2 py-0.5 rounded-full bg-[--theme-doctorsoffice-accent] bg-opacity-20">
-                  {wrongCount}
+                  {Object.keys(mostMissed).length}
                 </span>
               </h3>
               <div className="relative group">
@@ -804,16 +777,24 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
                 </span>
               </div>
             </div>
-            <div className="space-y-3">
-              {Object.entries(mostMissed).slice(0, 2).map(([concept, [_, incorrect, total]], index) => (
-                <div key={concept} 
-                  className="flex justify-between items-center p-3 rounded-lg bg-[--theme-doctorsoffice-accent] bg-opacity-10 hover:bg-opacity-20 transition-all"
-                >
-                  <span className="text-[--theme-text-color]">{concept}</span>
-                  <span className="font-medium text-[--theme-text-color]">{incorrect}/{total}</span>
-                </div>
-              ))}
-            </div>
+            <ScrollArea className="h-[100px] pr-4" showScrollbar={true}>
+              <div className="space-y-3">
+                {Object.entries(mostMissed).length > 0 ? (
+                  Object.entries(mostMissed).map(([concept, [_, incorrect, total]], index) => (
+                    <div key={concept} 
+                      className="flex justify-between items-center p-3 rounded-lg bg-[--theme-doctorsoffice-accent] bg-opacity-10 hover:bg-opacity-20 transition-all"
+                    >
+                      <span className="text-[--theme-text-color]">{concept}</span>
+                      <span className="font-medium text-[--theme-text-color]">{incorrect}/{total}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-[--theme-text-color] opacity-70 italic">
+                    No topics need review
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
           </motion.div>
 
           {/* Proficient */}
@@ -826,19 +807,21 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
             <h3 className="text-xl font-bold mb-4 text-[--theme-hover-color] flex items-center gap-2">
               <span>Proficient</span>
               <span className="text-sm px-2 py-0.5 rounded-full bg-[--theme-hover-color] bg-opacity-20 text-[--theme-hover-text]">
-                {correctCount}
+                {Object.keys(mostCorrect).length}
               </span>
             </h3>
-            <div className="space-y-3">
-              {Object.entries(mostCorrect).slice(0, 2).map(([concept, [correct, _, total]], index) => (
-                <div key={concept} 
-                  className="flex justify-between items-center p-3 rounded-lg bg-[--theme-hover-color] bg-opacity-10 hover:bg-opacity-20 transition-all"
-                >
-                  <span className="text-[--theme-text-color]">{concept}</span>
-                  <span className="font-medium text-[--theme-hover-color]">{correct}/{total}</span>
-                </div>
-              ))}
-            </div>
+            <ScrollArea className="h-[100px] pr-4" showScrollbar={true}>
+              <div className="space-y-3">
+                {Object.entries(mostCorrect).map(([concept, [correct, _, total]], index) => (
+                  <div key={concept} 
+                    className="flex justify-between items-center p-3 rounded-lg text-[--theme-text-color] bg-[--theme-hover-color] bg-opacity-10 hover:bg-opacity-20 transition-all"
+                  >
+                    <span>{concept}</span>
+                    <span className="font-medium">{correct}/{total}</span>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
           </motion.div>
         </div>
 
@@ -864,7 +847,7 @@ const AfterTestFeed = forwardRef<{ setWrongCards: (cards: any[]) => void }, Larg
   };
 
   /* ------------------------------------ Main Render ------------------------------------- */
-  if(userResponses.length === 0) {
+  if(!open) {
     return null;
   }
 

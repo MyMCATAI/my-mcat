@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { useAudio } from '@/store/selectors';
 import FlashcardSummary from './components/FlashcardSummary';
 import { useWindowSize } from '@/store/selectors';
+import { shouldShowCorrectAnswer } from '@/lib/utils';
 
 /* -------------------------------------------- Types --------------------------------------------- */
 export interface Flashcard {
@@ -115,6 +116,7 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [categoryStats, setCategoryStats] = useState<CategoryStats>({});
   const [weakestCategory, setWeakestCategory] = useState<string | null>(null);
+  const [showCorrectAnswer] = useState(() => shouldShowCorrectAnswer());
 
 /* -------------------------------------------- Refs --------------------------------------------- */
   const flashcardsRef = useRef<Flashcard[]>([]);
@@ -254,6 +256,26 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
     opacity: 1,
   }));
 
+  const handleOptionClick = useCallback((index: number, e?: React.MouseEvent<Element, MouseEvent>) => {
+    playSound('flashcard-select').catch(err => console.error("Error playing select sound:", err));
+    if (answeredMCQ) return;
+    
+    e?.stopPropagation();
+    setSelectedOption(index);
+    setIsAnswerRevealed(true);
+    setHasSeenAnswer(true);
+    setAnsweredMCQ(true);
+    onAnswerReveal?.(true);
+
+    const isCorrect = index === shuffledOptions.correctIndex;
+    onMCQAnswer?.(isCorrect);
+    
+    // Auto scroll to answer explanation
+    requestAnimationFrame(() => {
+      answerSectionRef.current?.scrollIntoView({ block: 'start' });
+    });
+  }, [answeredMCQ, shuffledOptions.correctIndex, onAnswerReveal, onMCQAnswer, playSound]);
+
   const handleSwipe = useCallback((direction: string) => {
     // Add check for revealed answer
     if (!hasSeenAnswer) {
@@ -339,16 +361,25 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
         return;
       }
   
+      // Handle number keys for MCQ
+      if (isMCQ && !answeredMCQ) {
+        const num = parseInt(event.key);
+        if (num >= 1 && num <= shuffledOptions.length) {
+          event.preventDefault();
+          event.stopPropagation();
+          handleOptionClick(num - 1);
+          return;
+        }
+      }
+  
       // Progress MCQ on any key press after answering
       if (isMCQ) {
         if (!answeredMCQ) return;
         event.preventDefault();
         event.stopPropagation();
         if (selectedOption === shuffledOptions.correctIndex) {
-          // Don't play sound here, handleSwipe will handle it
           handleSwipe('right');
         } else {
-          // Don't play sound here, handleSwipe will handle it
           handleSwipe('left');
         }
         return;
@@ -401,7 +432,9 @@ const FlashcardDeck: React.FC<FlashcardDeckProps> = ({ roomId, onWrongAnswer, on
     hasSeenAnswer,
     handleSwipe,
     toggleReveal,
-    isFeedbackOpen
+    isFeedbackOpen,
+    shuffledOptions.length,
+    handleOptionClick
   ]);
 
 
@@ -524,26 +557,6 @@ const getQuestionContent = () => {
     
     return shuffledOptions;
   };
-
-  const handleOptionClick = useCallback((index: number, e: React.MouseEvent) => {
-    playSound('flashcard-select').catch(err => console.error("Error playing select sound:", err));
-    if (answeredMCQ) return;
-    
-    e.stopPropagation();
-    setSelectedOption(index);
-    setIsAnswerRevealed(true);
-    setHasSeenAnswer(true);
-    setAnsweredMCQ(true);
-    onAnswerReveal?.(true);
-
-    const isCorrect = index === shuffledOptions.correctIndex;
-    onMCQAnswer?.(isCorrect);
-    
-    // Auto scroll to answer explanation
-    requestAnimationFrame(() => {
-      answerSectionRef.current?.scrollIntoView({ block: 'start' });
-    });
-  }, [answeredMCQ, shuffledOptions.correctIndex, onAnswerReveal, onMCQAnswer, playSound]);
 
   const fetchFlashcards = async () => {
     setIsLoading(true);
@@ -668,43 +681,57 @@ const getQuestionContent = () => {
                     {/* MCQ Options */}
                     {isMCQ && flashcards[currentCardIndex]?.questionOptions?.length > 0 && (
                       <div className="w-full mt-4 space-y-2">
-                        {shuffledOptions.map((option: string, index: number) => (
-                          <button 
-                            key={index}
-                            onClick={(e) => handleOptionClick(index, e)}
-                            type="button"
-                            className={`w-full p-3 rounded-lg border transition-colors focus:outline-none
-                              ${answeredMCQ ? 'cursor-default' : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]'} 
-                              ${
-                                isAnswerRevealed && index === shuffledOptions.correctIndex
-                                  ? 'border-green-500 bg-green-500 text-white'
-                                  : isAnswerRevealed && index === selectedOption && index !== shuffledOptions.correctIndex
-                                  ? 'border-red-500 bg-red-500 text-white'
-                                  : 'border-[--theme-border-color]'
-                              }
-                              disabled:cursor-default
-                              relative
-                            `}
-                          >
-                            <div className="text-left">
-                              <ContentRenderer 
-                                content={option}
-                                className={`${
-                                  isAnswerRevealed && (
-                                    index === shuffledOptions.correctIndex || 
-                                    (index === selectedOption && index !== shuffledOptions.correctIndex)
-                                  ) ? 'text-white' : ''
-                                }`}
-                              />
-                            </div>
-                            {/* Check mark for correct answer when revealed */}
-                            {isAnswerRevealed && index === shuffledOptions.correctIndex && (
-                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                <Check className="h-5 w-5 text-white" />
+                        {shuffledOptions.map((option: string, index: number) => {
+                          const isCorrectAnswer = index === shuffledOptions.correctIndex;
+                          return (
+                            <button 
+                              key={index}
+                              onClick={(e) => handleOptionClick(index, e)}
+                              type="button"
+                              className={`w-full pl-8 pr-3 py-3 rounded-lg border transition-colors focus:outline-none relative
+                                ${answeredMCQ ? 'cursor-default' : 'hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]'} 
+                                ${
+                                  isAnswerRevealed && index === shuffledOptions.correctIndex
+                                    ? 'border-green-500 bg-green-500 text-white'
+                                    : isAnswerRevealed && index === selectedOption && index !== shuffledOptions.correctIndex
+                                    ? 'border-red-500 bg-red-500 text-white'
+                                    : 'border-[--theme-border-color]'
+                                }
+                                disabled:cursor-default
+                                relative
+                              `}
+                            >
+                              {/* Option number indicator */}
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs opacity-50">
+                                {index + 1}
+                              </span>
+                              
+                              <div className="text-left">
+                                <ContentRenderer 
+                                  content={option}
+                                  className={`${
+                                    isAnswerRevealed && (
+                                      index === shuffledOptions.correctIndex || 
+                                      (index === selectedOption && index !== shuffledOptions.correctIndex)
+                                    ) ? 'text-white' : ''
+                                  }`}
+                                />
                               </div>
-                            )}
-                          </button>
-                        ))}
+                              {/* Show checkmark for correct answer when showCorrectAnswer is true */}
+                              {isCorrectAnswer && showCorrectAnswer && !answeredMCQ && (
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                  <Check className="h-5 w-5 text-[--theme-text-color] opacity-50" />
+                                </div>
+                              )}
+                              {/* Show checkmark for correct answer when revealed */}
+                              {isAnswerRevealed && index === shuffledOptions.correctIndex && (
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                  <Check className="h-5 w-5 text-white" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
