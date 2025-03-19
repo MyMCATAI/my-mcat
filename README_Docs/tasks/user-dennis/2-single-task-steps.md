@@ -4,348 +4,333 @@
 
 # Feature #2: Track UI Globally
 
-## Navigation State Management Strategy
+## Overview
+Implement global UI state tracking to maintain consistent awareness of user navigation and context throughout the application. This will ensure Kalypso AI has proper context about what the user is doing at all times.
 
-### Problem Analysis
-1. **Inconsistent route tracking**: 
-   - Not all section changes are reflected in the URL (e.g., entering ATS keeps `/home` in the URL)
-   - Subsection navigation doesn't update `currentRoute` in UI state
-   - Kalypso lacks contextual awareness of what the user is doing
+## Implementation Strategy
+We'll extend the UISlice with a structured navigation object that tracks both the current page and subsections, along with contextual information specific to each route.
 
-2. **Current approach limitations**:
-   - `useUIStore` has a `currentRoute` state, but it's not consistently updated
-   - URL changes happen in components without state synchronization
-   - No tracking of deeper navigation contexts (sections within sections)
-   - No persistence of navigation state
+## Implementation Checklist
 
-### Architecture Decision: General Context vs Section-Specific Contexts
+### 1. Extend UISlice with Enhanced Navigation Structure
 
-#### Approach 1: Section-Specific Context Objects (Original)
-- **Pros**:
-  - Clear organization by section
-  - Strong typing for each section's unique data
-  - Follows domain-driven design principles
-  - Easy to understand what belongs where
-
-- **Cons**:
-  - More complex nested structure
-  - Requires more code to update specific sections
-  - May lead to duplication of similar structures
-
-#### Approach 2: General Context Object (RECOMMENDED)
-- **Pros**:
-  - Simpler flat structure
-  - More flexible for changing requirements
-  - Easier to update single properties
-  - Cleaner for components that need a subset of properties
-  - Can still be type-safe with discriminated unions
-
-- **Cons**:
-  - May need careful property naming to avoid collisions
-  - Less obvious organization at a glance
-  - Potentially less strong typing
-
-### Decision: EXTEND UISLICE with a general context object
-
-The navigation and context state should live in UISlice, using a general context object that adapts based on the current route:
+- [ ] Add structured `navigation` object to UISlice state:
+  - [ ] `page` property - tracks main route (e.g., '/home', '/cars', '/ats')
+  - [ ] `subSection` object - contains route-specific subsection data
+- [ ] Implement action creators:
+  - [ ] `setNavigation` - updates both page and subsection data
+  - [ ] `updateSubSection` - updates only subsection data
+  - [ ] `clearNavigation` - resets navigation when needed
 
 ```typescript
-// In uiSlice.ts
+// Example UISlice extension
 interface UIState {
-  // General UI state
-  theme: ThemeType;
+  // Existing state
   window: WindowSize;
+  theme: ThemeType;
   
-  // Navigation state
-  currentRoute: string;
-  navigationHistory: string[];
-  
-  // General context - dynamic based on current route
-  context: {
-    // Common properties across all routes
-    pageTitle?: string;
-    lastUpdated?: string;
-    
-    // ATS route properties
-    subject?: string;
-    contentType?: 'video' | 'reading' | 'quiz' | 'highlight' | 'askKalypso';
-    timestamp?: number;
-    transcription?: string;
-    
-    // CARS route properties
-    passageContent?: string;
-    questionsAsked?: string[];
-    explanationNotes?: string;
-    
-    // Other route-specific properties as needed
-    [key: string]: any;
+  // Replace simple currentRoute with structured navigation
+  navigation: {
+    page: string; // e.g., '/home', '/cars', '/ats'
+    subSection: Record<string, any>; // Generic object that adapts based on the route
+  }
+}
+
+// Action creators
+const setNavigation = (page: string, subSection: Record<string, any> = {}) => {
+  set(() => ({
+    navigation: {
+      page,
+      subSection
+    }
+  }));
+}
+
+const updateSubSection = (updates: Record<string, any>) => {
+  set((state) => ({
+    navigation: {
+      ...state.navigation,
+      subSection: {
+        ...state.navigation.subSection,
+        ...updates
+      }
+    }
+  }));
+}
+
+const clearNavigation = () => {
+  set(() => ({ 
+    navigation: {
+      page: '',
+      subSection: {}
+    }
+  }));
+}
+```
+
+## Navigation Schema - Simplified for Initial Implementation
+
+Below are the minimal navigation schemas for each major route, focused only on essential tracking data:
+
+### 1. Home Dashboard Route
+```javascript
+navigation: {
+  page: '/home',
+  subSection: {
+    activeTab: 'Summary' // Options: 'Summary', 'KalypsoAI', 'AdaptiveTutoringSuite', 'CARS', 'flashcards', 'Tests'
   }
 }
 ```
 
-This approach:
-1. Keeps all state in one place (UISlice)
-2. Uses a flexible structure that can adapt to any route
-3. Makes it easy to update individual properties
-4. Simplifies state subscription for components
-5. Makes it easy to share context with Kalypso
-
-## Implementation Steps
-
-### 1. Extend UISlice with Enhanced Navigation and Context State
-
-```typescript
-// Add these to uiSlice.ts
-interface UIState {
-  // Existing state
-  window: WindowSize;
-  currentRoute: string;
-  theme: ThemeType;
-  
-  // New navigation state
-  navigationHistory: string[];
-  
-  // New general context state
-  context: Record<string, any>;
-}
-
-// Add new actions
-const setCurrentRoute = (route: string) => {
-  set((state) => ({
-    currentRoute: route,
-    navigationHistory: [...state.navigationHistory, route].slice(-10) // Keep last 10
-  }));
-}
-
-const setContext = (updates: Record<string, any>) => {
-  set((state) => ({
-    context: {
-      ...state.context,
-      ...updates
-    }
-  }));
-}
-
-const clearContext = () => {
-  set(() => ({ context: {} }));
+### 2. Adaptive Tutoring Suite (ATS) Route
+```javascript
+navigation: {
+  page: '/ats',
+  subSection: {
+    concept: 'Amino Acids', // The current topic being studied
+    contentType: 'Video', // Options: 'Video', 'Reading', 'Quiz', 'Notes'
+    contentId: 'vid_12345'
+  }
 }
 ```
 
-### 2. Create Navigation Hooks for Consistent Usage
+### 3. CARS (Critical Analysis & Reasoning) Route
+```javascript
+navigation: {
+  page: '/cars',
+  subSection: {
+    testMode: true, // Whether in test mode or review mode
+    passageId: 'passage_789',
+    passageTitle: 'Philosophy of Science',
+    currentQuestion: 3 // 1-indexed
+  }
+}
+```
+
+### 4. AnkiClinic (Flashcards) Route
+```javascript
+navigation: {
+  page: '/ankiclinic',
+  subSection: {
+    currentDeck: 'biochemistry-101',
+    deckCategory: 'Biology',
+    cardIndex: 12,
+    cardState: 'question' // 'question' or 'answer'
+  }
+}
+```
+
+### 5. Test/Quiz Route
+```javascript
+navigation: {
+  page: '/test',
+  subSection: {
+    testId: 'test_456',
+    testType: 'full-length', // 'full-length', 'section', 'practice', 'diagnostic'
+    subject: 'Chemistry',
+    currentSection: 'Organic',
+    questionNumber: 15
+  }
+}
+```
+
+### 6. User Test Review Route
+```javascript
+navigation: {
+  page: '/user-test',
+  subSection: {
+    testId: 'completed_test_789',
+    viewMode: 'review', // 'review', 'analytics', 'explanation'
+    score: 78, // Percentage
+    questionIndex: 5 // Current question being reviewed
+  }
+}
+```
+
+### 7. Doctors Office (Settings/Profile) Route
+```javascript
+navigation: {
+  page: '/doctorsoffice',
+  subSection: {
+    activeSection: 'profile' // 'profile', 'settings', 'subscription', 'performance'
+  }
+}
+```
+
+### 8. Pricing/Subscription Route
+```javascript
+navigation: {
+  page: '/pricing',
+  subSection: {
+    viewingPlan: 'premium' // 'basic', 'premium', 'professional'
+  }
+}
+```
+
+### 9. Blog/Resources Route
+```javascript
+navigation: {
+  page: '/blog',
+  subSection: {
+    category: 'study-tips',
+    articleId: 'blog_123'
+  }
+}
+```
+
+### 10. Onboarding Route
+```javascript
+navigation: {
+  page: '/onboarding',
+  subSection: {
+    step: 3, // Current onboarding step
+    totalSteps: 5
+  }
+}
+```
+
+### 2. Create Navigation Hook for Consistent Usage
+
+- [ ] Create `useNavigation` hook in `hooks/useNavigation.ts`
+- [ ] Implement core navigation methods:
+  - [ ] `navigateTo` - change routes with URL updates
+  - [ ] `updateSubSection` - update subsection data without changing page
+  - [ ] Route-specific helpers (e.g., `navigateATS`, `navigateCARS`)
 
 ```typescript
-// In a new hooks/useNavigation.ts file
-import { useRouter } from 'next/navigation';
-import { useUIStore } from '@/store/slices/uiSlice';
-
+// Example navigation hook
 export function useNavigation() {
   const router = useRouter();
-  const setCurrentRoute = useUIStore(state => state.setCurrentRoute);
-  const setContext = useUIStore(state => state.setContext);
-  const clearContext = useUIStore(state => state.clearContext);
+  const setNavigation = useUIStore(state => state.setNavigation);
+  const updateSubSection = useUIStore(state => state.updateSubSection);
+  const clearNavigation = useUIStore(state => state.clearNavigation);
   
   // Navigate to a main route with URL change
   const navigateTo = (route: string) => {
     router.push(route);
-    setCurrentRoute(route);
-    clearContext(); // Clear context when changing routes
+    setNavigation(route, {});
   };
   
-  // Update context without changing URL
-  const updateContext = (context: Record<string, any>) => {
-    setContext(context);
+  // Update subsection without changing URL or page
+  const updateSection = (subSectionData: Record<string, any>) => {
+    updateSubSection(subSectionData);
   };
   
-  // Navigate within ATS (common case)
-  const navigateATS = (subject: string, contentType: string) => {
-    // Only change URL to /ATS if not already there
-    if (window.location.pathname !== '/ATS') {
-      router.push('/ATS');
+  // Navigate to ATS with context
+  const navigateATS = (concept: string, contentType: string) => {
+    if (window.location.pathname !== '/ats') {
+      router.push('/ats');
     }
     
-    setCurrentRoute('/ATS');
-    setContext({
-      subject,
-      contentType,
-      lastUpdated: new Date().toISOString()
+    setNavigation('/ats', {
+      concept,
+      contentType
+    });
+  };
+  
+  // Navigate to CARS with context
+  const navigateCARS = (passage: string) => {
+    router.push('/cars');
+    setNavigation('/cars', {
+      passage
     });
   };
   
   return {
     navigateTo,
-    updateContext,
-    navigateATS
+    updateSection,
+    navigateATS,
+    navigateCARS
   };
 }
 ```
 
-### 3. Usage in Components with Selective Subscriptions
+### 3. Implement Navigation Tracking Per Major Route
+
+#### ATS Route
+- [ ] Update ATS page to use the new navigation system
+- [ ] Track concept selection (e.g., "Amino Acids")
+- [ ] Track content type (video, reading, quiz, etc.)
+- [ ] Update ATS navigation components to use new hooks
+
+#### CARS Route
+- [ ] Update CARS page to use the new navigation system
+- [ ] Track passage information
+- [ ] Track questions asked and explanation notes
+- [ ] Update CARS components to use new hooks
+
+#### Other Main Routes
+- [ ] Home Dashboard
+- [ ] Profile
+- [ ] Flashcards
+- [ ] Settings
+
+### 4. Connect Kalypso to Navigation State
+
+- [ ] Update Kalypso context provider to access navigation state
+- [ ] Pass relevant navigation data to Kalypso
+- [ ] Enable Kalypso to respond with context awareness
 
 ```typescript
-// In any component needing navigation
-import { useNavigation } from '@/hooks/useNavigation';
-import { useUIStore } from '@/store/slices/uiSlice';
-
-const MyComponent = () => {
-  const { navigateTo, updateContext } = useNavigation();
-  
-  // Subscribe only to specific context properties to optimize re-renders
-  const subject = useUIStore(state => state.context.subject);
-  const contentType = useUIStore(state => state.context.contentType);
-  
-  const goToHome = () => navigateTo('/home');
-  
-  const openBiologyVideos = () => {
-    navigateTo('/ATS');
-    updateContext({
-      subject: 'biology',
-      contentType: 'video'
-    });
-  };
-  
-  // ...
-};
-```
-
-### 4. Integration with Kalypso
-
-```typescript
-// In Kalypso context provider
-import { useUIStore } from '@/store/slices/uiSlice';
-
+// Example Kalypso integration
 const KalypsoContextProvider = ({ children }) => {
-  // Get both route and context information
-  const currentRoute = useUIStore(state => state.currentRoute);
-  const context = useUIStore(state => state.context);
+  const navigation = useUIStore(state => state.navigation);
   
-  // Build context object for Kalypso that includes navigation and content context
   const buildContextForKalypso = () => {
+    // Format navigation data for Kalypso
     return {
-      currentRoute,
-      ...context,
-      // Additional useful information for Kalypso can be added here
+      currentPage: navigation.page,
+      ...navigation.subSection
     };
   };
   
-  // ... rest of provider
+  // Use the navigation in Kalypso initialization
 };
 ```
 
-### 5. Debug Panel Integration
+### 5. Add Debug Panel Integration
+
+- [ ] Update DebugPanel to display current navigation state
+- [ ] Show page and subsection information
+- [ ] Format navigation data for readability
 
 ```typescript
-// In DebugPanel.tsx
-const uiState = useUIStore();
-
-// Format navigation and context for display
-const displayState = {
-  currentRoute: uiState.currentRoute,
-  recentHistory: uiState.navigationHistory.slice(-3), // Show last 3
-  context: uiState.context
+// Example Debug Panel implementation
+const DebugNavigationPanel = () => {
+  const navigation = useUIStore(state => state.navigation);
+  
+  return (
+    <div className="debug-panel-section">
+      <h3>Navigation State</h3>
+      <div>
+        <div>Current Page: {navigation.page}</div>
+        <div>SubSection: 
+          <pre>{JSON.stringify(navigation.subSection, null, 2)}</pre>
+        </div>
+      </div>
+    </div>
+  );
 };
-
-// Then in the render:
-<div>
-  <h4 className="font-bold">Navigation & Context State</h4>
-  <pre>{JSON.stringify(displayState, null, 2)}</pre>
-</div>
 ```
 
-## Benefits of General Context Approach
+## Testing Plan
 
-1. **Simpler State Structure**: Flat object is easier to understand and update
-2. **Selective Subscriptions**: Components can subscribe to exactly what they need:
-   ```typescript
-   // Only re-render when specific properties change
-   const transcript = useUIStore(state => state.context.transcript);
-   const timestamp = useUIStore(state => state.context.timestamp);
-   ```
-3. **Optimized Re-renders**: When one part of context changes, only components that subscribe to that specific property will re-render
-4. **Easier Updates**: Simpler API for updating context:
-   ```typescript
-   updateContext({ timestamp: currentTime, transcript: currentTranscript });
-   ```
-5. **More Flexible**: Easier to add new properties without changing the structure
-6. **Fewer Nested Updates**: No need to worry about deeply nested state updates
-7. **Cleaner Implementation**: Less code overall for the same functionality
+1. Test navigation through main routes:
+   - [ ] Verify `navigation.page` updates correctly
+   - [ ] Check subsection data is reset when changing routes
 
-## Next Steps
+2. Test subsection updates:
+   - [ ] ATS navigation with different concepts and content types
+   - [ ] CARS navigation with different passages and questions
+   - [ ] Verify subsection data updates without changing page
 
-1. Implement the UISlice extensions with general context
-2. Create the navigation hooks
-3. Update all navigation calls in the app to use the new system
-4. Add context updates in various components
-5. Connect Kalypso to the context state
-6. Update DebugPanel to show navigation and context state
+3. Test Kalypso integration:
+   - [ ] Verify Kalypso receives proper navigation context
+   - [ ] Test context-aware responses
 
-## Future Considerations
+## Expected Outcomes
 
-1. Analytics integration to track user navigation patterns
-2. Property validation for context to ensure type safety
-3. Automatic context clearing when changing routes
-4. Session replay capabilities using navigation history
-
-## Comprehensive Navigation Tracking Checklist
-
-Based on the entire codebase, here's a complete checklist of all sections/areas that should be tracked in the UI state for complete user navigation awareness:
-
-### Main Sections to Track (Primary Routes)
-- [ ] Landing Page (`/`)
-- [ ] Home Dashboard (`/home`)
-- [ ] ATS - Adaptive Tutoring Suite (`/ATS`)
-- [ ] CARS - Critical Analysis and Reasoning (`/CARS`)
-- [ ] Profile (`/profile`)
-- [ ] Settings (`/settings`)
-- [ ] Flashcards (`/flashcards`)
-- [ ] Resources (`/resources`)
-- [ ] Help (`/help`)
-- [ ] Onboarding (`/onboarding`)
-
-### Context Information to Track Per Route
-
-#### ATS Route Context
-- [ ] Current subject
-- [ ] Content type (video, reading, quiz, etc.)
-- [ ] Content ID/title
-- [ ] Timestamp (for videos)
-- [ ] Transcription excerpts
-- [ ] Progress percentage
-
-#### CARS Route Context
-- [ ] Passage content/ID
-- [ ] Current question
-- [ ] Questions asked
-- [ ] User answers
-- [ ] Explanation notes
-- [ ] Test vs. review mode
-
-#### Flashcards Route Context
-- [ ] Current deck ID
-- [ ] Current card
-- [ ] Study statistics
-- [ ] Session duration
-
-#### Implementation Priority Order
-1. [ ] Extend UISlice with navigation and context structure
-   - [ ] Add `navigationHistory` array
-   - [ ] Add `context` object
-   - [ ] Add action creators
-
-2. [ ] Create common `useNavigation` hook
-   - [ ] Implement general navigation methods
-   - [ ] Add context update helpers
-
-3. [ ] Update main section navigation (Primary Routes)
-   - [ ] Modify all route changes to update state
-   - [ ] Add context tracking for each major section
-
-4. [ ] Integrate with Kalypso
-   - [ ] Provide context to AI
-   - [ ] Enable context-aware responses
-
-### Technical Requirements
-- [ ] Persist navigation state in localStorage
-- [ ] Handle back/forward browser navigation
-- [ ] Maintain URL synchronization where appropriate
-- [ ] Add analytics tracking for navigation events
-- [ ] Implement selective subscriptions for performance optimization
+1. Complete structured navigation tracking throughout the app
+2. Contextual information available for Kalypso based on user's location
+3. Simplified and consistent navigation API
+4. Clear distinction between main page and subsection navigation
