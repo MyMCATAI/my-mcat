@@ -1109,3 +1109,104 @@ html::-webkit-scrollbar {
   transition: none !important;
   animation-duration: 0ms !important;
 }
+
+/* Themed Chat Container Styles */
+.theme-cyberSpace-chat .rcb-message-bubble.rcb-bot-message-bubble {
+  border-left: 3px solid #3b82f6;
+  box-shadow: 0 0 6px 2px rgba(0, 123, 255, 0.2) !important;
+}
+
+.theme-cyberSpace-chat .rcb-message-bubble.rcb-user-message-bubble {
+  border-right: 3px solid #007afc;
+  box-shadow: 0 0 6px 2px rgba(0, 123, 255, 0.2) !important;
+}
+
+.theme-sakuraTrees-chat .rcb-message-bubble.rcb-bot-message-bubble {
+  border-left: 3px solid #eb80b0;
+  box-shadow: 0 0 6px 2px rgba(255, 0, 89, 0.2) !important;
+}
+
+.theme-sakuraTrees-chat .rcb-message-bubble.rcb-user-message-bubble {
+  border-right: 3px solid #b85475;
+  box-shadow: 0 0 6px 2px rgba(255, 0, 89, 0.2) !important;
+}
+
+.theme-sunsetCity-chat .rcb-message-bubble.rcb-bot-message-bubble {
+  border-left: 3px solid #ff9baf;
+  box-shadow: 0 0 10px 3px rgba(255, 99, 71, 0.2) !important;
+}
+
+.theme-sunsetCity-chat .rcb-message-bubble.rcb-user-message-bubble {
+  border-right: 3px solid #ff6347;
+  box-shadow: 0 0 10px 3px rgba(255, 99, 71, 0.2) !important;
+}
+
+.theme-mykonosBlue-chat .rcb-message-bubble.rcb-bot-message-bubble {
+  border-left: 3px solid #4cb5e6;
+  box-shadow: 0 0 6px 6px rgba(30, 129, 176, 0.2) !important;
+}
+
+.theme-mykonosBlue-chat .rcb-message-bubble.rcb-user-message-bubble {
+  border-right: 3px solid #1e81b0;
+  box-shadow: 0 0 6px 6px rgba(30, 129, 176, 0.2) !important;
+}
+
+/* Enhanced chat container styles */
+.rcb-chat-container {
+  background-color: transparent !important;
+}
+
+.rcb-chat-body {
+  padding: 1rem !important;
+}
+
+.rcb-message-bubble {
+  padding: 0.75rem 1rem !important;
+  margin-bottom: 0.75rem !important;
+  max-width: 80% !important;
+}
+
+.rcb-message-bubble.rcb-bot-message-bubble {
+  margin-right: auto !important;
+}
+
+.rcb-message-bubble.rcb-user-message-bubble {
+  margin-left: auto !important;
+}
+
+.rcb-chat-input-textarea {
+  padding: 0.75rem !important;
+  color: var(--theme-text-color) !important;
+}
+
+/* Animation for chat elements */
+.rcb-message-bubble {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide in animation for welcome messages */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.5s ease-out forwards;
+}

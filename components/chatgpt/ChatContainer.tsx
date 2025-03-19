@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
 import { Styles } from "react-chatbotify";
-import { useAudio } from '@/store/selectors';
+import { useAudio, useTheme } from '@/store/selectors';
 import { useAllCalendarActivities } from "@/hooks/useCalendarActivities";
 import { useExamActivities } from "@/hooks/useCalendarActivities";
 import TestCalendar from '@/components/calendar/TestCalendar';
@@ -28,6 +28,14 @@ const QUICK_ACTIONS = [
   { id: "knowledge", text: "What was in my tutor's last report?", prompt: "Show me my tutor's last report" },
   // { id: "next-exam", text: "Next exam?", prompt: "When is my next practice exam?" }
 ];
+
+// Theme-based background images
+const THEME_BACKGROUNDS = {
+  cyberSpace: "/backgrounds/cyberroom.png",
+  sakuraTrees: "/backgrounds/sakuraroom.png",
+  sunsetCity: "/backgrounds/sunsetroom.png",
+  mykonosBlue: "/backgrounds/mykonosroom.png"
+};
 
 /* ----- Types ---- */
 interface ChatContainerProps {
@@ -52,11 +60,52 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   const [isTutorReportOpen, setIsTutorReportOpen] = useState(false);
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
   const [isBotResponding, setIsBotResponding] = useState(false);
+  const [welcomeVisible, setWelcomeVisible] = useState(true);
   
   // Get both exam and study activities
   const { activities: examActivities, loading: examLoading, fetchExamActivities } = useExamActivities();
   const { activities: studyActivities, loading: studyLoading, refetch: refetchStudyActivities } = useAllCalendarActivities();
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  
+  // Get current theme
+  const currentTheme = useTheme();
+  
+  // Get theme-specific styles
+  const getThemeStyles = () => {
+    switch(currentTheme) {
+      case 'sakuraTrees':
+        return {
+          botBubbleBg: 'rgba(251, 240, 248, 0.85)',
+          userBubbleBg: 'rgba(196, 122, 155, 0.85)',
+          overlayBg: 'rgba(250, 238, 244, 0.3)',
+          inputBg: 'rgba(251, 240, 248, 0.6)'
+        };
+      case 'sunsetCity':
+        return {
+          botBubbleBg: 'rgba(36, 23, 58, 0.85)',
+          userBubbleBg: 'rgba(255, 99, 71, 0.85)',
+          overlayBg: 'rgba(36, 23, 58, 0.3)',
+          inputBg: 'rgba(36, 23, 58, 0.6)'
+        };
+      case 'mykonosBlue':
+        return {
+          botBubbleBg: 'rgba(231, 250, 251, 0.85)',
+          userBubbleBg: 'rgba(30, 129, 176, 0.85)',
+          overlayBg: 'rgba(231, 250, 251, 0.3)',
+          inputBg: 'rgba(231, 250, 251, 0.6)'
+        };
+      case 'cyberSpace':
+      default:
+        return {
+          botBubbleBg: 'rgba(0, 18, 38, 0.85)',
+          userBubbleBg: 'rgba(0, 122, 252, 0.85)',
+          overlayBg: 'rgba(0, 18, 38, 0.3)',
+          inputBg: 'rgba(0, 18, 38, 0.6)'
+        };
+    }
+  };
+  
+  const themeStyles = getThemeStyles();
   
   /* ---- Refs --- */
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -70,6 +119,13 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
     if (!isMounted) {
       setIsMounted(true);
     }
+    
+    // Hide welcome message after 10 seconds
+    const welcomeTimer = setTimeout(() => {
+      setWelcomeVisible(false);
+    }, 10000);
+    
+    return () => clearTimeout(welcomeTimer);
   }, [isMounted]);
   
   useEffect(() => {
@@ -404,24 +460,19 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
       showAvatar: false,
       title: (
         <div className="flex items-center justify-between w-full">
-          <div className="text-[--theme-text-color]">
-          </div>
           <div className="flex text-[--theme-text-color] items-center gap-3">
             <div className="flex items-center">
               <button
                 onClick={toggleAudio}
-                className="px-2 py-1 text-xs bg-transparent hover:bg-[--theme-hover-color] transition-colors"
-                style={{
-                  color: audioEnabled
-                    ? "var(--theme-hover-color)"
-                    : "var(--gray-600)",
-                }}
+                className={cn(
+                  "px-2 py-1 text-xs rounded-full transition-colors",
+                  audioEnabled ? "text-[--theme-hover-color]" : "text-[--theme-text-color] hover:text-[--theme-hover-color]"
+                )}
               >
                 {audioEnabled ? "🔊" : "🔇"}
               </button>
               <span
-                className="text-[9px] ml-1"
-                style={{ color: "var(--gray-600)" }}
+                className="text-[9px] ml-1 text-[--theme-text-color]"
               >
                 {audioEnabled ? "speak with the mic" : "toggle voice with 'cmd' key"}
               </span>
@@ -431,9 +482,10 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
                 key={action.id}
                 className={cn(
                   "px-3 py-1 rounded-full text-xs font-medium transition-colors duration-300", 
-                  "bg-[--theme-leaguecard-color] text-[--theme-text-color] border border-[--theme-border-color]", 
-                  "hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]",
-                  activeTab === action.id && "bg-[--theme-hover-color] text-[--theme-hover-text]"
+                  "border border-[--theme-border-color]", 
+                  activeTab === action.id 
+                    ? "bg-[--theme-hover-color] text-[--theme-hover-text]"
+                    : "bg-[rgba(255,255,255,0.1)] text-[--theme-text-color] hover:bg-[--theme-hover-color] hover:text-[--theme-hover-text]"
                 )}
                 onClick={() => handleTabClick(action.id)}
               >
@@ -466,49 +518,113 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
     chatWindowStyle: {
       display: "flex",
       flexDirection: "column" as const,
-      height: "calc(100vh - 8rem)",
+      height: "calc(100vh - 9rem)",
       width: "100%",
-      backgroundColor: "var(--theme-leaguecard-color)",
+      backgroundColor: "transparent",
       position: "relative",
       zIndex: 1,
     },
     bodyStyle: {
       flexGrow: 1,
       overflowY: "auto" as const,
+      backgroundColor: "transparent",
     },
     chatInputContainerStyle: {
       position: 'sticky',
       bottom: 0,
-      backgroundColor: "var(--theme-leaguecard-color)",
-      borderTop: "1px solid var(--theme-border-color)",
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      backdropFilter: "blur(10px)",
+      borderTop: `2px solid ${
+        currentTheme === 'cyberSpace' ? 'rgba(59, 130, 246, 0.5)' :
+        currentTheme === 'sakuraTrees' ? 'rgba(235, 128, 176, 0.5)' :
+        currentTheme === 'sunsetCity' ? 'rgba(255, 99, 71, 0.5)' :
+        currentTheme === 'mykonosBlue' ? 'rgba(76, 181, 230, 0.5)' :
+        'var(--theme-border-color)'
+      }`,
       padding: "1rem",
       width: "100%",
       zIndex: 2,
+      boxShadow: currentTheme === 'cyberSpace' ? "0 -5px 15px -5px rgba(0, 123, 255, 0.2)" :
+                currentTheme === 'sakuraTrees' ? "0 -5px 15px -5px rgba(255, 0, 89, 0.2)" :
+                currentTheme === 'sunsetCity' ? "0 -5px 15px -5px rgba(255, 99, 71, 0.2)" :
+                currentTheme === 'mykonosBlue' ? "0 -5px 15px -5px rgba(30, 129, 176, 0.2)" :
+                "0 -5px 15px -5px rgba(0, 0, 0, 0.1)",
     },
     chatInputAreaStyle: {
-      border: "1px solid var(--theme-border-color)",
-      borderRadius: "8px",
-      backgroundColor: "transparent",
+      border: `1px solid ${
+        currentTheme === 'cyberSpace' ? 'rgba(59, 130, 246, 0.7)' :
+        currentTheme === 'sakuraTrees' ? 'rgba(235, 128, 176, 0.7)' :
+        currentTheme === 'sunsetCity' ? 'rgba(255, 99, 71, 0.7)' :
+        currentTheme === 'mykonosBlue' ? 'rgba(76, 181, 230, 0.7)' :
+        'var(--theme-border-color)'
+      }`,
+      borderRadius: "12px",
+      backgroundColor: "rgba(255, 255, 255, 0.1)",
       color: "var(--theme-text-color)",
       width: "100%",
+      boxShadow: `0 0 10px 2px ${
+        currentTheme === 'cyberSpace' ? 'rgba(0, 123, 255, 0.15)' :
+        currentTheme === 'sakuraTrees' ? 'rgba(255, 0, 89, 0.15)' :
+        currentTheme === 'sunsetCity' ? 'rgba(255, 99, 71, 0.15)' :
+        currentTheme === 'mykonosBlue' ? 'rgba(30, 129, 176, 0.15)' :
+        'rgba(0, 0, 0, 0.1)'
+      }`,
+      backdropFilter: "blur(5px)",
     },
     botBubbleStyle: {
-      fontSize: ".9rem",
+      fontSize: "1rem",
+      fontWeight: "500",
       fontFamily:
         "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
       color: "var(--theme-text-color)",
-      backgroundColor: "var(--theme-botchatbox-color)",
+      backgroundColor: currentTheme === 'cyberSpace' ? 'rgba(0, 18, 38, 0.95)' :
+                     currentTheme === 'sakuraTrees' ? 'rgba(251, 240, 248, 0.95)' :
+                     currentTheme === 'sunsetCity' ? 'rgba(36, 23, 58, 0.95)' :
+                     currentTheme === 'mykonosBlue' ? 'rgba(231, 250, 251, 0.95)' :
+                     themeStyles.botBubbleBg,
+      backdropFilter: "blur(10px)",
+      // Add theme-specific glow (box-shadow) with enhanced intensity
+      boxShadow: currentTheme === 'cyberSpace' ? "0 0 10px 4px rgba(0, 123, 255, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
+                currentTheme === 'sakuraTrees' ? "0 0 10px 4px rgba(255, 0, 89, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
+                currentTheme === 'sunsetCity' ? "0 0 14px 5px rgba(255, 99, 71, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
+                currentTheme === 'mykonosBlue' ? "0 0 10px 8px rgba(30, 129, 176, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
+                "0 2px 5px rgba(0, 0, 0, 0.1)",
+      borderRadius: "0.75rem 0.75rem 0.75rem 0.25rem",
+      borderLeft: currentTheme === 'cyberSpace' ? "3px solid #3b82f6" :
+                 currentTheme === 'sakuraTrees' ? "3px solid #eb80b0" :
+                 currentTheme === 'sunsetCity' ? "3px solid #ff9baf" :
+                 currentTheme === 'mykonosBlue' ? "3px solid #4cb5e6" :
+                 "3px solid var(--theme-hover-color)",
     },
     userBubbleStyle: {
-      fontSize: ".9rem",
+      fontSize: "1rem",
+      fontWeight: "500",
       fontFamily:
         "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
       color: "white",
-      backgroundColor: "var(--theme-userchatbox-color)",
+      backgroundColor: currentTheme === 'cyberSpace' ? 'rgba(0, 122, 252, 0.95)' :
+                     currentTheme === 'sakuraTrees' ? 'rgba(196, 122, 155, 0.95)' :
+                     currentTheme === 'sunsetCity' ? 'rgba(255, 99, 71, 0.95)' :
+                     currentTheme === 'mykonosBlue' ? 'rgba(30, 129, 176, 0.95)' :
+                     themeStyles.userBubbleBg,
+      backdropFilter: "blur(10px)",
+      // Add theme-specific glow (box-shadow) with enhanced intensity
+      boxShadow: currentTheme === 'cyberSpace' ? "0 0 10px 4px rgba(0, 123, 255, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
+                currentTheme === 'sakuraTrees' ? "0 0 10px 4px rgba(255, 0, 89, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
+                currentTheme === 'sunsetCity' ? "0 0 14px 5px rgba(255, 99, 71, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
+                currentTheme === 'mykonosBlue' ? "0 0 10px 8px rgba(30, 129, 176, 0.4), 0 2px 5px rgba(0, 0, 0, 0.1)" :
+                "0 2px 5px rgba(0, 0, 0, 0.1)",
+      borderRadius: "0.75rem 0.75rem 0.25rem 0.75rem",
+      borderRight: currentTheme === 'cyberSpace' ? "3px solid #007afc" :
+                  currentTheme === 'sakuraTrees' ? "3px solid #b85475" :
+                  currentTheme === 'sunsetCity' ? "3px solid #ff6347" :
+                  currentTheme === 'mykonosBlue' ? "3px solid #1e81b0" :
+                  "3px solid var(--theme-hover-color)",
       textAlign: "left",
     },
     headerStyle: {
-      background: "transparent",
+      background: themeStyles.overlayBg, // Theme-specific header background
+      backdropFilter: "blur(5px)",
       borderBottom: "1px solid var(--theme-border-color)",
       padding: "0.75rem 1rem",
     },
@@ -529,7 +645,16 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
   }
 
   return (
-    <div className="flex flex-col h-full rounded-lg overflow-hidden border border-[--theme-border-color] bg-[--theme-leaguecard-color]">
+    <div className={cn(
+      `flex flex-col h-full rounded-lg overflow-hidden border theme-${currentTheme}-chat`,
+      "shadow-lg",
+      className
+    )}
+    style={{ 
+      borderColor: 'var(--theme-border-color)',
+      borderWidth: '1px',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+    }}>
       {/* Chatbot container */}
       <div className="flex-1 relative">
         <DynamicChatBot
@@ -538,11 +663,28 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
           themes={themes}
           flow={flow}
         />
+        
+        {/* Themed welcome banner - only show when not responding */}
+        {!isBotResponding && welcomeVisible && (
+          <div 
+            className="absolute top-16 right-5 w-48 p-3 rounded-lg backdrop-blur-sm text-xs z-10 animate-slide-in"
+            style={{ 
+              backgroundColor: themeStyles.botBubbleBg,
+              borderLeft: `3px solid var(--theme-hover-color)`,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+            }}>
+            <p className="mb-2 font-medium">Welcome to your {currentTheme === 'mykonosBlue' ? 'Mykonos retreat' 
+                                            : currentTheme === 'sakuraTrees' ? 'Sakura garden'
+                                            : currentTheme === 'sunsetCity' ? 'Sunset city'
+                                            : 'Cyber space'}</p>
+            <p>Ask Kalypso about your MCAT study plan, or try scheduling a new task.</p>
+          </div>
+        )}
       </div>
 
       {/* Audio control indicator */}
       {isPlaying && audioEnabled && (
-        <div className="absolute bottom-4 right-4 bg-[--theme-doctorsoffice-accent] text-white px-3 py-1 rounded-full text-xs flex items-center gap-2">
+        <div className="absolute bottom-4 right-4 bg-[--theme-doctorsoffice-accent] text-white px-3 py-1 rounded-full text-xs flex items-center gap-2 backdrop-blur-sm">
           <span className="animate-pulse">🔊</span>
           <button onClick={stopAudio} className="hover:underline">Stop Audio</button>
         </div>
@@ -550,7 +692,7 @@ const ChatContainer = ({ className, chatbotRef }: ChatContainerProps) => {
 
       {/* Error display */}
       {error && (
-        <div className="p-4 bg-red-500 bg-opacity-10 border borr-red-500 text-red-500 rounded-lg m-4">
+        <div className="p-4 bg-red-500 bg-opacity-10 border border-red-500 text-red-500 rounded-lg m-4 backdrop-blur-sm">
           {error}
         </div>
       )}
