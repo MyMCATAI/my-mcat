@@ -13,12 +13,12 @@ import AdaptiveTutoring from "./AdaptiveTutoring";
 import TestingSuit from "./TestingSuit";
 import ThemeSwitcher from "@/components/home/ThemeSwitcher";
 import FlashcardDeck from "./FlashcardDeck";
-import PracticeTests from "./PracticeTests";
+import PracticeTests from "../practice-tests/PracticeTests";
 import StreakPopup from "@/components/score/StreakDisplay";
 import { checkProStatus, shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
-import { useAudio } from "@/store/selectors";
+import { useAudio, useNavigation, useUI } from "@/store/selectors";
 import RedeemReferralModal from '@/components/social/friend-request/RedeemReferralModal';
 import ChatContainer from "@/components/chatgpt/ChatContainer";
 import HoverSidebar from "@/components/navigation/HoverSidebar";
@@ -64,6 +64,7 @@ const HomePage: React.FC = () => {
   const { userInfo, isLoading: isLoadingUserInfo, isSubscribed } = useUserInfo();
   const { startActivity, endActivity, updateActivityEndTime } = useUserActivity();
   const { playMusic, stopMusic, volume, setVolume, isPlaying } = useAudio();
+  const { navigation, setNavigation, updateSubSection } = useUI();
   const paymentStatus = searchParams?.get("payment");
   
   // Debug mode check
@@ -126,17 +127,30 @@ const HomePage: React.FC = () => {
   /* ---- Callbacks & Event Handlers ---- */
   // Memoize chatbot context update
   const updateChatbotContext = useCallback((context: {contentTitle: string; context: string;}) => {
+    console.log('[HOME_PAGE] Updating chatbotContext:', context);
     updatePageState({ chatbotContext: context });
-  }, [updatePageState]);
+    
+    // Also update navigation subSection with chatbot context
+    updateSubSection({ 
+      chatbotContext: {
+        title: context.contentTitle,
+        hasContext: !!context.context
+      } 
+    });
+  }, [updatePageState, updateSubSection]);
 
   const initializePage = useCallback(async () => {
     if (!shouldInitialize) return;
     
     try {
+      console.log('[HOME_PAGE] Initializing with navigation state:', navigation);
+      
       const [activities, proStatus] = await Promise.all([
         fetch("/api/calendar-activity").then(res => res.json()),
         checkProStatus()
       ]);
+
+      console.log('[HOME_PAGE] Fetched activities count:', activities.length);
 
       // Batch all state updates
       updatePageState({
@@ -157,7 +171,7 @@ const HomePage: React.FC = () => {
         isLoading: false
       });
     }
-  }, [shouldInitialize, updatePageState, updateLoadingState]);
+  }, [shouldInitialize, updatePageState, updateLoadingState, navigation]);
 
   const updateCalendarChatContext = useCallback((currentActivities: FetchedActivity[]) => {
     const today = new Date();
@@ -229,6 +243,7 @@ const HomePage: React.FC = () => {
 
     try {
       const activities = await fetch("/api/calendar-activity").then(res => res.json());
+      console.log('[HOME_PAGE] Refreshed activities count:', activities.length);
       updatePageState({ activities });
     } catch (error) {
       console.error('[HOME_PAGE] Error fetching activities:', error);
@@ -237,8 +252,11 @@ const HomePage: React.FC = () => {
 
   // Handle activity tracking for user engagement
   const handleActivityChange = useCallback(async (type: string, location: string) => {
+    console.log('[HOME_PAGE] Handling activity change:', { type, location, currentActivityId: pageState.currentStudyActivityId });
+    
     if (pageState.currentStudyActivityId) {
       try {
+        console.log('[HOME_PAGE] Ending previous activity:', pageState.currentStudyActivityId);
         await endActivity(pageState.currentStudyActivityId);
       } catch (error) {
         console.error('Error ending previous activity:', error);
@@ -255,15 +273,27 @@ const HomePage: React.FC = () => {
       });
 
       if (activity) {
+        console.log('[HOME_PAGE] Started new activity:', activity.id);
         updatePageState({ currentStudyActivityId: activity.id });
+        
+        // Update navigation with activity tracking info
+        updateSubSection({ 
+          activityTracking: {
+            id: activity.id,
+            type: type,
+            location: location
+          }
+        });
       }
     } catch (error) {
       console.error('Error starting new activity:', error);
     }
-  }, [endActivity, startActivity, pageState.currentStudyActivityId, updatePageState]);
+  }, [endActivity, startActivity, pageState.currentStudyActivityId, updatePageState, updateSubSection]);
 
   // Tab change handler with navigation logic
   const handleTabChange = useCallback(async (newTab: string) => {
+    console.log('[HOME_PAGE] Tab change requested:', newTab, 'Current tab:', pageState.activeTab);
+    
     // Handle special navigation cases
     if (newTab === 'AnkiClinic') {
         try {
@@ -295,7 +325,15 @@ const HomePage: React.FC = () => {
         router.push(`/home?tab=Summary&view=${view}`);
     }
 
+    console.log('[HOME_PAGE] Updating page state for tab:', tab);
     updatePageState(updates);
+    
+    // Update navigation state in the store
+    setNavigation('/home', { 
+      activeTab: tab,
+      view: view || null,
+      hasActivities: pageState.activities.length > 0
+    });
 
     // Handle activity changes
     if (tab !== "AdaptiveTutoringSuite") {
@@ -305,7 +343,7 @@ const HomePage: React.FC = () => {
         // This ensures we still have consistent state tracking
         await handleActivityChange('tutoring', 'AdaptiveTutoringSuite');
     }
-  }, [router, handleActivityChange, updatePageState, pageState.currentStudyActivityId, endActivity]);
+  }, [router, handleActivityChange, updatePageState, pageState.currentStudyActivityId, endActivity, pageState.activities.length, setNavigation]);
 
   const switchKalypsoState = (newState: "wait" | "talk" | "end" | "start") => {
     setPageState(prev => ({ ...prev, kalypsoState: newState }));
@@ -415,6 +453,7 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const initializeActivity = async () => {
       if (pathname && pathname.startsWith('/home') && !pageState.currentStudyActivityId && !isLoadingUserInfo) {
+        console.log('[HOME_PAGE] Initializing activity for:', pageState.activeTab);
         const activity = await startActivity({
           type: 'studying',
           location: pageState.activeTab,
@@ -425,24 +464,39 @@ const HomePage: React.FC = () => {
         });
 
         if (activity) {
+          console.log('[HOME_PAGE] Initial activity created:', activity.id);
           setPageState(prev => ({ ...prev, currentStudyActivityId: activity.id }));
+          
+          // Update navigation with activity tracking info
+          updateSubSection({ 
+            activityTracking: {
+              id: activity.id,
+              type: 'studying',
+              location: pageState.activeTab,
+              initialLoad: true
+            }
+          });
         }
       }
     };
 
     initializeActivity();
-  }, [isLoadingUserInfo, pathname, pageState.activeTab, startActivity, pageState.currentStudyActivityId]);
+  }, [isLoadingUserInfo, pathname, pageState.activeTab, startActivity, pageState.currentStudyActivityId, updateSubSection]);
 
   // Handle URL without tab parameter - ensure we show Kalypso AI
   useEffect(() => {
     if (pathname === '/home' && !searchParams?.has('tab')) {
       // Ensure we're showing Kalypso AI when user navigates directly to /home
+      console.log('[HOME_PAGE] No tab parameter, defaulting to KalypsoAI');
       updatePageState({
         activeTab: 'KalypsoAI',
         currentPage: 'KalypsoAI'
       });
+      
+      // Update navigation state in the store
+      setNavigation('/home', { activeTab: 'KalypsoAI' });
     }
-  }, [pathname, searchParams, updatePageState]);
+  }, [pathname, searchParams, updatePageState, setNavigation]);
 
   useEffect(() => {
     if (!pageState.currentStudyActivityId) return;
@@ -458,11 +512,25 @@ const HomePage: React.FC = () => {
     setPageState(prev => ({ ...prev, showReferralModal: shouldShowRedeemReferralModal() }));
   }, []);
 
+  // Log state changes to track persistence issues
+  useEffect(() => {
+    console.log('[HOME_PAGE] PageState updated:', {
+      activeTab: pageState.activeTab,
+      currentPage: pageState.currentPage,
+      activitiesCount: pageState.activities.length,
+      currentStudyActivityId: pageState.currentStudyActivityId,
+      hasChatbotContext: !!pageState.chatbotContext
+    });
+    
+    console.log('[HOME_PAGE] Current navigation state:', navigation);
+  }, [pageState, navigation]);
+
   // Cleanup effect
   useEffect(() => {
     return () => {
       // Cleanup any pending activities
       if (pageState.currentStudyActivityId) {
+        console.log('[HOME_PAGE] Cleaning up activity on unmount:', pageState.currentStudyActivityId);
         endActivity(pageState.currentStudyActivityId);
       }
       if (timeoutRef.current) {

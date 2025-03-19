@@ -14,7 +14,7 @@ const RouteTracker = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { setCurrentRoute } = useUI();
+  const { setNavigation, navigation } = useUI();
   const { userInfo, isSubscribed, onboardingComplete, profileLoading, statsLoading } = useUser();
   const { isSignedIn } = useClerkUser();
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
@@ -45,7 +45,8 @@ const RouteTracker = () => {
   // Track route changes
   useEffect(() => {
     if (pathname) {
-      setCurrentRoute(pathname);
+      // Update navigation state with the new route
+      setNavigation(pathname, {});
 
       // Define exempt paths that should never redirect to onboarding
       const exemptPaths = [
@@ -75,7 +76,7 @@ const RouteTracker = () => {
         }
       }
     }
-  }, [pathname, setCurrentRoute, isSignedIn, userInfo, onboardingComplete, profileLoading, router]);
+  }, [pathname, setNavigation, isSignedIn, userInfo, onboardingComplete, profileLoading, router]);
 
   // Handle ambient sound cleanup on route changes
   useEffect(() => {    

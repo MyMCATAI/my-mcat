@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";
+import { useUI } from '@/store/selectors';
 
 /* ----- Types ---- */
 interface Task {
@@ -99,6 +100,7 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   /* ---- Refs --- */
   const sidebarRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { navigateTo } = useUI();
   
   /* --- Animations & Effects --- */
   useEffect(() => {
@@ -165,12 +167,11 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   const handleNavigationClick = (item: NavigationItem) => {
     setActiveTab(item.id);
     
-    if (item.id === 'ankiclinic') {
-      console.log(`======== Anki Clinic clicked ${new Date().toISOString()} ========`);
-      router.push('/ankiclinic');
-    } else {
-      onTabChange(item.tab);
-    }
+    // Use the navigateTo function from our selector
+    navigateTo(item.id, router);
+    
+    // Also call onTabChange for backward compatibility
+    onTabChange(item.tab);
   };
 
   const handleTaskCompletion = async (activityId: string, taskIndex: number, completed: boolean) => {

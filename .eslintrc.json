@@ -23,7 +23,8 @@
       }
     ],
     "import/no-unused-modules": ["warn", {
-      "unusedExports": true
+      "unusedExports": true,
+      "ignoreExports": ["**/app/**/*page.tsx", "**/app/**/*layout.tsx", "**/app/**/*loading.tsx", "**/app/**/*error.tsx"]
     }],
     "@typescript-eslint/adjacent-overload-signatures": "warn",
     "@typescript-eslint/ban-ts-comment": "warn",

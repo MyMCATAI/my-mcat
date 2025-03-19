@@ -9,24 +9,44 @@ import { useVocabStore } from './slices/vocabSlice'
 export const useUI = () => {
   const theme = useUIStore((state) => state.theme)
   const window = useUIStore((state) => state.window)
-  const currentRoute = useUIStore((state) => state.currentRoute)
+  const navigation = useUIStore((state) => state.navigation)
   const setTheme = useUIStore((state) => state.setTheme)
   const setWindowSize = useUIStore((state) => state.setWindowSize)
-  const setCurrentRoute = useUIStore((state) => state.setCurrentRoute)
+  const setNavigation = useUIStore((state) => state.setNavigation)
+  const updateSubSection = useUIStore((state) => state.updateSubSection)
+  const clearNavigation = useUIStore((state) => state.clearNavigation)
+  const navigateTo = useUIStore((state) => state.navigateTo)
   
   return {
     theme,
     window,
-    currentRoute,
+    navigation,
     setTheme,
     setWindowSize,
-    setCurrentRoute,
+    setNavigation,
+    updateSubSection,
+    clearNavigation,
+    navigateTo
   }
 }
 
 export const useTheme = () => useUIStore(state => state.theme)
 export const useWindowSize = () => useUIStore(state => state.window)
-export const useCurrentRoute = () => useUIStore(state => state.currentRoute)
+export const useNavigation = () => {
+  const navigation = useUIStore(state => state.navigation)
+  const setNavigation = useUIStore(state => state.setNavigation)
+  const updateSubSection = useUIStore(state => state.updateSubSection)
+  const clearNavigation = useUIStore(state => state.clearNavigation)
+  const navigateTo = useUIStore(state => state.navigateTo)
+  
+  return {
+    navigation,
+    setNavigation,
+    updateSubSection,
+    clearNavigation,
+    navigateTo
+  }
+}
 
 /* --- User Selector ---- */
 // Consolidated user selector that provides all user-related state and actions

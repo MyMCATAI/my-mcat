@@ -78,6 +78,12 @@ const DebugPanel = () => {
       <h3 className="text-lg font-bold mb-2">Debug Panel</h3>
       <div className="grid grid-cols-1 gap-2">
         <div>
+          <h4 className="font-bold">UI State</h4>
+          <pre>{JSON.stringify(uiState, null, 2)}</pre>
+        </div>
+        
+        <hr className="border-white/30 my-2" />
+        <div>
           <h4 className="font-bold">Audio State</h4>
           <pre>{JSON.stringify(displayAudioState, null, 2)}</pre>
         </div>
@@ -86,11 +92,6 @@ const DebugPanel = () => {
         <div>
           <h4 className="font-bold">Game State</h4>
           <pre>{JSON.stringify(gameState, null, 2)}</pre>
-        </div>
-        <hr className="border-white/30 my-2" />
-        <div>
-          <h4 className="font-bold">UI State</h4>
-          <pre>{JSON.stringify(uiState, null, 2)}</pre>
         </div>
         <hr className="border-white/30 my-2" />
         <div>

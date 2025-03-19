@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
 import { Styles } from "react-chatbotify";
 import { useAudio } from '@/store/selectors';
