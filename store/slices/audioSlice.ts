@@ -48,6 +48,12 @@ interface AudioState {
   // Track loading state to prevent duplicate playback
   _isLoopLoading: boolean;
   _pendingLoopName: string | null;
+  // Track music loading state to prevent multiple parallel fetches
+  _isMusicLoading: boolean;
+  _pendingMusicTrack: string | null;
+  // Debouncing for sounds
+  _lastPlayedSounds: Record<string, number>;
+  _soundDebounceTime: number;
 }
 
 interface AudioActions {
@@ -134,6 +140,7 @@ export const useAudioStore = create<AudioState & AudioActions>()(
       'notification': 'notification',
       'cardFlip': 'cardFlip',
       'levelUp': 'levelUp',
+      'levelup': 'levelUp', // Adding alias with lowercase for consistency
       'coin': 'coin',
       'achievement': 'achievement',
       'flashcard-startup': 'flashcard-startup',
@@ -141,11 +148,27 @@ export const useAudioStore = create<AudioState & AudioActions>()(
       'flashcard-select': 'flashcard-select',
       'correct': 'correct',
       'whoosh': 'whoosh',
+      'fanfare': 'fanfare',
+      'sadfanfare': 'sadfanfare', // Map to actual file now instead of fallback
+      'beep-tone': 'beep-tone',
+      'chatbot-open': 'chatbot-open',
+      'short-choir': 'short-choir',
+      'streakdaily': 'streakdaily',
+      'streakmonth': 'streakmonth',
+      'warning': 'warning',
     },
 
     // Initialize new properties for loop loading state
     _isLoopLoading: false,
     _pendingLoopName: null,
+
+    // Initialize new properties for music loading state
+    _isMusicLoading: false,
+    _pendingMusicTrack: null,
+
+    // Store last played sound with timestamp to prevent multiple rapid plays
+    _lastPlayedSounds: {} as Record<string, number>,
+    _soundDebounceTime: 3000, // Increased to 3 seconds (3000ms) from 1000ms
 
     // Set song queue
     setSongQueue: (queue) => {
@@ -433,6 +456,23 @@ export const useAudioStore = create<AudioState & AudioActions>()(
       console.log('[AudioSlice] playMusic called with URL:', trackUrl);
       const state = get();
       
+      // Check if the same track is already loading to prevent duplicate operations
+      if (state._isMusicLoading) {
+        console.log(`[AudioSlice] Another track is already loading: ${state._pendingMusicTrack}`);
+        if (state._pendingMusicTrack === trackUrl) {
+          console.log(`[AudioSlice] Skipping duplicate request for the same track`);
+          return;
+        }
+        // If a different track is loading, let's cancel it by stopping any music
+        state.stopMusic();
+      }
+      
+      // Set loading state immediately
+      set({ 
+        _isMusicLoading: true, 
+        _pendingMusicTrack: trackUrl 
+      });
+      
       // Check if audio context exists
       if (!state.audioContext) {
         console.log('[AudioSlice] No audio context, initializing first');
@@ -441,6 +481,7 @@ export const useAudioStore = create<AudioState & AudioActions>()(
           console.log('[AudioSlice] Audio context initialized successfully');
         } catch (error) {
           console.error('[AudioSlice] Failed to initialize audio context:', error);
+          set({ _isMusicLoading: false, _pendingMusicTrack: null });
           return;
         }
       }
@@ -453,6 +494,7 @@ export const useAudioStore = create<AudioState & AudioActions>()(
           console.log('[AudioSlice] Audio context resumed successfully');
         } catch (error) {
           console.error('[AudioSlice] Failed to resume audio context:', error);
+          set({ _isMusicLoading: false, _pendingMusicTrack: null });
           return;
         }
       }
@@ -475,10 +517,18 @@ export const useAudioStore = create<AudioState & AudioActions>()(
         const buffer = await state.loadAudioBuffer(trackUrl);
         console.log('[AudioSlice] Audio buffer loaded successfully');
         
+        // Check if another track was requested while we were loading
+        if (get()._pendingMusicTrack !== trackUrl) {
+          console.log('[AudioSlice] Another track was requested while loading, aborting playback');
+          set({ _isMusicLoading: false, _pendingMusicTrack: null });
+          return;
+        }
+        
         // Ensure audioContext exists
         const audioContext = state.audioContext;
         if (!audioContext) {
           console.error('[AudioSlice] Audio context not initialized after buffer load');
+          set({ _isMusicLoading: false, _pendingMusicTrack: null });
           throw new Error('Audio context not initialized');
         }
         
@@ -532,24 +582,34 @@ export const useAudioStore = create<AudioState & AudioActions>()(
           musicSource: source,
           isPlaying: true,
           currentMusic: trackUrl,
-          currentSong: trackUrl
+          currentSong: trackUrl,
+          _isMusicLoading: false
         });
         console.log('[AudioSlice] Playback started, state updated');
       } catch (error) {
         console.error('[AudioSlice] Error in playMusic:', error);
         // Update state to reflect error
-        set({ isPlaying: false });
+        set({ 
+          isPlaying: false,
+          _isMusicLoading: false,
+          _pendingMusicTrack: null
+        });
         throw error;
       }
     },
 
-    // Stop music
+    // Stop music - update this to clear music loading flags
     stopMusic: () => {
       console.log('[AudioSlice] stopMusic called');
       const state = get();
       
-      // Set state to not playing immediately
-      set({ isPlaying: false, currentMusic: null });
+      // Set state to not playing immediately and clear loading flags
+      set({ 
+        isPlaying: false, 
+        currentMusic: null,
+        _isMusicLoading: false,
+        _pendingMusicTrack: null 
+      });
       
       if (state.musicSource && state.audioContext) {
         try {
@@ -643,14 +703,47 @@ export const useAudioStore = create<AudioState & AudioActions>()(
     playSound: async (sfxName) => {
       console.log(`[AudioSlice] Attempting to play sound effect: ${sfxName}`);
       const state = get();
+      
+      // Prevent rapid repeated plays of the same sound
+      const now = Date.now();
+      const lastPlayed = state._lastPlayedSounds[sfxName] || 0;
+      if (now - lastPlayed < state._soundDebounceTime) {
+        console.log(`[AudioSlice] Skipping sound "${sfxName}" - played too recently (${now - lastPlayed}ms ago)`);
+        return Promise.resolve(); // Return resolved promise to avoid the async chain continuing
+      }
+      
+      // Update last played timestamp IMMEDIATELY before any async operations
+      // This prevents multiple calls while the first one is still initializing
+      set({ 
+        _lastPlayedSounds: { 
+          ...state._lastPlayedSounds, 
+          [sfxName]: now 
+        } 
+      });
+      
+      // Check if this is a duplicate call within 10ms (additional protection)
+      const callTime = now;
+      console.log(`[AudioSlice] Sound ${sfxName} - Processing started at ${callTime}`);
+      
       if (!state.audioContext) {
         console.log(`[AudioSlice] Audio context not initialized for sound: ${sfxName}, initializing now...`);
         await get().initializeAudioContext();
       }
       
-      const sfxPath = state._SOUND_MAPPINGS[sfxName];
+      // Try exact name first, then try lowercase version for case-insensitive match
+      let sfxPath = state._SOUND_MAPPINGS[sfxName];
+      if (!sfxPath && typeof sfxName === 'string') {
+        // Try lowercase version
+        const lcName = sfxName.toLowerCase();
+        sfxPath = state._SOUND_MAPPINGS[lcName];
+        if (sfxPath) {
+          console.log(`[AudioSlice] Found sound using case-insensitive match: ${lcName}`);
+        }
+      }
+      
       if (!sfxPath) {
         console.error(`[AudioSlice] Sound effect not found in mappings: ${sfxName}`);
+        console.log(`[AudioSlice] Available sounds: ${Object.keys(state._SOUND_MAPPINGS).join(', ')}`);
         return;
       }
 

@@ -50,7 +50,22 @@ interface MCATProgressData {
     "Chem/Phys": number | null;
     "Bio/Biochem": number | null;
   };
+  diagnosticScores?: {
+    total: string;
+    cp: string;
+    cars: string;
+    bb: string;
+    ps: string;
+  } | null;
 }
+
+// Map to connect DonutChart labels to diagnostic score keys
+const labelToDiagnosticMap = {
+  "CARs": "cars",
+  "Psych/Soc": "ps",
+  "Chem/Phys": "cp",
+  "Bio/Biochem": "bb"
+};
 
 const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
   const { theme } = useUI();
@@ -67,6 +82,11 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
         const response = await fetch('/api/mcat-progress');
         if (response.ok) {
           const data = await response.json();
+          console.log("DEBUG - DonutChart - Fetched MCAT progress data:", data);
+          console.log("DEBUG - DonutChart - Has diagnostic scores:", !!data.diagnosticScores);
+          if (data.diagnosticScores) {
+            console.log("DEBUG - DonutChart - Diagnostic scores content:", JSON.stringify(data.diagnosticScores, null, 2));
+          }
           setProgressData(data);
         }
       } catch (error) {
@@ -171,10 +191,43 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
     "Bio/Biochem": Activity,
   };
 
+  // Function to get score for a section
+  const getScoreForSection = (label: string): string => {
+    // First check if there are diagnostic scores available
+    if (progressData?.diagnosticScores) {
+      const diagnosticKey = labelToDiagnosticMap[label as keyof typeof labelToDiagnosticMap];
+      const diagnosticScore = diagnosticKey && progressData.diagnosticScores[diagnosticKey as keyof typeof progressData.diagnosticScores];
+      
+      console.log(`DEBUG - DonutChart - Getting score for ${label}, diagnostic key: ${diagnosticKey}, value: ${diagnosticScore}`);
+      
+      if (diagnosticKey && diagnosticScore) {
+        return diagnosticScore;
+      }
+    }
+
+    // If no diagnostic scores or the specific score is missing, fall back to practice test averages
+    if (progressData?.sectionAverages) {
+      const sectionKey = label as keyof typeof progressData.sectionAverages;
+      const avgScore = progressData.sectionAverages[sectionKey];
+      console.log(`DEBUG - DonutChart - Falling back to practice test avg for ${label}: ${avgScore}`);
+      
+      if (avgScore !== null && avgScore !== undefined) {
+        return avgScore.toString();
+      }
+    }
+    
+    return 'N/A';
+  };
+
+  // Check if we're using diagnostic scores or practice test scores
+  const isUsingDiagnosticScores = !!progressData?.diagnosticScores && 
+    Object.values(progressData.diagnosticScores).some(score => !!score);
+
   return (
     <div className="w-full h-full flex flex-col p-3 md:p-4 lg:p-6">
       <h2 className="text-[--theme-text-color] text-xs mb-6 opacity-60 uppercase tracking-wide text-center">
         {user?.firstName || 'Student'}&apos;s MCAT Progress
+        {isUsingDiagnosticScores && <span className="block mt-1 text-[0.6rem] font-light italic">Showing diagnostic scores</span>}
       </h2>
 
       <div className="flex flex-col lg:flex-row gap-3 lg:gap-6 h-[calc(100%-1rem)]">
@@ -251,51 +304,39 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
                     }
                   },
                   y: {
-                    min: 472,
-                    max: 528,
                     grid: {
-                      color: `${getThemeColor()}4D`,
-                      display: true,
-                      lineWidth: 0.5
+                      display: false,
                     },
                     border: {
                       display: false,
                     },
+                    min: 472,
+                    max: 528,
                     ticks: {
                       color: getThemeColor(),
                       font: {
                         size: 12,
                         weight: 'bold'
-                      },
-                      callback: function(value) {
-                        return value.toString();
                       }
                     }
                   }
-                },
+                }
               }}
             />
           ) : (
-            <div className="flex flex-col items-center justify-center h-full gap-8">
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="w-[300px] h-[200px] relative"
-              >
-                <Image
-                  src="/kalypsotyping.gif"
-                  alt="Kalypso typing"
-                  fill
-                  className="rounded-lg object-cover"
-                  priority
-                />
-              </motion.div>
+            <div className="flex flex-col items-center justify-center w-full">
+              <Image 
+                src="/kalypsotyping.gif" 
+                alt="Kalypso Working" 
+                width={200} 
+                height={200} 
+                className="opacity-80"
+              />
               <motion.p 
-                className="text-center text-xl md:text-2xl max-w-[60%] mx-auto font-semibold leading-relaxed"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
+                className="text-lg font-black mt-4 text-center max-w-md"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
                 style={{
                   background: 'linear-gradient(135deg, var(--theme-text-color) 0%, var(--theme-hover-color) 100%)',
                   WebkitBackgroundClip: 'text',
@@ -312,7 +353,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
         {/* Subject Buttons - Updated Design */}
         <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 lg:gap-6 lg:w-48">
           {labels.map((label) => {
-            const avgScore = progressData?.sectionAverages[label as keyof typeof progressData.sectionAverages];
+            const scoreValue = getScoreForSection(label);
             const Icon = sectionIcons[label as keyof typeof sectionIcons];
             
             return (
@@ -363,7 +404,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ onProgressClick }) => {
                         opacity: hoveredButton === label ? 1 : 0.75,
                         transform: `scale(${hoveredButton === label ? 1.02 : 1})`,
                       }}>
-                        {avgScore !== null ? avgScore : 'N/A'}
+                        {scoreValue}
                       </span>
                       <span className="text-xs font-medium mt-0.5 transition-all duration-300" style={{ 
                         color: 'var(--theme-text-color)',

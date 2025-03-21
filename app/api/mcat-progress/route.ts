@@ -16,6 +16,13 @@ export interface MCATProgressResponse {
     "Chem/Phys": number | null;
     "Bio/Biochem": number | null;
   };
+  diagnosticScores?: {
+    total: string;
+    cp: string;
+    cars: string;
+    bb: string;
+    ps: string;
+  } | null;
 }
 
 interface OnboardingInfo {
@@ -30,11 +37,18 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get user's target score from onboarding info
+    // Get user's target score from onboarding info and diagnostic scores
     const userInfo = await prisma.userInfo.findUnique({
       where: { userId },
-      select: { onboardingInfo: true }
+      select: { 
+        onboardingInfo: true,
+        diagnosticScores: true
+      }
     });
+    
+    console.log("DEBUG - MCAT Progress API - User ID:", userId);
+    console.log("DEBUG - MCAT Progress API - User info retrieved:", !!userInfo);
+    console.log("DEBUG - MCAT Progress API - Diagnostic scores:", JSON.stringify(userInfo?.diagnosticScores, null, 2));
     
     // Handle onboardingInfo properly whether it's a string or object
     let onboardingInfo: OnboardingInfo;
@@ -122,9 +136,21 @@ export async function GET() {
         : null
     };
 
+    // Extract diagnostic scores from user info
+    const diagnosticScores = userInfo?.diagnosticScores as {
+      total: string;
+      cp: string;
+      cars: string;
+      bb: string;
+      ps: string;
+    } | null;
+    
+    console.log("Diagnostic scores from DB:", diagnosticScores);
+
     const response = {
       chartData,
-      sectionAverages
+      sectionAverages,
+      diagnosticScores
     } as MCATProgressResponse;
 
     return NextResponse.json(response);

@@ -23,7 +23,8 @@
       }
     ],
     "import/no-unused-modules": ["warn", {
-      "unusedExports": true
+      "unusedExports": true,
+      "ignoreExports": ["**/api/**/*"]
     }],
     "@typescript-eslint/adjacent-overload-signatures": "warn",
     "@typescript-eslint/ban-ts-comment": "warn",
@@ -37,7 +38,7 @@
     "@typescript-eslint/no-misused-new": "warn",
     "@typescript-eslint/no-namespace": "warn",
     "@typescript-eslint/no-non-null-asserted-optional-chain": "warn",
-    "@typescript-eslint/no-non-null-assertion": "warn",
+    "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/no-this-alias": "warn",
     "@typescript-eslint/no-var-requires": "warn",
     "@typescript-eslint/prefer-as-const": "warn",
