@@ -1,7 +1,49 @@
-# Features:
-[ ] Talking to kalypso - better UI - waveform shows - when talking to Kalypso AI 
-[ ] 
+# Features / Branch Ideas:
 
+1.**Track UI Globally**
+- current Schema in UI State: 
+` "currentRoute": "/home"`  
+- navigation: {
+    page:  //  ex: `/home` , `/test`, `/cars`, `/ats` // anki clinic done
+    subSection: // object that encapsulates all subsections - each page could have different looking subsections
+}
+
+    // ex: if user lands in `/ats`
+    UI State would look like 
+    navigation:{
+        page: `/ats`
+        subSection: {
+            concept: "Amino Acids" //this is the top 6 button
+            contentType:   Video, reading, quiz, etc
+    }
+}
+ - make sure every route is accounted for,
+ - CARS: `context:passage, questionsAsked , explanationNotes`
+ 
+ 2) **Prynce priority: in Home - we need to fetch the user's information**
+ First time user signs in - ChatContainer is replaced by a new <Component> that holds space for a  3 minute video afterwards there a checkbox dialog you've watched it, (2nd time they login they dont see the video if the check was true)
+->
+ChatContainer (similar te refactor-final -branch) has transparent background -   interactive kalypso, waves and always talks right when u login.
+Kalypso has context and summarizes your week.
+
+- last time you were here its been this many days.
+- greet them happily -
+- next test  with motivational message! 
+
+- Example: 
+FIRST MESSAGE IS HARDCODED AFTER THEY ENTER! 
+
+   "Hey, welcome back! It's been three days. You scored a 492 on your last test, which isn't the best, but you have another one in SEVEN days. Keep on rocking, kiddo!" 
+
+ 3. **In ATS - Kalypso knows the content you are looking at and will quiz you (depends on 2).**
+ - given that #2 is done and we track user's ats context which might look like "timestamp, videoTranscript", we have kalypso pop in randomly it pauses the video kapyso asks a question based on the content the user has already seen (see our `refactor-home-final` branch ) .
+
+ 4. **Talking to Kalypso**
+- better UI  you should hold a button its listening and transcribing as opposed to just press command once.
+- when you hold down command, a waveform thats flat begins then you talk the waveform changes based on energy.
+- current behavior: - if you play music and press command,  you can  talk to kalypso and music is playing, we suggest evaluate if music is playing then just pause it - to not interfere with user talking or Kalypso talking back (user can play it again manually)
+- current behavior: when user says Kalypso the transcription says "Calypso", make sure its spelled right with a K 
+- change transcription to be real time (while cmd is being held down). 
 
 
 ---
@@ -122,7 +164,3 @@ Required actions after code changes:
 [x] Create component-guidelines.mdc and state-management.mdc files
 [ ] Migrate remaining content from .cursorrules to appropriate .mdc files
 [ ] Delete .cursorrules file after migration is complete
-
-## Bugs
-[ ] CARS Suite - take out sound when you select answer. (Prynce bug)
-
