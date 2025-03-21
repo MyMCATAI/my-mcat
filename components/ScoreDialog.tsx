@@ -1,12 +1,12 @@
 //components/ScoreDialog.tsx
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Star } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useRouter } from 'next/navigation'; 
 import Link from 'next/link';
-import Image from 'next/image'; // Added import
-import { useAudio } from '@/store/selectors'; // Replace useAudioManager
+import Image from 'next/image';
+import { useAudio } from '@/store/selectors';
 
 interface ScoreDialogProps {
   open: boolean;
@@ -33,80 +33,121 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
   totalTimeTaken, 
   difficulty
 }) => {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [animatedScore, setAnimatedScore] = useState(0);
   const [scoreStars, setScoreStars] = useState(0);
   const [timingStars, setTimingStars] = useState(0);
   const [techniqueStars, setTechniqueStars] = useState(0);
   const router = useRouter();
-  const audio = useAudio(); // Replace useAudioManager
+  const audio = useAudio();
+  
+  // Track animation intervals for cleanup
+  const intervalsRef = useRef<Array<NodeJS.Timeout>>([]);
+  // Flag to ensure sound is played only once
+  const soundPlayedRef = useRef(false);
+  // Dialog previous state 
+  const wasOpenRef = useRef(false);
+
+  // Cleanup function for intervals
+  const cleanupIntervals = useCallback(() => {
+    intervalsRef.current.forEach(interval => clearInterval(interval));
+    intervalsRef.current = [];
+  }, []);
+
+  // Play sound once when dialog opens
+  useEffect(() => {
+    // Only play sound when the dialog first opens
+    if (open && !wasOpenRef.current && !soundPlayedRef.current) {
+      soundPlayedRef.current = true;
+      
+      // Use setTimeout to ensure sound isn't played immediately during render loop
+      setTimeout(() => {
+        // Double check the flag hasn't changed
+        if (soundPlayedRef.current && open) {
+          // Play appropriate sound based on score
+          if (score === 100) {
+            audio.playSound('fanfare');
+          } else if (score >= 60) {
+            audio.playSound('levelup');
+          } else {
+            audio.playSound('sadfanfare');
+          }
+        }
+      }, 100);
+    }
+    
+    // Reset sound played flag when dialog closes
+    if (!open && wasOpenRef.current) {
+      soundPlayedRef.current = false;
+    }
+    
+    // Update previous state
+    wasOpenRef.current = open;
+  }, [open, score, audio]);
 
   useEffect(() => {
+    // Reset values when dialog opens
     if (open) {
-      // Play appropriate sound based on score
-      if (score === 100) {
-        audio.playSound('fanfare');
-      } else if (score >= 60) {
-        audio.playSound('levelup');
-      } else {
-        audio.playSound('sadfanfare');
-      }
+      setAnimatedScore(0);
+      setScoreStars(0);
+      setTimingStars(0);
+      setTechniqueStars(0);
 
-      // Animate the score percentage
-      let currentScore = 0;
-      const scoreInterval = setInterval(() => {
-        if (currentScore < score) {
-          currentScore += 1;
-          setAnimatedScore(currentScore);
-        } else {
-          clearInterval(scoreInterval);
-        }
-      }, 20);
-
-      // Animate stars for score
-      let currentScoreStars = 0;
-      const targetScoreStars = getStarCount(score);
-      const scoreStarsInterval = setInterval(() => {
-        if (currentScoreStars < targetScoreStars) {
-          currentScoreStars += 0.1;
-          setScoreStars(currentScoreStars);
-        } else {
-          clearInterval(scoreStarsInterval);
-        }
-      }, 50);
-
-      // Animate stars for timing
-      let currentTimingStars = 0;
-      const targetTimingStars = getTimingStars(totalTimeTaken, totalQuestions);
-      const timingStarsInterval = setInterval(() => {
-        if (currentTimingStars < targetTimingStars) {
-          currentTimingStars += 0.1;
-          setTimingStars(currentTimingStars);
-        } else {
-          clearInterval(timingStarsInterval);
-        }
-      }, 50);
-
-      // Animate stars for technique
-      let currentTechniqueStars = 0;
-      const targetTechniqueStars = getTechniqueStars(technique);
-      const techniqueStarsInterval = setInterval(() => {
-        if (currentTechniqueStars < targetTechniqueStars) {
-          currentTechniqueStars += 0.1;
-          setTechniqueStars(currentTechniqueStars);
-        } else {
-          clearInterval(techniqueStarsInterval);
-        }
-      }, 50);
-
-      return () => {
-        clearInterval(scoreInterval);
-        clearInterval(scoreStarsInterval);
-        clearInterval(timingStarsInterval);
-        clearInterval(techniqueStarsInterval);
-      };
+      // Create all animations at once with a single timeout
+      setTimeout(() => {
+        startAnimations();
+      }, 300);
     }
-  }, [open, score, audio]);
+
+    return () => {
+      cleanupIntervals();
+    };
+  }, [open, cleanupIntervals]);
+
+  // Function to start all animations
+  const startAnimations = () => {
+    cleanupIntervals(); // Clear any existing intervals
+    
+    // Calculate target values
+    const targetScore = score;
+    const targetScoreStars = getStarCount(score);
+    const targetTimingStars = getTimingStars(totalTimeTaken, totalQuestions);
+    const targetTechniqueStars = getTechniqueStars(technique);
+    
+    // Use a single animation frame for all animations
+    let frameCount = 0;
+    const totalFrames = 12; // Complete all animations in 12 frames
+    
+    const animationInterval = setInterval(() => {
+      frameCount++;
+      
+      if (frameCount >= totalFrames) {
+        // Final frame - set exact values
+        setAnimatedScore(targetScore);
+        setScoreStars(targetScoreStars);
+        setTimingStars(targetTimingStars);
+        setTechniqueStars(targetTechniqueStars);
+        cleanupIntervals();
+        return;
+      }
+      
+      // Calculate progress (0 to 1)
+      const progress = frameCount / totalFrames;
+      
+      // Update all values based on progress
+      const newScore = Math.floor(targetScore * progress);
+      const newScoreStars = Math.min(targetScoreStars, Math.ceil(targetScoreStars * progress));
+      const newTimingStars = Math.min(targetTimingStars, Math.ceil(targetTimingStars * progress));
+      const newTechniqueStars = Math.min(targetTechniqueStars, Math.ceil(targetTechniqueStars * progress));
+      
+      setAnimatedScore(newScore);
+      setScoreStars(newScoreStars);
+      setTimingStars(newTimingStars);
+      setTechniqueStars(newTechniqueStars);
+    }, 80); // ~1 second total animation
+    
+    // Store interval for cleanup
+    intervalsRef.current.push(animationInterval);
+  };
 
   const getStarCount = (score: number) => {
     if (score === 100) return 3;
@@ -208,7 +249,6 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <audio ref={audioRef} />
       <DialogContent className="bg-white text-black border-2 border-pink-600">
         <DialogHeader>
           <DialogTitle className="text-3xl font-semibold text-pink-600 text-center">
@@ -234,7 +274,7 @@ const ScoreDialog: React.FC<ScoreDialogProps> = ({
           <div>
             <p className="text-xl font-semibold">Score</p>
             <p className="text-2xl font-bold text-pink-600">
-              {animatedScore.toFixed(0)}%
+              {animatedScore}%
             </p>
             <p className="text-lg">
               {getQuestionsRight(correctAnswer, totalQuestions)}

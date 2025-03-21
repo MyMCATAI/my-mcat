@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useUI, useUser, useGame, useAudio } from '@/store/selectors'
+import { useUI, useUser, useGame, useAudio, useVocab } from '@/store/selectors'
 
 /* --- Constants ----- */
 const DEBUG_PARAM = 'debug'
@@ -18,6 +18,7 @@ const DebugPanel = () => {
   const userState = useUser()
   const gameState = useGame()
   const audioState = useAudio()
+  const vocabState = useVocab()
 
   /* --- Effects --- */
   // Simple debug mode logic - only use URL parameter
@@ -95,6 +96,11 @@ const DebugPanel = () => {
         <div>
           <h4 className="font-bold">User State</h4>
           <pre>{JSON.stringify(userState, null, 2)}</pre>
+        </div>
+        <hr className="border-white/30 my-2" />
+        <div>
+          <h4 className="font-bold">Vocab State</h4>
+          <pre>{JSON.stringify(vocabState, null, 2)}</pre>
         </div>
       </div>
     </div>

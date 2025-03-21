@@ -81,7 +81,9 @@ export function useSubscriptionStatus() {
   const isCanceled = stripeData.status?.subscription?.cancelAtPeriodEnd ?? false;
 
   // Calculate trial end date
-  const trialEnd = stripeData.status?.subscription?.trialEnd;
+  const trialEnd = stripeData.status?.subscription?.trialEnd 
+    ? new Date(stripeData.status.subscription.trialEnd) 
+    : null;
   
   // Calculate days remaining in trial if in trial period
   const trialDaysRemaining = trialEnd ? 

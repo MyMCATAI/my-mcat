@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { OnboardingInfo } from '@/types';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -82,12 +82,13 @@ export function useOnboardingInfo() {
     fetchOnboardingInfo();
   }, [router, onboardingComplete, setOnboardingComplete]);
 
+  // Update onboarding info in the database
   const updateOnboardingInfo = async (updates: Partial<OnboardingInfo>) => {
     try {
       const response = await fetch('/api/user-info/onboarding', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
+        body: JSON.stringify(updates)
       });
 
       if (!response.ok) throw new Error('Failed to update onboarding info');
@@ -235,7 +236,8 @@ export function useOnboardingInfo() {
     handleCollegeSubmit,
     handleAcademicsSubmit,
     handleGoalsSubmit,
-    handleReferralComplete,
     handleKalypsoComplete,
+    handleReferralComplete,
+    ONBOARDING_STEPS
   };
 } 

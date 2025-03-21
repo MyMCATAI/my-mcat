@@ -8,6 +8,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useUserInfo } from "@/hooks/useUserInfo";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,7 @@ export function PurchaseButton({
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [isModalOpen, setIsModalOpen] = useState(autoOpen);
   const { isSubscribed, isLoading } = useUserInfo();
+  const router = useRouter();
 
   useEffect(() => {
     setIsModalOpen(autoOpen);
@@ -49,21 +51,24 @@ export function PurchaseButton({
       setLoadingStates(prev => ({ ...prev, [productType]: true }));
       
       if (productType === ProductType.MD_GOLD) {
-        if (isSubscribed) {
-          const response = await axios.get("/api/stripe");
-          window.location.href = response.data.url;
-          return;
-        }
-        window.location.href = '/pricing';
+        console.log("Redirecting to pricing page for MD Gold subscription");
+        router.push('/pricing');
         return;
       }
 
+      console.log("Initiating checkout for product type:", productType);
       const response = await axios.post("/api/stripe/checkout", {
         priceType: productType
       });
+      console.log("Checkout response:", response.data);
       window.location.href = response.data.url;
-    } catch (error) {
-      console.error("Error:", error);
+    } catch (error: any) {
+      console.error("Error during purchase:", error);
+      // Log more details if available
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+        console.error("Error response status:", error.response.status);
+      }
       toast.error("Failed to initiate purchase. Please try again.");
     } finally {
       setLoadingStates(prev => ({ ...prev, [productType]: false }));
