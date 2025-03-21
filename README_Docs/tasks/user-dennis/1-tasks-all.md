@@ -1,6 +1,6 @@
 # Features / Branch Ideas:
 
-1.**Track UI Globally**
+1.**Track UI Globally** - Dennis 
 - current Schema in UI State: 
 ` "currentRoute": "/home"`  
 - navigation: {
