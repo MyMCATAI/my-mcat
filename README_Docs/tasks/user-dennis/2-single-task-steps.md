@@ -1,114 +1,351 @@
 ### Branch TODO:
 
-## Redirect Behavior Analysis: Current Branch vs Main Branch ✅
+### Branch Steps: Route and Navigation Tracking
 
-### Question: 
-What should be the default behavior when a returning user (already registered) visits localhost:3000? Should it redirect to /onboarding, /home, or something else?
+# Feature #2: Track UI Globally
 
-### Current Branch (with debug param preservation) ✅
+## Navigation State Management Strategy
 
-In the current branch, when a previously registered user visits localhost:3000:
+### Problem Analysis
+1. **Inconsistent route tracking**: 
+   - Not all section changes are reflected in the URL (e.g., entering ATS keeps `/home` in the URL)
+   - Subsection navigation doesn't update `currentRoute` in UI state
+   - Kalypso lacks contextual awareness of what the user is doing
 
-1. **Automatic Login Detection**: ✅
-   - If the user was previously logged in and their session is still valid, Clerk will auto-authenticate them
-   - The RouteTracker component detects this and processes redirection logic
+2. **Current approach limitations**:
+   - `useUIStore` has a `currentRoute` state, but it's not consistently updated
+   - URL changes happen in components without state synchronization
+   - No tracking of deeper navigation contexts (sections within sections)
+   - No persistence of navigation state
 
-2. **Redirection Flow**: ✅
-   ```
-   Root path (/) -> Check if signed in -> Check if onboarding complete -> Route accordingly
-   ```
+### Architecture Decision: General Context vs Section-Specific Contexts
 
-3. **Specific Logic**: ✅
-   - If user is signed in but has no userInfo: Redirect to `/onboarding`
-   - If user is signed in, has userInfo, and onboarding is complete:
-     - Redirect to `/home` (see "Special case" for root path)
-     - If user has no subscription: Will subsequently redirect to `/ankiclinic` 
-     - If user has subscription but no study plan: Will redirect to `/examcalendar`
+#### Approach 1: Section-Specific Context Objects (Original)
+- **Pros**:
+  - Clear organization by section
+  - Strong typing for each section's unique data
+  - Follows domain-driven design principles
+  - Easy to understand what belongs where
 
-4. **Implementation**: ✅
+- **Cons**:
+  - More complex nested structure
+  - Requires more code to update specific sections
+  - May lead to duplication of similar structures
+
+#### Approach 2: General Context Object (RECOMMENDED)
+- **Pros**:
+  - Simpler flat structure
+  - More flexible for changing requirements
+  - Easier to update single properties
+  - Cleaner for components that need a subset of properties
+  - Can still be type-safe with discriminated unions
+
+- **Cons**:
+  - May need careful property naming to avoid collisions
+  - Less obvious organization at a glance
+  - Potentially less strong typing
+
+### Decision: EXTEND UISLICE with a general context object
+
+The navigation and context state should live in UISlice, using a general context object that adapts based on the current route:
+
+```typescript
+// In uiSlice.ts
+interface UIState {
+  // General UI state
+  theme: ThemeType;
+  window: WindowSize;
+  
+  // Navigation state
+  currentRoute: string;
+  navigationHistory: string[];
+  
+  // General context - dynamic based on current route
+  context: {
+    // Common properties across all routes
+    pageTitle?: string;
+    lastUpdated?: string;
+    
+    // ATS route properties
+    subject?: string;
+    contentType?: 'video' | 'reading' | 'quiz' | 'highlight' | 'askKalypso';
+    timestamp?: number;
+    transcription?: string;
+    
+    // CARS route properties
+    passageContent?: string;
+    questionsAsked?: string[];
+    explanationNotes?: string;
+    
+    // Other route-specific properties as needed
+    [key: string]: any;
+  }
+}
+```
+
+This approach:
+1. Keeps all state in one place (UISlice)
+2. Uses a flexible structure that can adapt to any route
+3. Makes it easy to update individual properties
+4. Simplifies state subscription for components
+5. Makes it easy to share context with Kalypso
+
+## Implementation Steps
+
+### 1. Extend UISlice with Enhanced Navigation and Context State
+
+```typescript
+// Add these to uiSlice.ts
+interface UIState {
+  // Existing state
+  window: WindowSize;
+  currentRoute: string;
+  theme: ThemeType;
+  
+  // New navigation state
+  navigationHistory: string[];
+  
+  // New general context state
+  context: Record<string, any>;
+}
+
+// Add new actions
+const setCurrentRoute = (route: string) => {
+  set((state) => ({
+    currentRoute: route,
+    navigationHistory: [...state.navigationHistory, route].slice(-10) // Keep last 10
+  }));
+}
+
+const setContext = (updates: Record<string, any>) => {
+  set((state) => ({
+    context: {
+      ...state.context,
+      ...updates
+    }
+  }));
+}
+
+const clearContext = () => {
+  set(() => ({ context: {} }));
+}
+```
+
+### 2. Create Navigation Hooks for Consistent Usage
+
+```typescript
+// In a new hooks/useNavigation.ts file
+import { useRouter } from 'next/navigation';
+import { useUIStore } from '@/store/slices/uiSlice';
+
+export function useNavigation() {
+  const router = useRouter();
+  const setCurrentRoute = useUIStore(state => state.setCurrentRoute);
+  const setContext = useUIStore(state => state.setContext);
+  const clearContext = useUIStore(state => state.clearContext);
+  
+  // Navigate to a main route with URL change
+  const navigateTo = (route: string) => {
+    router.push(route);
+    setCurrentRoute(route);
+    clearContext(); // Clear context when changing routes
+  };
+  
+  // Update context without changing URL
+  const updateContext = (context: Record<string, any>) => {
+    setContext(context);
+  };
+  
+  // Navigate within ATS (common case)
+  const navigateATS = (subject: string, contentType: string) => {
+    // Only change URL to /ATS if not already there
+    if (window.location.pathname !== '/ATS') {
+      router.push('/ATS');
+    }
+    
+    setCurrentRoute('/ATS');
+    setContext({
+      subject,
+      contentType,
+      lastUpdated: new Date().toISOString()
+    });
+  };
+  
+  return {
+    navigateTo,
+    updateContext,
+    navigateATS
+  };
+}
+```
+
+### 3. Usage in Components with Selective Subscriptions
+
+```typescript
+// In any component needing navigation
+import { useNavigation } from '@/hooks/useNavigation';
+import { useUIStore } from '@/store/slices/uiSlice';
+
+const MyComponent = () => {
+  const { navigateTo, updateContext } = useNavigation();
+  
+  // Subscribe only to specific context properties to optimize re-renders
+  const subject = useUIStore(state => state.context.subject);
+  const contentType = useUIStore(state => state.context.contentType);
+  
+  const goToHome = () => navigateTo('/home');
+  
+  const openBiologyVideos = () => {
+    navigateTo('/ATS');
+    updateContext({
+      subject: 'biology',
+      contentType: 'video'
+    });
+  };
+  
+  // ...
+};
+```
+
+### 4. Integration with Kalypso
+
+```typescript
+// In Kalypso context provider
+import { useUIStore } from '@/store/slices/uiSlice';
+
+const KalypsoContextProvider = ({ children }) => {
+  // Get both route and context information
+  const currentRoute = useUIStore(state => state.currentRoute);
+  const context = useUIStore(state => state.context);
+  
+  // Build context object for Kalypso that includes navigation and content context
+  const buildContextForKalypso = () => {
+    return {
+      currentRoute,
+      ...context,
+      // Additional useful information for Kalypso can be added here
+    };
+  };
+  
+  // ... rest of provider
+};
+```
+
+### 5. Debug Panel Integration
+
+```typescript
+// In DebugPanel.tsx
+const uiState = useUIStore();
+
+// Format navigation and context for display
+const displayState = {
+  currentRoute: uiState.currentRoute,
+  recentHistory: uiState.navigationHistory.slice(-3), // Show last 3
+  context: uiState.context
+};
+
+// Then in the render:
+<div>
+  <h4 className="font-bold">Navigation & Context State</h4>
+  <pre>{JSON.stringify(displayState, null, 2)}</pre>
+</div>
+```
+
+## Benefits of General Context Approach
+
+1. **Simpler State Structure**: Flat object is easier to understand and update
+2. **Selective Subscriptions**: Components can subscribe to exactly what they need:
    ```typescript
-   // Special case: If on root path and signed in with completed onboarding, redirect to home
-   if (effectiveOnboardingComplete && pathname === '/') {
-     performRedirect('/home', 'On root with completed onboarding');
-     return;
-   }
+   // Only re-render when specific properties change
+   const transcript = useUIStore(state => state.context.transcript);
+   const timestamp = useUIStore(state => state.context.timestamp);
    ```
-
-5. **Debug Parameter Handling**: ✅
-   - The current branch preserves `?debug=true` parameter across redirects
-   - This is implemented with a dedicated utility function that checks for and appends the debug parameter to redirect URLs
-
-### Main Branch Implementation Details ✅
-
-In the main branch, the behavior is similar but with some implementation differences:
-
-1. **Redirection Logic Structure**: ✅
-   - Uses multiple separate useEffect hooks for different redirection scenarios
-   - Has more verbose code with direct router calls rather than a unified redirect function
-
-2. **Specific Logic**: ✅
+3. **Optimized Re-renders**: When one part of context changes, only components that subscribe to that specific property will re-render
+4. **Easier Updates**: Simpler API for updating context:
    ```typescript
-   // If user is signed in, has userInfo, and initial loading is complete
-   if (!userInfo || !pathname || !initialLoadComplete || !isSignedIn) {
-     return;
-   }
-   
-   // Check redirect path...
+   updateContext({ timestamp: currentTime, transcript: currentTranscript });
    ```
+5. **More Flexible**: Easier to add new properties without changing the structure
+6. **Fewer Nested Updates**: No need to worry about deeply nested state updates
+7. **Cleaner Implementation**: Less code overall for the same functionality
 
-3. **Fallback Redirects**: ✅
-   - The main branch implements fallback redirects using setTimeout to force navigation:
-   ```typescript
-   const fallbackTimeout = setTimeout(() => {
-     window.location.href = '/onboarding';
-   }, 2000); // 2 second timeout
-   ```
+## Next Steps
 
-4. **Debug Parameter Handling**: ✅
-   - The main branch does check for debug mode: `const isDebugMode = searchParams?.get('debug') === 'true';` 
-   - However, it doesn't explicitly preserve this parameter during redirects
-   - This explains why debug mode is lost during navigation in the main branch
+1. Implement the UISlice extensions with general context
+2. Create the navigation hooks
+3. Update all navigation calls in the app to use the new system
+4. Add context updates in various components
+5. Connect Kalypso to the context state
+6. Update DebugPanel to show navigation and context state
 
-### Key Differences: ✅
+## Future Considerations
 
-1. **Code Structure**: ✅
-   - Current branch: More modular with clearer separation of concerns
-   - Main branch: More sequential with separate effect hooks for different redirect scenarios
+1. Analytics integration to track user navigation patterns
+2. Property validation for context to ensure type safety
+3. Automatic context clearing when changing routes
+4. Session replay capabilities using navigation history
 
-2. **Debug Parameter Persistence**: ✅
-   - Current branch: Explicitly preserves debug parameter across redirects
-   - Main branch: Detects debug parameter but doesn't preserve it during redirects
+## Comprehensive Navigation Tracking Checklist
 
-3. **Redirect Implementation**: ✅
-   - Current branch: Uses a unified `performRedirect` function with throttling
-   - Main branch: Uses direct router calls with setTimeout fallbacks
+Based on the entire codebase, here's a complete checklist of all sections/areas that should be tracked in the UI state for complete user navigation awareness:
 
-4. **Error Handling**: ✅
-   - Main branch: More defensive with fallback redirects via window.location.href after timeouts
-   - Current branch: Relies primarily on Next.js router for navigation
+### Main Sections to Track (Primary Routes)
+- [ ] Landing Page (`/`)
+- [ ] Home Dashboard (`/home`)
+- [ ] ATS - Adaptive Tutoring Suite (`/ATS`)
+- [ ] CARS - Critical Analysis and Reasoning (`/CARS`)
+- [ ] Profile (`/profile`)
+- [ ] Settings (`/settings`)
+- [ ] Flashcards (`/flashcards`)
+- [ ] Resources (`/resources`)
+- [ ] Help (`/help`)
+- [ ] Onboarding (`/onboarding`)
 
-### Recommended Default Behavior: ✅
+### Context Information to Track Per Route
 
-The current branch behavior seems more correct - when a returning user visits localhost:3000:
-1. If they're already authenticated, redirect them to `/home` if onboarding is complete
-2. If onboarding isn't complete, send them to `/onboarding` to finish setup
-3. Then handle subscription checks for further redirection
+#### ATS Route Context
+- [ ] Current subject
+- [ ] Content type (video, reading, quiz, etc.)
+- [ ] Content ID/title
+- [ ] Timestamp (for videos)
+- [ ] Transcription excerpts
+- [ ] Progress percentage
 
-The debug parameter persistence in the current branch is an improvement that helps maintain developer tools visibility across these redirects.
+#### CARS Route Context
+- [ ] Passage content/ID
+- [ ] Current question
+- [ ] Questions asked
+- [ ] User answers
+- [ ] Explanation notes
+- [ ] Test vs. review mode
 
-## Implementation Status ✅
+#### Flashcards Route Context
+- [ ] Current deck ID
+- [ ] Current card
+- [ ] Study statistics
+- [ ] Session duration
 
-### Completed Tasks:
+#### Implementation Priority Order
+1. [ ] Extend UISlice with navigation and context structure
+   - [ ] Add `navigationHistory` array
+   - [ ] Add `context` object
+   - [ ] Add action creators
 
-- ✅ Updated RouteTracker to match main branch's behavior structure
-- ✅ Implemented fallback redirects using setTimeout and window.location.href
-- ✅ Split redirection logic into separate useEffect hooks for different scenarios
-- ✅ Added proper cleanup for timeout handlers
-- ✅ Preserved debug parameter functionality across all redirects
-- ✅ Fixed TypeScript issues with proper null checks and typing for timeouts
-- ✅ Maintained the same functional behavior for returning users as main branch
+2. [ ] Create common `useNavigation` hook
+   - [ ] Implement general navigation methods
+   - [ ] Add context update helpers
 
-The implementation now provides the best of both branches:
-1. Main branch's defensive approach with fallback redirects
-2. Current branch's debug parameter persistence
-3. Proper TypeScript type safety and null checks
+3. [ ] Update main section navigation (Primary Routes)
+   - [ ] Modify all route changes to update state
+   - [ ] Add context tracking for each major section
+
+4. [ ] Integrate with Kalypso
+   - [ ] Provide context to AI
+   - [ ] Enable context-aware responses
+
+### Technical Requirements
+- [ ] Persist navigation state in localStorage
+- [ ] Handle back/forward browser navigation
+- [ ] Maintain URL synchronization where appropriate
+- [ ] Add analytics tracking for navigation events
+- [ ] Implement selective subscriptions for performance optimization
