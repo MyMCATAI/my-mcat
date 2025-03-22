@@ -25,19 +25,20 @@ Idea: we do differentiate between Admin (mymcat staff) vs Tutors, by using a jso
 // Students are a user that's premium, thats been assigned a tutor
 
 ```
-
 model Student {
   id           String    @id @default(cuid())
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   name         String
-  userId       String
+  userId       String    @unique // Relation to external User model
   bio          String?
-
+  tutorId      String?   // Optional relation to a Tutor model
+  
   // Relations
+  tutor        Tutor?    @relation(fields: [tutorId], references: [id])
   sessions     Session[] // Sessions this student has attended
-  userId       String?   @unique // Optional relation to a User model if you have one
-  tutorId      String?  @unique // Optional relation to a Tutor model if you have one
+
+  @@index([tutorId])
 }
 
 model Tutor {
@@ -45,16 +46,16 @@ model Tutor {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   name            String
-  userId          String
+  userId          String    @unique
   profileImage    String?
-  bio             String?
+  bio             String?   @db.Text
   hourlyRate      Float?
-  education       String?
-  experience      String?
+  education       String?   @db.Text
+  experience      String?   @db.Text
 
   // Relations
-  Students        Student[] // Sessions this tutor has conducted
-  Sessions        Sesssion[]
+  students        Student[] // Students this tutor manages
+  sessions        Session[] // Sessions this tutor has conducted
 }
 
 // Session model
@@ -62,14 +63,17 @@ model Session {
   id          String   @id @default(cuid())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  description String?
-  notes       String?       // Notes taken during the session
-
+  description String?  @db.Text
+  notes       String?  @db.Text // Notes taken during the session
+  
   // Relations
   studentId   String
   student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   tutorId     String
-  tutor       Tutor    @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  tutor       Tutor    @relation(fields: [tutorId], references: [id])
+
+  @@index([studentId])
+  @@index([tutorId])
 }
 
 ```
