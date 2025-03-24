@@ -335,11 +335,6 @@ const AdaptiveTutoring: React.FC<AdaptiveTutoringProps> = ({
         setIsPlaying(true);
       }
 
-      if (clickedContent.transcript) {
-        setTimeout(() => {
-          toggleChatBot();
-        }, 10000);
-      }
       setChatbotContext({
         contentTitle: clickedContent.title,
         context: clickedContent.transcript
