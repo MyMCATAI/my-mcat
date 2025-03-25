@@ -63,7 +63,13 @@ const LandingNavbar = () => {
             </button>
           </Link>
           <Link href={"/sign-in"}>
-            <button className="bg-white text-black py-2 text-[16px] px-6 rounded-lg hover:bg-white/90 transition-colors duration-300">
+            <button 
+              className="bg-white text-black py-2 text-[16px] px-6 rounded-lg hover:bg-white/90 transition-colors duration-300"
+              onClick={() => {
+                console.log('[LOGIN BUTTON] Login button clicked explicitly by user');
+                localStorage.setItem('explicit_login_click', 'true');
+              }}
+            >
               Login
             </button>
           </Link>
@@ -113,7 +119,13 @@ const LandingNavbar = () => {
             </button>
           </Link>
           <Link href={"/sign-in"} >
-            <button className="w-full bg-white text-black py-3 text-lg rounded-lg hover:bg-white/90 transition-colors duration-300 mt-4">
+            <button 
+              className="w-full bg-white text-black py-3 text-lg rounded-lg hover:bg-white/90 transition-colors duration-300 mt-4"
+              onClick={() => {
+                console.log('[LOGIN BUTTON] Login button clicked explicitly by user');
+                localStorage.setItem('explicit_login_click', 'true');
+              }}
+            >
               Login
             </button>
           </Link>

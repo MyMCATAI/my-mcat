@@ -13,6 +13,14 @@ const isWithin14Days = (date: Date): boolean => {
 };
 
 //========================= Types ===============================
+/**
+ * Options for batch updating profile properties
+ */
+interface BatchUpdateOptions {
+  showToast?: boolean;
+  rollbackOnError?: boolean;
+}
+
 interface UserProfile {
   userId?: string;
   firstName?: string;
@@ -33,14 +41,12 @@ interface UserProfile {
     completedRoutes?: string[];
   };
   completedSteps?: string[];
-  onboardingComplete?: boolean;
   lastVisitedRoute?: string;
 }
 
 interface UserState {
   // Version tracking
   version: number;
-  isHydrated: boolean;
   
   // Profile state
   profile: UserProfile | null;
@@ -59,7 +65,6 @@ interface UserState {
     currentStep: number;
     completedRoutes: string[];
   };
-  onboardingComplete: boolean;
   lastVisitedRoute: string;
   
   // User info state
@@ -94,6 +99,9 @@ interface UserActions {
   // Stats actions
   updateCoins: (amount: number) => Promise<void>;
   updateCoinsDisplay: (newAmount: number) => void;
+  
+  // Batch update function
+  batchUpdateProfile: (updates: Partial<UserProfile & { onboardingInfo?: Partial<OnboardingInfo> }>, options?: BatchUpdateOptions) => Promise<UserProfile | null>;
 }
 
 //========================= Store Creation ===============================
@@ -101,7 +109,6 @@ export const useUserStore = create<UserState & UserActions>()(
   devtools((set, get) => ({
     // Version tracking
     version: 1,
-    isHydrated: false,
     
     // Profile state
     profile: null,
@@ -120,7 +127,6 @@ export const useUserStore = create<UserState & UserActions>()(
       currentStep: 0,
       completedRoutes: []
     },
-    onboardingComplete: false,
     lastVisitedRoute: '/',
     
     // User info state
@@ -186,7 +192,6 @@ export const useUserStore = create<UserState & UserActions>()(
           ...(updatedProfileFromServer.studyPreferences && { studyPreferences: updatedProfileFromServer.studyPreferences }),
           ...(updatedProfileFromServer.interfaceSettings && { interfaceSettings: updatedProfileFromServer.interfaceSettings }),
           ...(updatedProfileFromServer.tutorialProgress && { tutorialProgress: updatedProfileFromServer.tutorialProgress }),
-          ...(updatedProfileFromServer.onboardingComplete !== undefined && { onboardingComplete: updatedProfileFromServer.onboardingComplete }),
           ...(updatedProfileFromServer.lastVisitedRoute && { lastVisitedRoute: updatedProfileFromServer.lastVisitedRoute }),
           isProfileComplete: isProfileComplete(updatedProfileFromServer)
         });
@@ -200,17 +205,10 @@ export const useUserStore = create<UserState & UserActions>()(
     },
     
     setCompletedSteps: (steps) => {
-      set({ completedSteps: steps });
-      set({ isProfileComplete: steps.length >= 3 });
+      console.log('[DEBUG][userSlice] setCompletedSteps called with', steps.length, 'steps');
       
-      // Also update the profile object for consistency
-      const profile = get().profile;
-      if (profile) {
-        set({ profile: { ...profile, completedSteps: steps } });
-      }
-      
-      // Persist to backend if possible
-      get().updateProfile({ completedSteps: steps });
+      // Use the new batch update function instead of multiple set calls
+      get().batchUpdateProfile({ completedSteps: steps });
     },
     
     addCompletedStep: (step) => {
@@ -277,16 +275,80 @@ export const useUserStore = create<UserState & UserActions>()(
     },
     
     setOnboardingComplete: (completed) => {
-      set({ onboardingComplete: completed });
+      console.log('[DEBUG][userSlice] setOnboardingComplete called with value:', completed);
       
-      // Also update the profile object for consistency
-      const profile = get().profile;
-      if (profile) {
-        set({ profile: { ...profile, onboardingComplete: completed } });
+      // Get the current userInfo state
+      const { userInfo } = get();
+      
+      if (!userInfo) {
+        console.error('Cannot set onboardingComplete: No user info available');
+        return;
       }
       
-      // Persist to backend if possible
-      get().updateProfile({ onboardingComplete: completed });
+      // Create a typed version of onboardingInfo to ensure all required fields are present
+      const currentOnboardingInfo = userInfo.onboardingInfo || {
+        currentStep: 0,
+        onboardingComplete: false,
+        firstName: null,
+        college: null,
+        isNonTraditional: null,
+        isCanadian: null,
+        gpa: null,
+        currentMcatScore: null,
+        hasNotTakenMCAT: null,
+        mcatAttemptNumber: null,
+        targetMedSchool: null,
+        targetScore: null,
+        referralEmail: null
+      };
+      
+      // Create updated userInfo with the new onboardingComplete value
+      const updatedUserInfo = {
+        ...userInfo,
+        onboardingInfo: {
+          ...currentOnboardingInfo,
+          onboardingComplete: completed
+        }
+      };
+      
+      // Store original state for potential rollback
+      const originalState = {
+        userInfo: userInfo
+      };
+      
+      console.log('[DEBUG][userSlice] Updating local state with onboardingComplete:', completed);
+      
+      // Update only the userInfo property in a single atomic operation
+      set({ userInfo: updatedUserInfo });
+      
+      // Persist to backend with error handling and rollback capability
+      (async () => {
+        try {
+          console.log('[DEBUG][userSlice] Persisting onboardingComplete to backend');
+          const response = await fetch('/api/user-info/profile', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              onboardingInfo: updatedUserInfo.onboardingInfo 
+            })
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Backend update failed: ${response.status} ${response.statusText}`);
+          }
+          
+          const responseData = await response.json();
+          console.log('[DEBUG][userSlice] Backend update successful:', responseData);
+        } catch (error) {
+          console.error('[DEBUG][userSlice] Error updating onboardingComplete on backend:', error);
+          // Roll back to original state if backend update fails
+          console.log('[DEBUG][userSlice] Rolling back to original state');
+          set({ userInfo: originalState.userInfo });
+          // Show error to user
+          // We'd ideally use a toast here, but to avoid circular dependencies
+          // just log to console for now
+        }
+      })();
     },
     
     setLastVisitedRoute: (route) => {
@@ -304,45 +366,36 @@ export const useUserStore = create<UserState & UserActions>()(
     
     refreshUserInfo: async () => {
       try {
-        // Only set loading if not already loading
-        const currentState = get();
-        if (!currentState.statsLoading && !currentState.profileLoading) {
-          set({ statsLoading: true, profileLoading: true, error: null });
-        }
-
-        // Add loading timeout
-        const loadingTimeout = setTimeout(() => {
-          const state = get();
-          if (state.statsLoading || state.profileLoading) {
-            set({ 
-              statsLoading: false,
-              profileLoading: false,
-              error: 'Loading timeout - please try again'
-            });
-          }
-        }, 10000);
-
+        // Set detailed loading states
+        set({ 
+          profileLoading: true, 
+          statsLoading: true, 
+          error: null 
+        });
+        
+        // Track fetch start time for performance monitoring
+        const fetchStartTime = performance.now();
+        
         // Batch all fetch requests together
         const [userInfoResponse, profileResponse] = await Promise.all([
           fetch('/api/user-info'),
           fetch('/api/user-info/profile')
         ]);
 
-        clearTimeout(loadingTimeout);
+        // Handle failed user info response
+        if (!userInfoResponse.ok) {
+          throw new Error(`Failed to fetch user info: ${userInfoResponse.status} ${userInfoResponse.statusText}`);
+        }
 
-        if (!userInfoResponse.ok) throw new Error('Failed to fetch user info');
         const userInfo = await userInfoResponse.json();
         
         // Check if user is in 14-day free trial period
         const isNewUserTrial = userInfo.createdAt ? isWithin14Days(new Date(userInfo.createdAt)) : false;
 
-        // Prepare single state update with only changed values
+        // Prepare atomic state update with only changed values
         const updates: Partial<UserState> = {
           userInfo,
-          statsLoading: false,
-          profileLoading: false,
           error: null,
-          isHydrated: true,
           version: CURRENT_VERSION
         };
 
@@ -365,33 +418,7 @@ export const useUserStore = create<UserState & UserActions>()(
           updates.isSubscribed = newSubStatus;
         }
 
-        // IMPORTANT: Check onboarding status from userInfo.onboardingInfo
-        if (userInfo.onboardingInfo && typeof userInfo.onboardingInfo === 'object') {
-          // Check if targetScore exists (main branch logic)
-          const targetScore = userInfo.onboardingInfo.targetScore;
-          const isOnboardingComplete = targetScore !== undefined && 
-                                targetScore !== null && 
-                                targetScore > 0;
-          
-          // Set onboardingComplete based on targetScore criteria to match main branch
-          if (isOnboardingComplete !== get().onboardingComplete) {
-            // Apply this update immediately and separately from the batch update
-            set({ onboardingComplete: isOnboardingComplete });
-            
-            // Remove from batch updates to avoid overwriting
-            delete updates.onboardingComplete;
-            
-            // Sync with database if there's a mismatch
-            const dbOnboardingComplete = userInfo.onboardingInfo.onboardingComplete === true;
-            if (dbOnboardingComplete !== isOnboardingComplete) {
-              // Queue an update to sync the database value
-              setTimeout(() => {
-                get().updateProfile({ onboardingComplete: isOnboardingComplete });
-              }, 0);
-            }
-          }
-        }
-
+        // Handle profile data if available
         if (profileResponse.ok) {
           const profileData = await profileResponse.json();
           const currentProfile = get().profile;
@@ -417,19 +444,36 @@ export const useUserStore = create<UserState & UserActions>()(
               isProfileComplete: (profileData.completedSteps || []).length >= 3
             });
           }
+        } else {
+          console.warn(`[UserStore] Profile fetch failed: ${profileResponse.status} ${profileResponse.statusText}`);
         }
-
-        // Apply all updates in a single state update
+        
+        // Check if we're about to set onboardingComplete at root level (bug prevention)
+        if ('onboardingComplete' in updates) {
+          // @ts-ignore - Intentionally modifying object to prevent a bug
+          delete updates.onboardingComplete;
+        }
+        
+        // Complete the loading states
+        updates.statsLoading = false;
+        updates.profileLoading = false;
+        
+        // Finally, apply all updates in a single atomic state update
         set(updates);
-
+        
+        return userInfo;
       } catch (error) {
-        console.error('Error in refreshUserInfo:', error);
+        console.error('[UserStore] Error in refreshUserInfo:', error);
+        
+        // Set detailed error state
         set({ 
           error: error instanceof Error ? error.message : 'Failed to refresh user info',
           statsLoading: false,
-          profileLoading: false,
-          isHydrated: false
+          profileLoading: false
         });
+        
+        // Re-throw to allow handling by callers
+        throw error;
       }
     },
     
@@ -455,6 +499,169 @@ export const useUserStore = create<UserState & UserActions>()(
     
     updateCoinsDisplay: (newAmount) => {
       set({ coins: newAmount });
+    },
+
+    /**
+     * Batch update multiple profile properties in a single operation
+     * @param updates Object containing all properties to update
+     * @param options Optional settings for the update operation
+     */
+    batchUpdateProfile: async (
+      updates: Partial<UserProfile & { onboardingInfo?: Partial<OnboardingInfo> }>, 
+      options: BatchUpdateOptions = { showToast: true, rollbackOnError: true }
+    ): Promise<UserProfile | null> => {
+      console.log('[DEBUG][userSlice] batchUpdateProfile called with updates:', Object.keys(updates));
+      
+      // Get current state for potential rollback
+      const currentState = {
+        profile: get().profile,
+        completedSteps: get().completedSteps,
+        studyPreferences: get().studyPreferences,
+        interfaceSettings: get().interfaceSettings,
+        tutorialProgress: get().tutorialProgress,
+        lastVisitedRoute: get().lastVisitedRoute,
+        userInfo: get().userInfo
+      };
+      
+      try {
+        // First update local state
+        const updatedState: Partial<UserState> = {};
+        
+        // Process completedSteps updates
+        if (updates.completedSteps) {
+          updatedState.completedSteps = updates.completedSteps;
+          updatedState.isProfileComplete = updates.completedSteps.length >= 3;
+          
+          // Also update in profile if it exists
+          if (currentState.profile) {
+            updatedState.profile = { 
+              ...currentState.profile, 
+              completedSteps: updates.completedSteps 
+            };
+          }
+        }
+        
+        // Process studyPreferences updates
+        if (updates.studyPreferences) {
+          updatedState.studyPreferences = { 
+            ...currentState.studyPreferences, 
+            ...updates.studyPreferences 
+          };
+          
+          // Also update in profile if it exists
+          if (currentState.profile) {
+            updatedState.profile = { 
+              ...updatedState.profile || currentState.profile, 
+              studyPreferences: updatedState.studyPreferences 
+            };
+          }
+        }
+        
+        // Process interfaceSettings updates
+        if (updates.interfaceSettings) {
+          updatedState.interfaceSettings = { 
+            ...currentState.interfaceSettings, 
+            ...updates.interfaceSettings 
+          };
+          
+          // Also update in profile if it exists
+          if (currentState.profile) {
+            updatedState.profile = { 
+              ...updatedState.profile || currentState.profile, 
+              interfaceSettings: updatedState.interfaceSettings 
+            };
+          }
+        }
+        
+        // Process tutorialProgress updates
+        if (updates.tutorialProgress) {
+          updatedState.tutorialProgress = { 
+            ...currentState.tutorialProgress, 
+            ...updates.tutorialProgress 
+          };
+          
+          // Also update in profile if it exists
+          if (currentState.profile) {
+            updatedState.profile = { 
+              ...updatedState.profile || currentState.profile, 
+              tutorialProgress: updatedState.tutorialProgress 
+            };
+          }
+        }
+        
+        // Process lastVisitedRoute updates
+        if (updates.lastVisitedRoute) {
+          updatedState.lastVisitedRoute = updates.lastVisitedRoute;
+          
+          // Also update in profile if it exists
+          if (currentState.profile) {
+            updatedState.profile = { 
+              ...updatedState.profile || currentState.profile, 
+              lastVisitedRoute: updates.lastVisitedRoute 
+            };
+          }
+        }
+        
+        // Process onboardingInfo updates
+        if (updates.onboardingInfo && currentState.userInfo) {
+          const existingOnboardingInfo = currentState.userInfo.onboardingInfo || {
+            currentStep: 0,
+            onboardingComplete: false,
+            firstName: null,
+            college: null,
+            isNonTraditional: null,
+            isCanadian: null,
+            gpa: null,
+            currentMcatScore: null,
+            hasNotTakenMCAT: null,
+            mcatAttemptNumber: null,
+            targetMedSchool: null,
+            targetScore: null,
+            referralEmail: null
+          };
+          
+          updatedState.userInfo = {
+            ...currentState.userInfo,
+            onboardingInfo: {
+              ...existingOnboardingInfo,
+              ...updates.onboardingInfo
+            }
+          };
+        }
+        
+        console.log('[DEBUG][userSlice] Applying batch updates to local state:', Object.keys(updatedState));
+        
+        // Apply all updates in a single atomic operation
+        set(updatedState);
+        
+        // Then persist to backend
+        console.log('[DEBUG][userSlice] Persisting batch updates to backend');
+        const response = await fetch('/api/user-info/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Backend update failed: ${response.status} ${response.statusText}`);
+        }
+        
+        const responseData = await response.json();
+        console.log('[DEBUG][userSlice] Backend batch update successful:', responseData);
+        
+        return responseData;
+      } catch (error) {
+        console.error('[DEBUG][userSlice] Error in batchUpdateProfile:', error);
+        
+        // Roll back to original state if specified
+        if (options.rollbackOnError) {
+          console.log('[DEBUG][userSlice] Rolling back to original state');
+          set(currentState);
+        }
+        
+        // Return the error to allow callers to handle it
+        throw error;
+      }
     }
   }))
 );
@@ -655,104 +862,5 @@ const isProfileComplete = (profile: UserProfile | null): boolean => {
   );
 };
 
-// State update utility with optimistic updates and rollback
-const updateState = async (
-  set: (state: Partial<UserState> | ((state: UserState) => Partial<UserState>)) => void,
-  get: () => UserState,
-  updates: Partial<UserState>,
-  options: { sync?: boolean } = {}
-) => {
-  try {
-    // Store previous state for rollback
-    const previousState = get();
-    
-    // Optimistically update local state
-    set((state) => ({
-      ...state,
-      ...updates,
-      error: null
-    }));
-
-    // If sync is requested, update database
-    if (options.sync) {
-      try {
-        const response = await fetch('/api/user-info', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updates)
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to sync with database');
-        }
-
-        // Update local state with server response
-        const serverState = await response.json();
-        set((state) => ({
-          ...state,
-          ...serverState
-        }));
-      } catch (error) {
-        // Rollback on sync failure
-        console.error('Sync failed, rolling back:', error);
-        set(previousState);
-        throw error;
-      }
-    }
-  } catch (error) {
-    set((state) => ({
-      ...state,
-      error: error instanceof Error ? error.message : 'Update failed'
-    }));
-    throw error;
-  }
-};
-
 // Constants for state management
 const CURRENT_VERSION = 1;
-
-const initialState: UserState = {
-  // Version tracking
-  version: CURRENT_VERSION,
-  isHydrated: false,
-  
-  // Profile state
-  profile: null,
-  profileLoading: true,
-  isProfileComplete: false,
-  completedSteps: [],
-  studyPreferences: {
-    dailyGoal: 30,
-    reminderTime: '09:00'
-  },
-  interfaceSettings: {
-    darkMode: false,
-    fontSize: 'medium'
-  },
-  tutorialProgress: {
-    currentStep: 0,
-    completedRoutes: []
-  },
-  onboardingComplete: false,
-  lastVisitedRoute: '/',
-  
-  // User info state
-  userInfo: null,
-  isSubscribed: false,
-  
-  // Stats state
-  coins: 0,
-  statsLoading: false,
-  error: null
-};
-
-// Hydration check utility
-const isStateHydrated = (state: UserState): boolean => {
-  return state.isHydrated && state.version === CURRENT_VERSION;
-};
-
-// State reset utility
-const resetState = (): UserState => ({
-  ...initialState,
-  version: CURRENT_VERSION
-});

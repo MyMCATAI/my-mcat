@@ -40,7 +40,7 @@ export const useUser = () => {
   const studyPreferences = useUserStore((state) => state.studyPreferences)
   const interfaceSettings = useUserStore((state) => state.interfaceSettings)
   const tutorialProgress = useUserStore((state) => state.tutorialProgress)
-  const onboardingComplete = useUserStore((state) => state.onboardingComplete)
+  const onboardingComplete = useUserStore((state) => state.userInfo?.onboardingInfo?.onboardingComplete ?? false)
   const lastVisitedRoute = useUserStore((state) => state.lastVisitedRoute)
   
   // Profile actions
