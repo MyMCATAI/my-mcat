@@ -1,10 +1,32 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useUser as useClerkUser } from '@clerk/nextjs';
-import { useUser } from '@/store/selectors';
+import { useUserStore } from '@/store/slices/userSlice';
 import { useAudioStore } from '@/store/slices/audioSlice';
-import { initializeGlobalStore } from '@/store';
+import { useUIStore } from '@/store/slices/uiSlice';
+import type { ThemeType } from '@/store/slices/uiSlice';
+
+/**
+ * Initialize global store with theme and audio settings
+ */
+const initializeGlobalStore = async (): Promise<void> => {
+  if (typeof window !== 'undefined') {
+    try {
+      // Initialize audio context
+      await useAudioStore.getState().initializeAudioContext();
+      
+      // Initialize UI state
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme && ['cyberSpace', 'sakuraTrees', 'sunsetCity', 'mykonosBlue'].includes(savedTheme)) {
+        useUIStore.getState().setTheme(savedTheme as ThemeType);
+      }
+    } catch (error) {
+      console.error('[Store] Store initialization failed:', error);
+      throw error;
+    }
+  }
+};
 
 /**
  * StoreInitializer component
@@ -18,8 +40,12 @@ import { initializeGlobalStore } from '@/store';
  */
 const StoreInitializer = () => {
   const { isLoaded, isSignedIn } = useClerkUser();
-  const { refreshUserInfo } = useUser();
+  const refreshUserInfo = useUserStore(state => state.refreshUserInfo);
   const initializeAudioContext = useAudioStore(state => state.initializeAudioContext);
+  
+  // Track data refresh state
+  const [isInitialRefreshComplete, setIsInitialRefreshComplete] = useState(false);
+  const refreshAttemptRef = useRef(0);
   
   // Initialize the global store when the app starts
   useEffect(() => {
@@ -36,30 +62,55 @@ const StoreInitializer = () => {
     });
   }, [initializeAudioContext]);
   
-  // Refresh user information when the user is signed in
-  useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      // Initial refresh
-      refreshUserInfo();
-      
-      /**
-       * IMPORTANT: Secondary refresh to ensure state synchronization
-       * 
-       * This solves a race condition where:
-       * 1. The first refreshUserInfo() updates hasCompletedOnboarding in the store
-       * 2. But RouteTracker might read the old value before the update is fully applied
-       * 3. This causes incorrect redirects (e.g., to onboarding when it should go to home)
-       * 
-       * The delayed second refresh ensures all components have the correct state
-       * after the initial data load is complete.
-       */
-      const refreshTimeout = setTimeout(() => {
-        refreshUserInfo();
-      }, 1000);
-      
-      return () => clearTimeout(refreshTimeout);
+  // Helper to log performance info during refresh
+  const logRefreshAttempt = useCallback((action: string, attempt: number) => {
+    // Simplified: Only log critical user refresh events
+    if (action.includes('failed')) {
+      console.log(`[StoreInitializer] ${action} (attempt: ${attempt})`);
     }
-  }, [isLoaded, isSignedIn, refreshUserInfo]);
+  }, []);
+  
+  // Refresh user information when the user is signed in - dependency-based approach
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    
+    // Track this refresh attempt
+    const currentAttempt = refreshAttemptRef.current;
+    refreshAttemptRef.current += 1;
+    
+    logRefreshAttempt('User signed in, refreshing user info', currentAttempt);
+    
+    refreshUserInfo()
+      .then(() => {
+        logRefreshAttempt('User refresh complete', currentAttempt);
+        setIsInitialRefreshComplete(true);
+      })
+      .catch(error => {
+        console.error(`[StoreInitializer] User refresh failed (attempt: ${currentAttempt}):`, error);
+      });
+      
+  }, [isLoaded, isSignedIn, refreshUserInfo, logRefreshAttempt]);
+  
+  // Secondary refresh effect that depends on initial refresh being complete
+  // This replaces the arbitrary timeout with a dependency-based approach
+  useEffect(() => {
+    if (!isInitialRefreshComplete || !isLoaded || !isSignedIn) return;
+    
+    // Track this refresh attempt
+    const currentAttempt = refreshAttemptRef.current;
+    refreshAttemptRef.current += 1;
+    
+    logRefreshAttempt('Initial refresh complete, performing verification refresh', currentAttempt);
+    
+    refreshUserInfo()
+      .then(() => {
+        logRefreshAttempt('Verification refresh complete', currentAttempt);
+      })
+      .catch(error => {
+        console.error(`[StoreInitializer] Verification refresh failed (attempt: ${currentAttempt}):`, error);
+      });
+      
+  }, [isInitialRefreshComplete, isLoaded, isSignedIn, refreshUserInfo, logRefreshAttempt]);
   
   // This component doesn't render anything
   return null;
