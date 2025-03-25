@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prismadb";
+import { uworldMapping } from "@/constants/uworld";
 
 interface SourceWeights {
   aamc: number;
@@ -66,17 +67,17 @@ function calculateSourceMastery(
   timeWeights: number[] = []
 ): number {
   if (correct + incorrect === 0) return 0;
-  
+
   // If no time weights provided, use equal weights
   const weights = timeWeights.length > 0 ? timeWeights : Array(correct + incorrect).fill(1);
   const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-  
+
   // Normalize weights to sum to 1
   const normalizedWeights = weights.map(w => w / totalWeight);
-  
+
   // Calculate weighted mastery
   const mastery = (correct / (correct + incorrect)) * weight;
-  
+
   return mastery;
 }
 
@@ -132,25 +133,44 @@ export async function POST(req: Request) {
       return acc;
     }, {} as Record<string, typeof userResponses>);
 
-    // Group data pulses by content category
+    // Group data pulses by content category, distributing UWorld scores across mapped subjects
     const contentGroupedPulses = dataPulses.reduce((acc, pulse) => {
+      // Initialize categories if they don't exist
       if (!acc[pulse.name]) {
         acc[pulse.name] = {
           aamc: { positive: 0, negative: 0 },
           uworld: { positive: 0, negative: 0 }
         };
       }
-      
+
       if (pulse.source.toLowerCase().includes('aamc')) {
+        // For AAMC, handle normally (1:1 mapping)
         acc[pulse.name].aamc.positive += pulse.positive;
         acc[pulse.name].aamc.negative += pulse.negative;
       } else if (pulse.source.toLowerCase().includes('uworld')) {
-        acc[pulse.name].uworld.positive += pulse.positive;
-        acc[pulse.name].uworld.negative += pulse.negative;
+        // For UWorld, distribute scores across all mapped MyMCAT subjects
+        const mappedSubjects = uworldMapping[pulse.name] || [];
+        if (mappedSubjects.length > 0) {
+          // Calculate distributed scores
+          const distributedPositive = pulse.positive / mappedSubjects.length;
+          const distributedNegative = pulse.negative / mappedSubjects.length;
+
+          // Add distributed scores to each mapped subject
+          mappedSubjects.forEach(subject => {
+            if (!acc[subject]) {
+              acc[subject] = {
+                aamc: { positive: 0, negative: 0 },
+                uworld: { positive: 0, negative: 0 }
+              };
+            }
+            acc[subject].uworld.positive += distributedPositive;
+            acc[subject].uworld.negative += distributedNegative;
+          });
+        }
       }
-      
+
       return acc;
-    }, {} as Record<string, { 
+    }, {} as Record<string, {
       aamc: { positive: number, negative: number },
       uworld: { positive: number, negative: number }
     }>);
@@ -175,17 +195,17 @@ export async function POST(req: Request) {
       const weights = getAdjustedWeights(hasAAMC, hasUWorld, hasMymcat);
 
       // Calculate individual masteries
-      const mymcatMastery = hasMymcat ? 
+      const mymcatMastery = hasMymcat ?
         calculateSourceMastery(mymcatCorrect, mymcatTotal - mymcatCorrect, weights.mymcat) : 0;
 
-      const aamcMastery = hasAAMC ? 
+      const aamcMastery = hasAAMC ?
         calculateSourceMastery(
           externalSources.aamc.positive,
           externalSources.aamc.negative,
           weights.aamc
         ) : 0;
 
-      const uworldMastery = hasUWorld ? 
+      const uworldMastery = hasUWorld ?
         calculateSourceMastery(
           externalSources.uworld.positive,
           externalSources.uworld.negative,
@@ -195,7 +215,7 @@ export async function POST(req: Request) {
       // Combine all sources
       const totalMastery = mymcatMastery + aamcMastery + uworldMastery;
       acc[contentCategory] = totalMastery;
-      
+
       return acc;
     }, {} as Record<string, number>);
 
@@ -203,13 +223,13 @@ export async function POST(req: Request) {
     const updatePromises = Object.entries(groupedResponses).map(async ([categoryId, responses]) => {
       // Calculate time decay weights for each response
       const timeWeights = responses.map(r => calculateTimeDecayWeight(r.answeredAt));
-      
+
       // Split responses into correct and incorrect, maintaining time weights
       const correctResponses = responses.filter((r, i) => r.isCorrect).map((r, i) => ({
         response: r,
         weight: timeWeights[i]
       }));
-      
+
       const incorrectResponses = responses.filter((r, i) => !r.isCorrect).map((r, i) => ({
         response: r,
         weight: timeWeights[i]
@@ -226,7 +246,7 @@ export async function POST(req: Request) {
         timeWeights
       );
 
-      const latestResponse = responses.reduce((latest, current) => 
+      const latestResponse = responses.reduce((latest, current) =>
         latest.answeredAt > current.answeredAt ? latest : current
       );
 

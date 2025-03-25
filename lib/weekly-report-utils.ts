@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { startOfWeek, endOfWeek, subWeeks } from "date-fns";
-import { categoryMapping } from '@/constants/categoryMappings';
+import { mymcatTopicsMapping } from '@/constants/topics';
 
 const prisma = new PrismaClient();
 
@@ -158,7 +158,7 @@ export async function generateWeeklyReport(userId: string): Promise<WeeklyReport
   // Calculate daily activity
   const dailyActivityMap = new Map<string, boolean>();
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  
+
   weeklyResponses.forEach(response => {
     const day = days[response.answeredAt.getDay()];
     dailyActivityMap.set(day, true);
@@ -171,14 +171,14 @@ export async function generateWeeklyReport(userId: string): Promise<WeeklyReport
 
   // Calculate category accuracy and identify focus areas
   const categoryStats = new Map<string, { correct: number; total: number; conceptCategory?: string }>();
-  
+
   weeklyResponses.forEach(response => {
     if (response.categoryId) {
       if (!categoryStats.has(response.categoryId)) {
-        categoryStats.set(response.categoryId, { 
-          correct: 0, 
+        categoryStats.set(response.categoryId, {
+          correct: 0,
           total: 0,
-          conceptCategory: response.Category?.conceptCategory 
+          conceptCategory: response.Category?.conceptCategory
         });
       }
       const stats = categoryStats.get(response.categoryId)!;
@@ -200,12 +200,12 @@ export async function generateWeeklyReport(userId: string): Promise<WeeklyReport
 
   // Calculate test scores and averages
   const testScores = weeklyTests.map(test => test.score || 0);
-  const averageTestScore = testScores.length > 0 
-    ? testScores.reduce((a, b) => a + b, 0) / testScores.length 
+  const averageTestScore = testScores.length > 0
+    ? testScores.reduce((a, b) => a + b, 0) / testScores.length
     : 0;
 
   // Calculate total time spent
-  const totalTimeSpent = weeklyResponses.reduce((sum, response) => 
+  const totalTimeSpent = weeklyResponses.reduce((sum, response) =>
     sum + (response.timeSpent || 0), 0);
 
   // Count different question types
@@ -218,7 +218,7 @@ export async function generateWeeklyReport(userId: string): Promise<WeeklyReport
     weeklyResponses
       .filter(r => r.Category?.contentCategory)
       .map(r => r.Category!.contentCategory)
-      .map(code => categoryMapping[code] || code)
+      .flatMap(code => (mymcatTopicsMapping)[code] || [code])
   )];
 
   // Identify improvements based on recent performance trends
