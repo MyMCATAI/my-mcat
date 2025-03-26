@@ -13,7 +13,6 @@ import dynamic from 'next/dynamic';
 import { WorldProps } from '../ui/globe';
 import { FaDiscord } from 'react-icons/fa';
 import Link from 'next/link';
-import TutorSlider from './TutorSlider';
 
 const World = dynamic(() => import('../ui/globe').then((mod) => mod.World), {
   ssr: false,
@@ -332,7 +331,7 @@ const MethodologyAndTestimonials = () => {
         }}
       >
         <div className="container mx-auto px-4">
-          <TutorSlider />
+          {/* TutorSlider component would be placed here */}
         </div>
       </section>
 
