@@ -404,8 +404,12 @@ async function getOrderedTests(
 
   if (!introTestCompleted) {
     // Get the intro test
-    const introTest = await prisma.test.findUnique({
-      where: { id: "cm4nr1new004p5v6dxty82tws" },
+    const introTest = await prisma.test.findFirst({
+      where: {
+        passage: {
+          id: "mymcat_introduction"
+        }
+      },
       include: {
         questions: {
           include: {
@@ -441,10 +445,24 @@ async function getOrderedTests(
 
 // Add this helper function at the top
 async function hasCompletedIntroTest(userId: string) {
+  // Find the intro test ID first
+  const introTest = await prisma.test.findFirst({
+    where: {
+      passage: {
+        id: "mymcat_introduction"
+      }
+    },
+    select: {
+      id: true
+    }
+  });
+
+  if (!introTest) return true; // If no intro test exists, consider it completed
+
   const completedIntroTest = await prisma.userTest.findFirst({
     where: {
       userId: userId,
-      testId: "cm4nr1new004p5v6dxty82tws",
+      testId: introTest.id,
       finishedAt: { not: null }, // Make sure it's completed
     },
   });
