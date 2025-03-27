@@ -14,8 +14,30 @@ import { useAuth as useClerkAuth } from '@clerk/nextjs';
 // Define auth-related paths that should be exempt from redirects
 const AUTH_PATHS = ['/sign-in', '/sign-up', '/login', '/register', '/auth', '/sso-callback'];
 
-// Define other exempt paths
+// Define other exempt paths - Remove '/' from this list since we handle it specially
 const EXEMPT_PATHS = ['/auth', '/api', '/redirect', '/examcalendar', '/pricing', '/terms'];
+
+// Type for tracking loading states
+type LoadingState = {
+  auth: boolean;      // Clerk auth loaded
+  profile: boolean;   // User profile data loaded
+  stats: boolean;     // User stats loaded
+  studyPlan: boolean; // Study plan check loading
+  redirect: boolean;  // Redirect in progress
+};
+
+// Type for tracking async operations
+type AsyncOpState = {
+  loading: boolean;
+  error: Error | null;
+  complete: boolean;
+};
+
+const initialAsyncState: AsyncOpState = {
+  loading: false,
+  error: null,
+  complete: false
+};
 
 const RouteTracker = () => {
   const pathname = usePathname();
@@ -27,22 +49,88 @@ const RouteTracker = () => {
   const { isLoaded } = useClerkAuth();
   const { stopLoop, currentLoop } = useAudio();
   
+  // Consolidated loading state
+  const [loadingState, setLoadingState] = useState<LoadingState>({
+    auth: true,
+    profile: true,
+    stats: true,
+    studyPlan: false,
+    redirect: false
+  });
+  
+  // Request state for study plan check
+  const [studyPlanCheckState, setStudyPlanCheckState] = useState<AsyncOpState>(initialAsyncState);
+  
+  // State flags
+  const [justLoggedIn, setJustLoggedIn] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  
+  // Refs for redirection management
   const lastRedirectTime = useRef<number>(0);
   const isRedirecting = useRef<boolean>(false);
-
+  const prevSignedInState = useRef<boolean | undefined>(undefined);
+  
+  // Debug mode - Set to true to enable verbose logging
+  const isDebugMode = searchParams?.get('debug') === 'true';
+  
+  // Debug logging helper that only logs in debug mode
+  const debugLog = useCallback((section: string, ...args: unknown[]) => {
+    if (isDebugMode) {
+      console.log(`[${section}]`, ...args);
+    }
+  }, [isDebugMode]);
+  
+  // Update loading state when auth or data loading status changes
+  useEffect(() => {
+    setLoadingState(prev => ({
+      ...prev,
+      auth: !isLoaded,
+      profile: profileLoading,
+      stats: statsLoading
+    }));
+    
+    // Track initial load completion when all primary data is loaded
+    if (isLoaded && !profileLoading && !statsLoading && userInfo && !initialLoadComplete) {
+      setInitialLoadComplete(true);
+    }
+  }, [isLoaded, profileLoading, statsLoading, userInfo, initialLoadComplete]);
+  
   // Memoize values that are used in effect dependencies to prevent unnecessary re-renders
   const isExemptPath = useMemo(() => {
+    // Root path is always exempt
+    if (pathname === '/') {
+      debugLog('PATH_CHECK', 'Root path is exempt');
+      return true;
+    }
+    
     if (!pathname) return false;
-    return AUTH_PATHS.some(path => pathname.includes(path)) || 
-           EXEMPT_PATHS.some(path => pathname.startsWith(path));
-  }, [pathname]);
+    
+    // Always exempt auth-related paths
+    if (AUTH_PATHS.some(path => pathname.includes(path))) {
+      debugLog('PATH_CHECK', 'Auth path is exempt');
+      return true;
+    }
+    
+    // Other standard exempt paths
+    const isStandardExempt = EXEMPT_PATHS.some(path => pathname.startsWith(path));
+    debugLog('PATH_CHECK', `Path ${pathname} exempt: ${isStandardExempt}`);
+    return isStandardExempt;
+  }, [pathname, debugLog]);
 
   // Validate onboarding status (memoized)
   const effectiveOnboardingComplete = useMemo(() => {
+    // First check the direct onboardingComplete flag from onboardingInfo
+    if (userInfo?.onboardingInfo?.onboardingComplete === true) {
+      debugLog('ONBOARDING', 'Complete via direct flag');
+      return true;
+    }
+    
+    // Then fall back to targetScore validation as a secondary check
     const targetScore = userInfo?.onboardingInfo?.targetScore;
-    return targetScore !== undefined && targetScore !== null && targetScore > 0;
-  }, [userInfo?.onboardingInfo?.targetScore]);
+    const isComplete = targetScore !== undefined && targetScore !== null && targetScore > 0;
+    debugLog('ONBOARDING', `Complete via target score: ${isComplete}`);
+    return isComplete;
+  }, [userInfo?.onboardingInfo?.onboardingComplete, userInfo?.onboardingInfo?.targetScore, debugLog]);
 
   // Local utility function for preserving debug parameter
   const preserveDebugParam = useCallback((path: string): string => {
@@ -60,10 +148,15 @@ const RouteTracker = () => {
   const performRedirect = useCallback((targetPath: string, reason: string) => {
     // Prevent duplicate redirects and throttle redirect attempts
     if (Date.now() - lastRedirectTime.current < 1000 || isRedirecting.current) {
-      return false;
+      debugLog('REDIRECT', `Skipping redirect to ${targetPath} - too soon or already redirecting`);
+      return undefined;
     }
 
+    debugLog('REDIRECT', `Redirecting to ${targetPath} - reason: ${reason}`);
+
+    // Set redirect state
     isRedirecting.current = true;
+    setLoadingState(prev => ({ ...prev, redirect: true }));
     lastRedirectTime.current = Date.now();
     
     // Use the local function to preserve debug parameter
@@ -81,11 +174,45 @@ const RouteTracker = () => {
     // Reset redirect flag after 1.5 seconds
     setTimeout(() => {
       isRedirecting.current = false;
+      setLoadingState(prev => ({ ...prev, redirect: false }));
     }, 1500);
     
     // Return the fallback timeout to allow cleanup
     return fallbackTimeout;
-  }, [router, preserveDebugParam]);
+  }, [router, preserveDebugParam, debugLog]);
+
+  // Check study plan with proper async state tracking
+  const checkStudyPlan = useCallback(async (): Promise<boolean> => {
+    // Set loading state
+    setStudyPlanCheckState({ loading: true, error: null, complete: false });
+    setLoadingState(prev => ({ ...prev, studyPlan: true }));
+    
+    try {
+      const response = await fetch('/api/study-plan');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch study plan');
+      }
+      
+      const data = await response.json();
+      
+      // Update states
+      setStudyPlanCheckState({ loading: false, error: null, complete: true });
+      setLoadingState(prev => ({ ...prev, studyPlan: false }));
+      
+      // Return whether study plan exists
+      return !!data.studyPlan;
+    } catch (error) {
+      debugLog('STUDY_PLAN', 'Error checking study plan:', error);
+      
+      // Set error state
+      const typedError = error instanceof Error ? error : new Error('Unknown error checking study plan');
+      setStudyPlanCheckState({ loading: false, error: typedError, complete: true });
+      setLoadingState(prev => ({ ...prev, studyPlan: false }));
+      
+      return false;
+    }
+  }, [debugLog]);
 
   // Update current route in the store
   useEffect(() => {
@@ -93,23 +220,6 @@ const RouteTracker = () => {
       setCurrentRoute(pathname);
     }
   }, [pathname, setCurrentRoute]);
-
-  // Track initial load completion - match main branch behavior
-  useEffect(() => {
-    // Skip loading state tracking if we're on onboarding
-    if (pathname === '/onboarding') {
-      if (!initialLoadComplete) {
-        setInitialLoadComplete(true);
-      }
-      return;
-    }
-
-    // Consider data loaded when both profile and stats are loaded
-    // and we have userInfo data (like main branch)
-    if (!profileLoading && !statsLoading && userInfo && !initialLoadComplete) {
-      setInitialLoadComplete(true);
-    }
-  }, [profileLoading, statsLoading, userInfo, initialLoadComplete, pathname]);
 
   // Handle ambient sound cleanup on route changes
   useEffect(() => {    
@@ -119,15 +229,81 @@ const RouteTracker = () => {
     }
   }, [pathname, stopLoop, currentLoop]);
 
-  // EFFECT 1: Handle immediate redirection for users with no userInfo (like main branch)
+  // Track if user just logged in
   useEffect(() => {
-    // Don't redirect during loads or for exempt paths
-    if (!isLoaded || isRedirecting.current || isExemptPath) {
+    const wasExplicitLogin = localStorage.getItem('explicit_login_click') === 'true';
+    
+    // If signed in state changed AND it was an explicit login button click
+    if (isSignedIn === true && prevSignedInState.current !== true && wasExplicitLogin) {
+      debugLog('AUTH', 'Login detected from explicit button click');
+      setJustLoggedIn(true);
+      // Clear the flag
+      localStorage.removeItem('explicit_login_click');
+    }
+    
+    // Update previous state for next comparison
+    prevSignedInState.current = isSignedIn;
+  }, [isSignedIn, debugLog]);
+
+  // Special effect for handling login from root path
+  useEffect(() => {
+    // Only handle explicit login redirects on root path
+    if (pathname !== '/' || !justLoggedIn) return;
+
+    // Skip if still loading or redirect in progress
+    if (!isLoaded || loadingState.profile || isRedirecting.current) return;
+    
+    // Decide where to redirect based on onboarding status
+    if (isSignedIn) {
+      console.log('[CRITICAL_DEBUG] Login Redirect Decision:', {
+        onboardingFlag: userInfo?.onboardingInfo?.onboardingComplete,
+        targetScore: userInfo?.onboardingInfo?.targetScore,
+        effectiveOnboardingComplete: effectiveOnboardingComplete,
+        willRedirectTo: effectiveOnboardingComplete ? '/home' : '/onboarding'
+      });
+      
+      if (effectiveOnboardingComplete) {
+        debugLog('ROOT_PATH', 'Redirecting to /home - onboarding complete');
+        const fallback = performRedirect('/home', 'Login with onboarding complete');
+        setJustLoggedIn(false); // Reset flag
+        return () => { if (fallback) clearTimeout(fallback); };
+      }
+      
+      // Handle non-complete onboarding case
+      debugLog('ROOT_PATH', 'Redirecting to /onboarding - onboarding incomplete');
+      const fallback = performRedirect('/onboarding', 'Login with onboarding incomplete');
+      setJustLoggedIn(false); // Reset flag
+      return () => { if (fallback) clearTimeout(fallback); };
+    }
+  }, [
+    pathname, 
+    isSignedIn, 
+    isLoaded, 
+    justLoggedIn, 
+    effectiveOnboardingComplete, 
+    loadingState.profile, 
+    performRedirect,
+    debugLog,
+    userInfo
+  ]);
+
+  // Handle redirection for users with no userInfo
+  useEffect(() => {
+    // Skip if any of these conditions are true
+    if (
+      !isLoaded || 
+      isRedirecting.current || 
+      isExemptPath || 
+      !isSignedIn || 
+      loadingState.profile || 
+      pathname?.startsWith('/onboarding')
+    ) {
       return;
     }
-
+    
     // If user is signed in but has no userInfo, redirect to onboarding immediately
-    if (isSignedIn && !profileLoading && !userInfo && !pathname?.startsWith('/onboarding')) {
+    if (!userInfo) {
+      debugLog('USERINFO', 'No userInfo - redirecting to onboarding');
       const fallback = performRedirect('/onboarding', 'No userInfo');
       
       // Clean up fallback timeout if component unmounts
@@ -135,20 +311,32 @@ const RouteTracker = () => {
         if (fallback) clearTimeout(fallback);
       };
     }
-  }, [isSignedIn, userInfo, profileLoading, pathname, isLoaded, isExemptPath, performRedirect]);
+  }, [
+    isSignedIn, 
+    userInfo, 
+    loadingState.profile, 
+    pathname, 
+    isLoaded, 
+    isExemptPath, 
+    performRedirect,
+    debugLog
+  ]);
 
-  // EFFECT 2: Handle redirects based on onboarding status (like main branch)
+  // Handle redirects based on onboarding status
   useEffect(() => {
-    if (pathname === '/onboarding' || isExemptPath) {
+    // Skip if any of these conditions are true
+    if (
+      pathname === '/onboarding' || 
+      isExemptPath || 
+      loadingState.redirect || 
+      loadingState.profile
+    ) {
       return;
     }
     
-    // Only redirect to onboarding if:
-    // 1. User is signed in
-    // 2. Not already on onboarding page
-    // 3. Not in loading state
-    // 4. Onboarding is not complete
-    if (isSignedIn && !profileLoading && !isRedirecting.current && !effectiveOnboardingComplete) {
+    // Redirect to onboarding if needed
+    if (isSignedIn && !effectiveOnboardingComplete) {
+      debugLog('ONBOARDING_CHECK', 'Redirecting to onboarding - incomplete');
       const fallback = performRedirect('/onboarding', 'Onboarding not complete');
       
       // Clean up fallback timeout if component unmounts
@@ -157,85 +345,82 @@ const RouteTracker = () => {
       };
     }
     
-    // Onboarding complete but on onboarding page, redirect to home
-    if (isSignedIn && !profileLoading && effectiveOnboardingComplete && pathname === '/onboarding') {
-      const fallback = performRedirect('/home', 'Onboarding complete but on onboarding page');
+    // Redirect from onboarding page if already complete
+    if (isSignedIn && effectiveOnboardingComplete && pathname === '/onboarding') {
+      debugLog('ONBOARDING_CHECK', 'Redirecting to home - already complete');
+      const fallback = performRedirect('/home', 'Onboarding already complete');
       
       // Clean up fallback timeout if component unmounts
       return () => {
         if (fallback) clearTimeout(fallback);
       };
     }
-    
-    // Special case: If on root path and signed in with completed onboarding, redirect to home
-    if (isSignedIn && !profileLoading && effectiveOnboardingComplete && pathname === '/') {
-      const fallback = performRedirect('/home', 'On root with completed onboarding');
-      
-      // Clean up fallback timeout if component unmounts
-      return () => {
-        if (fallback) clearTimeout(fallback);
-      };
-    }
-  }, [isSignedIn, profileLoading, pathname, effectiveOnboardingComplete, isExemptPath, performRedirect]);
+  }, [
+    isSignedIn, 
+    loadingState.profile, 
+    loadingState.redirect,
+    pathname, 
+    effectiveOnboardingComplete, 
+    isExemptPath, 
+    performRedirect,
+    debugLog
+  ]);
 
-  // EFFECT 3: Main redirection logic for subscription checks (like main branch)
+  // Handle subscription and study plan checks
   useEffect(() => {
-    // Skip redirection checks for specific paths
+    // Skip checks if any of these conditions are true
     if (
+      !initialLoadComplete ||
+      !isLoaded || 
+      !isSignedIn ||
+      !userInfo ||
+      !effectiveOnboardingComplete ||
+      loadingState.redirect ||
+      loadingState.studyPlan ||
+      isExemptPath ||
       pathname === '/onboarding' || 
       pathname === '/redirect' ||
       pathname?.startsWith('/onboarding') ||
-      pathname?.startsWith('/pricing') ||
-      isExemptPath ||
-      isRedirecting.current ||
-      !initialLoadComplete ||
-      !isLoaded ||
-      !isSignedIn ||
-      !userInfo
+      pathname?.startsWith('/pricing')
     ) {
       return;
     }
 
-    // Check if we have userInfo, if not refresh it
-    if (isSignedIn && !userInfo) {
-      refreshUserInfo();
-      return;
-    }
-
-    const checkRedirectPath = async () => {
-      // 1. Subscription check - redirect non-subscribers to ankiclinic
-      if (effectiveOnboardingComplete && !isSubscribed && pathname && !pathname.startsWith('/ankiclinic')) {
+    // Check subscription status
+    const checkSubscriptionAndStudyPlan = async () => {
+      // Subscription check - redirect non-subscribers to ankiclinic
+      if (!isSubscribed && pathname && !pathname.startsWith('/ankiclinic')) {
+        debugLog('SUBSCRIPTION', 'Not subscribed - redirecting to ankiclinic');
         const fallback = performRedirect('/ankiclinic', 'Not subscribed');
-        if (fallback) return fallback;
+        return fallback;
       }
 
-      // 2. Check study plan for subscribed users
-      const studyPlanExemptPaths = ['/examcalendar', '/api', '/auth', '/onboarding', '/redirect'];
-      const shouldCheckStudyPlan = pathname ? !studyPlanExemptPaths.some(path => pathname.startsWith(path)) : false;
+      // Only check study plan for subscribed users on certain paths
+      const studyPlanExemptPaths = ['/examcalendar', '/api', '/auth', '/onboarding', '/redirect', '/ankiclinic'];
+      const shouldCheckStudyPlan = !studyPlanExemptPaths.some(path => pathname?.startsWith(path));
       
-      if (effectiveOnboardingComplete && isSubscribed && shouldCheckStudyPlan) {
-        try {
-          const response = await fetch('/api/study-plan');
-          if (!response.ok) {
-            throw new Error('Failed to fetch study plan');
-          }
-          
-          const data = await response.json();
-          
-          if (!data.studyPlan) {
-            const fallback = performRedirect('/examcalendar', 'No study plan');
-            if (fallback) return fallback;
-          }
-        } catch (error) {
-          console.error('[RouteTracker] Error checking study plan:', error);
+      if (isSubscribed && shouldCheckStudyPlan) {
+        debugLog('STUDY_PLAN', 'Checking study plan existence');
+        
+        // Check if study plan exists
+        const hasStudyPlan = await checkStudyPlan();
+        
+        if (!hasStudyPlan) {
+          debugLog('STUDY_PLAN', 'No study plan - redirecting to examcalendar');
+          const fallback = performRedirect('/examcalendar', 'No study plan');
+          return fallback;
         }
       }
+      
+      return undefined;
     };
     
-    // Handle async redirects with proper typing
+    // Handle async operations with proper cleanup
     let fallbackTimeout: ReturnType<typeof setTimeout> | undefined;
-    checkRedirectPath().then(timeout => {
-      fallbackTimeout = timeout;
+    checkSubscriptionAndStudyPlan().then(timeout => {
+      if (timeout) {
+        fallbackTimeout = timeout;
+      }
     });
     
     // Clean up fallback timeouts
@@ -250,10 +435,30 @@ const RouteTracker = () => {
     userInfo,
     effectiveOnboardingComplete,
     isSubscribed,
-    refreshUserInfo,
+    loadingState.redirect,
+    loadingState.studyPlan,
     isExemptPath,
-    performRedirect
+    performRedirect,
+    checkStudyPlan,
+    debugLog
   ]);
+
+  // Expose core loading state for the application
+  const isApplicationLoading = useMemo(() => {
+    return (
+      loadingState.auth || 
+      loadingState.profile || 
+      loadingState.redirect || 
+      isRedirecting.current
+    );
+  }, [loadingState]);
+
+  // Expose consolidated state to components via Zustand if needed
+  useEffect(() => {
+    // Here you could update a loading state in a Zustand store
+    // This would make the loading state available to all components
+    // Example: setAppLoading(isApplicationLoading);
+  }, []);
 
   return null;
 };
