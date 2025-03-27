@@ -23,6 +23,7 @@ export interface ATSSlice extends ATSState {
   setVideoPause: (pause: boolean) => void;
   setTimer: (seconds: number) => void;
   startTimer: () => void;
+  stopTimer: () => void;
   resetState: () => void;
 }
 
@@ -63,6 +64,16 @@ export const useATSStore = create<ATSSlice>()(
             timer: 0,
             timerFormatted: '0:00',
             videoPause: false,
+            timerInterval: null,
+          };
+        });
+      },
+      stopTimer: () => {
+        set((state) => {
+          if (state.timerInterval) {
+            clearInterval(state.timerInterval);
+          }
+          return {
             timerInterval: null,
           };
         });
