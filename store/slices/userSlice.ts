@@ -1,7 +1,16 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { UserInfo } from '@/types/user';
-import { OnboardingInfo } from '@/types';
+import type { UserInfo } from '@/types/user';
+import type { OnboardingInfo } from '../types';
+import { 
+  ONBOARDING_STEPS,
+  DEFAULT_ONBOARDING_INFO,
+  REQUIRED_STEPS 
+} from '../types';
+import type { 
+  OnboardingStep,
+  ValidationResult
+} from '../types';
 
 //========================= Helpers ===============================
 // Helper function to check if a date is within 14 days of now
@@ -79,7 +88,7 @@ interface UserState {
 
 interface UserActions {
   // Profile actions
-  updateProfile: (updates: any) => Promise<void>;
+  updateProfile: (updates: Partial<UserProfile & { onboardingInfo?: Partial<OnboardingInfo> }>) => Promise<void>;
   setCompletedSteps: (steps: string[]) => void;
   addCompletedStep: (step: string) => void;
   
@@ -95,6 +104,7 @@ interface UserActions {
   // User info actions
   refreshUserInfo: () => Promise<void>;
   setIsSubscribed: (status: boolean) => void;
+  setHasSeenIntroVideo: (hasSeenVideo: boolean) => Promise<void>;
   
   // Stats actions
   updateCoins: (amount: number) => Promise<void>;
@@ -129,7 +139,7 @@ export const useUserStore = create<UserState & UserActions>()(
     },
     lastVisitedRoute: '/',
     
-    // User info state
+    // User info state - this is the single source of truth
     userInfo: null,
     isSubscribed: false,
     
@@ -285,22 +295,8 @@ export const useUserStore = create<UserState & UserActions>()(
         return;
       }
       
-      // Create a typed version of onboardingInfo to ensure all required fields are present
-      const currentOnboardingInfo = userInfo.onboardingInfo || {
-        currentStep: 0,
-        onboardingComplete: false,
-        firstName: null,
-        college: null,
-        isNonTraditional: null,
-        isCanadian: null,
-        gpa: null,
-        currentMcatScore: null,
-        hasNotTakenMCAT: null,
-        mcatAttemptNumber: null,
-        targetMedSchool: null,
-        targetScore: null,
-        referralEmail: null
-      };
+      // Use DEFAULT_ONBOARDING_INFO instead of inline object
+      const currentOnboardingInfo = userInfo.onboardingInfo || { ...DEFAULT_ONBOARDING_INFO };
       
       // Create updated userInfo with the new onboardingComplete value
       const updatedUserInfo = {
@@ -366,46 +362,52 @@ export const useUserStore = create<UserState & UserActions>()(
     
     refreshUserInfo: async () => {
       try {
-        // Set detailed loading states
+        console.log('[UserStore DEBUG] Starting refreshUserInfo');
         set({ 
           profileLoading: true, 
           statsLoading: true, 
           error: null 
         });
         
-        // Track fetch start time for performance monitoring
-        const fetchStartTime = performance.now();
-        
-        // Batch all fetch requests together
+        console.log('[UserStore DEBUG] Making API requests for user info');
         const [userInfoResponse, profileResponse] = await Promise.all([
           fetch('/api/user-info'),
           fetch('/api/user-info/profile')
         ]);
 
-        // Handle failed user info response
+        console.log('[UserStore DEBUG] API responses received:', {
+          userInfoStatus: userInfoResponse.status,
+          profileStatus: profileResponse.status
+        });
+
         if (!userInfoResponse.ok) {
+          console.error('[UserStore DEBUG] User info fetch failed:', userInfoResponse.status, userInfoResponse.statusText);
           throw new Error(`Failed to fetch user info: ${userInfoResponse.status} ${userInfoResponse.statusText}`);
         }
 
         const userInfo = await userInfoResponse.json();
+        console.log('[UserStore DEBUG] Received userInfo:', {
+          hasOnboardingInfo: !!userInfo.onboardingInfo,
+          hasSeenIntroVideo: userInfo.onboardingInfo?.hasSeenIntroVideo,
+          userId: userInfo.userId,
+          subscriptionType: userInfo.subscriptionType
+        });
         
-        // Check if user is in 14-day free trial period
         const isNewUserTrial = userInfo.createdAt ? isWithin14Days(new Date(userInfo.createdAt)) : false;
 
-        // Prepare atomic state update with only changed values
-        const updates: Partial<UserState> = {
-          userInfo,
+        // Create clean updates object with proper typing
+        const baseUpdates: Partial<UserState> = {
           error: null,
-          version: CURRENT_VERSION
+          version: CURRENT_VERSION,
+          userInfo: userInfo // Always include userInfo as it's our source of truth
         };
 
-        // Only update coins if changed
+        // Add coins if changed
         if (userInfo.score !== get().coins) {
-          updates.coins = userInfo.score || 0;
+          baseUpdates.coins = userInfo.score || 0;
         }
 
-        // Match main branch behavior by including trial subscriptions
-        // Also include users in their 14-day trial period
+        // Add subscription status if changed
         const newSubStatus = 
           userInfo.subscriptionType === 'gold' || 
           userInfo.subscriptionType === 'premium' ||
@@ -415,17 +417,24 @@ export const useUserStore = create<UserState & UserActions>()(
           false;
           
         if (newSubStatus !== get().isSubscribed) {
-          updates.isSubscribed = newSubStatus;
+          baseUpdates.isSubscribed = newSubStatus;
         }
 
-        // Handle profile data if available
+        // Handle profile updates if available
         if (profileResponse.ok) {
+          console.log('[UserStore DEBUG] Processing profile response');
           const profileData = await profileResponse.json();
+          console.log('[UserStore DEBUG] Profile data:', { 
+            hasProfilePhoto: !!profileData.profilePhoto,
+            firstName: profileData.firstName,
+            completedStepsLength: profileData.completedSteps?.length
+          });
+          
           const currentProfile = get().profile;
           
-          // Only update profile fields that have changed
           if (JSON.stringify(currentProfile) !== JSON.stringify(profileData)) {
-            Object.assign(updates, {
+            console.log('[UserStore DEBUG] Profile data changed, updating');
+            Object.assign(baseUpdates, {
               profile: profileData,
               completedSteps: profileData.completedSteps || [],
               studyPreferences: profileData.studyPreferences || {
@@ -443,42 +452,99 @@ export const useUserStore = create<UserState & UserActions>()(
               lastVisitedRoute: profileData.lastVisitedRoute || '/',
               isProfileComplete: (profileData.completedSteps || []).length >= 3
             });
+          } else {
+            console.log('[UserStore DEBUG] Profile data unchanged');
           }
         } else {
-          console.warn(`[UserStore] Profile fetch failed: ${profileResponse.status} ${profileResponse.statusText}`);
+          console.warn(`[UserStore DEBUG] Profile fetch failed: ${profileResponse.status} ${profileResponse.statusText}`);
         }
         
-        // Check if we're about to set onboardingComplete at root level (bug prevention)
-        if ('onboardingComplete' in updates) {
-          // @ts-ignore - Intentionally modifying object to prevent a bug
-          delete updates.onboardingComplete;
-        }
+        console.log('[UserStore DEBUG] Applying updates to store:', Object.keys(baseUpdates));
+
+        // IMPORTANT: Set profileLoading to false to ensure the spinner stops
+        baseUpdates.profileLoading = false;
+        baseUpdates.statsLoading = false;
         
-        // Complete the loading states
-        updates.statsLoading = false;
-        updates.profileLoading = false;
-        
-        // Finally, apply all updates in a single atomic state update
-        set(updates);
+        set(baseUpdates);
+        console.log('[UserStore DEBUG] Store updates applied');
         
         return userInfo;
       } catch (error) {
-        console.error('[UserStore] Error in refreshUserInfo:', error);
-        
-        // Set detailed error state
+        console.error('[UserStore DEBUG] Error in refreshUserInfo:', error);
         set({ 
           error: error instanceof Error ? error.message : 'Failed to refresh user info',
           statsLoading: false,
           profileLoading: false
         });
-        
-        // Re-throw to allow handling by callers
         throw error;
       }
     },
     
     setIsSubscribed: (status) => {
       set({ isSubscribed: status });
+    },
+    
+    setHasSeenIntroVideo: async (hasSeenVideo: boolean) => {
+      const previousState = get().userInfo;
+      
+      try {
+        if (!previousState) {
+          throw new Error('Cannot update hasSeenIntroVideo: No user info available');
+        }
+        
+        // Ensure we have valid onboarding info with hasSeenIntroVideo as boolean
+        const currentOnboardingInfo = {
+          ...DEFAULT_ONBOARDING_INFO,
+          ...(previousState.onboardingInfo || {}),
+          // Make hasSeenIntroVideo a boolean
+          hasSeenIntroVideo: !!(previousState.onboardingInfo?.hasSeenIntroVideo)
+        };
+        
+        // Create the update with type safety
+        const updatedUserInfo = {
+          ...previousState,
+          onboardingInfo: {
+            ...currentOnboardingInfo,
+            // hasSeenVideo is already a boolean because of the function parameter type
+            hasSeenIntroVideo: hasSeenVideo
+          }
+        };
+
+        // Single atomic update to prevent duplicate state
+        set((state) => ({
+          ...state,
+          userInfo: updatedUserInfo
+        }));
+
+        const response = await fetch('/api/user-info', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            onboardingInfo: updatedUserInfo.onboardingInfo
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to update hasSeenIntroVideo: ${response.status} ${response.statusText}`);
+        }
+
+        const serverResponse = await response.json();
+        
+        // Update with server response, maintaining only the necessary state
+        set((state) => ({
+          ...state,
+          userInfo: serverResponse
+        }));
+
+      } catch (error) {
+        console.error('[UserStore] Failed to update hasSeenIntroVideo:', error);
+        // Rollback to previous state
+        set((state) => ({
+          ...state,
+          userInfo: previousState
+        }));
+        throw error;
+      }
     },
     
     updateCoins: async (amount) => {
@@ -604,27 +670,21 @@ export const useUserStore = create<UserState & UserActions>()(
         
         // Process onboardingInfo updates
         if (updates.onboardingInfo && currentState.userInfo) {
-          const existingOnboardingInfo = currentState.userInfo.onboardingInfo || {
-            currentStep: 0,
-            onboardingComplete: false,
-            firstName: null,
-            college: null,
-            isNonTraditional: null,
-            isCanadian: null,
-            gpa: null,
-            currentMcatScore: null,
-            hasNotTakenMCAT: null,
-            mcatAttemptNumber: null,
-            targetMedSchool: null,
-            targetScore: null,
-            referralEmail: null
+          const existingOnboardingInfo = {
+            ...DEFAULT_ONBOARDING_INFO,
+            ...(currentState.userInfo.onboardingInfo || {}),
+            // Make hasSeenIntroVideo a boolean
+            hasSeenIntroVideo: !!(currentState.userInfo.onboardingInfo?.hasSeenIntroVideo)
           };
           
           updatedState.userInfo = {
             ...currentState.userInfo,
             onboardingInfo: {
               ...existingOnboardingInfo,
-              ...updates.onboardingInfo
+              ...updates.onboardingInfo,
+              // Ensure boolean type if present
+              ...(updates.onboardingInfo.hasSeenIntroVideo !== undefined ? 
+                { hasSeenIntroVideo: Boolean(updates.onboardingInfo.hasSeenIntroVideo) } : {})
             }
           };
         }
@@ -665,34 +725,6 @@ export const useUserStore = create<UserState & UserActions>()(
     }
   }))
 );
-
-interface ValidationResult {
-  isValid: boolean;
-  missingFields: string[];
-  invalidFields: string[];
-  errors: string[];
-}
-
-// Constants for validation
-const ONBOARDING_STEPS = {
-  NAME: 1,
-  COLLEGE: 2,
-  ACADEMICS: 3,
-  GOALS: 4,
-  KALYPSO_DIALOGUE: 5,
-  REFERRAL: 6,
-  UNLOCK: 7
-} as const;
-
-const REQUIRED_STEPS = 3; // Minimum number of steps required for profile completion
-
-type OnboardingStep = typeof ONBOARDING_STEPS[keyof typeof ONBOARDING_STEPS];
-
-interface StepDependency {
-  step: OnboardingStep;
-  requires: OnboardingStep[];
-  validates: (info: OnboardingInfo) => boolean;
-}
 
 // Update validation logic to match main branch fields
 const STEP_DEPENDENCIES = {
@@ -737,21 +769,12 @@ const validateOnboardingState = (userInfo: UserInfo, profile: UserProfile | null
   
   // Validate all step dependencies
   for (const stepNum of Object.values(ONBOARDING_STEPS)) {
-    const dependency = STEP_DEPENDENCIES[stepNum];
+    const dependency = STEP_DEPENDENCIES[stepNum as OnboardingStep];
     const defaultOnboardingInfo: OnboardingInfo = {
-      currentStep: userInfo.onboardingInfo.currentStep ?? 0,
-      onboardingComplete: userInfo.onboardingInfo.onboardingComplete ?? false,
-      firstName: userInfo.onboardingInfo.firstName ?? null,
-      college: userInfo.onboardingInfo.college ?? null,
-      isNonTraditional: userInfo.onboardingInfo.isNonTraditional ?? null,
-      isCanadian: userInfo.onboardingInfo.isCanadian ?? null,
-      gpa: userInfo.onboardingInfo.gpa ?? null,
-      currentMcatScore: userInfo.onboardingInfo.currentMcatScore ?? null,
-      hasNotTakenMCAT: userInfo.onboardingInfo.hasNotTakenMCAT ?? null,
-      mcatAttemptNumber: userInfo.onboardingInfo.mcatAttemptNumber ?? null,
-      targetMedSchool: userInfo.onboardingInfo.targetMedSchool ?? null,
-      targetScore: userInfo.onboardingInfo.targetScore ?? null,
-      referralEmail: userInfo.onboardingInfo.referralEmail ?? null
+      ...DEFAULT_ONBOARDING_INFO,
+      ...userInfo.onboardingInfo,
+      // Make hasSeenIntroVideo a boolean
+      hasSeenIntroVideo: !!(userInfo.onboardingInfo.hasSeenIntroVideo)
     };
     if (!dependency.validates(defaultOnboardingInfo)) {
       return false;

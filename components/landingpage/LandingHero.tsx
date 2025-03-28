@@ -191,12 +191,12 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
       {/* Left side - Text content */}
       <div className="text-center">
         <h1 className="text-4xl md:text-5xl font-bold text-white font-krungthep mb-4">
-          Learn from <span className="text-[#f2f64f]">10x MCAT Tutors</span>
+           Score your <span className="text-[#f2f64f]">best.</span>
         </h1>
         <p className="text-xl md:text-2xl text-white my-8">
-          Elite tutors powered by cutting-edge software to maximize your score improvement.
+          High-tech MCAT software dedicated to creating the future doctors our patients deserve.
         </p>
-        <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+        <div className="flex justify-center">
           <motion.button
             onClick={handleDemoClick}
             className="bg-[#ffffff] text-[#0e2247] py-4 text-xl md:text-2xl px-10 rounded-[20px]"
@@ -215,13 +215,6 @@ const LandingHero = ({ onScrollClick }: LandingHeroProps) => {
             }}
           >
             Watch Demo
-          </motion.button>
-          <motion.button
-            onClick={() => document.getElementById('tutors')?.scrollIntoView({ behavior: 'smooth' })}
-            className="bg-transparent border-2 border-white text-white py-4 text-xl md:text-2xl px-10 rounded-[20px] hover:bg-white/10"
-            whileHover={{ scale: 1.05 }}
-          >
-            Meet Our Tutors
           </motion.button>
         </div>
       </div>

@@ -25,3 +25,7 @@ Evaluate whether our branch behaves and acts functionally the SAME as main.
 Having the worktree available provides:
 - Direct access to main branch files for inspection
 - The ability to verify functional equivalence with confidence
+
+
+
+Take a look at this check container component that's in the branch to folder. This existed in a separate branch where we styled it differently. Please note any differences between this file and the one we have for our check container and match the styling of the branch to. So therefore refactor our check container to match the styling. It also attaches a photo of what it should look like.

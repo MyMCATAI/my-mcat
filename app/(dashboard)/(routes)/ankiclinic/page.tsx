@@ -971,7 +971,6 @@ const DoctorsOfficePage = () => {
         largeDialogQuit={largeDialogQuit}
         setLargeDialogQuit={setLargeDialogQuit}
       />}
-      
       {/* Add HoverSidebar instead of FloatingButton */}
       <HoverSidebar
         activities={activities}

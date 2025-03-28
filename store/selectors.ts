@@ -10,23 +10,112 @@ export const useUI = () => {
   const theme = useUIStore((state) => state.theme)
   const window = useUIStore((state) => state.window)
   const currentRoute = useUIStore((state) => state.currentRoute)
+  const navigation = useUIStore((state) => state.navigation)
+  const context = useUIStore((state) => state.context)
   const setTheme = useUIStore((state) => state.setTheme)
   const setWindowSize = useUIStore((state) => state.setWindowSize)
   const setCurrentRoute = useUIStore((state) => state.setCurrentRoute)
+  const setPage = useUIStore((state) => state.setPage)
+  const setSubSection = useUIStore((state) => state.setSubSection)
+  const setContext = useUIStore((state) => state.setContext)
+  const clearContext = useUIStore((state) => state.clearContext)
   
   return {
     theme,
     window,
     currentRoute,
+    navigation,
+    context,
     setTheme,
     setWindowSize,
     setCurrentRoute,
+    setPage,
+    setSubSection,
+    setContext,
+    clearContext,
   }
 }
 
 export const useTheme = () => useUIStore(state => state.theme)
 export const useWindowSize = () => useUIStore(state => state.window)
 export const useCurrentRoute = () => useUIStore(state => state.currentRoute)
+
+/* --- Navigation Selector ---- */
+export const useNavigation = () => {
+  const navigation = useUIStore((state) => state.navigation)
+  const context = useUIStore((state) => state.context)
+  const setPage = useUIStore((state) => state.setPage)
+  const setSubSection = useUIStore((state) => state.setSubSection)
+  const setContext = useUIStore((state) => state.setContext)
+  const clearContext = useUIStore((state) => state.clearContext)
+  
+  // Navigate to a section within the app
+  const navigateToPage = (page: string) => {
+    console.log(`[useNavigation] navigateToPage called with: ${page}, current page: ${navigation.page}`);
+    setPage(page);
+    console.log(`[useNavigation] navigateToPage completed, page should now be: ${page}`);
+  };
+  
+  // Update sub-section without changing page
+  const updateSubSection = (updates: Record<string, any>) => {
+    console.log(`[useNavigation] updateSubSection called with:`, updates);
+    setSubSection(updates);
+  };
+  
+  // Combined navigation with context update
+  const navigateWithContext = (page: string, contextData: Record<string, any>) => {
+    console.log(`[useNavigation] navigateWithContext called with page: ${page}`);
+    setPage(page);
+    setContext(contextData);
+  };
+  
+  // Home page specific navigation
+  const navigateHomeTab = (tab: string, additionalContext?: Record<string, any>) => {
+    console.log(`[useNavigation] navigateHomeTab called with: ${tab}, current page: ${navigation.page}`);
+    setPage(tab);
+    if (additionalContext) {
+      setContext(additionalContext);
+    }
+    console.log(`[useNavigation] navigateHomeTab completed, page should now be: ${tab}`);
+  };
+  
+  // Navigate to ATS content
+  const navigateToATS = (subject: string, contentType: string, additionalContext?: Record<string, any>) => {
+    setPage('ats');
+    setSubSection({
+      concept: subject,
+      contentType,
+      ...additionalContext
+    });
+  };
+  
+  // Reset navigation state
+  const resetNavigation = () => {
+    setPage('KalypsoAI');
+    clearContext();
+  };
+  
+  return {
+    // Current state
+    activePage: navigation.page,
+    subSection: navigation.subSection,
+    context,
+    
+    // Navigation actions
+    navigateToPage,
+    updateSubSection,
+    navigateWithContext,
+    navigateHomeTab,
+    navigateToATS,
+    resetNavigation,
+    
+    // Direct state setters (for advanced usage)
+    setPage,
+    setSubSection,
+    setContext,
+    clearContext
+  };
+}
 
 /* --- User Selector ---- */
 // Consolidated user selector that provides all user-related state and actions
@@ -56,6 +145,10 @@ export const useUser = () => {
   const userInfo = useUserStore((state) => state.userInfo)
   const isSubscribed = useUserStore((state) => state.isSubscribed)
   const setIsSubscribed = useUserStore((state) => state.setIsSubscribed)
+  
+  // Explicitly access hasSeenIntroVideo from onboardingInfo
+  const hasSeenIntroVideo = userInfo?.onboardingInfo?.hasSeenIntroVideo || false
+  const setHasSeenIntroVideo = useUserStore((state) => state.setHasSeenIntroVideo)
   
   // User stats state and actions
   const coins = useUserStore((state) => state.coins)
@@ -90,6 +183,8 @@ export const useUser = () => {
     userInfo,
     isSubscribed,
     setIsSubscribed,
+    hasSeenIntroVideo,
+    setHasSeenIntroVideo,
     
     // Stats
     coins,
@@ -98,6 +193,15 @@ export const useUser = () => {
     updateCoinsDisplay,
     refreshUserInfo,
   }
+}
+
+// Dedicated selector for hasSeenIntroVideo
+export const useHasSeenIntroVideo = () => {
+  const userInfo = useUserStore((state) => state.userInfo)
+  const hasSeenIntroVideo = userInfo?.onboardingInfo?.hasSeenIntroVideo || false
+  const setHasSeenIntroVideo = useUserStore((state) => state.setHasSeenIntroVideo)
+  
+  return { hasSeenIntroVideo, setHasSeenIntroVideo }
 }
 
 /* --- Game Selector ---- */

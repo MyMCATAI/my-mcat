@@ -188,6 +188,26 @@ const RouteTracker = () => {
     setLoadingState(prev => ({ ...prev, studyPlan: true }));
     
     try {
+      // Check localStorage cache first
+      const cachedPlan = localStorage.getItem('study_plan_cache');
+      const cacheTimestamp = localStorage.getItem('study_plan_cache_timestamp');
+      const cacheAge = cacheTimestamp ? Date.now() - Number.parseInt(cacheTimestamp) : null;
+      
+      // Use cache if it exists and is less than 10 minutes old
+      if (cachedPlan && cacheAge && cacheAge < 10 * 60 * 1000) {
+        debugLog('STUDY_PLAN', 'Using cached study plan, cache age:', Math.round(cacheAge/1000), 'seconds');
+        
+        // Update states
+        setStudyPlanCheckState({ loading: false, error: null, complete: true });
+        setLoadingState(prev => ({ ...prev, studyPlan: false }));
+        
+        // Return whether study plan exists based on cache
+        const data = JSON.parse(cachedPlan);
+        return !!data.studyPlan;
+      }
+      
+      // If no valid cache, fetch from API
+      debugLog('STUDY_PLAN', 'Fetching fresh study plan data');
       const response = await fetch('/api/study-plan');
       
       if (!response.ok) {
@@ -195,6 +215,10 @@ const RouteTracker = () => {
       }
       
       const data = await response.json();
+      
+      // Cache the response
+      localStorage.setItem('study_plan_cache', JSON.stringify(data));
+      localStorage.setItem('study_plan_cache_timestamp', Date.now().toString());
       
       // Update states
       setStudyPlanCheckState({ loading: false, error: null, complete: true });
@@ -204,6 +228,7 @@ const RouteTracker = () => {
       return !!data.studyPlan;
     } catch (error) {
       debugLog('STUDY_PLAN', 'Error checking study plan:', error);
+      console.error('Error checking study plan:', error);
       
       // Set error state
       const typedError = error instanceof Error ? error : new Error('Unknown error checking study plan');
@@ -212,7 +237,7 @@ const RouteTracker = () => {
       
       return false;
     }
-  }, [debugLog]);
+  }, [debugLog, pathname]);
 
   // Update current route in the store
   useEffect(() => {
@@ -255,13 +280,6 @@ const RouteTracker = () => {
     
     // Decide where to redirect based on onboarding status
     if (isSignedIn) {
-      console.log('[CRITICAL_DEBUG] Login Redirect Decision:', {
-        onboardingFlag: userInfo?.onboardingInfo?.onboardingComplete,
-        targetScore: userInfo?.onboardingInfo?.targetScore,
-        effectiveOnboardingComplete: effectiveOnboardingComplete,
-        willRedirectTo: effectiveOnboardingComplete ? '/home' : '/onboarding'
-      });
-      
       if (effectiveOnboardingComplete) {
         debugLog('ROOT_PATH', 'Redirecting to /home - onboarding complete');
         const fallback = performRedirect('/home', 'Login with onboarding complete');
