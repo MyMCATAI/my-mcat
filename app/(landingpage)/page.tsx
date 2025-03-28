@@ -11,21 +11,12 @@ const LandingHero = dynamic(
   }
 );
 
-// Second fold - load tutors section with high priority
-const TutorSlider = dynamic(
-  () => import("@/components/landingpage/TutorSlider"),
-  {
-    ssr: true,
-    loading: () => <div className="h-[600px] bg-[#12233c]" />
-  }
-);
-
-// Third fold - load when approaching viewport
+// Second fold - load when approaching viewport
 const ProductWrapper = dynamic(
   () => import("@/components/landingpage/ProductWrapper"),
   {
     loading: () => <div className="h-screen bg-[#12233c]" />,
-    ssr: false
+    ssr: false // Client-side only since it has animations
   }
 );
 
@@ -66,21 +57,14 @@ const LandingPage = () => {
         <LandingHero />
       </Suspense>
 
-      {/* Second fold - Tutor section */}
-      <div className="relative z-10">
-        <Suspense fallback={<div className="h-[600px] bg-[#12233c]" />}>
-          <TutorSlider />
-        </Suspense>
-      </div>
-
-      {/* Third fold - Product section */}
+      {/* Second fold - load when approaching */}
       <div className="relative z-10">
         <Suspense fallback={<div className="h-screen bg-[#12233c]" />}>
           <ProductWrapper />
         </Suspense>
       </div>
 
-      {/* Rest of the content */}
+      {/* Third fold */}
       <div id="mission" className="relative z-20">
         <Suspense fallback={<div className="h-screen bg-[#12233c]" />}>
           <Mission />
