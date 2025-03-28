@@ -24,7 +24,10 @@
     ],
     "import/no-unused-modules": ["warn", {
       "unusedExports": true,
-      "ignoreExports": ["**/api/**/*"]
+      "ignoreExports": [
+        "**/api/**/*",
+        "**/store/types.ts"
+      ]
     }],
     "@typescript-eslint/adjacent-overload-signatures": "warn",
     "@typescript-eslint/ban-ts-comment": "warn",
@@ -47,7 +50,7 @@
     "prefer-const": "warn",
     "no-var": "warn",
     "no-unused-expressions": "warn",
-    "no-undef": "warn"
+    "no-undef": "warn",
   },
   "settings": {
     "import/resolver": {

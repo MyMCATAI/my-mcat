@@ -6,553 +6,666 @@ fireWith @ jquery.js:2
 ready @ jquery.js:2
 I @ jquery.js:2
 contentScript.js:2 Chrome storage API available, initializing emoji style sync
- [RouteTracker DEBUG] === STATE DUMP ===
- [RouteTracker DEBUG] Path: /home
- [RouteTracker DEBUG] isSignedIn: undefined
- [RouteTracker DEBUG] isLoaded: true
- [RouteTracker DEBUG] profileLoading: true
- [RouteTracker DEBUG] Zustand onboardingComplete: false
- [RouteTracker DEBUG] userInfo exists: false
- [RouteTracker DEBUG] ====================
- [RouteTracker DEBUG] Checking exemption for path: /home
- [RouteTracker DEBUG] User is signed in: undefined
- [RouteTracker DEBUG] Path exempt (standard): false
- [RouteTracker DEBUG] Calculated effectiveOnboardingComplete: false targetScore: undefined
- 👋 DebugPanel: Component initialized
- 👋 DebugPanel: Current path and search params {pathname: '/home', searchParams: 'debug=true'}
- 👋 DebugPanel: Not rendering panel (isDebug is false)
- [DEBUG][StoreInitializer] Starting initialization...
- [DEBUG][StoreInitializer] Checking raw Zustand state:
- [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
- [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
- [DEBUG][StoreInitializer] No userInfo or onboardingInfo yet
- [RouteTracker DEBUG] isExemptPath changed to: false
- [RouteTracker DEBUG] Current path: /home
- [RouteTracker DEBUG] isSignedIn state: undefined
- [RouteTracker DEBUG] Effect 1 - isSignedIn: undefined has userInfo: false
- [RouteTracker DEBUG] Effect 1 - onboardingComplete: false
- [RouteTracker DEBUG] Effect 2 - path: /home
- [RouteTracker DEBUG] Effect 2 - isSignedIn: undefined onboarding complete: false
- [RouteTracker DEBUG] Effect 2 - Zustand onboardingComplete: false
- [DEBUG][StoreInitializer] Starting initialization...
- [DEBUG][StoreInitializer] Checking raw Zustand state:
- [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
- [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
- [DEBUG][StoreInitializer] No userInfo or onboardingInfo yet
- [MusicPlayer] Initializing audio context
- [MusicPlayer] Theme changed or component mounted, theme: cyberSpace
- [MusicPlayer] Queue status: {initialized: false, queueLength: 0, firstSongMatchesTheme: false, shouldUpdateQueue: true}
- [MusicPlayer] Updating song queue for theme: cyberSpace
- [AudioSlice] Theme changed to cyberSpace wasPlaying: false
- 🎫 Subscription Status: FREE
- 👋 DebugPanel: URL debug parameter = true
- 👋 DebugPanel: Direct URL check = true http://localhost:3000/home?debug=true
- 👋 DebugPanel: Debug mode ENABLED
- 👋 DebugPanel: isDebug state = false
- [DEBUG][StoreInitializer] Starting initialization...
- [DEBUG][StoreInitializer] Checking raw Zustand state:
- [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
- [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
- [DEBUG][StoreInitializer] No userInfo or onboardingInfo yet
- [RouteTracker DEBUG] isExemptPath changed to: false
- [RouteTracker DEBUG] Current path: /home
- [RouteTracker DEBUG] isSignedIn state: undefined
- [RouteTracker DEBUG] Effect 1 - isSignedIn: undefined has userInfo: false
- [RouteTracker DEBUG] Effect 1 - onboardingComplete: false
- [RouteTracker DEBUG] Effect 2 - path: /home
- [RouteTracker DEBUG] Effect 2 - isSignedIn: undefined onboarding complete: false
- [RouteTracker DEBUG] Effect 2 - Zustand onboardingComplete: false
- [DEBUG][StoreInitializer] Starting initialization...
- [DEBUG][StoreInitializer] Checking raw Zustand state:
- [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
- [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
- [DEBUG][StoreInitializer] No userInfo or onboardingInfo yet
- [MusicPlayer] Initializing audio context
- [MusicPlayer] Theme changed or component mounted, theme: cyberSpace
- [MusicPlayer] Queue status: {initialized: true, queueLength: 0, firstSongMatchesTheme: false, shouldUpdateQueue: true}
- [MusicPlayer] Updating song queue for theme: cyberSpace
- [AudioSlice] Theme changed to cyberSpace wasPlaying: false
- 🎫 Subscription Status: FREE
- 👋 DebugPanel: URL debug parameter = true
- 👋 DebugPanel: Direct URL check = true http://localhost:3000/home?debug=true
-DebugPanel.tsx:39 👋 DebugPanel: Debug mode ENABLED
-DebugPanel.tsx:52 👋 DebugPanel: isDebug state = false
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: undefined
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: true
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: false
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: false
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-DebugPanel.tsx:12 👋 DebugPanel: Component initialized
-DebugPanel.tsx:19 👋 DebugPanel: Current path and search params {pathname: '/home', searchParams: 'debug=true'}
-DebugPanel.tsx:233 👋 DebugPanel: RENDERING PANEL!
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['currentRoute', 'theme', 'window']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for userState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['coins', 'completedSteps', 'interfaceSettings', 'isProfileComplete', 'isSubscribed', 'lastVisitedRoute', 'onboardingComplete', 'profile', 'profileLoading', 'statsLoading', 'studyPreferences', 'tutorialProgress', 'userInfo']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for audioState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['audioContext', 'currentLoop', 'currentMusic', 'currentSong', 'currentSongIndex', 'currentSongTitle', 'gainNodes', 'isPlaying', 'masterVolume', 'queueLength', 'songQueue', 'sources', 'volume']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for gameState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (15) ['activeRooms', 'completeAllRoom', 'correctCount', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'patientsPerDay', 'streakDays', 'testScore', 'totalPatients', 'userLevel', 'userResponses', 'userRooms', 'wrongCount']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for vocabState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['isCmdIEnabled', 'showVocabList', 'vocabList']
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: true profile: null forceShowProfile: false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:186 [HomePage] hasSeenIntroVideo calculated: false
+page.tsx:202 [HomePage] shouldInitialize check: {shouldInit: null, isInitialized: false, hasUserInfo: false, isLoadingUserInfo: false}
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
+RouteTracker.tsx:402 [ROUTE_TRACKER] Subscription/study plan effect triggered
+RouteTracker.tsx:403 [ROUTE_TRACKER] State values: {initialLoadComplete: false, isLoaded: true, isSignedIn: undefined, pathname: '/home', userInfoExists: false, …}
+RouteTracker.tsx:431 [ROUTE_TRACKER] Skipping subscription/study plan checks due to conditions not met
 musicplayer.tsx:104 [MusicPlayer] Initializing audio context
-musicplayer.tsx:116 [MusicPlayer] Theme changed or component mounted, theme: mykonosBlue
-musicplayer.tsx:131 [MusicPlayer] Queue status: {initialized: true, queueLength: 10, firstSongMatchesTheme: false, shouldUpdateQueue: true}
-musicplayer.tsx:139 [MusicPlayer] Updating song queue for theme: mykonosBlue
-audioSlice.ts:200 [AudioSlice] Theme changed to mykonosBlue wasPlaying: false
-DebugPanel.tsx:52 👋 DebugPanel: isDebug state = true
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: undefined
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: true
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: false
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: false
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-DebugPanel.tsx:12 👋 DebugPanel: Component initialized
-DebugPanel.tsx:19 👋 DebugPanel: Current path and search params {pathname: '/home', searchParams: 'debug=true'}
-DebugPanel.tsx:233 👋 DebugPanel: RENDERING PANEL!
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['currentRoute', 'theme', 'window']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for userState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['coins', 'completedSteps', 'interfaceSettings', 'isProfileComplete', 'isSubscribed', 'lastVisitedRoute', 'onboardingComplete', 'profile', 'profileLoading', 'statsLoading', 'studyPreferences', 'tutorialProgress', 'userInfo']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for audioState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['audioContext', 'currentLoop', 'currentMusic', 'currentSong', 'currentSongIndex', 'currentSongTitle', 'gainNodes', 'isPlaying', 'masterVolume', 'queueLength', 'songQueue', 'sources', 'volume']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for gameState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (15) ['activeRooms', 'completeAllRoom', 'correctCount', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'patientsPerDay', 'streakDays', 'testScore', 'totalPatients', 'userLevel', 'userResponses', 'userRooms', 'wrongCount']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for vocabState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['isCmdIEnabled', 'showVocabList', 'vocabList']
-musicplayer.tsx:116 [MusicPlayer] Theme changed or component mounted, theme: mykonosBlue
+musicplayer.tsx:116 [MusicPlayer] Theme changed or component mounted, theme: cyberSpace
+musicplayer.tsx:131 [MusicPlayer] Queue status: {initialized: false, queueLength: 0, firstSongMatchesTheme: false, shouldUpdateQueue: true}
+musicplayer.tsx:139 [MusicPlayer] Updating song queue for theme: cyberSpace
+audioSlice.ts:200 [AudioSlice] Theme changed to cyberSpace wasPlaying: false
+ProfileButton.tsx:68 [Debug] Profile loading state changed: true
+ProfileButton.tsx:70 [Debug] Profile is currently loading
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: false}
+page.tsx:106 [HomePage] Setting up safety timer
+page.tsx:176 [HomePage] Loading state check: {isLoadingUserInfo: false, loadingState: {…}}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: false, isLoadingUserInfo: false}
+selectors.ts:74 [useNavigation] navigateHomeTab called with: KalypsoAI, current page: KalypsoAI
+uiSlice.ts:80 [uiSlice] setPage called with: KalypsoAI
+uiSlice.ts:84 [uiSlice] setPage - no change needed, page already: KalypsoAI
+selectors.ts:79 [useNavigation] navigateHomeTab completed, page should now be: KalypsoAI
+page.tsx:494 [HomePage] Component lifecycle effect
+layout.tsx:46 🎫 Subscription Status: FREE
+RouteTracker.tsx:402 [ROUTE_TRACKER] Subscription/study plan effect triggered
+RouteTracker.tsx:403 [ROUTE_TRACKER] State values: {initialLoadComplete: false, isLoaded: true, isSignedIn: undefined, pathname: '/home', userInfoExists: false, …}
+RouteTracker.tsx:431 [ROUTE_TRACKER] Skipping subscription/study plan checks due to conditions not met
+musicplayer.tsx:104 [MusicPlayer] Initializing audio context
+musicplayer.tsx:116 [MusicPlayer] Theme changed or component mounted, theme: cyberSpace
+musicplayer.tsx:131 [MusicPlayer] Queue status: {initialized: true, queueLength: 0, firstSongMatchesTheme: false, shouldUpdateQueue: true}
+musicplayer.tsx:139 [MusicPlayer] Updating song queue for theme: cyberSpace
+audioSlice.ts:200 [AudioSlice] Theme changed to cyberSpace wasPlaying: false
+ProfileButton.tsx:68 [Debug] Profile loading state changed: true
+ProfileButton.tsx:70 [Debug] Profile is currently loading
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: false}
+page.tsx:106 [HomePage] Setting up safety timer
+page.tsx:176 [HomePage] Loading state check: {isLoadingUserInfo: false, loadingState: {…}}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: false, isLoadingUserInfo: false}
+page.tsx:494 [HomePage] Component lifecycle effect
+layout.tsx:46 🎫 Subscription Status: FREE
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: true profile: null forceShowProfile: false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
+musicplayer.tsx:104 [MusicPlayer] Initializing audio context
+musicplayer.tsx:116 [MusicPlayer] Theme changed or component mounted, theme: cyberSpace
 musicplayer.tsx:131 [MusicPlayer] Queue status: {initialized: true, queueLength: 10, firstSongMatchesTheme: true, shouldUpdateQueue: false}
-index.ts:122 COMBINED STATE KEYS: (116) ['masterVolume', 'isPlaying', 'currentMusic', 'currentLoop', 'audioContext', 'musicSource', 'loopSource', 'voiceSource', 'bufferCache', 'volume', 'currentSong', 'songQueue', 'currentSongIndex', 'masterGainNode', 'musicGainNode', 'sfxGainNode', 'loopGainNode', 'voiceGainNode', '_SOUND_MAPPINGS', '_isLoopLoading', '_pendingLoopName', '_isMusicLoading', '_pendingMusicTrack', '_lastPlayedSounds', '_soundDebounceTime', 'setSongQueue', 'getCurrentSongTitle', 'handleThemeChange', 'togglePlayPause', 'initializeAudioContext', 'setMasterVolume', 'setVolume', 'skipToNext', 'loadAudioBuffer', 'playMusic', 'stopMusic', 'playSound', 'playLoop', 'stopLoop', 'playVoice', 'stopVoice', 'window', 'currentRoute', 'theme', 'setWindowSize', 'setCurrentRoute', 'setTheme', 'patientsPerDay', 'streakDays', 'totalPatients', 'userLevel', 'userRooms', 'activeRooms', 'completeAllRoom', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'correctCount', 'testScore', 'userResponses', 'wrongCount', 'reportData', 'isClinicDataLoading', 'endGame', 'resetGameState', 'setActiveRooms', 'setCompleteAllRoom', 'setCorrectCount', 'setFlashcardRoomId', 'setIsFlashcardsOpen', 'setUserResponses', 'setTestScore', 'setTotalPatients', 'setWrongCount', 'setStreakDays', 'setUserRooms', 'startGame', 'unlockRoom', 'updateUserLevel', 'fetchClinicData', 'resetClinicData', 'performDailyCalculations', 'version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', …]
-index.ts:122 COMBINED STATE KEYS: (116) ['masterVolume', 'isPlaying', 'currentMusic', 'currentLoop', 'audioContext', 'musicSource', 'loopSource', 'voiceSource', 'bufferCache', 'volume', 'currentSong', 'songQueue', 'currentSongIndex', 'masterGainNode', 'musicGainNode', 'sfxGainNode', 'loopGainNode', 'voiceGainNode', '_SOUND_MAPPINGS', '_isLoopLoading', '_pendingLoopName', '_isMusicLoading', '_pendingMusicTrack', '_lastPlayedSounds', '_soundDebounceTime', 'setSongQueue', 'getCurrentSongTitle', 'handleThemeChange', 'togglePlayPause', 'initializeAudioContext', 'setMasterVolume', 'setVolume', 'skipToNext', 'loadAudioBuffer', 'playMusic', 'stopMusic', 'playSound', 'playLoop', 'stopLoop', 'playVoice', 'stopVoice', 'window', 'currentRoute', 'theme', 'setWindowSize', 'setCurrentRoute', 'setTheme', 'patientsPerDay', 'streakDays', 'totalPatients', 'userLevel', 'userRooms', 'activeRooms', 'completeAllRoom', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'correctCount', 'testScore', 'userResponses', 'wrongCount', 'reportData', 'isClinicDataLoading', 'endGame', 'resetGameState', 'setActiveRooms', 'setCompleteAllRoom', 'setCorrectCount', 'setFlashcardRoomId', 'setIsFlashcardsOpen', 'setUserResponses', 'setTestScore', 'setTotalPatients', 'setWrongCount', 'setStreakDays', 'setUserRooms', 'startGame', 'unlockRoom', 'updateUserLevel', 'fetchClinicData', 'resetClinicData', 'performDailyCalculations', 'version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', …]
-musicplayer.tsx:107 [MusicPlayer] Audio context initialized successfully
-index.ts:122 COMBINED STATE KEYS: (116) ['masterVolume', 'isPlaying', 'currentMusic', 'currentLoop', 'audioContext', 'musicSource', 'loopSource', 'voiceSource', 'bufferCache', 'volume', 'currentSong', 'songQueue', 'currentSongIndex', 'masterGainNode', 'musicGainNode', 'sfxGainNode', 'loopGainNode', 'voiceGainNode', '_SOUND_MAPPINGS', '_isLoopLoading', '_pendingLoopName', '_isMusicLoading', '_pendingMusicTrack', '_lastPlayedSounds', '_soundDebounceTime', 'setSongQueue', 'getCurrentSongTitle', 'handleThemeChange', 'togglePlayPause', 'initializeAudioContext', 'setMasterVolume', 'setVolume', 'skipToNext', 'loadAudioBuffer', 'playMusic', 'stopMusic', 'playSound', 'playLoop', 'stopLoop', 'playVoice', 'stopVoice', 'window', 'currentRoute', 'theme', 'setWindowSize', 'setCurrentRoute', 'setTheme', 'patientsPerDay', 'streakDays', 'totalPatients', 'userLevel', 'userRooms', 'activeRooms', 'completeAllRoom', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'correctCount', 'testScore', 'userResponses', 'wrongCount', 'reportData', 'isClinicDataLoading', 'endGame', 'resetGameState', 'setActiveRooms', 'setCompleteAllRoom', 'setCorrectCount', 'setFlashcardRoomId', 'setIsFlashcardsOpen', 'setUserResponses', 'setTestScore', 'setTotalPatients', 'setWrongCount', 'setStreakDays', 'setUserRooms', 'startGame', 'unlockRoom', 'updateUserLevel', 'fetchClinicData', 'resetClinicData', 'performDailyCalculations', 'version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', …]
-index.ts:122 COMBINED STATE KEYS: (116) ['masterVolume', 'isPlaying', 'currentMusic', 'currentLoop', 'audioContext', 'musicSource', 'loopSource', 'voiceSource', 'bufferCache', 'volume', 'currentSong', 'songQueue', 'currentSongIndex', 'masterGainNode', 'musicGainNode', 'sfxGainNode', 'loopGainNode', 'voiceGainNode', '_SOUND_MAPPINGS', '_isLoopLoading', '_pendingLoopName', '_isMusicLoading', '_pendingMusicTrack', '_lastPlayedSounds', '_soundDebounceTime', 'setSongQueue', 'getCurrentSongTitle', 'handleThemeChange', 'togglePlayPause', 'initializeAudioContext', 'setMasterVolume', 'setVolume', 'skipToNext', 'loadAudioBuffer', 'playMusic', 'stopMusic', 'playSound', 'playLoop', 'stopLoop', 'playVoice', 'stopVoice', 'window', 'currentRoute', 'theme', 'setWindowSize', 'setCurrentRoute', 'setTheme', 'patientsPerDay', 'streakDays', 'totalPatients', 'userLevel', 'userRooms', 'activeRooms', 'completeAllRoom', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'correctCount', 'testScore', 'userResponses', 'wrongCount', 'reportData', 'isClinicDataLoading', 'endGame', 'resetGameState', 'setActiveRooms', 'setCompleteAllRoom', 'setCorrectCount', 'setFlashcardRoomId', 'setIsFlashcardsOpen', 'setUserResponses', 'setTestScore', 'setTotalPatients', 'setWrongCount', 'setStreakDays', 'setUserRooms', 'startGame', 'unlockRoom', 'updateUserLevel', 'fetchClinicData', 'resetClinicData', 'performDailyCalculations', 'version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', …]
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: false}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: false, isLoadingUserInfo: false}
 musicplayer.tsx:107 [MusicPlayer] Audio context initialized successfully
 musicplayer.tsx:107 [MusicPlayer] Audio context initialized successfully
-StoreInitializer.tsx:83 [DEBUG][StoreInitializer] After initialization:
-StoreInitializer.tsx:28 [DEBUG][StoreInitializer] Checking raw Zustand state:
-StoreInitializer.tsx:29 [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-StoreInitializer.tsx:60 [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
-StoreInitializer.tsx:68 [DEBUG][StoreInitializer] No userInfo or onboardingInfo yet
-StoreInitializer.tsx:83 [DEBUG][StoreInitializer] After initialization:
-StoreInitializer.tsx:28 [DEBUG][StoreInitializer] Checking raw Zustand state:
-StoreInitializer.tsx:29 [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-StoreInitializer.tsx:60 [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
-StoreInitializer.tsx:68 [DEBUG][StoreInitializer] No userInfo or onboardingInfo yet
-StoreInitializer.tsx:83 [DEBUG][StoreInitializer] After initialization:
-StoreInitializer.tsx:28 [DEBUG][StoreInitializer] Checking raw Zustand state:
-StoreInitializer.tsx:29 [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-StoreInitializer.tsx:60 [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
-StoreInitializer.tsx:68 [DEBUG][StoreInitializer] No userInfo or onboardingInfo yet
-StoreInitializer.tsx:83 [DEBUG][StoreInitializer] After initialization:
-StoreInitializer.tsx:28 [DEBUG][StoreInitializer] Checking raw Zustand state:
-StoreInitializer.tsx:29 [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-StoreInitializer.tsx:60 [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
-StoreInitializer.tsx:68 [DEBUG][StoreInitializer] No userInfo or onboardingInfo yet
+musicplayer.tsx:107 [MusicPlayer] Audio context initialized successfully
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
 script.debug.js:1 [Vercel Web Analytics] Debug mode is enabled by default in development. No requests will be sent to the server.
-script.debug.js:1 [Vercel Web Analytics] [pageview] http://localhost:3000/home?debug=true {o: 'http://localhost:3000/home?debug=true', sv: '0.1.2', sdkn: '@vercel/analytics/react', sdkv: '1.3.1', ts: 1742871036249, …}
+script.debug.js:1 [Vercel Web Analytics] [pageview] http://localhost:3000/home {o: 'http://localhost:3000/home', sv: '0.1.2', sdkn: '@vercel/analytics/react', sdkv: '1.3.1', ts: 1743191716954, …}
 audioSlice.ts:226 [AudioSlice] Not playing music after theme change
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: true
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: true
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: false
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: false
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-RouteTracker.tsx:59 [RouteTracker DEBUG] Checking exemption for path: /home
-RouteTracker.tsx:60 [RouteTracker DEBUG] User is signed in: true
-RouteTracker.tsx:71 [RouteTracker DEBUG] Path exempt (standard): false
 audioSlice.ts:226 [AudioSlice] Not playing music after theme change
-StoreInitializer.tsx:96 [DEBUG][StoreInitializer] User signed in, refreshing user info...
-StoreInitializer.tsx:28 [DEBUG][StoreInitializer] Checking raw Zustand state:
-StoreInitializer.tsx:29 [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-StoreInitializer.tsx:60 [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
-StoreInitializer.tsx:68 [DEBUG][StoreInitializer] No userInfo or onboardingInfo yet
-userSlice.ts:334 [DEBUG][UserStore] Starting refreshUserInfo
-userSlice.ts:335 [DEBUG][UserStore] Current state keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
 
                 
           
           
           
          Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
-RouteTracker.tsx:174 [RouteTracker DEBUG] isExemptPath changed to: false
-RouteTracker.tsx:175 [RouteTracker DEBUG] Current path: /home
-RouteTracker.tsx:176 [RouteTracker DEBUG] isSignedIn state: true
-RouteTracker.tsx:221 [RouteTracker DEBUG] Effect 1 - isSignedIn: true has userInfo: false
-RouteTracker.tsx:222 [RouteTracker DEBUG] Effect 1 - onboardingComplete: false
-RouteTracker.tsx:244 [RouteTracker DEBUG] Effect 2 - path: /home
-RouteTracker.tsx:245 [RouteTracker DEBUG] Effect 2 - isSignedIn: true onboarding complete: false
-RouteTracker.tsx:246 [RouteTracker DEBUG] Effect 2 - Zustand onboardingComplete: false
-RouteTracker.tsx:367 [AUTH DEBUG] Auth state changed but NOT from login button - no redirect
-StoreInitializer.tsx:96 [DEBUG][StoreInitializer] User signed in, refreshing user info...
-StoreInitializer.tsx:28 [DEBUG][StoreInitializer] Checking raw Zustand state:
-StoreInitializer.tsx:29 [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-StoreInitializer.tsx:60 [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
-StoreInitializer.tsx:68 [DEBUG][StoreInitializer] No userInfo or onboardingInfo yet
-userSlice.ts:334 [DEBUG][UserStore] Starting refreshUserInfo
-userSlice.ts:335 [DEBUG][UserStore] Current state keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-userSlice.ts:334 [DEBUG][UserStore] Starting refreshUserInfo
-userSlice.ts:335 [DEBUG][UserStore] Current state keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-userSlice.ts:334 [DEBUG][UserStore] Starting refreshUserInfo
-userSlice.ts:335 [DEBUG][UserStore] Current state keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-audioSlice.ts:226 [AudioSlice] Not playing music after theme change
-StoreInitializer.tsx:117 [DEBUG][StoreInitializer] Running secondary refresh...
-userSlice.ts:334 [DEBUG][UserStore] Starting refreshUserInfo
-userSlice.ts:335 [DEBUG][UserStore] Current state keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-StoreInitializer.tsx:117 [DEBUG][StoreInitializer] Running secondary refresh...
-userSlice.ts:334 [DEBUG][UserStore] Starting refreshUserInfo
-userSlice.ts:335 [DEBUG][UserStore] Current state keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: true
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: true
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: false
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: false
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-DebugPanel.tsx:12 👋 DebugPanel: Component initialized
-DebugPanel.tsx:19 👋 DebugPanel: Current path and search params {pathname: '/home', searchParams: 'debug=true'}
-DebugPanel.tsx:233 👋 DebugPanel: RENDERING PANEL!
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['currentRoute', 'theme', 'window']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for userState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['coins', 'completedSteps', 'interfaceSettings', 'isProfileComplete', 'isSubscribed', 'lastVisitedRoute', 'onboardingComplete', 'profile', 'profileLoading', 'statsLoading', 'studyPreferences', 'tutorialProgress', 'userInfo']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for audioState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['audioContext', 'currentLoop', 'currentMusic', 'currentSong', 'currentSongIndex', 'currentSongTitle', 'gainNodes', 'isPlaying', 'masterVolume', 'queueLength', 'songQueue', 'sources', 'volume']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for gameState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (15) ['activeRooms', 'completeAllRoom', 'correctCount', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'patientsPerDay', 'streakDays', 'testScore', 'totalPatients', 'userLevel', 'userResponses', 'userRooms', 'wrongCount']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for vocabState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['isCmdIEnabled', 'showVocabList', 'vocabList']
-userSlice.ts:372 [DEBUG][UserStore] Raw API response from /api/user-info: {id: 'cm8notvdl000pdg8ot2z1qfoz', userId: 'user_2umbBNpR47nyyHjhbMFvNBd8csC', devUserId: null, bio: 'Excited to ace the MCAT!', updatedAt: '2025-03-24T23:18:38.048Z', …}
-userSlice.ts:373 [DEBUG][UserStore] API response keys: (20) ['id', 'userId', 'devUserId', 'bio', 'updatedAt', 'apiCount', 'createdAt', 'score', 'clinicRooms', 'hasPaid', 'subscriptionType', 'diagnosticScores', 'firstName', 'profilePhoto', 'streak', 'notificationPreference', 'unlocks', 'onboardingInfo', 'patientRecord', 'email']
-userSlice.ts:393 [DEBUG][UserStore] Updating with these keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:418 [DEBUG][UserStore] Profile API response keys: (6) ['userId', 'firstName', 'bio', 'coins', 'profilePhoto', 'patientsCount']
-userSlice.ts:446 [DEBUG][UserStore] Final updates object keys: (14) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version', 'coins', 'isSubscribed', 'profile', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'isProfileComplete']
-userSlice.ts:470 [DEBUG][UserStore] ✅ No root onboardingComplete after update
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: true
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: false
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: true
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: true
-RouteTracker.tsx:45 [RouteTracker DEBUG] userInfo.onboardingInfo: {gpa: 3.4, college: 'Non-Traditional', firstName: 'Dennis[FACEBOOK] ', isCanadian: false, currentStep: 4, …}
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-RouteTracker.tsx:79 [RouteTracker DEBUG] effectiveOnboardingComplete: true (direct onboardingComplete flag)
-DebugPanel.tsx:12 👋 DebugPanel: Component initialized
-DebugPanel.tsx:19 👋 DebugPanel: Current path and search params {pathname: '/home', searchParams: 'debug=true'}
-DebugPanel.tsx:233 👋 DebugPanel: RENDERING PANEL!
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['currentRoute', 'theme', 'window']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['coins', 'completedSteps', 'interfaceSettings', 'isProfileComplete', 'isSubscribed', 'lastVisitedRoute', 'onboardingInfo', 'profile', 'profileLoading', 'statsLoading', 'studyPreferences', 'tutorialProgress', 'userInfo']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for audioState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['audioContext', 'currentLoop', 'currentMusic', 'currentSong', 'currentSongIndex', 'currentSongTitle', 'gainNodes', 'isPlaying', 'masterVolume', 'queueLength', 'songQueue', 'sources', 'volume']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for gameState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (15) ['activeRooms', 'completeAllRoom', 'correctCount', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'patientsPerDay', 'streakDays', 'testScore', 'totalPatients', 'userLevel', 'userResponses', 'userRooms', 'wrongCount']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for vocabState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['isCmdIEnabled', 'showVocabList', 'vocabList']
-RouteTracker.tsx:221 [RouteTracker DEBUG] Effect 1 - isSignedIn: true has userInfo: true
-RouteTracker.tsx:222 [RouteTracker DEBUG] Effect 1 - onboardingComplete: true
-RouteTracker.tsx:244 [RouteTracker DEBUG] Effect 2 - path: /home
-RouteTracker.tsx:245 [RouteTracker DEBUG] Effect 2 - isSignedIn: true onboarding complete: true
-RouteTracker.tsx:246 [RouteTracker DEBUG] Effect 2 - Zustand onboardingComplete: true
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: true profile: null forceShowProfile: false
+userSlice.ts:365 [UserStore DEBUG] Starting refreshUserInfo
+userSlice.ts:372 [UserStore DEBUG] Making API requests for user info
+RouteTracker.tsx:402 [ROUTE_TRACKER] Subscription/study plan effect triggered
+RouteTracker.tsx:403 [ROUTE_TRACKER] State values: {initialLoadComplete: false, isLoaded: true, isSignedIn: true, pathname: '/home', userInfoExists: false, …}
+RouteTracker.tsx:431 [ROUTE_TRACKER] Skipping subscription/study plan checks due to conditions not met
+userSlice.ts:365 [UserStore DEBUG] Starting refreshUserInfo
+userSlice.ts:372 [UserStore DEBUG] Making API requests for user info
+useUserInfo.ts:137 [useUserInfo] Initializing with user ID: user_2rFXhmeHNzY3irm9HShrGMGMY3M
+useUserInfo.ts:120 [useUserInfo] Starting initial fetch
+userSlice.ts:365 [UserStore DEBUG] Starting refreshUserInfo
+userSlice.ts:372 [UserStore DEBUG] Making API requests for user info
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: true profile: null forceShowProfile: false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: false}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: false, isLoadingUserInfo: false}
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
+ProfileButton.tsx:78 [Debug] Profile loading timeout - forcing display of default profile
+userSlice.ts:365 [UserStore DEBUG] Starting refreshUserInfo
+userSlice.ts:372 [UserStore DEBUG] Making API requests for user info
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: true profile: null forceShowProfile: true
+ProfileButton.tsx:10 [Debug] ProfileImage rendering with photo: undefined
+ProfileButton.tsx:68 [Debug] Profile loading state changed: true
+ProfileButton.tsx:70 [Debug] Profile is currently loading
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: false}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: false, isLoadingUserInfo: false}
+ProfileButton.tsx:21 [Debug] Profile image loaded: undefined
+userSlice.ts:378 [UserStore DEBUG] API responses received: {userInfoStatus: 200, profileStatus: 200}
+userSlice.ts:389 [UserStore DEBUG] Received userInfo: {hasOnboardingInfo: true, hasSeenIntroVideo: true, userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', subscriptionType: 'gold'}
+userSlice.ts:425 [UserStore DEBUG] Processing profile response
+userSlice.ts:427 [UserStore DEBUG] Profile data: {hasProfilePhoto: false, firstName: 'Dennis Cao', completedStepsLength: undefined}
+ [UserStore DEBUG] Profile data changed, updating
+ [UserStore DEBUG] Applying updates to store: (12) ['error', 'version', 'userInfo', 'coins', 'isSubscribed', 'profile', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'isProfileComplete']
+ [UserStore DEBUG] Store updates applied
+ [Debug] ProfileButton render - profileLoading: false profile: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …} forceShowProfile: true
+ [Debug] ProfileImage rendering with photo: 
+ [HomePage] Component rendering
+ [HomePage] hasSeenIntroVideo calculated: true
+ [HomePage] shouldInitialize check: {shouldInit: true, isInitialized: false, hasUserInfo: true, isLoadingUserInfo: false}
+ [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+ [HomePage] Showing page initialization loading spinner
+ [ROUTE_TRACKER] Subscription/study plan effect triggered
+RouteTracker.tsx:403 [ROUTE_TRACKER] State values: {initialLoadComplete: false, isLoaded: true, isSignedIn: true, pathname: '/home', userInfoExists: true, …}
+RouteTracker.tsx:431 [ROUTE_TRACKER] Skipping subscription/study plan checks due to conditions not met
+ProfileButton.tsx:68 [Debug] Profile loading state changed: false
+ProfileButton.tsx:87 [Debug] Profile loaded with data: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …}
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:217 [HomePage] Starting initializeData
 layout.tsx:46 🎫 Subscription Status: GOLD or PREMIUM
-StoreInitializer.tsx:101 [DEBUG][StoreInitializer] After initial refresh:
-StoreInitializer.tsx:28 [DEBUG][StoreInitializer] Checking raw Zustand state:
-StoreInitializer.tsx:29 [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-StoreInitializer.tsx:60 [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
-StoreInitializer.tsx:65 [DEBUG][StoreInitializer] Nested onboardingComplete: true
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: true
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: false
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: true
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: true
-RouteTracker.tsx:45 [RouteTracker DEBUG] userInfo.onboardingInfo: {gpa: 3.4, college: 'Non-Traditional', firstName: 'Dennis[FACEBOOK] ', isCanadian: false, currentStep: 4, …}
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-userSlice.ts:372 [DEBUG][UserStore] Raw API response from /api/user-info: {id: 'cm8notvdl000pdg8ot2z1qfoz', userId: 'user_2umbBNpR47nyyHjhbMFvNBd8csC', devUserId: null, bio: 'Excited to ace the MCAT!', updatedAt: '2025-03-24T23:18:38.048Z', …}
-userSlice.ts:373 [DEBUG][UserStore] API response keys: (20) ['id', 'userId', 'devUserId', 'bio', 'updatedAt', 'apiCount', 'createdAt', 'score', 'clinicRooms', 'hasPaid', 'subscriptionType', 'diagnosticScores', 'firstName', 'profilePhoto', 'streak', 'notificationPreference', 'unlocks', 'onboardingInfo', 'patientRecord', 'email']
-userSlice.ts:393 [DEBUG][UserStore] Updating with these keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:418 [DEBUG][UserStore] Profile API response keys: (6) ['userId', 'firstName', 'bio', 'coins', 'profilePhoto', 'patientsCount']
-userSlice.ts:446 [DEBUG][UserStore] Final updates object keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:470 [DEBUG][UserStore] ✅ No root onboardingComplete after update
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: true
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: false
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: true
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: true
-RouteTracker.tsx:45 [RouteTracker DEBUG] userInfo.onboardingInfo: {gpa: 3.4, college: 'Non-Traditional', firstName: 'Dennis[FACEBOOK] ', isCanadian: false, currentStep: 4, …}
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-DebugPanel.tsx:12 👋 DebugPanel: Component initialized
-DebugPanel.tsx:19 👋 DebugPanel: Current path and search params {pathname: '/home', searchParams: 'debug=true'}
-DebugPanel.tsx:233 👋 DebugPanel: RENDERING PANEL!
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['currentRoute', 'theme', 'window']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['coins', 'completedSteps', 'interfaceSettings', 'isProfileComplete', 'isSubscribed', 'lastVisitedRoute', 'onboardingInfo', 'profile', 'profileLoading', 'statsLoading', 'studyPreferences', 'tutorialProgress', 'userInfo']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for audioState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['audioContext', 'currentLoop', 'currentMusic', 'currentSong', 'currentSongIndex', 'currentSongTitle', 'gainNodes', 'isPlaying', 'masterVolume', 'queueLength', 'songQueue', 'sources', 'volume']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for gameState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (15) ['activeRooms', 'completeAllRoom', 'correctCount', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'patientsPerDay', 'streakDays', 'testScore', 'totalPatients', 'userLevel', 'userResponses', 'userRooms', 'wrongCount']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for vocabState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['isCmdIEnabled', 'showVocabList', 'vocabList']
-RouteTracker.tsx:221 [RouteTracker DEBUG] Effect 1 - isSignedIn: true has userInfo: true
-RouteTracker.tsx:222 [RouteTracker DEBUG] Effect 1 - onboardingComplete: true
-RouteTracker.tsx:244 [RouteTracker DEBUG] Effect 2 - path: /home
-RouteTracker.tsx:245 [RouteTracker DEBUG] Effect 2 - isSignedIn: true onboarding complete: true
-RouteTracker.tsx:246 [RouteTracker DEBUG] Effect 2 - Zustand onboardingComplete: true
-StoreInitializer.tsx:101 [DEBUG][StoreInitializer] After initial refresh:
-StoreInitializer.tsx:28 [DEBUG][StoreInitializer] Checking raw Zustand state:
-StoreInitializer.tsx:29 [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-StoreInitializer.tsx:60 [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
-StoreInitializer.tsx:65 [DEBUG][StoreInitializer] Nested onboardingComplete: true
-userSlice.ts:372 [DEBUG][UserStore] Raw API response from /api/user-info: {id: 'cm8notvdl000pdg8ot2z1qfoz', userId: 'user_2umbBNpR47nyyHjhbMFvNBd8csC', devUserId: null, bio: 'Excited to ace the MCAT!', updatedAt: '2025-03-24T23:18:38.048Z', …}
-userSlice.ts:373 [DEBUG][UserStore] API response keys: (20) ['id', 'userId', 'devUserId', 'bio', 'updatedAt', 'apiCount', 'createdAt', 'score', 'clinicRooms', 'hasPaid', 'subscriptionType', 'diagnosticScores', 'firstName', 'profilePhoto', 'streak', 'notificationPreference', 'unlocks', 'onboardingInfo', 'patientRecord', 'email']
-userSlice.ts:393 [DEBUG][UserStore] Updating with these keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:418 [DEBUG][UserStore] Profile API response keys: (6) ['userId', 'firstName', 'bio', 'coins', 'profilePhoto', 'patientsCount']
-userSlice.ts:446 [DEBUG][UserStore] Final updates object keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:470 [DEBUG][UserStore] ✅ No root onboardingComplete after update
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: true
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: false
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: true
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: true
-RouteTracker.tsx:45 [RouteTracker DEBUG] userInfo.onboardingInfo: {gpa: 3.4, college: 'Non-Traditional', firstName: 'Dennis[FACEBOOK] ', isCanadian: false, currentStep: 4, …}
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-DebugPanel.tsx:12 👋 DebugPanel: Component initialized
-DebugPanel.tsx:19 👋 DebugPanel: Current path and search params {pathname: '/home', searchParams: 'debug=true'}
-DebugPanel.tsx:233 👋 DebugPanel: RENDERING PANEL!
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['currentRoute', 'theme', 'window']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['coins', 'completedSteps', 'interfaceSettings', 'isProfileComplete', 'isSubscribed', 'lastVisitedRoute', 'onboardingInfo', 'profile', 'profileLoading', 'statsLoading', 'studyPreferences', 'tutorialProgress', 'userInfo']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for audioState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['audioContext', 'currentLoop', 'currentMusic', 'currentSong', 'currentSongIndex', 'currentSongTitle', 'gainNodes', 'isPlaying', 'masterVolume', 'queueLength', 'songQueue', 'sources', 'volume']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for gameState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (15) ['activeRooms', 'completeAllRoom', 'correctCount', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'patientsPerDay', 'streakDays', 'testScore', 'totalPatients', 'userLevel', 'userResponses', 'userRooms', 'wrongCount']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for vocabState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['isCmdIEnabled', 'showVocabList', 'vocabList']
-RouteTracker.tsx:221 [RouteTracker DEBUG] Effect 1 - isSignedIn: true has userInfo: true
-RouteTracker.tsx:222 [RouteTracker DEBUG] Effect 1 - onboardingComplete: true
-RouteTracker.tsx:244 [RouteTracker DEBUG] Effect 2 - path: /home
-RouteTracker.tsx:245 [RouteTracker DEBUG] Effect 2 - isSignedIn: true onboarding complete: true
-RouteTracker.tsx:246 [RouteTracker DEBUG] Effect 2 - Zustand onboardingComplete: true
-userSlice.ts:372 [DEBUG][UserStore] Raw API response from /api/user-info: {id: 'cm8notvdl000pdg8ot2z1qfoz', userId: 'user_2umbBNpR47nyyHjhbMFvNBd8csC', devUserId: null, bio: 'Excited to ace the MCAT!', updatedAt: '2025-03-24T23:18:38.048Z', …}
-userSlice.ts:373 [DEBUG][UserStore] API response keys: (20) ['id', 'userId', 'devUserId', 'bio', 'updatedAt', 'apiCount', 'createdAt', 'score', 'clinicRooms', 'hasPaid', 'subscriptionType', 'diagnosticScores', 'firstName', 'profilePhoto', 'streak', 'notificationPreference', 'unlocks', 'onboardingInfo', 'patientRecord', 'email']
-userSlice.ts:393 [DEBUG][UserStore] Updating with these keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:418 [DEBUG][UserStore] Profile API response keys: (6) ['userId', 'firstName', 'bio', 'coins', 'profilePhoto', 'patientsCount']
-userSlice.ts:446 [DEBUG][UserStore] Final updates object keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:470 [DEBUG][UserStore] ✅ No root onboardingComplete after update
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: true
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: false
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: true
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: true
-RouteTracker.tsx:45 [RouteTracker DEBUG] userInfo.onboardingInfo: {gpa: 3.4, college: 'Non-Traditional', firstName: 'Dennis[FACEBOOK] ', isCanadian: false, currentStep: 4, …}
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-DebugPanel.tsx:12 👋 DebugPanel: Component initialized
-DebugPanel.tsx:19 👋 DebugPanel: Current path and search params {pathname: '/home', searchParams: 'debug=true'}
-DebugPanel.tsx:233 👋 DebugPanel: RENDERING PANEL!
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['currentRoute', 'theme', 'window']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['coins', 'completedSteps', 'interfaceSettings', 'isProfileComplete', 'isSubscribed', 'lastVisitedRoute', 'onboardingInfo', 'profile', 'profileLoading', 'statsLoading', 'studyPreferences', 'tutorialProgress', 'userInfo']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for audioState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['audioContext', 'currentLoop', 'currentMusic', 'currentSong', 'currentSongIndex', 'currentSongTitle', 'gainNodes', 'isPlaying', 'masterVolume', 'queueLength', 'songQueue', 'sources', 'volume']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for gameState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (15) ['activeRooms', 'completeAllRoom', 'correctCount', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'patientsPerDay', 'streakDays', 'testScore', 'totalPatients', 'userLevel', 'userResponses', 'userRooms', 'wrongCount']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for vocabState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['isCmdIEnabled', 'showVocabList', 'vocabList']
-RouteTracker.tsx:221 [RouteTracker DEBUG] Effect 1 - isSignedIn: true has userInfo: true
-RouteTracker.tsx:222 [RouteTracker DEBUG] Effect 1 - onboardingComplete: true
-RouteTracker.tsx:244 [RouteTracker DEBUG] Effect 2 - path: /home
-RouteTracker.tsx:245 [RouteTracker DEBUG] Effect 2 - isSignedIn: true onboarding complete: true
-RouteTracker.tsx:246 [RouteTracker DEBUG] Effect 2 - Zustand onboardingComplete: true
-userSlice.ts:334 [DEBUG][UserStore] Starting refreshUserInfo
-userSlice.ts:335 [DEBUG][UserStore] Current state keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-userSlice.ts:334 [DEBUG][UserStore] Starting refreshUserInfo
-userSlice.ts:335 [DEBUG][UserStore] Current state keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: true
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: true
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: true
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: true
-RouteTracker.tsx:45 [RouteTracker DEBUG] userInfo.onboardingInfo: {gpa: 3.4, college: 'Non-Traditional', firstName: 'Dennis[FACEBOOK] ', isCanadian: false, currentStep: 4, …}
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-DebugPanel.tsx:12 👋 DebugPanel: Component initialized
-DebugPanel.tsx:19 👋 DebugPanel: Current path and search params {pathname: '/home', searchParams: 'debug=true'}
-DebugPanel.tsx:233 👋 DebugPanel: RENDERING PANEL!
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['currentRoute', 'theme', 'window']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['coins', 'completedSteps', 'interfaceSettings', 'isProfileComplete', 'isSubscribed', 'lastVisitedRoute', 'onboardingInfo', 'profile', 'profileLoading', 'statsLoading', 'studyPreferences', 'tutorialProgress', 'userInfo']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for audioState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['audioContext', 'currentLoop', 'currentMusic', 'currentSong', 'currentSongIndex', 'currentSongTitle', 'gainNodes', 'isPlaying', 'masterVolume', 'queueLength', 'songQueue', 'sources', 'volume']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for gameState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (15) ['activeRooms', 'completeAllRoom', 'correctCount', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'patientsPerDay', 'streakDays', 'testScore', 'totalPatients', 'userLevel', 'userResponses', 'userRooms', 'wrongCount']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for vocabState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['isCmdIEnabled', 'showVocabList', 'vocabList']
-RouteTracker.tsx:221 [RouteTracker DEBUG] Effect 1 - isSignedIn: true has userInfo: true
-RouteTracker.tsx:222 [RouteTracker DEBUG] Effect 1 - onboardingComplete: true
-RouteTracker.tsx:244 [RouteTracker DEBUG] Effect 2 - path: /home
-RouteTracker.tsx:245 [RouteTracker DEBUG] Effect 2 - isSignedIn: true onboarding complete: true
-RouteTracker.tsx:246 [RouteTracker DEBUG] Effect 2 - Zustand onboardingComplete: true
-userSlice.ts:372 [DEBUG][UserStore] Raw API response from /api/user-info: {id: 'cm8notvdl000pdg8ot2z1qfoz', userId: 'user_2umbBNpR47nyyHjhbMFvNBd8csC', devUserId: null, bio: 'Excited to ace the MCAT!', updatedAt: '2025-03-24T23:18:38.048Z', …}
-userSlice.ts:373 [DEBUG][UserStore] API response keys: (20) ['id', 'userId', 'devUserId', 'bio', 'updatedAt', 'apiCount', 'createdAt', 'score', 'clinicRooms', 'hasPaid', 'subscriptionType', 'diagnosticScores', 'firstName', 'profilePhoto', 'streak', 'notificationPreference', 'unlocks', 'onboardingInfo', 'patientRecord', 'email']
-userSlice.ts:393 [DEBUG][UserStore] Updating with these keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:418 [DEBUG][UserStore] Profile API response keys: (6) ['userId', 'firstName', 'bio', 'coins', 'profilePhoto', 'patientsCount']
-userSlice.ts:446 [DEBUG][UserStore] Final updates object keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:470 [DEBUG][UserStore] ✅ No root onboardingComplete after update
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: true
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: false
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: true
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: true
-RouteTracker.tsx:45 [RouteTracker DEBUG] userInfo.onboardingInfo: {gpa: 3.4, college: 'Non-Traditional', firstName: 'Dennis[FACEBOOK] ', isCanadian: false, currentStep: 4, …}
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-DebugPanel.tsx:12 👋 DebugPanel: Component initialized
-DebugPanel.tsx:19 👋 DebugPanel: Current path and search params {pathname: '/home', searchParams: 'debug=true'}
-DebugPanel.tsx:233 👋 DebugPanel: RENDERING PANEL!
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['currentRoute', 'theme', 'window']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['coins', 'completedSteps', 'interfaceSettings', 'isProfileComplete', 'isSubscribed', 'lastVisitedRoute', 'onboardingInfo', 'profile', 'profileLoading', 'statsLoading', 'studyPreferences', 'tutorialProgress', 'userInfo']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for audioState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['audioContext', 'currentLoop', 'currentMusic', 'currentSong', 'currentSongIndex', 'currentSongTitle', 'gainNodes', 'isPlaying', 'masterVolume', 'queueLength', 'songQueue', 'sources', 'volume']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for gameState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (15) ['activeRooms', 'completeAllRoom', 'correctCount', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'patientsPerDay', 'streakDays', 'testScore', 'totalPatients', 'userLevel', 'userResponses', 'userRooms', 'wrongCount']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for vocabState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['isCmdIEnabled', 'showVocabList', 'vocabList']
-RouteTracker.tsx:221 [RouteTracker DEBUG] Effect 1 - isSignedIn: true has userInfo: true
-RouteTracker.tsx:222 [RouteTracker DEBUG] Effect 1 - onboardingComplete: true
-RouteTracker.tsx:244 [RouteTracker DEBUG] Effect 2 - path: /home
-RouteTracker.tsx:245 [RouteTracker DEBUG] Effect 2 - isSignedIn: true onboarding complete: true
-RouteTracker.tsx:246 [RouteTracker DEBUG] Effect 2 - Zustand onboardingComplete: true
-StoreInitializer.tsx:119 [DEBUG][StoreInitializer] After secondary refresh:
-StoreInitializer.tsx:28 [DEBUG][StoreInitializer] Checking raw Zustand state:
-StoreInitializer.tsx:29 [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-StoreInitializer.tsx:60 [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
-StoreInitializer.tsx:65 [DEBUG][StoreInitializer] Nested onboardingComplete: true
-userSlice.ts:372 [DEBUG][UserStore] Raw API response from /api/user-info: {id: 'cm8notvdl000pdg8ot2z1qfoz', userId: 'user_2umbBNpR47nyyHjhbMFvNBd8csC', devUserId: null, bio: 'Excited to ace the MCAT!', updatedAt: '2025-03-24T23:18:38.048Z', …}
-userSlice.ts:373 [DEBUG][UserStore] API response keys: (20) ['id', 'userId', 'devUserId', 'bio', 'updatedAt', 'apiCount', 'createdAt', 'score', 'clinicRooms', 'hasPaid', 'subscriptionType', 'diagnosticScores', 'firstName', 'profilePhoto', 'streak', 'notificationPreference', 'unlocks', 'onboardingInfo', 'patientRecord', 'email']
-userSlice.ts:393 [DEBUG][UserStore] Updating with these keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:418 [DEBUG][UserStore] Profile API response keys: (6) ['userId', 'firstName', 'bio', 'coins', 'profilePhoto', 'patientsCount']
-userSlice.ts:446 [DEBUG][UserStore] Final updates object keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:470 [DEBUG][UserStore] ✅ No root onboardingComplete after update
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: true
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: false
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: true
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: true
-RouteTracker.tsx:45 [RouteTracker DEBUG] userInfo.onboardingInfo: {gpa: 3.4, college: 'Non-Traditional', firstName: 'Dennis[FACEBOOK] ', isCanadian: false, currentStep: 4, …}
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-DebugPanel.tsx:12 👋 DebugPanel: Component initialized
-DebugPanel.tsx:19 👋 DebugPanel: Current path and search params {pathname: '/home', searchParams: 'debug=true'}
-DebugPanel.tsx:233 👋 DebugPanel: RENDERING PANEL!
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['currentRoute', 'theme', 'window']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['coins', 'completedSteps', 'interfaceSettings', 'isProfileComplete', 'isSubscribed', 'lastVisitedRoute', 'onboardingInfo', 'profile', 'profileLoading', 'statsLoading', 'studyPreferences', 'tutorialProgress', 'userInfo']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for audioState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['audioContext', 'currentLoop', 'currentMusic', 'currentSong', 'currentSongIndex', 'currentSongTitle', 'gainNodes', 'isPlaying', 'masterVolume', 'queueLength', 'songQueue', 'sources', 'volume']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for gameState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (15) ['activeRooms', 'completeAllRoom', 'correctCount', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'patientsPerDay', 'streakDays', 'testScore', 'totalPatients', 'userLevel', 'userResponses', 'userRooms', 'wrongCount']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for vocabState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['isCmdIEnabled', 'showVocabList', 'vocabList']
-RouteTracker.tsx:221 [RouteTracker DEBUG] Effect 1 - isSignedIn: true has userInfo: true
-RouteTracker.tsx:222 [RouteTracker DEBUG] Effect 1 - onboardingComplete: true
-RouteTracker.tsx:244 [RouteTracker DEBUG] Effect 2 - path: /home
-RouteTracker.tsx:245 [RouteTracker DEBUG] Effect 2 - isSignedIn: true onboarding complete: true
-RouteTracker.tsx:246 [RouteTracker DEBUG] Effect 2 - Zustand onboardingComplete: true
-StoreInitializer.tsx:119 [DEBUG][StoreInitializer] After secondary refresh:
-StoreInitializer.tsx:28 [DEBUG][StoreInitializer] Checking raw Zustand state:
-StoreInitializer.tsx:29 [DEBUG][StoreInitializer] Keys: (26) ['version', 'profile', 'profileLoading', 'isProfileComplete', 'completedSteps', 'studyPreferences', 'interfaceSettings', 'tutorialProgress', 'lastVisitedRoute', 'userInfo', 'isSubscribed', 'coins', 'statsLoading', 'error', 'updateProfile', 'setCompletedSteps', 'addCompletedStep', 'updateStudyPreferences', 'updateInterfaceSettings', 'updateTutorialProgress', 'setOnboardingComplete', 'setLastVisitedRoute', 'refreshUserInfo', 'setIsSubscribed', 'updateCoins', 'updateCoinsDisplay']
-StoreInitializer.tsx:60 [DEBUG][StoreInitializer] ✅ No root-level onboardingComplete
-StoreInitializer.tsx:65 [DEBUG][StoreInitializer] Nested onboardingComplete: true
-userSlice.ts:372 [DEBUG][UserStore] Raw API response from /api/user-info: {id: 'cm8notvdl000pdg8ot2z1qfoz', userId: 'user_2umbBNpR47nyyHjhbMFvNBd8csC', devUserId: null, bio: 'Excited to ace the MCAT!', updatedAt: '2025-03-24T23:18:38.048Z', …}
-userSlice.ts:373 [DEBUG][UserStore] API response keys: (20) ['id', 'userId', 'devUserId', 'bio', 'updatedAt', 'apiCount', 'createdAt', 'score', 'clinicRooms', 'hasPaid', 'subscriptionType', 'diagnosticScores', 'firstName', 'profilePhoto', 'streak', 'notificationPreference', 'unlocks', 'onboardingInfo', 'patientRecord', 'email']
-userSlice.ts:393 [DEBUG][UserStore] Updating with these keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:418 [DEBUG][UserStore] Profile API response keys: (6) ['userId', 'firstName', 'bio', 'coins', 'profilePhoto', 'patientsCount']
-userSlice.ts:446 [DEBUG][UserStore] Final updates object keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:470 [DEBUG][UserStore] ✅ No root onboardingComplete after update
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: true
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: false
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: true
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: true
-RouteTracker.tsx:45 [RouteTracker DEBUG] userInfo.onboardingInfo: {gpa: 3.4, college: 'Non-Traditional', firstName: 'Dennis[FACEBOOK] ', isCanadian: false, currentStep: 4, …}
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-DebugPanel.tsx:12 👋 DebugPanel: Component initialized
-DebugPanel.tsx:19 👋 DebugPanel: Current path and search params {pathname: '/home', searchParams: 'debug=true'}
-DebugPanel.tsx:233 👋 DebugPanel: RENDERING PANEL!
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['currentRoute', 'theme', 'window']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['coins', 'completedSteps', 'interfaceSettings', 'isProfileComplete', 'isSubscribed', 'lastVisitedRoute', 'onboardingInfo', 'profile', 'profileLoading', 'statsLoading', 'studyPreferences', 'tutorialProgress', 'userInfo']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for audioState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['audioContext', 'currentLoop', 'currentMusic', 'currentSong', 'currentSongIndex', 'currentSongTitle', 'gainNodes', 'isPlaying', 'masterVolume', 'queueLength', 'songQueue', 'sources', 'volume']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for gameState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (15) ['activeRooms', 'completeAllRoom', 'correctCount', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'patientsPerDay', 'streakDays', 'testScore', 'totalPatients', 'userLevel', 'userResponses', 'userRooms', 'wrongCount']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for vocabState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['isCmdIEnabled', 'showVocabList', 'vocabList']
-RouteTracker.tsx:221 [RouteTracker DEBUG] Effect 1 - isSignedIn: true has userInfo: true
-RouteTracker.tsx:222 [RouteTracker DEBUG] Effect 1 - onboardingComplete: true
-RouteTracker.tsx:244 [RouteTracker DEBUG] Effect 2 - path: /home
-RouteTracker.tsx:245 [RouteTracker DEBUG] Effect 2 - isSignedIn: true onboarding complete: true
-RouteTracker.tsx:246 [RouteTracker DEBUG] Effect 2 - Zustand onboardingComplete: true
-userSlice.ts:372 [DEBUG][UserStore] Raw API response from /api/user-info: {id: 'cm8notvdl000pdg8ot2z1qfoz', userId: 'user_2umbBNpR47nyyHjhbMFvNBd8csC', devUserId: null, bio: 'Excited to ace the MCAT!', updatedAt: '2025-03-24T23:18:38.048Z', …}
-userSlice.ts:373 [DEBUG][UserStore] API response keys: (20) ['id', 'userId', 'devUserId', 'bio', 'updatedAt', 'apiCount', 'createdAt', 'score', 'clinicRooms', 'hasPaid', 'subscriptionType', 'diagnosticScores', 'firstName', 'profilePhoto', 'streak', 'notificationPreference', 'unlocks', 'onboardingInfo', 'patientRecord', 'email']
-userSlice.ts:393 [DEBUG][UserStore] Updating with these keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:418 [DEBUG][UserStore] Profile API response keys: (6) ['userId', 'firstName', 'bio', 'coins', 'profilePhoto', 'patientsCount']
-userSlice.ts:446 [DEBUG][UserStore] Final updates object keys: (5) ['userInfo', 'statsLoading', 'profileLoading', 'error', 'version']
-userSlice.ts:470 [DEBUG][UserStore] ✅ No root onboardingComplete after update
-RouteTracker.tsx:37 [RouteTracker DEBUG] === STATE DUMP ===
-RouteTracker.tsx:38 [RouteTracker DEBUG] Path: /home
-RouteTracker.tsx:39 [RouteTracker DEBUG] isSignedIn: true
-RouteTracker.tsx:40 [RouteTracker DEBUG] isLoaded: true
-RouteTracker.tsx:41 [RouteTracker DEBUG] profileLoading: false
-RouteTracker.tsx:42 [RouteTracker DEBUG] Zustand onboardingComplete: true
-RouteTracker.tsx:43 [RouteTracker DEBUG] userInfo exists: true
-RouteTracker.tsx:45 [RouteTracker DEBUG] userInfo.onboardingInfo: {gpa: 3.4, college: 'Non-Traditional', firstName: 'Dennis[FACEBOOK] ', isCanadian: false, currentStep: 4, …}
-RouteTracker.tsx:47 [RouteTracker DEBUG] ====================
-DebugPanel.tsx:12 👋 DebugPanel: Component initialized
-DebugPanel.tsx:19 👋 DebugPanel: Current path and search params {pathname: '/home', searchParams: 'debug=true'}
-DebugPanel.tsx:233 👋 DebugPanel: RENDERING PANEL!
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['currentRoute', 'theme', 'window']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for unknown state
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['coins', 'completedSteps', 'interfaceSettings', 'isProfileComplete', 'isSubscribed', 'lastVisitedRoute', 'onboardingInfo', 'profile', 'profileLoading', 'statsLoading', 'studyPreferences', 'tutorialProgress', 'userInfo']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for audioState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (13) ['audioContext', 'currentLoop', 'currentMusic', 'currentSong', 'currentSongIndex', 'currentSongTitle', 'gainNodes', 'isPlaying', 'masterVolume', 'queueLength', 'songQueue', 'sources', 'volume']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for gameState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (15) ['activeRooms', 'completeAllRoom', 'correctCount', 'currentUserTestId', 'flashcardRoomId', 'isFlashcardsOpen', 'isGameInProgress', 'patientsPerDay', 'streakDays', 'testScore', 'totalPatients', 'userLevel', 'userResponses', 'userRooms', 'wrongCount']
-DebugPanel.tsx:91 👋 DebugPanel: stringifySorted called for vocabState
-DebugPanel.tsx:175 👋 DebugPanel: Prepared object keys: (3) ['isCmdIEnabled', 'showVocabList', 'vocabList']
-RouteTracker.tsx:221 [RouteTracker DEBUG] Effect 1 - isSignedIn: true has userInfo: true
-RouteTracker.tsx:222 [RouteTracker DEBUG] Effect 1 - onboardingComplete: true
-RouteTracker.tsx:244 [RouteTracker DEBUG] Effect 2 - path: /home
-RouteTracker.tsx:245 [RouteTracker DEBUG] Effect 2 - isSignedIn: true onboarding complete: true
-RouteTracker.tsx:246 [RouteTracker DEBUG] Effect 2 - Zustand onboardingComplete: true
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: false profile: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …} forceShowProfile: false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
+userSlice.ts:365 [UserStore DEBUG] Starting refreshUserInfo
+userSlice.ts:372 [UserStore DEBUG] Making API requests for user info
+RouteTracker.tsx:402 [ROUTE_TRACKER] Subscription/study plan effect triggered
+RouteTracker.tsx:403 [ROUTE_TRACKER] State values: {initialLoadComplete: true, isLoaded: true, isSignedIn: true, pathname: '/home', userInfoExists: true, …}
+RouteTracker.tsx:435 [ROUTE_TRACKER] All conditions met, proceeding with subscription/study plan checks
+RouteTracker.tsx:439 [ROUTE_TRACKER] Checking subscription and study plan...
+RouteTracker.tsx:440 [ROUTE_TRACKER] Current path: /home
+RouteTracker.tsx:441 [ROUTE_TRACKER] isSubscribed: true
+RouteTracker.tsx:454 [ROUTE_TRACKER] Should check study plan: true
+RouteTracker.tsx:455 [ROUTE_TRACKER] Exempt paths check: (6) [{…}, {…}, {…}, {…}, {…}, {…}]
+RouteTracker.tsx:461 [ROUTE_TRACKER] Initiating study plan check via checkStudyPlan()
+RouteTracker.tsx:190 [ROUTE_TRACKER] Starting study plan check...
+RouteTracker.tsx:191 [ROUTE_TRACKER] Current pathname: /home
+RouteTracker.tsx:215 [ROUTE_TRACKER] No valid cache found, fetching from API...
+ProfileButton.tsx:68 [Debug] Profile loading state changed: false
+ProfileButton.tsx:87 [Debug] Profile loaded with data: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …}
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:217 [HomePage] Starting initializeData
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: true profile: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …} forceShowProfile: false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
+RouteTracker.tsx:402 [ROUTE_TRACKER] Subscription/study plan effect triggered
+RouteTracker.tsx:403 [ROUTE_TRACKER] State values: {initialLoadComplete: true, isLoaded: true, isSignedIn: true, pathname: '/home', userInfoExists: true, …}
+RouteTracker.tsx:431 [ROUTE_TRACKER] Skipping subscription/study plan checks due to conditions not met
+ProfileButton.tsx:68 [Debug] Profile loading state changed: true
+ProfileButton.tsx:70 [Debug] Profile is currently loading
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:217 [HomePage] Starting initializeData
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:217 [HomePage] Starting initializeData
+userSlice.ts:378 [UserStore DEBUG] API responses received: {userInfoStatus: 200, profileStatus: 200}
+userSlice.ts:389 [UserStore DEBUG] Received userInfo: {hasOnboardingInfo: true, hasSeenIntroVideo: true, userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', subscriptionType: 'gold'}
+userSlice.ts:425 [UserStore DEBUG] Processing profile response
+userSlice.ts:427 [UserStore DEBUG] Profile data: {hasProfilePhoto: false, firstName: 'Dennis Cao', completedStepsLength: undefined}
+userSlice.ts:456 [UserStore DEBUG] Profile data unchanged
+userSlice.ts:462 [UserStore DEBUG] Applying updates to store: (3) ['error', 'version', 'userInfo']
+userSlice.ts:469 [UserStore DEBUG] Store updates applied
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: false profile: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …} forceShowProfile: false
+ProfileButton.tsx:10 [Debug] ProfileImage rendering with photo: 
+page.tsx:41 [HomePage] Component rendering
+page.tsx:186 [HomePage] hasSeenIntroVideo calculated: true
+page.tsx:202 [HomePage] shouldInitialize check: {shouldInit: true, isInitialized: false, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
+RouteTracker.tsx:402 [ROUTE_TRACKER] Subscription/study plan effect triggered
+RouteTracker.tsx:403 [ROUTE_TRACKER] State values: {initialLoadComplete: true, isLoaded: true, isSignedIn: true, pathname: '/home', userInfoExists: true, …}
+RouteTracker.tsx:431 [ROUTE_TRACKER] Skipping subscription/study plan checks due to conditions not met
+ProfileButton.tsx:68 [Debug] Profile loading state changed: false
+ProfileButton.tsx:87 [Debug] Profile loaded with data: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …}
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:217 [HomePage] Starting initializeData
+userSlice.ts:365 [UserStore DEBUG] Starting refreshUserInfo
+userSlice.ts:372 [UserStore DEBUG] Making API requests for user info
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: true profile: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …} forceShowProfile: false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
+ProfileButton.tsx:68 [Debug] Profile loading state changed: true
+ProfileButton.tsx:70 [Debug] Profile is currently loading
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:217 [HomePage] Starting initializeData
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:217 [HomePage] Starting initializeData
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:217 [HomePage] Starting initializeData
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: true, showingContent: false}
+page.tsx:659 [HomePage] Showing page initialization loading spinner
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: true, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: false, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:217 [HomePage] Starting initializeData
+page.tsx:238 [HomePage] Data loaded successfully {activitiesCount: 6, proStatus: false}
+page.tsx:249 [HomePage] Setting loading state to false
+page.tsx:251 [HomePage] Loading state should now be false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:202 [HomePage] shouldInitialize check: {shouldInit: false, isInitialized: true, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+ChatContainer.tsx:120 [ChatContainer] Component mounted, prefetching welcome message
+ChatContainer.tsx:136 [ChatContainer] TEST: Cleared cache flags to force template regeneration
+ChatContainer.tsx:150 [ChatContainer] Waiting for activities to load before generating welcome message
+useUserInfo.ts:137 [useUserInfo] Initializing with user ID: user_2rFXhmeHNzY3irm9HShrGMGMY3M
+useUserInfo.ts:120 [useUserInfo] Starting initial fetch
+userSlice.ts:365 [UserStore DEBUG] Starting refreshUserInfo
+userSlice.ts:372 [UserStore DEBUG] Making API requests for user info
+useUserInfo.ts:137 [useUserInfo] Initializing with user ID: user_2rFXhmeHNzY3irm9HShrGMGMY3M
+useUserInfo.ts:120 [useUserInfo] Starting initial fetch
+userSlice.ts:365 [UserStore DEBUG] Starting refreshUserInfo
+userSlice.ts:372 [UserStore DEBUG] Making API requests for user info
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:176 [HomePage] Loading state check: {isLoadingUserInfo: false, loadingState: {…}}
+page.tsx:179 [HomePage] Fully loaded and ready to display content
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+ChatContainer.tsx:224 [ChatContainer] Component unmounted
+ChatContainer.tsx:120 [ChatContainer] Component mounted, prefetching welcome message
+ChatContainer.tsx:136 [ChatContainer] TEST: Cleared cache flags to force template regeneration
+ChatContainer.tsx:150 [ChatContainer] Waiting for activities to load before generating welcome message
+ChatContainer.tsx:224 [ChatContainer] Component unmounted
+ChatContainer.tsx:120 [ChatContainer] Component mounted, prefetching welcome message
+ChatContainer.tsx:136 [ChatContainer] TEST: Cleared cache flags to force template regeneration
+ChatContainer.tsx:150 [ChatContainer] Waiting for activities to load before generating welcome message
+userSlice.ts:378 [UserStore DEBUG] API responses received: {userInfoStatus: 200, profileStatus: 200}
+RouteTracker.tsx:223 [ROUTE_TRACKER] Study plan API response received, caching result
+RouteTracker.tsx:467 [ROUTE_TRACKER] Study plan check result: true
+userSlice.ts:389 [UserStore DEBUG] Received userInfo: {hasOnboardingInfo: true, hasSeenIntroVideo: true, userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', subscriptionType: 'gold'}
+userSlice.ts:425 [UserStore DEBUG] Processing profile response
+RouteTracker.tsx:402 [ROUTE_TRACKER] Subscription/study plan effect triggered
+RouteTracker.tsx:403 [ROUTE_TRACKER] State values: {initialLoadComplete: true, isLoaded: true, isSignedIn: true, pathname: '/home', userInfoExists: true, …}
+RouteTracker.tsx:435 [ROUTE_TRACKER] All conditions met, proceeding with subscription/study plan checks
+RouteTracker.tsx:439 [ROUTE_TRACKER] Checking subscription and study plan...
+RouteTracker.tsx:440 [ROUTE_TRACKER] Current path: /home
+RouteTracker.tsx:441 [ROUTE_TRACKER] isSubscribed: true
+RouteTracker.tsx:454 [ROUTE_TRACKER] Should check study plan: true
+RouteTracker.tsx:455 [ROUTE_TRACKER] Exempt paths check: (6) [{…}, {…}, {…}, {…}, {…}, {…}]
+RouteTracker.tsx:461 [ROUTE_TRACKER] Initiating study plan check via checkStudyPlan()
+RouteTracker.tsx:190 [ROUTE_TRACKER] Starting study plan check...
+RouteTracker.tsx:191 [ROUTE_TRACKER] Current pathname: /home
+RouteTracker.tsx:202 [ROUTE_TRACKER] Using cached study plan from localStorage, age: 0 seconds
+RouteTracker.tsx:467 [ROUTE_TRACKER] Study plan check result: true
+userSlice.ts:427 [UserStore DEBUG] Profile data: {hasProfilePhoto: false, firstName: 'Dennis Cao', completedStepsLength: undefined}
+userSlice.ts:456 [UserStore DEBUG] Profile data unchanged
+userSlice.ts:462 [UserStore DEBUG] Applying updates to store: (3) ['error', 'version', 'userInfo']
+userSlice.ts:469 [UserStore DEBUG] Store updates applied
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: false profile: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …} forceShowProfile: false
+ProfileButton.tsx:10 [Debug] ProfileImage rendering with photo: 
+page.tsx:41 [HomePage] Component rendering
+page.tsx:186 [HomePage] hasSeenIntroVideo calculated: true
+page.tsx:202 [HomePage] shouldInitialize check: {shouldInit: false, isInitialized: true, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+ChatContainer.tsx:224 [ChatContainer] Component unmounted
+RouteTracker.tsx:402 [ROUTE_TRACKER] Subscription/study plan effect triggered
+RouteTracker.tsx:403 [ROUTE_TRACKER] State values: {initialLoadComplete: true, isLoaded: true, isSignedIn: true, pathname: '/home', userInfoExists: true, …}
+RouteTracker.tsx:435 [ROUTE_TRACKER] All conditions met, proceeding with subscription/study plan checks
+RouteTracker.tsx:439 [ROUTE_TRACKER] Checking subscription and study plan...
+RouteTracker.tsx:440 [ROUTE_TRACKER] Current path: /home
+RouteTracker.tsx:441 [ROUTE_TRACKER] isSubscribed: true
+RouteTracker.tsx:454 [ROUTE_TRACKER] Should check study plan: true
+RouteTracker.tsx:455 [ROUTE_TRACKER] Exempt paths check: (6) [{…}, {…}, {…}, {…}, {…}, {…}]
+RouteTracker.tsx:461 [ROUTE_TRACKER] Initiating study plan check via checkStudyPlan()
+RouteTracker.tsx:190 [ROUTE_TRACKER] Starting study plan check...
+RouteTracker.tsx:191 [ROUTE_TRACKER] Current pathname: /home
+RouteTracker.tsx:202 [ROUTE_TRACKER] Using cached study plan from localStorage, age: 0 seconds
+ProfileButton.tsx:68 [Debug] Profile loading state changed: false
+ProfileButton.tsx:87 [Debug] Profile loaded with data: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …}
+ChatContainer.tsx:120 [ChatContainer] Component mounted, prefetching welcome message
+ChatContainer.tsx:136 [ChatContainer] TEST: Cleared cache flags to force template regeneration
+ChatContainer.tsx:150 [ChatContainer] Waiting for activities to load before generating welcome message
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+useUserInfo.ts:125 [useUserInfo] Initial fetch completed in 8736ms
+RouteTracker.tsx:467 [ROUTE_TRACKER] Study plan check result: true
+useUserInfo.ts:142 [useUserInfo] Initialization completed in 8737ms
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: false profile: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …} forceShowProfile: false
+page.tsx:238 [HomePage] Data loaded successfully {activitiesCount: 6, proStatus: false}
+page.tsx:249 [HomePage] Setting loading state to false
+page.tsx:251 [HomePage] Loading state should now be false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+ProfileButton.tsx:21 [Debug] Profile image loaded: 
+page.tsx:238 [HomePage] Data loaded successfully {activitiesCount: 6, proStatus: false}
+page.tsx:249 [HomePage] Setting loading state to false
+page.tsx:251 [HomePage] Loading state should now be false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+userSlice.ts:378 [UserStore DEBUG] API responses received: {userInfoStatus: 200, profileStatus: 200}
+ [UserStore DEBUG] Received userInfo: {hasOnboardingInfo: true, hasSeenIntroVideo: true, userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', subscriptionType: 'gold'}
+ [UserStore DEBUG] Processing profile response
+ [UserStore DEBUG] Profile data: {hasProfilePhoto: false, firstName: 'Dennis Cao', completedStepsLength: undefined}
+ [UserStore DEBUG] Profile data unchanged
+ [UserStore DEBUG] Applying updates to store: (3) ['error', 'version', 'userInfo']
+ [UserStore DEBUG] Store updates applied
+ [Debug] ProfileButton render - profileLoading: false profile: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …} forceShowProfile: false
+ [HomePage] Component rendering
+ [HomePage] hasSeenIntroVideo calculated: true
+ [HomePage] shouldInitialize check: {shouldInit: false, isInitialized: true, hasUserInfo: true, isLoadingUserInfo: false}
+ [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+ [HomePage] Rendering main content
+ [ChatContainer] Component unmounted
+ [ROUTE_TRACKER] Subscription/study plan effect triggered
+ [ROUTE_TRACKER] State values: {initialLoadComplete: true, isLoaded: true, isSignedIn: true, pathname: '/home', userInfoExists: true, …}
+ [ROUTE_TRACKER] All conditions met, proceeding with subscription/study plan checks
+ [ROUTE_TRACKER] Checking subscription and study plan...
+ [ROUTE_TRACKER] Current path: /home
+ [ROUTE_TRACKER] isSubscribed: true
+ [ROUTE_TRACKER] Should check study plan: true
+ [ROUTE_TRACKER] Exempt paths check: (6) [{…}, {…}, {…}, {…}, {…}, {…}]
+ [ROUTE_TRACKER] Initiating study plan check via checkStudyPlan()
+ [ROUTE_TRACKER] Starting study plan check...
+ [ROUTE_TRACKER] Current pathname: /home
+ [ROUTE_TRACKER] Using cached study plan from localStorage, age: 2 seconds
+ [ChatContainer] Component mounted, prefetching welcome message
+ [ChatContainer] TEST: Cleared cache flags to force template regeneration
+ [ChatContainer] Waiting for activities to load before generating welcome message
+ [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+ [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+ [ROUTE_TRACKER] Study plan check result: true
+ [HomePage] Data loaded successfully {activitiesCount: 6, proStatus: false}
+ [HomePage] Setting loading state to false
+ [HomePage] Loading state should now be false
+ [HomePage] Component rendering
+ [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+ [HomePage] Rendering main content
+ [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+ [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+ [HomePage] Component rendering
+ [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+ [HomePage] Rendering main content
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:238 [HomePage] Data loaded successfully {activitiesCount: 6, proStatus: false}
+page.tsx:249 [HomePage] Setting loading state to false
+page.tsx:251 [HomePage] Loading state should now be false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+userSlice.ts:378 [UserStore DEBUG] API responses received: {userInfoStatus: 200, profileStatus: 200}
+userSlice.ts:389 [UserStore DEBUG] Received userInfo: {hasOnboardingInfo: true, hasSeenIntroVideo: true, userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', subscriptionType: 'gold'}
+userSlice.ts:425 [UserStore DEBUG] Processing profile response
+userSlice.ts:427 [UserStore DEBUG] Profile data: {hasProfilePhoto: false, firstName: 'Dennis Cao', completedStepsLength: undefined}
+userSlice.ts:456 [UserStore DEBUG] Profile data unchanged
+userSlice.ts:462 [UserStore DEBUG] Applying updates to store: (3) ['error', 'version', 'userInfo']
+userSlice.ts:469 [UserStore DEBUG] Store updates applied
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: false profile: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …} forceShowProfile: false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:186 [HomePage] hasSeenIntroVideo calculated: true
+page.tsx:202 [HomePage] shouldInitialize check: {shouldInit: false, isInitialized: true, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+ChatContainer.tsx:224 [ChatContainer] Component unmounted
+RouteTracker.tsx:402 [ROUTE_TRACKER] Subscription/study plan effect triggered
+RouteTracker.tsx:403 [ROUTE_TRACKER] State values: {initialLoadComplete: true, isLoaded: true, isSignedIn: true, pathname: '/home', userInfoExists: true, …}
+RouteTracker.tsx:435 [ROUTE_TRACKER] All conditions met, proceeding with subscription/study plan checks
+RouteTracker.tsx:439 [ROUTE_TRACKER] Checking subscription and study plan...
+RouteTracker.tsx:440 [ROUTE_TRACKER] Current path: /home
+RouteTracker.tsx:441 [ROUTE_TRACKER] isSubscribed: true
+RouteTracker.tsx:454 [ROUTE_TRACKER] Should check study plan: true
+RouteTracker.tsx:455 [ROUTE_TRACKER] Exempt paths check: (6) [{…}, {…}, {…}, {…}, {…}, {…}]
+RouteTracker.tsx:461 [ROUTE_TRACKER] Initiating study plan check via checkStudyPlan()
+RouteTracker.tsx:190 [ROUTE_TRACKER] Starting study plan check...
+RouteTracker.tsx:191 [ROUTE_TRACKER] Current pathname: /home
+RouteTracker.tsx:202 [ROUTE_TRACKER] Using cached study plan from localStorage, age: 2 seconds
+ChatContainer.tsx:120 [ChatContainer] Component mounted, prefetching welcome message
+ChatContainer.tsx:136 [ChatContainer] TEST: Cleared cache flags to force template regeneration
+ChatContainer.tsx:150 [ChatContainer] Waiting for activities to load before generating welcome message
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+RouteTracker.tsx:467 [ROUTE_TRACKER] Study plan check result: true
+ChatContainer.tsx:224 [ChatContainer] Component unmounted
+ChatContainer.tsx:120 [ChatContainer] Component mounted, prefetching welcome message
+ChatContainer.tsx:136 [ChatContainer] TEST: Cleared cache flags to force template regeneration
+ChatContainer.tsx:150 [ChatContainer] Waiting for activities to load before generating welcome message
+page.tsx:238 [HomePage] Data loaded successfully {activitiesCount: 6, proStatus: false}
+page.tsx:249 [HomePage] Setting loading state to false
+page.tsx:251 [HomePage] Loading state should now be false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+userSlice.ts:378 [UserStore DEBUG] API responses received: {userInfoStatus: 200, profileStatus: 200}
+userSlice.ts:389 [UserStore DEBUG] Received userInfo: {hasOnboardingInfo: true, hasSeenIntroVideo: true, userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', subscriptionType: 'gold'}
+userSlice.ts:425 [UserStore DEBUG] Processing profile response
+userSlice.ts:427 [UserStore DEBUG] Profile data: {hasProfilePhoto: false, firstName: 'Dennis Cao', completedStepsLength: undefined}
+userSlice.ts:456 [UserStore DEBUG] Profile data unchanged
+userSlice.ts:462 [UserStore DEBUG] Applying updates to store: (3) ['error', 'version', 'userInfo']
+userSlice.ts:469 [UserStore DEBUG] Store updates applied
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: false profile: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …} forceShowProfile: false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:186 [HomePage] hasSeenIntroVideo calculated: true
+page.tsx:202 [HomePage] shouldInitialize check: {shouldInit: false, isInitialized: true, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+ChatContainer.tsx:224 [ChatContainer] Component unmounted
+RouteTracker.tsx:402 [ROUTE_TRACKER] Subscription/study plan effect triggered
+RouteTracker.tsx:403 [ROUTE_TRACKER] State values: {initialLoadComplete: true, isLoaded: true, isSignedIn: true, pathname: '/home', userInfoExists: true, …}
+RouteTracker.tsx:435 [ROUTE_TRACKER] All conditions met, proceeding with subscription/study plan checks
+RouteTracker.tsx:439 [ROUTE_TRACKER] Checking subscription and study plan...
+RouteTracker.tsx:440 [ROUTE_TRACKER] Current path: /home
+RouteTracker.tsx:441 [ROUTE_TRACKER] isSubscribed: true
+RouteTracker.tsx:454 [ROUTE_TRACKER] Should check study plan: true
+RouteTracker.tsx:455 [ROUTE_TRACKER] Exempt paths check: (6) [{…}, {…}, {…}, {…}, {…}, {…}]
+RouteTracker.tsx:461 [ROUTE_TRACKER] Initiating study plan check via checkStudyPlan()
+RouteTracker.tsx:190 [ROUTE_TRACKER] Starting study plan check...
+RouteTracker.tsx:191 [ROUTE_TRACKER] Current pathname: /home
+RouteTracker.tsx:202 [ROUTE_TRACKER] Using cached study plan from localStorage, age: 3 seconds
+ChatContainer.tsx:120 [ChatContainer] Component mounted, prefetching welcome message
+ChatContainer.tsx:136 [ChatContainer] TEST: Cleared cache flags to force template regeneration
+ChatContainer.tsx:150 [ChatContainer] Waiting for activities to load before generating welcome message
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+RouteTracker.tsx:467 [ROUTE_TRACKER] Study plan check result: true
+ChatContainer.tsx:224 [ChatContainer] Component unmounted
+ChatContainer.tsx:120 [ChatContainer] Component mounted, prefetching welcome message
+ChatContainer.tsx:136 [ChatContainer] TEST: Cleared cache flags to force template regeneration
+ChatContainer.tsx:160 [ChatContainer] Activities loaded, updating temporary welcome message
+ChatContainer.tsx:178 [ChatContainer] Generated template welcome message: Good afternoon, Dennis Cao! It's 12:55 PM on Friday - great time for a focused study block.
+
+Your next full-length practice exam is scheduled for March 29th (0 days away).
+
+You don't have any specific tasks scheduled for today. Consider adding some study activities!
+
+What can I help you with?
+ChatContainer.tsx:224 [ChatContainer] Component unmounted
+ChatContainer.tsx:120 [ChatContainer] Component mounted, prefetching welcome message
+ChatContainer.tsx:129 [ChatContainer] Skipping duplicate prefetch, already have welcome message in state
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+ChatContainer.tsx:120 [ChatContainer] Component mounted, prefetching welcome message
+ChatContainer.tsx:129 [ChatContainer] Skipping duplicate prefetch, already have welcome message in state
+DraggableKalypso.tsx:231 Debug image loaded
+userSlice.ts:378 [UserStore DEBUG] API responses received: {userInfoStatus: 200, profileStatus: 200}
+ChatContainer.tsx:540 [ChatContainer] Using prefetched welcome message
+userSlice.ts:389 [UserStore DEBUG] Received userInfo: {hasOnboardingInfo: true, hasSeenIntroVideo: true, userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', subscriptionType: 'gold'}
+userSlice.ts:425 [UserStore DEBUG] Processing profile response
+userSlice.ts:427 [UserStore DEBUG] Profile data: {hasProfilePhoto: false, firstName: 'Dennis Cao', completedStepsLength: undefined}
+userSlice.ts:456 [UserStore DEBUG] Profile data unchanged
+userSlice.ts:462 [UserStore DEBUG] Applying updates to store: (3) ['error', 'version', 'userInfo']
+userSlice.ts:469 [UserStore DEBUG] Store updates applied
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: false profile: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …} forceShowProfile: false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:186 [HomePage] hasSeenIntroVideo calculated: true
+page.tsx:202 [HomePage] shouldInitialize check: {shouldInit: false, isInitialized: true, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+RouteTracker.tsx:402 [ROUTE_TRACKER] Subscription/study plan effect triggered
+RouteTracker.tsx:403 [ROUTE_TRACKER] State values: {initialLoadComplete: true, isLoaded: true, isSignedIn: true, pathname: '/home', userInfoExists: true, …}
+RouteTracker.tsx:435 [ROUTE_TRACKER] All conditions met, proceeding with subscription/study plan checks
+RouteTracker.tsx:439 [ROUTE_TRACKER] Checking subscription and study plan...
+RouteTracker.tsx:440 [ROUTE_TRACKER] Current path: /home
+RouteTracker.tsx:441 [ROUTE_TRACKER] isSubscribed: true
+RouteTracker.tsx:454 [ROUTE_TRACKER] Should check study plan: true
+RouteTracker.tsx:455 [ROUTE_TRACKER] Exempt paths check: (6) [{…}, {…}, {…}, {…}, {…}, {…}]
+RouteTracker.tsx:461 [ROUTE_TRACKER] Initiating study plan check via checkStudyPlan()
+RouteTracker.tsx:190 [ROUTE_TRACKER] Starting study plan check...
+RouteTracker.tsx:191 [ROUTE_TRACKER] Current pathname: /home
+RouteTracker.tsx:202 [ROUTE_TRACKER] Using cached study plan from localStorage, age: 3 seconds
+ChatContainer.tsx:120 [ChatContainer] Component mounted, prefetching welcome message
+ChatContainer.tsx:129 [ChatContainer] Skipping duplicate prefetch, already have welcome message in state
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+useUserInfo.ts:125 [useUserInfo] Initial fetch completed in 3626ms
+RouteTracker.tsx:467 [ROUTE_TRACKER] Study plan check result: true
+useUserInfo.ts:142 [useUserInfo] Initialization completed in 3626ms
+page.tsx:238 [HomePage] Data loaded successfully {activitiesCount: 6, proStatus: false}
+page.tsx:249 [HomePage] Setting loading state to false
+page.tsx:251 [HomePage] Loading state should now be false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+ChatContainer.tsx:276 [ChatContainer] KeyDown: Enter repeat: false cmdPressedRef: false
+userSlice.ts:378 [UserStore DEBUG] API responses received: {userInfoStatus: 200, profileStatus: 200}
+page.tsx:238 [HomePage] Data loaded successfully {activitiesCount: 6, proStatus: false}
+page.tsx:249 [HomePage] Setting loading state to false
+page.tsx:251 [HomePage] Loading state should now be false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+userSlice.ts:389 [UserStore DEBUG] Received userInfo: {hasOnboardingInfo: true, hasSeenIntroVideo: true, userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', subscriptionType: 'gold'}
+userSlice.ts:425 [UserStore DEBUG] Processing profile response
+userSlice.ts:427 [UserStore DEBUG] Profile data: {hasProfilePhoto: false, firstName: 'Dennis Cao', completedStepsLength: undefined}
+userSlice.ts:456 [UserStore DEBUG] Profile data unchanged
+userSlice.ts:462 [UserStore DEBUG] Applying updates to store: (3) ['error', 'version', 'userInfo']
+userSlice.ts:469 [UserStore DEBUG] Store updates applied
+ProfileButton.tsx:46 [Debug] ProfileButton render - profileLoading: false profile: {userId: 'user_2rFXhmeHNzY3irm9HShrGMGMY3M', firstName: 'Dennis Cao', bio: 'MAIN ACCOUNT', coins: 24, profilePhoto: '', …} forceShowProfile: false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:186 [HomePage] hasSeenIntroVideo calculated: true
+page.tsx:202 [HomePage] shouldInitialize check: {shouldInit: false, isInitialized: true, hasUserInfo: true, isLoadingUserInfo: false}
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+RouteTracker.tsx:402 [ROUTE_TRACKER] Subscription/study plan effect triggered
+RouteTracker.tsx:403 [ROUTE_TRACKER] State values: {initialLoadComplete: true, isLoaded: true, isSignedIn: true, pathname: '/home', userInfoExists: true, …}
+RouteTracker.tsx:435 [ROUTE_TRACKER] All conditions met, proceeding with subscription/study plan checks
+RouteTracker.tsx:439 [ROUTE_TRACKER] Checking subscription and study plan...
+RouteTracker.tsx:440 [ROUTE_TRACKER] Current path: /home
+RouteTracker.tsx:441 [ROUTE_TRACKER] isSubscribed: true
+RouteTracker.tsx:454 [ROUTE_TRACKER] Should check study plan: true
+RouteTracker.tsx:455 [ROUTE_TRACKER] Exempt paths check: (6) [{…}, {…}, {…}, {…}, {…}, {…}]
+RouteTracker.tsx:461 [ROUTE_TRACKER] Initiating study plan check via checkStudyPlan()
+RouteTracker.tsx:190 [ROUTE_TRACKER] Starting study plan check...
+RouteTracker.tsx:191 [ROUTE_TRACKER] Current pathname: /home
+RouteTracker.tsx:202 [ROUTE_TRACKER] Using cached study plan from localStorage, age: 5 seconds
+ChatContainer.tsx:120 [ChatContainer] Component mounted, prefetching welcome message
+ChatContainer.tsx:129 [ChatContainer] Skipping duplicate prefetch, already have welcome message in state
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+useUserInfo.ts:125 [useUserInfo] Initial fetch completed in 5505ms
+RouteTracker.tsx:467 [ROUTE_TRACKER] Study plan check result: true
+useUserInfo.ts:142 [useUserInfo] Initialization completed in 5505ms
+ChatContainer.tsx:276 [ChatContainer] KeyDown: Enter repeat: false cmdPressedRef: false
+page.tsx:238 [HomePage] Data loaded successfully {activitiesCount: 6, proStatus: false}
+page.tsx:249 [HomePage] Setting loading state to false
+page.tsx:251 [HomePage] Loading state should now be false
+page.tsx:41 [HomePage] Component rendering
+page.tsx:647 [HomePage] Rendering content with states: {isLoadingUserInfo: false, loading: false, showingContent: true}
+page.tsx:663 [HomePage] Rendering main content
+page.tsx:56 [HomePage] Render {isLoadingUserInfo: false, loadingState: false, userInfoExists: true}
+page.tsx:208 [HomePage] Prefetch effect triggered {initializationRef: true, hasUserInfo: true, isLoadingUserInfo: false}
+ChatContainer.tsx:276 [ChatContainer] KeyDown: Enter repeat: false cmdPressedRef: false
+ChatContainer.tsx:276 [ChatContainer] KeyDown: Meta repeat: false cmdPressedRef: false
+ChatContainer.tsx:280 [ChatContainer] Setting cmdPressedRef to true
+ChatContainer.tsx:293 [ChatContainer] KeyUp: Meta cmdPressedRef: true cmdPressedTime: 1743191748836
+ChatContainer.tsx:298 [ChatContainer] Command press duration: 1394 ms
+ChatContainer.tsx:276 [ChatContainer] KeyDown: w repeat: false cmdPressedRef: false
+ChatContainer.tsx:276 [ChatContainer] KeyDown: h repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: w cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: a repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: h cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: t repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: a cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown:   repeat: false cmdPressedRef: false
+ChatContainer.tsx:276 [ChatContainer] KeyDown: i repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: t cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:293 [ChatContainer] KeyUp:   cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: s repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: i cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown:   repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: s cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:293 [ChatContainer] KeyUp:   cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: m repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: m cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: Backspace repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: Backspace cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: m repeat: false cmdPressedRef: false
+ChatContainer.tsx:276 [ChatContainer] KeyDown: y repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: m cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown:   repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: y cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: s repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp:   cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: t repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: s cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:293 [ChatContainer] KeyUp: t cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: a repeat: false cmdPressedRef: false
+ChatContainer.tsx:276 [ChatContainer] KeyDown: t repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: a cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: u repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: t cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: s repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: u cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown:   repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: s cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: o repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp:   cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: n repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: o cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown:   repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: n cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:293 [ChatContainer] KeyUp:   cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: Backspace repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: Backspace cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: Backspace repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: Backspace cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: Backspace repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: Backspace cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: i repeat: false cmdPressedRef: false
+ChatContainer.tsx:276 [ChatContainer] KeyDown: n repeat: false cmdPressedRef: false
+ChatContainer.tsx:276 [ChatContainer] KeyDown:   repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: i cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: t repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: n cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:293 [ChatContainer] KeyUp:   cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:293 [ChatContainer] KeyUp: t cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: h repeat: false cmdPressedRef: false
+ChatContainer.tsx:276 [ChatContainer] KeyDown: e repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: h cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown:   repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: e cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: a repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp:   cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: n repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: a cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: k repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: n cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:293 [ChatContainer] KeyUp: k cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: i repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: i cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown:   repeat: false cmdPressedRef: false
+ChatContainer.tsx:276 [ChatContainer] KeyDown: c repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp:   cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: l repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: c cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:293 [ChatContainer] KeyUp: l cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: i repeat: false cmdPressedRef: false
+ChatContainer.tsx:276 [ChatContainer] KeyDown: n repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: i cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: i repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: n cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: c repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: i cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:293 [ChatContainer] KeyUp: c cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: Shift repeat: false cmdPressedRef: false
+ChatContainer.tsx:276 [ChatContainer] KeyDown: ? repeat: false cmdPressedRef: false
+ChatContainer.tsx:276 [ChatContainer] KeyDown:   repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: ? cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:293 [ChatContainer] KeyUp:   cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:293 [ChatContainer] KeyUp: Shift cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: Enter repeat: false cmdPressedRef: false
+ChatContainer.tsx:293 [ChatContainer] KeyUp: Enter cmdPressedRef: false cmdPressedTime: null
+ChatContainer.tsx:276 [ChatContainer] KeyDown: Meta repeat: false cmdPressedRef: false
+ChatContainer.tsx:280 [ChatContainer] Setting cmdPressedRef to true
+ChatContainer.tsx:276 [ChatContainer] KeyDown: Shift repeat: false cmdPressedRef: true
+ChatContainer.tsx:287 [ChatContainer] Combo detected, clearing cmdPressedTime

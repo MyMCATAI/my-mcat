@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import toast from "react-hot-toast";
 import { useUser as useClerkUser } from "@clerk/nextjs";
 import { useUser } from "@/store/selectors";
@@ -28,27 +28,105 @@ interface UseUserInfoReturn {
   unlockGame: () => Promise<void>;
   createNewUser: (data: { firstName: string; bio?: string }) => Promise<UserInfo>;
   isSubscribed: boolean;
+  hasSeenIntroVideo: boolean;
+  setHasSeenIntroVideo: (hasSeenVideo: boolean) => Promise<void>;
 }
 
 export const useUserInfo = (): UseUserInfoReturn => {
   const { user, isSignedIn, isLoaded } = useClerkUser();
-  const { setIsSubscribed, refreshUserInfo, userInfo } = useUser();
+  const { 
+    userInfo,
+    isSubscribed,
+    setIsSubscribed,
+    refreshUserInfo,
+    setHasSeenIntroVideo
+  } = useUser();
   const [isLoading, setIsLoading] = useState(true);
   const hasInitialized = useRef(false);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const perfTrackingRef = useRef({
+    fetchStartTime: 0,
+    lastRefreshTime: 0,
+    fetchCount: 0
+  });
   
   const [referrals, setReferrals] = useState<Referral[]>([]);
+
+  // Get hasSeenIntroVideo from userInfo.onboardingInfo
+  const hasSeenIntroVideo = useMemo(() => {
+    const value = userInfo?.onboardingInfo?.hasSeenIntroVideo || false;
+    // Only log if the value changes from the previous render
+    return value;
+  }, [userInfo]);
+
+  // Debounced fetch function to prevent multiple rapid refreshes
+  const debouncedFetchUserInfo = useCallback(async () => {
+    // Clear any existing timeout
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+    
+    // Set a new timeout
+    fetchTimeoutRef.current = setTimeout(async () => {
+      if (!isSignedIn) {
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        setIsLoading(true);
+        
+        // Track performance
+        perfTrackingRef.current.fetchStartTime = Date.now();
+        perfTrackingRef.current.fetchCount++;
+        console.log(`[useUserInfo] Starting debounced fetch #${perfTrackingRef.current.fetchCount}`);
+        
+        // Refresh user info in store
+        await refreshUserInfo();
+        
+        // Log performance
+        const fetchTime = Date.now() - perfTrackingRef.current.fetchStartTime;
+        console.log(`[useUserInfo] Debounced fetch completed in ${fetchTime}ms`);
+        
+        // Track time since last refresh
+        const timeSinceLastRefresh = perfTrackingRef.current.lastRefreshTime ? 
+          Date.now() - perfTrackingRef.current.lastRefreshTime : null;
+        if (timeSinceLastRefresh) {
+          console.log(`[useUserInfo] Time since last refresh: ${timeSinceLastRefresh}ms`);
+        }
+        perfTrackingRef.current.lastRefreshTime = Date.now();
+        
+      } catch (error) {
+        console.error('[useUserInfo] Failed to fetch user info:', error);
+      } finally {
+        setIsLoading(false);
+      }
+      
+      fetchTimeoutRef.current = null;
+    }, 300); // 300ms debounce
+  }, [isSignedIn, refreshUserInfo]);
 
   const fetchUserInfo = useCallback(async () => {
     if (!isSignedIn) {
       setIsLoading(false);
       return;
     }
+    
     try {
       setIsLoading(true);
+      
+      // Track performance
+      const fetchStartTime = Date.now();
+      console.log('[useUserInfo] Starting initial fetch');
+      
       // Refresh user info in store
       await refreshUserInfo();
+      
+      console.log(`[useUserInfo] Initial fetch completed in ${Date.now() - fetchStartTime}ms`);
+      perfTrackingRef.current.lastRefreshTime = Date.now();
+      
     } catch (error) {
-      console.error('Failed to fetch user info:', error);
+      console.error('[useUserInfo] Failed to fetch user info:', error);
     } finally {
       setIsLoading(false);
     }
@@ -56,10 +134,24 @@ export const useUserInfo = (): UseUserInfoReturn => {
 
   useEffect(() => {
     if (user?.id && !hasInitialized.current) {
+      console.log('[useUserInfo] Initializing with user ID:', user.id);
       hasInitialized.current = true;
-      fetchUserInfo();
+      const initializeStartTime = Date.now();
+      
+      fetchUserInfo().then(() => {
+        console.log(`[useUserInfo] Initialization completed in ${Date.now() - initializeStartTime}ms`);
+      });
     }
   }, [user?.id, fetchUserInfo]);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Check if user is in 14-day trial period directly from userInfo
   const isNewUserTrial = userInfo?.createdAt ? isWithin14Days(new Date(userInfo.createdAt)) : false;
@@ -74,14 +166,14 @@ export const useUserInfo = (): UseUserInfoReturn => {
 
       if (!response.ok) throw new Error();
 
-      // Refresh userInfo to update all components
-      await refreshUserInfo();
+      // Use debounced refresh
+      debouncedFetchUserInfo();
 
     } catch (error) {
       console.error('Failed to update score:', error);
       toast.error('Failed to update score');
     }
-  }, [refreshUserInfo]);
+  }, [debouncedFetchUserInfo]);
 
   const updateNotificationPreference = useCallback(
     async (preference: boolean) => {
@@ -97,13 +189,13 @@ export const useUserInfo = (): UseUserInfoReturn => {
         }
 
         const data = await response.json();
-        refreshUserInfo();
+        debouncedFetchUserInfo();
       } catch (err) {
         toast.error("Failed to update notification preferences");
         throw err;
       }
     },
-    [refreshUserInfo]
+    [debouncedFetchUserInfo]
   );
 
   const updateUserProfile = useCallback(
@@ -120,13 +212,13 @@ export const useUserInfo = (): UseUserInfoReturn => {
         }
 
         const updatedData = await response.json();
-        refreshUserInfo();
+        debouncedFetchUserInfo();
       } catch (err) {
         toast.error("Failed to update profile");
         throw err;
       }
     },
-    [refreshUserInfo]
+    [debouncedFetchUserInfo]
   );
 
   const incrementScore = useCallback(async () => {
@@ -142,12 +234,12 @@ export const useUserInfo = (): UseUserInfoReturn => {
       }
 
       const data = await response.json();
-      refreshUserInfo();
+      debouncedFetchUserInfo();
     } catch (err) {
       toast.error("Failed to increment score");
       throw err;
     }
-  }, [refreshUserInfo]);
+  }, [debouncedFetchUserInfo]);
 
   const decrementScore = useCallback(async () => {
     try {
@@ -162,24 +254,24 @@ export const useUserInfo = (): UseUserInfoReturn => {
       }
 
       const data = await response.json();
-      refreshUserInfo();
+      debouncedFetchUserInfo();
     } catch (err) {
       toast.error("Failed to decrement score");
       throw err;
     }
-  }, [refreshUserInfo]);
+  }, [debouncedFetchUserInfo]);
 
   const fetchReferrals = useCallback(async () => {
     try {
       const response = await fetch("/api/referrals");
       if (!response.ok) throw new Error("Failed to fetch referrals");
       const data = await response.json();
-      refreshUserInfo();
+      debouncedFetchUserInfo();
     } catch (err) {
       toast.error("Failed to load referrals");
       throw err;
     }
-  }, [refreshUserInfo]);
+  }, [debouncedFetchUserInfo]);
 
   const createReferral = useCallback(async (data: { friendEmail: string }) => {
     try {
@@ -194,14 +286,14 @@ export const useUserInfo = (): UseUserInfoReturn => {
       }
 
       const newReferral = await response.json();
-      refreshUserInfo();
+      debouncedFetchUserInfo();
 
       toast.success("Referral sent successfully");
     } catch (err) {
       toast.error("Failed to create referral");
       throw err;
     }
-  }, [refreshUserInfo]);
+  }, [debouncedFetchUserInfo]);
 
   const checkHasReferrals = useCallback(async () => {
     try {
@@ -235,14 +327,14 @@ export const useUserInfo = (): UseUserInfoReturn => {
       }
 
       const data = await response.json();
-      refreshUserInfo();
+      debouncedFetchUserInfo();
 
       toast.success('Welcome to the Anki Clinic!');
     } catch (err) {
       toast.error('Failed to unlock the Anki Clinic');
       throw err;
     }
-  }, [refreshUserInfo]);
+  }, [debouncedFetchUserInfo]);
 
   const createNewUser = useCallback(async (data: { firstName: string; bio?: string }) => {
     try {
@@ -257,24 +349,18 @@ export const useUserInfo = (): UseUserInfoReturn => {
       }
 
       const newUserInfo = await response.json();
-      refreshUserInfo();
+      debouncedFetchUserInfo();
       return newUserInfo;
     } catch (err) {
       toast.error("Failed to create user profile");
       throw err;
     }
-  }, [refreshUserInfo]);
+  }, [debouncedFetchUserInfo]);
 
   return {
-    userInfo: userInfo as UserInfo | null,
+    userInfo,
     isLoading,
-    isSubscribed: 
-      userInfo?.subscriptionType?.startsWith('Gold') || 
-      userInfo?.subscriptionType === 'gold' || 
-      userInfo?.subscriptionType === 'premium' ||
-      userInfo?.subscriptionType?.includes('_Trial') || 
-      isNewUserTrial || 
-      false,
+    error: null,
     updateScore,
     updateNotificationPreference,
     updateUserProfile,
@@ -288,7 +374,9 @@ export const useUserInfo = (): UseUserInfoReturn => {
     checkHasReferrals,
     unlockGame,
     createNewUser,
-    error: null
+    isSubscribed: !!userInfo?.hasPaid || isNewUserTrial,
+    hasSeenIntroVideo,
+    setHasSeenIntroVideo
   };
 };
 

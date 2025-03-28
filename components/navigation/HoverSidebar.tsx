@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import HelpContentTestingSuite from "@/components/guides/HelpContentTestingSuite";
+import { useNavigation } from "@/store/selectors";
 
 /* ----- Types ---- */
 interface Task {
@@ -72,7 +73,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   {
     id: "ankiclinic",
     name: "Anki Clinic",
-    tab: "ankiclinic",
+    tab: "AnkiClinic",
     icon: <Clock className="w-5 h-5" />
   }
 ];
@@ -86,15 +87,19 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
 }) => {
   /* ---- State ----- */
   const [isVisible, setIsVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState<string | null>(() => {
-    // Initialize based on currentPage
-    const matchingItem = NAVIGATION_ITEMS.find(item => item.tab === currentPage);
-    return matchingItem ? matchingItem.id : "kalypso-ai";
-  });
   const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [visibleSection, setVisibleSection] = useState<'nav' | 'tasks'>('nav');
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Use navigation selector hook
+  const { activePage, navigateHomeTab } = useNavigation();
+  
+  // Map page to nav id for UI highlighting
+  const activeTab = (() => {
+    const matchingItem = NAVIGATION_ITEMS.find(item => item.tab === activePage);
+    return matchingItem ? matchingItem.id : "kalypso-ai";
+  })();
   
   /* ---- Refs --- */
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -114,12 +119,11 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   }, []);
   
   useEffect(() => {
-    // Update active tab when currentPage changes
-    const matchingItem = NAVIGATION_ITEMS.find(item => item.tab === currentPage);
-    if (matchingItem) {
-      setActiveTab(matchingItem.id);
+    // Update global navigation state when currentPage prop changes (for initial sync)
+    if (currentPage && currentPage !== activePage) {
+      navigateHomeTab(currentPage);
     }
-  }, [currentPage]);
+  }, [currentPage, activePage, navigateHomeTab]);
   
   useEffect(() => {
     // Handle hover detection on the edge of the screen
@@ -163,14 +167,21 @@ const HoverSidebar: React.FC<HoverSidebarProps> = ({
   };
 
   const handleNavigationClick = (item: NavigationItem) => {
-    setActiveTab(item.id);
+    console.log(`[HoverSidebar] Navigation clicked: ${item.tab}, current activePage: ${activePage}`);
     
+    // Update global navigation state using the navigation hook
+    navigateHomeTab(item.tab);
+    console.log(`[HoverSidebar] Called navigateHomeTab with: ${item.tab}`);
+    
+    // Special case for ankiclinic which requires a page navigation
     if (item.id === 'ankiclinic') {
-      console.log(`======== Anki Clinic clicked ${new Date().toISOString()} ========`);
+      console.log(`[HoverSidebar] Ankiclinic requires page navigation`);
       router.push('/ankiclinic');
-    } else {
-      onTabChange(item.tab);
     }
+    
+    // No need to call onTabChange anymore since the global state update
+    // will trigger a re-render in the HomePage component
+    // This was causing duplicate state updates and unexpected behavior
   };
 
   const handleTaskCompletion = async (activityId: string, taskIndex: number, completed: boolean) => {
