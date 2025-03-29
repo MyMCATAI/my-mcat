@@ -50,7 +50,7 @@ export async function GET(req: Request) {
       email: userEmail,
     });
   } catch (error) {
-    console.log('[USER_INFO_GET]', error);
+    console.error('[USER_INFO_GET]', error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -109,7 +109,8 @@ export async function POST(req: Request) {
           mcatAttemptNumber: null,
           targetMedSchool: null,
           targetScore: null,
-          referralEmail: null
+          referralEmail: null,
+          hasSeenIntroVideo: false
         }
       }
     });
@@ -177,7 +178,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ...userInfo, referralRedeemed });
   } catch (error) {
     console.error("[USER_INFO_POST]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -190,7 +191,26 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { bio, unlockGame, amount, incrementScore, decrementScore, notificationPreference } = body;
+    const { bio, unlockGame, amount, incrementScore, decrementScore, notificationPreference, onboardingInfo } = body;
+
+    // Handle onboardingInfo update
+    if (onboardingInfo) {
+      const updatedInfo = await prismadb.userInfo.update({
+        where: { userId },
+        data: { 
+          onboardingInfo: {
+            ...onboardingInfo
+          }
+        },
+        include: { patientRecord: true }
+      });
+
+      return NextResponse.json({
+        ...updatedInfo,
+        coins: updatedInfo.score,
+        patientsCount: updatedInfo.patientRecord?.patientsTreated || 0
+      });
+    }
 
     // Handle bio update
     if (bio !== undefined) {
@@ -205,6 +225,16 @@ export async function PUT(req: Request) {
         coins: updatedInfo.score,
         patientsCount: updatedInfo.patientRecord?.patientsTreated || 0
       });
+    }
+
+    // Handle score update with amount
+    if (amount !== undefined) {
+      if (typeof amount !== 'number' || Number.isNaN(amount)) {
+        return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+      }
+
+      const updatedInfo = await incrementUserScore(amount);
+      return NextResponse.json({ score: updatedInfo.score });
     }
 
     if (unlockGame) {
@@ -238,16 +268,6 @@ export async function PUT(req: Request) {
       });
 
       return NextResponse.json(updatedInfo);
-    }
-
-    // Handle score update with amount
-    if (amount !== undefined) {
-      if (typeof amount !== 'number' || isNaN(amount)) {
-        return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
-      }
-
-      const updatedInfo = await incrementUserScore(amount);
-      return NextResponse.json({ score: updatedInfo.score });
     }
 
     // Handle increment/decrement score

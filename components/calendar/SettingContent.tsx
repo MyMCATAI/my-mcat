@@ -210,6 +210,7 @@ const SettingContent: React.FC<SettingContentProps> = ({
       if (diff < smallestDiff) {
         smallestDiff = diff;
         closestDate = date;
+        
       }
     });
 
@@ -232,14 +233,21 @@ const SettingContent: React.FC<SettingContentProps> = ({
   }, []);
 
   const fetchExistingStudyPlan = async () => {
+    console.log('[SETTING_CONTENT] Fetching existing study plan...');
+    // console.log('[SETTING_CONTENT] Component stack trace:', new Error().stack);
+    
     try {
+      console.log('[SETTING_CONTENT] Making API request to /api/study-plan');
       const response = await fetch("/api/study-plan");
       const data = await response.json();
+      console.log('[SETTING_CONTENT] Study plan API response received');
+      
       if (!response.ok) {
         throw new Error(data.error || "Failed to fetch study plan");
       }
 
       if (data.studyPlan) {
+        console.log('[SETTING_CONTENT] Study plan found, updating component state');
         const plan = data.studyPlan;
         setExistingStudyPlan(plan);
 

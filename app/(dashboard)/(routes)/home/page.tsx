@@ -1,11 +1,11 @@
 // app/(dashboard)/(routes)/home/page.tsx
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, memo, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useUserInfo } from "@/hooks/useUserInfo";
+import { useUser, useAudio, useNavigation } from "@/store/selectors";
 import { useUserActivity } from '@/hooks/useUserActivity';
-import { FetchedActivity } from "@/types";
+import type { FetchedActivity } from "@/types";
 import { isToday } from "date-fns";
 import Summary from "./Summary";
 import SideBar from "./SideBar";
@@ -18,38 +18,19 @@ import StreakPopup from "@/components/score/StreakDisplay";
 import { checkProStatus, shouldUpdateKnowledgeProfiles, updateKnowledgeProfileTimestamp } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import { shouldShowRedeemReferralModal } from '@/lib/referral';
-import { useAudio } from "@/store/selectors";
+import { useUIStore } from "@/store/slices/uiSlice";
 import RedeemReferralModal from '@/components/social/friend-request/RedeemReferralModal';
 import ChatContainer from "@/components/chatgpt/ChatContainer";
 import HoverSidebar from "@/components/navigation/HoverSidebar";
+import IntroVideoPlayer from "@/components/home/IntroVideoPlayer";
+import DraggableKalypso from "@/components/home/DraggableKalypso";
+// Import the extracted components from their new location
+import { LoadingSpinner } from "@/components/home/LoadingSpinner";
+import { ContentWrapper } from "@/components/home/ContentWrapper";
 
 /* ----------------------------------------- Types ------------------------------------------ */
-interface ContentWrapperProps {
-  children: React.ReactNode;
-}
-
-interface LoadingSpinnerProps {
-  message?: string;
-}
-
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = memo(({ message = "Loading..." }) => (
-  <div className="fixed inset-0 flex justify-center items-center bg-black/50 z-[9999]">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500 mx-auto mb-4" />
-      <p className="text-sky-300 text-xl">{message}</p>
-    </div>
-  </div>
-));
-LoadingSpinner.displayName = 'LoadingSpinner';
-
-const ContentWrapper: React.FC<ContentWrapperProps> = memo(({ children }) => (
-  <div className="w-full px-[2rem] lg:px-[2.7rem] xl:px-[7rem] overflow-visible">
-    <div className="text-[--theme-text-color] flex gap-[1.5rem] overflow-visible">
-      {children}
-    </div>
-  </div>
-));
-ContentWrapper.displayName = 'ContentWrapper';
+type KalypsoState = "wait" | "talk" | "end" | "start";
+type ChatbotContextType = { contentTitle: string; context: string } | null;
 
 // Memoize components that don't need frequent updates
 const MemoizedSummary = memo(Summary);
@@ -57,15 +38,155 @@ const MemoizedSideBar = memo(SideBar);
 const MemoizedAdaptiveTutoring = memo(AdaptiveTutoring);
 
 const HomePage: React.FC = () => {
+  console.log('[HomePage] Component rendering');
+  
   /* ---------------------------------------- Hooks ---------------------------------------- */
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { userInfo, isLoading: isLoadingUserInfo, isSubscribed } = useUserInfo();
+  const { userInfo, refreshUserInfo, isSubscribed, setHasSeenIntroVideo } = useUser();
+  const [isLoadingUserInfo, setIsLoadingUserInfo] = useState(false);
   const { startActivity, endActivity, updateActivityEndTime } = useUserActivity();
   const { playMusic, stopMusic, volume, setVolume, isPlaying } = useAudio();
+  const { activePage, navigateHomeTab, updateSubSection } = useNavigation();
   const paymentStatus = searchParams?.get("payment");
   
+  // Track renders in development only
+  useEffect(() => {
+    console.log('[HomePage] Render', { 
+      isLoadingUserInfo, 
+      loadingState: loadingState ? loadingState.isLoading : 'not initialized', 
+      userInfoExists: !!userInfo
+    });
+  });
+  
+  /* ----------------------------------------- Refs ---------------------------------------- */
+  const kalypsoRef = useRef<HTMLImageElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const chatbotRef = useRef<{ sendMessage: (message: string, context?: string) => void }>({
+    sendMessage: () => {},
+  });
+  const initializationRef = useRef(false);
+  const navigationInitializedRef = useRef(false);
+  const currentTrackedTabRef = useRef<string | null>(null);
+  const safetyTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  /* ---------------------------------------- State ---------------------------------------- */
+  // Split large state object into smaller, focused states
+  const [activities, setActivities] = useState<FetchedActivity[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [currentStudyActivityId, setCurrentStudyActivityId] = useState<string | null>(null);
+  const [chatbotContext, setChatbotContext] = useState<ChatbotContextType>(null);
+  
+  // UI state group
+  const [uiState, setUIState] = useState({
+    kalypsoState: "start" as KalypsoState,
+    showScorePopup: false,
+    showStreakPopup: false,
+    showReferralModal: false
+  });
+  
+  // User data group
+  const [userData, setUserData] = useState({
+    isPro: false,
+    testScore: 0,
+    userStreak: 0
+  });
+
+  // Replace multiple loading flags with a more flexible approach
+  const [loadingState, setLoadingState] = useState({
+    isLoading: true,
+    isUpdatingProfile: false,
+    isGeneratingActivities: false,
+    isLoadingTimeout: false
+  });
+
+  // Set up global safety timer immediately
+  useEffect(() => {
+    console.log('[HomePage] Setting up safety timer');
+    
+    // Clear any existing timer
+    if (safetyTimerRef.current) {
+      clearTimeout(safetyTimerRef.current);
+    }
+    
+    // Set a global safety timer to exit loading state
+    safetyTimerRef.current = setTimeout(() => {
+      console.log('[HomePage] Safety timer triggered', { loadingState });
+      
+      if (loadingState.isLoading) {
+        console.log('[HomePage] FORCING EXIT from loading state via safety timer');
+        setLoadingState(prev => ({ ...prev, isLoading: false }));
+      }
+    }, 5000); // Force exit loading after 5 seconds
+    
+    return () => {
+      if (safetyTimerRef.current) {
+        clearTimeout(safetyTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Add this after the loading state declaration
+  const isPageLoading = useMemo(() => 
+    loadingState.isUpdatingProfile || loadingState.isGeneratingActivities || loadingState.isLoadingTimeout,
+    [loadingState.isUpdatingProfile, loadingState.isGeneratingActivities, loadingState.isLoadingTimeout]
+  );
+
+  // Update functions for new state structure
+  const updateLoadingState = useCallback((newState: Partial<typeof loadingState>) => {
+    console.log('[HomePage] updateLoadingState called with', newState, 'current state:', loadingState);
+    
+    setLoadingState(prev => {
+      // Only update if values actually changed
+      const hasChanges = Object.entries(newState).some(
+        ([key, value]) => prev[key as keyof typeof prev] !== value
+      );
+      
+      const newLoadingState = hasChanges ? { ...prev, ...newState } : prev;
+      console.log('[HomePage] Loading state updated to:', newLoadingState);
+      return newLoadingState;
+    });
+  }, [loadingState]);
+
+  const updateUIState = useCallback((updates: Partial<typeof uiState>) => {
+    setUIState(prev => {
+      // Only update if values actually changed
+      const hasChanges = Object.entries(updates).some(
+        ([key, value]) => prev[key as keyof typeof prev] !== value
+      );
+      
+      return hasChanges ? { ...prev, ...updates } : prev;
+    });
+  }, []);
+
+  const updateUserData = useCallback((updates: Partial<typeof userData>) => {
+    setUserData(prev => {
+      // Only update if values actually changed
+      const hasChanges = Object.entries(updates).some(
+        ([key, value]) => prev[key as keyof typeof prev] !== value
+      );
+      
+      return hasChanges ? { ...prev, ...updates } : prev;
+    });
+  }, []);
+  
+  // Log when component is fully loaded (dev only)
+  useEffect(() => {
+    console.log('[HomePage] Loading state check:', { isLoadingUserInfo, loadingState });
+    
+    if (!isLoadingUserInfo && !loadingState.isLoading) {
+      console.log('[HomePage] Fully loaded and ready to display content');
+    }
+  }, [isLoadingUserInfo, loadingState.isLoading]);
+  
+  // Check if intro video has been seen from userInfo.onboardingInfo
+  const hasSeenIntroVideo = useMemo(() => {
+    const seen = userInfo?.onboardingInfo?.hasSeenIntroVideo || false;
+    console.log('[HomePage] hasSeenIntroVideo calculated:', seen);
+    return seen;
+  }, [userInfo]);
+
   // Debug mode check
   const isDebugMode = searchParams?.get('debug') === 'true';
 
@@ -75,89 +196,94 @@ const HomePage: React.FC = () => {
     return tabParam || "KalypsoAI";
   }, [searchParams]);
 
-  /* ---------------------------------------- State ---------------------------------------- */
-  // Combine related states into a single object to reduce re-renders
-  const [pageState, setPageState] = useState({
-    activeTab: defaultTab, // Use the calculated default tab
-    currentPage: defaultTab, // Match current page with active tab
-    activities: [] as FetchedActivity[],
-    isInitialized: false,
-    currentStudyActivityId: null as string | null,
-    chatbotContext: null as {contentTitle: string; context: string;} | null,
-    kalypsoState: "start" as "wait" | "talk" | "end" | "start", 
-    isPro: false,
-    showScorePopup: false,
-    testScore: 0,
-    showStreakPopup: false,
-    userStreak: 0,
-    showReferralModal: false
-  });
-
-  // Combine loading states into a single object
-  const [loadingState, setLoadingState] = useState({
-    isLoading: true,
-    isUpdatingProfile: false,
-    isGeneratingActivities: false,
-    isLoadingTimeout: false
-  });
-
-  /* ----------------------------------------- Refs ---------------------------------------- */
-  const kalypsoRef = useRef<HTMLImageElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const chatbotRef = useRef<{ sendMessage: (message: string, context?: string) => void }>({
-    sendMessage: () => {},
-  });
-  const initializationRef = useRef(false);
-
-  // Memoize state updates to prevent unnecessary re-renders
-  const updatePageState = useCallback((updates: Partial<typeof pageState>) => {
-    setPageState(prev => ({ ...prev, ...updates }));
-  }, []);
-
-  const updateLoadingState = useCallback((newState: Partial<typeof loadingState>) => {
-    setLoadingState(prev => ({ ...prev, ...newState }));
-  }, []);
-
   /* ---- Memoized Values ---- */
   const shouldInitialize = useMemo(() => {
-    return !pageState.isInitialized && userInfo && !isLoadingUserInfo;
-  }, [pageState.isInitialized, userInfo, isLoadingUserInfo]);
+    const shouldInit = !isInitialized && userInfo && !isLoadingUserInfo;
+    console.log('[HomePage] shouldInitialize check:', { shouldInit, isInitialized, hasUserInfo: !!userInfo, isLoadingUserInfo });
+    return shouldInit;
+  }, [isInitialized, userInfo, isLoadingUserInfo]);
+
+  // Prefetch data as soon as possible - prioritize critical data
+  useEffect(() => {
+    console.log('[HomePage] Prefetch effect triggered', { 
+      initializationRef: initializationRef.current,  
+      hasUserInfo: !!userInfo, 
+      isLoadingUserInfo 
+    });
+    
+    if (initializationRef.current || !userInfo || isLoadingUserInfo) return;
+    
+    const initializeData = async () => {
+      console.log('[HomePage] Starting initializeData');
+      
+      try {
+        // Prioritize API calls - run them in parallel
+        const [activitiesPromise, proStatusPromise] = [
+          fetch("/api/calendar-activity").then(res => res.json()),
+          checkProStatus()
+        ];
+        
+        // Start navigation setup while data is loading
+        if (!navigationInitializedRef.current && defaultTab) {
+          navigateHomeTab(defaultTab);
+          navigationInitializedRef.current = true;
+        }
+        
+        // Wait for data to load
+        const [fetchedActivities, proStatus] = await Promise.all([
+          activitiesPromise,
+          proStatusPromise
+        ]);
+        
+        console.log('[HomePage] Data loaded successfully', { 
+          activitiesCount: fetchedActivities?.length, 
+          proStatus 
+        });
+        
+        // Update state with all fetched data to prevent cascading renders
+        setActivities(fetchedActivities);
+        setIsInitialized(true);
+        updateUserData({ isPro: proStatus });
+        updateUIState({ showReferralModal: shouldShowRedeemReferralModal() });
+        
+        console.log('[HomePage] Setting loading state to false');
+        setLoadingState(prev => ({ ...prev, isLoading: false }));
+        console.log('[HomePage] Loading state should now be false');
+        
+        initializationRef.current = true;
+      } catch (error) {
+        console.error('[HOME_PAGE] Error during data prefetching:', error);
+        toast.error("Failed to load some data. Please refresh if you experience issues.");
+        
+        // Ensure we still mark loading as complete
+        console.log('[HomePage] Setting loading to false after error');
+        setLoadingState(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+    
+    initializeData();
+  }, [userInfo, isLoadingUserInfo, defaultTab, navigateHomeTab, updateUserData, updateUIState]);
+
+  // Skip useEffect for the original initializePage since we now use the prefetch approach
+  const initializePage = useCallback(async () => {
+    // This is kept for compatibility but doesn't need to do anything anymore
+    if (initializationRef.current) return;
+  }, []);
+
+  // Update the navigation initialization effect to respect user navigation
+  useEffect(() => {
+    // Only initialize the navigation once, not after user has clicked on sidebar items
+    if (!navigationInitializedRef.current && defaultTab) {
+      navigateHomeTab(defaultTab);
+      navigationInitializedRef.current = true;
+    }
+  }, [defaultTab, navigateHomeTab]);
 
   /* ---- Callbacks & Event Handlers ---- */
   // Memoize chatbot context update
-  const updateChatbotContext = useCallback((context: {contentTitle: string; context: string;}) => {
-    updatePageState({ chatbotContext: context });
-  }, [updatePageState]);
-
-  const initializePage = useCallback(async () => {
-    if (!shouldInitialize) return;
-    
-    try {
-      const [activities, proStatus] = await Promise.all([
-        fetch("/api/calendar-activity").then(res => res.json()),
-        checkProStatus()
-      ]);
-
-      // Batch all state updates
-      updatePageState({
-        activities,
-        isPro: proStatus,
-        isInitialized: true
-      });
-
-      updateLoadingState({
-        isLoading: false
-      });
-
-    } catch (error) {
-      console.error('[HOME_PAGE] Error during initialization:', error);
-      toast.error("Failed to initialize page. Please refresh.");
-      
-      updateLoadingState({
-        isLoading: false
-      });
-    }
-  }, [shouldInitialize, updatePageState, updateLoadingState]);
+  const updateChatbotContext = useCallback((context: ChatbotContextType) => {
+    setChatbotContext(context);
+  }, []);
 
   const updateCalendarChatContext = useCallback((currentActivities: FetchedActivity[]) => {
     const today = new Date();
@@ -229,17 +355,17 @@ const HomePage: React.FC = () => {
 
     try {
       const activities = await fetch("/api/calendar-activity").then(res => res.json());
-      updatePageState({ activities });
+      setActivities(activities);
     } catch (error) {
       console.error('[HOME_PAGE] Error fetching activities:', error);
     }
-  }, [loadingState.isLoading, updatePageState]);
+  }, [loadingState.isLoading]);
 
   // Handle activity tracking for user engagement
   const handleActivityChange = useCallback(async (type: string, location: string) => {
-    if (pageState.currentStudyActivityId) {
+    if (currentStudyActivityId) {
       try {
-        await endActivity(pageState.currentStudyActivityId);
+        await endActivity(currentStudyActivityId);
       } catch (error) {
         console.error('Error ending previous activity:', error);
       }
@@ -255,29 +381,29 @@ const HomePage: React.FC = () => {
       });
 
       if (activity) {
-        updatePageState({ currentStudyActivityId: activity.id });
+        setCurrentStudyActivityId(activity.id);
       }
     } catch (error) {
       console.error('Error starting new activity:', error);
     }
-  }, [endActivity, startActivity, pageState.currentStudyActivityId, updatePageState]);
+  }, [endActivity, startActivity, currentStudyActivityId]);
 
-  // Tab change handler with navigation logic
+  // Tab change handler - now only handles special cases (backward compatibility)
   const handleTabChange = useCallback(async (newTab: string) => {
     // Handle special navigation cases
     if (newTab === 'AnkiClinic') {
-        try {
-            // Clean up current activity first
-            if (pageState.currentStudyActivityId) {
-                await endActivity(pageState.currentStudyActivityId);
-            }
-            await router.push('/ankiclinic');
-            return; // Important: return immediately after navigation
-        } catch (error) {
-            console.error('Navigation error:', error);
-            toast.error('Failed to navigate to Anki Clinic');
+      try {
+        // Clean up current activity first
+        if (currentStudyActivityId) {
+          await endActivity(currentStudyActivityId);
         }
-        return; // Return in case of error too
+        await router.push('/ankiclinic');
+        return; // Important: return immediately after navigation
+      } catch (error) {
+        console.error('Navigation error:', error);
+        toast.error('Failed to navigate to Anki Clinic');
+      }
+      return; // Return in case of error too
     }
 
     // Handle tab with view parameter
@@ -285,43 +411,73 @@ const HomePage: React.FC = () => {
     const searchParams = new URLSearchParams(params);
     const view = searchParams.get('view');
 
-    // Batch state updates
-    const updates: Partial<typeof pageState> = {
-        activeTab: tab,
-        currentPage: tab
-    };
+    // Use global navigation
+    navigateHomeTab(tab);
 
     if (tab === "Summary" && view) {
-        router.push(`/home?tab=Summary&view=${view}`);
+      // Add context for the view
+      updateSubSection({ currentView: view });
+      router.push(`/home?tab=Summary&view=${view}`);
     }
+    
+    // REMOVED: Activity tracking is now handled by the effect triggered by activePage changes
+  }, [router, navigateHomeTab, updateSubSection, currentStudyActivityId, endActivity]);
 
-    updatePageState(updates);
+  // Add an effect for activity tracking that responds to global state changes
+  useEffect(() => {
+    // Skip during initial render/loading
+    if (isLoadingUserInfo || !isInitialized) return;
+    
+    // Don't create a new activity if we're on the special cases
+    if (activePage === 'ankiclinic') return;
+    
+    // Skip if we're already tracking this tab
+    if (currentTrackedTabRef.current === activePage) {
+      return;
+    }
+    
+    // Handle activity tracking based on tab
+    const activityType = activePage === "AdaptiveTutoringSuite" ? 'tutoring' : 'studying';
+    
+    // Async function to update activity
+    const updateActivity = async () => {
+      try {
+        await handleActivityChange(activityType, activePage);
+        // Update ref to current tracked tab
+        currentTrackedTabRef.current = activePage;
+      } catch (error) {
+        console.error(`[HomePage] Error updating activity for ${activePage}:`, error);
+      }
+    };
+    
+    updateActivity();
+    
+  }, [activePage, handleActivityChange, isLoadingUserInfo, isInitialized]);
 
-    // Handle activity changes
-    if (tab !== "AdaptiveTutoringSuite") {
-        await handleActivityChange('studying', tab);
+  // When activity changes, update the tracked tab ref
+  useEffect(() => {
+    if (currentStudyActivityId) {
+      currentTrackedTabRef.current = activePage;
     } else {
-        // For AdaptiveTutoringSuite, track with a different activity type
-        // This ensures we still have consistent state tracking
-        await handleActivityChange('tutoring', 'AdaptiveTutoringSuite');
+      currentTrackedTabRef.current = null;
     }
-  }, [router, handleActivityChange, updatePageState, pageState.currentStudyActivityId, endActivity]);
+  }, [currentStudyActivityId, activePage]);
 
-  const switchKalypsoState = (newState: "wait" | "talk" | "end" | "start") => {
-    setPageState(prev => ({ ...prev, kalypsoState: newState }));
+  const switchKalypsoState = useCallback((newState: KalypsoState) => {
+    updateUIState({ kalypsoState: newState });
     if (kalypsoRef.current) {
       kalypsoRef.current.src = `/kalypso${newState}.gif`;
     }
-  };
+  }, [updateUIState]);
 
-  const toggleChatBot = () => {
-    // Implement chatbot toggling functionality
-    updatePageState({ activeTab: "KalypsoAI" });
-  };
+  const toggleChatBot = useCallback(() => {
+    // Use global navigation instead of local state
+    navigateHomeTab("KalypsoAI");
+  }, [navigateHomeTab]);
 
   /* ---------------------------------------- Memoized Values ---------------------------------------- */
   const pageTitle = useMemo(() => {
-    switch (pageState.activeTab) {
+    switch (activePage) {
       case "Summary": return "Statistics";
       case "Tests": return "Testing Suite";
       case "AdaptiveTutoringSuite": return "Adaptive Tutoring Suite";
@@ -330,25 +486,23 @@ const HomePage: React.FC = () => {
       case "KalypsoAI": return "Kalypso";
       default: return "Home";
     }
-  }, [pageState.activeTab]);
-
-  const isPageLoading = useMemo(() => 
-    loadingState.isUpdatingProfile || loadingState.isGeneratingActivities || loadingState.isLoadingTimeout,
-    [loadingState.isUpdatingProfile, loadingState.isGeneratingActivities, loadingState.isLoadingTimeout]
-  );
+  }, [activePage]);
 
   /* ---------------------------------------- Effects ---------------------------------------- */
   // Track component lifecycle - simplified
   useEffect(() => {
-    // Mark initialization to prevent double initialization
-    if (initializationRef.current) return;
-    initializationRef.current = true;
+    console.log('[HomePage] Component lifecycle effect');
     
-    // Add a safety timeout to ensure loading completes
-    const safetyTimeout = setTimeout(() => {
+    // Reset the safety timer to ensure it runs from component mount
+    if (safetyTimerRef.current) {
+      clearTimeout(safetyTimerRef.current);
+    }
+    
+    safetyTimerRef.current = setTimeout(() => {
+      console.log('[HomePage] Lifecycle safety timer triggered');
       if (loadingState.isLoading) {
-        // Force loading to complete after timeout
-        updateLoadingState({ isLoading: false });
+        console.log('[HomePage] FORCING EXIT from loading state via lifecycle safety timer');
+        setLoadingState(prev => ({ ...prev, isLoading: false }));
       }
     }, 3000); // 3 second safety timeout
     
@@ -356,9 +510,11 @@ const HomePage: React.FC = () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      clearTimeout(safetyTimeout);
+      if (safetyTimerRef.current) {
+        clearTimeout(safetyTimerRef.current);
+      }
     };
-  }, [loadingState.isLoading, updateLoadingState]);
+  }, []);
 
   // Combine initialization effects
   useEffect(() => {
@@ -368,13 +524,13 @@ const HomePage: React.FC = () => {
   }, [shouldInitialize, initializePage]);
 
   useEffect(() => {
-    updateCalendarChatContext(pageState.activities);
-  }, [pageState.activities, updateCalendarChatContext]);
+    updateCalendarChatContext(activities);
+  }, [activities, updateCalendarChatContext]);
 
   useEffect(() => {
     const handleScroll = () => {
       const remToPixels = (rem: number) =>
-        rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
+        rem * Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
       const scrollToPosition = remToPixels(7.125);
 
       window.scrollTo({
@@ -389,7 +545,7 @@ const HomePage: React.FC = () => {
     }, 100); // Small delay to ensure content is rendered
 
     return () => clearTimeout(timer);
-  }, [pageState.activities, pageState.activeTab]); // Re-run when content changes
+  }, []); // No dependencies needed as the effect only runs once
 
   useEffect(() => {
     switchKalypsoState("start"); // Start with talking animation to encourage engagement
@@ -398,7 +554,7 @@ const HomePage: React.FC = () => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, []);
+  }, [switchKalypsoState]);
 
   // Payment status effect
   useEffect(() => {
@@ -414,10 +570,10 @@ const HomePage: React.FC = () => {
   // Activity tracking effects
   useEffect(() => {
     const initializeActivity = async () => {
-      if (pathname && pathname.startsWith('/home') && !pageState.currentStudyActivityId && !isLoadingUserInfo) {
+      if (pathname?.startsWith('/home') && !currentStudyActivityId && !isLoadingUserInfo) {
         const activity = await startActivity({
           type: 'studying',
-          location: pageState.activeTab,
+          location: activePage,
           metadata: {
             initialLoad: true,
             timestamp: new Date().toISOString()
@@ -425,72 +581,96 @@ const HomePage: React.FC = () => {
         });
 
         if (activity) {
-          setPageState(prev => ({ ...prev, currentStudyActivityId: activity.id }));
+          setCurrentStudyActivityId(activity.id);
         }
       }
     };
 
     initializeActivity();
-  }, [isLoadingUserInfo, pathname, pageState.activeTab, startActivity, pageState.currentStudyActivityId]);
-
-  // Handle URL without tab parameter - ensure we show Kalypso AI
-  useEffect(() => {
-    if (pathname === '/home' && !searchParams?.has('tab')) {
-      // Ensure we're showing Kalypso AI when user navigates directly to /home
-      updatePageState({
-        activeTab: 'KalypsoAI',
-        currentPage: 'KalypsoAI'
-      });
-    }
-  }, [pathname, searchParams, updatePageState]);
+  }, [isLoadingUserInfo, pathname, activePage, startActivity, currentStudyActivityId]);
 
   useEffect(() => {
-    if (!pageState.currentStudyActivityId) return;
+    if (!currentStudyActivityId) return;
 
     const intervalId = setInterval(() => {
-      updateActivityEndTime(pageState.currentStudyActivityId);
+      updateActivityEndTime(currentStudyActivityId);
     }, 300000);
 
     return () => clearInterval(intervalId);
-  }, [pageState.currentStudyActivityId, updateActivityEndTime]);
+  }, [currentStudyActivityId, updateActivityEndTime]);
 
   useEffect(() => {
-    setPageState(prev => ({ ...prev, showReferralModal: shouldShowRedeemReferralModal() }));
-  }, []);
+    updateUIState({ showReferralModal: shouldShowRedeemReferralModal() });
+  }, [updateUIState]);
 
   // Cleanup effect
   useEffect(() => {
     return () => {
       // Cleanup any pending activities
-      if (pageState.currentStudyActivityId) {
-        endActivity(pageState.currentStudyActivityId);
+      if (currentStudyActivityId) {
+        endActivity(currentStudyActivityId);
       }
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      if (safetyTimerRef.current) {
+        clearTimeout(safetyTimerRef.current);
+      }
     };
-  }, [endActivity, pageState.currentStudyActivityId]);
+  }, [endActivity, currentStudyActivityId]);
+
+  // Handle when the intro video is completed
+  const handleIntroVideoComplete = useCallback(async () => {
+    try {
+      // Update the user's hasSeenIntroVideo status in global state and database
+      await setHasSeenIntroVideo(true);
+      toast.success("Introduction video completed!");
+    } catch (error) {
+      console.error("[HomePage] Failed to update intro video status:", error);
+      toast.error("Failed to update your profile. Please try again.");
+    }
+  }, [setHasSeenIntroVideo]);
+
+  // Add the missing navigation effect back without the console.log
+  // Update URL parameter effect to respect user navigation 
+  useEffect(() => {
+    // Only set default page if we're on the home page without a tab parameter
+    // AND navigation hasn't been initialized yet
+    if (pathname === '/home' && !searchParams?.has('tab') && !navigationInitializedRef.current) {
+      navigateHomeTab('KalypsoAI');
+      navigationInitializedRef.current = true;
+    }
+  }, [pathname, searchParams, navigateHomeTab]);
 
   /* -------------------------------------- Rendering ------------------------------------- */
   const content = useMemo(() => {
+    console.log('[HomePage] Rendering content with states:', { 
+      isLoadingUserInfo, 
+      loading: loadingState.isLoading, 
+      showingContent: !isLoadingUserInfo && !loadingState.isLoading 
+    });
+    
     if (isLoadingUserInfo) {
+      console.log('[HomePage] Showing user info loading spinner');
       return <LoadingSpinner message="Loading user info..." />;
     }
 
-    if (isPageLoading) {
+    if (loadingState.isLoading) {
+      console.log('[HomePage] Showing page initialization loading spinner');
       return <LoadingSpinner message="Initializing page..." />;
     }
-
+    
+    console.log('[HomePage] Rendering main content');
     return (
       <>
         {/* Hover Sidebar - positioned outside ContentWrapper to be fixed */}
         <HoverSidebar
-          activities={pageState.activities as any[]}
+          activities={activities}
           onTasksUpdate={(tasks) => {
-            updatePageState({ activities: tasks as FetchedActivity[] });
+            setActivities(tasks as FetchedActivity[]);
           }}
           onTabChange={handleTabChange}
-          currentPage={pageState.currentPage}
+          currentPage={activePage}
           isSubscribed={isSubscribed}
         />
         
@@ -498,32 +678,39 @@ const HomePage: React.FC = () => {
           <div className="w-3/4 relative overflow-visible">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <h2
-                  className="text-white text-2xl ml-3 font-thin leading-normal shadow-text cursor-pointer"
+                <button
+                  type="button"
+                  className="text-white text-2xl ml-3 font-thin leading-normal shadow-text cursor-pointer bg-transparent border-none"
                   onClick={() => router.push("/home")}
                 >
                   {pageTitle}
-                </h2>
+                </button>
                 <ThemeSwitcher />
               </div>
             </div>
             <div className="relative overflow-visible">
               <div className="p-3 pb-6 gradientbg h-[calc(100vh-5.5rem)] rounded-lg mb-4">
-                {/* Set KalypsoAI as the main component to show */}
-                {(pageState.activeTab === 'KalypsoAI' || !pageState.activeTab) && (
+                {/* Main content area - conditional rendering based on active page */}
+                {(activePage === 'KalypsoAI' || !activePage) && (
                   <div className="h-full overflow-hidden">
-                    <ChatContainer chatbotRef={chatbotRef} />
+                    {!hasSeenIntroVideo ? (
+                      <IntroVideoPlayer 
+                        onComplete={handleIntroVideoComplete}
+                      />
+                    ) : (
+                      <ChatContainer chatbotRef={chatbotRef} />
+                    )}
                   </div>
                 )}
-                {pageState.activeTab === 'Summary' && (
+                {activePage === 'Summary' && (
                   <MemoizedSummary 
                     handleSetTab={handleTabChange}
-                    isActive={pageState.activeTab === 'Summary'}
+                    isActive={true}
                     chatbotRef={chatbotRef}
                     userInfo={userInfo}
                   />
                 )}
-                {pageState.activeTab === 'AdaptiveTutoringSuite' && (
+                {activePage === 'AdaptiveTutoringSuite' && (
                   <div className="h-full overflow-hidden">
                     <MemoizedAdaptiveTutoring 
                       toggleChatBot={toggleChatBot}
@@ -533,9 +720,9 @@ const HomePage: React.FC = () => {
                     />
                   </div>
                 )}
-                {pageState.activeTab === 'CARS' && <TestingSuit />}
-                {pageState.activeTab === 'flashcards' && <FlashcardDeck />}
-                {pageState.activeTab === 'Tests' && (
+                {activePage === 'CARS' && <TestingSuit />}
+                {activePage === 'flashcards' && <FlashcardDeck />}
+                {activePage === 'Tests' && (
                   <PracticeTests 
                     handleSetTab={handleTabChange} 
                     chatbotRef={chatbotRef}
@@ -552,9 +739,9 @@ const HomePage: React.FC = () => {
             </h2>
             <div className="gradientbg p-3 pb-6 h-[calc(100vh-5.5rem)] rounded-lg knowledge-profile-component mb-4">
               <MemoizedSideBar 
-                activities={pageState.activities}
-                currentPage={pageState.currentPage}
-                chatbotContext={pageState.chatbotContext}
+                activities={activities}
+                currentPage={activePage}
+                chatbotContext={chatbotContext}
                 chatbotRef={chatbotRef}
                 handleSetTab={handleTabChange}
                 onActivitiesUpdate={fetchActivities}
@@ -565,46 +752,53 @@ const HomePage: React.FC = () => {
           </div>
 
           {/* Modals and Popups */}
-          {pageState.showReferralModal && (
+          {uiState.showReferralModal && (
             <RedeemReferralModal 
-              isOpen={pageState.showReferralModal} 
-              onClose={() => updatePageState({ showReferralModal: false })}
+              isOpen={uiState.showReferralModal} 
+              onClose={() => updateUIState({ showReferralModal: false })}
             />
           )}
-          {pageState.showStreakPopup && (
+          {uiState.showStreakPopup && (
             <StreakPopup 
-              isOpen={pageState.showStreakPopup}
-              onClose={() => updatePageState({ showStreakPopup: false })}
-              streak={pageState.userStreak}
+              isOpen={uiState.showStreakPopup}
+              onClose={() => updateUIState({ showStreakPopup: false })}
+              streak={userData.userStreak}
             />
           )}
         </ContentWrapper>
+
+        {/* Draggable Kalypso at page level - only visible when KalypsoAI tab is active */}
+        {(activePage === 'KalypsoAI' || !activePage) && hasSeenIntroVideo && (
+          <DraggableKalypso buttonSize="25rem" />
+        )}
       </>
     );
   }, [
+    // Keep only the dependencies that actually affect rendering
     isLoadingUserInfo,
-    isPageLoading,
-    pageState.activeTab,
-    pageState.activities,
-    pageState.currentPage,
-    pageState.chatbotContext,
+    loadingState.isLoading,
+    activePage,
+    activities,
+    chatbotContext,
     chatbotRef,
     handleTabChange,
-    fetchActivities,
     isSubscribed,
     userInfo,
-    toggleChatBot,
-    updatePageState,
-    handleActivityChange,
-    pageTitle,
-    pageState.showReferralModal,
-    pageState.showStreakPopup,
-    pageState.userStreak,
     router,
-    updateChatbotContext
+    handleIntroVideoComplete,
+    hasSeenIntroVideo,
+    // Add dependencies for new state structure
+    uiState.showReferralModal,
+    uiState.showStreakPopup,
+    userData.userStreak,
+    uiState.kalypsoState,
+    updateUIState,
+    fetchActivities,
+    setActivities
   ]);
 
   return content;
 };
 
+// Use memo to prevent unnecessary renders of the entire component
 export default memo(HomePage);

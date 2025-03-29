@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect, memo, useRef } from 'react';
 import { useClerk, useUser as useClerkUser } from '@clerk/nextjs';
 import { FaUser, FaUserCog, FaSignOutAlt } from 'react-icons/fa';
 import UserProfileModal from '../social/profile/UserProfileModal';
@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { createPortal } from 'react-dom';
 
 const ProfileImage = memo(({ profilePhoto }: { profilePhoto: string | undefined }) => {
+  console.log('[Debug] ProfileImage rendering with photo:', profilePhoto);
   return (
     <Image
       key={profilePhoto} // Now safe to use key here since component is memoized
@@ -17,7 +18,11 @@ const ProfileImage = memo(({ profilePhoto }: { profilePhoto: string | undefined 
       className="w-full h-full object-cover opacity-0 transition-opacity duration-300"
       quality={100}
       onLoad={(e) => {
+        console.log('[Debug] Profile image loaded:', profilePhoto);
         (e.target as HTMLImageElement).classList.remove('opacity-0');
+      }}
+      onError={(e) => {
+        console.error('[Debug] Profile image failed to load:', profilePhoto);
       }}
       priority
       unoptimized
@@ -30,11 +35,15 @@ ProfileImage.displayName = 'ProfileImage';
 export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [forceShowProfile, setForceShowProfile] = useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
   const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { openUserProfile, signOut } = useClerk();
   const { user } = useClerkUser();
-  const { profile, profileLoading } = useUser();
+  const { profile, profileLoading, refreshUserInfo } = useUser();
+  
+  console.log('[Debug] ProfileButton render - profileLoading:', profileLoading, 'profile:', profile, 'forceShowProfile:', forceShowProfile);
 
   // Handle clicks outside menu
   useEffect(() => {
@@ -54,6 +63,48 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
     };
   }, [isMenuOpen]);
 
+  // Add a debugging effect to monitor profile loading state
+  useEffect(() => {
+    console.log('[Debug] Profile loading state changed:', profileLoading);
+    if (profileLoading) {
+      console.log('[Debug] Profile is currently loading');
+      
+      // Set a timeout to force show the profile if loading takes too long
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      
+      loadingTimeoutRef.current = setTimeout(() => {
+        console.log('[Debug] Profile loading timeout - forcing display of default profile');
+        setForceShowProfile(true);
+        
+        // Try to refresh the user info again
+        refreshUserInfo().catch(err => {
+          console.error('[Debug] Failed to refresh user info:', err);
+        });
+      }, 5000); // 5 seconds timeout
+    } else {
+      console.log('[Debug] Profile loaded with data:', profile);
+      // Clear the timeout if profile loaded successfully
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+      
+      // Reset force show if we have a real profile
+      if (forceShowProfile) {
+        setForceShowProfile(false);
+      }
+    }
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, [profileLoading, profile, forceShowProfile, refreshUserInfo]);
+
   return (
     <>
       {/* Profile Button */}
@@ -61,6 +112,7 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
         ref={buttonRef}
         onClick={() => setIsMenuOpen(!isMenuOpen)}
         className="w-12 h-12 rounded-full overflow-hidden bg-[--theme-hover-color]/20 flex items-center justify-center hover:bg-[--theme-hover-color]/30 transition-colors relative group"
+        type="button"
       >
         {/* Gleam effect */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
@@ -68,7 +120,7 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
         </div>
         
         {/* Profile Image with Loading State */}
-        {profileLoading ? (
+        {profileLoading && !forceShowProfile ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-[--theme-hover-color] border-t-transparent" />
           </div>
@@ -95,6 +147,7 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
                 setIsMenuOpen(false);
               }}
               className="w-full px-2 py-1.5 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+              type="button"
             >
               <FaUser className="w-4 h-4" />
               Customize profile
@@ -106,6 +159,7 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
               setIsMenuOpen(false);
             }}
             className="w-full px-2 py-1.5 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+            type="button"
           >
             <FaUserCog className="w-4 h-4" />
             Account & Security
@@ -113,6 +167,7 @@ export const ProfileButton = ({hideProfile}: {hideProfile?: boolean}) => {
           <button
             onClick={() => signOut()}
             className="w-full px-2 py-1.5 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+            type="button"
           >
             <FaSignOutAlt className="w-4 h-4" />
             Sign out
